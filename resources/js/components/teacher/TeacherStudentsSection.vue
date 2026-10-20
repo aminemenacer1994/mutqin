@@ -1,103 +1,99 @@
 <template>
   <section class="teacher-stack">
-    <TeacherPanel :title="t('teacher.nav_students')">
-      <form class="teacher-filters" @submit.prevent="$emit('search')">
-        <label class="teacher-field teacher-field--wide">
-          <span>{{ t('teacher.search') }}</span>
-          <input
-            :value="filters.q"
-            type="search"
-            :placeholder="t('teacher.search_placeholder')"
-            @input="onQueryInput"
-          >
-        </label>
-        <label class="teacher-field">
-          <span>{{ t('teacher.group') }}</span>
-          <select :value="filters.group_id" @change="onFilterChange('group_id', $event.target.value)">
-            <option value="">{{ t('teacher.any_group') }}</option>
-            <option v-for="group in teachingGroups" :key="group.id" :value="String(group.id)">{{ group.name }}</option>
-          </select>
-        </label>
-        <label class="teacher-field">
-          <span>{{ t('teacher.activity_filter') }}</span>
-          <select :value="filters.activity" @change="onFilterChange('activity', $event.target.value)">
-            <option value="">{{ t('teacher.any') }}</option>
-            <option value="active_7">{{ t('teacher.active_7') }}</option>
-            <option value="active_30">{{ t('teacher.active_30') }}</option>
-            <option value="inactive_7">{{ t('teacher.inactive_7') }}</option>
-          </select>
-        </label>
-        <label class="teacher-field">
-          <span>{{ t('teacher.performance') }}</span>
-          <select :value="filters.performance" @change="onFilterChange('performance', $event.target.value)">
-            <option value="">{{ t('teacher.any') }}</option>
-            <option value="strong">{{ t('teacher.strong') }}</option>
-            <option value="developing">{{ t('teacher.developing') }}</option>
-            <option value="none">{{ t('teacher.no_ai') }}</option>
-          </select>
-        </label>
-        <label class="teacher-check">
-          <input
-            :checked="filters.attention === '1'"
-            type="checkbox"
-            @change="onFilterChange('attention', $event.target.checked ? '1' : '')"
-          >
-          <span>{{ t('teacher.needs_attention') }}</span>
-        </label>
-      </form>
-    </TeacherPanel>
+    <div class="teacher-toolbar">
+      <label class="teacher-search">
+        <span class="visually-hidden">{{ t('teacher.search') }}</span>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input
+          :value="filters.q"
+          type="search"
+          :placeholder="t('teacher.search_placeholder')"
+          autocomplete="off"
+          @input="onQueryInput"
+        >
+      </label>
+      <button
+        type="button"
+        class="teacher-filter"
+        :class="{ 'is-on': filters.attention === '1' }"
+        :aria-pressed="filters.attention === '1' ? 'true' : 'false'"
+        @click="onFilterChange('attention', filters.attention === '1' ? '' : '1')"
+      >
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <span>{{ t('teacher.need_look') }}</span>
+      </button>
+    </div>
 
-    <p v-if="loading" class="teacher-loading-inline">
+    <p v-if="loading && !students.length" class="teacher-loading-inline">
       <span class="dash-spinner" aria-hidden="true"></span>
       {{ t('teacher.loading') }}
     </p>
     <TeacherEmpty v-else-if="!students.length" icon="bi bi-people" :message="t('teacher.students_empty')" />
-    <div v-else class="teacher-students">
-      <TeacherStudentCard
-        v-for="student in students"
-        :key="student.id"
-        :student="student"
-        :group-label="groupLabel(student)"
-        :metrics="studentMetrics(student)"
-        @open="$emit('open-student', $event)"
-      />
+    <div v-else class="teacher-groups">
+      <section
+        v-for="group in performanceGroups"
+        :key="group.key"
+        class="teacher-group"
+        :aria-labelledby="`teacher-group-${group.key}`"
+      >
+        <h2 :id="`teacher-group-${group.key}`" class="teacher-group__title">
+          {{ group.title }}
+          <span class="teacher-group__count">{{ group.students.length }}</span>
+        </h2>
+        <div class="teacher-grid">
+          <TeacherStudentCard
+            v-for="(student, index) in group.students"
+            :key="student.id"
+            :student="student"
+            :organisation-label="organisationName"
+            :format-when="formatWhen"
+            :style="{ '--dash-delay': `${Math.min(index, 8) * 28}ms` }"
+            @open="$emit('open-student', $event)"
+          />
+        </div>
+      </section>
     </div>
-
-    <div v-if="meta.last_page > 1" class="teacher-pager">
-      <button type="button" class="dash-btn dash-btn--ghost" :disabled="meta.current_page <= 1" @click="$emit('page', meta.current_page - 1)">
-        {{ t('teacher.previous') }}
-      </button>
-      <span>{{ meta.current_page }} / {{ meta.last_page }}</span>
-      <button type="button" class="dash-btn dash-btn--ghost" :disabled="meta.current_page >= meta.last_page" @click="$emit('page', meta.current_page + 1)">
-        {{ t('teacher.next') }}
-      </button>
-    </div>
+    <TeacherMore
+      :remaining="remaining"
+      :loading="loadingMore"
+      @more="$emit('more')"
+    />
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { groupStudentsByPerformance } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
-import TeacherPanel from './TeacherPanel.vue'
+import TeacherMore from './TeacherMore.vue'
 import TeacherStudentCard from './TeacherStudentCard.vue'
 
 export default {
   name: 'TeacherStudentsSection',
-  components: { TeacherEmpty, TeacherPanel, TeacherStudentCard },
+  components: { TeacherEmpty, TeacherMore, TeacherStudentCard },
   mixins: [i18nMixin],
   props: {
     filters: { type: Object, required: true },
-    teachingGroups: { type: Array, default: () => [] },
+    organisationName: { type: String, default: '' },
     students: { type: Array, default: () => [] },
     meta: { type: Object, required: true },
     loading: { type: Boolean, default: false },
-    groupLabel: { type: Function, required: true },
-    weakLabel: { type: Function, required: true },
-    revisionLabel: { type: Function, required: true },
-    assignmentLabel: { type: Function, required: true },
+    loadingMore: { type: Boolean, default: false },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student'],
+  emits: ['update:filters', 'search', 'queue-search', 'more', 'open-student'],
+  computed: {
+    performanceGroups() {
+      return groupStudentsByPerformance(this.students, this.t)
+    },
+    remaining() {
+      const total = Number(this.meta.total || 0)
+      if (total > 0) return Math.max(0, total - this.students.length)
+      const last = Number(this.meta.last_page || 1)
+      const current = Number(this.meta.current_page || 1)
+      return last > current ? 1 : 0
+    },
+  },
   methods: {
     onQueryInput(event) {
       this.$emit('update:filters', { ...this.filters, q: event.target.value })
@@ -106,26 +102,6 @@ export default {
     onFilterChange(key, value) {
       this.$emit('update:filters', { ...this.filters, [key]: value })
       this.$emit('search')
-    },
-    studentMetrics(student) {
-      return [
-        { key: 'sessions', label: this.t('teacher.sessions'), value: student.sessions },
-        { key: 'active_days', label: this.t('teacher.active_days'), value: student.active_days },
-        { key: 'ayahs', label: this.t('teacher.ayahs'), value: student.ayahs_practised },
-        {
-          key: 'last',
-          label: this.t('teacher.last'),
-          value: student.last_activity_at ? this.formatWhen(student.last_activity_at) : this.t('teacher.no_activity'),
-        },
-        {
-          key: 'ai',
-          label: this.t('teacher.ai_rate'),
-          value: student.ai_success_rate === null ? this.t('teacher.unavailable') : `${student.ai_success_rate}%`,
-        },
-        { key: 'weak', label: this.t('teacher.weak'), value: this.weakLabel(student) },
-        { key: 'revision', label: this.t('teacher.revision'), value: this.revisionLabel(student) },
-        { key: 'assignments', label: this.t('teacher.assignment_status'), value: this.assignmentLabel(student.assignments) },
-      ]
     },
   },
 }

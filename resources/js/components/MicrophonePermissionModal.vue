@@ -3,13 +3,14 @@
     <div
       v-if="open"
       ref="overlay"
-      class="mic-permission-overlay"
+      class="modal-overlay mutqin-modal-overlay mic-permission-overlay"
       :data-theme="theme || undefined"
       role="dialog"
       aria-modal="true"
       aria-labelledby="micPermissionTitle"
       :aria-describedby="describedBy"
       @keydown="onOverlayKeydown"
+      @click.self.prevent
     >
       <div ref="dialog" class="mic-permission-card" @click.stop>
         <div class="mic-permission-heading">
@@ -33,14 +34,14 @@
         <div class="mic-permission-actions">
           <button
             type="button"
-            class="mic-permission-btn mic-permission-btn--ghost"
+            class="mutqin-modal-btn mutqin-modal-btn--ghost mic-permission-btn"
             @click.stop="onCancel"
           >
             {{ cancelLabel }}
           </button>
           <button
             type="button"
-            class="mic-permission-btn mic-permission-btn--primary"
+            class="mutqin-modal-btn mutqin-modal-btn--primary mic-permission-btn"
             @click.stop="onTryAgain"
           >
             {{ tryAgainLabel }}
@@ -94,7 +95,7 @@ export default {
     open(next) {
       if (next) {
         this._returnFocusEl = captureReturnFocus(this.$refs.overlay)
-        this.$nextTick(() => focusInitialElement(this.$refs.dialog, '.mic-permission-btn--primary'))
+        this.$nextTick(() => focusInitialElement(this.$refs.dialog, '.mutqin-modal-btn--primary'))
       } else {
         restoreReturnFocus(this._returnFocusEl)
         this._returnFocusEl = null
@@ -131,18 +132,18 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 35000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  align-content: center;
   box-sizing: border-box;
   padding:
     max(1rem, env(safe-area-inset-top, 0px))
     max(1rem, env(safe-area-inset-right, 0px))
     max(1rem, env(safe-area-inset-bottom, 0px))
     max(1rem, env(safe-area-inset-left, 0px));
-  background: color-mix(in srgb, #0a100d 64%, transparent);
-  backdrop-filter: blur(9px) saturate(0.82);
-  -webkit-backdrop-filter: blur(9px) saturate(0.82);
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #0a100d 64%, transparent));
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 9px)) saturate(0.82);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 9px)) saturate(0.82);
   pointer-events: auto;
 }
 
@@ -154,9 +155,9 @@ export default {
   box-sizing: border-box;
   margin: 0;
   padding: clamp(1.2rem, 3vw, 1.7rem);
-  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  border-radius: 1.35rem;
-  background: var(--surface, #f6f1ea);
+  border-radius: var(--mutqin-modal-radius, 1.35rem);
+  background: var(--mutqin-modal-surface-bg, var(--surface, #f6f1ea));
+  border: 1px solid var(--mutqin-modal-surface-border, color-mix(in srgb, currentColor 12%, transparent));
   color: var(--text-primary, #2c2118);
   font-family: "Avenir Next", "Nunito", system-ui, sans-serif !important;
   box-shadow: 0 24px 70px color-mix(in srgb, #1a1410 34%, transparent), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
@@ -223,40 +224,11 @@ export default {
 }
 
 .mic-permission-btn {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3rem;
   width: 100%;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.85rem;
-  border: 1px solid transparent;
-  font: inherit;
+  min-height: 3rem;
   font-size: 0.98rem;
   font-weight: 650;
-  line-height: 1.2;
-  cursor: pointer;
-  pointer-events: auto;
   touch-action: manipulation;
-}
-
-.mic-permission-btn:focus-visible {
-  outline: 3px solid var(--focus-ring-color, #8b5e3c);
-  outline-offset: 3px;
-}
-
-.mic-permission-btn--ghost {
-  background: transparent;
-  border-color: color-mix(in srgb, currentColor 22%, transparent);
-  color: inherit;
-}
-
-.mic-permission-btn--primary {
-  background: #5c4030;
-  border-color: #5c4030;
-  color: #fff;
 }
 
 .mic-permission-continue {
@@ -297,13 +269,6 @@ export default {
   color: #e3bd91;
 }
 
-[data-theme="dark"] .mic-permission-btn--primary,
-.mic-permission-overlay[data-theme="dark"] .mic-permission-btn--primary {
-  background: #c4a484;
-  border-color: #c4a484;
-  color: #1c1814;
-}
-
 [data-theme="sepia"] .mic-permission-card,
 .mic-permission-overlay[data-theme="sepia"] .mic-permission-card {
   border-color: rgba(118, 88, 54, 0.22);
@@ -328,7 +293,7 @@ export default {
     grid-template-columns: 1fr;
   }
 
-  .mic-permission-btn--primary {
+  .mic-permission-actions .mutqin-modal-btn--primary {
     order: -1;
   }
 }

@@ -48,10 +48,79 @@ export function extensionForMimeType(mimeType = '') {
   return 'webm'
 }
 
+const MAX_MEDIA_DURATION_SECONDS = 86400
+
 export function sanitizeAudioDuration(duration) {
   const value = Number(duration)
-  if (!Number.isFinite(value) || value <= 0) return 0
+  if (!Number.isFinite(value) || value <= 0 || value > MAX_MEDIA_DURATION_SECONDS) return 0
   return value
+}
+
+/** Finite media duration from an HTMLAudioElement, or 0 when unknown. */
+export function readMediaDuration(audio) {
+  return sanitizeAudioDuration(audio?.duration)
+}
+
+/**
+ * Resolve duration for WebM / Safari blobs where metadata reports NaN or Infinity.
+ * Seeks to the end and reads currentTime after seeked; restores the prior time when idle.
+ */
+export function probeIndeterminateMediaDuration(audio, { timeoutMs = 4000 } = {}) {
+  if (!audio) return Promise.resolve(0)
+  const immediate = readMediaDuration(audio)
+  if (immediate > 0) return Promise.resolve(immediate)
+
+  return new Promise((resolve) => {
+    let settled = false
+    const previousTime = Number(audio.currentTime) || 0
+    const wasPaused = !!audio.paused
+
+    const finish = (value) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      const resolved = sanitizeAudioDuration(value)
+      if (wasPaused) {
+        try { audio.currentTime = previousTime } catch { /* ignore */ }
+      }
+      resolve(resolved)
+    }
+
+    const cleanup = () => {
+      clearTimeout(timeoutId)
+      audio.removeEventListener('seeked', onSeeked)
+      audio.removeEventListener('durationchange', onDurationChange)
+      audio.removeEventListener('loadedmetadata', onDurationChange)
+    }
+
+    const onDurationChange = () => {
+      const next = readMediaDuration(audio)
+      if (next > 0) finish(next)
+    }
+
+    const onSeeked = () => {
+      finish(Math.max(readMediaDuration(audio), sanitizeAudioDuration(audio.currentTime)))
+    }
+
+    const timeoutId = setTimeout(() => {
+      finish(Math.max(readMediaDuration(audio), sanitizeAudioDuration(audio.currentTime)))
+    }, timeoutMs)
+
+    audio.addEventListener('seeked', onSeeked)
+    audio.addEventListener('durationchange', onDurationChange)
+    audio.addEventListener('loadedmetadata', onDurationChange)
+
+    if (Number(audio.readyState || 0) < 1) {
+      finish(0)
+      return
+    }
+
+    try {
+      audio.currentTime = 1e10
+    } catch {
+      finish(0)
+    }
+  })
 }
 
 export function createObjectUrlFromBlob(blob) {

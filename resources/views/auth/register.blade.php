@@ -8,6 +8,27 @@
     $organisationOpen = in_array($accountRole, ['student', 'teacher'], true)
         || $errors->has('organisation_type')
         || $errors->has('organisation_name');
+    $organisationOptions = $organisationOptions ?? [];
+    $oldOrganisationType = old('organisation_type');
+    $oldOrganisationName = old('organisation_name');
+    $listedOrganisationNames = collect($organisationOptions)
+        ->filter(fn (array $row) => ($row['type'] ?? '') === $oldOrganisationType)
+        ->pluck('name')
+        ->all();
+    $organisationNameIsCustom = is_string($oldOrganisationName)
+        && $oldOrganisationName !== ''
+        && ! in_array($oldOrganisationName, $listedOrganisationNames, true);
+    $roleCards = [
+        'individual' => ['icon' => 'bi-person', 'title' => __('ui.auth_role_individual_title'), 'lede' => __('ui.auth_role_individual_lede')],
+        'student' => ['icon' => 'bi-mortarboard', 'title' => __('ui.auth_role_student_title'), 'lede' => __('ui.auth_role_student_lede')],
+        'teacher' => ['icon' => 'bi-easel2', 'title' => __('ui.auth_role_teacher_title'), 'lede' => __('ui.auth_role_teacher_lede')],
+    ];
+    $typeChips = [
+        'halaqa' => 'bi-moon-stars',
+        'madrassa' => 'bi-book',
+        'school' => 'bi-building',
+        'other' => 'bi-grid',
+    ];
 @endphp
 
 @section('content')
@@ -41,18 +62,17 @@
             <fieldset class="auth-role">
                 <legend class="auth-role__legend">{{ __('ui.auth_role_prompt') }}</legend>
                 <div class="auth-role__options" role="radiogroup" aria-label="{{ __('ui.auth_role_prompt') }}">
-                    <label class="auth-role__option" for="account-role-individual">
-                        <input id="account-role-individual" type="radio" name="account_role" value="individual" @checked($accountRole === 'individual') @if($errors->has('account_role')) aria-invalid="true" aria-describedby="registerRoleError" @endif>
-                        <span>{{ __('ui.auth_role_individual') }}</span>
-                    </label>
-                    <label class="auth-role__option" for="account-role-student">
-                        <input id="account-role-student" type="radio" name="account_role" value="student" @checked($accountRole === 'student') @if($errors->has('account_role')) aria-invalid="true" aria-describedby="registerRoleError" @endif>
-                        <span>{{ __('ui.auth_role_student') }}</span>
-                    </label>
-                    <label class="auth-role__option" for="account-role-teacher">
-                        <input id="account-role-teacher" type="radio" name="account_role" value="teacher" @checked($accountRole === 'teacher') @if($errors->has('account_role')) aria-invalid="true" aria-describedby="registerRoleError" @endif>
-                        <span>{{ __('ui.auth_role_teacher') }}</span>
-                    </label>
+                    @foreach ($roleCards as $roleValue => $roleCard)
+                        <label class="auth-role__option" for="account-role-{{ $roleValue }}">
+                            <input id="account-role-{{ $roleValue }}" type="radio" name="account_role" value="{{ $roleValue }}" @checked($accountRole === $roleValue) @if($errors->has('account_role')) aria-invalid="true" aria-describedby="registerRoleError" @endif>
+                            <span class="auth-role__icon" aria-hidden="true"><i class="bi {{ $roleCard['icon'] }}"></i></span>
+                            <span class="auth-role__copy">
+                                <span class="visually-hidden">{{ __('ui.auth_role_'.$roleValue) }}</span>
+                                <span class="auth-role__title">{{ $roleCard['title'] }}</span>
+                                <span class="auth-role__lede">{{ $roleCard['lede'] }}</span>
+                            </span>
+                        </label>
+                    @endforeach
                 </div>
                 @error('account_role')
                     <span id="registerRoleError" class="invalid-feedback" role="alert">{{ $message }}</span>
@@ -60,30 +80,63 @@
 
                 <div class="auth-org @if($organisationOpen) is-open @endif" data-auth-org>
                     <div class="auth-org__inner">
+                        <p id="registerOrgIntro" class="auth-org__intro">{{ __('ui.auth_org_section_intro') }}</p>
+
                         <div class="auth-field">
-                            <label for="organisation_type" class="form-label">{{ __('ui.auth_org_type') }}</label>
-                            <select id="organisation_type" name="organisation_type" class="form-control @error('organisation_type') is-invalid @enderror" @if($organisationOpen) required @endif @if($errors->has('organisation_type')) aria-invalid="true" aria-describedby="registerOrgTypeError" @endif>
-                                <option value="" @selected(! old('organisation_type'))>{{ __('ui.auth_org_type_placeholder') }}</option>
+                            <p class="form-label" id="organisation-type-label">{{ __('ui.auth_org_type') }}</p>
+                            <div class="auth-chips" role="radiogroup" aria-labelledby="organisation-type-label" @if($errors->has('organisation_type')) aria-invalid="true" aria-describedby="registerOrgTypeError" @endif>
                                 @foreach (\App\Enums\OrganisationType::cases() as $organisationType)
-                                    <option value="{{ $organisationType->value }}" @selected(old('organisation_type') === $organisationType->value)>{{ __('ui.auth_org_type_'.$organisationType->value) }}</option>
+                                    <label class="auth-chip" for="organisation-type-{{ $organisationType->value }}">
+                                        <input
+                                            id="organisation-type-{{ $organisationType->value }}"
+                                            type="radio"
+                                            name="organisation_type"
+                                            value="{{ $organisationType->value }}"
+                                            @checked($oldOrganisationType === $organisationType->value)
+                                            @if($organisationOpen) required @endif
+                                        >
+                                        <span class="auth-chip__icon" aria-hidden="true"><i class="bi {{ $typeChips[$organisationType->value] ?? 'bi-grid' }}"></i></span>
+                                        <span class="auth-chip__label">{{ __('ui.auth_org_type_'.$organisationType->value) }}</span>
+                                    </label>
                                 @endforeach
-                            </select>
+                            </div>
                             @error('organisation_type')
                                 <span id="registerOrgTypeError" class="invalid-feedback" role="alert">{{ $message }}</span>
                             @enderror
                         </div>
 
                         <div class="auth-field" data-auth-org-name>
-                            <label for="organisation_name_choice" class="form-label">{{ __('ui.auth_org_name') }}</label>
-                            <select id="organisation_name_choice" class="form-control @error('organisation_name') is-invalid @enderror" @if($organisationOpen) required @endif @if($errors->has('organisation_name')) aria-invalid="true" aria-describedby="registerOrgNameError registerOrgNameHint" @else aria-describedby="registerOrgNameHint" @endif>
-                                <option value="">{{ __('ui.auth_org_name_placeholder') }}</option>
-                            </select>
-                            <p id="registerOrgNameHint" class="auth-field-hint" data-auth-org-name-hint hidden>{{ __('ui.auth_org_name_none_for_type') }}</p>
-                            <div class="auth-field auth-field--nested" data-auth-org-name-custom hidden>
-                                <label for="organisation_name_custom" class="form-label">{{ __('ui.auth_org_name_custom_placeholder') }}</label>
-                                <input id="organisation_name_custom" type="text" class="form-control @error('organisation_name') is-invalid @enderror" value="{{ old('organisation_name') }}" placeholder="{{ __('ui.auth_org_name_custom_placeholder') }}" maxlength="120" autocomplete="organization">
+                            <p class="form-label" id="organisation-name-label">{{ __('ui.auth_org_name') }}</p>
+                            <p class="auth-org-names__prompt">{{ __('ui.auth_org_name_placeholder') }}</p>
+                            <div class="auth-org-names" role="radiogroup" aria-labelledby="organisation-name-label" data-auth-org-name-list>
+                                @foreach ($organisationOptions as $organisationOption)
+                                    <label class="auth-choice" data-org-type="{{ $organisationOption['type'] }}">
+                                        <input
+                                            type="radio"
+                                            name="organisation_name"
+                                            value="{{ $organisationOption['name'] }}"
+                                            @checked(! $organisationNameIsCustom && $oldOrganisationName === $organisationOption['name'] && $oldOrganisationType === $organisationOption['type'])
+                                        >
+                                        <span class="auth-choice__mark" aria-hidden="true"></span>
+                                        <span class="auth-choice__label">{{ $organisationOption['name'] }}</span>
+                                    </label>
+                                @endforeach
+                                <label class="auth-choice auth-choice--custom" data-org-custom>
+                                    <input
+                                        type="radio"
+                                        name="organisation_name"
+                                        value="{{ \App\Support\Registration\RegistrationProfile::CUSTOM_NAME_VALUE }}"
+                                        @checked($organisationNameIsCustom)
+                                    >
+                                    <span class="auth-choice__mark" aria-hidden="true"></span>
+                                    <span class="auth-choice__label">{{ __('ui.auth_org_name_other') }}</span>
+                                </label>
                             </div>
-                            <input type="hidden" name="organisation_name" id="organisation_name" value="{{ old('organisation_name') }}">
+                            <p class="auth-field-hint" data-auth-org-name-hint hidden>{{ __('ui.auth_org_name_none_for_type') }}</p>
+                            <div class="auth-org-custom" data-auth-org-name-custom>
+                                <label for="organisation_name_custom" class="form-label">{{ __('ui.auth_org_name_custom_placeholder') }}</label>
+                                <input id="organisation_name_custom" type="text" name="organisation_name_custom" class="form-control @error('organisation_name') is-invalid @enderror" value="{{ $organisationNameIsCustom ? $oldOrganisationName : '' }}" placeholder="{{ __('ui.auth_org_name_custom_placeholder') }}" maxlength="120" autocomplete="organization">
+                            </div>
                             @error('organisation_name')
                                 <span id="registerOrgNameError" class="invalid-feedback" role="alert">{{ $message }}</span>
                             @enderror
@@ -158,128 +211,116 @@
 <script>
 (function () {
     var form = document.getElementById('register-form');
-    if (!form || !form.querySelector('#organisation_name_choice')) return;
+    if (!form || !form.querySelector('[data-auth-org-name-list]')) return;
 
     var org = form.querySelector('[data-auth-org]');
-    var typeInput = form.querySelector('#organisation_type');
-    var nameChoice = form.querySelector('#organisation_name_choice');
-    var nameCustomWrap = form.querySelector('[data-auth-org-name-custom]');
-    var nameCustom = form.querySelector('#organisation_name_custom');
-    var nameHidden = form.querySelector('#organisation_name');
+    var nameList = form.querySelector('[data-auth-org-name-list]');
     var nameHint = form.querySelector('[data-auth-org-name-hint]');
+    var nameCustom = form.querySelector('#organisation_name_custom');
     var googleButton = form.querySelector('[data-register-google]');
     var typeMessage = form.getAttribute('data-org-type-required') || '';
     var nameMessage = form.getAttribute('data-org-name-required') || '';
     var organisationsUrl = '/api/registration/organisations';
-    var placeholderLabel = @json(__('ui.auth_org_name_placeholder'));
-    var otherLabel = @json(__('ui.auth_org_name_other'));
-    var initialName = @json(old('organisation_name', ''));
-    var customValue = '__custom__';
+    var customValue = @json(\App\Support\Registration\RegistrationProfile::CUSTOM_NAME_VALUE);
     var fetchTimer = null;
-    var catalog = [];
-
-    try {
-        catalog = JSON.parse(form.getAttribute('data-organisation-catalog') || '[]');
-    } catch (error) {
-        catalog = [];
-    }
 
     function needsOrg() {
         var checked = form.querySelector('input[name="account_role"]:checked');
         return !!checked && (checked.value === 'student' || checked.value === 'teacher');
     }
 
-    function setCustomVisible(visible) {
-        if (nameCustomWrap) nameCustomWrap.hidden = !visible;
-        if (nameChoice) nameChoice.required = needsOrg() && !visible;
-        if (nameCustom) nameCustom.required = needsOrg() && visible;
+    function selectedType() {
+        var checked = form.querySelector('input[name="organisation_type"]:checked');
+        return checked ? checked.value : '';
     }
 
-    function mergeCatalogRows(rows) {
-        if (!Array.isArray(rows)) return;
-        rows.forEach(function (row) {
-            if (!row || !row.name || !row.type) return;
-            var exists = catalog.some(function (item) {
-                return item.name === row.name && item.type === row.type;
-            });
-            if (!exists) catalog.push({ name: row.name, type: row.type });
+    function selectedNameInput() {
+        return form.querySelector('input[name="organisation_name"]:checked');
+    }
+
+    function listedNamesFor(type) {
+        return Array.prototype.filter.call(
+            nameList.querySelectorAll('.auth-choice[data-org-type]'),
+            function (choice) { return choice.getAttribute('data-org-type') === type; }
+        );
+    }
+
+    function resolvedName() {
+        var picked = selectedNameInput();
+        if (!picked) return '';
+        if (picked.value === customValue) {
+            return nameCustom ? nameCustom.value.trim() : '';
+        }
+        return picked.value.trim();
+    }
+
+    function syncOrgPanel() {
+        var open = needsOrg();
+        if (org) org.classList.toggle('is-open', open);
+        form.querySelectorAll('input[name="organisation_type"]').forEach(function (radio) {
+            radio.required = open;
         });
-    }
-
-    function namesForType(type) {
-        if (!type) return [];
-        var names = catalog
-            .filter(function (row) { return row.type === type; })
-            .map(function (row) { return row.name; });
-        return names.filter(function (name, index) { return names.indexOf(name) === index; });
-    }
-
-    function rebuildOrganisationNameSelect(preferredValue) {
-        if (!nameChoice || !typeInput) return;
-
-        var type = typeInput.value;
-        var names = namesForType(type);
-        var previous = preferredValue || nameChoice.value;
-
-        nameChoice.innerHTML = '';
-        var placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = placeholderLabel;
-        nameChoice.appendChild(placeholder);
-
-        names.forEach(function (name) {
-            var option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            nameChoice.appendChild(option);
+        form.querySelectorAll('input[name="organisation_name"]').forEach(function (radio) {
+            radio.required = false;
         });
+        if (nameCustom) nameCustom.required = false;
+        if (!open) return;
+        syncNameChoices();
+        refreshOrganisationsFromServer();
+    }
 
-        var other = document.createElement('option');
-        other.value = customValue;
-        other.textContent = otherLabel;
-        nameChoice.appendChild(other);
+    function syncNameChoices() {
+        var type = selectedType();
+        var visible = listedNamesFor(type);
+        var selected = selectedNameInput();
 
-        if (nameHint) nameHint.hidden = !type || names.length > 0;
-
-        if (previous && names.indexOf(previous) !== -1) {
-            nameChoice.value = previous;
-            setCustomVisible(false);
-        } else if (previous === customValue) {
-            nameChoice.value = customValue;
-            setCustomVisible(true);
-        } else if (names.length === 1) {
-            nameChoice.value = names[0];
-            setCustomVisible(false);
-        } else if (names.length === 0 && type) {
-            nameChoice.value = customValue;
-            setCustomVisible(true);
-        } else {
-            nameChoice.value = '';
-            setCustomVisible(false);
+        if (selected && selected.value !== customValue) {
+            var parent = selected.closest('[data-org-type]');
+            if (parent && parent.getAttribute('data-org-type') !== type) {
+                selected.checked = false;
+                selected = null;
+            }
         }
 
-        syncHiddenName();
+        if (nameHint) nameHint.hidden = !type || visible.length > 0;
+
+        if (type && visible.length === 0 && !selected) {
+            var other = nameList.querySelector('[data-org-custom] input');
+            if (other) other.checked = true;
+        }
+
+        var picked = selectedNameInput();
+        if (nameCustom) {
+            nameCustom.required = needsOrg() && !!picked && picked.value === customValue;
+        }
+        if (needsOrg() && type) {
+            var requireTarget = visible[0]
+                ? visible[0].querySelector('input')
+                : nameList.querySelector('[data-org-custom] input');
+            if (requireTarget) requireTarget.required = true;
+        }
     }
 
-    function restoreInitialName() {
-        if (!initialName) return;
-        var type = typeInput ? typeInput.value : '';
-        var names = namesForType(type);
-        if (names.indexOf(initialName) !== -1) {
-            nameChoice.value = initialName;
-            setCustomVisible(false);
-        } else {
-            nameChoice.value = customValue;
-            setCustomVisible(true);
-            if (nameCustom) nameCustom.value = initialName;
-        }
-        initialName = '';
-        syncHiddenName();
+    function addNameChoice(type, name) {
+        var exists = Array.prototype.some.call(
+            nameList.querySelectorAll('.auth-choice[data-org-type] input'),
+            function (input) { return input.value === name && input.closest('[data-org-type]').getAttribute('data-org-type') === type; }
+        );
+        if (exists) return;
+
+        var label = document.createElement('label');
+        label.className = 'auth-choice';
+        label.setAttribute('data-org-type', type);
+        label.innerHTML = '<input type="radio" name="organisation_name" value=""><span class="auth-choice__mark" aria-hidden="true"></span><span class="auth-choice__label"></span>';
+        label.querySelector('input').value = name;
+        label.querySelector('.auth-choice__label').textContent = name;
+        var custom = nameList.querySelector('[data-org-custom]');
+        nameList.insertBefore(label, custom);
     }
 
     function refreshOrganisationsFromServer() {
-        if (!typeInput || !typeInput.value) return;
-        var type = typeInput.value;
+        var type = selectedType();
+        if (!type) return;
         clearTimeout(fetchTimer);
         fetchTimer = setTimeout(function () {
             fetch(organisationsUrl + '?type=' + encodeURIComponent(type), {
@@ -289,100 +330,66 @@
                 .then(function (response) { return response.ok ? response.json() : null; })
                 .then(function (payload) {
                     if (!payload || !Array.isArray(payload.data)) return;
-                    mergeCatalogRows(payload.data);
-                    rebuildOrganisationNameSelect(nameChoice.value);
-                    restoreInitialName();
+                    payload.data.forEach(function (row) {
+                        if (row && row.name && row.type) addNameChoice(row.type, row.name);
+                    });
+                    syncNameChoices();
                 })
-                .catch(function () { /* catalogue JSON is enough */ });
+                .catch(function () { /* seeded names are already in the page */ });
         }, 0);
     }
 
-    function resolvedName() {
-        if (!nameChoice) return '';
-        if (nameChoice.value === customValue) {
-            return nameCustom ? nameCustom.value.trim() : '';
+    function validateOrgFields() {
+        var typeRadio = form.querySelector('input[name="organisation_type"]');
+        var type = selectedType();
+        if (!type) {
+            if (typeRadio) typeRadio.setCustomValidity(typeMessage);
+            return form.querySelector('.auth-chip input') || typeRadio;
         }
-        return nameChoice.value.trim();
-    }
+        form.querySelectorAll('input[name="organisation_type"]').forEach(function (radio) {
+            radio.setCustomValidity('');
+        });
 
-    function syncHiddenName() {
-        if (!nameHidden) return;
-        nameHidden.value = resolvedName();
-    }
-
-    function syncOrgPanel() {
-        var open = needsOrg();
-        if (org) org.classList.toggle('is-open', open);
-        if (typeInput) typeInput.required = open;
-        if (!open) {
-            setCustomVisible(false);
-            if (nameChoice) nameChoice.required = false;
-            if (nameCustom) nameCustom.required = false;
-            return;
+        var nameValue = resolvedName();
+        var picked = selectedNameInput();
+        if (!nameValue) {
+            if (picked && picked.value === customValue && nameCustom) {
+                nameCustom.setCustomValidity(nameMessage);
+                return nameCustom;
+            }
+            var firstName = nameList.querySelector('.auth-choice input');
+            if (firstName) firstName.setCustomValidity(nameMessage);
+            return firstName;
         }
-        rebuildOrganisationNameSelect();
-        refreshOrganisationsFromServer();
-        restoreInitialName();
+        form.querySelectorAll('input[name="organisation_name"]').forEach(function (radio) {
+            radio.setCustomValidity('');
+        });
+        if (nameCustom) nameCustom.setCustomValidity('');
+        return null;
     }
 
     form.querySelectorAll('input[name="account_role"]').forEach(function (radio) {
         radio.addEventListener('change', syncOrgPanel);
     });
-
-    if (typeInput) {
-        typeInput.addEventListener('change', function () {
-            typeInput.setCustomValidity('');
-            rebuildOrganisationNameSelect('');
+    form.querySelectorAll('input[name="organisation_type"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            radio.setCustomValidity('');
+            syncNameChoices();
             refreshOrganisationsFromServer();
         });
-    }
-
-    if (nameChoice) {
-        nameChoice.addEventListener('change', function () {
-            nameChoice.setCustomValidity('');
-            setCustomVisible(nameChoice.value === customValue);
-            syncHiddenName();
+    });
+    nameList.addEventListener('change', function () {
+        form.querySelectorAll('input[name="organisation_name"]').forEach(function (radio) {
+            radio.setCustomValidity('');
         });
-    }
-
+        syncNameChoices();
+        if (nameCustom) nameCustom.setCustomValidity('');
+    });
     if (nameCustom) {
         nameCustom.addEventListener('input', function () {
             nameCustom.setCustomValidity('');
-            syncHiddenName();
         });
     }
-
-    form.addEventListener('submit', function () {
-        syncHiddenName();
-    });
-
-    function validateOrgFields() {
-        var invalid = null;
-        if (typeInput && !typeInput.value) {
-            typeInput.setCustomValidity(typeMessage);
-            invalid = typeInput;
-        } else if (typeInput) {
-            typeInput.setCustomValidity('');
-        }
-
-        syncHiddenName();
-        var nameValue = resolvedName();
-        if (!nameValue) {
-            if (nameChoice && nameChoice.value === customValue && nameCustom) {
-                nameCustom.setCustomValidity(nameMessage);
-                if (!invalid) invalid = nameCustom;
-            } else if (nameChoice) {
-                nameChoice.setCustomValidity(nameMessage);
-                if (!invalid) invalid = nameChoice;
-            }
-        } else {
-            if (nameChoice) nameChoice.setCustomValidity('');
-            if (nameCustom) nameCustom.setCustomValidity('');
-        }
-
-        return invalid;
-    }
-
     if (googleButton) {
         googleButton.addEventListener('click', function (event) {
             if (!needsOrg()) return;

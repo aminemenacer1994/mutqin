@@ -108,6 +108,18 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(80, $profile['payload']['success_rate']);
         $this->assertSame(1, $profile['payload']['attempts'][0]['issues']['wrong']);
         $this->assertSame(2, $profile['payload']['attempts'][0]['issues']['skipped']);
+
+        $overview = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'overview']))->assertOk()->json('payload');
+        $this->assertArrayHasKey('latest_saved', $overview);
+        $this->assertArrayHasKey('needs_attention', $overview['metrics']);
+        $this->assertArrayHasKey('active_7', $overview['metrics']);
+
+        $analytics = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'analytics']))->assertOk()->json('payload');
+        $this->assertSame(80, $analytics['success_rate']);
+        $this->assertArrayHasKey('sessions', $analytics);
+        $this->assertArrayHasKey('weak', $analytics);
+        $this->assertArrayHasKey('attempts', $analytics);
+        $this->assertArrayHasKey('calendar', $analytics);
     }
 
     public function test_revoked_consent_removes_access_immediately(): void

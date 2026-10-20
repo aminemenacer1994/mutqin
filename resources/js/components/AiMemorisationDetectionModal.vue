@@ -23,7 +23,7 @@
                   <h2 id="amdModalTitle" class="amd-title amd-title--premium" tabindex="-1">{{ title }}</h2>
                   <span
                     v-if="betaBadge"
-                    class="amd-beta-badge"
+                    class="amd-beta-badge mutqin-label--uncertain"
                     :title="disclaimer || undefined"
                   >{{ betaBadge }}</span>
                 </div>
@@ -523,8 +523,10 @@ export default {
       return this.micStatusLabel || 'Ready'
     },
     showAudioProgress() {
-      return !this.isComplete && !this.isError && !this.endingSoon
-        && (this.isStarting || this.isListening || this.isProcessing)
+      if (this.isComplete || this.isError || this.endingSoon) return false
+      // Active recording status lives in the sticky header and toolbar timer.
+      if (this.isListening && !this.isStarting) return false
+      return this.isStarting || this.isProcessing || this.isAnalysing || this.isUploading
     },
     audioProgressTitle() {
       if (this.isStarting) return this.stageLabel || 'Starting…'

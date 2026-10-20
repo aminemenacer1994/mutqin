@@ -2,6 +2,8 @@
 
 namespace App\Support\Demo;
 
+use App\Support\Registration\RegistrationOrganisationDirectory;
+
 /**
  * Closed list of teacher-demo identities.
  *
@@ -30,9 +32,9 @@ final class TeacherDemoCatalog
 
     public const INTERVENTION_AFTER = 90;
 
-    public const INTERVENTION_FEEDBACK = 'Demo feedback: Al-Ikhlas 1–4 improved after the assigned recitation. Compare the attempt from before this task with the one after it.';
+    public const INTERVENTION_FEEDBACK = 'Al-Ikhlas 1 to 4 improved after this recitation. Compare the check from before this task with the one after it.';
 
-    public const PRIVATE_NOTE = 'Demo private note: this student repeats the same word in An-Nas 2. This note stays with the teacher.';
+    public const PRIVATE_NOTE = 'This student repeats the same word in An-Nas 2. This note stays with the teacher.';
 
     /**
      * @var list<int>
@@ -98,14 +100,33 @@ final class TeacherDemoCatalog
     ];
 
     /**
+     * @var list<string>
+     */
+    private const STUDENT_NAMES = [
+        'Adam Nasser', 'Ayah Malik', 'Yusuf Hussein', 'Fatima Qadir',
+        'Ibrahim Adel', 'Khadija Saleh', 'Omar Amin', 'Maryam Rashid',
+        'Hassan Tariq', 'Zainab Nabil', 'Hamza Suleiman', 'Hana Farid',
+        'Ismail Jamil', 'Aisha Nur', 'Anas Khalil', 'Layla Rahman',
+        'Musa Ali', 'Sara Zahra', 'Zayd Harun', 'Noor Sadiq',
+        'Idris Malik', 'Hafsa Yusuf', 'Yahya Qureshi', 'Ruqayyah Hussein',
+        'Dawud Ahmad', 'Asma Faruq', 'Sami Uthman', 'Sumayyah Karim',
+        'Salma Ibrahim', 'Dina Salih',
+    ];
+
+    /**
      * @return list<array{key: string, type: string, name: string}>
      */
     public static function organisations(): array
     {
+        $byType = [];
+        foreach (RegistrationOrganisationDirectory::entries() as $entry) {
+            $byType[$entry['type']] = $entry['name'];
+        }
+
         return [
-            ['key' => 'halaqa', 'type' => 'halaqa', 'name' => 'Mutqin Demo Halaqa'],
-            ['key' => 'madrassa', 'type' => 'madrassa', 'name' => 'Mutqin Demo Madrassa'],
-            ['key' => 'school', 'type' => 'school', 'name' => 'Mutqin Demo School'],
+            ['key' => 'halaqa', 'type' => 'halaqa', 'name' => $byType['halaqa']],
+            ['key' => 'madrassa', 'type' => 'madrassa', 'name' => $byType['madrassa']],
+            ['key' => 'school', 'type' => 'school', 'name' => $byType['school']],
         ];
     }
 
@@ -115,12 +136,12 @@ final class TeacherDemoCatalog
     public static function groups(): array
     {
         return [
-            ['key' => 'fajr', 'org' => 'halaqa', 'name' => 'Demo Fajr Circle'],
-            ['key' => 'maghrib', 'org' => 'halaqa', 'name' => 'Demo Maghrib Circle'],
-            ['key' => 'year-1', 'org' => 'madrassa', 'name' => 'Demo Year One'],
-            ['key' => 'year-2', 'org' => 'madrassa', 'name' => 'Demo Year Two'],
-            ['key' => 'class-7a', 'org' => 'school', 'name' => 'Demo Class 7A'],
-            ['key' => 'class-7b', 'org' => 'school', 'name' => 'Demo Class 7B'],
+            ['key' => 'fajr', 'org' => 'halaqa', 'name' => 'Fajr Circle'],
+            ['key' => 'maghrib', 'org' => 'halaqa', 'name' => 'Maghrib Circle'],
+            ['key' => 'year-1', 'org' => 'madrassa', 'name' => 'Year One'],
+            ['key' => 'year-2', 'org' => 'madrassa', 'name' => 'Year Two'],
+            ['key' => 'class-7a', 'org' => 'school', 'name' => 'Class 7A'],
+            ['key' => 'class-7b', 'org' => 'school', 'name' => 'Class 7B'],
         ];
     }
 
@@ -132,35 +153,35 @@ final class TeacherDemoCatalog
         return [
             [
                 'key' => 'halaqa-fajr',
-                'name' => 'Demo Teacher — Halaqa Fajr',
+                'name' => 'Umar Siddiq',
                 'email' => 'teacher.demo.halaqa.fajr@example.com',
                 'org' => 'halaqa',
                 'groups' => ['fajr'],
             ],
             [
                 'key' => 'halaqa-maghrib',
-                'name' => 'Demo Teacher — Halaqa Maghrib',
+                'name' => 'Layla Hassan',
                 'email' => 'teacher.demo.halaqa.maghrib@example.com',
                 'org' => 'halaqa',
                 'groups' => ['maghrib'],
             ],
             [
                 'key' => 'madrassa',
-                'name' => 'Demo Teacher — Madrassa',
+                'name' => 'Ahmed Qureshi',
                 'email' => 'teacher.demo.madrassa@example.com',
                 'org' => 'madrassa',
                 'groups' => ['year-1', 'year-2'],
             ],
             [
                 'key' => 'school-7a',
-                'name' => 'Demo Teacher — School 7A',
+                'name' => 'Nadia Malik',
                 'email' => 'teacher.demo.school.7a@example.com',
                 'org' => 'school',
                 'groups' => ['class-7a'],
             ],
             [
                 'key' => 'school-7b',
-                'name' => 'Demo Teacher — School 7B',
+                'name' => 'Tariq Jamil',
                 'email' => 'teacher.demo.school.7b@example.com',
                 'org' => 'school',
                 'groups' => ['class-7b'],
@@ -186,7 +207,7 @@ final class TeacherDemoCatalog
                     'number' => $number,
                     'key' => sprintf('s%02d', $number),
                     'email' => sprintf('teacher.demo.student.%02d@example.com', $number),
-                    'name' => sprintf('Demo Student %02d — %s', $number, ucfirst($profile)),
+                    'name' => self::STUDENT_NAMES[$number - 1],
                     'profile' => $profile,
                     'ordinal' => $ordinal,
                     'group' => self::GROUP_KEYS[($number - 1) % count(self::GROUP_KEYS)],

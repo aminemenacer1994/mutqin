@@ -18,6 +18,7 @@
 
       <template v-else>
         <TeacherHero
+          v-if="view === 'overview'"
           :first-name="firstName"
           :organisation-name="overview?.teacher?.organisation?.name || ''"
           :practice-url="practiceUrl"
@@ -39,32 +40,24 @@
               v-if="view === 'overview' && overview"
               :overview="overview"
               :kpi-cards="kpiCards"
-              :chart-days="chartDays"
-              :day-options="TEACHER_CHART_DAY_OPTIONS"
-              :chart-ready="chartReady"
-              :chart-data="chartData"
-              :chart-options="chartOptions"
               :format-when="formatWhen"
-              @set-days="setDays"
               @open-student="openStudent"
+              @select-kpi="openStudentsFromKpi"
             />
 
             <TeacherStudentsSection
               v-else-if="view === 'students'"
               :filters="filters"
-              :teaching-groups="teachingGroups"
+              :organisation-name="overview?.teacher?.organisation?.name || ''"
               :students="students"
               :meta="studentMeta"
               :loading="studentsLoading"
-              :group-label="groupLabel"
-              :weak-label="weakLabel"
-              :revision-label="revisionLabel"
-              :assignment-label="assignmentLabel"
+              :loading-more="studentsLoadingMore"
               :format-when="formatWhen"
               @update:filters="updateFilters"
               @search="loadStudents(1)"
               @queue-search="queueStudentSearch"
-              @page="loadStudents"
+              @more="loadMoreStudents"
               @open-student="openStudent"
             />
 
@@ -74,8 +67,6 @@
               :section="profileSection"
               :tabs="TEACHER_PROFILE_TABS"
               :loading="profileLoading"
-              :note="note"
-              :note-saving="noteSaving"
               :metric="metric"
               :practice-time="practiceTime"
               :comparisons="comparisons"
@@ -85,8 +76,6 @@
               :format-when="formatWhen"
               @back="openView('students')"
               @change-section="onProfileSection"
-              @update:note="note = $event"
-              @save-note="saveNote"
             />
 
             <TeacherAssignmentsSection
@@ -95,25 +84,9 @@
               :saving="assignmentSaving"
               :rows="assignmentRows"
               :students="students"
-              :teaching-groups="teachingGroups"
               :surahs="surahs"
               @update:form="assignment = $event"
               @create="createAssignment"
-              @open-student="openStudent"
-            />
-
-            <TeacherGroupsSection
-              v-else-if="view === 'groups'"
-              :groups="groups"
-              :group-name="groupName"
-              :saving="groupSaving"
-              :open-group-id="openGroupId"
-              :group-detail="groupDetail"
-              @update:group-name="groupName = $event"
-              @create="createGroup"
-              @join="joinGroup"
-              @toggle="toggleGroup"
-              @review="reviewMembership"
               @open-student="openStudent"
             />
 
@@ -121,11 +94,9 @@
               v-else
               :teacher="overview?.teacher"
               :teacher-name="overview?.teacher?.name || firstName"
-              :roster="overview?.roster"
               :student-initial="studentInitial"
               :practice-url="practiceUrl"
               :profile-url="profileUrl"
-              @open-student="openStudent"
             />
           </div>
         </div>
@@ -139,7 +110,6 @@
 <script>
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
-import TeacherGroupsSection from '../components/teacher/TeacherGroupsSection.vue'
 import TeacherHero from '../components/teacher/TeacherHero.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import TeacherOverviewSection from '../components/teacher/TeacherOverviewSection.vue'
@@ -155,7 +125,6 @@ export default {
   components: {
     NetworkFallback,
     TeacherAssignmentsSection,
-    TeacherGroupsSection,
     TeacherHero,
     TeacherNav,
     TeacherOverviewSection,

@@ -1,23 +1,28 @@
 <template>
-  <div v-if="visible" class="hifz-plan-modal-wrap">
-    <div class="modal-backdrop fade show"></div>
+  <Teleport to="body">
     <div
-      class="modal fade show d-block hifz-plan-modal"
-      tabindex="-1"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="hifzPlanCreatorTitle"
+      v-if="visible"
+      class="modal-overlay mutqin-modal-overlay hifz-plan-modal-overlay"
       @click.self.prevent
-      @keydown.esc.prevent="close"
+      @keydown="onOverlayKeydown"
     >
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mutqin-modal-dialog mutqin-modal-dialog--full hifz-plan-dialog">
+        <div
+          ref="dialog"
+          class="modal-content mutqin-modal-surface hifz-plan-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hifzPlanCreatorTitle"
+          tabindex="-1"
+        >
           <div class="modal-header">
             <div>
               <span class="hifz-plan-kicker">{{ t('memorisation.planner.hifzPlan') }}</span>
-              <h2 id="hifzPlanCreatorTitle" class="modal-title">{{ existingPlan ? t('hifzPlan.wizard.editTitle') : t('hifzPlan.wizard.createTitle') }}</h2>
+              <h2 id="hifzPlanCreatorTitle" class="modal-title" tabindex="-1">{{ existingPlan ? t('hifzPlan.wizard.editTitle') : t('hifzPlan.wizard.createTitle') }}</h2>
             </div>
-            <button type="button" class="btn-close" :aria-label="t('common.close')" @click="close"></button>
+            <button type="button" class="modal-close-btn" :aria-label="t('common.close')" @click="close">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </div>
 
           <div class="modal-body">
@@ -264,33 +269,35 @@
             </section>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" :disabled="currentStep === 0" @click="previousStep">
-              {{ t('common.back') }}
-            </button>
-            <button
-              v-if="currentStep < steps.length - 1"
-              type="button"
-              class="btn btn-primary"
-              :disabled="!canProceedFromCurrentStep"
-              @click="nextStep"
-            >
-              {{ t('common.continue') }}
-            </button>
-            <button
-              v-else
-              type="button"
-              class="btn btn-primary hifz-plan-save-btn"
-              :disabled="!canSavePlan"
-              @click="savePlan"
-            >
-              {{ existingPlan ? t('hifzPlan.wizard.savePlan') : t('hifzPlan.wizard.startJourney') }}
-            </button>
+          <div class="modal-footer mutqin-modal-footer">
+            <div class="mutqin-modal-actions mutqin-modal-actions--end hifz-plan-modal-actions">
+              <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" :disabled="currentStep === 0" @click="previousStep">
+                <span>{{ t('common.back') }}</span>
+              </button>
+              <button
+                v-if="currentStep < steps.length - 1"
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary"
+                :disabled="!canProceedFromCurrentStep"
+                @click="nextStep"
+              >
+                <span>{{ t('common.continue') }}</span>
+              </button>
+              <button
+                v-else
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary hifz-plan-save-btn"
+                :disabled="!canSavePlan"
+                @click="savePlan"
+              >
+                <span>{{ existingPlan ? t('hifzPlan.wizard.savePlan') : t('hifzPlan.wizard.startJourney') }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script>
@@ -298,6 +305,12 @@ import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../scripts/engine/
 import learningApi from '../scripts/api/learning'
 import { offlineScopedLocalKey } from '../utils/mutqinStorageKeys'
 import { formatAppNumber, unwrapLocale } from '../utils/i18nFormat'
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
 
 const STORAGE_KEY = HIFZ_PLAN_STORAGE_KEY
 
@@ -328,6 +341,7 @@ export default {
   emits: ['close', 'saved'],
   data() {
     return {
+      _returnFocusEl: null,
       currentStep: 0,
       existingPlan: null,
       draft: createDefaultHifzDraft(),
@@ -552,13 +566,33 @@ export default {
   },
   watch: {
     visible(isVisible) {
-      if (isVisible) this.prepareModal()
+      if (isVisible) {
+        this._returnFocusEl = captureReturnFocus()
+        this.prepareModal()
+        return
+      }
+      restoreReturnFocus(this._returnFocusEl)
+      this._returnFocusEl = null
     }
   },
   mounted() {
-    if (this.visible) this.prepareModal()
+    if (this.visible) {
+      this._returnFocusEl = captureReturnFocus()
+      this.prepareModal()
+    }
+  },
+  beforeUnmount() {
+    restoreReturnFocus(this._returnFocusEl)
+    this._returnFocusEl = null
   },
   methods: {
+    onOverlayKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        open: this.visible,
+        onEscape: () => this.close(),
+      })
+    },
     createDefaultDraft() {
       return createDefaultHifzDraft()
     },
@@ -587,10 +621,7 @@ export default {
         supportLevel: false,
         playback: false
       }
-      this.$nextTick(() => {
-        const dialog = this.$el?.querySelector?.('.hifz-plan-modal')
-        if (dialog) dialog.focus({ preventScroll: true })
-      })
+      this.$nextTick(() => focusInitialElement(this.$refs.dialog, '#hifzPlanCreatorTitle'))
     },
     async loadExistingPlan() {
       if (this.backendSyncEnabled) {
@@ -878,9 +909,7 @@ export default {
 </script>
 
 <style scoped>
-.hifz-plan-modal-wrap {
-  position: fixed;
-  inset: 0;
+.hifz-plan-modal-overlay {
   z-index: 13000;
   --plan-border: color-mix(in srgb, var(--accent) 18%, var(--border));
   --plan-border-strong: color-mix(in srgb, var(--accent) 32%, var(--border));
@@ -892,28 +921,28 @@ export default {
   --plan-accent: var(--accent, #9a6738);
   --plan-accent-strong: var(--accent-strong, #6e4726);
   --plan-accent-soft: var(--accent-light, rgba(154, 103, 56, 0.1));
-  --plan-overlay: var(--overlay, rgba(14, 12, 10, 0.32));
 }
 
-.hifz-plan-modal {
-  background: var(--plan-overlay);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
-}
-
-.modal-dialog {
+.hifz-plan-dialog {
   width: min(100%, 1240px);
   margin-inline: auto;
 }
 
-.modal-content {
-  border: 1px solid var(--plan-border);
-  border-radius: 12px;
+.hifz-plan-modal {
   overflow: hidden;
-  background: var(--plan-surface);
-  box-shadow: var(--shadow-lg);
   max-height: calc(100dvh - 1.5rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.hifz-plan-modal .modal-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.hifz-plan-modal-actions {
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .modal-header,
@@ -1251,7 +1280,7 @@ export default {
 }
 
 .hifz-plan-modal .btn,
-.hifz-plan-modal .btn-close,
+.hifz-plan-modal .modal-close-btn,
 .hifz-plan-choice,
 .hifz-plan-step-dot {
   min-width: 44px;

@@ -6,7 +6,8 @@ use App\Models\User;
 
 /**
  * Single post-auth destination for login / guest redirects.
- * Verified admins and learners both land on memorisation (not Progress).
+ * Verified teachers land on the teacher dashboard when that feature is enabled.
+ * Verified learners and admins land on memorisation (not Progress).
  * Unverified accounts go to the email verification notice when verification is enabled.
  * Get Pro from /pricing stores a plan and resumes Stripe checkout after auth.
  */
@@ -18,6 +19,10 @@ final class AuthRedirect
         // Google users with a trusted provider-verified email already have email_verified_at set.
         if ($user !== null && ! $user->hasVerifiedEmail()) {
             return 'verification.notice';
+        }
+
+        if ($user !== null && TeacherFeatures::enabled() && $user->isTeacher()) {
+            return 'teacher.dashboard';
         }
 
         return 'memorisation';

@@ -1008,7 +1008,7 @@ class TeacherDemoSeeder extends Seeder
             $count = $teacher ? $access->authorizedStudentIds($teacher)->count() : 0;
             $rows[] = ['Teacher', $definition['name'], $definition['email'], $groups.' ('.$count.' students)'];
         }
-        $rows[] = ['Students', 'Demo Student 01–30', 'teacher.demo.student.01@example.com … 30', 'Own group only'];
+        $rows[] = ['Students', '30 students', 'teacher.demo.student.01@example.com to 30', 'Own group only'];
 
         return $rows;
     }

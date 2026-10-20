@@ -81,7 +81,7 @@ class TeacherDemoSeederTest extends TestCase
         }
 
         $this->assertSame('Kept Account', $user->fresh()->name);
-        $this->assertSame(0, Organisation::query()->where('name', 'Mutqin Demo Halaqa')->count());
+        $this->assertSame(0, Organisation::query()->where('name', TeacherDemoCatalog::organisations()[0]['name'])->count());
     }
 
     public function test_teacher_demo_records_drive_the_dashboard(): void
@@ -105,7 +105,7 @@ class TeacherDemoSeederTest extends TestCase
 
         $this->artisan('mutqin:reset-teacher-demo')->assertSuccessful();
         $this->assertNull(User::query()->where('email', 'like', 'teacher.demo.%')->first());
-        $this->assertSame(0, Organisation::query()->where('name', 'Mutqin Demo Halaqa')->count());
+        $this->assertSame(0, Organisation::query()->where('name', TeacherDemoCatalog::organisations()[0]['name'])->count());
         $this->assertSame('Bystander', $bystander->fresh()->name);
     }
 

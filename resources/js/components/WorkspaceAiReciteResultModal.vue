@@ -20,6 +20,7 @@
             aria-modal="true"
             aria-labelledby="workspaceReciteResultTitle"
             tabindex="-1"
+            @keydown="onDialogKeydown"
           >
             <header class="post-session-simple__header post-session-simple__header--calm">
               <span class="post-session-simple__check" aria-hidden="true">
@@ -90,7 +91,7 @@
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--step">
                     <span class="post-session-simple__step-num" aria-hidden="true">1</span>
                     {{ yourResultLabel }}
-                    <span class="post-session-simple__beta-badge" role="note">{{ betaBadgeLabel }}</span>
+                    <span class="post-session-simple__beta-tag mutqin-label--uncertain" role="note">{{ betaBadgeLabel }}</span>
                   </p>
                   <h3 class="post-session-simple__outcome-title">
                     {{ view.outcomeHeadline }}
@@ -258,17 +259,29 @@
 
                 <div
                   v-if="view.showDetailsToggle || view.colourSegments?.length || view.detailsMetrics?.length || view.audioUrl"
-                  class="post-session-simple__ai-details post-session-simple__ai-details--open"
+                  class="post-session-simple__ai-details"
                 >
-                  <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                    {{ detailsSectionLabel }}
-                  </p>
+                  <button
+                    type="button"
+                    id="workspaceReciteAiDetailsToggle"
+                    class="post-session-simple__ai-details-toggle"
+                    :aria-expanded="aiDetailsExpanded ? 'true' : 'false'"
+                    aria-controls="workspaceReciteAiDetailsDisclosure"
+                    @click="aiDetailsExpanded = !aiDetailsExpanded"
+                  >
+                    {{ aiDetailsExpanded ? hideDetailsLabel : viewDetailsLabel }}
+                  </button>
                   <div
+                    v-if="aiDetailsExpanded"
                     id="workspaceReciteAiDetailsDisclosure"
                     class="post-session-simple__ai-details-body"
                     role="region"
+                    aria-labelledby="workspaceReciteAiDetailsToggle"
                     data-testid="workspace-recite-details"
                   >
+                    <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                      {{ detailsSectionLabel }}
+                    </p>
                     <div
                       v-if="view.colourSegments?.length"
                       class="post-session-simple__check-meter"
@@ -365,6 +378,12 @@
 <script>
 import AppStatus from './AppStatus.vue'
 import RecitationAudioPlayer from './RecitationAudioPlayer.vue'
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
 
 export default {
   name: 'WorkspaceAiReciteResultModal',
@@ -383,6 +402,8 @@ export default {
     yourResultLabel: { type: String, default: 'Your result' },
     betaBadgeLabel: { type: String, default: 'Audio recitation · Beta' },
     detailsSectionLabel: { type: String, default: 'Details' },
+    viewDetailsLabel: { type: String, default: 'View details' },
+    hideDetailsLabel: { type: String, default: 'Hide details' },
     resultStatsAriaLabel: { type: String, default: 'Check results' },
     aiResultsAriaLabel: { type: String, default: 'AI memorisation result' },
     colourMeterAriaLabel: { type: String, default: 'Word colour breakdown' },
@@ -404,16 +425,37 @@ export default {
     compareDifferencesLabel: { type: String, default: 'Compare differences' },
   },
   emits: ['close', 'try-again', 'mutashabihat-compare'],
+  data() {
+    return {
+      returnFocusEl: null,
+      aiDetailsExpanded: false,
+    }
+  },
   watch: {
     open(value) {
-      if (!value) return
-      this.$nextTick(() => {
-        const dialog = this.$refs.dialog
-        if (dialog && typeof dialog.focus === 'function') dialog.focus()
-      })
+      if (!value) {
+        restoreReturnFocus(this.returnFocusEl)
+        this.returnFocusEl = null
+        this.aiDetailsExpanded = false
+        return
+      }
+      this.aiDetailsExpanded = false
+      this.returnFocusEl = captureReturnFocus()
+      this.$nextTick(() => focusInitialElement(this.$refs.dialog, '#workspaceReciteResultTitle'))
     },
   },
+  beforeUnmount() {
+    restoreReturnFocus(this.returnFocusEl)
+    this.returnFocusEl = null
+  },
   methods: {
+    onDialogKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        open: this.open,
+        onEscape: () => this.requestClose(),
+      })
+    },
     requestClose() {
       if (this.actionsBusy) return
       this.$emit('close')

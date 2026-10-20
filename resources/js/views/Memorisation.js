@@ -1783,7 +1783,7 @@ export default {
         beginner_audio: true,
         beginner_saved: false,
         advanced_setup: true,
-        advanced_playback: true,
+        advanced_playback: false,
         advanced_practice: false,
         advanced_saved: false,
         session_tools: false,
@@ -2802,6 +2802,19 @@ export default {
         ? this.t('memorisation.common.chainingLabel', { method: this.chainingMethod })
         : this.t('memorisation.common.plainSequence')
       return this.t('memorisation.common.setupSummary', { count: repeatCount, mode: this.playModeSummaryLabel, chaining })
+    },
+    controlsSetupCollapsedSummary() {
+      if (!this.chapterId) {
+        return this.t('sessionSetup.chooseSurah')
+      }
+      const surah = this.getChapterDisplayName(this.currentChapter || this.chapterId) || this.t('sessionSetup.chooseSurah')
+      const range = typeof this.formatAyahRangeDisplay === 'function'
+        ? this.formatAyahRangeDisplay(this.rangeStart, this.rangeEnd)
+        : `${this.rangeStart}-${this.rangeEnd}`
+      return `${surah} · ${range} · ${this.repetitionDisplayValue}`
+    },
+    controlsPlaybackCollapsedSummary() {
+      return `${this.playbackSpeedDisplayValue} · ${this.playModeSummaryLabel}`
     },
     playModeSummaryLabel() {
       if (this.playMode === 'manual') return this.t('memorisation.common.manualAdvance')
@@ -8200,16 +8213,14 @@ export default {
     aiAudioConsentBody() {
       const meta = aiAudioConsentMeta()
       return this.t('memorisation.aiCheck.consentBody', { processor: meta.processorName })
-        || `When you use AI Recite, Mutqin uses your microphone to assess Qur’an recitation. Audio may be processed by ${meta.processorName}. Listening and other tools work without it.`
+        || `We use your microphone to check recitation (via ${meta.processorName}). Choose Allow when your browser asks. Other tools work without AI.`
     },
     aiAudioConsentBrowserPrompt() {
-      return this.t('memorisation.aiCheck.consentBrowserPrompt')
+      const prompt = this.t('memorisation.aiCheck.consentBrowserPrompt')
+      return prompt && !String(prompt).startsWith('memorisation.') ? prompt : ''
     },
     aiAudioConsentPrivacyItems() {
       const config = readAudioPrivacyConfig()
-      const processor = this.t('memorisation.aiCheck.consentProcessor', {
-        processor: config.processor_name,
-      })
       const retention = config.raw_recording_retention === 'never'
         ? this.t('memorisation.aiCheck.consentRetentionNever')
         : (config.raw_recording_retention === 'retain'
@@ -8217,11 +8228,8 @@ export default {
           : this.t('memorisation.aiCheck.consentRetentionTemporaryFor', {
             hours: config.temporary_ttl_hours,
           }))
-      return [
-        processor,
-        retention,
-        this.t('memorisation.aiCheck.consentNoSale'),
-      ].filter((item) => item && !String(item).startsWith('memorisation.'))
+      const summary = retention && !String(retention).startsWith('memorisation.') ? retention : ''
+      return summary ? [summary] : []
     },
     aiAudioConsentPrivacyLinkLabel() {
       return this.t('memorisation.aiCheck.consentPrivacyLink') || 'Privacy policy'
@@ -11798,6 +11806,10 @@ export default {
     },
     showPlannerCompletionModal(newVal) {
       this.syncBodyScrollLock(newVal)
+      if (newVal) {
+        this.modalReturnFocusEl = captureReturnFocus()
+        this.$nextTick(() => focusInitialElement(this.$refs.plannerCompletionModalDialog, '#plannerCompletionTitle'))
+      }
     },
     showPostSessionConfetti(next) {
       if (!next) this.clearPostSessionConfettiTimer()
@@ -23737,10 +23749,14 @@ export default {
         ? sectionKey
         : (this.helpLearningSections[0]?.key || 'tajweed')
       this.helpLearningActiveKey = key
+      this.modalReturnFocusEl = captureReturnFocus()
       this.showHelpLearningModal = true
+      this.$nextTick(() => focusInitialElement(this.$refs.helpLearningModalDialog, '#helpLearningTitle'))
     },
     closeHelpLearningModal() {
       this.showHelpLearningModal = false
+      restoreReturnFocus(this.modalReturnFocusEl)
+      this.modalReturnFocusEl = null
     },
     openTajweedColourGuide() {
       this.topCardMenuOpen = false
@@ -24788,13 +24804,24 @@ export default {
       this.renameRecordingId = recordingId
       this.renameRecordingName = String(target.title || this.getRecordingAttemptLabel(target) || '').trim()
       this.renameRecordingError = ''
+      this.modalReturnFocusEl = captureReturnFocus()
       this.showRenameRecordingModal = true
+      this.$nextTick(() => {
+        const input = document.getElementById('renameRecordingInput')
+        if (input instanceof HTMLElement && typeof input.focus === 'function') {
+          input.focus({ preventScroll: true })
+          return
+        }
+        focusInitialElement(this.$refs.renameRecordingModalDialog, '#renameRecordingTitle')
+      })
     },
     closeRenameRecordingModal() {
       this.showRenameRecordingModal = false
       this.renameRecordingId = ''
       this.renameRecordingName = ''
       this.renameRecordingError = ''
+      restoreReturnFocus(this.modalReturnFocusEl)
+      this.modalReturnFocusEl = null
     },
     confirmRenameRecording() {
       const trimmedName = String(this.renameRecordingName || '').trim()
@@ -36863,10 +36890,14 @@ export default {
         this.openSessionAnalyticsModal(this.selectedStatsSessionRecord)
         return
       }
+      this.modalReturnFocusEl = captureReturnFocus()
       this.showAdvancedMetricsModal = true
+      this.$nextTick(() => focusInitialElement(this.$refs.advancedMetricsModalDialog, '#advancedMetricsTitle'))
     },
     closeAdvancedMetricsModal() {
       this.showAdvancedMetricsModal = false
+      restoreReturnFocus(this.modalReturnFocusEl)
+      this.modalReturnFocusEl = null
     },
     saveSessionFromHomeCard() {
       if (this.hasVerses) {
@@ -37182,6 +37213,8 @@ export default {
     },
     closePlannerCompletionModal() {
       this.showPlannerCompletionModal = false
+      restoreReturnFocus(this.modalReturnFocusEl)
+      this.modalReturnFocusEl = null
     },
     openHifzPlanFromCompletionModal() {
       this.closePlannerCompletionModal()
@@ -39665,6 +39698,21 @@ export default {
         if (this.showHelpLearningModal) {
           event.preventDefault()
           this.closeHelpLearningModal()
+          return
+        }
+        if (this.showAdvancedMetricsModal) {
+          event.preventDefault()
+          this.closeAdvancedMetricsModal()
+          return
+        }
+        if (this.showPlannerCompletionModal) {
+          event.preventDefault()
+          this.closePlannerCompletionModal()
+          return
+        }
+        if (this.showRenameRecordingModal) {
+          event.preventDefault()
+          this.closeRenameRecordingModal()
           return
         }
         if (this.showKeyboardShortcuts) {

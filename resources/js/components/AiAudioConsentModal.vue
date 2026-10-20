@@ -3,12 +3,13 @@
     <div
       v-if="open"
       ref="overlay"
-      class="ai-audio-consent-overlay"
+      class="modal-overlay mutqin-modal-overlay ai-audio-consent-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="aiAudioConsentTitle"
       aria-describedby="aiAudioConsentBody"
       @keydown="onOverlayKeydown"
+      @click.self.prevent
     >
       <div ref="dialog" class="ai-audio-consent-card" @click.stop>
         <div class="ai-audio-consent-heading">
@@ -25,12 +26,7 @@
           <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
           <span>{{ browserPrompt }}</span>
         </p>
-        <ul v-if="privacyItems.length" class="ai-audio-consent-facts">
-          <li v-for="item in privacyItems" :key="item">
-            <i class="bi bi-check2" aria-hidden="true"></i>
-            <span>{{ item }}</span>
-          </li>
-        </ul>
+        <p v-if="privacyNote" class="ai-audio-consent-note">{{ privacyNote }}</p>
         <div class="ai-audio-consent-privacy">
           <i class="bi bi-shield-check" aria-hidden="true"></i>
           <a
@@ -43,14 +39,14 @@
         <div class="ai-audio-consent-actions">
           <button
             type="button"
-            class="ai-audio-consent-btn ai-audio-consent-btn--ghost"
+            class="mutqin-modal-btn mutqin-modal-btn--ghost ai-audio-consent-btn"
             @click.stop="onDecline"
           >
             {{ declineLabel }}
           </button>
           <button
             type="button"
-            class="ai-audio-consent-btn ai-audio-consent-btn--primary"
+            class="mutqin-modal-btn mutqin-modal-btn--primary ai-audio-consent-btn"
             @click.stop="onAccept"
           >
             {{ acceptLabel }}
@@ -83,6 +79,12 @@ export default {
     declineLabel: { type: String, default: '' },
   },
   emits: ['accept', 'decline'],
+  computed: {
+    privacyNote() {
+      const items = Array.isArray(this.privacyItems) ? this.privacyItems : []
+      return items.filter(Boolean).join(' ')
+    },
+  },
   data() {
     return {
       _returnFocusEl: null,
@@ -126,18 +128,18 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 34000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  align-content: center;
   box-sizing: border-box;
   padding:
     max(1rem, env(safe-area-inset-top, 0px))
     max(1rem, env(safe-area-inset-right, 0px))
     max(1rem, env(safe-area-inset-bottom, 0px))
     max(1rem, env(safe-area-inset-left, 0px));
-  background: color-mix(in srgb, #0a100d 64%, transparent);
-  backdrop-filter: blur(9px) saturate(0.82);
-  -webkit-backdrop-filter: blur(9px) saturate(0.82);
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #0a100d 64%, transparent));
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 9px)) saturate(0.82);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 9px)) saturate(0.82);
   pointer-events: auto;
 }
 
@@ -233,27 +235,11 @@ export default {
   color: #8b5e3c;
 }
 
-.ai-audio-consent-facts {
-  display: grid;
-  gap: 0.46rem;
-  margin: 0.9rem 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.87rem;
+.ai-audio-consent-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.86rem;
   line-height: 1.45;
-}
-
-.ai-audio-consent-facts li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-.ai-audio-consent-facts i {
-  flex: 0 0 auto;
-  margin-top: 0.15rem;
-  color: #2f6f58;
-  font-size: 1rem;
+  opacity: 0.82;
 }
 
 .ai-audio-consent-privacy {
@@ -284,40 +270,11 @@ export default {
 }
 
 .ai-audio-consent-btn {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3rem;
   width: 100%;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.85rem;
-  border: 1px solid transparent;
-  font: inherit;
+  min-height: 3rem;
   font-size: 0.98rem;
   font-weight: 650;
-  line-height: 1.2;
-  cursor: pointer;
-  pointer-events: auto;
   touch-action: manipulation;
-}
-
-.ai-audio-consent-btn:focus-visible {
-  outline: 3px solid var(--focus-ring-color, #8b5e3c);
-  outline-offset: 3px;
-}
-
-.ai-audio-consent-btn--ghost {
-  background: transparent;
-  border-color: color-mix(in srgb, currentColor 22%, transparent);
-  color: inherit;
-}
-
-.ai-audio-consent-btn--primary {
-  background: #5c4030;
-  border-color: #5c4030;
-  color: #fff;
 }
 
 [data-theme="dark"] .ai-audio-consent-card {
@@ -348,16 +305,6 @@ export default {
   color: #e3bd91;
 }
 
-[data-theme="dark"] .ai-audio-consent-facts i {
-  color: #8bd2ad;
-}
-
-[data-theme="dark"] .ai-audio-consent-btn--primary {
-  background: #c4a484;
-  border-color: #c4a484;
-  color: #1c1814;
-}
-
 [data-theme="sepia"] .ai-audio-consent-card {
   border-color: rgba(118, 88, 54, 0.22);
   background: linear-gradient(160deg, #fffaf1, #f2e6d2);
@@ -381,7 +328,7 @@ export default {
     grid-template-columns: 1fr;
   }
 
-  .ai-audio-consent-btn--primary {
+  .ai-audio-consent-actions .mutqin-modal-btn--primary {
     order: -1;
   }
 }

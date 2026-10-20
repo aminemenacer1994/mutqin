@@ -40,6 +40,11 @@ assert.equal(view.hasContent, true, 'mixed recitation produces content')
 assert.match(view.headerLead, /Al-Fatiha/, 'header includes surah name')
 assert.match(view.outcomeHeadline, /./, 'headline is populated')
 assert.ok(view.outcomeStatChips.length >= 1, 'stat chips are shown')
+assert.equal(
+  view.outcomeStatChips.filter((chip) => chip.key === 'match' || chip.key === 'match_percent').length,
+  1,
+  'match stats are not duplicated',
+)
 assert.ok(view.focusAyahRows.length >= 1, 'focus ayah rows are built')
 assert.ok(view.infoArchitecture.weakAreas.items.length >= 1, 'weak areas are listed')
 assert.equal(view.showDetailsToggle, true, 'details toggle is available')
@@ -122,9 +127,9 @@ assert.ok(view.detailsMetrics.some((m) => m.key === 'sequence'), 'sequence metri
 const sequenceMetric = view.detailsMetrics.find((m) => m.key === 'sequence')
 assert.doesNotMatch(String(sequenceMetric?.value || ''), /slip/i, 'sequence metric avoids slips wording')
 
-assert.match(modal, /post-session-simple__ai-details--open/, 'details section is always visible')
+assert.match(modal, /post-session-simple__ai-details-toggle/, 'technical metrics sit behind a disclosure toggle')
+assert.doesNotMatch(modal, /post-session-simple__ai-details--open/, 'details are collapsed by default')
 assert.doesNotMatch(modal, /bi-play-circle post-session-simple__focus-phrase-icon/, 'focus ayahs omit play icon')
-assert.doesNotMatch(modal, /post-session-simple__ai-details-toggle/, 'details are not behind a collapse toggle')
 assert.doesNotMatch(modal, /post-session-simple__panel--hero ps-rec-card/, 'modal excludes recommendation plan')
 assert.doesNotMatch(modal, /save.*plan/i, 'modal excludes save plan actions')
 assert.match(modal, /workspace-recite-try-again/, 'modal exposes try again action')

@@ -10,12 +10,34 @@ use Illuminate\Validation\Rule;
 
 final class RegistrationProfile
 {
+    public const CUSTOM_NAME_VALUE = '__custom__';
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function normalize(array $data): array
+    {
+        $picked = $data['organisation_name'] ?? null;
+        $custom = is_string($data['organisation_name_custom'] ?? null)
+            ? trim($data['organisation_name_custom'])
+            : '';
+
+        if (is_string($picked) && ($picked === self::CUSTOM_NAME_VALUE || trim($picked) === '')) {
+            $data['organisation_name'] = $custom;
+        }
+
+        return $data;
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     public static function rules(array $data): array
     {
+        $data = self::normalize($data);
+
         if (! TeacherFeatures::enabled()) {
             return [
                 'account_role' => ['nullable', 'string', Rule::in([AccountRole::Individual->value])],
@@ -84,6 +106,7 @@ final class RegistrationProfile
             $input['account_role'] = AccountRole::Individual->value;
         }
 
+        $input = self::normalize($input);
         $data = Validator::make($input, self::rules($input), self::messages())->validate();
         $role = AccountRole::from($data['account_role']);
 

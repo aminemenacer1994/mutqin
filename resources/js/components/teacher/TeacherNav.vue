@@ -1,7 +1,6 @@
 <template>
-  <component :is="wrapperTag" :class="shellClass" :aria-label="variant === 'mobile' ? navLabel : undefined">
-    <p v-if="variant === 'desktop'" class="teacher-nav-shell__label">{{ navLabel }}</p>
-    <nav class="teacher-nav" :aria-label="variant === 'desktop' ? navLabel : undefined">
+  <aside :class="shellClass">
+    <nav class="teacher-nav" :aria-label="navLabel">
       <button
         v-for="item in items"
         :key="`${variant}-${item.id}`"
@@ -15,7 +14,7 @@
         <span>{{ t(item.label) }}</span>
       </button>
     </nav>
-  </component>
+  </aside>
 </template>
 
 <script>
@@ -38,9 +37,6 @@ export default {
   computed: {
     navLabel() {
       return this.t(this.navLabelKey)
-    },
-    wrapperTag() {
-      return this.variant === 'desktop' ? 'aside' : 'aside'
     },
     shellClass() {
       return this.variant === 'desktop'

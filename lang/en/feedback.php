@@ -11,7 +11,7 @@ return [
     'typeRequired' => 'Please choose a feedback type.',
     'typeInvalid' => 'That feedback type is not supported.',
     'screenshotLabel' => 'Screenshot',
-    'screenshotOptional' => 'Optional — PNG, JPG, WebP, or GIF up to 5 MB',
+    'screenshotOptional' => 'Optional. PNG, JPG, WebP, or GIF up to 5 MB',
     'screenshotPreviewAlt' => 'Screenshot preview',
     'removeScreenshot' => 'Remove screenshot',
     'screenshotInvalid' => 'Please upload a PNG, JPG, WebP, or GIF image.',

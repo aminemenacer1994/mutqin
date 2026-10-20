@@ -35,11 +35,11 @@
 </template>
 
 <script>
-import { BarElement, CategoryScale, Chart as ChartJS, Tooltip } from 'chart.js'
+import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import { i18nMixin } from '../../mixins/i18nMixin'
 
-ChartJS.register(CategoryScale, BarElement, Tooltip)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
 
 export default {
   name: 'TeacherActivityChart',

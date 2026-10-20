@@ -7,6 +7,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const css = readFileSync(join(root, 'resources/js/views/Memorisation.css'), 'utf8')
 const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const hifz = readFileSync(join(root, 'resources/js/components/HifzPlanCreatorModal.vue'), 'utf8')
+const appScss = readFileSync(join(root, 'resources/sass/app.scss'), 'utf8')
+const consent = readFileSync(join(root, 'resources/js/components/AiAudioConsentModal.vue'), 'utf8')
+const mic = readFileSync(join(root, 'resources/js/components/MicrophonePermissionModal.vue'), 'utf8')
+const sharedButtons = readFileSync(join(root, 'resources/js/styles/mutqin-buttons.css'), 'utf8')
 
 function sliceVariant(name) {
   // Prefer the shared colour block (property includes color/background), not layout-only overrides.
@@ -29,7 +33,7 @@ function sliceVariant(name) {
 
 // Shared semantic tokens exist — Bootstrap custom danger (#b55041), not plain #dc3545/#c0392b
 {
-  assert.match(css, /--accent:\s*#9a6738/)
+  assert.match(css, /--accent:\s*#8b5e3c/)
   assert.match(css, /--success:\s*#2e7d64/)
   assert.match(css, /--bs-danger:\s*#b55041/)
   assert.match(css, /--danger:\s*#b55041/)
@@ -109,10 +113,21 @@ function sliceVariant(name) {
 
 // Plan wizard Continue / save use primary, not Bootstrap success green
 {
-  assert.match(hifz, /class="btn btn-primary"/)
-  assert.match(hifz, /class="btn btn-primary hifz-plan-save-btn"/)
+  assert.match(hifz, /mutqin-modal-btn--primary/)
+  assert.match(hifz, /mutqin-modal-btn--primary hifz-plan-save-btn/)
   assert.doesNotMatch(hifz, /btn-success/)
   assert.match(hifz, /--plan-accent:\s*var\(--accent,\s*#9a6738\)/)
+}
+
+// Shared button sheet is wired globally; consent / mic modals use modal variants
+{
+  assert.match(appScss, /mutqin-buttons\.css/)
+  assert.match(sharedButtons, /\.mutqin-btn--recording/)
+  assert.match(sharedButtons, /--recording:/)
+  assert.match(consent, /mutqin-modal-btn--primary/)
+  assert.match(consent, /mutqin-modal-btn--ghost/)
+  assert.match(mic, /mutqin-modal-btn--primary/)
+  assert.doesNotMatch(consent, /ai-audio-consent-btn--primary/)
 }
 
 // Tools offcanvas tabs (Setup / Practice / Saved) use brand accent, not mint green

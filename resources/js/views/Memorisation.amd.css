@@ -1670,19 +1670,17 @@
 }
 
 .amd-beta-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.45rem;
-  padding: 0.18rem 0.58rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent, #8b5e3c) 16%, #fff);
-  border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 34%, transparent);
-  color: var(--accent-strong, #a86a3f);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  box-shadow: 0 1px 0 color-mix(in srgb, #000 6%, transparent);
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--warning, #9a6207) 82%, var(--text-muted, #78716c));
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  box-shadow: none;
   flex: 0 0 auto;
 }
 
@@ -3706,9 +3704,9 @@
 
 .amd-overlay[data-theme="dark"] .amd-beta-badge,
 [data-theme="dark"] .amd-beta-badge {
-  background: color-mix(in srgb, #e4a76a 16%, #171412);
-  border-color: color-mix(in srgb, #e4a76a 32%, transparent);
-  color: #f0c4a0;
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, #e5a845 72%, #b8aea4);
 }
 
 .amd-overlay[data-theme="dark"] .amd-mushaf-shell--premium,
@@ -3975,6 +3973,10 @@
 }
 
 @media (max-width: 380px) {
+  .amd-tools-bar__hint {
+    display: none !important;
+  }
+
   .amd-header--compact .amd-title--premium {
     font-size: 0.92rem !important;
   }

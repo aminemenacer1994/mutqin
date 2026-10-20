@@ -196,19 +196,21 @@
     <Teleport to="body">
       <div
         v-if="detail"
-        class="afb-modal-overlay"
+        class="modal-overlay mutqin-modal-overlay afb-modal-overlay"
         @click.self.prevent
+        @keydown="onDetailOverlayKeydown"
       >
         <div
-          class="afb-modal"
+          ref="detailDialog"
+          class="afb-modal mutqin-modal-surface"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="'afb-detail-title'"
-          @keydown.esc.prevent="closeDetail"
+          tabindex="-1"
         >
           <header class="afb-modal__header">
             <div>
-              <h2 :id="'afb-detail-title'">{{ t('admin.feedback.detailTitle') }} #{{ detail.id }}</h2>
+              <h2 :id="'afb-detail-title'" tabindex="-1">{{ t('admin.feedback.detailTitle') }} #{{ detail.id }}</h2>
               <p class="afb-modal__sub">
                 <span class="afb-type" :data-type="detail.type">{{ typeLabel(detail.type) }}</span>
                 <span>{{ detail.user?.name || detail.user?.email }}</span>
@@ -217,7 +219,7 @@
             </div>
             <button
               type="button"
-              class="afb-modal__close"
+              class="modal-close-btn afb-modal__close"
               :aria-label="t('common.close')"
               @click="closeDetail"
             >
@@ -316,6 +318,12 @@
 
 <script>
 import { formatAppDateTime, unwrapLocale } from '../utils/i18nFormat';
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus';
 
 const TYPES = ['suggestion', 'bug', 'ai_recitation', 'design', 'other'];
 const STATUSES = ['new', 'reviewing', 'planned', 'resolved', 'closed'];
@@ -343,7 +351,27 @@ export default {
       detailSaving: false,
       detailError: '',
       deletingId: null,
+      detailReturnFocusEl: null,
     };
+  },
+  watch: {
+    detail(next) {
+      if (typeof document === 'undefined') return
+      const open = Boolean(next)
+      document.body.classList.toggle('afb-modal-open', open)
+      document.documentElement.classList.toggle('afb-modal-open', open)
+      if (open) {
+        document.body.style.overflow = 'hidden'
+        document.documentElement.style.overflow = 'hidden'
+        this.detailReturnFocusEl = captureReturnFocus()
+        this.$nextTick(() => focusInitialElement(this.$refs.detailDialog, '#afb-detail-title'))
+        return
+      }
+      restoreReturnFocus(this.detailReturnFocusEl)
+      this.detailReturnFocusEl = null
+      document.body.style.removeProperty('overflow')
+      document.documentElement.style.removeProperty('overflow')
+    },
   },
   computed: {
     resultsLabel() {
@@ -367,8 +395,17 @@ export default {
   },
   beforeUnmount() {
     if (this.flashTimer) window.clearTimeout(this.flashTimer);
+    restoreReturnFocus(this.detailReturnFocusEl);
+    this.detailReturnFocusEl = null;
   },
   methods: {
+    onDetailOverlayKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.detailDialog,
+        open: Boolean(this.detail),
+        onEscape: () => this.closeDetail(),
+      });
+    },
     apiBase() {
       return this.auth.feedback_api_url || '/api/admin/feedback';
     },
@@ -871,16 +908,17 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 250000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  align-content: center;
   padding:
     max(1rem, env(safe-area-inset-top))
     max(1rem, env(safe-area-inset-right))
     max(1rem, env(safe-area-inset-bottom))
     max(1rem, env(safe-area-inset-left));
-  background: rgba(12, 10, 8, 0.58);
-  backdrop-filter: blur(6px);
+  background: var(--mutqin-modal-backdrop, rgba(12, 10, 8, 0.58));
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 6px));
 }
 
 .afb-modal {
@@ -889,11 +927,11 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: var(--mutqin-modal-radius, 18px);
   background: var(--afb-panel);
   color: var(--afb-text);
-  border: 1px solid var(--afb-border);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.24);
+  border: 1px solid var(--afb-border, var(--mutqin-modal-surface-border, rgba(0, 0, 0, 0.08)));
+  box-shadow: var(--mutqin-modal-shadow, 0 24px 56px rgba(0, 0, 0, 0.24));
 }
 
 .afb-modal__header {

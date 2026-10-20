@@ -72,6 +72,8 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
+        $data = RegistrationProfile::normalize($data);
+
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -98,6 +100,8 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        $data = RegistrationProfile::normalize($data);
+
         return DB::transaction(function () use ($data) {
             $user = User::create([
                 'name' => $data['name'],

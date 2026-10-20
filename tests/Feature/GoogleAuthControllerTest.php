@@ -627,7 +627,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('teacher.dashboard'));
 
         $teacher = User::where('email', 'teacher-google@example.com')->firstOrFail();
         $this->assertSame(AccountRole::Teacher, $teacher->account_role);

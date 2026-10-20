@@ -1,0 +1,226 @@
+/*
+ * Mutqin button hierarchy (light / sepia / dark).
+ * primary = accent · secondary = neutral · ghost = tertiary · success / destructive = semantics · recording = live capture
+ */
+
+:root {
+  --mutqin-btn-radius: var(--primary-action-radius, 999px);
+  --mutqin-btn-min-height: var(--primary-action-min-height, 2.45rem);
+  --mutqin-btn-padding-y: var(--primary-action-padding-y, 0.45rem);
+  --mutqin-btn-padding-x: var(--primary-action-padding-x, 0.85rem);
+  --mutqin-btn-font-size: var(--primary-action-font-size, 0.8rem);
+  --mutqin-btn-font-weight: var(--primary-action-font-weight, 520);
+  --mutqin-btn-gap: var(--primary-action-gap, 0.4rem);
+  --mutqin-modal-btn-radius: 12px;
+  --mutqin-modal-btn-min-height: 2.55rem;
+  --recording: #b13f32;
+  --recording-strong: #9a362b;
+  --recording-soft: rgba(177, 63, 50, 0.08);
+  --recording-ring: rgba(177, 63, 50, 0.34);
+}
+
+.mutqin-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mutqin-btn-gap);
+  min-height: var(--mutqin-modal-btn-min-height, var(--mutqin-btn-min-height));
+  padding: var(--mutqin-btn-padding-y) var(--mutqin-btn-padding-x);
+  border-radius: var(--mutqin-modal-btn-radius, var(--mutqin-btn-radius));
+  border: 1px solid transparent;
+  font-size: var(--mutqin-btn-font-size);
+  font-weight: var(--mutqin-btn-font-weight);
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 120ms ease,
+    box-shadow 150ms ease;
+}
+
+.mutqin-modal-btn:disabled,
+.mutqin-modal-btn.is-loading,
+.mutqin-modal-btn[aria-busy="true"] {
+  opacity: var(--control-disabled-opacity, 0.48);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mutqin-modal-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.mutqin-modal-btn:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  transform: translateY(0.5px);
+}
+
+.mutqin-modal-btn--ghost {
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+}
+
+.mutqin-modal-btn--ghost:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: color-mix(in srgb, var(--surface) 82%, var(--accent-light, transparent) 18%);
+  color: var(--text);
+}
+
+.mutqin-modal-btn--ghost:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: color-mix(in srgb, var(--surface) 76%, var(--accent-light, transparent) 24%);
+}
+
+.mutqin-modal-btn--ghost:focus-visible {
+  outline-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Workspace tools — ghost/soft map to tertiary (Reset, Close quiz, …) */
+.tools-btn-ghost,
+.tools-btn-soft {
+  color: var(--text-muted);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: none;
+}
+
+.tools-btn-ghost:hover:not(:disabled),
+.tools-btn-soft:hover:not(:disabled) {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--border) 58%, var(--text-muted));
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 90%, var(--text-muted));
+}
+
+.tools-btn-ghost:focus-visible,
+.tools-btn-soft:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.tools-btn-ghost:disabled,
+.tools-btn-soft:disabled {
+  opacity: var(--control-disabled-opacity, 0.72);
+  cursor: not-allowed;
+}
+
+html[data-theme="dark"] .tools-btn-ghost,
+html[data-theme="dark"] .tools-btn-soft,
+html[data-theme="dark"] .tools-btn.tools-btn-ghost,
+html[data-theme="dark"] .tools-btn.tools-btn-soft {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  color: var(--text);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .tools-btn-ghost:hover:not(:disabled),
+html[data-theme="dark"] .tools-btn-soft:hover:not(:disabled),
+html[data-theme="dark"] .tools-btn.tools-btn-ghost:hover:not(:disabled),
+html[data-theme="dark"] .tools-btn.tools-btn-soft:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 88%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--text);
+}
+
+/* Generic btn-primary / btn-secondary (AMD modal, legacy footers) */
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mutqin-btn-gap);
+  min-height: var(--mutqin-btn-min-height);
+  padding: var(--mutqin-btn-padding-y) var(--mutqin-btn-padding-x);
+  border-radius: var(--mutqin-btn-radius);
+  font-size: var(--mutqin-btn-font-size);
+  font-weight: var(--mutqin-btn-font-weight);
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 120ms ease,
+    box-shadow 150ms ease;
+}
+
+.btn-secondary {
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 90%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--border) 58%, var(--text-muted));
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: var(--control-disabled-opacity, 0.72);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--mutqin-btn-min-height);
+  padding: var(--mutqin-btn-padding-y) var(--mutqin-btn-padding-x);
+  border-radius: var(--mutqin-btn-radius);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--mutqin-btn-font-size);
+  font-weight: var(--mutqin-btn-font-weight);
+  cursor: pointer;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface) 82%, var(--accent-light, transparent) 18%);
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+}
+
+/* Live recording — distinct from destructive confirm actions */
+.mutqin-btn--recording,
+.self-check-action-btn-ai.recording,
+.self-check-ayah-action-ai.recording,
+.self-check-ayah-action-manual.recording {
+  color: #fff !important;
+  background: var(--recording) !important;
+  border-color: var(--recording) !important;
+  animation: mutqinRecordingPulse 1s ease-in-out infinite;
+}
+
+.self-check-ayah-action-ai:not(.recording) {
+  color: #fff;
+  background: linear-gradient(135deg, var(--success), var(--success-strong));
+  border-color: color-mix(in srgb, var(--success) 52%, transparent);
+}
+
+html[data-theme="dark"] .self-check-ayah-action-ai:not(.recording) {
+  background: linear-gradient(135deg, var(--success), var(--success-strong));
+  border-color: color-mix(in srgb, var(--success) 46%, transparent);
+  color: #0d1a14;
+}
+
+@keyframes mutqinRecordingPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--recording-ring);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(177, 63, 50, 0);
+  }
+}

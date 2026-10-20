@@ -2,11 +2,11 @@
   <div>
     <ul v-if="profile.payload.items?.length" class="teacher-list teacher-list--bordered">
       <li v-for="item in profile.payload.items" :key="item.id">
-        <span>{{ item.surah_name }} {{ item.ayah_number }} · {{ item.spot_type }}</span>
-        <span>{{ t('teacher.times', { n: item.affected_attempt_count }) }} · {{ formatWhen(item.last_identified_at) }}</span>
+        <span>{{ item.surah_name }} {{ item.ayah_number }}</span>
+        <span class="teacher-chip teacher-chip--attention">{{ t('teacher.times', { n: item.affected_attempt_count }) }}</span>
       </li>
     </ul>
-    <TeacherEmpty v-else :message="t('teacher.weak_empty')" />
+    <TeacherEmpty v-else icon="bi bi-emoji-smile" :message="t('teacher.weak_empty')" />
   </div>
 </template>
 

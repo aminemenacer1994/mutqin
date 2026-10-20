@@ -1,0 +1,76 @@
+/*
+ * Restrained status hierarchy (light / sepia / dark):
+ * - mutqin-label--inline: informational copy (Beta, Ready, Completed, Strong when not urgent)
+ * - mutqin-label--badge: persistent pill only for actionable or warning/error states
+ * - mutqin-label--uncertain: AI / beta uncertainty (inline, not a loud promo badge)
+ */
+
+.mutqin-label--inline {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted, #4f4640);
+  white-space: normal;
+  vertical-align: baseline;
+}
+
+.mutqin-label--uncertain {
+  display: inline;
+  font-size: 0.92em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--warning, #9a6207) 82%, var(--text-muted, #4f4640));
+}
+
+.mutqin-label--badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.mutqin-label--badge.mutqin-label--danger {
+  color: var(--danger-strong, #9a4336);
+  background: var(--danger-soft, rgba(181, 80, 65, 0.14));
+  border-color: color-mix(in srgb, var(--danger, #b55041) 28%, transparent);
+}
+
+.mutqin-label--badge.mutqin-label--warn {
+  color: var(--warning-strong, #7a4d05);
+  background: var(--warning-soft, rgba(154, 98, 7, 0.14));
+  border-color: color-mix(in srgb, var(--warning, #9a6207) 30%, transparent);
+}
+
+.mutqin-label--badge.mutqin-label--success {
+  color: var(--success-strong, #245a42);
+  background: var(--success-soft, rgba(45, 106, 79, 0.14));
+  border-color: color-mix(in srgb, var(--success, #2d6a4f) 28%, transparent);
+}
+
+[data-theme="dark"] .mutqin-label--inline,
+html[data-theme="dark"] .mutqin-label--inline {
+  color: color-mix(in srgb, var(--text-muted, #b8aea4) 92%, #fff);
+}
+
+[data-theme="dark"] .mutqin-label--uncertain,
+html[data-theme="dark"] .mutqin-label--uncertain {
+  color: color-mix(in srgb, var(--warning, #e5a845) 70%, var(--text-muted, #b8aea4));
+}

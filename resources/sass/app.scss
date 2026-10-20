@@ -24,6 +24,9 @@
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
 
+@import '../js/styles/mutqin-labels.css';
+@import '../js/styles/mutqin-buttons.css';
+
 /* Global theme tokens (light/sepia/dark) — WCAG AA contrast targets */
 :root {
   color-scheme: light;
@@ -487,15 +490,15 @@ html[data-theme="dark"] .app-navbar-logo--dark {
 }
 
 .auth-panel {
-  width: min(26rem, 100%);
+  width: min(28rem, 100%);
   display: grid;
-  gap: 1rem;
+  gap: 1.15rem;
   justify-items: stretch;
   box-sizing: border-box;
-  padding: clamp(1.35rem, 3.8vw, 1.85rem) clamp(1.15rem, 3.6vw, 1.65rem);
-  border-radius: 18px;
+  padding: clamp(1.45rem, 4vw, 2rem) clamp(1.2rem, 3.8vw, 1.75rem);
+  border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
   box-shadow: var(--shadow-sm);
 }
 
@@ -813,7 +816,7 @@ button.auth-google {
 
 .auth-form {
   display: grid;
-  gap: 0.9rem;
+  gap: 1rem;
   margin-top: 0.1rem;
 }
 
@@ -822,43 +825,51 @@ button.auth-google {
   padding: 0;
   border: 0;
   min-width: 0;
+  overflow: visible;
 }
 
 .auth-role__legend {
   float: none;
   width: auto;
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.55rem;
   padding: 0;
-  font-weight: 500;
-  font-size: 0.86rem;
+  font-weight: 600;
+  font-size: 0.92rem;
   line-height: 1.35;
   color: var(--text);
 }
 
 .auth-role__options {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.55rem;
 }
 
 .auth-role__option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.75rem;
   margin: 0;
-  padding: 0.45rem 0.65rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
-  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 98%, transparent);
   color: var(--text);
-  font-size: 0.86rem;
-  line-height: 1.35;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-role__option:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 42%, var(--surface-strong));
 }
 
 .auth-role__option:has(input:checked) {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent-light) 70%, var(--surface-strong));
+  border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 78%, var(--surface-strong));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .auth-role__option:has(input:focus-visible) {
@@ -866,18 +877,42 @@ button.auth-google {
 }
 
 .auth-role__option input {
-  width: 1rem;
-  height: 1rem;
-  min-width: 1rem;
-  min-height: 1rem;
-  margin: 0.12rem 0 0;
-  flex-shrink: 0;
-  accent-color: var(--accent);
-  cursor: pointer;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.auth-role__option span {
+.auth-role__icon {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-light) 88%, var(--surface-strong));
+  color: var(--accent-strong);
+  font-size: 1.15rem;
+}
+
+.auth-role__option:has(input:checked) .auth-role__icon {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-strong));
+}
+
+.auth-role__copy {
+  display: grid;
+  gap: 0.12rem;
   min-width: 0;
+}
+
+.auth-role__title {
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.auth-role__lede {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .auth-org {
@@ -885,6 +920,7 @@ button.auth-google {
   grid-template-rows: 0fr;
   visibility: hidden;
   margin: 0;
+  overflow: visible;
   transition: grid-template-rows var(--dur) var(--ease-out), visibility 0s linear var(--dur);
 }
 
@@ -893,15 +929,196 @@ button.auth-google {
 .auth-org.is-open {
   grid-template-rows: 1fr;
   visibility: visible;
-  margin-top: 0.7rem;
+  margin-top: 0.85rem;
   transition: grid-template-rows var(--dur) var(--ease-out), visibility 0s linear 0s;
 }
 
 .auth-org__inner {
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   display: grid;
-  gap: 0.9rem;
+  gap: 1.05rem;
+  padding: 1rem 1rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-light) 55%, var(--surface-strong)), var(--surface-strong));
+}
+
+.auth-org__intro {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.auth-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.auth-chip {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  min-height: 4.6rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.auth-chip:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.auth-chip:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 64%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 80%, var(--surface-strong));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.auth-chip:has(input:focus-visible) {
+  box-shadow: var(--ring);
+}
+
+.auth-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.auth-chip__icon {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-light) 90%, var(--surface-strong));
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+}
+
+.auth-chip__label {
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.auth-org-names__prompt,
+.auth-org-names,
+.auth-org-custom,
+.auth-choice[data-org-type] {
+  display: none;
+}
+
+.auth-org-names__prompt {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.auth-org:not(:has(input[name="organisation_type"]:checked)) .auth-org-names__prompt {
+  display: block;
+}
+
+.auth-org:has(input[name="organisation_type"]:checked) .auth-org-names {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.auth-org:has(input[name="organisation_type"][value="halaqa"]:checked) .auth-choice[data-org-type="halaqa"],
+.auth-org:has(input[name="organisation_type"][value="madrassa"]:checked) .auth-choice[data-org-type="madrassa"],
+.auth-org:has(input[name="organisation_type"][value="school"]:checked) .auth-choice[data-org-type="school"],
+.auth-org:has(input[name="organisation_type"][value="other"]:checked) .auth-choice[data-org-type="other"],
+.auth-org:has(input[name="organisation_type"]:checked) .auth-choice--custom {
+  display: flex;
+}
+
+.auth-choice {
+  position: relative;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  min-height: 3.05rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.auth-choice:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.auth-choice:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 64%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 72%, var(--surface-strong));
+}
+
+.auth-choice:has(input:focus-visible) {
+  box-shadow: var(--ring);
+}
+
+.auth-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.auth-choice__mark {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--surface-strong);
+  box-shadow: inset 0 0 0 3px transparent;
+}
+
+.auth-choice:has(input:checked) .auth-choice__mark {
+  border-color: var(--accent-strong);
+  box-shadow: inset 0 0 0 3px var(--accent-strong);
+}
+
+.auth-choice__label {
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.auth-org:has(input[name="organisation_name"][value="__custom__"]:checked) .auth-org-custom {
+  display: grid;
+  gap: 0.38rem;
+  margin-top: 0.15rem;
+}
+
+.auth-select {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.auth-select select.form-control {
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 2.35rem;
+  background-image: none;
 }
 
 .auth-field select.form-control {
@@ -910,7 +1127,9 @@ button.auth-google {
 
 @media (prefers-reduced-motion: reduce) {
   .auth-org,
-  .auth-role__option {
+  .auth-role__option,
+  .auth-chip,
+  .auth-choice {
     transition: none;
   }
 }
@@ -1480,6 +1699,23 @@ html[data-theme="dark"] .memorisation-boot-btn--primary {
   --bp-xl: 1280px;
   --page-gutter: clamp(0.75rem, 2.5vw, 1.25rem);
   --page-gutter-tight: clamp(0.625rem, 2vw, 1rem);
+  /* Shared modal tokens (Memorisation.css extends these on the workspace) */
+  --mutqin-modal-radius: 26px;
+  --mutqin-modal-backdrop: color-mix(in srgb, #0a100d 58%, transparent);
+  --mutqin-modal-backdrop-blur: 10px;
+  --mutqin-modal-surface-border: color-mix(in srgb, var(--border, #d8cfc4) 62%, var(--accent, #8b5e3c) 38%);
+  --mutqin-modal-shadow:
+    0 1px 0 color-mix(in srgb, #fff 62%, transparent) inset,
+    0 22px 48px color-mix(in srgb, #0f1110 14%, transparent),
+    0 48px 100px color-mix(in srgb, #0f1110 18%, transparent);
+}
+
+html[data-theme="dark"] {
+  --mutqin-modal-backdrop: color-mix(in srgb, #070a09 72%, transparent);
+}
+
+html[data-theme="light"] {
+  --mutqin-modal-backdrop: color-mix(in srgb, #1a1410 36%, transparent);
 }
 
 @media (max-width: 1024px) {
@@ -1571,9 +1807,16 @@ html[data-theme="dark"] .onboarding-btn--primary {
 }
 
 .mutqin-modal-btn--secondary,
-.post-session-simple__btn--secondary {
+.post-session-simple__btn--secondary,
+.btn-secondary {
   color: var(--text) !important;
   background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+  border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
+}
+
+.mutqin-modal-btn--ghost,
+.btn-outline {
+  color: var(--text) !important;
   border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
 }
 

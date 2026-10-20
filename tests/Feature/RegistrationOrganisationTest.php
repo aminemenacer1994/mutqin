@@ -12,6 +12,8 @@ use App\Models\LearningGroup;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Organisations\GroupMembershipService;
+use App\Support\Registration\RegistrationOrganisationDirectory;
+use Database\Seeders\RegistrationOrganisationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
@@ -224,6 +226,22 @@ class RegistrationOrganisationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_seeded_registration_organisations_link_teacher_and_student_rosters(): void
+    {
+        $this->seed(RegistrationOrganisationSeeder::class);
+
+        $halaqaName = RegistrationOrganisationDirectory::entries()[0]['name'];
+        $this->register('Registered Student', 'registered-student@example.com', 'student', 'halaqa', $halaqaName);
+        $this->register('Registered Teacher', 'registered-teacher@example.com', 'teacher', 'halaqa', $halaqaName);
+
+        $student = User::where('email', 'registered-student@example.com')->firstOrFail();
+        $teacher = User::where('email', 'registered-teacher@example.com')->firstOrFail();
+
+        $this->assertSame($student->organisation_id, $teacher->organisation_id);
+        $this->assertSame(2, GroupMembership::count());
+        $this->assertTrue(Gate::forUser($teacher)->allows('view-student-analytics', $student));
+    }
+
     public function test_registration_organisation_catalogue_lists_database_names_by_type(): void
     {
         Organisation::factory()->create([
@@ -243,7 +261,10 @@ class RegistrationOrganisationTest extends TestCase
         $this->get(route('register'))
             ->assertOk()
             ->assertSee('data-organisation-catalog', false)
-            ->assertSee('Sunrise Madrassa', false);
+            ->assertSee('Sunrise Madrassa', false)
+            ->assertSee('name="organisation_type"', false)
+            ->assertSee('organisation-type-madrassa', false)
+            ->assertSee('value="Sunrise Madrassa"', false);
     }
 
     private function register(string $name, string $email, string $role, string $type, string $organisation): void
@@ -258,6 +279,6 @@ class RegistrationOrganisationTest extends TestCase
             'account_role' => $role,
             'organisation_type' => $type,
             'organisation_name' => $organisation,
-        ])->assertRedirect(route('memorisation'));
+        ])->assertRedirect($role === 'teacher' ? route('teacher.dashboard') : route('memorisation'));
     }
 }

@@ -1,16 +1,20 @@
 <template>
   <div>
-    <p v-if="profile.payload.latest_saved">
-      <strong>{{ t('teacher.saved_session') }}</strong> {{ sessionLabel(profile.payload.latest_saved) }}
+    <p v-if="profile.payload.latest_saved" class="teacher-saved">
+      <span class="teacher-pill teacher-pill--practice">
+        <i class="bi bi-bookmark-fill" aria-hidden="true"></i>
+        {{ t('teacher.saved_session') }}
+      </span>
+      {{ sessionLabel(profile.payload.latest_saved) }}
     </p>
-    <TeacherEmpty v-else :message="t('teacher.saved_empty')" />
+    <TeacherEmpty v-else icon="bi bi-bookmark" :message="t('teacher.saved_empty')" />
     <ul v-if="profile.payload.sessions?.length" class="teacher-list teacher-list--bordered">
       <li v-for="session in profile.payload.sessions" :key="session.id">
         <span>{{ sessionLabel(session) }}</span>
-        <span>{{ session.status }} · {{ formatWhen(session.last_activity_at) }}</span>
+        <span class="teacher-chip teacher-chip--practising">{{ formatWhen(session.last_activity_at) }}</span>
       </li>
     </ul>
-    <TeacherEmpty v-else :message="t('teacher.practice_empty')" />
+    <TeacherEmpty v-else icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
   </div>
 </template>
 

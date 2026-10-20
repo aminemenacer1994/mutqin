@@ -238,20 +238,20 @@
               </section>
             </div>
 
-            <section
+            <details
               v-if="workspaceTourDashboardWeakItems.length || workspaceTourDashboardShowWeakEmpty"
-              class="workspace-tour__dash-panel workspace-tour__dash-panel--murajaah"
+              class="workspace-tour__dash-panel workspace-tour__dash-panel--murajaah workspace-tour__dash-fold"
               data-tour="tour-dashboard-murajaah"
             >
-              <div class="workspace-tour__dash-panel-head">
+              <summary class="workspace-tour__dash-fold-summary">
                 <span class="workspace-tour__dash-panel-icon" aria-hidden="true">
                   <i class="bi bi-arrow-repeat"></i>
                 </span>
-                <div>
-                  <h4>{{ t('dashboard.strengthen_title') }}</h4>
-                  <p>{{ workspaceTourDashboardMurajaahSubtitle }}</p>
-                </div>
-              </div>
+                <span class="workspace-tour__dash-fold-copy">
+                  <strong>{{ t('dashboard.strengthen_title') }}</strong>
+                  <span>{{ workspaceTourDashboardMurajaahSubtitle }}</span>
+                </span>
+              </summary>
 
               <div
                 v-if="workspaceTourDashboardShowWeakEmpty"
@@ -285,7 +285,7 @@
                   </div>
                 </li>
               </ul>
-            </section>
+            </details>
           </template>
           </div>
         </div>
@@ -1617,9 +1617,9 @@
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(verse) || verse.number }) }}</span>
-                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
-                    <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
-                    <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">{{ t('memorisation.badges.steady') }}</span>
+                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-subtle verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
+                    <span v-if="isNewHifzAyah(verse.key)" class="verse-status-subtle verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
+                    <span v-if="isMasteredAyah(verse.key)" class="verse-status-subtle verse-status-badge-mastered">{{ t('memorisation.badges.steady') }}</span>
                     <span
                       v-if="getPracticeFocusWordsForVerse(verse.key).length"
                       class="verse-status-badge verse-status-badge-focus"
@@ -1867,6 +1867,7 @@
                   <span class="st-ico"><i class="bi bi-journal-text"></i></span>
                   <span class="st-txt">
                     <span class="st-title">{{ t('sessionSetup.title') }}</span>
+                    <span v-if="!sectionOpen.advanced_setup" class="st-sub">{{ controlsSetupCollapsedSummary }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
@@ -2045,6 +2046,7 @@
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
                   <span class="st-txt">
                     <span class="st-title">{{ t('memorisation.audio.title') }}</span>
+                    <span v-if="!sectionOpen.advanced_playback" class="st-sub">{{ controlsPlaybackCollapsedSummary }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
@@ -2771,7 +2773,7 @@
                             <span class="saved-sheet__row-meta-line saved-sheet__row-meta-line--secondary">
                               <span
                                 v-if="group.complete"
-                                class="saved-sheet__status-badge"
+                                class="saved-sheet__status-label mutqin-label--inline"
                               >{{ t('memorisation.saved_session_meta_completed') }}</span>
                               <span v-if="getSavedSessionOpenedLine(session)">{{ getSavedSessionOpenedLine(session) }}</span>
                               <template v-if="getSavedSessionMetaLine(session)">
@@ -3174,13 +3176,13 @@
     </div>
     </transition>
 
-    <div v-if="showHelpLearningModal" class="modal-overlay mutqin-modal-overlay help-learning-overlay" @click.self.prevent>
+    <div v-if="showHelpLearningModal" class="modal-overlay mutqin-modal-overlay help-learning-overlay" @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'helpLearningModalDialog', onClose: closeHelpLearningModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide help-learning-dialog">
-        <div class="modal-content mutqin-modal-surface help-learning-modal" role="dialog" aria-modal="true"
+        <div ref="helpLearningModalDialog" class="modal-content mutqin-modal-surface help-learning-modal" role="dialog" aria-modal="true"
           aria-labelledby="helpLearningTitle" aria-describedby="helpLearningSubtitle">
           <div class="modal-header help-learning-header">
             <div class="modal-header-text">
-              <h2 id="helpLearningTitle">{{ helpLearningUi.title }}</h2>
+              <h2 id="helpLearningTitle" tabindex="-1">{{ helpLearningUi.title }}</h2>
               <p id="helpLearningSubtitle">{{ helpLearningUi.subtitle }}</p>
             </div>
             <button class="modal-close-btn" @click="closeHelpLearningModal" :aria-label="t('memorisation.a11y.closeHelpLearning')">
@@ -3311,14 +3313,14 @@
     </transition>
 
     <div v-if="showHifzPlannerUi && showPlannerCompletionModal" class="modal-overlay mutqin-modal-overlay planner-completion-overlay"
-      @click.self.prevent>
+      @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'plannerCompletionModalDialog', onClose: closePlannerCompletionModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
-      <div class="modal-content mutqin-modal-surface planner-completion-modal" role="dialog" aria-modal="true"
+      <div ref="plannerCompletionModalDialog" class="modal-content mutqin-modal-surface planner-completion-modal" role="dialog" aria-modal="true"
         aria-labelledby="plannerCompletionTitle">
         <div class="modal-header planner-completion-header">
           <div class="planner-completion-head-copy">
             <span class="planner-completion-kicker">{{ t('memorisation.session_finished') }}</span>
-            <h2 id="plannerCompletionTitle">{{ t('memorisation.congratulations_todays_hifz_session_is_complete') }}</h2>
+            <h2 id="plannerCompletionTitle" tabindex="-1">{{ t('memorisation.congratulations_todays_hifz_session_is_complete') }}</h2>
             <p>{{ t('memorisation.postSession.recommendation.completedWithCare') }}</p>
           </div>
           <button class="modal-close-btn" @click="closePlannerCompletionModal" :aria-label="t('common.close')">
@@ -3596,6 +3598,8 @@
       :your-result-label="translateOrFallback('memorisation.postSession.recommendation.yourResult', 'Your result')"
       :beta-badge-label="translateOrFallback('memorisation.postSession.recommendation.aiRecitationBeta', 'Audio recitation · Beta')"
       :details-section-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'Details')"
+      :view-details-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'View details')"
+      :hide-details-label="translateOrFallback('memorisation.postSession.recommendation.hideDetails', 'Hide details')"
       :result-stats-aria-label="translateOrFallback('memorisation.postSession.recommendation.resultStats', 'Check results')"
       :ai-results-aria-label="translateOrFallback('memorisation.a11y.aiMemorisationResult', 'AI memorisation result')"
       :colour-meter-aria-label="translateOrFallback('memorisation.aiCheck.colourMeterAria', 'Word colour breakdown')"
@@ -3617,13 +3621,13 @@
     />
 
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
-      @click.self.prevent>
+      @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'advancedMetricsModalDialog', onClose: closeAdvancedMetricsModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
-      <div class="modal-content mutqin-modal-surface session-analytics-modal advanced-metrics-modal" role="dialog" aria-modal="true"
+      <div ref="advancedMetricsModalDialog" class="modal-content mutqin-modal-surface session-analytics-modal advanced-metrics-modal" role="dialog" aria-modal="true"
         aria-labelledby="advancedMetricsTitle">
         <div class="modal-header session-analytics-header">
           <div class="session-analytics-head-copy">
-            <h2 id="advancedMetricsTitle">{{ t('memorisation.advanced_metrics') }}</h2>
+            <h2 id="advancedMetricsTitle" tabindex="-1">{{ t('memorisation.advanced_metrics') }}</h2>
             <p>{{ t('memorisation.session_signals_review_health_cards_graphs_and_cha') }}</p>
             <small>{{ t('memorisation.save_a_session_to_unlock_full_per_session_analytic') }}</small>
           </div>
@@ -3686,13 +3690,13 @@
 
 
     <div v-if="showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
-      @click.self.prevent>
+      @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'recordingsLibraryModalDialog', onClose: closeRecordingsLibrary })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
-      <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"
+      <div ref="recordingsLibraryModalDialog" class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"
         aria-labelledby="recordingsLibraryTitle">
         <div class="modal-header recordings-library-header" :class="{ 'has-back-action': recordingsLibraryReturnToSelfCheckKey }">
           <div class="recordings-library-head-copy">
-            <h2 id="recordingsLibraryTitle">{{ t('memorisation.recordings_library') }}</h2>
+            <h2 id="recordingsLibraryTitle" tabindex="-1">{{ t('memorisation.recordings_library') }}</h2>
             <div class="recordings-library-hierarchy">
               <span>{{ getChapterDisplayName(currentChapter) || t('memorisation.saved_session') }}</span>
               <span>{{ rangeStart }}-{{ rangeEnd }}</span>
@@ -3848,15 +3852,6 @@
                     </div>
                   </div>
 
-                  <div v-else class="recording-history-meta">
-                    <span><i class="bi bi-stars"></i> {{
-                      getRecitationMistakeSummary(selectedRecordingsEntry.mistakeBreakdown
-                        ||
-                        selectedRecordingsEntry.mistakes) }}</span>
-                    <span><i class="bi bi-calendar3"></i> {{ formatRecordingDate(selectedRecordingsEntry.recordedAt)
-                      }}</span>
-                  </div>
-
                   <div v-if="isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-ai-detail shared-result-flow">
                     <section class="shared-result-section shared-result-section--summary transition-all duration-300">
                       <div class="shared-result-section-head">
@@ -3876,71 +3871,74 @@
                         </article>
                       </div>
                     </section>
-                    <section class="shared-result-section shared-result-section--words transition-all duration-300">
-                      <div class="shared-result-section-head">
-                        <span class="recitation-check-section-label">
-                          <span class="shared-result-step-badge">2</span>
-                          <i class="bi bi-chat-square-text" aria-hidden="true"></i>
-                          {{ getUnifiedResultSectionLabel('words') }}
-                        </span>
-                        <p>{{ getRecitationWordsReviewSummary(selectedRecordingsEntry) }}</p>
-                      </div>
-                      <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah shared-result-ayah"
-                        dir="rtl"
-                        v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
-                      <div class="shared-result-word-review transition-all duration-300">
-                        <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
-                          <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
-                            class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
-                            {{ resolveRecitationWordDisplay(word) }}
-                          </span>
-                        </div>
-                        <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
-                      </div>
-                    </section>
-                    <div class="shared-result-support-grid transition-all duration-300">
-                      <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
+                    <details class="recording-history-ai-fold">
+                      <summary>{{ t('memorisation.postSession.recommendation.viewDetails') }}</summary>
+                      <section class="shared-result-section shared-result-section--words transition-all duration-300">
                         <div class="shared-result-section-head">
                           <span class="recitation-check-section-label">
-                            <span class="shared-result-step-badge">3</span>
-                            <i class="bi bi-compass" aria-hidden="true"></i>
-                            {{ getUnifiedResultSectionLabel('next') }}
+                            <span class="shared-result-step-badge">2</span>
+                            <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                            {{ getUnifiedResultSectionLabel('words') }}
                           </span>
+                          <p>{{ getRecitationWordsReviewSummary(selectedRecordingsEntry) }}</p>
                         </div>
-                        <div class="shared-result-support-body">
-                          <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
-                          <p class="shared-result-support-copy">{{ getRecitationNextStep(selectedRecordingsEntry, { saved: true }) }}</p>
-                        </div>
-                      </section>
-                      <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
-                        <div class="shared-result-section-head">
-                          <span class="recitation-check-section-label">
-                            <span class="shared-result-step-badge">4</span>
-                            <i class="bi bi-play-circle" aria-hidden="true"></i>
-                            {{ getUnifiedResultSectionLabel('recording') }}
-                          </span>
-                        </div>
-                        <div class="shared-result-support-body">
-                          <strong class="shared-result-support-title" :class="getRecitationValidationTone(selectedRecordingsEntry)">{{ getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
-                          <p class="shared-result-support-copy">{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
-                        </div>
-                        <div class="shared-result-support-media">
-                          <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
-                            <button class="recording-history-player-btn"
-                              type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
-                              :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.a11y.pauseReplay') : t('memorisation.a11y.replayRecitation')">
-                              <i class="bi"
-                                :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                            </button>
-                            <div class="recording-history-player-copy">
-                              <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.recordings.playing') : t('memorisation.a11y.replayRecitation') }}</strong>
-                              <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
-                            </div>
+                        <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah shared-result-ayah"
+                          dir="rtl"
+                          v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
+                        <div class="shared-result-word-review transition-all duration-300">
+                          <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
+                            <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
+                              class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
+                              {{ resolveRecitationWordDisplay(word) }}
+                            </span>
                           </div>
-                          <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</span></p>
+                          <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
                         </div>
                       </section>
-                    </div>
+                      <div class="shared-result-support-grid transition-all duration-300">
+                        <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
+                          <div class="shared-result-section-head">
+                            <span class="recitation-check-section-label">
+                              <span class="shared-result-step-badge">3</span>
+                              <i class="bi bi-compass" aria-hidden="true"></i>
+                              {{ getUnifiedResultSectionLabel('next') }}
+                            </span>
+                          </div>
+                          <div class="shared-result-support-body">
+                            <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
+                            <p class="shared-result-support-copy">{{ getRecitationNextStep(selectedRecordingsEntry, { saved: true }) }}</p>
+                          </div>
+                        </section>
+                        <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
+                          <div class="shared-result-section-head">
+                            <span class="recitation-check-section-label">
+                              <span class="shared-result-step-badge">4</span>
+                              <i class="bi bi-play-circle" aria-hidden="true"></i>
+                              {{ getUnifiedResultSectionLabel('recording') }}
+                            </span>
+                          </div>
+                          <div class="shared-result-support-body">
+                            <strong class="shared-result-support-title" :class="getRecitationValidationTone(selectedRecordingsEntry)">{{ getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
+                            <p class="shared-result-support-copy">{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
+                          </div>
+                          <div class="shared-result-support-media">
+                            <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
+                              <button class="recording-history-player-btn"
+                                type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
+                                :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.a11y.pauseReplay') : t('memorisation.a11y.replayRecitation')">
+                                <i class="bi"
+                                  :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                              </button>
+                              <div class="recording-history-player-copy">
+                                <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.recordings.playing') : t('memorisation.a11y.replayRecitation') }}</strong>
+                                <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                              </div>
+                            </div>
+                            <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</span></p>
+                          </div>
+                        </section>
+                      </div>
+                    </details>
                   </div>
 
                   <div class="recording-history-footer"
@@ -4097,7 +4095,7 @@
                     <span class="post-session-simple__step-num" aria-hidden="true">1</span>
                     {{ t('memorisation.postSession.recommendation.yourResult') || 'Your result' }}
                     <span
-                      class="post-session-simple__beta-badge"
+                      class="post-session-simple__beta-tag mutqin-label--uncertain"
                       role="note"
                     >{{ t('memorisation.postSession.recommendation.aiRecitationBeta') || 'Audio recitation · Beta' }}</span>
                   </p>
@@ -4845,14 +4843,14 @@
     </transition>
     </Teleport>
 
-    <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self.prevent>
+    <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'renameRecordingModalDialog', onClose: closeRenameRecordingModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
-      <div class="modal-content mutqin-modal-surface confirm-modal rename-recording-modal" role="dialog" aria-modal="true"
+      <div ref="renameRecordingModalDialog" class="modal-content mutqin-modal-surface confirm-modal rename-recording-modal" role="dialog" aria-modal="true"
         aria-labelledby="renameRecordingTitle">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ t('memorisation.renameRecording.badge') }}</div>
-            <h2 id="renameRecordingTitle">{{ t('memorisation.renameRecording.title') }}</h2>
+            <h2 id="renameRecordingTitle" tabindex="-1">{{ t('memorisation.renameRecording.title') }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeRenameRecordingModal" type="button" :aria-label="t('memorisation.renameRecording.closeDialog')">
             <i class="bi bi-x-lg" aria-hidden="true"></i>

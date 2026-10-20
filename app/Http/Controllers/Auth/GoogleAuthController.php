@@ -36,6 +36,8 @@ class GoogleAuthController extends Controller
 
         RegistrationIntent::forget();
 
+        $request->merge(RegistrationProfile::normalize($request->all()));
+
         $data = $request->validate(
             RegistrationProfile::rules($request->all()),
             RegistrationProfile::messages(),

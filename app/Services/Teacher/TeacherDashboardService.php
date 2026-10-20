@@ -124,6 +124,7 @@ class TeacherDashboardService
                 'revision_upcoming' => $metric['revision_upcoming'],
                 'assignments' => $metric['assignments'],
                 'needs_attention' => $metric['needs_attention'],
+                'active_7' => (bool) ($metric['active_7'] ?? false),
             ];
         })->filter()->values();
 
@@ -186,7 +187,7 @@ class TeacherDashboardService
 
         $this->assertAuthorised($teacher, $student);
         $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
-        $section = in_array($section, ['overview', 'practice', 'weak', 'ai', 'revision'], true) ? $section : 'overview';
+        $section = in_array($section, ['overview', 'analytics', 'practice', 'weak', 'ai', 'revision'], true) ? $section : 'overview';
         $metrics = $this->metricsFor($teacher, [(int) $student->id])[(int) $student->id];
         $groups = $this->sharedGroups($teacher, [(int) $student->id])->get($student->id, collect());
 
@@ -209,6 +210,7 @@ class TeacherDashboardService
             'weak' => $this->weakSection($student),
             'ai' => $this->aiSection($student),
             'revision' => $this->revisionSection($teacher, $student),
+            'analytics' => $this->analyticsSection($teacher, $student, $metrics),
             default => $this->overviewSection($teacher, $student, $metrics),
         };
 
@@ -622,6 +624,8 @@ class TeacherDashboardService
                 'name' => $users->get($id)?->name,
                 'last_activity_at' => $metric['last_activity_at'],
                 'active_7' => $metric['active_7'],
+                'needs_attention' => $metric['needs_attention'],
+                'ai_success_rate' => $metric['ai_success_rate'],
             ];
         })->filter(fn (array $row) => $row['name']);
 
@@ -735,18 +739,12 @@ class TeacherDashboardService
      */
     private function overviewSection(User $teacher, User $student, array $metrics): array
     {
-        $notes = TeacherNote::query()
-            ->where('teacher_id', $teacher->id)
-            ->where('student_id', $student->id)
-            ->latest('id')
-            ->limit(20)
-            ->get()
-            ->map(fn (TeacherNote $note) => [
-                'id' => (int) $note->id,
-                'kind' => $note->kind instanceof TeacherNoteKind ? $note->kind->value : (string) $note->kind,
-                'body' => $note->body,
-                'created_at' => $note->created_at?->toIso8601String(),
-            ])->all();
+        $saved = UserSession::query()
+            ->where('user_id', $student->id)
+            ->where('is_onboarding_example', false)
+            ->whereIn('status', UserSessionStatus::unfinishedDatabaseValues())
+            ->latest('last_activity_at')
+            ->first();
 
         return [
             'metrics' => [
@@ -757,9 +755,38 @@ class TeacherDashboardService
                 'learning_ayahs' => $metrics['learning_ayahs'],
                 'ayahs_practised' => $metrics['ayahs_practised'],
                 'last_activity_at' => $metrics['last_activity_at'],
+                'needs_attention' => (bool) ($metrics['needs_attention'] ?? false),
+                'ai_success_rate' => $metrics['ai_success_rate'] ?? null,
+                'active_7' => (bool) ($metrics['active_7'] ?? false),
+                'weak_count' => (int) ($metrics['weak_count'] ?? 0),
+                'revision_overdue' => (int) ($metrics['revision_overdue'] ?? 0),
             ],
             'calendar' => $this->calendar((int) $student->id),
-            'notes' => $notes,
+            'latest_saved' => $saved ? $this->presentSession($saved) : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function analyticsSection(User $teacher, User $student, array $metrics): array
+    {
+        $overview = $this->overviewSection($teacher, $student, $metrics);
+        $practice = $this->practiceSection($student);
+        $weak = $this->weakSection($student);
+        $ai = $this->aiSection($student);
+        $revision = $this->revisionSection($teacher, $student);
+
+        return [
+            'metrics' => $overview['metrics'],
+            'calendar' => $overview['calendar'],
+            'latest_saved' => $practice['latest_saved'] ?? $overview['latest_saved'],
+            'sessions' => array_slice($practice['sessions'] ?? [], 0, 6),
+            'weak' => array_slice($weak['items'] ?? [], 0, 6),
+            'success_rate' => $ai['success_rate'] ?? null,
+            'attempts' => array_slice($ai['attempts'] ?? [], 0, 6),
+            'revisit' => array_slice($revision['revisit'] ?? [], 0, 6),
+            'plans' => array_slice($revision['plans'] ?? [], 0, 6),
         ];
     }
 

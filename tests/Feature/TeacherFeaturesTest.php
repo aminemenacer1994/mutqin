@@ -230,7 +230,7 @@ class TeacherFeaturesTest extends TestCase
             'account_role' => 'teacher',
             'organisation_type' => OrganisationType::School->value,
             'organisation_name' => 'Al Noor School',
-        ])->assertRedirect(route('memorisation'));
+        ])->assertRedirect(route('teacher.dashboard'));
 
         $teacher = User::where('email', 'classroom@example.com')->firstOrFail();
         $this->assertSame(AccountRole::Teacher, $teacher->account_role);
@@ -245,5 +245,29 @@ class TeacherFeaturesTest extends TestCase
         $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk();
         $this->actingAs($teacher)->get(route('dashboard'))->assertOk();
         $this->actingAs($teacher)->get(route('memorisation'))->assertOk();
+    }
+
+    public function test_teacher_sign_in_opens_the_teacher_dashboard(): void
+    {
+        $this->enableTeacherFeatures();
+
+        $teacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+        ]);
+        $student = User::factory()->create([
+            'account_role' => AccountRole::Student->value,
+        ]);
+
+        $this->post(route('login'), [
+            'email' => $teacher->email,
+            'password' => 'password',
+        ])->assertRedirect(route('teacher.dashboard'));
+
+        auth()->logout();
+
+        $this->post(route('login'), [
+            'email' => $student->email,
+            'password' => 'password',
+        ])->assertRedirect(route('memorisation'));
     }
 }

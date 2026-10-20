@@ -3,15 +3,16 @@
     <transition name="feedback-modal-fade">
       <div
         v-if="visible"
-        class="feedback-modal-overlay"
+        class="modal-overlay mutqin-modal-overlay feedback-modal-overlay"
         @click.self.prevent
       >
         <div
           ref="dialog"
-          class="feedback-modal-shell"
+          class="feedback-modal-shell mutqin-modal-surface"
           role="dialog"
           aria-modal="true"
           aria-labelledby="feedbackModalTitle"
+          tabindex="-1"
           @keydown="onDialogKeydown"
         >
           <div v-if="success" class="feedback-modal__success" role="status">
@@ -27,7 +28,7 @@
               </div>
               <button
                 type="button"
-                class="feedback-modal__close"
+                class="modal-close-btn feedback-modal__close"
                 :aria-label="t('common.close')"
                 :disabled="submitting"
                 @click="close"
@@ -101,10 +102,10 @@
                 </ul>
               </div>
 
-              <footer class="feedback-modal__actions">
+              <footer class="feedback-modal__actions mutqin-modal-actions mutqin-modal-actions--end">
                 <button
                   type="button"
-                  class="feedback-modal__btn feedback-modal__btn--ghost"
+                  class="mutqin-modal-btn mutqin-modal-btn--secondary feedback-modal__btn feedback-modal__btn--ghost"
                   :disabled="submitting"
                   @click="close"
                 >
@@ -112,7 +113,7 @@
                 </button>
                 <button
                   type="submit"
-                  class="feedback-modal__btn feedback-modal__btn--primary"
+                  class="mutqin-modal-btn mutqin-modal-btn--primary feedback-modal__btn feedback-modal__btn--primary"
                   :disabled="submitting || !canSubmit"
                   :aria-busy="submitting ? 'true' : 'false'"
                 >
@@ -187,6 +188,22 @@ export default {
       return Object.values(errors).flat().filter(Boolean);
     },
   },
+  watch: {
+    visible(isOpen) {
+      if (typeof document === 'undefined') return
+      document.body.classList.toggle('feedback-modal-open', isOpen)
+      document.documentElement.classList.toggle('feedback-modal-open', isOpen)
+      if (isOpen) {
+        document.body.style.overflow = 'hidden'
+        document.documentElement.style.overflow = 'hidden'
+        return
+      }
+      if (!document.querySelector('.modal-overlay.mutqin-modal-overlay, .post-session-simple, .session-analysis-modal-root')) {
+        document.body.style.removeProperty('overflow')
+        document.documentElement.style.removeProperty('overflow')
+      }
+    },
+  },
   mounted() {
     this.openHandler = (options) => this.openFromEvent(options || {});
     registerFeedbackModalHandler(this.openHandler);
@@ -195,6 +212,10 @@ export default {
     unregisterFeedbackModalHandler();
     restoreReturnFocus(this._returnFocusEl);
     this._returnFocusEl = null;
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('feedback-modal-open')
+      document.documentElement.classList.remove('feedback-modal-open')
+    }
   },
   methods: {
     onDialogKeydown(event) {
@@ -325,17 +346,17 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 250000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  align-content: center;
   padding:
     max(1rem, env(safe-area-inset-top))
     max(1rem, env(safe-area-inset-right))
     max(1rem, env(safe-area-inset-bottom))
     max(1rem, env(safe-area-inset-left));
-  background: rgba(12, 10, 8, 0.64);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #0a100d 58%, transparent));
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px));
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px));
 }
 
 .feedback-modal-shell {
@@ -344,13 +365,11 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 18px;
-  background: var(--feedback-bg);
+  border-radius: var(--mutqin-modal-radius, 18px);
+  background: var(--feedback-bg, var(--mutqin-modal-surface-bg, #fffaf4));
   color: var(--feedback-text);
-  border: 1px solid var(--feedback-border);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.45) inset,
-    0 24px 56px rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--feedback-border, var(--mutqin-modal-surface-border, color-mix(in srgb, var(--border, #d8cfc4) 62%, #8b5e3c 38%)));
+  box-shadow: var(--mutqin-modal-shadow, 0 24px 56px rgba(0, 0, 0, 0.22));
 }
 
 .feedback-modal__header {
@@ -535,20 +554,8 @@ export default {
   cursor: not-allowed;
 }
 
-.feedback-modal__btn--ghost {
-  background: var(--feedback-control-bg);
-  border: 1px solid var(--feedback-input-border);
-  color: var(--feedback-text);
-}
-
 .feedback-modal__btn--ghost:hover:not(:disabled) {
   background: var(--feedback-control-hover);
-}
-
-.feedback-modal__btn--primary {
-  border: 0;
-  color: #fff;
-  background: linear-gradient(135deg, var(--feedback-accent), var(--feedback-accent-strong));
 }
 
 .feedback-modal__success {

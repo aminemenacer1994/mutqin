@@ -14,7 +14,6 @@ import {
   assignmentLabel,
   cssThemeColor,
   formatTeacherWhen,
-  groupLabel,
   isTeacherNavActive,
   issueLabel,
   revisionLabel,
@@ -37,19 +36,13 @@ export function useTeacherDashboard(authRef) {
   const chartReady = ref(true)
   const students = ref([])
   const studentsLoading = ref(false)
-  const studentMeta = ref({ current_page: 1, last_page: 1 })
+  const studentsLoadingMore = ref(false)
+  const studentMeta = ref({ current_page: 1, last_page: 1, total: 0 })
   const filters = ref(defaultStudentFilters())
   const searchTimer = ref(null)
-  const groups = ref([])
-  const groupDetail = ref(null)
-  const openGroupId = ref(null)
-  const groupName = ref('')
-  const groupSaving = ref(false)
   const profile = ref(null)
   const profileSection = ref('overview')
   const profileLoading = ref(false)
-  const note = ref({ kind: 'feedback', body: '' })
-  const noteSaving = ref(false)
   const assignmentRows = ref([])
   const assignmentSaving = ref(false)
   const assignment = ref(defaultAssignmentForm())
@@ -64,15 +57,34 @@ export function useTeacherDashboard(authRef) {
   const profileUrl = computed(() => authRef?.profile_url || '/profile')
 
   const surahs = computed(() => overview.value?.surahs || [])
-  const teachingGroups = computed(() => groups.value.filter((group) => group.teaches))
 
   const kpiCards = computed(() => {
     const kpis = overview.value?.kpis || {}
     return [
-      { key: 'students', label: t('teacher.kpi_students'), value: kpis.authorised_students ?? 0, icon: 'bi bi-people', tone: 'teal' },
-      { key: 'active', label: t('teacher.kpi_active'), value: `${kpis.active_7_days ?? 0} / ${kpis.active_30_days ?? 0}`, icon: 'bi bi-lightning-charge', tone: 'gold' },
-      { key: 'ai', label: t('teacher.kpi_ai'), value: kpis.ai_success_rate === null || kpis.ai_success_rate === undefined ? t('teacher.unavailable') : `${kpis.ai_success_rate}%`, icon: 'bi bi-mic', tone: 'sky' },
-      { key: 'attention', label: t('teacher.kpi_attention'), value: kpis.needs_attention ?? 0, icon: 'bi bi-exclamation-circle', tone: 'accent' },
+      {
+        key: 'students',
+        label: t('teacher.kpi_students'),
+        value: kpis.authorised_students ?? '—',
+        icon: 'bi bi-people',
+        tone: 'teal',
+        action: t('teacher.kpi_open_students'),
+      },
+      {
+        key: 'attention',
+        label: t('teacher.kpi_attention'),
+        value: kpis.needs_attention ?? '—',
+        icon: 'bi bi-exclamation-circle',
+        tone: 'teal',
+        action: t('teacher.kpi_open_help'),
+      },
+      {
+        key: 'active',
+        label: t('teacher.kpi_active'),
+        value: kpis.active_7_days ?? '—',
+        icon: 'bi bi-calendar-week',
+        tone: 'teal',
+        action: t('teacher.kpi_open_week'),
+      },
     ]
   })
 
@@ -85,22 +97,45 @@ export function useTeacherDashboard(authRef) {
         label: t('teacher.sessions'),
         data: points.map((point) => point.sessions),
         backgroundColor: color,
-        borderRadius: 6,
-        maxBarThickness: chartDays.value === 7 ? 22 : 12,
+        hoverBackgroundColor: cssThemeColor('--accent-strong', color),
+        borderRadius: 8,
+        borderSkipped: false,
+        maxBarThickness: chartDays.value === 7 ? 28 : 16,
       }],
     }
   })
 
   const chartOptions = computed(() => {
     const ink = cssThemeColor('--text', '#1c1917')
+    const muted = cssThemeColor('--text-muted', '#6b635a')
     const grid = cssThemeColor('--border', 'rgba(120, 100, 70, 0.2)')
     return {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: true } },
+      animation: { duration: 420, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          backgroundColor: cssThemeColor('--surface-strong', '#fffaf3'),
+          titleColor: ink,
+          bodyColor: ink,
+          borderColor: grid,
+          borderWidth: 1,
+          padding: 10,
+          displayColors: false,
+        },
+      },
       scales: {
-        x: { ticks: { color: ink, maxRotation: 0, autoSkip: true }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: ink, precision: 0 }, grid: { color: grid } },
+        x: {
+          ticks: { color: muted, maxRotation: 0, autoSkip: true, font: { size: 11, weight: '600' } },
+          grid: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: muted, precision: 0, font: { size: 11, weight: '600' } },
+          grid: { color: grid, drawBorder: false },
+        },
       },
     }
   })
@@ -157,14 +192,20 @@ export function useTeacherDashboard(authRef) {
     syncUrl()
     if (nextView === 'students') {
       loadStudents(1)
-      loadGroups()
     }
     if (nextView === 'assignments') {
       loadStudents(1)
-      loadGroups()
       loadAssignments()
     }
-    if (nextView === 'groups') loadGroups()
+  }
+
+  function openStudentsFromKpi(key) {
+    filters.value = {
+      ...defaultStudentFilters(),
+      attention: key === 'attention' ? '1' : '',
+      activity: key === 'active' ? 'active_7' : '',
+    }
+    openView('students')
   }
 
   function queueStudentSearch() {
@@ -172,26 +213,24 @@ export function useTeacherDashboard(authRef) {
     searchTimer.value = setTimeout(() => loadStudents(1), 250)
   }
 
-  async function loadStudents(page = 1) {
-    studentsLoading.value = true
+  async function loadStudents(page = 1, append = false) {
+    if (append) studentsLoadingMore.value = true
+    else studentsLoading.value = true
     try {
-      const payload = await learningApi.getTeacherStudents({ ...filters.value, page, per_page: 20 })
-      students.value = payload.data || []
-      studentMeta.value = payload.meta || { current_page: 1, last_page: 1 }
+      const payload = await learningApi.getTeacherStudents({ ...filters.value, page, per_page: 24 })
+      const next = payload.data || []
+      students.value = append ? [...students.value, ...next] : next
+      studentMeta.value = payload.meta || { current_page: 1, last_page: 1, total: 0 }
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
     } finally {
       studentsLoading.value = false
+      studentsLoadingMore.value = false
     }
   }
 
-  async function loadGroups() {
-    try {
-      const payload = await learningApi.getTeacherGroups()
-      groups.value = payload.data || []
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
-    }
+  function loadMoreStudents() {
+    return loadStudents(Number(studentMeta.value.current_page || 1) + 1, true)
   }
 
   async function loadAssignments() {
@@ -203,17 +242,24 @@ export function useTeacherDashboard(authRef) {
     }
   }
 
+  function resolveProfileSection(section) {
+    if (TEACHER_PROFILE_TABS.includes(section)) return section
+    return 'overview'
+  }
+
   async function openStudent(id, section = 'overview') {
     view.value = 'student'
     await loadProfile(id, section)
   }
 
   async function loadProfile(id, section = 'overview') {
-    profileLoading.value = !profile.value || profile.value.student?.id !== Number(id)
-    profileSection.value = section
+    const resolved = resolveProfileSection(section)
+    const sameStudent = profile.value?.student?.id === Number(id)
+    profileLoading.value = !sameStudent
+    profileSection.value = resolved
     formError.value = ''
     try {
-      profile.value = await learningApi.getTeacherStudent(id, section)
+      profile.value = await learningApi.getTeacherStudent(id, resolved)
       view.value = 'student'
       syncUrl()
     } catch (err) {
@@ -229,21 +275,6 @@ export function useTeacherDashboard(authRef) {
     return value === null || value === undefined ? t('teacher.unavailable') : value
   }
 
-  async function saveNote() {
-    if (!profile.value?.student?.id || !note.value.body.trim()) return
-    noteSaving.value = true
-    formError.value = ''
-    try {
-      await learningApi.saveTeacherNote(profile.value.student.id, note.value)
-      note.value.body = ''
-      await loadProfile(profile.value.student.id, 'overview')
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
-    } finally {
-      noteSaving.value = false
-    }
-  }
-
   async function createAssignment() {
     assignmentSaving.value = true
     formError.value = ''
@@ -256,8 +287,7 @@ export function useTeacherDashboard(authRef) {
       due_at: assignment.value.due_at || null,
       feedback: assignment.value.feedback || null,
     }
-    if (assignment.value.target === 'group') payload.learning_group_id = Number(assignment.value.learning_group_id)
-    else payload.student_id = Number(assignment.value.student_id)
+    payload.student_id = Number(assignment.value.student_id)
     try {
       await learningApi.createTeacherAssignment(payload)
       assignment.value.feedback = ''
@@ -267,57 +297,6 @@ export function useTeacherDashboard(authRef) {
       formError.value = teacherErrorMessage(err, t)
     } finally {
       assignmentSaving.value = false
-    }
-  }
-
-  async function createGroup() {
-    groupSaving.value = true
-    formError.value = ''
-    try {
-      await learningApi.createTeacherGroup(groupName.value)
-      groupName.value = ''
-      await loadGroups()
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
-    } finally {
-      groupSaving.value = false
-    }
-  }
-
-  async function joinGroup(group) {
-    formError.value = ''
-    try {
-      await learningApi.joinTeacherGroup(group.id)
-      await loadGroups()
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
-    }
-  }
-
-  async function toggleGroup(group) {
-    if (openGroupId.value === group.id) {
-      openGroupId.value = null
-      groupDetail.value = null
-      return
-    }
-    formError.value = ''
-    try {
-      groupDetail.value = await learningApi.getTeacherGroup(group.id)
-      openGroupId.value = group.id
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
-    }
-  }
-
-  async function reviewMembership(membership, action) {
-    formError.value = ''
-    try {
-      await learningApi.reviewTeacherMembership(membership.id, action)
-      if (openGroupId.value) groupDetail.value = await learningApi.getTeacherGroup(openGroupId.value)
-      await loadGroups()
-      await loadOverview()
-    } catch (err) {
-      formError.value = teacherErrorMessage(err, t)
     }
   }
 
@@ -332,11 +311,10 @@ export function useTeacherDashboard(authRef) {
   async function bootstrapData() {
     await loadOverview()
     if (view.value === 'students' || view.value === 'assignments') await loadStudents(1)
-    if (view.value === 'groups' || view.value === 'assignments' || view.value === 'students') await loadGroups()
     if (view.value === 'assignments') await loadAssignments()
     const params = new URLSearchParams(window.location.search)
     if (view.value === 'student' && params.get('student')) {
-      await loadProfile(params.get('student'), params.get('section') || 'overview')
+      await loadProfile(params.get('student'), resolveProfileSection(params.get('section') || 'overview'))
     }
   }
 
@@ -364,18 +342,12 @@ export function useTeacherDashboard(authRef) {
     chartReady,
     students,
     studentsLoading,
+    studentsLoadingMore,
     studentMeta,
     filters,
-    groups,
-    groupDetail,
-    openGroupId,
-    groupName,
-    groupSaving,
     profile,
     profileSection,
     profileLoading,
-    note,
-    noteSaving,
     assignmentRows,
     assignmentSaving,
     assignment,
@@ -384,7 +356,6 @@ export function useTeacherDashboard(authRef) {
     practiceUrl,
     profileUrl,
     surahs,
-    teachingGroups,
     kpiCards,
     chartData,
     chartOptions,
@@ -393,21 +364,17 @@ export function useTeacherDashboard(authRef) {
     loadOverview,
     setDays,
     openView,
+    openStudentsFromKpi,
     queueStudentSearch,
     loadStudents,
+    loadMoreStudents,
     openStudent,
     loadProfile,
     metric,
-    saveNote,
     createAssignment,
-    createGroup,
-    joinGroup,
-    toggleGroup,
-    reviewMembership,
     isNavActive: (id) => isTeacherNavActive(view.value, id),
     formatWhen: formatTeacherWhen,
     studentInitial,
-    groupLabel: (student) => groupLabel(student, t),
     weakLabel: (student) => weakLabel(student, t),
     revisionLabel: (student) => revisionLabel(student, t),
     assignmentLabel: (counts) => assignmentLabel(counts, t),

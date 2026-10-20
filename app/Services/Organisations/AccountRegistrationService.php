@@ -14,7 +14,8 @@ use App\Support\TeacherFeatures;
 class AccountRegistrationService
 {
     public function __construct(
-        private readonly OrganisationRegistry $organisations
+        private readonly OrganisationRegistry $organisations,
+        private readonly OrganisationRegistrationRoster $registrationRoster,
     ) {}
 
     /**
@@ -46,5 +47,7 @@ class AccountRegistrationService
             'account_role' => $role->value,
             'organisation_id' => $organisation->id,
         ])->save();
+
+        $this->registrationRoster->enrollRegisteredMember($user->refresh(), $organisation);
     }
 }
