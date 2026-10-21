@@ -79,6 +79,18 @@
           </div>
         </header>
 
+        <LearnerTeacherSection
+          v-if="showLearnerTeacherSection"
+          :support="support"
+          :loading="supportLoading"
+          :error="supportError"
+          :groups-error="supportGroupsError"
+          :starting-id="assignmentStartingId"
+          @start="startSupportAssignment"
+          @request-group="requestSupportGroup"
+          @grant-consent="grantSupportConsent"
+        />
+
         <div class="user-dashboard__content">
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
           <div class="dash-section__head dash-section__head--compact">
@@ -164,18 +176,6 @@
             </div>
           </div>
         </section>
-
-        <LearnerTeacherSection
-          v-if="showLearnerTeacherSection"
-          :support="support"
-          :loading="supportLoading"
-          :error="supportError"
-          :groups-error="supportGroupsError"
-          :starting-id="assignmentStartingId"
-          @start="startSupportAssignment"
-          @request-group="requestSupportGroup"
-          @grant-consent="grantSupportConsent"
-        />
 
         <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section

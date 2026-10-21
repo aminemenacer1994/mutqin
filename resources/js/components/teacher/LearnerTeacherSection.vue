@@ -12,7 +12,6 @@
           </span>
           <div class="dash-section__title-copy">
             <h2 id="learner-teacher-heading">{{ t('teacher.learner_section_title') }}</h2>
-            <p class="dash-section__hint">{{ t('teacher.learner_section_subtitle') }}</p>
           </div>
         </div>
         <span v-if="pendingCount > 0" class="learner-teacher__count" aria-live="polite">
@@ -32,10 +31,6 @@
 
       <template v-else>
         <div class="learner-teacher__block">
-          <div class="learner-teacher__block-head">
-            <h3 class="learner-teacher__block-title">{{ t('teacher.learner_assignments_title') }}</h3>
-          </div>
-
           <div v-if="!assignments.length" class="learner-teacher__empty">
             <strong>{{ t('teacher.learner_assignments_empty_title') }}</strong>
             <span>{{ t('teacher.learner_assignments_empty') }}</span>
@@ -82,6 +77,9 @@
                 <span class="dash-continue-card__label">{{ t('teacher.learner_assignments_next') }}</span>
                 <strong class="dash-continue-card__title">{{ rangeLabel(featured) }}</strong>
                 <p class="dash-continue-card__hint">{{ metaLine(featured) }}</p>
+                <p v-if="featured.assignment?.feedback" class="learner-teacher__message-preview">
+                  {{ featured.assignment.feedback }}
+                </p>
               </div>
               <button
                 type="button"
@@ -103,6 +101,9 @@
                   <div class="learner-teacher__row-copy">
                     <strong>{{ rangeLabel(item) }}</strong>
                     <span class="learner-teacher__row-meta">{{ metaLine(item) }}</span>
+                    <span v-if="item.assignment?.feedback" class="learner-teacher__message-preview">
+                      {{ item.assignment.feedback }}
+                    </span>
                     <span v-if="isCompleted(item) && item.completed_at" class="learner-teacher__row-done">
                       {{ completedWhen(item) }}
                     </span>
@@ -136,10 +137,13 @@
         <div v-if="hasSecondary" class="learner-teacher__secondary">
           <ul v-if="support.feedback?.length" class="learner-teacher__messages">
             <li v-for="note in support.feedback" :key="note.id">
-              <span class="learner-teacher__message-label">
-                {{ t('teacher.feedback') }}<template v-if="note.teacher_name"> · {{ note.teacher_name }}</template>
-              </span>
-              <p class="learner-teacher__message-body">{{ note.body }}</p>
+              <i class="bi bi-chat-quote" aria-hidden="true"></i>
+              <div>
+                <span class="learner-teacher__message-label">
+                  {{ t('teacher.feedback') }}<template v-if="note.teacher_name"> · {{ note.teacher_name }}</template>
+                </span>
+                <p class="learner-teacher__message-body">{{ note.body }}</p>
+              </div>
             </li>
           </ul>
 
@@ -177,6 +181,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { assignmentProgressLabel } from '../../scripts/teacher/formatters'
 
 const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue'])
 
@@ -302,14 +307,7 @@ export default {
       return row?.assignment?.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-book'
     },
     progressLabel(row) {
-      const progress = row?.progress
-      if (!progress) return ''
-      const completed = Number(progress.completed ?? 0)
-      const target = Number(progress.target ?? 1)
-      if (this.isCompleted(row) || completed >= target) {
-        return this.t('teacher.learner_assignments_progress_done', { target })
-      }
-      return this.t('teacher.learner_assignments_progress', { completed, target })
+      return row?.progress ? assignmentProgressLabel(row, this.t.bind(this)) : ''
     },
     dueLabel(row) {
       const due = row?.assignment?.due_at

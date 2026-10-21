@@ -2,7 +2,6 @@
   <section class="teacher-stack">
     <TeacherPageHeader
       :title="t('teacher.nav_assignments')"
-      :subtitle="t('teacher.tasks_subtitle')"
     >
       <template #actions>
         <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" @click="$emit('update:formOpen', true)">
@@ -14,38 +13,42 @@
 
     <p v-if="success" class="teacher-alert teacher-alert--success" role="status">{{ success }}</p>
 
-    <label class="teacher-search teacher-search--tasks">
-      <span class="visually-hidden">{{ t('teacher.search') }}</span>
-      <i class="bi bi-search" aria-hidden="true"></i>
-      <input v-model="query" type="search" :placeholder="t('teacher.search_placeholder')" autocomplete="off">
-    </label>
+    <div class="teacher-toolbar teacher-toolbar--tasks">
+      <label class="teacher-search teacher-search--tasks">
+        <span class="visually-hidden">{{ t('teacher.search') }}</span>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input v-model="query" type="search" :placeholder="t('teacher.search_placeholder')" autocomplete="off">
+      </label>
+    </div>
 
     <TeacherSectionPane
       v-if="filteredItems.length"
       :title="t('teacher.sent_tasks')"
-      :hint="t('teacher.sent_tasks_hint')"
-      icon="bi bi-send"
       tone="neutral"
     >
-      <ul class="teacher-records teacher-records--interactive">
-        <li v-for="item in visibleItems" :key="item.key">
+      <ul class="teacher-task-list teacher-task-list--compact">
+        <li v-for="item in visibleItems" :key="item.key" :class="{ 'is-completed': item.status === 'completed' }">
           <button
             type="button"
-            class="teacher-records__item teacher-records__item--btn"
+            class="teacher-task-row teacher-task-row--compact"
             :disabled="!item.studentId"
             @click="item.studentId && $emit('open-student', item.studentId)"
           >
-            <span class="teacher-records__icon" :class="`teacher-records__icon--${item.statusTone}`" aria-hidden="true">
+            <span class="teacher-task-row__icon" :class="`is-${item.statusTone}`" aria-hidden="true">
               <i :class="item.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'"></i>
             </span>
-            <span class="teacher-records__copy">
-              <span class="teacher-records__title teacher-quran">{{ item.title }}</span>
-              <span class="teacher-records__hint">{{ item.studentName }}</span>
+            <span class="teacher-task-row__copy">
+              <span class="teacher-task-row__student">{{ item.studentName }}</span>
+              <span class="teacher-task-row__range teacher-quran">{{ item.title }}</span>
+              <span class="teacher-task-row__meta">
+                <span>{{ item.kindLabel }}</span>
+                <span v-if="item.due">{{ item.due }}</span>
+                <span v-if="item.progress">{{ item.progress }}</span>
+              </span>
             </span>
-            <span class="teacher-records__aside">
-              <span class="teacher-badge" :class="`teacher-badge--${item.statusTone}`">{{ t(`teacher.status_${item.status}`) }}</span>
-              <span v-if="item.progress || item.due" class="teacher-records__meta">{{ item.progress || item.due }}</span>
-              <i class="bi bi-chevron-right teacher-records__chev" aria-hidden="true"></i>
+            <span class="teacher-task-row__aside">
+              <span class="teacher-task-row__status" :class="`is-${item.statusTone}`">{{ item.statusLabel }}</span>
+              <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
             </span>
           </button>
         </li>
@@ -58,6 +61,7 @@
       :open="formOpen"
       :form="form"
       :saving="saving"
+      :error="error"
       :students="students"
       :surahs="surahs"
       @close="closeForm"
@@ -69,7 +73,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { formatTeacherWhen } from '../../scripts/teacher/formatters'
+import { assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherPageHeader from './TeacherPageHeader.vue'
@@ -87,6 +91,7 @@ export default {
     formOpen: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
     success: { type: String, default: '' },
+    error: { type: String, default: '' },
     rows: { type: Array, default: () => [] },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
@@ -114,10 +119,13 @@ export default {
             title,
             studentId: recipient.student_id,
             studentName: recipient.student_name,
+            assignment,
             status,
             statusTone: this.statusTone(status),
-            due: assignment.due_at ? formatTeacherWhen(assignment.due_at) : '',
-            progress: this.progressLabel(recipient),
+            statusLabel: this.t(`teacher.status_${status}`),
+            kindLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
+            due: assignment.due_at ? `${this.t('teacher.due')}: ${formatTeacherWhen(assignment.due_at)}` : '',
+            progress: this.progressLabel(recipient, assignment),
           }
         })
       })
@@ -141,13 +149,9 @@ export default {
     closeForm() {
       this.$emit('update:formOpen', false)
     },
-    progressLabel(recipient) {
-      const progress = recipient.progress
-      if (!progress?.target) return ''
-      return this.t('teacher.learner_assignments_progress', {
-        completed: progress.completed ?? 0,
-        target: progress.target,
-      })
+    progressLabel(recipient, assignment) {
+      if (!recipient?.progress) return ''
+      return assignmentProgressLabel({ ...recipient, assignment }, this.t.bind(this))
     },
     statusTone(status) {
       if (status === 'completed') return 'good'

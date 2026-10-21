@@ -5,16 +5,9 @@
         <span class="teacher-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
-          <span class="teacher-attention-list__tags">
-            <span
-              v-for="tag in tags(student)"
-              :key="tag.key"
-              class="teacher-tag"
-              :class="`teacher-tag--${tag.tone}`"
-            >
-              <i :class="tag.icon" aria-hidden="true"></i>
-              {{ tag.label }}
-            </span>
+          <span v-if="reason(student)" class="teacher-attention-list__reason">
+            <i :class="reason(student).icon" aria-hidden="true"></i>
+            {{ reason(student).label }}
           </span>
         </span>
         <i class="bi bi-chevron-right teacher-attention-list__chev" aria-hidden="true"></i>
@@ -47,8 +40,8 @@ export default {
   emits: ['open-student', 'assign-revision'],
   methods: {
     initial: studentInitial,
-    tags(student) {
-      return attentionReasonTags(student, this.t)
+    reason(student) {
+      return attentionReasonTags(student, this.t)[0] || null
     },
   },
 }

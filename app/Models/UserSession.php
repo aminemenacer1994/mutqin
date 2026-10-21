@@ -12,6 +12,7 @@ class UserSession extends Model
 {
     protected $fillable = [
         'user_id',
+        'teacher_assignment_recipient_id',
         'surah_number',
         'ayah_number',
         'current_step',
@@ -58,6 +59,11 @@ class UserSession extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignmentRecipient(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentRecipient::class, 'teacher_assignment_recipient_id');
     }
 
     public function repeatedFrom(): BelongsTo

@@ -1,10 +1,5 @@
 <template>
-  <TeacherSectionPane
-    :title="t('teacher.tab_practice')"
-    :hint="t('teacher.profile_tab_practice_hint')"
-    icon="bi bi-play-circle"
-    tone="practice"
-  >
+  <TeacherSectionPane tone="practice">
     <div v-if="profile.payload.latest_saved" class="teacher-spotlight teacher-spotlight--practice teacher-spotlight--inline">
       <span class="teacher-spotlight__icon" aria-hidden="true"><i class="bi bi-bookmark-fill"></i></span>
       <div class="teacher-spotlight__copy">

@@ -13,6 +13,7 @@ class AiReciteAttempt extends Model
 
     protected $fillable = [
         'user_id',
+        'teacher_assignment_recipient_id',
         'session_recommendation_id',
         'user_session_id',
         'memorisation_assessment_id',
@@ -63,6 +64,11 @@ class AiReciteAttempt extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignmentRecipient(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentRecipient::class, 'teacher_assignment_recipient_id');
     }
 
     public function recommendation(): BelongsTo

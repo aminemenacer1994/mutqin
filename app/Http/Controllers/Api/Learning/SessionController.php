@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Learning;
 
 use App\Enums\UserSessionStatus;
+use App\Enums\AssignmentKind;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\User;
@@ -12,10 +13,12 @@ use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\MainMemorisationPositionService;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
+use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class SessionController extends Controller
 {
@@ -146,7 +149,7 @@ class SessionController extends Controller
         ]);
     }
 
-    public function start(Request $request): JsonResponse
+    public function start(Request $request, TeacherAssignmentService $assignments): JsonResponse
     {
         $data = $request->validate([
             'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
@@ -158,7 +161,31 @@ class SessionController extends Controller
             'last_activity_at' => ['nullable', 'date'],
             'metadata' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
+            'teacher_assignment_recipient_id' => ['nullable', 'integer', 'min:1'],
         ]);
+
+        $config = is_array($data['metadata']['config'] ?? null) ? $data['metadata']['config'] : [];
+        $configSurah = (int) ($config['chapterId'] ?? 0);
+        $sessionSurah = (int) ($data['surah_number'] ?? 0);
+        if (
+            ! empty($data['teacher_assignment_recipient_id'])
+            && ($configSurah <= 0 || $sessionSurah !== $configSurah)
+        ) {
+            throw ValidationException::withMessages([
+                'teacher_assignment_recipient_id' => 'This task session must keep its assigned ayah range.',
+            ]);
+        }
+        $recipient = $assignments->linkedRecipientForActivity(
+            $request->user(),
+            $data['teacher_assignment_recipient_id'] ?? null,
+            AssignmentKind::Practice,
+            $configSurah,
+            (int) ($config['rangeStart'] ?? 0),
+            (int) ($config['rangeEnd'] ?? 0),
+        );
+        if ($recipient !== null) {
+            $data['teacher_assignment_recipient_id'] = $recipient->id;
+        }
 
         $session = $this->lifecycle->start($request->user(), $data);
         $this->authorize('update', $session);

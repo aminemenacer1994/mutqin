@@ -731,6 +731,9 @@ class SessionLifecycleService
             'attempt_number',
             'recommendation_id',
             'recommendation_source',
+            // This is only injected by the task-aware controller after it has
+            // confirmed recipient ownership, assignment kind, and exact range.
+            'teacher_assignment_recipient_id',
             'completion_settings',
             'start_idempotency_key',
         ];

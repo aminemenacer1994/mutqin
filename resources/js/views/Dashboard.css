@@ -4958,6 +4958,126 @@ a.dash-ai-results__attempt {
   }
 }
 
+/* Teacher tasks sit immediately after the learner's next step, with the next
+   actionable item carrying the visual weight and completed work staying quiet. */
+.user-dashboard .dash-section--learner-teacher {
+  order: -1;
+}
+
+.user-dashboard .dash-section--learner-teacher .dash-section__head {
+  padding-bottom: 0.55rem;
+}
+
+.user-dashboard .learner-teacher {
+  gap: 0.7rem;
+}
+
+.user-dashboard .learner-teacher__block {
+  gap: 0.65rem;
+}
+
+.user-dashboard .learner-teacher__featured {
+  gap: 0.65rem 0.85rem;
+  padding: 0.8rem;
+  background: color-mix(in srgb, var(--dash-accent-light) 45%, var(--dash-card-bg));
+  box-shadow: none;
+}
+
+.user-dashboard .learner-teacher__featured .dash-continue-card__label {
+  font-size: 0.7rem;
+}
+
+.user-dashboard .learner-teacher__featured .dash-continue-card__title {
+  font-size: 1rem;
+}
+
+.user-dashboard .learner-teacher__featured .dash-continue-card__hint {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+}
+
+.user-dashboard .learner-teacher__message-preview {
+  margin: 0.25rem 0 0;
+  color: var(--dash-ink);
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.user-dashboard .learner-teacher__list {
+  gap: 0;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border) 82%, transparent);
+}
+
+.user-dashboard .learner-teacher__row {
+  min-height: 3.4rem;
+  padding: 0.6rem 0.1rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-border) 82%, transparent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.user-dashboard .learner-teacher__row.is-completed {
+  border-color: color-mix(in srgb, var(--dash-border) 82%, transparent);
+  background: transparent;
+  opacity: 0.66;
+}
+
+.user-dashboard .learner-teacher__row-copy strong {
+  color: var(--dash-ink);
+}
+
+.user-dashboard .learner-teacher__row-meta {
+  font-size: 0.78rem;
+}
+
+.user-dashboard .learner-teacher__status {
+  letter-spacing: 0.035em;
+}
+
+.user-dashboard .learner-teacher__secondary {
+  gap: 0.45rem;
+  padding-top: 0.65rem;
+}
+
+.user-dashboard .learner-teacher__messages li {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0.65rem 0.7rem;
+  border-color: color-mix(in srgb, var(--dash-accent) 18%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 30%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__messages li > i {
+  margin-top: 0.1rem;
+  color: var(--dash-accent-strong);
+}
+
+.user-dashboard .learner-teacher__message-label {
+  color: var(--dash-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.user-dashboard .learner-teacher__message-body {
+  margin-top: 0.16rem;
+  color: var(--dash-ink);
+}
+
+@media (max-width: 520px) {
+  .user-dashboard .learner-teacher__featured {
+    padding: 0.75rem;
+  }
+
+  .user-dashboard .learner-teacher__row-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .user-dashboard .teacher-list {
   display: grid;
   gap: 0.35rem;

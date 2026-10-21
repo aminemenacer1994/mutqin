@@ -6,7 +6,6 @@
 
     <TeacherSectionPane
       :title="t('teacher.overview_need_look')"
-      :hint="t('teacher.overview_need_look_hint')"
       icon="bi bi-exclamation-circle"
       tone="warn"
     >

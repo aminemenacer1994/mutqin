@@ -19,15 +19,19 @@
         </div>
       </header>
 
-      <div class="teacher-tabs teacher-tabs--scroll" role="tablist" :aria-label="t('teacher.nav_students')">
+      <div :id="tabsId" class="teacher-tabs teacher-tabs--scroll" role="tablist" :aria-label="t('teacher.nav_students')">
         <button
           v-for="tab in tabs"
           :key="tab.id"
           type="button"
           role="tab"
+          :id="tabId(tab.id)"
           class="teacher-tabs__tab"
           :class="{ 'is-active': section === tab.id }"
           :aria-selected="section === tab.id ? 'true' : 'false'"
+          :aria-controls="panelId"
+          :tabindex="section === tab.id ? 0 : -1"
+          @keydown="onTabKeydown($event, tab.id)"
           @click="$emit('change-section', tab.id)"
         >
           <i :class="tab.icon" aria-hidden="true"></i>
@@ -35,7 +39,7 @@
         </button>
       </div>
 
-      <div class="teacher-tab-panel teacher-profile-stack">
+      <div :id="panelId" class="teacher-tab-panel teacher-profile-stack" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
           :profile="profile"
@@ -43,6 +47,8 @@
           :practice-time="practiceTime"
           :session-label="sessionLabel"
           :format-when="formatWhen"
+          @assign-revision="$emit('assign-revision', $event)"
+          @change-section="$emit('change-section', $event)"
         />
         <TeacherStudentProfilePractice
           v-else-if="section === 'practice'"
@@ -54,6 +60,7 @@
           v-else-if="section === 'ai'"
           :profile="profile"
           :issue-label="issueLabel"
+          :format-when="formatWhen"
         />
         <TeacherStudentProfileWeak
           v-else-if="section === 'weak'"
@@ -115,5 +122,34 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   emits: ['back', 'change-section', 'assign-revision'],
+  data() {
+    const uid = Math.random().toString(36).slice(2, 9)
+    return {
+      tabsId: `teacher-profile-tabs-${uid}`,
+      panelId: `teacher-profile-panel-${uid}`,
+      tabPrefix: `teacher-profile-tab-${uid}`,
+    }
+  },
+  methods: {
+    tabId(id) {
+      return `${this.tabPrefix}-${id}`
+    },
+    onTabKeydown(event, id) {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+      if (!keys.includes(event.key)) return
+      event.preventDefault()
+      const current = this.tabs.findIndex((tab) => tab.id === id)
+      if (current < 0) return
+      let next = current
+      if (event.key === 'ArrowLeft') next = (current - 1 + this.tabs.length) % this.tabs.length
+      if (event.key === 'ArrowRight') next = (current + 1) % this.tabs.length
+      if (event.key === 'Home') next = 0
+      if (event.key === 'End') next = this.tabs.length - 1
+      const nextTab = this.tabs[next]
+      if (!nextTab) return
+      this.$emit('change-section', nextTab.id)
+      this.$nextTick(() => document.getElementById(this.tabId(nextTab.id))?.focus())
+    },
+  },
 }
 </script>

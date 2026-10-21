@@ -7,22 +7,47 @@ use App\Http\Requests\Memorisation\AdjustMemorisationPracticePlanRequest;
 use App\Http\Requests\Memorisation\CompleteMemorisationPracticePlanRequest;
 use App\Http\Requests\Memorisation\StoreFailedMemorisationAssessmentRequest;
 use App\Http\Requests\Memorisation\StoreMemorisationAssessmentRequest;
+use App\Enums\AssignmentKind;
+use App\Models\AiReciteAttempt;
 use App\Models\MemorisationPracticePlan;
 use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
+use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class MemorisationDetectionController extends Controller
 {
     public function storeAssessment(
         StoreMemorisationAssessmentRequest $request,
         RecitationAssessmentService $service,
+        TeacherAssignmentService $assignments,
     ): JsonResponse {
+        $payload = $request->validated();
+        $recipient = $assignments->linkedRecipientForActivity(
+            $request->user(),
+            $payload['teacher_assignment_recipient_id'] ?? null,
+            AssignmentKind::AiRecite,
+            (int) ($payload['surah_number'] ?? 0),
+            (int) ($payload['start_ayah'] ?? 0),
+            (int) ($payload['end_ayah'] ?? 0),
+        );
+        if ($recipient !== null) {
+            $source = (string) ($payload['source'] ?? '');
+            $type = (string) ($payload['assessment_type'] ?? '');
+            if ($source !== AiReciteAttempt::SOURCE_DASHBOARD && $type !== 'dashboard_ai_recite') {
+                throw ValidationException::withMessages([
+                    'teacher_assignment_recipient_id' => 'Task recite checks must use the AI recite flow.',
+                ]);
+            }
+            $payload['teacher_assignment_recipient_id'] = $recipient->id;
+        }
+
         try {
-            $result = $service->create($request->user(), $request->validated());
+            $result = $service->create($request->user(), $payload);
         } catch (\Throwable $exception) {
             MutqinLog::error('memorisation.assessment.failed', [
                 'exception' => $exception::class,

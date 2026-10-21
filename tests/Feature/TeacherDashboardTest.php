@@ -213,8 +213,16 @@ class TeacherDashboardTest extends TestCase
         $this->assertCount(1, $created['recipients']);
         $this->assertSame($student->id, $created['recipients'][0]['student_id']);
 
+        $recipientId = $created['recipients'][0]['id'];
+        $started = $this->actingAs($student)
+            ->postJson(route('api.me.assignments.start', $recipientId))
+            ->assertOk()
+            ->json();
+        $this->assertStringContainsString('assignment_recipient='.$recipientId, $started['href']);
+
         AiReciteAttempt::query()->create([
             'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $recipientId,
             'attempt_number' => 2,
             'accuracy_percent' => 90,
             'band' => 'strong',
@@ -242,10 +250,20 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $support['assignments'][0]['progress']['target']);
         $this->assertArrayNotHasKey('private', $support);
 
-        $started = $this->actingAs($student)
-            ->postJson(route('api.me.assignments.start', $created['recipients'][0]['id']))
-            ->assertOk()
-            ->json();
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $recipientId,
+            'attempt_number' => 4,
+            'accuracy_percent' => 85,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 3],
+        ]);
+
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $this->assertSame(1, $support['assignments'][0]['progress']['completed']);
+        $this->assertSame(1, $support['assignments'][0]['progress']['target']);
+        $this->assertSame(2, $support['assignments'][0]['progress']['activity_count']);
+
         $this->assertStringContainsString('surah=1', $started['href']);
         $this->assertStringContainsString('ai_check=1', $started['href']);
         $this->assertStringContainsString('from=1', $started['href']);
@@ -257,7 +275,7 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(0, TeacherAssignmentRecipient::query()->where('student_id', $hidden->id)->count());
     }
 
-    public function test_practice_assignment_completes_from_an_existing_session_range(): void
+    public function test_practice_assignment_only_counts_a_linked_completion_and_caps_progress_at_target(): void
     {
         [$teacher, $student] = $this->classroom();
 
@@ -269,6 +287,10 @@ class TeacherDashboardTest extends TestCase
             'ayah_end' => 7,
         ])->assertCreated()->json();
 
+        $recipientId = $created['recipients'][0]['id'];
+
+        // A matching range from ordinary practice is preserved as history but
+        // cannot satisfy a teacher task it was not launched from.
         UserSession::query()->create([
             'user_id' => $student->id,
             'surah_number' => 1,
@@ -280,8 +302,64 @@ class TeacherDashboardTest extends TestCase
         ]);
 
         $rows = $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data');
-        $this->assertSame(AssignmentStatus::Completed->value, $rows[0]['recipients'][0]['status']);
+        $this->assertSame(AssignmentStatus::Pending->value, $rows[0]['recipients'][0]['status']);
         $this->assertSame($created['assignment']['id'], $rows[0]['assignment']['id']);
+
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.start', $recipientId))
+            ->assertOk();
+
+        $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 2,
+            'idempotency_key' => 'assignment-practice-wrong-range',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 2, 'rangeEnd' => 7]],
+        ])->assertStatus(422);
+
+        $first = $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'assignment-practice-first',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk()->json('session');
+
+        $this->assertSame($recipientId, $first['teacher_assignment_recipient_id']);
+
+        $this->actingAs($student)->postJson(route('api.session.end'), [
+            'session_id' => $first['id'],
+            'idempotency_key' => 'assignment-practice-first-end',
+            'range_complete' => true,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk();
+
+        $rows = $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data');
+        $progress = $rows[0]['recipients'][0]['progress'];
+        $this->assertSame(AssignmentStatus::Completed->value, $rows[0]['recipients'][0]['status']);
+        $this->assertSame(1, $progress['completed']);
+        $this->assertSame(1, $progress['target']);
+
+        $second = $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'assignment-practice-second',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk()->json('session');
+
+        $this->actingAs($student)->postJson(route('api.session.end'), [
+            'session_id' => $second['id'],
+            'idempotency_key' => 'assignment-practice-second-end',
+            'range_complete' => true,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk();
+
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $progress = $support['assignments'][0]['progress'];
+        $this->assertSame(1, $progress['completed']);
+        $this->assertSame(1, $progress['target']);
+        $this->assertSame(2, $progress['activity_count']);
     }
 
     public function test_existing_learner_dashboard_still_loads(): void

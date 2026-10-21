@@ -916,6 +916,9 @@ export default {
       learnerDashboardWeekSummary: null,
       learnerDashboardWeaknesses: null,
       dashboardEntryReturnHref: null,
+      // Present only while a teacher-task deep link is being consumed. The API
+      // validates the recipient, task kind, and exact ayah range independently.
+      teacherAssignmentRecipientId: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
       learnerStreakDays: 0,
@@ -13305,6 +13308,7 @@ export default {
         const sessionId = String(params.get('session') || '').trim()
         const panel = String(params.get('panel') || '').trim().toLowerCase()
         const returnTo = String(params.get('return') || '').trim().toLowerCase()
+        const assignmentRecipientId = Number(params.get('assignment_recipient') || 0)
         const surah = Number(params.get('surah') || 0)
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
@@ -13331,6 +13335,7 @@ export default {
             sessionId: sessionId || null,
             panel: panel || null,
             returnTo: returnTo || null,
+            assignmentRecipientId: assignmentRecipientId > 0 ? assignmentRecipientId : null,
             journey: journey || null,
             surah: surah > 0 ? surah : 0,
             from: from > 0 ? from : 0,
@@ -13350,7 +13355,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'journey', 'view', 'layout', 'weak']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -13364,6 +13369,7 @@ export default {
     async consumeDashboardEntryIntent(intent = null) {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
+      this.teacherAssignmentRecipientId = Number(entry.assignmentRecipientId || 0) || null
       this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
         ? (this.learnerDashboardUrl || '/dashboard')
         : null
@@ -13396,7 +13402,9 @@ export default {
           await this.openDashboardAiMemoryCheck({
             surah: entry.surah,
             ayah: entry.from,
+            to: entry.to,
             returnTo: entry.returnTo,
+            assignmentRecipientId: this.teacherAssignmentRecipientId,
           })
           this.markDashboardEntryIntentConsumed()
           return true
@@ -16801,6 +16809,7 @@ export default {
                 ayah_number: Number(this.rangeStart || 1) || null,
                 memorisation_mode: this.currentMode,
                 idempotency_key: startIdempotencyKey,
+                teacher_assignment_recipient_id: Number(this.teacherAssignmentRecipientId || 0) || undefined,
                 metadata: {
                   is_main_journey: !!this.pendingMainJourney,
                   config: {
@@ -16819,6 +16828,7 @@ export default {
               }).then((result) => {
                 this.pendingMainJourney = false
                 this.applyBackendStartResult(result)
+                this.teacherAssignmentRecipientId = null
                 return result
               }).catch((error) => {
                 this.noteLearningBackendFailure(error, 'start')
@@ -26197,12 +26207,13 @@ export default {
     openAiMemorisationCheckerForSession() {
       this.openAiRecitationCheckForSession()
     },
-    async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, returnTo = null } = {}) {
+    async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, to = 0, returnTo = null, assignmentRecipientId = null } = {}) {
       const chapterId = Number(surah || 0)
       const ayahNumber = Number(ayah || 0)
       if (!(chapterId > 0 && ayahNumber > 0) || !this.aiTestModalsEnabled) return false
 
       this.dashboardAiCheckReturnTo = returnTo === 'dashboard' ? '/dashboard' : null
+      this.teacherAssignmentRecipientId = Number(assignmentRecipientId || 0) || null
       this.welcomeBackWorkspaceHidden = true
       this.showTools = false
       this.showWelcomeBackModal = false
@@ -26213,7 +26224,7 @@ export default {
           ...baseConfig,
           chapterId,
           rangeStart: ayahNumber,
-          rangeEnd: ayahNumber,
+          rangeEnd: Math.max(ayahNumber, Number(to || ayahNumber)),
         })
         this.currentMode = this.currentMode === 'advanced' ? 'advanced' : 'beginner'
         await this.loadVerses(this.currentMode)
@@ -26234,7 +26245,9 @@ export default {
 
         await this.openAiMemorisationDetection({
           verse,
-          scope: 'ayah',
+          scope: Number(assignmentRecipientId || 0) > 0 && Number(to || ayahNumber) > ayahNumber
+            ? 'session'
+            : 'ayah',
           fromDashboardReview: true,
         })
         return true
@@ -28151,12 +28164,15 @@ export default {
         this._amdAssessmentSubmitPromise = null
         return finishSubmission(this._lastAmdSubmitData)
       }
+      const assignmentRecipientId = this.amdEntrySource === 'dashboard-review'
+        ? (Number(this.teacherAssignmentRecipientId || 0) || null)
+        : null
       const payload = {
         surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
         surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
         start_ayah: numbers[0] || Number(this.rangeStart || 1),
         end_ayah: numbers[numbers.length - 1] || Number(this.rangeEnd || numbers[0] || 1),
-        assessment_type: this.amdEntrySource === 'workspace-ai-recite'
+        assessment_type: this.amdEntrySource === 'workspace-ai-recite' || assignmentRecipientId
           ? 'dashboard_ai_recite'
           : 'memorisation_detection',
         ayahs,
@@ -28187,9 +28203,12 @@ export default {
         tajweed_practice_check: tajweedPracticeCheck || undefined,
         idempotency_key: idempotencyKey,
       }
-      if (this.amdEntrySource === 'workspace-ai-recite') {
+      if (this.amdEntrySource === 'workspace-ai-recite' || assignmentRecipientId) {
         payload.source = 'dashboard_ai_recite'
         payload.peek_used = !!this.amdPeekUsed
+      }
+      if (assignmentRecipientId) {
+        payload.teacher_assignment_recipient_id = assignmentRecipientId
       }
 
       try {
@@ -28222,6 +28241,7 @@ export default {
         }
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this._lastAmdSubmitData = data
+        if (assignmentRecipientId) this.teacherAssignmentRecipientId = null
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
         const canonicalResult = applyBackendAlignmentToResult(result, data.assessment || {})

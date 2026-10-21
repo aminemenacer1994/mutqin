@@ -14,6 +14,7 @@
           class="teacher-badge"
           :class="row.badgeTone ? `teacher-badge--${row.badgeTone}` : 'teacher-badge--muted'"
         >{{ row.badge }}</span>
+        <span v-if="row.source" class="teacher-records__source">{{ row.source }}</span>
         <button
           v-if="row.actionLabel"
           type="button"

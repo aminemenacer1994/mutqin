@@ -1,10 +1,5 @@
 <template>
-  <TeacherSectionPane
-    :title="t('teacher.tab_revision')"
-    :hint="t('teacher.profile_tab_revision_hint')"
-    icon="bi bi-arrow-repeat"
-    tone="neutral"
-  >
+  <TeacherSectionPane tone="neutral">
     <h4 class="teacher-section-label">
       <i class="bi bi-pin-angle" aria-hidden="true"></i>
       {{ t('teacher.revisit') }}

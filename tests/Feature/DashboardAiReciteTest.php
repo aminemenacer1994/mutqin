@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\AiReciteAttempt;
 use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
+use App\Models\TeacherAssignment;
+use App\Models\TeacherAssignmentRecipient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,6 +45,41 @@ class DashboardAiReciteTest extends TestCase
             ->assertJsonPath('idempotent', true)
             ->assertJsonPath('ai_attempt.id', $first->json('ai_attempt.id'));
 
+        $this->assertDatabaseCount('ai_recite_attempts', 1);
+    }
+
+    public function test_task_ai_recite_links_one_idempotent_attempt_to_its_started_recipient(): void
+    {
+        $student = User::factory()->pro()->create();
+        $assignment = TeacherAssignment::factory()->create([
+            'kind' => 'ai_recite',
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 1,
+        ]);
+        $recipient = TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'started_at' => now(),
+        ]);
+
+        $payload = $this->payload([
+            'idempotency_key' => 'task-ai-recite-1',
+            'teacher_assignment_recipient_id' => $recipient->id,
+        ]);
+
+        $first = $this->actingAs($student)
+            ->postJson('/api/memorisation/assessments', $payload)
+            ->assertCreated();
+        $this->actingAs($student)
+            ->postJson('/api/memorisation/assessments', $payload)
+            ->assertOk()
+            ->assertJsonPath('idempotent', true);
+
+        $this->assertDatabaseHas('ai_recite_attempts', [
+            'id' => $first->json('ai_attempt.id'),
+            'teacher_assignment_recipient_id' => $recipient->id,
+        ]);
         $this->assertDatabaseCount('ai_recite_attempts', 1);
     }
 

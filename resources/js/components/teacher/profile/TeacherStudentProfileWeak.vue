@@ -1,10 +1,5 @@
 <template>
-  <TeacherSectionPane
-    :title="t('teacher.tab_weak')"
-    :hint="t('teacher.profile_tab_weak_hint')"
-    icon="bi bi-exclamation-triangle"
-    tone="warn"
-  >
+  <TeacherSectionPane tone="warn">
     <TeacherRecordList
       v-if="weakRows.length"
       :rows="weakRows"

@@ -32,6 +32,15 @@
           <option value="inactive_7">{{ t('teacher.inactive_7') }}</option>
         </select>
       </label>
+      <label class="teacher-field teacher-field--inline">
+        <span class="visually-hidden">{{ t('teacher.filters') }}</span>
+        <select :value="filters.sort || 'name'" @change="onFilterChange('sort', $event.target.value)">
+          <option value="name">{{ t('teacher.col_name') }}</option>
+          <option value="last_seen">{{ t('teacher.last') }}</option>
+          <option value="score">{{ t('teacher.ai_rate') }}</option>
+          <option value="attention">{{ t('teacher.need_look') }}</option>
+        </select>
+      </label>
       <button
         type="button"
         class="teacher-filter"

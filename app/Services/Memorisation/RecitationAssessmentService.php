@@ -891,6 +891,9 @@ class RecitationAssessmentService
             ['memorisation_assessment_id' => $assessment->id],
             [
                 'user_id' => $user->id,
+                'teacher_assignment_recipient_id' => isset($payload['teacher_assignment_recipient_id'])
+                    ? (int) $payload['teacher_assignment_recipient_id'] ?: null
+                    : null,
                 'session_recommendation_id' => null,
                 'user_session_id' => isset($payload['user_session_id'])
                     ? (int) $payload['user_session_id'] ?: null

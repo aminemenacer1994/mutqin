@@ -1,10 +1,5 @@
 <template>
-  <TeacherSectionPane
-    :title="t('teacher.nav_assignments')"
-    :hint="t('teacher.profile_tab_tasks_hint')"
-    icon="bi bi-journal-text"
-    tone="neutral"
-  >
+  <TeacherSectionPane tone="neutral">
     <TeacherRecordList v-if="taskRows.length" :rows="taskRows" />
     <TeacherEmpty v-else icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
   </TeacherSectionPane>
@@ -12,6 +7,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import { assignmentProgressLabel } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
@@ -46,12 +42,7 @@ export default {
   },
   methods: {
     progressLabel(item) {
-      const progress = item.progress
-      if (!progress?.target) return ''
-      return this.t('teacher.learner_assignments_progress', {
-        completed: progress.completed ?? 0,
-        target: progress.target,
-      })
+      return item?.progress ? assignmentProgressLabel(item, this.t.bind(this)) : ''
     },
   },
 }

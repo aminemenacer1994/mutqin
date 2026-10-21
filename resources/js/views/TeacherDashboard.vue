@@ -93,6 +93,7 @@
               :form-open="assignmentFormOpen"
               :saving="assignmentSaving"
               :success="formSuccess"
+              :error="formError"
               :rows="assignmentRows"
               :students="students"
               :surahs="surahs"

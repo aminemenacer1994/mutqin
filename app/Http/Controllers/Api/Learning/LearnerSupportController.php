@@ -62,7 +62,7 @@ class LearnerSupportController extends Controller
         return response()->json([
             'recipient' => $assignments->presentRecipient($updated),
             'href' => $updated->assignment
-                ? $assignments->practiceHref($updated->assignment, $resumeSessionId)
+                ? $assignments->practiceHref($updated->assignment, $resumeSessionId, (int) $updated->id)
                 : null,
         ]);
     }

@@ -9,7 +9,7 @@
         aria-modal="true"
         :aria-labelledby="titleId"
         tabindex="-1"
-        @keydown.esc.prevent="$emit('close')"
+        @keydown="onKeydown"
       >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable teacher-task-modal__dialog">
           <div class="modal-content teacher-task-modal__content">
@@ -22,10 +22,12 @@
             </div>
 
             <form :id="formId" class="modal-body teacher-task-modal__body" @submit.prevent="$emit('submit')">
+              <p v-if="error" class="teacher-task-modal__alert" role="alert">{{ error }}</p>
               <div class="teacher-task-modal__block">
                 <label class="form-label" :for="`${formId}-student`">{{ t('teacher.student') }}</label>
                 <select
                   :id="`${formId}-student`"
+                  ref="studentField"
                   class="form-select"
                   :value="form.student_id"
                   required
@@ -156,6 +158,11 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import {
+  captureReturnFocus,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../../utils/modalFocus'
 
 let sheetUid = 0
 
@@ -166,6 +173,7 @@ export default {
     open: { type: Boolean, default: false },
     form: { type: Object, required: true },
     saving: { type: Boolean, default: false },
+    error: { type: String, default: '' },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
   },
@@ -176,26 +184,41 @@ export default {
     return {
       titleId: `teacher-task-modal-title-${uid}`,
       formId: `teacher-task-form-${uid}`,
+      returnFocusEl: null,
     }
   },
   watch: {
     open: {
       immediate: true,
       handler(value) {
+        if (typeof document === 'undefined') return
         document.body.classList.toggle('modal-open', value)
         document.body.classList.toggle('teacher-task-modal-open', value)
         if (value) {
-          this.$nextTick(() => this.$refs.dialogRoot?.focus())
+          this.returnFocusEl = captureReturnFocus()
+          this.$nextTick(() => this.$refs.studentField?.focus({ preventScroll: true }))
+        } else if (this.returnFocusEl) {
+          const target = this.returnFocusEl
+          this.returnFocusEl = null
+          this.$nextTick(() => restoreReturnFocus(target))
         }
       },
     },
   },
   beforeUnmount() {
-    document.body.classList.remove('modal-open', 'teacher-task-modal-open')
+    if (typeof document !== 'undefined') document.body.classList.remove('modal-open', 'teacher-task-modal-open')
+    restoreReturnFocus(this.returnFocusEl)
   },
   methods: {
     patch(key, value) {
       this.$emit('update:form', { ...this.form, [key]: value })
+    },
+    onKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialogRoot,
+        open: this.open,
+        onEscape: () => this.$emit('close'),
+      })
     },
   },
 }

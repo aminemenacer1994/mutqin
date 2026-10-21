@@ -6,7 +6,7 @@
         <span class="teacher-table__cell teacher-table__cell--meta" role="columnheader">{{ t('teacher.last') }}</span>
         <span class="teacher-table__cell teacher-table__cell--num" role="columnheader">{{ t('teacher.col_practice') }}</span>
         <span class="teacher-table__cell teacher-table__cell--num" role="columnheader">{{ t('teacher.ai_rate') }}</span>
-        <span class="teacher-table__cell teacher-table__cell--num" role="columnheader">{{ t('teacher.weak') }}</span>
+        <span class="teacher-table__cell teacher-table__cell--concern" role="columnheader">{{ t('teacher.need_look') }}</span>
         <span class="teacher-table__cell teacher-table__cell--flag" role="columnheader"><span class="visually-hidden">{{ t('teacher.need_look') }}</span></span>
       </div>
       <button
@@ -31,14 +31,15 @@
         <span class="teacher-table__cell teacher-table__cell--num" role="cell">
           <span class="teacher-table__score" :class="scoreClass(student)">{{ score(student) }}</span>
         </span>
-        <span class="teacher-table__cell teacher-table__cell--num" role="cell">
-          {{ weak(student) }}
+        <span class="teacher-table__cell teacher-table__cell--concern" role="cell">
+          <span v-if="concern(student)" class="teacher-table__concern" :class="`is-${concern(student).tone}`">
+            <i :class="concern(student).icon" aria-hidden="true"></i>
+            {{ concern(student).label }}
+          </span>
+          <span v-else class="teacher-table__quiet">{{ t('teacher.none') }}</span>
         </span>
         <span class="teacher-table__cell teacher-table__cell--flag" role="cell">
-          <span v-if="student.needs_attention" class="teacher-table__dot" :title="t('teacher.need_look')">
-            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-            <span class="teacher-table__dot-label">{{ t('teacher.need_look') }}</span>
-          </span>
+          <i class="bi bi-chevron-right teacher-table__go" aria-hidden="true"></i>
         </span>
         <span class="teacher-table__mobile-stats" aria-hidden="true">
           {{ mobileStats(student) }}
@@ -50,7 +51,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
+import { attentionReasonTags, scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
 
 export default {
   name: 'TeacherStudentTable',
@@ -85,8 +86,12 @@ export default {
       }
       return String(student.weak_count)
     },
+    concern(student) {
+      return attentionReasonTags(student, this.t)[0] || null
+    },
     rowLabel(student) {
-      return `${student.name}, ${this.score(student)}, ${this.lastSeen(student)}`
+      const concern = this.concern(student)?.label
+      return [student.name, this.score(student), this.lastSeen(student), concern].filter(Boolean).join(', ')
     },
     mobileStats(student) {
       return this.t('teacher.student_row_mobile', {

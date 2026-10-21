@@ -5,6 +5,22 @@ export function formatTeacherWhen(value) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+export function assignmentProgressLabel(item, t) {
+  const progress = item?.progress
+  const target = Math.max(1, Number(progress?.target || 1))
+  const completed = Math.min(target, Math.max(0, Number(progress?.completed || 0)))
+
+  if (item?.assignment?.kind === 'ai_recite') {
+    const attempts = Math.max(completed, Number(progress?.activity_count || 0))
+    return t(
+      attempts === 1 ? 'teacher.assignment_progress_attempt_one' : 'teacher.assignment_progress_attempt_other',
+      { count: attempts, target },
+    )
+  }
+
+  return t('teacher.assignment_progress_repetitions', { completed, target })
+}
+
 export function studentInitial(name) {
   const trimmed = String(name || '').trim()
   if (!trimmed) return '?'
