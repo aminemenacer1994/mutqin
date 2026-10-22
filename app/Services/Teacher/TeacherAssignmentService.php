@@ -104,6 +104,69 @@ class TeacherAssignmentService
         });
     }
 
+    public function canManage(TeacherAssignment $assignment, bool $forUpdate = false): bool
+    {
+        $query = $assignment->recipients();
+        if ($forUpdate) $query->lockForUpdate();
+        $recipients = $query->get(['id', 'started_at', 'completed_at', 'student_completed_at']);
+        if ($recipients->isEmpty() || $recipients->contains(fn ($recipient) => $recipient->started_at !== null || $recipient->completed_at !== null || $recipient->student_completed_at !== null)) {
+            return false;
+        }
+
+        $ids = $recipients->pluck('id')->all();
+
+        return ! UserSession::query()->whereIn('teacher_assignment_recipient_id', $ids)->exists()
+            && ! AiReciteAttempt::query()->whereIn('teacher_assignment_recipient_id', $ids)->exists();
+    }
+
+    /** @param array<string, mixed> $input */
+    public function update(User $teacher, TeacherAssignment $assignment, array $input): TeacherAssignment
+    {
+        $surah = (int) $input['surah_number'];
+        $start = (int) $input['ayah_start'];
+        $end = (int) $input['ayah_end'];
+        $ayahCount = QuranMetadata::ayahCount($surah);
+        if ($ayahCount === null || $start < 1 || $end < $start || $end > $ayahCount) {
+            throw ValidationException::withMessages(['ayah_end' => 'Choose a surah and an ayah range that exists.']);
+        }
+
+        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end) {
+            $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
+            $this->assertManageable($teacher, $locked, true);
+            $locked->forceFill([
+                'kind' => $input['kind'],
+                'surah_number' => $surah,
+                'ayah_start' => $start,
+                'ayah_end' => $end,
+                'repetition_target' => $input['repetition_target'] ?? null,
+                'due_at' => $input['due_at'] ?? null,
+                'feedback' => $this->nullableText($input['feedback'] ?? null),
+            ])->save();
+
+            return $locked->refresh()->load('recipients');
+        });
+    }
+
+    public function remove(User $teacher, TeacherAssignment $assignment): void
+    {
+        DB::transaction(function () use ($teacher, $assignment) {
+            $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
+            $this->assertManageable($teacher, $locked, true);
+            $locked->delete();
+        });
+    }
+
+    private function assertManageable(User $teacher, TeacherAssignment $assignment, bool $forUpdate = false): void
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        if (! $teacher->isTeacher() || (int) $assignment->teacher_id !== (int) $teacher->id || (int) $assignment->organisation_id !== (int) $teacher->organisation_id) {
+            abort(404);
+        }
+        if (! $this->canManage($assignment, $forUpdate)) {
+            throw ValidationException::withMessages(['assignment' => 'This task has student activity and can no longer be changed or removed.']);
+        }
+    }
+
     /**
      * @param  list<int>  $studentIds
      */
@@ -146,20 +209,31 @@ class TeacherAssignmentService
                 continue;
             }
 
+            if ($recipient->student_completed_at !== null) {
+                if ($recipient->status !== AssignmentStatus::Completed) {
+                    $recipient->forceFill([
+                        'status' => AssignmentStatus::Completed->value,
+                        'completed_at' => $recipient->completed_at ?? $recipient->student_completed_at,
+                    ])->save();
+                }
+                continue;
+            }
+
             $matches = $this->completedRepeats($recipient, $sessions, $attempts);
 
             $target = max(1, (int) ($assignment->repetition_target ?? 1));
             $status = AssignmentStatus::Pending;
             if ($matches >= $target) {
-                $status = AssignmentStatus::Completed;
+                // Meeting the target makes a task ready for the learner to
+                // confirm. It is not a completion by itself: that confirmation
+                // is a separate, auditable part of the assignment lifecycle.
+                $status = AssignmentStatus::AwaitingConfirmation;
             } elseif ($matches > 0 || $recipient->started_at !== null) {
                 $status = AssignmentStatus::InProgress;
             }
 
             $completedAt = $recipient->completed_at;
-            if ($status === AssignmentStatus::Completed) {
-                $completedAt = $completedAt ?? now();
-            } else {
+            if ($status !== AssignmentStatus::Completed) {
                 $completedAt = null;
             }
 
@@ -197,6 +271,38 @@ class TeacherAssignmentService
             $recipient->forceFill([
                 'started_at' => now(),
                 'status' => AssignmentStatus::InProgress->value,
+            ])->save();
+        }
+
+        return $recipient->refresh();
+    }
+
+    public function completeByStudent(User $student, TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $recipient->loadMissing('assignment');
+        if ($recipient->assignment === null || (int) $recipient->student_id !== (int) $student->id) {
+            abort(404);
+        }
+
+        if ($recipient->student_completed_at === null) {
+            $progress = $this->progressForRecipient($recipient);
+            if ((int) $progress['activity_count'] < (int) $progress['target']) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'Complete the required linked activity before marking this task complete.',
+                ]);
+            }
+            $completedAt = now();
+            $recipient->forceFill([
+                'status' => AssignmentStatus::Completed->value,
+                'completed_at' => $recipient->completed_at ?? $completedAt,
+                'student_completed_at' => $completedAt,
+                'completion_evidence' => [
+                    'activity_count' => (int) $progress['activity_count'],
+                    'target' => (int) $progress['target'],
+                    'confirmed_at' => $completedAt->toIso8601String(),
+                ],
             ])->save();
         }
 
@@ -294,7 +400,7 @@ class TeacherAssignmentService
     }
 
     /**
-     * @return array{completed: int, target: int, activity_count: int, resume_available: bool}
+     * @return array{completed: int, target: int, activity_count: int, attempt_count: int|null, completion_count: int|null, resume_available: bool}
      */
     public function progressForRecipient(
         TeacherAssignmentRecipient $recipient,
@@ -305,7 +411,22 @@ class TeacherAssignmentService
         $assignment = $recipient->assignment;
         $target = max(1, (int) ($assignment?->repetition_target ?? 1));
         if ($assignment === null) {
-            return ['completed' => 0, 'target' => $target, 'activity_count' => 0, 'resume_available' => false];
+            return ['completed' => 0, 'target' => $target, 'activity_count' => 0, 'attempt_count' => null, 'completion_count' => null, 'resume_available' => false];
+        }
+
+        if ($recipient->student_completed_at !== null) {
+            $evidenceCount = is_array($recipient->completion_evidence)
+                ? (int) ($recipient->completion_evidence['activity_count'] ?? $target)
+                : $target;
+            $activityCount = max($target, $evidenceCount);
+            return [
+                'completed' => $target,
+                'target' => $target,
+                'activity_count' => $activityCount,
+                'attempt_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? $activityCount : null,
+                'completion_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? null : $activityCount,
+                'resume_available' => false,
+            ];
         }
 
         if ($completedSessions === null || $scoredAttempts === null) {
@@ -332,6 +453,8 @@ class TeacherAssignmentService
             'completed' => min($activityCount, $target),
             'target' => $target,
             'activity_count' => $activityCount,
+            'attempt_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? $activityCount : null,
+            'completion_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? null : $activityCount,
             'resume_available' => $this->resumeSessionId($recipient, $unfinishedSessions) !== null,
         ];
     }
@@ -394,6 +517,7 @@ class TeacherAssignmentService
             'started_at' => $recipient->started_at?->toIso8601String(),
             'completed_at' => $recipient->completed_at?->toIso8601String(),
             'updated_at' => $recipient->updated_at?->toIso8601String(),
+            'completion_evidence' => $recipient->completion_evidence,
         ];
 
         if ($assignment) {
@@ -405,9 +529,6 @@ class TeacherAssignmentService
                 $scoredAttempts,
                 $unfinishedSessions,
             );
-            if ((int) ($payload['progress']['completed'] ?? 0) >= (int) ($payload['progress']['target'] ?? 1)) {
-                $payload['status'] = AssignmentStatus::Completed->value;
-            }
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
@@ -500,6 +621,7 @@ class TeacherAssignmentService
                 ->filter(fn (AiReciteAttempt $attempt) => (
                     (int) $attempt->teacher_assignment_recipient_id === (int) $recipient->id
                     && (int) $attempt->user_id === (int) $recipient->student_id
+                    && $this->exactRange($attempt, $assignment)
                 ))
                 ->count();
         }
@@ -543,7 +665,7 @@ class TeacherAssignmentService
             ? $recipient->status->value
             : (string) $recipient->status;
 
-        if ($status !== AssignmentStatus::Completed->value && $assignment?->due_at !== null && $assignment->due_at->isPast()) {
+        if ($status !== AssignmentStatus::Completed->value && $assignment?->due_at !== null && $assignment->due_at->copy()->endOfDay()->isPast()) {
             return AssignmentStatus::Overdue->value;
         }
 

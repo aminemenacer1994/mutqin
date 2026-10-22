@@ -99,15 +99,18 @@ class TeacherDashboardController extends Controller
 
         $rows = TeacherAssignment::query()
             ->where('teacher_id', $teacher->id)
+            ->whereHas('recipients', function ($query) use ($ids) {
+                $query->whereIn('student_id', $ids === [] ? [0] : $ids);
+            })
             ->with(['recipients' => function ($query) use ($ids) {
                 $query->whereIn('student_id', $ids === [] ? [0] : $ids)->with('student:id,name');
             }, 'learningGroup:id,name'])
             ->latest('id')
-            ->limit(50)
             ->get()
             ->map(function (TeacherAssignment $assignment) use ($assignments) {
                 return [
                     'assignment' => $assignments->presentAssignment($assignment),
+                    'can_manage' => $assignments->canManage($assignment),
                     'group_name' => $assignment->learningGroup?->name,
                     'recipients' => $assignment->recipients->map(function ($recipient) use ($assignments) {
                         $payload = $assignments->presentRecipient($recipient, true);
@@ -142,6 +145,29 @@ class TeacherDashboardController extends Controller
             'assignment' => $assignments->presentAssignment($assignment),
             'recipients' => $assignment->recipients->map(fn ($recipient) => $assignments->presentRecipient($recipient->setRelation('assignment', $assignment)))->values()->all(),
         ], 201);
+    }
+
+    public function updateAssignment(Request $request, TeacherAssignment $assignment, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'kind' => ['required', Rule::in(['practice', 'ai_recite'])],
+            'surah_number' => ['required', 'integer', 'between:1,114'],
+            'ayah_start' => ['required', 'integer', 'min:1'],
+            'ayah_end' => ['required', 'integer', 'min:1'],
+            'repetition_target' => ['nullable', 'integer', 'between:1,50'],
+            'due_at' => ['nullable', 'date'],
+            'feedback' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        return $this->json(['assignment' => $assignments->presentAssignment($assignments->update($teacher, $assignment, $data))]);
+    }
+
+    public function destroyAssignment(Request $request, TeacherAssignment $assignment, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $assignments->remove($this->teacher($request), $assignment);
+
+        return $this->json(['removed' => true]);
     }
 
     public function storeNote(Request $request, User $student, TeacherDashboardService $dashboard): JsonResponse

@@ -6,6 +6,7 @@ enum AssignmentStatus: string
 {
     case Pending = 'pending';
     case InProgress = 'in_progress';
+    case AwaitingConfirmation = 'awaiting_confirmation';
     case Completed = 'completed';
     case Overdue = 'overdue';
 

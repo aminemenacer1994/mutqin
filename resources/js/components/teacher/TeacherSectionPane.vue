@@ -1,13 +1,13 @@
 <template>
-  <section class="teacher-pane" :class="tone ? `teacher-pane--${tone}` : ''">
-    <header v-if="title || hint" class="teacher-pane__head">
-      <span v-if="icon" class="teacher-pane__icon" aria-hidden="true"><i :class="icon"></i></span>
-      <div class="teacher-pane__titles">
-        <h3 v-if="title" class="teacher-pane__title">{{ title }}</h3>
-        <p v-if="hint" class="teacher-pane__hint">{{ hint }}</p>
+  <section class="card teacher-pane" :class="tone ? `teacher-pane--${tone}` : ''">
+    <header v-if="title || hint" class="card-header teacher-pane__head d-flex align-items-start gap-2">
+      <span v-if="icon" class="teacher-pane__icon d-inline-flex align-items-center justify-content-center" aria-hidden="true"><i :class="icon"></i></span>
+      <div class="teacher-pane__titles flex-grow-1">
+        <h3 v-if="title" class="card-title teacher-pane__title mb-0">{{ title }}</h3>
+        <p v-if="hint" class="card-text teacher-pane__hint mb-0">{{ hint }}</p>
       </div>
     </header>
-    <div class="teacher-pane__body">
+    <div class="card-body teacher-pane__body">
       <slot />
     </div>
   </section>

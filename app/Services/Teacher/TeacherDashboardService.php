@@ -140,6 +140,7 @@ class TeacherDashboardService
                 'last_activity_at' => $metric['last_activity_at'],
                 'ai_success_rate' => $metric['ai_success_rate'],
                 'weak_count' => $metric['weak_count'],
+                'recurring_weak' => $metric['recurring_weak'],
                 'weak_example' => $metric['weak_example'],
                 'revision_overdue' => $metric['revision_overdue'],
                 'revision_upcoming' => $metric['revision_upcoming'],
@@ -196,11 +197,18 @@ class TeacherDashboardService
             $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] <= $max)->values();
         }
 
-        $sort = (string) ($filters['sort'] ?? 'name');
+        $sort = (string) (($filters['sort'] ?? null)
+            ?: ((string) ($filters['attention'] ?? '') === '1' ? 'attention' : 'name'));
         $rows = match ($sort) {
             'score' => $rows->sortByDesc(fn (array $row) => $row['ai_success_rate'] ?? -1)->values(),
             'last_seen' => $rows->sortByDesc(fn (array $row) => $row['last_activity_at'] ?? '')->values(),
-            'attention' => $rows->sortByDesc(fn (array $row) => (int) $row['needs_attention'])->values(),
+            'attention' => $rows->sortBy(fn (array $row) => [
+                -((int) ($row['assignments']['overdue'] ?? 0)),
+                -((int) $row['revision_overdue']),
+                $row['ai_success_rate'] === null ? 100 : $row['ai_success_rate'],
+                -((int) $row['recurring_weak']),
+                $row['last_activity_at'] ?? '',
+            ])->values(),
             default => $rows->sortBy(fn (array $row) => mb_strtolower($row['name']))->values(),
         };
 
@@ -458,7 +466,6 @@ class TeacherDashboardService
                 ->values()
                 ->all(),
             'feedback' => $feedback,
-            'groups' => $user->isStudent() ? $this->studentGroups($user) : [],
         ];
     }
 
@@ -485,7 +492,7 @@ class TeacherDashboardService
                 'weak_example' => null,
                 'revision_overdue' => 0,
                 'revision_upcoming' => 0,
-                'assignments' => ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0],
+                'assignments' => ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0],
                 'active_7' => false,
                 'active_30' => false,
                 'needs_attention' => false,
@@ -572,13 +579,35 @@ class TeacherDashboardService
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->orderByDesc('affected_attempt_count')
             ->get(['user_id', 'surah_number', 'ayah_number', 'spot_type', 'affected_attempt_count', 'word_index']);
+        $seenSpots = [];
+        $seenAyahs = [];
+        $seenRecurringAyahs = [];
         foreach ($spots as $spot) {
             $id = (int) $spot->user_id;
             if (! isset($metrics[$id])) {
                 continue;
             }
-            $metrics[$id]['weak_count']++;
-            if ((int) $spot->affected_attempt_count >= 2) {
+            // Retries can write an exact duplicate. Word-level findings for
+            // different words remain separate, rather than disappearing into a
+            // generic ayah issue.
+            $spotKey = implode(':', [
+                $id,
+                (int) $spot->surah_number,
+                (int) $spot->ayah_number,
+                (string) ($spot->spot_type ?: 'unknown'),
+                $spot->word_index === null ? 'ayah' : (string) $spot->word_index,
+            ]);
+            if (isset($seenSpots[$spotKey])) {
+                continue;
+            }
+            $seenSpots[$spotKey] = true;
+            $ayahKey = implode(':', [$id, (int) $spot->surah_number, (int) $spot->ayah_number]);
+            if (! isset($seenAyahs[$ayahKey])) {
+                $seenAyahs[$ayahKey] = true;
+                $metrics[$id]['weak_count']++;
+            }
+            if ((int) $spot->affected_attempt_count >= 2 && ! isset($seenRecurringAyahs[$ayahKey])) {
+                $seenRecurringAyahs[$ayahKey] = true;
                 $metrics[$id]['recurring_weak']++;
             }
             if ($metrics[$id]['weak_example'] === null) {
@@ -619,7 +648,7 @@ class TeacherDashboardService
             $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
             $overdue = $status !== AssignmentStatus::Completed->value
                 && $recipient->assignment?->due_at !== null
-                && $recipient->assignment->due_at->isPast();
+                && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
             if ($overdue) {
                 $metrics[$id]['assignments']['overdue']++;
             } elseif (isset($metrics[$id]['assignments'][$status])) {
@@ -771,7 +800,7 @@ class TeacherDashboardService
 
     private function assignmentCounts(User $teacher, array $ids): array
     {
-        $counts = ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'outstanding' => 0];
+        $counts = ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'outstanding' => 0];
         if ($ids === []) {
             return $counts;
         }
@@ -786,7 +815,7 @@ class TeacherDashboardService
             $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
             $overdue = $status !== AssignmentStatus::Completed->value
                 && $recipient->assignment?->due_at !== null
-                && $recipient->assignment->due_at->isPast();
+                && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
             if ($overdue) {
                 $counts['overdue']++;
                 $counts['outstanding']++;
@@ -850,9 +879,11 @@ class TeacherDashboardService
                 'last_activity_at' => $metrics['last_activity_at'],
                 'needs_attention' => (bool) ($metrics['needs_attention'] ?? false),
                 'ai_success_rate' => $metrics['ai_success_rate'] ?? null,
+                'ai_attempts' => (int) ($metrics['ai_attempts'] ?? 0),
                 'active_7' => (bool) ($metrics['active_7'] ?? false),
                 'weak_count' => (int) ($metrics['weak_count'] ?? 0),
                 'revision_overdue' => (int) ($metrics['revision_overdue'] ?? 0),
+                'assignments' => $metrics['assignments'],
             ],
             'calendar' => $this->calendar((int) $student->id),
             'latest_saved' => $saved ? $this->presentSession($saved) : null,
@@ -977,9 +1008,19 @@ class TeacherDashboardService
     {
         $items = MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
+            ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->orderByDesc('affected_attempt_count')
-            ->limit(40)
+            ->orderByDesc('last_identified_at')
+            ->orderByDesc('id')
             ->get()
+            ->unique(fn (MemorisationWeakSpot $spot) => implode(':', [
+                (int) $spot->user_id,
+                (int) $spot->surah_number,
+                (int) $spot->ayah_number,
+                (string) ($spot->spot_type ?: 'unknown'),
+                $spot->word_index === null ? 'ayah' : (string) $spot->word_index,
+            ]))
+            ->take(40)
             ->map(fn (MemorisationWeakSpot $spot) => [
                 'id' => (int) $spot->id,
                 'spot_type' => $spot->spot_type,
@@ -1010,14 +1051,23 @@ class TeacherDashboardService
             ->limit(30)
             ->get();
 
-        $scored = $attempts->filter(fn (AiReciteAttempt $attempt) => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true));
+        // Directory and profile use the same full-history denominator. The
+        // visible history remains limited to the most recent 30 checks.
+        $scored = AiReciteAttempt::query()
+            ->validScored()
+            ->where('user_id', $student->id)
+            ->get(['accuracy_percent', 'created_at', 'band']);
         $rate = $scored->isEmpty() ? null : round((float) $scored->avg('accuracy_percent'), 1);
 
         return [
             'success_rate' => $rate,
+            'score_count' => $scored->count(),
+            'score_window_start' => $scored->min('created_at')?->toIso8601String(),
+            'score_window_end' => $scored->max('created_at')?->toIso8601String(),
             'attempts' => $attempts->map(fn (AiReciteAttempt $attempt) => [
                 'id' => (int) $attempt->id,
-                'accuracy_percent' => $attempt->accuracy_percent === null ? null : (int) $attempt->accuracy_percent,
+                'accuracy_percent' => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true)
+                    ? (int) $attempt->accuracy_percent : null,
                 'band' => $attempt->band,
                 'created_at' => $attempt->created_at?->toIso8601String(),
                 'range' => is_array($attempt->ayah_range) ? [
@@ -1029,7 +1079,7 @@ class TeacherDashboardService
                 'issues' => $this->wordIssues($attempt),
                 'assessment_status' => $attempt->assessment?->status,
             ])->all(),
-            'trend' => $scored->sortBy('created_at')->map(fn (AiReciteAttempt $attempt) => [
+            'trend' => $scored->sortByDesc('created_at')->take(30)->sortBy('created_at')->map(fn (AiReciteAttempt $attempt) => [
                 'at' => $attempt->created_at?->toIso8601String(),
                 'accuracy_percent' => (int) $attempt->accuracy_percent,
                 'band' => $attempt->band,
@@ -1097,8 +1147,17 @@ class TeacherDashboardService
         $plans = MemorisationPracticePlan::query()
             ->where('user_id', $student->id)
             ->latest('id')
-            ->limit(20)
             ->get()
+            // A retry can create the same scheduled event more than once. Keep
+            // separate dates/scopes, but collapse exact event duplicates.
+            ->unique(fn (MemorisationPracticePlan $plan) => implode('|', [
+                (int) $plan->surah_number,
+                (int) $plan->start_ayah,
+                (int) $plan->end_ayah,
+                (string) ($plan->practice_scope ?: 'legacy'),
+                $plan->recommended_review_at?->toIso8601String() ?: 'unscheduled',
+            ]))
+            ->take(20)
             ->map(function (MemorisationPracticePlan $plan) {
                 return [
                     'id' => (int) $plan->id,
@@ -1108,6 +1167,7 @@ class TeacherDashboardService
                     'surah_name' => QuranMetadata::name((int) $plan->surah_number),
                     'ayah_start' => (int) $plan->start_ayah,
                     'ayah_end' => (int) $plan->end_ayah,
+                    'review_type' => $plan->practice_scope ?: 'legacy',
                     'recommended_review_at' => $plan->recommended_review_at?->toIso8601String(),
                     'overdue' => $plan->status === MemorisationPracticePlan::STATUS_ACTIVE
                         && $plan->recommended_review_at !== null
@@ -1120,14 +1180,22 @@ class TeacherDashboardService
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->orderByDesc('affected_attempt_count')
-            ->limit(12)
             ->get()
+            ->unique(fn (MemorisationWeakSpot $spot) => implode(':', [
+                (int) $spot->surah_number,
+                (int) $spot->ayah_number,
+                (string) ($spot->spot_type ?: 'unknown'),
+                $spot->word_index === null ? 'ayah' : (string) $spot->word_index,
+            ]))
+            ->take(12)
             ->map(fn (MemorisationWeakSpot $spot) => [
                 'surah_name' => QuranMetadata::name((int) $spot->surah_number),
                 'surah_number' => (int) $spot->surah_number,
                 'ayah_number' => (int) $spot->ayah_number,
                 'spot_type' => $spot->spot_type,
+                'word_index' => $spot->word_index,
                 'affected_attempt_count' => (int) $spot->affected_attempt_count,
+                'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
             ])->all();
 
         $assignments = TeacherAssignmentRecipient::query()
@@ -1370,8 +1438,9 @@ class TeacherDashboardService
         $rank = fn (string $status): int => match ($status) {
             AssignmentStatus::Overdue->value => 0,
             AssignmentStatus::InProgress->value => 1,
-            AssignmentStatus::Pending->value => 2,
-            AssignmentStatus::Completed->value => 3,
+            AssignmentStatus::AwaitingConfirmation->value => 2,
+            AssignmentStatus::Pending->value => 3,
+            AssignmentStatus::Completed->value => 4,
             default => 4,
         };
 

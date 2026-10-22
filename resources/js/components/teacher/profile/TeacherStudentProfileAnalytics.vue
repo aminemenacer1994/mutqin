@@ -51,7 +51,7 @@
           <span>{{ t('teacher.times', { n: item.affected_attempt_count }) }}</span>
         </li>
       </ul>
-      <TeacherMore :remaining="weak.length - shownWeak" @more="shownWeak += STEP" />
+      <TeacherMore :remaining="weak.length - shownWeak" :shown="shownWeak" :initial="STEP" @more="shownWeak += STEP" @less="shownWeak = STEP" />
     </section>
 
     <section v-if="sessions.length" class="teacher-analytics__block">
@@ -63,7 +63,7 @@
           <span>{{ formatWhen(session.last_activity_at) }}</span>
         </li>
       </ul>
-      <TeacherMore :remaining="sessions.length - shownSessions" @more="shownSessions += STEP" />
+      <TeacherMore :remaining="sessions.length - shownSessions" :shown="shownSessions" :initial="STEP" @more="shownSessions += STEP" @less="shownSessions = STEP" />
     </section>
 
   </div>

@@ -2,7 +2,9 @@
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
 
-    <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    <section class="teacher-overview-summary" :aria-label="t('teacher.nav_overview')">
+      <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    </section>
 
     <TeacherSectionPane
       :title="t('teacher.overview_need_look')"
@@ -48,7 +50,7 @@ export default {
         if (!student?.needs_attention || seen.has(student.id)) return false
         seen.add(student.id)
         return true
-      }).slice(0, 6)
+      })
     },
   },
   methods: {

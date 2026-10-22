@@ -170,6 +170,7 @@ Route::middleware(['auth'])->group(function () {
 // when the provider reports a verified email — see GoogleSignInService).
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/progress', [DashboardController::class, 'index'])->name('progress.dashboard');
     Route::get('/teacher', [TeacherDashboardPageController::class, 'index'])
         ->middleware('teacher.features')
         ->name('teacher.dashboard');

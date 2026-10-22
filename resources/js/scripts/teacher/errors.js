@@ -5,5 +5,6 @@ export function teacherErrorMessage(error, t) {
     if (first) return String(first)
   }
   if (error?.response?.status === 404) return t('teacher.student_unavailable')
+  if (Number(error?.response?.status || 0) >= 500) return t('teacher.action_failed')
   return error?.response?.data?.message || t('teacher.action_failed')
 }

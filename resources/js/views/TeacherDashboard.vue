@@ -32,14 +32,15 @@
           />
 
           <div class="teacher-dashboard__main dash-reveal" style="--dash-delay: 80ms">
-            <p v-if="formError" class="teacher-alert" role="alert">{{ formError }}</p>
-            <p v-if="formSuccess && view !== 'assignments'" class="teacher-alert teacher-alert--success" role="status">{{ formSuccess }}</p>
+            <p v-if="formError && view !== 'assignments'" class="alert alert-danger mb-0" role="alert">{{ formError }}</p>
+            <p v-if="formSuccess && view !== 'assignments'" class="alert alert-success mb-0" role="status">{{ formSuccess }}</p>
 
+            <Transition name="teacher-view" mode="out-in">
+              <div :key="view" class="teacher-view-stage">
             <TeacherHero
               v-if="view === 'overview'"
               :first-name="firstName"
               :organisation-name="overview?.teacher?.organisation?.name || ''"
-              :practice-url="practiceUrl"
             />
 
             <TeacherOverviewSection
@@ -65,7 +66,7 @@
               @update:filters="updateFilters"
               @search="loadStudents(1)"
               @queue-search="queueStudentSearch"
-              @more="loadMoreStudents"
+              @page="loadStudents"
               @open-student="openStudent"
             />
 
@@ -91,15 +92,20 @@
               v-else-if="view === 'assignments'"
               :form="assignment"
               :form-open="assignmentFormOpen"
+              :editing="Boolean(editingAssignmentId)"
               :saving="assignmentSaving"
               :success="formSuccess"
               :error="formError"
               :rows="assignmentRows"
+              :loading="assignmentsLoading"
               :students="students"
               :surahs="surahs"
               @update:form="assignment = $event"
               @update:form-open="assignmentFormOpen = $event"
-              @create="createAssignment"
+              @new="beginCreateAssignment"
+              @edit="beginEditAssignment"
+              @save="saveAssignment"
+              @remove="removeAssignment"
               @open-student="openStudent"
             />
 
@@ -111,6 +117,8 @@
               :practice-url="practiceUrl"
               :profile-url="profileUrl"
             />
+              </div>
+            </Transition>
           </div>
         </div>
 
@@ -150,10 +158,11 @@ export default {
     const dashboard = useTeacherDashboard(props.auth)
     function updateFilters(next) {
       dashboard.filters.value = next
+      dashboard.syncUrl()
     }
     function onProfileSection(tab) {
       if (!dashboard.profile.value?.student?.id) return
-      dashboard.loadProfile(dashboard.profile.value.student.id, tab)
+      dashboard.loadProfile(dashboard.profile.value.student.id, tab, true)
     }
     return {
       ...dashboard,

@@ -84,11 +84,13 @@
           :support="support"
           :loading="supportLoading"
           :error="supportError"
-          :groups-error="supportGroupsError"
-          :starting-id="assignmentStartingId"
+          :saving-id="assignmentSavingId"
+          :completion-message="assignmentCompletionMessage"
+          :failed-item="assignmentFailedItem"
           @start="startSupportAssignment"
-          @request-group="requestSupportGroup"
-          @grant-consent="grantSupportConsent"
+          @complete="completeSupportAssignment"
+          @view-completed="showCompletedAssignments"
+          @dismiss-completion="dismissAssignmentCompletion"
         />
 
         <div class="user-dashboard__content">
@@ -929,8 +931,10 @@ export default {
       support: null,
       supportLoading: false,
       supportError: '',
-      supportGroupsError: '',
-      assignmentStartingId: 0,
+      assignmentSavingId: 0,
+      assignmentCompletionMessage: '',
+      assignmentCompletionTimer: null,
+      assignmentFailedItem: null,
     }
   },
   computed: {
@@ -1765,6 +1769,7 @@ export default {
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
     if (this.themeObserver) this.themeObserver.disconnect()
     this.clearToast()
+    clearTimeout(this.assignmentCompletionTimer)
     this.syncDrawerBodyLock(false)
   },
   methods: {
@@ -2429,9 +2434,8 @@ export default {
       try {
         this.support = await learningApi.getLearnerSupport()
         this.supportError = ''
-        this.supportGroupsError = ''
       } catch (error) {
-        this.support = this.support || { assignments: [], feedback: [], groups: [] }
+        this.support = this.support || { assignments: [], feedback: [] }
         this.supportError = error?.response?.data?.message || this.t('teacher.learner_assignments_load_failed')
       } finally {
         this.supportLoading = false
@@ -2440,7 +2444,7 @@ export default {
     async startSupportAssignment(item) {
       if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportError = ''
-      this.assignmentStartingId = Number(item?.id || 0)
+      this.assignmentSavingId = Number(item?.id || 0)
       try {
         const payload = await learningApi.startLearnerAssignment(item.id)
         if (payload?.recipient && Array.isArray(this.support?.assignments)) {
@@ -2458,38 +2462,37 @@ export default {
         this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
         this.showToast(this.supportError)
       } finally {
-        this.assignmentStartingId = 0
+        this.assignmentSavingId = 0
       }
     },
-    async requestSupportGroup(group) {
+    async completeSupportAssignment(item) {
       if (this.auth?.learner_teacher_section_enabled !== true) return
-      this.supportGroupsError = ''
+      this.supportError = ''
+      this.assignmentCompletionMessage = ''
+      this.assignmentFailedItem = null
+      this.assignmentSavingId = Number(item?.id || 0)
       try {
-        this.support = await learningApi.requestLearnerGroup(group.id)
-        this.showToast(this.t('teacher.learner_groups_updated'))
+        this.support = await learningApi.completeLearnerAssignment(item.id)
+        this.assignmentCompletionMessage = this.t('teacher.learner_assignments_completed_success')
+        clearTimeout(this.assignmentCompletionTimer)
+        this.assignmentCompletionTimer = setTimeout(() => this.dismissAssignmentCompletion(), 5000)
       } catch (error) {
-        this.supportGroupsError = this.supportErrorMessage(error)
-        this.showToast(this.supportGroupsError)
+        this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
+        this.assignmentFailedItem = item
+      } finally {
+        this.assignmentSavingId = 0
       }
     },
-    async grantSupportConsent(group) {
-      if (this.auth?.learner_teacher_section_enabled !== true) return
-      this.supportGroupsError = ''
-      try {
-        this.support = await learningApi.grantLearnerConsent(group.membership_id)
-        this.showToast(this.t('teacher.learner_groups_updated'))
-      } catch (error) {
-        this.supportGroupsError = this.supportErrorMessage(error)
-        this.showToast(this.supportGroupsError)
-      }
+    showCompletedAssignments() {
+      this.assignmentCompletionMessage = ''
+      this.$nextTick(() => {
+        this.$el?.querySelector('.learner-teacher__filter.is-completed')?.click()
+      })
     },
-    supportErrorMessage(error) {
-      const errors = error?.response?.data?.errors
-      if (errors && typeof errors === 'object') {
-        const first = Object.values(errors).flat()[0]
-        if (first) return String(first)
-      }
-      return error?.response?.data?.message || this.t('teacher.action_failed')
+    dismissAssignmentCompletion() {
+      clearTimeout(this.assignmentCompletionTimer)
+      this.assignmentCompletionTimer = null
+      this.assignmentCompletionMessage = ''
     },
     setChartDays(days) {
       const next = days === 7 ? 7 : 30

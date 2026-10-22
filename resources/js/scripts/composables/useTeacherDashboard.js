@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { learningApi } from '../api/learning'
 import { classifyRequestFailure } from '../../utils/networkStatus'
@@ -44,12 +44,16 @@ export function useTeacherDashboard(authRef) {
   const profileSection = ref('overview')
   const profileLoading = ref(false)
   const assignmentRows = ref([])
+  const assignmentsLoading = ref(false)
   const assignmentSaving = ref(false)
   const assignment = ref(defaultAssignmentForm())
   const assignmentFormOpen = ref(false)
+  const editingAssignmentId = ref(null)
   const formSuccess = ref('')
   const attentionPreview = ref([])
   const teacherGroups = ref([])
+  let profileRequestId = 0
+  let studentRequestId = 0
 
   const featuresEnabled = computed(() => authRef?.teacher_features_enabled === true)
 
@@ -65,11 +69,11 @@ export function useTeacherDashboard(authRef) {
   const kpiCards = computed(() => {
     const kpis = overview.value?.kpis || {}
     const overdueTasks = Number(kpis.overdue_assignments ?? 0)
-    const overdueRevision = Number(kpis.overdue_revisions ?? 0)
     return [
       {
         key: 'students',
         label: t('teacher.kpi_students'),
+        description: t('teacher.kpi_students_help'),
         value: kpis.authorised_students ?? '—',
         icon: 'bi bi-people',
         tone: 'teal',
@@ -78,6 +82,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'active',
         label: t('teacher.kpi_active_7d'),
+        description: t('teacher.kpi_active_help'),
         value: kpis.active_7_days ?? '—',
         icon: 'bi bi-calendar-week',
         tone: 'teal',
@@ -86,7 +91,8 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'overdue',
         label: t('teacher.kpi_overdue_tasks'),
-        value: overdueTasks + overdueRevision,
+        description: t('teacher.kpi_overdue_help'),
+        value: overdueTasks,
         icon: 'bi bi-clock-history',
         tone: 'teal',
         action: t('teacher.view_all'),
@@ -94,6 +100,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'attention',
         label: t('teacher.kpi_need_support'),
+        description: t('teacher.kpi_support_help'),
         value: kpis.needs_attention ?? '—',
         icon: 'bi bi-exclamation-circle',
         tone: 'teal',
@@ -165,21 +172,27 @@ export function useTeacherDashboard(authRef) {
     (profile.value?.payload?.assignments || []).filter((item) => item.assignment)
   ))
 
-  function syncUrl() {
+  function syncUrl(pushHistory = false) {
     const params = new URLSearchParams()
     if (view.value !== 'overview') params.set('view', view.value)
     if (chartDays.value !== 30) params.set('days', String(chartDays.value))
+    Object.entries(filters.value || {}).forEach(([key, value]) => {
+      if (value) params.set(key, String(value))
+    })
     if (view.value === 'student' && profile.value?.student?.id) {
       params.set('student', String(profile.value.student.id))
       params.set('section', profileSection.value)
     }
     const query = params.toString()
-    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`)
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}`
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    if (nextUrl === currentUrl) return
+    window.history[pushHistory ? 'pushState' : 'replaceState']({}, '', nextUrl)
   }
 
   async function loadAttentionPreview() {
     try {
-      const payload = await learningApi.getTeacherStudents({ attention: '1', page: 1, per_page: 6 })
+      const payload = await learningApi.getTeacherStudents({ attention: '1', page: 1, per_page: 100 })
       attentionPreview.value = payload.data || []
     } catch {
       attentionPreview.value = []
@@ -220,10 +233,12 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openView(nextView) {
+    if (nextView !== 'student') profileRequestId += 1
+    const changed = view.value !== nextView
     view.value = nextView
     formError.value = ''
     formSuccess.value = ''
-    syncUrl()
+    syncUrl(changed)
     if (nextView === 'students') {
       loadStudents(1)
       loadTeacherGroups()
@@ -260,6 +275,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openAssignRevision(student) {
+    editingAssignmentId.value = null
     prefillAssignmentFromStudent(student)
     assignmentFormOpen.value = true
     openView('assignments')
@@ -271,31 +287,44 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function loadStudents(page = 1, append = false) {
+    const requestId = ++studentRequestId
     if (append) studentsLoadingMore.value = true
     else studentsLoading.value = true
     try {
       const payload = await learningApi.getTeacherStudents({ ...filters.value, page, per_page: 24 })
+      if (requestId !== studentRequestId) return
       const next = payload.data || []
       students.value = append ? [...students.value, ...next] : next
       studentMeta.value = payload.meta || { current_page: 1, last_page: 1, total: 0 }
     } catch (err) {
+      if (requestId !== studentRequestId) return
       formError.value = teacherErrorMessage(err, t)
+      if (!append) {
+        students.value = []
+        studentMeta.value = { current_page: 1, last_page: 1, total: 0 }
+      }
     } finally {
-      studentsLoading.value = false
-      studentsLoadingMore.value = false
+      if (requestId === studentRequestId) {
+        studentsLoading.value = false
+        studentsLoadingMore.value = false
+      }
     }
   }
 
   function loadMoreStudents() {
+    if (studentsLoading.value || studentsLoadingMore.value) return
     return loadStudents(Number(studentMeta.value.current_page || 1) + 1, true)
   }
 
   async function loadAssignments() {
+    assignmentsLoading.value = true
     try {
       const payload = await learningApi.getTeacherAssignments()
       assignmentRows.value = payload.data || []
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
+    } finally {
+      assignmentsLoading.value = false
     }
   }
 
@@ -310,24 +339,28 @@ export function useTeacherDashboard(authRef) {
 
   async function openStudent(id, section = 'overview') {
     view.value = 'student'
-    await loadProfile(id, section)
+    await loadProfile(id, section, true)
   }
 
-  async function loadProfile(id, section = 'overview') {
+  async function loadProfile(id, section = 'overview', pushHistory = false) {
+    const requestId = ++profileRequestId
     const resolved = resolveProfileSection(section)
     const sameStudent = profile.value?.student?.id === Number(id)
     profileLoading.value = !sameStudent
     profileSection.value = resolved
     formError.value = ''
     try {
-      profile.value = await learningApi.getTeacherStudent(id, resolved)
+      const nextProfile = await learningApi.getTeacherStudent(id, resolved)
+      if (requestId !== profileRequestId) return
+      profile.value = nextProfile
       view.value = 'student'
-      syncUrl()
+      syncUrl(pushHistory)
     } catch (err) {
+      if (requestId !== profileRequestId) return
       profile.value = null
       formError.value = teacherErrorMessage(err, t)
     } finally {
-      profileLoading.value = false
+      if (requestId === profileRequestId) profileLoading.value = false
     }
   }
 
@@ -336,7 +369,36 @@ export function useTeacherDashboard(authRef) {
     return value === null || value === undefined ? t('teacher.unavailable') : value
   }
 
-  async function createAssignment() {
+  function beginCreateAssignment() {
+    editingAssignmentId.value = null
+    assignment.value = defaultAssignmentForm()
+    formError.value = ''
+    formSuccess.value = ''
+    assignmentFormOpen.value = true
+  }
+
+  function beginEditAssignment(row) {
+    const source = row?.assignment
+    const recipient = row?.recipients?.[0]
+    if (!row?.can_manage || !source || !recipient) return
+    editingAssignmentId.value = source.id
+    assignment.value = {
+      kind: source.kind,
+      student_id: String(recipient.student_id),
+      surah_number: String(source.surah_number),
+      ayah_start: source.ayah_start,
+      ayah_end: source.ayah_end,
+      repetition_target: source.repetition_target || 1,
+      due_at: source.due_at ? source.due_at.slice(0, 10) : '',
+      feedback: source.feedback || '',
+    }
+    formError.value = ''
+    formSuccess.value = ''
+    assignmentFormOpen.value = true
+  }
+
+  async function saveAssignment() {
+    if (assignmentSaving.value) return
     assignmentSaving.value = true
     formError.value = ''
     const payload = {
@@ -348,12 +410,32 @@ export function useTeacherDashboard(authRef) {
       due_at: assignment.value.due_at || null,
       feedback: assignment.value.feedback || null,
     }
-    payload.student_id = Number(assignment.value.student_id)
+    if (!editingAssignmentId.value) payload.student_id = Number(assignment.value.student_id)
     try {
-      await learningApi.createTeacherAssignment(payload)
+      if (editingAssignmentId.value) await learningApi.updateTeacherAssignment(editingAssignmentId.value, payload)
+      else await learningApi.createTeacherAssignment(payload)
+      const wasEditing = Boolean(editingAssignmentId.value)
+      editingAssignmentId.value = null
       assignment.value = { ...defaultAssignmentForm(), surah_number: assignment.value.surah_number }
       assignmentFormOpen.value = false
-      formSuccess.value = t('teacher.assign_success')
+      formSuccess.value = wasEditing ? t('teacher.task_updated') : t('teacher.assign_success')
+      await loadAssignments()
+      await loadOverview()
+    } catch (err) {
+      formError.value = teacherErrorMessage(err, t)
+    } finally {
+      assignmentSaving.value = false
+    }
+  }
+
+  async function removeAssignment(id) {
+    if (assignmentSaving.value) return
+    assignmentSaving.value = true
+    formError.value = ''
+    formSuccess.value = ''
+    try {
+      await learningApi.deleteTeacherAssignment(id)
+      formSuccess.value = t('teacher.task_removed')
       await loadAssignments()
       await loadOverview()
     } catch (err) {
@@ -367,8 +449,12 @@ export function useTeacherDashboard(authRef) {
     const params = new URLSearchParams(window.location.search)
     const urlView = params.get('view') || 'overview'
     view.value = TEACHER_VIEWS.includes(urlView) ? urlView : 'overview'
+    profileSection.value = resolveProfileSection(params.get('section') || 'overview')
     const days = Number(params.get('days'))
     chartDays.value = TEACHER_CHART_DAY_OPTIONS.includes(days) ? days : 30
+    filters.value = Object.fromEntries(
+      Object.keys(defaultStudentFilters()).map((key) => [key, params.get(key) || '']),
+    )
   }
 
   async function bootstrapData() {
@@ -388,7 +474,19 @@ export function useTeacherDashboard(authRef) {
     }
     bootstrapFromUrl()
     bootstrapData()
+    window.addEventListener('popstate', onHistoryNavigation)
   })
+
+  onUnmounted(() => {
+    window.removeEventListener('popstate', onHistoryNavigation)
+    clearTimeout(searchTimer.value)
+  })
+
+  function onHistoryNavigation() {
+    profileRequestId += 1
+    bootstrapFromUrl()
+    bootstrapData()
+  }
 
   return {
     t,
@@ -412,9 +510,11 @@ export function useTeacherDashboard(authRef) {
     profileSection,
     profileLoading,
     assignmentRows,
+    assignmentsLoading,
     assignmentSaving,
     assignment,
     assignmentFormOpen,
+    editingAssignmentId,
     formSuccess,
     attentionPreview,
     teacherGroups,
@@ -430,6 +530,7 @@ export function useTeacherDashboard(authRef) {
     comparisons,
     loadOverview,
     setDays,
+    syncUrl,
     openView,
     openStudentsFromKpi,
     queueStudentSearch,
@@ -438,7 +539,10 @@ export function useTeacherDashboard(authRef) {
     openStudent,
     loadProfile,
     metric,
-    createAssignment,
+    beginCreateAssignment,
+    beginEditAssignment,
+    saveAssignment,
+    removeAssignment,
     openAssignRevision,
     prefillAssignmentFromStudent,
     isNavActive: (id) => isTeacherNavActive(view.value, id),

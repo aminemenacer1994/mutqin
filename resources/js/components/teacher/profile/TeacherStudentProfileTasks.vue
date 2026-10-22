@@ -26,14 +26,18 @@ export default {
         const a = item.assignment || {}
         const kind = a.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'
         const statusKey = item.status || 'pending'
-        const tone = statusKey === 'completed' ? 'good' : (statusKey === 'overdue' ? 'danger' : 'mid')
+        const tone = statusKey === 'completed'
+          ? 'good'
+          : (statusKey === 'overdue' ? 'danger' : (statusKey === 'pending' ? 'muted' : 'mid'))
         return {
           key: item.id,
           icon: kind,
           iconTone: tone,
           title: `${a.surah_name} ${a.ayah_start}–${a.ayah_end}`,
-          quran: true,
-          hint: this.t(`teacher.status_${statusKey}`),
+          hint: [
+            this.t(`teacher.status_${statusKey}`),
+            this.completionEvidenceLabel(item),
+          ].filter(Boolean).join(' · '),
           badge: this.progressLabel(item) || (a.due_at ? this.formatWhen(a.due_at) : ''),
           badgeTone: tone,
         }
@@ -43,6 +47,12 @@ export default {
   methods: {
     progressLabel(item) {
       return item?.progress ? assignmentProgressLabel(item, this.t.bind(this)) : ''
+    },
+    completionEvidenceLabel(item) {
+      if (item?.status !== 'completed' || !item?.completed_at) return ''
+      return this.t('teacher.learner_assignments_completed_at', {
+        date: this.formatWhen(item.completed_at),
+      })
     },
   },
 }

@@ -11,7 +11,7 @@ export function assignmentProgressLabel(item, t) {
   const completed = Math.min(target, Math.max(0, Number(progress?.completed || 0)))
 
   if (item?.assignment?.kind === 'ai_recite') {
-    const attempts = Math.max(completed, Number(progress?.activity_count || 0))
+    const attempts = Math.max(completed, Number(progress?.attempt_count ?? progress?.activity_count ?? 0))
     return t(
       attempts === 1 ? 'teacher.assignment_progress_attempt_one' : 'teacher.assignment_progress_attempt_other',
       { count: attempts, target },
@@ -25,6 +25,31 @@ export function studentInitial(name) {
   const trimmed = String(name || '').trim()
   if (!trimmed) return '?'
   return trimmed.charAt(0).toUpperCase()
+}
+
+export function ayahRangeLabel(name, from, to, t) {
+  const surah = name || t('teacher.unavailable')
+  if (!from || !to) return surah
+  if (Number(from) === Number(to)) return `${surah} · ${t('teacher.ayah_n', { n: from })}`
+  return `${surah} · ${t('teacher.ayahs_range', { from, to })}`
+}
+
+export function groupAyahFindings(items, t) {
+  const groups = new Map()
+  for (const item of items || []) {
+    const key = `${item.surah_number}:${item.ayah_number}`
+    if (!groups.has(key)) groups.set(key, { key, title: ayahRangeLabel(item.surah_name, item.ayah_number, item.ayah_number, t), findings: [], seen: new Set(), first: item })
+    const group = groups.get(key)
+    const findingKey = `${item.spot_type || 'unknown'}:${item.word_index ?? 'ayah'}`
+    if (group.seen.has(findingKey)) continue
+    group.seen.add(findingKey)
+    const place = item.word_index === null || item.word_index === undefined
+      ? t('teacher.ayah_n', { n: item.ayah_number })
+      : t('teacher.word_n', { n: Number(item.word_index) + 1 })
+    const checks = t(item.affected_attempt_count === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: item.affected_attempt_count })
+    group.findings.push(`${place}: ${checks}`)
+  }
+  return [...groups.values()]
 }
 
 export function cssThemeColor(name, fallback) {
@@ -55,6 +80,7 @@ export function assignmentLabel(counts = {}, t) {
   if (counts.overdue) parts.push(t('teacher.overdue_n', { n: counts.overdue }))
   if (counts.pending) parts.push(t('teacher.pending_n', { n: counts.pending }))
   if (counts.in_progress) parts.push(t('teacher.progress_n', { n: counts.in_progress }))
+  if (counts.awaiting_confirmation) parts.push(t('teacher.awaiting_confirmation_n', { n: counts.awaiting_confirmation }))
   if (counts.completed) parts.push(t('teacher.completed_n', { n: counts.completed }))
   return parts.length ? parts.join(' · ') : t('teacher.none')
 }
@@ -73,20 +99,20 @@ export function issueLabel(issues, t) {
 
 export function attentionReasonTags(student, t) {
   const tags = []
-  if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {
-    tags.push({ key: 'inactive', tone: 'quiet', icon: 'bi bi-moon', label: t('teacher.reason_inactive') })
+  if ((student?.assignments?.overdue || 0) > 0) {
+    tags.push({ key: 'tasks', tone: 'danger', icon: 'bi bi-clock', label: t('teacher.kpi_overdue_tasks') })
   }
   if ((student?.revision_overdue || 0) > 0) {
     tags.push({ key: 'revision', tone: 'warn', icon: 'bi bi-arrow-repeat', label: t('teacher.overdue_revisions') })
   }
-  if ((student?.assignments?.overdue || 0) > 0) {
-    tags.push({ key: 'tasks', tone: 'danger', icon: 'bi bi-clock', label: t('teacher.kpi_overdue_tasks') })
-  }
-  if ((student?.weak_count || 0) > 0) {
-    tags.push({ key: 'weak', tone: 'warn', icon: 'bi bi-exclamation-triangle', label: t('teacher.reason_hard_ayahs') })
-  }
   if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65) {
     tags.push({ key: 'score', tone: 'danger', icon: 'bi bi-mic', label: t('teacher.reason_low_score') })
+  }
+  if ((student?.recurring_weak || student?.weak_count || 0) > 0) {
+    tags.push({ key: 'weak', tone: 'warn', icon: 'bi bi-exclamation-triangle', label: t('teacher.reason_hard_ayahs') })
+  }
+  if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {
+    tags.push({ key: 'inactive', tone: 'quiet', icon: 'bi bi-moon', label: t('teacher.reason_inactive') })
   }
   if (!tags.length && student?.needs_attention) {
     tags.push({ key: 'help', tone: 'warn', icon: 'bi bi-hand-index', label: t('teacher.need_look') })

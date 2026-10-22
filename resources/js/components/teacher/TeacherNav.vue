@@ -1,12 +1,12 @@
 <template>
   <aside :class="shellClass">
-    <nav class="teacher-nav" :aria-label="navLabel">
+    <nav class="teacher-nav nav nav-pills flex-column gap-1 p-2 border rounded-3 bg-body" :aria-label="navLabel">
       <button
         v-for="item in items"
         :key="`${variant}-${item.id}`"
         type="button"
-        class="teacher-nav__link"
-        :class="{ 'is-active': isActive(item.id) }"
+        class="teacher-nav__link nav-link d-flex align-items-center gap-2 text-start"
+        :class="{ 'is-active': isActive(item.id), active: isActive(item.id) }"
         :aria-current="isActive(item.id) ? 'page' : null"
         @click="$emit('select', item.id)"
       >

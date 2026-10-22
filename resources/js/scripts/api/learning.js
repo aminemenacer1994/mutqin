@@ -601,6 +601,10 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/start`)
     return data
   },
+  async completeLearnerAssignment(recipientId) {
+    const { data } = await http.post(`/me/assignments/${recipientId}/complete`)
+    return data
+  },
   async getTeacherOverview(days = 30) {
     const { data } = await http.get('/teacher/overview', { params: { days } })
     return data
@@ -643,6 +647,14 @@ export const learningApi = {
   },
   async createTeacherAssignment(payload) {
     const { data } = await http.post('/teacher/assignments', payload)
+    return data
+  },
+  async updateTeacherAssignment(id, payload) {
+    const { data } = await http.put(`/teacher/assignments/${id}`, payload)
+    return data
+  },
+  async deleteTeacherAssignment(id) {
+    const { data } = await http.delete(`/teacher/assignments/${id}`)
     return data
   },
 }

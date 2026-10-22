@@ -111,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
+            Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
         });
 
         Route::middleware('teacher.features')->group(function () {
@@ -128,6 +129,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/memberships/{membership}/remove', [TeacherDashboardController::class, 'removeMembership'])->name('api.teacher.memberships.remove');
                 Route::get('/assignments', [TeacherDashboardController::class, 'assignments'])->name('api.teacher.assignments');
                 Route::post('/assignments', [TeacherDashboardController::class, 'storeAssignment'])->name('api.teacher.assignments.store');
+                Route::put('/assignments/{assignment}', [TeacherDashboardController::class, 'updateAssignment'])->name('api.teacher.assignments.update');
+                Route::delete('/assignments/{assignment}', [TeacherDashboardController::class, 'destroyAssignment'])->name('api.teacher.assignments.destroy');
             });
         });
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');

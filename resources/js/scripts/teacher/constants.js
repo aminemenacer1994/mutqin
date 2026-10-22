@@ -3,7 +3,7 @@ export const TEACHER_VIEWS = ['overview', 'students', 'student', 'assignments', 
 export const TEACHER_CHART_DAY_OPTIONS = [7, 30, 90]
 
 export const TEACHER_NAV = [
-  { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-house-door' },
+  { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },
   { id: 'students', label: 'teacher.nav_students', icon: 'bi bi-people' },
   { id: 'assignments', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
   { id: 'settings', label: 'teacher.nav_settings', icon: 'bi bi-person' },

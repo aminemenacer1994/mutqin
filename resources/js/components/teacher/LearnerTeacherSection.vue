@@ -14,14 +14,32 @@
             <h2 id="learner-teacher-heading">{{ t('teacher.learner_section_title') }}</h2>
           </div>
         </div>
-        <span v-if="pendingCount > 0" class="learner-teacher__count" aria-live="polite">
-          {{ t('teacher.pending_n', { n: pendingCount }) }}
+        <span class="learner-teacher__count" aria-live="polite">
+          {{ t('teacher.learner_assignments_total', { n: assignments.length }) }}
         </span>
       </div>
     </div>
 
     <div class="dash-section__body learner-teacher">
-      <p v-if="error" class="teacher-alert" role="alert">{{ error }}</p>
+      <div v-if="error" class="alert alert-danger learner-teacher__alert" role="alert">
+        <span>{{ error }}</span>
+        <button
+          v-if="failedItem"
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          :disabled="savingId === failedItem.id"
+          @click="$emit('complete', failedItem)"
+        >{{ t('common.retry') }}</button>
+      </div>
+      <div v-if="completionMessage" class="alert alert-success learner-teacher__alert" role="status" aria-live="polite">
+        <span>{{ completionMessage }}</span>
+        <span class="learner-teacher__alert-actions">
+          <button type="button" class="btn btn-sm btn-outline-success" @click="$emit('view-completed')">
+            {{ t('teacher.learner_assignments_view_completed') }}
+          </button>
+          <button type="button" class="btn-close" :aria-label="t('common.close')" @click="$emit('dismiss-completion')"></button>
+        </span>
+      </div>
       <p v-if="groupsError" class="teacher-alert" role="alert">{{ groupsError }}</p>
 
       <div v-if="loading" class="learner-teacher__loading" role="status" aria-live="polite">
@@ -38,59 +56,35 @@
 
           <template v-else>
             <div
-              v-if="primaryFilters.length"
-              class="dash-range-toggle learner-teacher__filters"
-              role="group"
+              class="learner-teacher__filters"
+              role="tablist"
               :aria-label="t('teacher.learner_assignments_filter_label')"
             >
               <button
                 v-for="filter in primaryFilters"
                 :key="filter.id"
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :class="{ 'is-active': activeFilter === filter.id }"
-                :aria-pressed="activeFilter === filter.id ? 'true' : 'false'"
+                class="learner-teacher__filter"
+                :class="[`is-${filter.id}`, { 'is-active': activeFilter === filter.id }]"
+                role="tab"
+                :aria-selected="activeFilter === filter.id ? 'true' : 'false'"
                 @click="setFilter(filter.id)"
               >
                 {{ filter.label }}
-                <span v-if="filter.count > 0" class="learner-teacher__filter-count">{{ filter.count }}</span>
+                <span class="learner-teacher__filter-count">{{ filter.count }}</span>
               </button>
             </div>
 
             <p
-              v-if="activeFilter === 'actionable' && pendingCount === 0 && completedCount > 0"
+              v-if="activeFilter === 'actionable' && pendingCount === 0"
               class="learner-teacher__uptodate"
             >
               <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
               {{ t('teacher.learner_assignments_caught_up') }}
             </p>
-
-            <article
-              v-if="featured"
-              class="learner-teacher__featured dash-continue-card dash-continue-card--fresh"
-              :class="{ 'is-busy': startingId === featured.id }"
-            >
-              <span class="dash-continue-card__icon" aria-hidden="true">
-                <i :class="kindIcon(featured)" aria-hidden="true"></i>
-              </span>
-              <div class="dash-continue-card__main">
-                <span class="dash-continue-card__label">{{ t('teacher.learner_assignments_next') }}</span>
-                <strong class="dash-continue-card__title">{{ rangeLabel(featured) }}</strong>
-                <p class="dash-continue-card__hint">{{ metaLine(featured) }}</p>
-                <p v-if="featured.assignment?.feedback" class="learner-teacher__message-preview">
-                  {{ featured.assignment.feedback }}
-                </p>
-              </div>
-              <button
-                type="button"
-                class="dash-btn dash-btn--primary dash-btn--sm learner-teacher__cta"
-                :disabled="startingId === featured.id"
-                @click="$emit('start', featured)"
-              >
-                <i class="bi" :class="actionIcon(featured)" aria-hidden="true"></i>
-                {{ actionLabel(featured) }}
-              </button>
-            </article>
+            <p v-if="activeFilter === 'completed' && completedCount === 0" class="learner-teacher__uptodate">
+              {{ t('teacher.learner_assignments_no_completed') }}
+            </p>
 
             <ul v-if="listItems.length" class="learner-teacher__list">
               <li v-for="item in listItems" :key="item.id">
@@ -104,37 +98,56 @@
                     <span v-if="item.assignment?.feedback" class="learner-teacher__message-preview">
                       {{ item.assignment.feedback }}
                     </span>
+                    <details v-if="hasDetails(item)" class="learner-teacher__details">
+                      <summary>{{ t('teacher.learner_assignments_details') }}</summary>
+                      <span v-if="completionHint(item)">{{ completionHint(item) }}</span>
+                      <span v-if="item.assignment?.feedback">{{ item.assignment.feedback }}</span>
+                    </details>
                     <span v-if="isCompleted(item) && item.completed_at" class="learner-teacher__row-done">
                       {{ completedWhen(item) }}
                     </span>
                   </div>
                   <div class="learner-teacher__row-actions">
                     <span class="learner-teacher__status" :class="`is-${item.status}`">
+                      <i class="bi" :class="statusIcon(item)" aria-hidden="true"></i>
                       {{ statusLabel(item) }}
                     </span>
                     <button
-                      v-if="!isCompleted(item)"
+                      v-if="!isCompleted(item) && !canConfirm(item)"
                       type="button"
                       class="dash-btn dash-btn--ghost dash-btn--sm"
-                      :disabled="startingId === item.id"
+                      :disabled="savingId === item.id"
                       @click="$emit('start', item)"
                     >
                       {{ actionLabel(item) }}
                     </button>
+                    <button
+                      v-if="!isCompleted(item) && canConfirm(item)"
+                      type="button"
+                      class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__complete"
+                      :disabled="savingId === item.id"
+                      @click="$emit('complete', item)"
+                    >
+                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      {{ t('teacher.mark_complete') }}
+                    </button>
+                    <a v-if="isCompleted(item) && item.href" class="dash-btn dash-btn--ghost dash-btn--sm" :href="item.href">
+                      {{ t('teacher.view') }}
+                    </a>
                   </div>
                 </div>
               </li>
             </ul>
 
             <div v-if="showViewAll" class="learner-teacher__footer">
-              <button type="button" class="dash-text-link" @click="expanded = true">
-                {{ t('teacher.learner_assignments_view_all', { n: openListCount }) }}
+              <button type="button" class="dash-text-link" @click="visibleLimit += listLimit">
+                {{ t('teacher.learner_assignments_view_more', { n: Math.min(listLimit, remainingCount) }) }}
               </button>
             </div>
           </template>
         </div>
 
-        <div v-if="hasSecondary" class="learner-teacher__secondary">
+        <div v-if="support?.feedback?.length" class="learner-teacher__secondary">
           <ul v-if="support.feedback?.length" class="learner-teacher__messages">
             <li v-for="note in support.feedback" :key="note.id">
               <i class="bi bi-chat-quote" aria-hidden="true"></i>
@@ -147,32 +160,6 @@
             </li>
           </ul>
 
-          <ul v-if="support.groups?.length" class="learner-teacher__groups">
-            <li v-for="group in support.groups" :key="group.id">
-              <div class="learner-teacher__group-copy">
-                <strong>{{ group.name }}</strong>
-                <span>{{ group.status ? t(`teacher.status_${group.status}`) : t('teacher.not_joined') }}</span>
-              </div>
-              <div class="teacher-actions">
-                <button
-                  v-if="!group.membership_id || group.status === 'rejected'"
-                  type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
-                  @click="$emit('request-group', group)"
-                >
-                  {{ t('teacher.ask_join') }}
-                </button>
-                <button
-                  v-if="group.membership_id && !group.sharing && group.status !== 'rejected'"
-                  type="button"
-                  class="dash-btn dash-btn--primary dash-btn--sm"
-                  @click="$emit('grant-consent', group)"
-                >
-                  {{ t('teacher.allow_sharing') }}
-                </button>
-              </div>
-            </li>
-          </ul>
         </div>
       </template>
     </div>
@@ -183,7 +170,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { assignmentProgressLabel } from '../../scripts/teacher/formatters'
 
-const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue'])
+const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'awaiting_confirmation', 'overdue'])
 
 export default {
   name: 'LearnerTeacherSection',
@@ -192,23 +179,21 @@ export default {
     support: { type: Object, default: null },
     loading: { type: Boolean, default: false },
     error: { type: String, default: '' },
-    groupsError: { type: String, default: '' },
-    startingId: { type: Number, default: 0 },
+    savingId: { type: Number, default: 0 },
+    completionMessage: { type: String, default: '' },
+    failedItem: { type: Object, default: null },
   },
-  emits: ['start', 'request-group', 'grant-consent'],
+  emits: ['start', 'complete', 'view-completed', 'dismiss-completion'],
   data() {
     return {
       activeFilter: 'actionable',
-      expanded: false,
       listLimit: 4,
+      visibleLimit: 4,
     }
   },
   computed: {
     assignments() {
       return Array.isArray(this.support?.assignments) ? this.support.assignments : []
-    },
-    hasSecondary() {
-      return Boolean(this.support?.feedback?.length || this.support?.groups?.length)
     },
     pendingCount() {
       return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status)).length
@@ -219,8 +204,13 @@ export default {
     primaryFilters() {
       const filters = [
         {
+          id: 'all',
+          label: this.t('teacher.learner_assignments_filter_all'),
+          count: this.assignments.length,
+        },
+        {
           id: 'actionable',
-          label: this.t('teacher.learner_assignments_filter_actionable'),
+          label: this.t('teacher.learner_assignments_filter_todo'),
           count: this.pendingCount,
         },
         {
@@ -229,62 +219,40 @@ export default {
           count: this.completedCount,
         },
       ]
-      return filters.filter((row) => row.id === 'actionable' || row.count > 0)
+      return filters
     },
     filteredByStatus() {
       if (this.activeFilter === 'completed') {
         return this.assignments.filter((row) => row.status === 'completed')
       }
+      if (this.activeFilter === 'all') return this.assignments
       if (this.activeFilter === 'actionable') {
         return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status))
       }
       return this.assignments
     },
-    featured() {
-      if (this.activeFilter === 'completed') return null
-      const pool = this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status))
-      return pool[0] || null
-    },
-    showCompletedInList() {
-      return this.activeFilter === 'completed'
-        || (this.activeFilter === 'actionable' && this.pendingCount === 0 && this.completedCount > 0)
-    },
     listItems() {
-      let pool = []
-      if (this.activeFilter === 'completed' || this.showCompletedInList) {
-        pool = this.assignments.filter((row) => row.status === 'completed')
-      } else {
-        pool = this.filteredByStatus.filter((row) => {
-          if (this.featured && row.id === this.featured.id) return false
-          return true
-        })
-      }
-      if (this.expanded) return pool
-      return pool.slice(0, this.listLimit)
+      return this.filteredByStatus.slice(0, this.visibleLimit)
     },
     openListCount() {
-      return this.filteredByStatus.filter((row) => {
-        if (this.featured && row.id === this.featured.id) return false
-        return true
-      }).length
+      return this.filteredByStatus.length
+    },
+    remainingCount() {
+      return Math.max(0, this.openListCount - this.visibleLimit)
     },
     showViewAll() {
-      if (this.expanded || this.activeFilter === 'completed') return false
-      return this.openListCount > this.listLimit
+      return this.remainingCount > 0
     },
   },
   watch: {
     assignments() {
-      this.expanded = false
-      if (this.activeFilter === 'completed' && this.completedCount === 0) {
-        this.activeFilter = 'actionable'
-      }
+      this.visibleLimit = this.listLimit
     },
   },
   methods: {
     setFilter(id) {
       this.activeFilter = id
-      this.expanded = false
+      this.visibleLimit = this.listLimit
     },
     isCompleted(row) {
       return row?.status === 'completed'
@@ -292,6 +260,13 @@ export default {
     statusLabel(row) {
       if (this.isCompleted(row)) return this.t('teacher.status_completed')
       return this.t(`teacher.status_${row.status}`)
+    },
+    statusIcon(row) {
+      if (this.isCompleted(row)) return 'bi-check2-circle'
+      if (row?.status === 'overdue') return 'bi-exclamation-circle'
+      if (row?.status === 'awaiting_confirmation') return 'bi-check-circle'
+      if (row?.status === 'in_progress') return 'bi-arrow-repeat'
+      return 'bi-circle'
     },
     rangeLabel(row) {
       const assignment = row?.assignment
@@ -308,6 +283,17 @@ export default {
     },
     progressLabel(row) {
       return row?.progress ? assignmentProgressLabel(row, this.t.bind(this)) : ''
+    },
+    canConfirm(row) {
+      return Number(row?.progress?.activity_count || 0) >= Number(row?.progress?.target || 1)
+    },
+    hasDetails(row) {
+      return Boolean(row?.assignment?.feedback || this.completionHint(row))
+    },
+    completionHint(row) {
+      if (this.canConfirm(row)) return ''
+      const progress = row?.progress || {}
+      return `${progress.activity_count || 0} of ${progress.target || 1} qualifying activities complete`
     },
     dueLabel(row) {
       const due = row?.assignment?.due_at
@@ -343,7 +329,7 @@ export default {
       return parts.join(' · ')
     },
     actionLabel(row) {
-      if (this.isCompleted(row)) return ''
+      if (this.isCompleted(row)) return this.t('teacher.view')
       if (row?.progress?.resume_available || row?.status === 'in_progress' || row?.started_at) {
         return this.t('common.resume')
       }

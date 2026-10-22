@@ -1,4 +1,5 @@
 <template>
+  <div v-if="remaining > 0 || shown > initial" class="teacher-more__actions">
   <button
     v-if="remaining > 0"
     type="button"
@@ -8,6 +9,16 @@
   >
     {{ loading ? t('teacher.loading') : t('teacher.load_more') }}
   </button>
+  <button
+    v-if="shown > initial"
+    type="button"
+    class="dash-text-link teacher-more teacher-more--less"
+    :disabled="loading"
+    @click="$emit('less')"
+  >
+    {{ t('teacher.show_less') }}
+  </button>
+  </div>
 </template>
 
 <script>
@@ -19,7 +30,9 @@ export default {
   props: {
     remaining: { type: Number, default: 0 },
     loading: { type: Boolean, default: false },
+    shown: { type: Number, default: 0 },
+    initial: { type: Number, default: 5 },
   },
-  emits: ['more'],
+  emits: ['more', 'less'],
 }
 </script>

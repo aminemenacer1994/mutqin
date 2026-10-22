@@ -22,6 +22,8 @@ class TeacherAssignmentRecipient extends Model
             'status' => AssignmentStatus::class,
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'student_completed_at' => 'datetime',
+            'completion_evidence' => 'array',
         ];
     }
 

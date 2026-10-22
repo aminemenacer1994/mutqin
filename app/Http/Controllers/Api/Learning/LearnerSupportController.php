@@ -66,4 +66,16 @@ class LearnerSupportController extends Controller
                 : null,
         ]);
     }
+
+    public function completeAssignment(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments, TeacherDashboardService $dashboard): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $assignments->completeByStudent($user, $recipient);
+
+        return response()->json($dashboard->learnerSupport($user))
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
 }

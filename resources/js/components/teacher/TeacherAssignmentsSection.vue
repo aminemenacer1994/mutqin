@@ -1,73 +1,133 @@
 <template>
   <section class="teacher-stack">
-    <TeacherPageHeader
-      :title="t('teacher.nav_assignments')"
-    >
-      <template #actions>
-        <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" @click="$emit('update:formOpen', true)">
-          <i class="bi bi-plus-lg" aria-hidden="true"></i>
-          {{ t('teacher.add_task') }}
-        </button>
-      </template>
-    </TeacherPageHeader>
+    <p v-if="success" class="alert alert-success mb-0" role="status">{{ success }}</p>
+    <p v-if="error && !formOpen" class="alert alert-danger mb-0" role="alert">{{ error }}</p>
 
-    <p v-if="success" class="teacher-alert teacher-alert--success" role="status">{{ success }}</p>
-
-    <div class="teacher-toolbar teacher-toolbar--tasks">
-      <label class="teacher-search teacher-search--tasks">
+    <div class="teacher-toolbar teacher-toolbar--tasks d-flex flex-wrap align-items-center gap-2">
+      <label class="input-group teacher-search teacher-search--tasks flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
-        <i class="bi bi-search" aria-hidden="true"></i>
-        <input v-model="query" type="search" :placeholder="t('teacher.search_placeholder')" autocomplete="off">
+        <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.task_search_placeholder')" autocomplete="off">
       </label>
+      <div class="btn-group btn-group-sm teacher-task-filters flex-wrap" role="group" :aria-label="t('teacher.task_filter_label')">
+        <button
+          v-for="filter in taskFilters"
+          :key="filter.id"
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          :class="{ 'is-active': statusFilter === filter.id }"
+          :aria-pressed="statusFilter === filter.id ? 'true' : 'false'"
+          @click="setStatusFilter(filter.id)"
+        >
+          {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
+        </button>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        {{ t('teacher.add_task') }}
+      </button>
     </div>
 
+    <p v-if="loading" class="teacher-loading-inline" role="status" aria-live="polite">
+      <span class="dash-spinner" aria-hidden="true"></span>
+      {{ t('teacher.loading') }}
+    </p>
+
     <TeacherSectionPane
-      v-if="filteredItems.length"
-      :title="t('teacher.sent_tasks')"
+      v-else-if="filteredItems.length"
       tone="neutral"
     >
-      <ul class="teacher-task-list teacher-task-list--compact">
-        <li v-for="item in visibleItems" :key="item.key" :class="{ 'is-completed': item.status === 'completed' }">
-          <button
-            type="button"
-            class="teacher-task-row teacher-task-row--compact"
-            :disabled="!item.studentId"
-            @click="item.studentId && $emit('open-student', item.studentId)"
-          >
+      <ul class="list-group list-group-flush teacher-task-list teacher-task-list--compact">
+        <li v-for="item in visibleItems" :key="item.key" class="list-group-item p-0" :class="`teacher-task-list__item--${item.statusTone}`">
+          <div class="teacher-task-row teacher-task-row--compact">
             <span class="teacher-task-row__icon" :class="`is-${item.statusTone}`" aria-hidden="true">
               <i :class="item.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'"></i>
             </span>
-            <span class="teacher-task-row__copy">
+            <button type="button" class="teacher-task-row__copy teacher-task-row__open" :disabled="!item.studentId" @click="$emit('open-student', item.studentId)">
               <span class="teacher-task-row__student">{{ item.studentName }}</span>
-              <span class="teacher-task-row__range teacher-quran">{{ item.title }}</span>
+              <span class="teacher-task-row__range">{{ item.title }}</span>
               <span class="teacher-task-row__meta">
                 <span>{{ item.kindLabel }}</span>
                 <span v-if="item.due">{{ item.due }}</span>
                 <span v-if="item.progress">{{ item.progress }}</span>
+                <span v-if="item.completionEvidence">{{ item.completionEvidence }}</span>
+              </span>
+            </button>
+            <span class="teacher-task-row__aside">
+              <span class="teacher-task-row__status" :class="`is-${item.statusTone}`">
+                <i :class="item.statusIcon" aria-hidden="true"></i>
+                <span>{{ item.statusLabel }}</span>
+              </span>
+              <span class="teacher-task-row__controls">
+              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+              </button>
+              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_remove')} ${item.studentName}`" :title="t('teacher.task_remove')" @click="openRemove(item)">
+                <i class="bi bi-trash" aria-hidden="true"></i>
+              </button>
+              <button v-else-if="item.studentId" type="button" class="teacher-task-row__go" :aria-label="`${t('teacher.open')} ${item.studentName}`" @click="$emit('open-student', item.studentId)">
+                <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
+              </button>
               </span>
             </span>
-            <span class="teacher-task-row__aside">
-              <span class="teacher-task-row__status" :class="`is-${item.statusTone}`">{{ item.statusLabel }}</span>
-              <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
-            </span>
-          </button>
+          </div>
         </li>
       </ul>
-      <TeacherMore :remaining="filteredItems.length - shown" @more="shown += STEP" />
+      <TeacherMore :remaining="filteredItems.length - shown" :shown="shown" :initial="STEP" @more="shown += STEP" @less="shown = STEP" />
     </TeacherSectionPane>
-    <TeacherEmpty v-else icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
+    <div v-else class="teacher-task-empty">
+      <TeacherEmpty
+        icon="bi bi-clipboard-check"
+        :message="rows.length ? t('teacher.task_filter_empty') : t('teacher.assignments_empty')"
+      />
+      <button
+        v-if="rows.length && (query || statusFilter !== 'all')"
+        type="button"
+        class="btn btn-outline-secondary btn-sm"
+        @click="resetFilters"
+      >
+        {{ t('teacher.clear_filters') }}
+      </button>
+    </div>
 
     <TeacherTaskSheet
       :open="formOpen"
+      :editing="editing"
       :form="form"
       :saving="saving"
       :error="error"
       :students="students"
       :surahs="surahs"
       @close="closeForm"
-      @submit="$emit('create')"
+      @submit="$emit('save')"
       @update:form="$emit('update:form', $event)"
     />
+    <Teleport to="body">
+      <template v-if="removeItem">
+        <div class="modal-backdrop fade show teacher-task-backdrop" @click="closeRemove"></div>
+        <div ref="removeDialog" class="modal fade show d-block teacher-task-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-remove-title" tabindex="-1" @keydown="onRemoveKeydown">
+          <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog">
+            <div class="modal-content teacher-task-modal__content teacher-task-modal__content--remove">
+              <div class="modal-header teacher-task-modal__header">
+                <div class="teacher-task-modal__intro">
+                  <span class="teacher-task-modal__eyebrow teacher-task-modal__eyebrow--danger"><i class="bi bi-trash3" aria-hidden="true"></i> {{ t('teacher.task_remove') }}</span>
+                  <h2 id="teacher-remove-title" class="modal-title h5 teacher-task-modal__title">{{ t('teacher.task_remove') }}</h2>
+                </div>
+                <button type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeRemove"></button>
+              </div>
+              <div class="modal-body teacher-task-modal__remove-body">
+                <span class="teacher-task-modal__remove-icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
+                <p class="mb-0">{{ t('teacher.task_remove_confirm', { student: removeItem.studentName, range: removeItem.title }) }}</p>
+              </div>
+              <div class="modal-footer teacher-task-modal__footer">
+                <button type="button" class="btn btn-outline-secondary" @click="closeRemove">{{ t('teacher.close') }}</button>
+                <button ref="removeButton" type="button" class="btn btn-danger" :disabled="saving" @click="confirmRemove">{{ t('teacher.task_remove') }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Teleport>
   </section>
 </template>
 
@@ -76,88 +136,163 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
-import TeacherPageHeader from './TeacherPageHeader.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
+import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
 
-const STEP = 8
+const STEP = 5
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherSectionPane, TeacherTaskSheet },
+  components: { TeacherEmpty, TeacherMore, TeacherSectionPane, TeacherTaskSheet },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
     formOpen: { type: Boolean, default: false },
+    editing: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
     success: { type: String, default: '' },
     error: { type: String, default: '' },
     rows: { type: Array, default: () => [] },
+    loading: { type: Boolean, default: false },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
   },
-  emits: ['update:form', 'update:formOpen', 'create', 'open-student'],
+  emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student'],
   data() {
-    return { shown: STEP, STEP, query: '' }
+    return { shown: STEP, STEP, query: '', statusFilter: 'all', removeItem: null, returnFocusEl: null }
+  },
+  watch: {
+    removeItem(value) {
+      document.body.classList.toggle('modal-open', Boolean(value))
+      document.body.classList.toggle('teacher-task-modal-open', Boolean(value))
+    },
+  },
+  beforeUnmount() {
+    document.body.classList.remove('modal-open', 'teacher-task-modal-open')
   },
   computed: {
+    taskFilters() {
+      const counts = this.flatItems.reduce((result, item) => {
+        result.all += 1
+        if (item.status === 'completed') result.done += 1
+        else if (item.status === 'overdue') result.overdue += 1
+        else if (item.status === 'in_progress' || item.status === 'awaiting_confirmation') result.progress += 1
+        else result.waiting += 1
+        return result
+      }, { all: 0, waiting: 0, progress: 0, overdue: 0, done: 0 })
+      return [
+        { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
+        { id: 'waiting', label: this.t('teacher.task_filter_waiting'), count: counts.waiting },
+        { id: 'progress', label: this.t('teacher.task_filter_progress'), count: counts.progress },
+        { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
+        { id: 'done', label: this.t('teacher.task_filter_completed'), count: counts.done },
+      ]
+    },
     flatItems() {
       return this.rows.flatMap((row) => {
         const assignment = row.assignment || {}
         const title = `${assignment.surah_name} ${assignment.ayah_start}–${assignment.ayah_end}`
-        const recipients = row.recipients?.length ? row.recipients : [{
-          id: assignment.id,
-          student_id: null,
-          student_name: this.t('teacher.no_authorised'),
-          status: 'pending',
-        }]
-        return recipients.map((recipient) => {
+        const recipients = row.recipients || []
+        return recipients.map((recipient, recipientIndex) => {
           const status = recipient.status || 'pending'
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
             title,
             studentId: recipient.student_id,
-            studentName: recipient.student_name,
+            studentName: recipient.student_name || this.t('teacher.unavailable'),
             assignment,
+            sourceRow: row,
+            canManage: Boolean(row.can_manage) && !assignment.learning_group_id && recipients.length === 1 && recipientIndex === 0,
             status,
             statusTone: this.statusTone(status),
+            statusIcon: this.statusIcon(status),
             statusLabel: this.t(`teacher.status_${status}`),
             kindLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
             due: assignment.due_at ? `${this.t('teacher.due')}: ${formatTeacherWhen(assignment.due_at)}` : '',
             progress: this.progressLabel(recipient, assignment),
+            completionEvidence: this.completionEvidenceLabel(recipient),
           }
         })
       })
     },
     filteredItems() {
       const needle = this.query.trim().toLowerCase()
-      if (!needle) return this.flatItems
-      return this.flatItems.filter((item) => (
+      const items = needle ? this.flatItems.filter((item) => (
         item.title.toLowerCase().includes(needle)
         || item.studentName.toLowerCase().includes(needle)
-      ))
+      )) : [...this.flatItems]
+      const filtered = this.statusFilter === 'all'
+        ? items
+        : items.filter((item) => this.statusFilter === 'done'
+          ? item.status === 'completed'
+          : this.statusFilter === 'overdue'
+            ? item.status === 'overdue'
+            : this.statusFilter === 'progress'
+              ? item.status === 'in_progress' || item.status === 'awaiting_confirmation'
+              : item.status === 'pending')
+      const urgency = { overdue: 0, in_progress: 1, pending: 2, completed: 3 }
+      return filtered.sort((a, b) => (urgency[a.status] ?? 2) - (urgency[b.status] ?? 2))
     },
     visibleItems() {
       return this.filteredItems.slice(0, this.shown)
     },
   },
   methods: {
+    openRemove(item) {
+      this.returnFocusEl = captureReturnFocus()
+      this.removeItem = item
+      this.$nextTick(() => this.$refs.removeButton?.focus())
+    },
+    closeRemove() {
+      this.removeItem = null
+      this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
+    },
+    confirmRemove() {
+      if (!this.removeItem || this.saving) return
+      this.$emit('remove', this.removeItem.assignment.id)
+      this.closeRemove()
+    },
+    onRemoveKeydown(event) {
+      handleModalKeydown(event, { container: this.$refs.removeDialog, open: Boolean(this.removeItem), onEscape: this.closeRemove })
+    },
     patch(key, value) {
       this.$emit('update:form', { ...this.form, [key]: value })
     },
     closeForm() {
       this.$emit('update:formOpen', false)
     },
+    setStatusFilter(filter) {
+      this.statusFilter = filter
+      this.shown = STEP
+    },
+    resetFilters() {
+      this.query = ''
+      this.statusFilter = 'all'
+      this.shown = STEP
+    },
     progressLabel(recipient, assignment) {
       if (!recipient?.progress) return ''
       return assignmentProgressLabel({ ...recipient, assignment }, this.t.bind(this))
     },
+    completionEvidenceLabel(recipient) {
+      if (recipient?.status !== 'completed' || !recipient?.completed_at) return ''
+      return this.t('teacher.learner_assignments_completed_at', {
+        date: formatTeacherWhen(recipient.completed_at),
+      })
+    },
     statusTone(status) {
       if (status === 'completed') return 'good'
       if (status === 'overdue') return 'danger'
-      if (status === 'in_progress') return 'mid'
+      if (status === 'in_progress' || status === 'awaiting_confirmation') return 'mid'
       return 'muted'
+    },
+    statusIcon(status) {
+      if (status === 'completed') return 'bi bi-check2'
+      if (status === 'overdue') return 'bi bi-exclamation-circle'
+      if (status === 'in_progress' || status === 'awaiting_confirmation') return 'bi bi-arrow-repeat'
+      return 'bi bi-clock'
     },
   },
 }

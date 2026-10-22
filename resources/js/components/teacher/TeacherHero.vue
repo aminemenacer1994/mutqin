@@ -1,19 +1,17 @@
 <template>
-  <header class="teacher-pane teacher-pane--hero dash-reveal teacher-hero">
-    <div class="teacher-hero__row">
+  <header class="card border rounded-3 shadow-sm dash-reveal teacher-hero">
+    <div class="card-body teacher-hero__row">
       <div class="teacher-hero__copy">
-        <p class="teacher-kicker">{{ t('teacher.kicker') }}</p>
         <h1 class="teacher-hero__title">{{ t('teacher.greeting', { name: firstName }) }}</h1>
         <p v-if="organisationName" class="teacher-meta">
           <i class="bi bi-building" aria-hidden="true"></i>
           {{ organisationName }}
         </p>
-        <p class="teacher-hero__summary">{{ t('teacher.hero_summary') }}</p>
+        <p class="teacher-hero__summary">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          <span>{{ t('teacher.hero_summary') }}</span>
+        </p>
       </div>
-      <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="practiceUrl">
-        <i class="bi bi-book" aria-hidden="true"></i>
-        {{ t('teacher.my_practice') }}
-      </a>
     </div>
   </header>
 </template>
@@ -27,7 +25,6 @@ export default {
   props: {
     firstName: { type: String, required: true },
     organisationName: { type: String, default: '' },
-    practiceUrl: { type: String, required: true },
   },
 }
 </script>

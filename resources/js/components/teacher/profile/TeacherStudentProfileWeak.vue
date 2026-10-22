@@ -11,6 +11,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import { groupAyahFindings } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
@@ -26,17 +27,14 @@ export default {
   emits: ['assign-revision'],
   computed: {
     weakRows() {
-      return (this.profile.payload.items || []).map((item) => ({
-        key: item.id,
+      return groupAyahFindings(this.profile.payload.items, this.t).map((group) => ({
+        key: group.key,
         icon: 'bi bi-exclamation-triangle',
         iconTone: 'warn',
-        title: `${item.surah_name} ${item.ayah_number}`,
-        quran: true,
-        hint: this.t('teacher.weak_spot_hint', { n: item.affected_attempt_count }),
-        badge: this.t('teacher.times', { n: item.affected_attempt_count }),
-        badgeTone: 'warn',
+        title: group.title,
+        hint: group.findings.join(' · '),
         actionLabel: this.t('teacher.assign_revision'),
-        actionPayload: this.assignPayload(item),
+        actionPayload: this.assignPayload(group.first),
       }))
     },
   },

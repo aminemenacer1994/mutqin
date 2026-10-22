@@ -1,14 +1,10 @@
 <template>
   <section class="teacher-stack teacher-profile">
-    <button type="button" class="teacher-back" @click="$emit('back')">
-      <i class="bi bi-arrow-left" aria-hidden="true"></i>
-      {{ t('teacher.back_students') }}
-    </button>
-
     <div v-if="loading" class="teacher-skeletons"><div class="teacher-skeleton"></div></div>
 
     <template v-else-if="profile">
-      <header class="teacher-profile-hero teacher-profile-hero--compact">
+      <header class="card teacher-profile-hero teacher-profile-hero--compact">
+        <div class="card-body d-flex align-items-center gap-3">
         <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
         <div class="teacher-profile-hero__copy">
           <h2>{{ profile.student.name }}</h2>
@@ -17,29 +13,37 @@
             {{ profile.student.organisation || t('teacher.no_group') }}
           </p>
         </div>
+        </div>
       </header>
 
-      <div :id="tabsId" class="teacher-tabs teacher-tabs--scroll" role="tablist" :aria-label="t('teacher.nav_students')">
+      <div
+        :id="tabsId"
+        ref="tabStrip"
+        class="nav nav-tabs teacher-tabs teacher-tabs--scroll"
+        role="tablist"
+        :aria-label="t('teacher.nav_students')"
+        aria-orientation="horizontal"
+      >
         <button
           v-for="tab in tabs"
           :key="tab.id"
           type="button"
           role="tab"
           :id="tabId(tab.id)"
-          class="teacher-tabs__tab"
-          :class="{ 'is-active': section === tab.id }"
+          class="nav-link teacher-tabs__tab"
+          :class="{ 'is-active': section === tab.id, active: section === tab.id }"
           :aria-selected="section === tab.id ? 'true' : 'false'"
           :aria-controls="panelId"
           :tabindex="section === tab.id ? 0 : -1"
           @keydown="onTabKeydown($event, tab.id)"
-          @click="$emit('change-section', tab.id)"
+          @click="selectTab(tab.id)"
         >
           <i :class="tab.icon" aria-hidden="true"></i>
           <span>{{ t(tab.label) }}</span>
         </button>
       </div>
 
-      <div :id="panelId" class="teacher-tab-panel teacher-profile-stack" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
+      <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
           :profile="profile"
@@ -130,6 +134,14 @@ export default {
       tabPrefix: `teacher-profile-tab-${uid}`,
     }
   },
+  watch: {
+    section() {
+      this.$nextTick(this.revealActiveTab)
+    },
+    profile() {
+      this.$nextTick(this.revealActiveTab)
+    },
+  },
   methods: {
     tabId(id) {
       return `${this.tabPrefix}-${id}`
@@ -147,8 +159,24 @@ export default {
       if (event.key === 'End') next = this.tabs.length - 1
       const nextTab = this.tabs[next]
       if (!nextTab) return
-      this.$emit('change-section', nextTab.id)
-      this.$nextTick(() => document.getElementById(this.tabId(nextTab.id))?.focus())
+      this.selectTab(nextTab.id, true)
+    },
+    selectTab(id, focus = false) {
+      this.$emit('change-section', id)
+      this.$nextTick(() => {
+        this.revealActiveTab(id)
+        if (focus) document.getElementById(this.tabId(id))?.focus({ preventScroll: true })
+      })
+    },
+    revealActiveTab(id = this.section) {
+      const strip = this.$refs.tabStrip
+      const tab = document.getElementById(this.tabId(id))
+      if (!strip || !tab) return
+      const container = strip.getBoundingClientRect()
+      const target = tab.getBoundingClientRect()
+      const inset = 8
+      if (target.left < container.left + inset) strip.scrollLeft += target.left - container.left - inset
+      else if (target.right > container.right - inset) strip.scrollLeft += target.right - container.right + inset
     },
   },
 }

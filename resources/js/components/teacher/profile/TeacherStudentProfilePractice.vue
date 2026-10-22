@@ -4,10 +4,19 @@
       <span class="teacher-spotlight__icon" aria-hidden="true"><i class="bi bi-bookmark-fill"></i></span>
       <div class="teacher-spotlight__copy">
         <span class="teacher-spotlight__label">{{ t('teacher.saved_session') }}</span>
-        <span class="teacher-quran teacher-spotlight__value">{{ sessionLabel(profile.payload.latest_saved) }}</span>
+        <span class="teacher-spotlight__value">{{ sessionLabel(profile.payload.latest_saved) }}</span>
       </div>
     </div>
-    <TeacherRecordList v-if="sessionRows.length" :rows="sessionRows" />
+    <div v-if="sessionGroups.length" class="teacher-history-groups">
+      <details v-for="group in sessionGroups" :key="group.key" class="teacher-history-group" :open="group.rows.length === 1">
+        <summary class="teacher-history-group__summary">
+          <span class="teacher-history-group__title">{{ group.title }}</span>
+          <span class="teacher-history-group__count">{{ group.rows.length }} {{ group.rows.length === 1 ? t('teacher.session_one') : t('teacher.session_many') }}</span>
+          <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </summary>
+        <TeacherRecordList :rows="group.rows" />
+      </details>
+    </div>
     <TeacherEmpty v-else icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
   </TeacherSectionPane>
 </template>
@@ -28,17 +37,19 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   computed: {
-    sessionRows() {
-      return (this.profile.payload.sessions || []).map((session) => ({
-        key: session.id,
-        icon: 'bi bi-journal-text',
-        iconTone: 'accent',
-        title: this.sessionLabel(session),
-        quran: true,
-        hint: this.t('teacher.profile_session_when', { when: this.formatWhen(session.last_activity_at) }),
-        badge: this.formatWhen(session.last_activity_at),
-        badgeTone: 'muted',
-      }))
+    sessionGroups() {
+      const groups = new Map()
+      for (const session of this.profile.payload.sessions || []) {
+        const title = this.sessionLabel(session)
+        if (!groups.has(title)) groups.set(title, { key: title, title, rows: [] })
+        groups.get(title).rows.push({
+          key: session.id,
+          icon: 'bi bi-journal-text',
+          iconTone: 'accent',
+          title: this.formatWhen(session.last_activity_at) || this.t('teacher.unavailable'),
+        })
+      }
+      return [...groups.values()]
     },
   },
 }
