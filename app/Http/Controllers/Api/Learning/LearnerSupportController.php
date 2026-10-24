@@ -78,4 +78,18 @@ class LearnerSupportController extends Controller
         return response()->json($dashboard->learnerSupport($user))
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
+
+    public function storeAssignmentMessage(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+
+        $message = $assignments->addLearnerMessage($user, $recipient, $data['body']);
+
+        return response()->json([
+            'message' => $assignments->presentAssignmentMessage($message),
+        ], 201)->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
 }

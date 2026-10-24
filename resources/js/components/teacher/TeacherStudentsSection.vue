@@ -1,5 +1,12 @@
 <template>
   <section class="teacher-stack">
+    <header class="teacher-page-header teacher-page-header--context">
+      <div class="teacher-page-header__main">
+        <p class="teacher-page-header__eyebrow">{{ t('teacher.nav_students') }}</p>
+        <h2 class="teacher-page-header__title teacher-page-header__title--display">{{ t('teacher.students_section_title') }}</h2>
+        <p class="teacher-page-header__subtitle">{{ t('teacher.students_section_subtitle') }}</p>
+      </div>
+    </header>
     <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-student-toolbar d-flex flex-wrap align-items-center gap-2">
       <label class="input-group teacher-search teacher-search--compact flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
@@ -54,6 +61,7 @@
       :students="students"
       :format-when="formatWhen"
       @open="$emit('open-student', $event)"
+      @assign="$emit('assign-revision', $event)"
     />
     <nav v-if="pageCount > 1" class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2" :aria-label="t('teacher.pagination_label')">
       <span class="teacher-pagination__summary">
@@ -86,7 +94,7 @@ export default {
     loadingMore: { type: Boolean, default: false },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student'],
+  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision'],
   computed: {
     hasFilters() {
       return Boolean(this.filters.q || this.filters.activity || this.filters.attention || this.filters.performance || (this.filters.sort && this.filters.sort !== 'name'))

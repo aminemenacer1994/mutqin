@@ -1,5 +1,12 @@
 <template>
   <section class="teacher-stack">
+    <header class="teacher-page-header teacher-page-header--context">
+      <div class="teacher-page-header__main">
+        <p class="teacher-page-header__eyebrow">{{ t('teacher.nav_assignments') }}</p>
+        <h2 class="teacher-page-header__title teacher-page-header__title--display">{{ t('teacher.tasks_section_title') }}</h2>
+        <p class="teacher-page-header__subtitle">{{ t('teacher.tasks_section_subtitle') }}</p>
+      </div>
+    </header>
     <p v-if="success" class="alert alert-success mb-0" role="status">{{ success }}</p>
     <p v-if="error && !formOpen" class="alert alert-danger mb-0" role="alert">{{ error }}</p>
 
@@ -59,6 +66,10 @@
                 <span>{{ item.statusLabel }}</span>
               </span>
               <span class="teacher-task-row__controls">
+              <button type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__message" :aria-label="`${t('teacher.task_conversation')} ${item.studentName}`" :title="t('teacher.task_conversation')" @click="openMessages(item)">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                <span v-if="item.messages.length" class="teacher-task-row__message-count">{{ item.messages.length }}</span>
+              </button>
               <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
               </button>
@@ -127,6 +138,49 @@
           </div>
         </div>
       </template>
+      <template v-if="messageItem">
+        <div class="modal-backdrop fade show teacher-task-backdrop" @click="closeMessages"></div>
+        <div ref="messageDialog" class="modal fade show d-block teacher-task-modal teacher-message-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-message-title" tabindex="-1" @keydown="onMessageKeydown">
+          <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog teacher-message-modal__dialog">
+            <div class="modal-content teacher-task-modal__content teacher-message-modal__content">
+              <div class="modal-header teacher-task-modal__header">
+                <div class="teacher-task-modal__intro">
+                  <span class="teacher-task-modal__eyebrow"><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ t('teacher.task_conversation') }}</span>
+                  <h2 id="teacher-message-title" class="modal-title h5 teacher-task-modal__title">{{ messageItem.studentName }}</h2>
+                  <p>{{ messageItem.title }} · {{ messageItem.kindLabel }}</p>
+                </div>
+                <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
+              </div>
+              <div class="modal-body teacher-message-modal__body">
+                <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
+                  <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="`is-${message.sender}`">
+                    <span>{{ message.sender === 'teacher' ? t('teacher.you') : messageItem.studentName }}</span>
+                    <p>{{ message.body }}</p>
+                    <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}</time>
+                  </article>
+                </div>
+                <div v-else class="teacher-message-empty">
+                  <i class="bi bi-chat-heart" aria-hidden="true"></i>
+                  <p>{{ t('teacher.teacher_conversation_empty', { student: messageItem.studentName }) }}</p>
+                </div>
+                <form class="teacher-message-composer" @submit.prevent="sendMessage">
+                  <label for="teacher-task-reply">{{ t('teacher.reply_to_student') }}</label>
+                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="4" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
+                  <div class="teacher-message-composer__foot">
+                    <span v-if="messageError" class="text-danger" role="alert">{{ messageError }}</span>
+                    <span v-else-if="messageSent" class="text-success" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
+                    <span v-else>{{ messageDraft.length }}/2000</span>
+                    <button type="submit" class="btn btn-primary" :disabled="messageSaving || !messageDraft.trim()">
+                      <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+                      {{ messageSaving ? t('teacher.saving') : t('teacher.send_reply') }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </Teleport>
   </section>
 </template>
@@ -157,15 +211,30 @@ export default {
     loading: { type: Boolean, default: false },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
+    onSendMessage: { type: Function, required: true },
   },
   emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student'],
   data() {
-    return { shown: STEP, STEP, query: '', statusFilter: 'all', removeItem: null, returnFocusEl: null }
+    return {
+      shown: STEP,
+      STEP,
+      query: '',
+      statusFilter: 'all',
+      removeItem: null,
+      messageItem: null,
+      messageDraft: '',
+      messageSaving: false,
+      messageError: '',
+      messageSent: false,
+      returnFocusEl: null,
+    }
   },
   watch: {
     removeItem(value) {
-      document.body.classList.toggle('modal-open', Boolean(value))
-      document.body.classList.toggle('teacher-task-modal-open', Boolean(value))
+      this.syncModalState(Boolean(value) || Boolean(this.messageItem))
+    },
+    messageItem(value) {
+      this.syncModalState(Boolean(value) || Boolean(this.removeItem))
     },
   },
   beforeUnmount() {
@@ -213,6 +282,8 @@ export default {
             due: assignment.due_at ? `${this.t('teacher.due')}: ${formatTeacherWhen(assignment.due_at)}` : '',
             progress: this.progressLabel(recipient, assignment),
             completionEvidence: this.completionEvidenceLabel(recipient),
+            recipientId: recipient.id,
+            messages: Array.isArray(recipient.messages) ? recipient.messages : [],
           }
         })
       })
@@ -240,6 +311,10 @@ export default {
     },
   },
   methods: {
+    syncModalState(open) {
+      document.body.classList.toggle('modal-open', open)
+      document.body.classList.toggle('teacher-task-modal-open', open)
+    },
     openRemove(item) {
       this.returnFocusEl = captureReturnFocus()
       this.removeItem = item
@@ -256,6 +331,47 @@ export default {
     },
     onRemoveKeydown(event) {
       handleModalKeydown(event, { container: this.$refs.removeDialog, open: Boolean(this.removeItem), onEscape: this.closeRemove })
+    },
+    openMessages(item) {
+      this.returnFocusEl = captureReturnFocus()
+      this.messageItem = item
+      this.messageDraft = ''
+      this.messageError = ''
+      this.messageSent = false
+      this.$nextTick(() => this.$refs.messageClose?.focus())
+    },
+    closeMessages() {
+      this.messageItem = null
+      this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
+    },
+    onMessageKeydown(event) {
+      handleModalKeydown(event, { container: this.$refs.messageDialog, open: Boolean(this.messageItem), onEscape: this.closeMessages })
+    },
+    async sendMessage() {
+      const body = this.messageDraft.trim()
+      if (!body || !this.messageItem || this.messageSaving) return
+      this.messageSaving = true
+      this.messageError = ''
+      this.messageSent = false
+      try {
+        const message = await this.onSendMessage(this.messageItem.recipientId, body)
+        if (message) this.messageItem.messages.push(message)
+        this.messageDraft = ''
+        this.messageSent = true
+      } catch (error) {
+        this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        this.messageSaving = false
+      }
+    },
+    messageWhen(message) {
+      try {
+        const date = new Date(message?.created_at)
+        if (Number.isNaN(date.getTime())) return ''
+        return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      } catch (_) {
+        return ''
+      }
     },
     patch(key, value) {
       this.$emit('update:form', { ...this.form, [key]: value })

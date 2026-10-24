@@ -6,7 +6,8 @@
         <i :class="row.icon || 'bi bi-dot'"></i>
       </span>
       <div class="teacher-records__copy">
-        <span class="teacher-records__title" :class="{ 'teacher-quran': row.quran }">{{ row.title }}</span>
+        <a v-if="row.href" class="teacher-records__title teacher-records__link" :class="{ 'teacher-quran': row.quran }" :href="row.href">{{ row.title }}</a>
+        <span v-else class="teacher-records__title" :class="{ 'teacher-quran': row.quran }">{{ row.title }}</span>
         <span v-if="row.hint" class="teacher-records__hint">{{ row.hint }}</span>
       </div>
       <div class="teacher-records__aside">
@@ -20,6 +21,7 @@
           v-if="row.actionLabel"
           type="button"
           class="btn btn-outline-secondary btn-sm dash-btn dash-btn--ghost dash-btn--sm"
+          :aria-label="`${row.actionLabel}: ${row.title}`"
           @click="$emit('action', row.actionPayload)"
         >
           {{ row.actionLabel }}

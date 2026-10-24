@@ -1,22 +1,25 @@
 <template>
   <section
-    class="dash-section dash-section--flat dash-section--learner-teacher dash-reveal"
+    class="dash-section dash-section--learner-teacher dash-reveal"
     aria-labelledby="learner-teacher-heading"
     style="--dash-delay: 15ms"
   >
-    <div class="dash-section__head dash-section__head--compact">
+    <div class="dash-section__head learner-teacher__hero">
       <div class="dash-section__head-row">
         <div class="dash-section__title">
-          <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-            <i class="bi bi-person-workspace" aria-hidden="true"></i>
+          <span class="dash-section__icon learner-teacher__hero-icon" aria-hidden="true">
+            <i class="bi bi-mortarboard" aria-hidden="true"></i>
           </span>
           <div class="dash-section__title-copy">
+            <span class="learner-teacher__eyebrow">{{ t('teacher.learner_assignments_title') }}</span>
             <h2 id="learner-teacher-heading">{{ t('teacher.learner_section_title') }}</h2>
+            <p>{{ t('teacher.learner_section_subtitle') }}</p>
           </div>
         </div>
-        <span class="learner-teacher__count" aria-live="polite">
-          {{ t('teacher.learner_assignments_total', { n: assignments.length }) }}
-        </span>
+        <div v-if="assignments.length" class="learner-teacher__summary" aria-live="polite">
+          <span><strong>{{ pendingCount }}</strong>{{ t('teacher.learner_assignments_filter_todo') }}</span>
+          <span><strong>{{ completedCount }}</strong>{{ t('teacher.status_completed') }}</span>
+        </div>
       </div>
     </div>
 
@@ -68,6 +71,7 @@
                 :class="[`is-${filter.id}`, { 'is-active': activeFilter === filter.id }]"
                 role="tab"
                 :aria-selected="activeFilter === filter.id ? 'true' : 'false'"
+                :aria-controls="`learner-teacher-panel-${filter.id}`"
                 @click="setFilter(filter.id)"
               >
                 {{ filter.label }}
@@ -76,66 +80,93 @@
             </div>
 
             <p
-              v-if="activeFilter === 'actionable' && pendingCount === 0"
+              v-if="activeFilter === 'todo' && pendingCount === 0"
               class="learner-teacher__uptodate"
             >
               <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
               {{ t('teacher.learner_assignments_caught_up') }}
             </p>
-            <p v-if="activeFilter === 'completed' && completedCount === 0" class="learner-teacher__uptodate">
+            <p v-if="activeFilter === 'done' && completedCount === 0" class="learner-teacher__uptodate">
               {{ t('teacher.learner_assignments_no_completed') }}
             </p>
 
-            <ul v-if="listItems.length" class="learner-teacher__list">
+            <ul v-if="listItems.length" :id="`learner-teacher-panel-${activeFilter}`" class="learner-teacher__list learner-teacher__card-list" role="tabpanel">
               <li v-for="item in listItems" :key="item.id">
-                <div
+                <article
                   class="learner-teacher__row"
-                  :class="{ 'is-completed': isCompleted(item) }"
+                  :class="[`is-${item.status}`, { 'is-completed': isCompleted(item) }]"
                 >
-                  <div class="learner-teacher__row-copy">
-                    <strong>{{ rangeLabel(item) }}</strong>
-                    <span class="learner-teacher__row-meta">{{ metaLine(item) }}</span>
-                    <span v-if="item.assignment?.feedback" class="learner-teacher__message-preview">
-                      {{ item.assignment.feedback }}
-                    </span>
-                    <details v-if="hasDetails(item)" class="learner-teacher__details">
-                      <summary>{{ t('teacher.learner_assignments_details') }}</summary>
-                      <span v-if="completionHint(item)">{{ completionHint(item) }}</span>
-                      <span v-if="item.assignment?.feedback">{{ item.assignment.feedback }}</span>
-                    </details>
+                  <div class="learner-teacher__task-icon" :class="`is-${item.assignment?.kind || 'practice'}`" aria-hidden="true">
+                    <i :class="kindIcon(item)"></i>
+                  </div>
+                  <div class="learner-teacher__row-main">
+                    <div class="learner-teacher__row-top">
+                      <div class="learner-teacher__row-copy">
+                        <span class="learner-teacher__kind">{{ kindLabel(item) }}</span>
+                        <strong>{{ rangeLabel(item) }}</strong>
+                      </div>
+                      <span class="learner-teacher__status" :class="`is-${item.status}`">
+                        <i class="bi" :class="statusIcon(item)" aria-hidden="true"></i>
+                        {{ statusLabel(item) }}
+                      </span>
+                    </div>
+
+                    <div class="learner-teacher__meta-grid">
+                      <span><i class="bi bi-person" aria-hidden="true"></i>{{ item.teacher_name || t('teacher.teacher') }}</span>
+                      <span v-if="dueLabel(item)"><i class="bi bi-calendar-event" aria-hidden="true"></i>{{ dueLabel(item) }}</span>
+                      <span><i class="bi bi-arrow-repeat" aria-hidden="true"></i>{{ progressLabel(item) }}</span>
+                      <span v-if="messageCount(item)"><i class="bi bi-chat-dots" aria-hidden="true"></i>{{ t('teacher.task_messages_count', { n: messageCount(item) }) }}</span>
+                    </div>
+
+                    <div class="learner-teacher__progress" :aria-label="progressLabel(item)">
+                      <span :style="{ width: `${progressPercent(item)}%` }"></span>
+                    </div>
+
+                    <p v-if="item.assignment?.feedback" class="learner-teacher__note-preview">
+                      <i class="bi bi-chat-quote" aria-hidden="true"></i>
+                      <span><strong>{{ t('teacher.teacher_note') }}</strong>{{ item.assignment.feedback }}</span>
+                    </p>
                     <span v-if="isCompleted(item) && item.completed_at" class="learner-teacher__row-done">
-                      {{ completedWhen(item) }}
+                      <i class="bi bi-check2" aria-hidden="true"></i>{{ completedWhen(item) }}
                     </span>
+
+                    <div class="learner-teacher__row-actions">
+                      <button
+                        v-if="!isCompleted(item) && !canConfirm(item)"
+                        type="button"
+                        class="dash-btn dash-btn--primary"
+                        :disabled="savingId === item.id"
+                        @click="$emit('start', item)"
+                      >
+                        <i class="bi" :class="actionIcon(item)" aria-hidden="true"></i>
+                        {{ actionLabel(item) }}
+                      </button>
+                      <button
+                        v-if="!isCompleted(item) && canConfirm(item)"
+                        type="button"
+                        class="dash-btn dash-btn--primary learner-teacher__complete"
+                        :disabled="savingId === item.id"
+                        @click="$emit('complete', item)"
+                      >
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        {{ t('teacher.mark_complete') }}
+                      </button>
+                      <a v-if="canConfirm(item) && item.href" class="dash-btn dash-btn--ghost" :href="item.href">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                        {{ t('teacher.practice_again') }}
+                      </a>
+                      <button
+                        type="button"
+                        class="dash-btn dash-btn--ghost learner-teacher__details-button"
+                        :aria-label="`${t('teacher.task_conversation')}: ${rangeLabel(item)}`"
+                        @click="openDetails(item)"
+                      >
+                        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                        {{ messageCount(item) ? t('teacher.task_conversation') : t('teacher.message_teacher') }}
+                      </button>
+                    </div>
                   </div>
-                  <div class="learner-teacher__row-actions">
-                    <span class="learner-teacher__status" :class="`is-${item.status}`">
-                      <i class="bi" :class="statusIcon(item)" aria-hidden="true"></i>
-                      {{ statusLabel(item) }}
-                    </span>
-                    <button
-                      v-if="!isCompleted(item) && !canConfirm(item)"
-                      type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
-                      :disabled="savingId === item.id"
-                      @click="$emit('start', item)"
-                    >
-                      {{ actionLabel(item) }}
-                    </button>
-                    <button
-                      v-if="!isCompleted(item) && canConfirm(item)"
-                      type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__complete"
-                      :disabled="savingId === item.id"
-                      @click="$emit('complete', item)"
-                    >
-                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                      {{ t('teacher.mark_complete') }}
-                    </button>
-                    <a v-if="isCompleted(item) && item.href" class="dash-btn dash-btn--ghost dash-btn--sm" :href="item.href">
-                      {{ t('teacher.view') }}
-                    </a>
-                  </div>
-                </div>
+                </article>
               </li>
             </ul>
 
@@ -163,6 +194,97 @@
         </div>
       </template>
     </div>
+
+    <Teleport to="body">
+    <div v-if="selectedItem" class="user-dashboard learner-teacher__portal">
+    <div class="learner-teacher__modal-backdrop" @click.self="closeDetails">
+      <section
+        ref="detailsModal"
+        class="learner-teacher__modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="learner-teacher-details-title"
+        tabindex="-1"
+        @keydown="handleModalKeydown"
+      >
+        <header class="learner-teacher__modal-head">
+          <div>
+            <span class="learner-teacher__modal-kicker">{{ t('teacher.task_conversation') }}</span>
+            <h3 id="learner-teacher-details-title">{{ rangeLabel(selectedItem) }}</h3>
+          </div>
+          <button ref="modalClose" type="button" class="learner-teacher__modal-close" :aria-label="t('common.close')" @click="closeDetails"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </header>
+        <div class="learner-teacher__modal-body">
+          <dl class="learner-teacher__facts">
+            <div><dt>{{ t('teacher.teacher') }}</dt><dd>{{ selectedItem.teacher_name || t('teacher.unavailable') }}</dd></div>
+            <div><dt>{{ t('teacher.group') }}</dt><dd>{{ selectedItem.organisation_name || t('teacher.unavailable') }}</dd></div>
+            <div><dt>{{ t('teacher.kind') }}</dt><dd>{{ kindLabel(selectedItem) }}</dd></div>
+            <div><dt>{{ t('teacher.task_status') }}</dt><dd><span class="learner-teacher__status" :class="`is-${selectedItem.status}`"><i class="bi" :class="statusIcon(selectedItem)" aria-hidden="true"></i> {{ statusLabel(selectedItem) }}</span></dd></div>
+            <div><dt>{{ t('teacher.due') }}</dt><dd>{{ dueValue(selectedItem) || t('teacher.unavailable') }}</dd></div>
+            <div><dt>{{ t('teacher.task_progress') }}</dt><dd>{{ progressLabel(selectedItem) || t('teacher.unavailable') }}</dd></div>
+            <div v-if="isCompleted(selectedItem) && selectedItem.completed_at"><dt>{{ t('teacher.status_completed') }}</dt><dd>{{ completedWhen(selectedItem) }}</dd></div>
+          </dl>
+          <div v-if="selectedItem.assignment?.feedback" class="learner-teacher__teacher-note">
+            <strong><i class="bi bi-chat-left-text" aria-hidden="true"></i> {{ t('teacher.teacher_note') }}</strong>
+            <p>{{ selectedItem.assignment.feedback }}</p>
+          </div>
+          <section class="learner-teacher__conversation" :aria-label="t('teacher.task_conversation')">
+            <div class="learner-teacher__conversation-head">
+              <div>
+                <h4>{{ t('teacher.task_conversation') }}</h4>
+                <p>{{ t('teacher.task_conversation_hint') }}</p>
+              </div>
+              <i class="bi bi-shield-check" aria-hidden="true"></i>
+            </div>
+            <div v-if="selectedItem.messages?.length" class="learner-teacher__thread" aria-live="polite">
+              <article
+                v-for="message in selectedItem.messages"
+                :key="message.id"
+                class="learner-teacher__bubble"
+                :class="`is-${message.sender}`"
+              >
+                <span>{{ message.sender === 'student' ? t('teacher.you') : (message.sender_name || selectedItem.teacher_name || t('teacher.teacher')) }}</span>
+                <p>{{ message.body }}</p>
+                <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}</time>
+              </article>
+            </div>
+            <div v-else class="learner-teacher__thread-empty">
+              <i class="bi bi-chat-heart" aria-hidden="true"></i>
+              <span>{{ t('teacher.task_conversation_empty') }}</span>
+            </div>
+            <form class="learner-teacher__composer" @submit.prevent="sendMessage">
+              <label :for="`task-message-${selectedItem.id}`">{{ t('teacher.message_teacher') }}</label>
+              <textarea
+                :id="`task-message-${selectedItem.id}`"
+                v-model="messageDraft"
+                rows="3"
+                maxlength="2000"
+                :placeholder="t('teacher.message_teacher_placeholder')"
+                :disabled="messageSaving"
+              ></textarea>
+              <div class="learner-teacher__composer-foot">
+                <span v-if="messageError" class="learner-teacher__message-error" role="alert">{{ messageError }}</span>
+                <span v-else-if="messageSent" class="learner-teacher__message-success" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.message_sent') }}</span>
+                <span v-else>{{ messageDraft.length }}/2000</span>
+                <button type="submit" class="dash-btn dash-btn--primary" :disabled="messageSaving || !messageDraft.trim()">
+                  <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+                  {{ messageSaving ? t('teacher.saving') : t('teacher.send_message') }}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+        <footer class="learner-teacher__modal-foot">
+          <button type="button" class="dash-btn dash-btn--ghost" @click="closeDetails">{{ t('common.close') }}</button>
+          <a v-if="selectedItem.href && !isCompleted(selectedItem)" class="dash-btn dash-btn--primary" :href="selectedItem.href" @click="closeDetails">
+            <i class="bi" :class="actionIcon(selectedItem)" aria-hidden="true"></i> {{ actionLabel(selectedItem) }}
+          </a>
+          <a v-else-if="selectedItem.href" class="dash-btn dash-btn--primary" :href="selectedItem.href" @click="closeDetails"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>{{ t('teacher.practice_again') }}</a>
+        </footer>
+      </section>
+    </div>
+    </div>
+    </Teleport>
   </section>
 </template>
 
@@ -182,13 +304,20 @@ export default {
     savingId: { type: Number, default: 0 },
     completionMessage: { type: String, default: '' },
     failedItem: { type: Object, default: null },
+    onSendNote: { type: Function, required: true },
   },
   emits: ['start', 'complete', 'view-completed', 'dismiss-completion'],
   data() {
     return {
-      activeFilter: 'actionable',
+      activeFilter: 'todo',
       listLimit: 4,
       visibleLimit: 4,
+      selectedItem: null,
+      previouslyFocused: null,
+      messageDraft: '',
+      messageSaving: false,
+      messageError: '',
+      messageSent: false,
     }
   },
   computed: {
@@ -209,12 +338,12 @@ export default {
           count: this.assignments.length,
         },
         {
-          id: 'actionable',
+          id: 'todo',
           label: this.t('teacher.learner_assignments_filter_todo'),
           count: this.pendingCount,
         },
         {
-          id: 'completed',
+          id: 'done',
           label: this.t('teacher.status_completed'),
           count: this.completedCount,
         },
@@ -222,11 +351,11 @@ export default {
       return filters
     },
     filteredByStatus() {
-      if (this.activeFilter === 'completed') {
+      if (this.activeFilter === 'done') {
         return this.assignments.filter((row) => row.status === 'completed')
       }
       if (this.activeFilter === 'all') return this.assignments
-      if (this.activeFilter === 'actionable') {
+      if (this.activeFilter === 'todo') {
         return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status))
       }
       return this.assignments
@@ -248,11 +377,68 @@ export default {
     assignments() {
       this.visibleLimit = this.listLimit
     },
+    selectedItem(value) {
+      if (typeof document !== 'undefined') document.body.classList.toggle('modal-open', Boolean(value))
+    },
+  },
+  beforeUnmount() {
+    if (typeof document !== 'undefined') document.body.classList.remove('modal-open')
   },
   methods: {
     setFilter(id) {
       this.activeFilter = id
       this.visibleLimit = this.listLimit
+    },
+    openDetails(row) {
+      this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null
+      this.selectedItem = row
+      this.messageDraft = ''
+      this.messageError = ''
+      this.messageSent = false
+      this.$nextTick(() => this.$refs.modalClose?.focus())
+    },
+    closeDetails() {
+      this.selectedItem = null
+      this.$nextTick(() => this.previouslyFocused?.focus?.())
+    },
+    async sendMessage() {
+      const body = this.messageDraft.trim()
+      if (!body || !this.selectedItem || this.messageSaving) return
+      this.messageSaving = true
+      this.messageError = ''
+      this.messageSent = false
+      try {
+        const message = await this.onSendNote(this.selectedItem, body)
+        if (message) {
+          this.selectedItem.messages = [...(this.selectedItem.messages || []), message]
+        }
+        this.messageDraft = ''
+        this.messageSent = true
+      } catch (error) {
+        this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        this.messageSaving = false
+      }
+    },
+    handleModalKeydown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        this.closeDetails()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const root = this.$refs.detailsModal
+      const focusable = root ? [...root.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled) : []
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     },
     isCompleted(row) {
       return row?.status === 'completed'
@@ -284,24 +470,37 @@ export default {
     progressLabel(row) {
       return row?.progress ? assignmentProgressLabel(row, this.t.bind(this)) : ''
     },
+    progressPercent(row) {
+      const completed = Number(row?.progress?.completed || 0)
+      const target = Math.max(1, Number(row?.progress?.target || 1))
+      return Math.max(0, Math.min(100, Math.round((completed / target) * 100)))
+    },
+    messageCount(row) {
+      return Array.isArray(row?.messages) ? row.messages.length : 0
+    },
+    messageWhen(message) {
+      try {
+        const date = new Date(message?.created_at)
+        if (Number.isNaN(date.getTime())) return ''
+        return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      } catch (_) {
+        return ''
+      }
+    },
     canConfirm(row) {
       return Number(row?.progress?.activity_count || 0) >= Number(row?.progress?.target || 1)
     },
-    hasDetails(row) {
-      return Boolean(row?.assignment?.feedback || this.completionHint(row))
-    },
-    completionHint(row) {
-      if (this.canConfirm(row)) return ''
-      const progress = row?.progress || {}
-      return `${progress.activity_count || 0} of ${progress.target || 1} qualifying activities complete`
-    },
     dueLabel(row) {
+      const value = this.dueValue(row)
+      return value ? `${this.t('teacher.due')}: ${value}` : ''
+    },
+    dueValue(row) {
       const due = row?.assignment?.due_at
-      if (!due || this.isCompleted(row)) return ''
+      if (!due) return ''
       try {
         const date = new Date(due)
         if (Number.isNaN(date.getTime())) return ''
-        return `${this.t('teacher.due')}: ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
       } catch (_) {
         return ''
       }
@@ -329,7 +528,7 @@ export default {
       return parts.join(' · ')
     },
     actionLabel(row) {
-      if (this.isCompleted(row)) return this.t('teacher.view')
+      if (this.isCompleted(row)) return this.t('teacher.practice_again')
       if (row?.progress?.resume_available || row?.status === 'in_progress' || row?.started_at) {
         return this.t('common.resume')
       }

@@ -103,6 +103,7 @@ class TeacherDashboardTest extends TestCase
         $this->assertCount(1, $students);
         $this->assertSame($student->id, $students[0]['id']);
         $this->assertSame(1, $students[0]['sessions']);
+        $this->assertSame(1, $students[0]['ai_attempts']);
         $this->assertSame(1, $students[0]['weak_count']);
         $this->assertEquals(80, $students[0]['ai_success_rate']);
 
@@ -533,6 +534,101 @@ class TeacherDashboardTest extends TestCase
             ->json('payload.assignments');
 
         $this->assertSame(AssignmentStatus::Completed->value, $tasks[0]['status']);
+    }
+
+    public function test_student_and_teacher_can_exchange_messages_on_the_assigned_task(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $otherTeacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $teacher->organisation_id,
+        ]);
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+
+        $learnerMessage = $this->actingAs($student)
+            ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => 'I keep pausing at ayah four.'])
+            ->assertCreated()
+            ->assertJsonPath('message.sender', 'student')
+            ->json('message');
+
+        $this->actingAs($hidden)
+            ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => 'Not my task.'])
+            ->assertNotFound();
+        $this->actingAs($otherTeacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), ['body' => 'Not my student.'])
+            ->assertNotFound();
+
+        $teacherMessage = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), ['body' => 'Repeat ayahs three and four slowly.'])
+            ->assertCreated()
+            ->assertJsonPath('message.sender', 'teacher')
+            ->assertJsonPath('message.sender_name', $teacher->name)
+            ->json('message');
+
+        $supportMessages = $this->actingAs($student)
+            ->getJson(route('api.me.support'))
+            ->assertOk()
+            ->json('assignments.0.messages');
+        $this->assertSame([$learnerMessage['id'], $teacherMessage['id']], array_column($supportMessages, 'id'));
+        $this->assertSame(['student', 'teacher'], array_column($supportMessages, 'sender'));
+
+        $teacherMessages = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.assignments'))
+            ->assertOk()
+            ->json('data.0.recipients.0.messages');
+        $this->assertSame(['student', 'teacher'], array_column($teacherMessages, 'sender'));
+
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => '   '])
+            ->assertUnprocessable();
+    }
+
+    public function test_completed_task_can_be_practised_again_and_keeps_the_new_attempt_count(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+
+        $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))->assertOk();
+        foreach (['first', 'again'] as $index => $label) {
+            $session = $this->actingAs($student)->postJson(route('api.session.start'), [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'idempotency_key' => "completed-task-{$label}",
+                'teacher_assignment_recipient_id' => $recipientId,
+                'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+            ])->assertOk()->json('session');
+            $this->actingAs($student)->postJson(route('api.session.end'), [
+                'session_id' => $session['id'],
+                'idempotency_key' => "completed-task-{$label}-end",
+                'range_complete' => true,
+                'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+            ])->assertOk();
+
+            if ($index === 0) {
+                $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))->assertOk();
+            }
+        }
+
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json('assignments.0');
+        $this->assertSame(AssignmentStatus::Completed->value, $support['status']);
+        $this->assertSame(2, $support['progress']['activity_count']);
+        $this->assertSame(2, $support['progress']['completion_count']);
+        $this->assertStringContainsString('assignment_recipient='.$recipientId, $support['href']);
     }
 
     public function test_date_only_task_is_not_overdue_until_after_its_due_day(): void

@@ -1,18 +1,37 @@
 <template>
   <TeacherSectionPane tone="neutral">
-    <h4 class="teacher-section-label">
-      <i class="bi bi-pin-angle" aria-hidden="true"></i>
-      {{ t('teacher.revisit') }}
-    </h4>
-    <TeacherRecordList v-if="revisitRows.length" :rows="revisitRows" />
-    <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.revision_empty')" />
+    <div class="teacher-section-summary teacher-section-summary--compact" role="list">
+      <div role="listitem">
+        <span>{{ t('teacher.revisit') }}</span>
+        <strong>{{ revisitRows.length }}</strong>
+        <small>{{ t('teacher.revisit_help') }}</small>
+      </div>
+      <div role="listitem">
+        <span>{{ t('teacher.plans') }}</span>
+        <strong>{{ planRows.length }}</strong>
+        <small>{{ t('teacher.plans_help') }}</small>
+      </div>
+    </div>
 
-    <h4 class="teacher-section-label">
-      <i class="bi bi-calendar-event" aria-hidden="true"></i>
-      {{ t('teacher.plans') }}
-    </h4>
-    <TeacherRecordList v-if="planRows.length" :rows="planRows" />
-    <TeacherEmpty v-else inline icon="bi bi-calendar" :message="t('teacher.revision_empty')" />
+    <div class="teacher-revision-grid">
+      <section class="teacher-revision-group" :aria-labelledby="`${sectionId}-revisit`">
+        <h4 :id="`${sectionId}-revisit`" class="teacher-section-label">
+          <i class="bi bi-pin-angle" aria-hidden="true"></i>
+          <span><strong>{{ t('teacher.revisit') }}</strong><small>{{ t('teacher.revisit_help') }}</small></span>
+        </h4>
+        <TeacherRecordList v-if="revisitRows.length" :rows="revisitRows" />
+        <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.revision_empty')" />
+      </section>
+
+      <section class="teacher-revision-group" :aria-labelledby="`${sectionId}-plans`">
+        <h4 :id="`${sectionId}-plans`" class="teacher-section-label">
+          <i class="bi bi-calendar-event" aria-hidden="true"></i>
+          <span><strong>{{ t('teacher.plans') }}</strong><small>{{ t('teacher.plans_help') }}</small></span>
+        </h4>
+        <TeacherRecordList v-if="planRows.length" :rows="planRows" />
+        <TeacherEmpty v-else inline icon="bi bi-calendar" :message="t('teacher.revision_empty')" />
+      </section>
+    </div>
   </TeacherSectionPane>
 </template>
 
@@ -27,6 +46,9 @@ export default {
   name: 'TeacherStudentProfileRevision',
   components: { TeacherEmpty, TeacherRecordList, TeacherSectionPane },
   mixins: [i18nMixin],
+  data() {
+    return { sectionId: `teacher-revision-${Math.random().toString(36).slice(2, 8)}` }
+  },
   props: {
     profile: { type: Object, required: true },
     comparisons: { type: Array, default: () => [] },
@@ -40,6 +62,7 @@ export default {
         iconTone: 'accent',
         title: group.title,
         hint: group.findings.join(' · '),
+        href: group.first?.evidence_url || '',
       }))
     },
     planRows() {
@@ -53,6 +76,7 @@ export default {
           ? this.t('teacher.overdue')
           : (plan.recommended_review_at ? this.formatWhen(plan.recommended_review_at) : this.t('teacher.unavailable')),
         badgeTone: plan.overdue ? 'danger' : 'muted',
+        href: plan.evidence_url || '',
       }))
     },
   },

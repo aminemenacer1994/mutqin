@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\TeacherAssignment;
+use App\Models\TeacherAssignmentRecipient;
 use App\Models\User;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -104,7 +105,7 @@ class TeacherDashboardController extends Controller
             })
             ->with(['recipients' => function ($query) use ($ids) {
                 $query->whereIn('student_id', $ids === [] ? [0] : $ids)->with('student:id,name');
-            }, 'learningGroup:id,name'])
+            }, 'learningGroup:id,name', 'notes.teacher:id,name'])
             ->latest('id')
             ->get()
             ->map(function (TeacherAssignment $assignment) use ($assignments) {
@@ -168,6 +169,17 @@ class TeacherDashboardController extends Controller
         $assignments->remove($this->teacher($request), $assignment);
 
         return $this->json(['removed' => true]);
+    }
+
+    public function storeAssignmentMessage(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        $message = $assignments->addTeacherMessage($teacher, $recipient, $data['body']);
+
+        return $this->json([
+            'message' => $assignments->presentAssignmentMessage($message->loadMissing('teacher:id,name')),
+        ], 201);
     }
 
     public function storeNote(Request $request, User $student, TeacherDashboardService $dashboard): JsonResponse

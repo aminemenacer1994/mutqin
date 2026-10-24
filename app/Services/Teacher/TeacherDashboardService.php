@@ -139,6 +139,7 @@ class TeacherDashboardService
                 'ayahs_practised' => $metric['ayahs_practised'],
                 'last_activity_at' => $metric['last_activity_at'],
                 'ai_success_rate' => $metric['ai_success_rate'],
+                'ai_attempts' => $metric['ai_attempts'],
                 'weak_count' => $metric['weak_count'],
                 'recurring_weak' => $metric['recurring_weak'],
                 'weak_example' => $metric['weak_example'],
@@ -393,7 +394,7 @@ class TeacherDashboardService
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $user->id)
             ->whereHas('assignment')
-            ->with(['assignment.teacher:id,name'])
+            ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name'])
             ->latest('id')
             ->limit(50)
             ->get();
@@ -409,7 +410,7 @@ class TeacherDashboardService
             $assignments = TeacherAssignmentRecipient::query()
                 ->where('student_id', $user->id)
                 ->whereHas('assignment')
-                ->with(['assignment.teacher:id,name'])
+                ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name'])
                 ->latest('id')
                 ->limit(50)
                 ->get();
@@ -435,6 +436,7 @@ class TeacherDashboardService
         $feedback = TeacherNote::query()
             ->where('student_id', $user->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
+            ->whereNull('teacher_assignment_id')
             ->with('teacher:id,name')
             ->latest('id')
             ->limit(20)
@@ -459,6 +461,7 @@ class TeacherDashboardService
                         $unfinishedSessions,
                     );
                     $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
+                    $payload['organisation_name'] = $recipient->assignment?->organisation?->name;
 
                     return $payload;
                 })
@@ -556,7 +559,11 @@ class TeacherDashboardService
             }
         }
 
-        $ai = AiReciteAttempt::query()->validScored()->whereIn('user_id', $ids)->get(['user_id', 'accuracy_percent', 'created_at']);
+        $ai = AiReciteAttempt::query()->validScored()->whereIn('user_id', $ids)->get([
+            'id', 'user_id', 'user_session_id', 'memorisation_assessment_id', 'teacher_assignment_recipient_id',
+            'session_recommendation_id', 'attempt_number', 'ayah_range', 'accuracy_percent', 'band', 'created_at',
+        ]);
+        $ai = $this->dedupeScoredAttempts($ai);
         $aiBuckets = [];
         foreach ($ai as $attempt) {
             $id = (int) $attempt->user_id;
@@ -665,7 +672,8 @@ class TeacherDashboardService
             $metrics[$id]['needs_attention'] = ! $metrics[$id]['active_7']
                 || $row['revision_overdue'] > 0
                 || $row['assignments']['overdue'] > 0
-                || $row['recurring_weak'] > 0;
+                || $row['recurring_weak'] > 0
+                || ($row['ai_success_rate'] !== null && $row['ai_success_rate'] < 65);
         }
 
         return $metrics;
@@ -1034,6 +1042,7 @@ class TeacherDashboardService
                 'affected_attempt_count' => (int) $spot->affected_attempt_count,
                 'first_identified_at' => $spot->first_identified_at?->toIso8601String(),
                 'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
+                'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
             ])->all();
 
         return ['items' => $items];
@@ -1050,13 +1059,18 @@ class TeacherDashboardService
             ->latest('created_at')
             ->limit(30)
             ->get();
+        $attempts = $this->dedupeScoredAttempts($attempts);
 
         // Directory and profile use the same full-history denominator. The
         // visible history remains limited to the most recent 30 checks.
         $scored = AiReciteAttempt::query()
             ->validScored()
             ->where('user_id', $student->id)
-            ->get(['accuracy_percent', 'created_at', 'band']);
+            ->get([
+                'id', 'user_session_id', 'memorisation_assessment_id', 'teacher_assignment_recipient_id',
+                'session_recommendation_id', 'attempt_number', 'ayah_range', 'accuracy_percent', 'created_at', 'band',
+            ]);
+        $scored = $this->dedupeScoredAttempts($scored);
         $rate = $scored->isEmpty() ? null : round((float) $scored->avg('accuracy_percent'), 1);
 
         return [
@@ -1085,6 +1099,50 @@ class TeacherDashboardService
                 'band' => $attempt->band,
             ])->values()->all(),
         ];
+    }
+
+    /**
+     * Retries can duplicate the same persisted check. Keep the newest row for
+     * an identical session/range/score event so averages and history agree.
+     */
+    private function dedupeScoredAttempts(Collection $attempts): Collection
+    {
+        return $attempts
+            ->sortByDesc('id')
+            ->unique(function (AiReciteAttempt $attempt): string {
+                $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+                $event = $attempt->user_session_id
+                    ? 'session:'.$attempt->user_session_id
+                    : ($attempt->memorisation_assessment_id
+                        ? 'assessment:'.$attempt->memorisation_assessment_id
+                        : ($attempt->teacher_assignment_recipient_id
+                            ? 'assignment:'.$attempt->teacher_assignment_recipient_id
+                            : ($attempt->session_recommendation_id
+                                ? 'recommendation:'.$attempt->session_recommendation_id
+                                : 'row:'.$attempt->id)));
+
+                return implode('|', [
+                    $event,
+                    (string) ($range['surah'] ?? $range['surah_number'] ?? ''),
+                    (string) ($range['from'] ?? ''),
+                    (string) ($range['to'] ?? ''),
+                    (string) ($attempt->attempt_number ?? ''),
+                    (string) $attempt->accuracy_percent,
+                    (string) $attempt->band,
+                ]);
+            })
+            ->sortByDesc('created_at')
+            ->values();
+    }
+
+    private function memorisationEvidenceUrl(int $surah, int $from, int $to, bool $review = false): string
+    {
+        return route('memorisation', array_filter([
+            'surah' => $surah,
+            'from' => $from,
+            'to' => $to,
+            'review' => $review ? 1 : null,
+        ], static fn ($value) => $value !== null && $value !== ''));
     }
 
     /**
@@ -1173,6 +1231,7 @@ class TeacherDashboardService
                         && $plan->recommended_review_at !== null
                         && $plan->recommended_review_at->isPast(),
                     'retest_metrics' => $plan->retest_metrics,
+                    'evidence_url' => $this->memorisationEvidenceUrl((int) $plan->surah_number, (int) $plan->start_ayah, (int) $plan->end_ayah, true),
                 ];
             })->all();
 
@@ -1196,12 +1255,13 @@ class TeacherDashboardService
                 'word_index' => $spot->word_index,
                 'affected_attempt_count' => (int) $spot->affected_attempt_count,
                 'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
+                'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
             ])->all();
 
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $student->id)
             ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
-            ->with('assignment')
+            ->with(['assignment.notes.teacher:id,name'])
             ->latest('id')
             ->limit(20)
             ->get()

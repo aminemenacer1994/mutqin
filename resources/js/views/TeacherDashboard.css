@@ -7458,6 +7458,43 @@ html[data-theme="dark"] .teacher-badge--good,
   .teacher-dashboard .teacher-table--students tbody td.teacher-table__cell { display: table-cell !important; }
 }
 
+/* Mobile keeps the two key performance measures with the student's name,
+   even when the wide table is scrolled horizontally. */
+.teacher-dashboard .teacher-table__identity {
+  display: inline-flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: .12rem;
+  vertical-align: middle;
+}
+
+.teacher-dashboard .teacher-table__mobile-meta {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .teacher-dashboard .teacher-table__mobile-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .2rem .65rem;
+    color: var(--bs-secondary-color, var(--dash-muted));
+    font-size: .68rem;
+    line-height: 1.25;
+  }
+
+  .teacher-dashboard .teacher-table__mobile-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .22rem;
+  }
+
+  .teacher-dashboard .teacher-table__mobile-meta i {
+    color: var(--teacher-accent-strong);
+    font-size: .7rem;
+  }
+}
+
 /* Bootstrap-first finish: keep the existing card content, but let Bootstrap
    own the surfaces, controls, spacing and interaction states. */
 .teacher-dashboard {

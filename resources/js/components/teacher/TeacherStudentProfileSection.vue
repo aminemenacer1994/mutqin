@@ -4,15 +4,29 @@
 
     <template v-else-if="profile">
       <header class="card teacher-profile-hero teacher-profile-hero--compact">
-        <div class="card-body d-flex align-items-center gap-3">
-        <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
-        <div class="teacher-profile-hero__copy">
-          <h2>{{ profile.student.name }}</h2>
-          <p class="teacher-meta">
-            <i class="bi bi-building" aria-hidden="true"></i>
-            {{ profile.student.organisation || t('teacher.no_group') }}
-          </p>
-        </div>
+        <div class="card-body teacher-profile-hero__body">
+          <div class="teacher-profile-hero__identity">
+            <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
+            <div class="teacher-profile-hero__copy">
+              <p class="teacher-profile-hero__eyebrow">{{ t('teacher.student_profile') }}</p>
+              <h2>{{ profile.student.name }}</h2>
+              <p class="teacher-meta">
+                <i class="bi bi-building" aria-hidden="true"></i>
+                {{ profile.student.organisation || t('teacher.no_group') }}
+                <template v-if="profile.student.groups?.length"> · {{ profile.student.groups.map((group) => group.name).join(', ') }}</template>
+              </p>
+            </div>
+          </div>
+          <div class="teacher-profile-hero__actions">
+            <button type="button" class="btn teacher-profile-hero__back" @click="$emit('back')">
+              <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              {{ t('teacher.back_students') }}
+            </button>
+            <button type="button" class="btn btn-primary teacher-profile-hero__assign" @click="$emit('assign-revision', profile.student)">
+              <i class="bi bi-journal-plus" aria-hidden="true"></i>
+              {{ t('teacher.assign_revision') }}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -42,6 +56,14 @@
           <span>{{ t(tab.label) }}</span>
         </button>
       </div>
+
+      <header class="teacher-profile-section-head">
+        <div>
+          <p>{{ t('teacher.student_learning_record') }}</p>
+          <h3>{{ activeTabLabel }}</h3>
+        </div>
+        <span>{{ sectionHint }}</span>
+      </header>
 
       <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
         <TeacherStudentProfileOverview
@@ -140,6 +162,23 @@ export default {
     },
     profile() {
       this.$nextTick(this.revealActiveTab)
+    },
+  },
+  computed: {
+    activeTabLabel() {
+      const tab = this.tabs.find((item) => item.id === this.section)
+      return tab ? this.t(tab.label) : this.t('teacher.tab_overview')
+    },
+    sectionHint() {
+      const keys = {
+        overview: 'teacher.profile_tab_overview_hint',
+        practice: 'teacher.profile_tab_practice_hint',
+        ai: 'teacher.profile_tab_ai_hint',
+        weak: 'teacher.profile_tab_weak_hint',
+        revision: 'teacher.profile_tab_revision_hint',
+        tasks: 'teacher.profile_tab_tasks_hint',
+      }
+      return this.t(keys[this.section] || keys.overview)
     },
   },
   methods: {

@@ -47,4 +47,9 @@ class TeacherAssignment extends Model
     {
         return $this->hasMany(TeacherAssignmentRecipient::class);
     }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(TeacherNote::class, 'teacher_assignment_id');
+    }
 }

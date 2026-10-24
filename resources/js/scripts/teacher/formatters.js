@@ -108,7 +108,7 @@ export function attentionReasonTags(student, t) {
   if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65) {
     tags.push({ key: 'score', tone: 'danger', icon: 'bi bi-mic', label: t('teacher.reason_low_score') })
   }
-  if ((student?.recurring_weak || student?.weak_count || 0) > 0) {
+  if ((student?.recurring_weak || 0) > 0) {
     tags.push({ key: 'weak', tone: 'warn', icon: 'bi bi-exclamation-triangle', label: t('teacher.reason_hard_ayahs') })
   }
   if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {

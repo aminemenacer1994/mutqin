@@ -445,6 +445,11 @@ export function useTeacherDashboard(authRef) {
     }
   }
 
+  async function sendTeacherMessage(recipientId, body) {
+    const payload = await learningApi.sendTeacherAssignmentMessage(recipientId, body)
+    return payload?.message || null
+  }
+
   function bootstrapFromUrl() {
     const params = new URLSearchParams(window.location.search)
     const urlView = params.get('view') || 'overview'
@@ -543,6 +548,7 @@ export function useTeacherDashboard(authRef) {
     beginEditAssignment,
     saveAssignment,
     removeAssignment,
+    sendTeacherMessage,
     openAssignRevision,
     prefillAssignmentFromStudent,
     isNavActive: (id) => isTeacherNavActive(view.value, id),

@@ -5,13 +5,24 @@
         <span class="teacher-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
-          <span v-if="reason(student)" class="teacher-attention-list__reason">
-            <i :class="reason(student).icon" aria-hidden="true"></i>
-            {{ reason(student).label }}
+          <span class="teacher-attention-list__reasons">
+            <span v-for="item in reasons(student)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`">
+              <i :class="item.icon" aria-hidden="true"></i>
+              {{ item.label }}
+            </span>
           </span>
         </span>
-        <i class="bi bi-chevron-right teacher-attention-list__chev ms-auto" aria-hidden="true"></i>
       </button>
+      <button
+        type="button"
+        class="teacher-attention-list__assign"
+        :aria-label="t('teacher.assign_revision_for', { name: student.name })"
+        :title="t('teacher.assign_revision')"
+        @click="$emit('assign-revision', student)"
+      >
+        <i class="bi bi-journal-plus" aria-hidden="true"></i>
+      </button>
+      <i class="bi bi-chevron-right teacher-attention-list__chev" aria-hidden="true"></i>
     </li>
   </ul>
   <TeacherMore v-if="rows.length" :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
@@ -44,6 +55,9 @@ export default {
     initial: studentInitial,
     reason(student) {
       return attentionReasonTags(student, this.t)[0] || null
+    },
+    reasons(student) {
+      return attentionReasonTags(student, this.t)
     },
   },
 }

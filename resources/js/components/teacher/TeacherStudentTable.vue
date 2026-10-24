@@ -1,14 +1,22 @@
 <template>
-  <div class="table-responsive teacher-table-wrap">
-    <table class="table table-hover align-middle mb-0 teacher-table teacher-table--students" :aria-label="t('teacher.nav_students')">
+  <div class="teacher-table-shell">
+    <div v-if="hasOverflow" class="teacher-table-scrollbar" role="group" :aria-label="t('teacher.table_scroll_controls')">
+      <span>{{ t('teacher.table_scroll_hint') }}</span>
+      <div class="teacher-table-scrollbar__actions">
+        <button type="button" :aria-label="t('teacher.table_scroll_left')" @click="scrollTable(-1)"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+        <button type="button" :aria-label="t('teacher.table_scroll_right')" @click="scrollTable(1)"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  <div ref="tableWrap" class="table-responsive teacher-table-wrap" role="region" :aria-label="t('teacher.student_table_region')" tabindex="0">
+    <table class="table align-middle mb-0 teacher-table teacher-table--students" :aria-label="t('teacher.nav_students')">
       <thead class="table-light">
         <tr>
           <th scope="col"><i class="bi bi-person me-1" aria-hidden="true"></i>{{ t('teacher.col_name') }}</th>
           <th scope="col"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>{{ t('teacher.last') }}</th>
-          <th scope="col" class="text-end"><i class="bi bi-journal-check me-1" aria-hidden="true"></i>{{ t('teacher.col_practice') }}</th>
-          <th scope="col" class="text-end"><i class="bi bi-stars me-1" aria-hidden="true"></i>{{ t('teacher.ai_rate') }}</th>
-          <th scope="col"><i class="bi bi-flag me-1" aria-hidden="true"></i>{{ t('teacher.need_look') }}</th>
-          <th scope="col"><span class="visually-hidden">{{ t('teacher.open') }}</span></th>
+          <th scope="col" class="text-end"><i class="bi bi-journal-check me-1" aria-hidden="true"></i>{{ t('teacher.sessions_recorded') }}</th>
+          <th scope="col" class="text-end"><i class="bi bi-stars me-1" aria-hidden="true"></i>{{ t('teacher.ai_check_average') }}</th>
+          <th scope="col"><i class="bi bi-flag me-1" aria-hidden="true"></i>{{ t('teacher.follow_up_reason') }}</th>
+          <th scope="col" class="text-end">{{ t('teacher.student_actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -26,15 +34,21 @@
       >
         <td class="teacher-table__cell teacher-table__cell--name">
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
-          <span class="teacher-table__name">{{ student.name }}</span>
+          <span class="teacher-table__identity">
+            <span class="teacher-table__name">{{ student.name }}</span>
+            <span class="teacher-table__mobile-meta">
+              <span><i class="bi bi-journal-check" aria-hidden="true"></i>{{ sessions(student) }} {{ t('teacher.sessions') }}</span>
+              <span><i class="bi bi-stars" aria-hidden="true"></i>{{ score(student) }}</span>
+            </span>
+          </span>
         </td>
         <td class="teacher-table__cell teacher-table__cell--meta">
           {{ lastSeen(student) }}
         </td>
         <td class="teacher-table__cell teacher-table__cell--num text-end">
           <span class="teacher-table__metric">
-            <strong>{{ ayahs(student) }}</strong>
-            <small>{{ t('teacher.col_practice') }}</small>
+            <strong>{{ sessions(student) }}</strong>
+            <small>{{ t('teacher.sessions') }}</small>
           </span>
         </td>
         <td class="teacher-table__cell teacher-table__cell--num text-end">
@@ -47,12 +61,32 @@
           </span>
           <span v-else class="teacher-table__quiet">{{ t('teacher.none') }}</span>
         </td>
-        <td class="teacher-table__cell teacher-table__cell--flag text-end">
-          <span class="teacher-table__open" aria-hidden="true"><i class="bi bi-arrow-up-right"></i></span>
+        <td class="teacher-table__cell teacher-table__cell--actions text-end">
+          <span class="teacher-table__actions">
+            <button
+              type="button"
+              class="teacher-table__action"
+              :aria-label="t('teacher.assign_revision_for', { name: student.name })"
+              :title="t('teacher.assign_revision')"
+              @click.stop="$emit('assign', student)"
+            >
+              <i class="bi bi-journal-plus" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              class="teacher-table__action teacher-table__action--primary"
+              :aria-label="t('teacher.open_profile_for', { name: student.name })"
+              :title="t('teacher.open_profile')"
+              @click.stop="$emit('open', student.id)"
+            >
+              <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+            </button>
+          </span>
         </td>
       </tr>
       </tbody>
     </table>
+  </div>
   </div>
 </template>
 
@@ -67,19 +101,34 @@ export default {
     students: { type: Array, default: () => [] },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['open'],
+  emits: ['open', 'assign'],
+  data() {
+    return { hasOverflow: false }
+  },
+  mounted() {
+    this.updateOverflow()
+    window.addEventListener('resize', this.updateOverflow, { passive: true })
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateOverflow)
+  },
+  updated() {
+    this.$nextTick(this.updateOverflow)
+  },
   methods: {
     initial: studentInitial,
     lastSeen(student) {
       return student.last_activity_at ? this.formatWhen(student.last_activity_at) : this.t('teacher.no_activity')
     },
-    ayahs(student) {
-      const n = student.ayahs_practised
+    sessions(student) {
+      const n = student.sessions
       return n === null || n === undefined ? '—' : String(n)
     },
     score(student) {
       const rate = student.ai_success_rate
-      return typeof rate === 'number' ? `${rate}%` : '—'
+      if (typeof rate !== 'number') return this.t('teacher.no_scored_checks')
+      const count = Number(student.ai_attempts || 0)
+      return `${rate}% · ${count} ${count === 1 ? this.t('teacher.check_one') : this.t('teacher.check_many')}`
     },
     scoreClass(student) {
       const rate = student.ai_success_rate
@@ -109,6 +158,15 @@ export default {
     rowLabel(student) {
       const concern = this.concern(student)?.label
       return [student.name, this.score(student), this.lastSeen(student), concern].filter(Boolean).join(', ')
+    },
+    scrollTable(direction) {
+      const wrap = this.$refs.tableWrap
+      if (!wrap) return
+      wrap.scrollBy({ left: direction * Math.max(240, wrap.clientWidth * 0.65), behavior: 'smooth' })
+    },
+    updateOverflow() {
+      const wrap = this.$refs.tableWrap
+      this.hasOverflow = Boolean(wrap && wrap.scrollWidth > wrap.clientWidth + 2)
     },
   },
 }

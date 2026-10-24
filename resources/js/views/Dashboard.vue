@@ -87,6 +87,7 @@
           :saving-id="assignmentSavingId"
           :completion-message="assignmentCompletionMessage"
           :failed-item="assignmentFailedItem"
+          :on-send-note="sendSupportNote"
           @start="startSupportAssignment"
           @complete="completeSupportAssignment"
           @view-completed="showCompletedAssignments"
@@ -2483,10 +2484,15 @@ export default {
         this.assignmentSavingId = 0
       }
     },
+    async sendSupportNote(item, body) {
+      if (this.auth?.learner_teacher_section_enabled !== true) return null
+      const payload = await learningApi.sendLearnerAssignmentMessage(item.id, body)
+      return payload?.message || null
+    },
     showCompletedAssignments() {
       this.assignmentCompletionMessage = ''
       this.$nextTick(() => {
-        this.$el?.querySelector('.learner-teacher__filter.is-completed')?.click()
+        this.$el?.querySelector('.learner-teacher__filter.is-done')?.click()
       })
     },
     dismissAssignmentCompletion() {

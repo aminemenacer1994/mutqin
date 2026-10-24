@@ -1,16 +1,20 @@
 <template>
-  <header class="card border rounded-3 shadow-sm dash-reveal teacher-hero">
-    <div class="card-body teacher-hero__row">
-      <div class="teacher-hero__copy">
-        <h1 class="teacher-hero__title">{{ t('teacher.greeting', { name: firstName }) }}</h1>
-        <p v-if="organisationName" class="teacher-meta">
-          <i class="bi bi-building" aria-hidden="true"></i>
-          {{ organisationName }}
-        </p>
-        <p class="teacher-hero__summary">
-          <i class="bi bi-person-check" aria-hidden="true"></i>
-          <span>{{ t('teacher.hero_summary') }}</span>
-        </p>
+  <header class="dash-reveal teacher-hero">
+    <div class="teacher-hero__row">
+      <div class="teacher-hero__identity">
+        <span class="teacher-hero__mark" aria-hidden="true"><i class="bi bi-mortarboard"></i></span>
+        <div class="teacher-hero__copy">
+          <p class="teacher-hero__eyebrow">{{ t('teacher.workspace_label') }}</p>
+          <h1 class="teacher-hero__title">{{ t('teacher.greeting', { name: firstName }) }}</h1>
+          <p v-if="organisationName" class="teacher-meta">
+            <i class="bi bi-building" aria-hidden="true"></i>
+            {{ organisationName }}
+          </p>
+        </div>
+      </div>
+      <div class="teacher-hero__signals" :aria-label="t('teacher.class_snapshot')">
+        <span><strong>{{ studentCount }}</strong>{{ t('teacher.kpi_students') }}</span>
+        <span :class="{ 'is-alert': supportCount > 0 }"><strong>{{ supportCount }}</strong>{{ t('teacher.follow_ups') }}</span>
       </div>
     </div>
   </header>
@@ -25,6 +29,8 @@ export default {
   props: {
     firstName: { type: String, required: true },
     organisationName: { type: String, default: '' },
+    studentCount: { type: Number, default: 0 },
+    supportCount: { type: Number, default: 0 },
   },
 }
 </script>

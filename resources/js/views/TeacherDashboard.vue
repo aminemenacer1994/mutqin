@@ -2,7 +2,7 @@
   <div
     v-if="featuresEnabled"
     class="user-dashboard teacher-dashboard"
-    data-teacher-ui="2026-10-20"
+    data-teacher-ui="2026-10-23"
     tabindex="-1"
   >
     <div class="container user-dashboard__shell teacher-dashboard__shell">
@@ -41,6 +41,8 @@
               v-if="view === 'overview'"
               :first-name="firstName"
               :organisation-name="overview?.teacher?.organisation?.name || ''"
+              :student-count="Number(overview?.kpis?.authorised_students || 0)"
+              :support-count="Number(overview?.kpis?.needs_attention || 0)"
             />
 
             <TeacherOverviewSection
@@ -68,6 +70,7 @@
               @queue-search="queueStudentSearch"
               @page="loadStudents"
               @open-student="openStudent"
+              @assign-revision="openAssignRevision"
             />
 
             <TeacherStudentProfileSection
@@ -100,6 +103,7 @@
               :loading="assignmentsLoading"
               :students="students"
               :surahs="surahs"
+              :on-send-message="sendTeacherMessage"
               @update:form="assignment = $event"
               @update:form-open="assignmentFormOpen = $event"
               @new="beginCreateAssignment"

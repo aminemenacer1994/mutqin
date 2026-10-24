@@ -1,25 +1,28 @@
 <template>
   <TeacherSectionPane tone="neutral">
     <div class="teacher-profile-overview">
-      <div class="teacher-profile-overview__priority" :class="`is-${stage.key}`">
-        <span class="teacher-profile-overview__priority-icon" aria-hidden="true">
-          <i :class="priorityIcon"></i>
-        </span>
-        <div>
-          <span class="teacher-profile-overview__eyebrow">{{ priorityLabel }}</span>
-          <p>{{ priorityDetail }}</p>
+      <div class="teacher-profile-overview__top">
+        <div class="teacher-profile-overview__priority" :class="`is-${stage.key}`">
+          <span class="teacher-profile-overview__priority-icon" aria-hidden="true">
+            <i :class="priorityIcon"></i>
+          </span>
+          <div>
+            <span class="teacher-profile-overview__eyebrow">{{ t('teacher.teaching_focus') }}</span>
+            <strong>{{ priorityLabel }}</strong>
+            <p>{{ priorityDetail }}</p>
+          </div>
         </div>
-      </div>
 
-      <button
-        v-if="nextAction"
-        type="button"
-        class="btn btn-primary btn-sm teacher-profile-overview__action"
-        @click="runNextAction"
-      >
-        <i :class="nextAction.icon" aria-hidden="true"></i>
-        {{ nextAction.label }}
-      </button>
+        <button
+          v-if="nextAction"
+          type="button"
+          class="btn btn-primary btn-sm teacher-profile-overview__action"
+          @click="runNextAction"
+        >
+          <i :class="nextAction.icon" aria-hidden="true"></i>
+          {{ nextAction.label }}
+        </button>
+      </div>
 
       <div v-if="summaryFacts.length" class="teacher-profile-overview__facts" role="list">
         <div v-for="fact in summaryFacts" :key="fact.key" class="teacher-profile-overview__fact" role="listitem">
@@ -27,10 +30,15 @@
           <div>
             <span>{{ fact.label }}</span>
             <strong :class="{ 'teacher-quran': fact.quran }">{{ fact.value }}</strong>
+            <small>{{ fact.hint }}</small>
           </div>
         </div>
       </div>
 
+      <p v-if="hasScore" class="teacher-profile-overview__score-note" role="note">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        {{ t('teacher.profile_recite_ai_note') }}
+      </p>
     </div>
   </TeacherSectionPane>
 </template>
@@ -114,21 +122,37 @@ export default {
       return this.stageMeta.icon
     },
     summaryFacts() {
-      const facts = []
+      const metrics = this.profile.payload?.metrics || {}
+      const facts = [
+        {
+          key: 'sessions',
+          icon: 'bi bi-play-circle',
+          label: this.t('teacher.sessions_recorded'),
+          value: Number(metrics.sessions || 0),
+          hint: this.t('teacher.sessions_recorded_help'),
+        },
+        {
+          key: 'time',
+          icon: 'bi bi-stopwatch',
+          label: this.t('teacher.practice_time'),
+          value: this.practiceTime,
+          hint: this.t('teacher.practice_time_help'),
+        },
+        {
+          key: 'days',
+          icon: 'bi bi-calendar-check',
+          label: this.t('teacher.active_days'),
+          value: Number(metrics.active_days || 0),
+          hint: this.t('teacher.active_days_help'),
+        },
+      ]
       if (this.nowOn) {
         facts.push({
           key: 'saved',
           icon: 'bi bi-bookmark-fill',
           label: this.t('teacher.saved_session'),
           value: this.nowOn,
-        })
-      }
-      if (this.lastSeen) {
-        facts.push({
-          key: 'activity',
-          icon: 'bi bi-clock-history',
-          label: this.t('teacher.last'),
-          value: this.lastSeen,
+          hint: this.t('teacher.saved_session_help'),
         })
       }
       if (this.hasScore) {
@@ -140,8 +164,16 @@ export default {
             score: this.scoreValue,
             count: Number(this.profile.payload?.metrics?.ai_attempts || 0),
           }),
+          hint: this.t('teacher.ai_check_average_help'),
         })
       }
+      facts.push({
+        key: 'last',
+        icon: 'bi bi-clock-history',
+        label: this.t('teacher.last'),
+        value: this.lastSeen || this.t('teacher.no_activity'),
+        hint: this.t('teacher.last_activity_help'),
+      })
       return facts
     },
     nextAction() {

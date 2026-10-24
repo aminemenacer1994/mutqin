@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
+            Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->name('api.me.assignments.notes.store');
         });
 
         Route::middleware('teacher.features')->group(function () {
@@ -131,6 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/assignments', [TeacherDashboardController::class, 'storeAssignment'])->name('api.teacher.assignments.store');
                 Route::put('/assignments/{assignment}', [TeacherDashboardController::class, 'updateAssignment'])->name('api.teacher.assignments.update');
                 Route::delete('/assignments/{assignment}', [TeacherDashboardController::class, 'destroyAssignment'])->name('api.teacher.assignments.destroy');
+                Route::post('/assignment-recipients/{recipient}/notes', [TeacherDashboardController::class, 'storeAssignmentMessage'])->name('api.teacher.assignment-recipients.notes.store');
             });
         });
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');

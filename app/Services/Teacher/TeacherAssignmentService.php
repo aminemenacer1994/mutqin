@@ -6,12 +6,14 @@ use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\TeacherNoteKind;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -202,6 +204,7 @@ class TeacherAssignmentService
             ->validScored()
             ->whereIn('teacher_assignment_recipient_id', $recipientIds)
             ->get();
+        $attempts = $this->dedupeScoredAttempts($attempts);
 
         foreach ($recipients as $recipient) {
             $assignment = $recipient->assignment;
@@ -309,6 +312,32 @@ class TeacherAssignmentService
         return $recipient->refresh();
     }
 
+    public function addLearnerMessage(User $student, TeacherAssignmentRecipient $recipient, string $body): TeacherNote
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $recipient->loadMissing('assignment');
+        $assignment = $recipient->assignment;
+        if ($assignment === null || (int) $recipient->student_id !== (int) $student->id) {
+            abort(404);
+        }
+
+        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body);
+    }
+
+    public function addTeacherMessage(User $teacher, TeacherAssignmentRecipient $recipient, string $body): TeacherNote
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $recipient->loadMissing('assignment');
+        $assignment = $recipient->assignment;
+        if ($assignment === null || (int) $assignment->teacher_id !== (int) $teacher->id || ! $teacher->isTeacher()) {
+            abort(404);
+        }
+
+        return $this->createAssignmentMessage($assignment, $recipient->student, TeacherNoteKind::Feedback, $body);
+    }
+
     public function linkedRecipientForActivity(
         User $student,
         mixed $recipientId,
@@ -414,21 +443,6 @@ class TeacherAssignmentService
             return ['completed' => 0, 'target' => $target, 'activity_count' => 0, 'attempt_count' => null, 'completion_count' => null, 'resume_available' => false];
         }
 
-        if ($recipient->student_completed_at !== null) {
-            $evidenceCount = is_array($recipient->completion_evidence)
-                ? (int) ($recipient->completion_evidence['activity_count'] ?? $target)
-                : $target;
-            $activityCount = max($target, $evidenceCount);
-            return [
-                'completed' => $target,
-                'target' => $target,
-                'activity_count' => $activityCount,
-                'attempt_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? $activityCount : null,
-                'completion_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? null : $activityCount,
-                'resume_available' => false,
-            ];
-        }
-
         if ($completedSessions === null || $scoredAttempts === null) {
             $studentId = (int) $recipient->student_id;
             $completedSessions = UserSession::query()
@@ -442,9 +456,16 @@ class TeacherAssignmentService
                 ->where('user_id', $studentId)
                 ->where('teacher_assignment_recipient_id', $recipient->id)
                 ->get();
+            $scoredAttempts = $this->dedupeScoredAttempts($scoredAttempts);
         }
 
         $activityCount = $this->completedRepeats($recipient, $completedSessions, $scoredAttempts);
+        if ($recipient->student_completed_at !== null) {
+            $evidenceCount = is_array($recipient->completion_evidence)
+                ? (int) ($recipient->completion_evidence['activity_count'] ?? $target)
+                : $target;
+            $activityCount = max($target, $evidenceCount, $activityCount);
+        }
 
         return [
             // Progress is intentionally capped at the task target. The raw count
@@ -530,6 +551,7 @@ class TeacherAssignmentService
                 $unfinishedSessions,
             );
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
+            $payload['messages'] = $this->assignmentMessages($assignment, (int) $recipient->student_id);
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
             }
@@ -617,7 +639,7 @@ class TeacherAssignmentService
         }
 
         if ($assignment->kind === AssignmentKind::AiRecite) {
-            return $scoredAttempts
+            return $this->dedupeScoredAttempts($scoredAttempts)
                 ->filter(fn (AiReciteAttempt $attempt) => (
                     (int) $attempt->teacher_assignment_recipient_id === (int) $recipient->id
                     && (int) $attempt->user_id === (int) $recipient->student_id
@@ -634,6 +656,29 @@ class TeacherAssignmentService
             ->count();
     }
 
+    /** Keep retries of the same scored check from inflating progress. */
+    private function dedupeScoredAttempts(Collection $attempts): Collection
+    {
+        return $attempts
+            ->sortByDesc('id')
+            ->unique(function (AiReciteAttempt $attempt): string {
+                $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+
+                return implode('|', [
+                    (string) ($attempt->user_id ?: ''),
+                    (string) ($attempt->teacher_assignment_recipient_id ?: ''),
+                    (string) ($attempt->user_session_id ?: 'no-session'),
+                    (string) ($range['surah'] ?? $range['surah_number'] ?? ''),
+                    (string) ($range['from'] ?? $range['start'] ?? ''),
+                    (string) ($range['to'] ?? $range['end'] ?? ''),
+                    (string) ($attempt->attempt_number ?? ''),
+                    (string) $attempt->accuracy_percent,
+                    (string) $attempt->band,
+                ]);
+            })
+            ->values();
+    }
+
     private function exactRange(AiReciteAttempt $attempt, TeacherAssignment $assignment): bool
     {
         $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
@@ -644,6 +689,65 @@ class TeacherAssignmentService
         return $surah === (int) $assignment->surah_number
             && $from === (int) $assignment->ayah_start
             && $to === (int) $assignment->ayah_end;
+    }
+
+    private function createAssignmentMessage(
+        TeacherAssignment $assignment,
+        User $student,
+        TeacherNoteKind $kind,
+        string $body,
+    ): TeacherNote {
+        $body = trim($body);
+        if ($body === '' || mb_strlen($body) > 2000) {
+            throw ValidationException::withMessages([
+                'body' => 'Enter a message of up to 2000 characters.',
+            ]);
+        }
+
+        $note = new TeacherNote;
+        $note->forceFill([
+            'teacher_id' => $assignment->teacher_id,
+            'student_id' => $student->id,
+            'organisation_id' => $assignment->organisation_id,
+            'teacher_assignment_id' => $assignment->id,
+            'kind' => $kind->value,
+            'body' => $body,
+        ])->save();
+
+        return $note->refresh();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function assignmentMessages(TeacherAssignment $assignment, int $studentId): array
+    {
+        $notes = $assignment->relationLoaded('notes')
+            ? $assignment->notes
+            : $assignment->notes()->with('teacher:id,name')->get();
+
+        return $notes
+            ->where('student_id', $studentId)
+            ->sortBy(fn (TeacherNote $note) => sprintf('%020d', (int) $note->id))
+            ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function presentAssignmentMessage(TeacherNote $note): array
+    {
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+
+        return [
+            'id' => (int) $note->id,
+            'sender' => $kind === TeacherNoteKind::Feedback ? 'teacher' : 'student',
+            'sender_name' => $kind === TeacherNoteKind::Feedback ? $note->teacher?->name : null,
+            'body' => $note->body,
+            'created_at' => $note->created_at?->toIso8601String(),
+        ];
     }
 
     /**
