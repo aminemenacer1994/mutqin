@@ -605,8 +605,15 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/complete`)
     return data
   },
-  async sendLearnerAssignmentMessage(recipientId, body) {
-    const { data } = await http.post(`/me/assignments/${recipientId}/notes`, { body })
+  async sendLearnerAssignmentMessage(recipientId, body, recording = null) {
+    const form = new FormData()
+    const text = String(body || '').trim()
+    if (text) form.append('body', text)
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/me/assignments/${recipientId}/notes`, form)
     return data
   },
   async getTeacherOverview(days = 30) {

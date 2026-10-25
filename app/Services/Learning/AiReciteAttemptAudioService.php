@@ -4,6 +4,7 @@ namespace App\Services\Learning;
 
 use App\Models\AiReciteAttempt;
 use App\Models\User;
+use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\AudioPrivacy;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,8 @@ class AiReciteAttemptAudioService
         'audio/mpeg',
         'audio/mp3',
     ];
+
+    public function __construct(private readonly StudentAccessAuthorizer $access) {}
 
     public function store(User $user, AiReciteAttempt $attempt, UploadedFile $file, ?int $durationMs = null): bool
     {
@@ -124,7 +127,7 @@ class AiReciteAttemptAudioService
 
     public function stream(User $user, AiReciteAttempt $attempt): ?Response
     {
-        if ((int) $attempt->user_id !== (int) $user->id) {
+        if (! $this->canView($user, $attempt)) {
             return null;
         }
 
@@ -146,6 +149,19 @@ class AiReciteAttemptAudioService
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    public function canView(User $viewer, AiReciteAttempt $attempt): bool
+    {
+        if ((int) $attempt->user_id === (int) $viewer->id) {
+            return true;
+        }
+
+        $student = $attempt->relationLoaded('user')
+            ? $attempt->user
+            : User::query()->find($attempt->user_id);
+
+        return $student instanceof User && $this->access->allows($viewer, $student);
     }
 
     public function deleteStored(?AiReciteAttempt $attempt): void

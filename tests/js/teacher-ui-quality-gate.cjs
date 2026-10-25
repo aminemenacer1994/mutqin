@@ -21,7 +21,7 @@ async function main() {
       await page.evaluate((value) => {
         document.documentElement.dataset.theme = value
       }, theme)
-      for (const view of ['Home', 'Students', 'Tasks', 'Account']) {
+      for (const view of ['Overview', 'Students', 'Tasks', 'Account']) {
         const nav = page.locator(width <= 960 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop')
         await nav.getByRole('button', { name: view, exact: true }).click()
         await page.waitForTimeout(350)
@@ -78,8 +78,8 @@ async function main() {
   if (!await page.locator('.teacher-task-empty').getByText('No tasks match these filters.').count()) defects.push('Tasks search empty state missing')
   await page.locator('.teacher-task-empty button').click()
   await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Students', exact: true }).click()
-  await page.locator('.teacher-loading-inline').waitFor({ state: 'hidden' })
-  await page.locator('.teacher-search input').fill('qa-no-matching-student-zzzz')
+  await page.locator('.teacher-student-toolbar .teacher-search input').waitFor({ state: 'visible' })
+  await page.locator('.teacher-student-toolbar .teacher-search input').fill('qa-no-matching-student-zzzz')
   await page.getByText('No students match these filters.').waitFor()
   await page.locator('.teacher-directory-actions__clear').click()
   await page.locator('.teacher-table__row').first().waitFor()

@@ -57,15 +57,7 @@
         </button>
       </div>
 
-      <header class="teacher-profile-section-head">
-        <div>
-          <p>{{ t('teacher.student_learning_record') }}</p>
-          <h3>{{ activeTabLabel }}</h3>
-        </div>
-        <span>{{ sectionHint }}</span>
-      </header>
-
-      <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
+      <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" :class="`is-${section}`" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
           :profile="profile"
@@ -88,17 +80,11 @@
           :issue-label="issueLabel"
           :format-when="formatWhen"
         />
-        <TeacherStudentProfileWeak
-          v-else-if="section === 'weak'"
+        <TeacherStudentProfileFocus
+          v-else-if="section === 'focus'"
           :profile="profile"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
-        />
-        <TeacherStudentProfileRevision
-          v-else-if="section === 'revision'"
-          :profile="profile"
-          :comparisons="comparisons"
-          :format-when="formatWhen"
         />
         <TeacherStudentProfileTasks
           v-else-if="section === 'tasks'"
@@ -116,22 +102,20 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfileAi from './profile/TeacherStudentProfileAi.vue'
+import TeacherStudentProfileFocus from './profile/TeacherStudentProfileFocus.vue'
 import TeacherStudentProfileOverview from './profile/TeacherStudentProfileOverview.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
-import TeacherStudentProfileRevision from './profile/TeacherStudentProfileRevision.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
-import TeacherStudentProfileWeak from './profile/TeacherStudentProfileWeak.vue'
 
 export default {
   name: 'TeacherStudentProfileSection',
   components: {
     TeacherEmpty,
     TeacherStudentProfileAi,
+    TeacherStudentProfileFocus,
     TeacherStudentProfileOverview,
     TeacherStudentProfilePractice,
-    TeacherStudentProfileRevision,
     TeacherStudentProfileTasks,
-    TeacherStudentProfileWeak,
   },
   mixins: [i18nMixin],
   props: {
@@ -162,23 +146,6 @@ export default {
     },
     profile() {
       this.$nextTick(this.revealActiveTab)
-    },
-  },
-  computed: {
-    activeTabLabel() {
-      const tab = this.tabs.find((item) => item.id === this.section)
-      return tab ? this.t(tab.label) : this.t('teacher.tab_overview')
-    },
-    sectionHint() {
-      const keys = {
-        overview: 'teacher.profile_tab_overview_hint',
-        practice: 'teacher.profile_tab_practice_hint',
-        ai: 'teacher.profile_tab_ai_hint',
-        weak: 'teacher.profile_tab_weak_hint',
-        revision: 'teacher.profile_tab_revision_hint',
-        tasks: 'teacher.profile_tab_tasks_hint',
-      }
-      return this.t(keys[this.section] || keys.overview)
     },
   },
   methods: {

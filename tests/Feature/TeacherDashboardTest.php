@@ -10,6 +10,7 @@ use App\Enums\MembershipStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\MemorisationAssessment;
 use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
 use App\Models\TeacherAssignmentRecipient;
@@ -17,6 +18,8 @@ use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\GroupMembershipService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TeacherDashboardTest extends TestCase
@@ -40,7 +43,8 @@ class TeacherDashboardTest extends TestCase
         $this->actingAs($teacher)->get(route('teacher.dashboard'))
             ->assertOk()
             ->assertSee('teacher-dashboard', false)
-            ->assertSee('teacher-dashboard.css', false);
+            ->assertSee('teacher-dashboard.css', false)
+            ->assertSee('href="'.route('teacher.dashboard').'"', false);
     }
 
     public function test_overview_uses_authorised_records_only(): void
@@ -104,7 +108,7 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame($student->id, $students[0]['id']);
         $this->assertSame(1, $students[0]['sessions']);
         $this->assertSame(1, $students[0]['ai_attempts']);
-        $this->assertSame(1, $students[0]['weak_count']);
+        $this->assertSame(0, $students[0]['weak_count']);
         $this->assertEquals(80, $students[0]['ai_success_rate']);
 
         $this->actingAs($teacher)->getJson(route('api.teacher.students.show', $hidden))->assertNotFound();
@@ -169,6 +173,12 @@ class TeacherDashboardTest extends TestCase
             ->assertOk()->json('payload.items');
         $this->assertCount(2, $weak);
 
+        $focus = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'focus']))
+            ->assertOk()->json('payload');
+        $this->assertCount(2, $focus['items']);
+        $this->assertSame([], $focus['plans']);
+
         $ai = $this->actingAs($teacher)
             ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
             ->assertOk()->json('payload');
@@ -176,6 +186,92 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(2, $ai['score_count']);
         $this->assertNotNull($ai['score_window_start']);
         $this->assertNotNull($ai['score_window_end']);
+    }
+
+    public function test_teacher_sees_structured_recording_and_transcript_evidence_with_consent(): void
+    {
+        Storage::fake('local');
+        config(['mutqin.audio_privacy.raw_recording_retention' => 'retain']);
+        [$teacher, $student, $hidden] = $this->classroom();
+
+        $session = UserSession::query()->create([
+            'user_id' => $student->id,
+            'surah_number' => 114,
+            'ayah_number' => 1,
+            'status' => 'completed',
+            'session_duration_seconds' => 42,
+            'last_activity_at' => now(),
+            'ended_at' => now(),
+            'metadata' => ['range_start' => 1, 'range_end' => 1],
+        ]);
+        $assessment = MemorisationAssessment::query()->create([
+            'user_id' => $student->id,
+            'user_session_id' => $session->id,
+            'idempotency_key' => 'teacher-evidence-test',
+            'surah_number' => 114,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'assessment_type' => 'memorisation_detection',
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'recognition_data' => ['raw' => ['transcript' => 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ']],
+            'overall_accuracy' => 82,
+        ]);
+        $attempt = AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'user_session_id' => $session->id,
+            'memorisation_assessment_id' => $assessment->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 82,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 114, 'from' => 1, 'to' => 1, 'surah_name' => 'An-Nas'],
+        ]);
+        $path = 'ai-recite-audio/'.$student->id.'/'.$attempt->id.'.webm';
+        Storage::disk('local')->put($path, str_repeat('R', 256));
+        $attempt->forceFill([
+            'audio_disk' => 'local',
+            'audio_path' => $path,
+            'audio_mime' => 'audio/webm',
+            'audio_bytes' => 256,
+            'audio_duration_ms' => 4200,
+        ])->save();
+        MemorisationWeakSpot::query()->create([
+            'user_id' => $student->id,
+            'spot_type' => 'ayah',
+            'surah_number' => 114,
+            'ayah_number' => 1,
+            'spot_key' => 'ayah:114:1:ayah',
+            'affected_attempt_count' => 2,
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'source_assessment_id' => $assessment->id,
+            'last_assessment_id' => $assessment->id,
+            'last_identified_at' => now(),
+        ]);
+
+        $ai = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
+            ->assertOk();
+        $ai->assertJsonPath('payload.attempts.0.evidence.audio.available', true)
+            ->assertJsonPath('payload.attempts.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
+
+        $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'practice']))
+            ->assertOk()
+            ->assertJsonPath('payload.sessions.0.evidence.audio.available', true)
+            ->assertJsonPath('payload.sessions.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
+
+        $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'weak']))
+            ->assertOk()
+            ->assertJsonPath('payload.items.0.evidence.audio.available', true)
+            ->assertJsonPath('payload.items.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
+
+        $this->actingAs($teacher)
+            ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
+            ->assertOk()
+            ->assertHeader('content-type', 'audio/webm');
+        $this->actingAs($hidden)
+            ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
+            ->assertNotFound();
     }
 
     public function test_hard_ayahs_exclude_resolved_history_and_keep_distinct_words(): void
@@ -203,6 +299,15 @@ class TeacherDashboardTest extends TestCase
             'spot_key' => 'word:114:1:2',
             'affected_attempt_count' => 5,
             'status' => MemorisationWeakSpot::STATUS_RESOLVED,
+        ]);
+        MemorisationWeakSpot::query()->create([
+            'user_id' => $student->id,
+            'spot_type' => 'ayah',
+            'surah_number' => 114,
+            'ayah_number' => 2,
+            'spot_key' => 'ayah:114:2:ayah',
+            'affected_attempt_count' => 1,
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
         ]);
 
         $items = $this->actingAs($teacher)
@@ -538,6 +643,7 @@ class TeacherDashboardTest extends TestCase
 
     public function test_student_and_teacher_can_exchange_messages_on_the_assigned_task(): void
     {
+        Storage::fake('user_files');
         [$teacher, $student, $hidden] = $this->classroom();
         $otherTeacher = User::factory()->create([
             'account_role' => AccountRole::Teacher->value,
@@ -573,18 +679,40 @@ class TeacherDashboardTest extends TestCase
             ->assertJsonPath('message.sender_name', $teacher->name)
             ->json('message');
 
+        $voiceMessage = $this->actingAs($student)
+            ->postJson(route('api.me.assignments.notes.store', $recipientId), [
+                'audio' => UploadedFile::fake()->createWithContent(
+                    'voice-note.webm',
+                    hex2bin('1A45DFA39F4286810142F7810142F2810442F381084282847765626D4287810242858102').str_repeat("\0", 1024),
+                ),
+                'duration_ms' => 4200,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('message.sender', 'student')
+            ->assertJsonPath('message.audio.available', true)
+            ->assertJsonPath('message.audio.duration_ms', 4200)
+            ->json('message');
+
+        $this->actingAs($teacher)
+            ->get($voiceMessage['audio']['url'])
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->actingAs($hidden)
+            ->get($voiceMessage['audio']['url'])
+            ->assertNotFound();
+
         $supportMessages = $this->actingAs($student)
             ->getJson(route('api.me.support'))
             ->assertOk()
             ->json('assignments.0.messages');
-        $this->assertSame([$learnerMessage['id'], $teacherMessage['id']], array_column($supportMessages, 'id'));
-        $this->assertSame(['student', 'teacher'], array_column($supportMessages, 'sender'));
+        $this->assertSame([$learnerMessage['id'], $teacherMessage['id'], $voiceMessage['id']], array_column($supportMessages, 'id'));
+        $this->assertSame(['student', 'teacher', 'student'], array_column($supportMessages, 'sender'));
 
         $teacherMessages = $this->actingAs($teacher)
             ->getJson(route('api.teacher.assignments'))
             ->assertOk()
             ->json('data.0.recipients.0.messages');
-        $this->assertSame(['student', 'teacher'], array_column($teacherMessages, 'sender'));
+        $this->assertSame(['student', 'teacher', 'student'], array_column($teacherMessages, 'sender'));
 
         $this->actingAs($student)
             ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => '   '])

@@ -1,5 +1,34 @@
 <template>
-  <div class="teacher-table-shell">
+  <div class="teacher-table-shell" :class="{ 'is-compact': compact }">
+    <div class="teacher-student-cards" role="list" :aria-label="t('teacher.nav_students')">
+      <article v-for="student in students" :key="`mobile-${student.id}`" class="teacher-student-card" :class="rowClasses(student)" role="listitem">
+        <button type="button" class="teacher-student-card__main" :aria-label="rowLabel(student)" @click="$emit('open', student.id)">
+          <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
+          <span class="teacher-student-card__identity">
+            <strong>{{ student.name }}</strong>
+            <span>{{ lastSeen(student) }}</span>
+          </span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </button>
+        <dl class="teacher-student-card__metrics">
+          <div><dt>{{ t('teacher.sessions_recorded') }}</dt><dd>{{ sessions(student) }}</dd></div>
+          <div><dt>{{ t('teacher.ai_check_average') }}</dt><dd>{{ score(student) }}</dd></div>
+        </dl>
+        <div class="teacher-student-card__follow-up">
+          <span>{{ t('teacher.follow_up_reason') }}</span>
+          <strong v-if="concern(student)" :class="`is-${concern(student).tone}`"><i :class="concern(student).icon" aria-hidden="true"></i>{{ concern(student).label }}</strong>
+          <strong v-else>{{ t('teacher.none') }}</strong>
+        </div>
+        <div class="teacher-student-card__actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('assign', student)">
+            <i class="bi bi-journal-plus" aria-hidden="true"></i><span class="teacher-student-card__assign-label">{{ t('teacher.assign_short') }}</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" @click="$emit('open', student.id)">
+            {{ t('teacher.open_profile') }}
+          </button>
+        </div>
+      </article>
+    </div>
     <div v-if="hasOverflow" class="teacher-table-scrollbar" role="group" :aria-label="t('teacher.table_scroll_controls')">
       <span>{{ t('teacher.table_scroll_hint') }}</span>
       <div class="teacher-table-scrollbar__actions">
@@ -15,7 +44,7 @@
           <th scope="col"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>{{ t('teacher.last') }}</th>
           <th scope="col" class="text-end"><i class="bi bi-journal-check me-1" aria-hidden="true"></i>{{ t('teacher.sessions_recorded') }}</th>
           <th scope="col" class="text-end"><i class="bi bi-stars me-1" aria-hidden="true"></i>{{ t('teacher.ai_check_average') }}</th>
-          <th scope="col"><i class="bi bi-flag me-1" aria-hidden="true"></i>{{ t('teacher.follow_up_reason') }}</th>
+          <th scope="col"><i class="bi bi-globe2 me-1" aria-hidden="true"></i>{{ t('teacher.follow_up_reason') }}</th>
           <th scope="col" class="text-end">{{ t('teacher.student_actions') }}</th>
         </tr>
       </thead>
@@ -71,6 +100,7 @@
               @click.stop="$emit('assign', student)"
             >
               <i class="bi bi-journal-plus" aria-hidden="true"></i>
+              <span class="teacher-table__action-label">{{ t('teacher.assign_short') }}</span>
             </button>
             <button
               type="button"
@@ -79,7 +109,7 @@
               :title="t('teacher.open_profile')"
               @click.stop="$emit('open', student.id)"
             >
-              <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+              <span class="teacher-table__action-label">{{ t('teacher.open') }}</span>
             </button>
           </span>
         </td>
@@ -100,6 +130,7 @@ export default {
   props: {
     students: { type: Array, default: () => [] },
     formatWhen: { type: Function, required: true },
+    compact: { type: Boolean, default: false },
   },
   emits: ['open', 'assign'],
   data() {

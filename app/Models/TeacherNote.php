@@ -19,6 +19,8 @@ class TeacherNote extends Model
     {
         return [
             'kind' => TeacherNoteKind::class,
+            'audio_bytes' => 'integer',
+            'audio_duration_ms' => 'integer',
         ];
     }
 

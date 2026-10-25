@@ -8216,9 +8216,9 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @else
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" data-tour="nav-dashboard">
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs(Auth::user()->isTeacher() ? 'teacher.dashboard' : 'dashboard') ? 'active' : '' }}" href="{{ Auth::user()->isTeacher() ? route('teacher.dashboard') : route('dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
+                                <span class="nav-link-copy"><strong @unless (Auth::user()->isTeacher()) data-i18n="dashboard" @endunless>{{ Auth::user()->isTeacher() ? __('admin.dashboard') : __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
@@ -8369,11 +8369,11 @@
                             <li>
                                 <a
                                     class="dropdown-item"
-                                    href="{{ route('dashboard') }}"
+                                    href="{{ Auth::user()->isTeacher() ? route('teacher.dashboard') : route('dashboard') }}"
                                     role="menuitem"
                                 >
                                     <i class="bi bi-speedometer2" aria-hidden="true"></i>
-                                    <span data-i18n="dashboard">{{ __('ui.dashboard') }}</span>
+                                    <span @unless (Auth::user()->isTeacher()) data-i18n="dashboard" @endunless>{{ Auth::user()->isTeacher() ? __('admin.dashboard') : __('ui.dashboard') }}</span>
                                 </a>
                             </li>
                             @endif

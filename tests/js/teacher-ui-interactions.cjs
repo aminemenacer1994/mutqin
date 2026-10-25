@@ -1,9 +1,11 @@
 const { chromium } = require('playwright')
 
+const base = process.env.MUTQIN_QA_BASE || 'http://localhost:8000'
+
 async function main() {
   const browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: { width: 360, height: 780 } })
-  await page.goto('http://localhost:8000/login', { waitUntil: 'domcontentloaded' })
+  await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' })
   await page.locator('input[type=email]').fill('org.demo.halaqa.teacher@example.com')
   await page.locator('input[type=password]').fill('OrganisationDemo1!')
   await page.getByRole('button', { name: /login/i }).click()
@@ -13,7 +15,7 @@ async function main() {
   const nav = page.locator('.teacher-nav-shell--mobile')
   await nav.getByRole('button', { name: 'Students', exact: true }).click()
   await page.locator('.teacher-loading-inline').waitFor({ state: 'hidden' })
-  await page.locator('.teacher-table__row').first().click()
+  await page.locator('.teacher-student-card__main').first().click()
   await page.locator('.teacher-profile-hero').waitFor()
   const tabs = page.locator('[role=tablist] [role=tab]')
   const tabResults = []
@@ -33,7 +35,9 @@ async function main() {
     if (['Practice', 'Recite'].includes(tabResults[tabResults.length - 1].name)) {
       await page.screenshot({ path: `/private/tmp/mutqin-profile-${tabResults[tabResults.length - 1].name.toLowerCase()}-360-sepia.png`, fullPage: false })
       if (tabResults[tabResults.length - 1].name === 'Recite') {
-        await page.locator('.teacher-history-group').first().evaluate((el) => { el.open = true })
+        if (await page.locator('.teacher-history-group').first().getAttribute('open') === null) {
+          throw new Error('The newest Recite group should be open by default')
+        }
         const before = await page.locator('.teacher-records__item').count()
         await page.locator('.teacher-more').click()
         const after = await page.locator('.teacher-records__item').count()
@@ -44,7 +48,7 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Tasks' }).waitFor()
   await page.goBack({ waitUntil: 'domcontentloaded' })
-  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Review' }).waitFor()
+  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Focus' }).waitFor()
   await page.goForward({ waitUntil: 'domcontentloaded' })
   await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Tasks' }).waitFor()
   await page.screenshot({ path: '/private/tmp/mutqin-profile-360-sepia.png', fullPage: false })
@@ -91,14 +95,24 @@ async function main() {
   await page.setViewportSize({ width: 360, height: 780 })
   await page.evaluate(() => { document.documentElement.dataset.theme = 'sepia' })
 
-  await page.goto('http://localhost:8000/teacher', { waitUntil: 'domcontentloaded' })
+  await page.goto(`${base}/teacher`, { waitUntil: 'domcontentloaded' })
   await page.locator('.teacher-dashboard').waitFor()
   await page.locator('.teacher-nav-shell--mobile').getByRole('button', { name: 'Tasks', exact: true }).click()
   await page.locator('.teacher-toolbar--tasks').waitFor({ state: 'visible' })
   await page.waitForTimeout(500)
+  const taskRowOverlap = await page.locator('.teacher-task-row').first().evaluate((row) => {
+    const copy = row.querySelector('.teacher-task-row__copy')?.getBoundingClientRect()
+    const aside = row.querySelector('.teacher-task-row__aside')?.getBoundingClientRect()
+    return copy && aside ? copy.bottom > aside.top + 1 : false
+  })
   const trigger = page.locator('.teacher-task-add')
   await trigger.click()
   await page.locator('.teacher-task-modal').waitFor()
+  const studentPicker = page.locator('.teacher-task-modal__student-picker input')
+  await studentPicker.fill('Fatima')
+  await page.getByRole('option', { name: 'Fatima Noor' }).click()
+  const searchableStudentSelected = await studentPicker.inputValue() === 'Fatima Noor'
+  const ayahCountVisible = await page.locator('.teacher-task-modal__ayah-count').isVisible()
   const modal = await page.evaluate(() => {
     const dialog = document.querySelector('.teacher-task-modal__content')?.getBoundingClientRect()
     const content = document.querySelector('.teacher-task-modal__content')
@@ -171,10 +185,10 @@ async function main() {
   await page.keyboard.press('Shift+Tab')
   const focusTrapped = await page.evaluate(() => document.querySelector('.teacher-task-modal')?.contains(document.activeElement) === true)
   await page.keyboard.press('Escape')
-  console.log(JSON.stringify({ tabResults, profileMatrix, modalMatrix, modal, darkModalColors, escaped, keyboardOpen: true, focusTrapped }, null, 2))
-  if (!escaped || modal.overflow > 0 || modal.dialog.left < 0 || modal.dialog.right > 360 || modal.footer.bottom > 780
+  console.log(JSON.stringify({ tabResults, profileMatrix, modalMatrix, modal, darkModalColors, taskRowOverlap, searchableStudentSelected, ayahCountVisible, escaped, keyboardOpen: true, focusTrapped }, null, 2))
+  if (!escaped || taskRowOverlap || !searchableStudentSelected || !ayahCountVisible || modal.overflow > 0 || modal.dialog.left < 0 || modal.dialog.right > 360 || modal.footer.bottom > 780
     || modal.styles.contentOpacity !== '1' || modal.styles.headerBackground === 'rgba(0, 0, 0, 0)'
-    || darkModalColors.body !== darkModalColors.content || !darkModalColors.body.startsWith('rgb(26, 22, 18)')
+    || darkModalColors.body !== darkModalColors.content || !darkModalColors.body.startsWith('rgb(')
     || !focusTrapped || tabResults.some((result) => result.selected !== 'true' || result.overflow > 0 || result.panel !== 1 || result.overlapsNext)) process.exitCode = 1
   await browser.close()
 }

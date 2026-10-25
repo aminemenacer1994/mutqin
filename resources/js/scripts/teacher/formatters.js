@@ -2,7 +2,12 @@ export function formatTeacherWhen(value) {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+export function practiceMinutes(seconds) {
+  if (seconds === null || seconds === undefined) return null
+  return Math.ceil(Math.max(0, Number(seconds) || 0) / 60)
 }
 
 export function assignmentProgressLabel(item, t) {
@@ -87,7 +92,7 @@ export function assignmentLabel(counts = {}, t) {
 
 export function sessionLabel(session, t) {
   const name = session.surah_name || t('teacher.surah_n', { n: session.surah_number || t('teacher.unavailable') })
-  if (session.ayah_start && session.ayah_end) return `${name} ${session.ayah_start} to ${session.ayah_end}`
+  if (session.ayah_start && session.ayah_end) return `${name} ${session.ayah_start}–${session.ayah_end}`
   if (session.ayah_number) return `${name} ${session.ayah_number}`
   return name
 }
@@ -117,7 +122,7 @@ export function attentionReasonTags(student, t) {
   if (!tags.length && student?.needs_attention) {
     tags.push({ key: 'help', tone: 'warn', icon: 'bi bi-hand-index', label: t('teacher.need_look') })
   }
-  return tags.slice(0, 3)
+  return tags
 }
 
 export function attentionReasons(student, t) {

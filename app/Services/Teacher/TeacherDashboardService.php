@@ -20,6 +20,7 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -38,6 +39,7 @@ class TeacherDashboardService
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentService $assignments,
         private readonly GroupMembershipService $memberships,
+        private readonly AiReciteAttemptAudioService $audio,
     ) {}
 
     /**
@@ -237,7 +239,7 @@ class TeacherDashboardService
 
         $this->assertAuthorised($teacher, $student);
         $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
-        $section = in_array($section, ['overview', 'analytics', 'practice', 'weak', 'ai', 'revision', 'tasks'], true) ? $section : 'overview';
+        $section = in_array($section, ['overview', 'analytics', 'practice', 'focus', 'weak', 'ai', 'revision', 'tasks'], true) ? $section : 'overview';
         $metrics = $this->metricsFor($teacher, [(int) $student->id])[(int) $student->id];
         $groups = $this->sharedGroups($teacher, [(int) $student->id])->get($student->id, collect());
 
@@ -257,6 +259,7 @@ class TeacherDashboardService
 
         $base['payload'] = match ($section) {
             'practice' => $this->practiceSection($student),
+            'focus' => $this->focusSection($teacher, $student),
             'weak' => $this->weakSection($student),
             'ai' => $this->aiSection($student),
             'revision' => $this->revisionSection($teacher, $student),
@@ -587,7 +590,6 @@ class TeacherDashboardService
             ->orderByDesc('affected_attempt_count')
             ->get(['user_id', 'surah_number', 'ayah_number', 'spot_type', 'affected_attempt_count', 'word_index']);
         $seenSpots = [];
-        $seenAyahs = [];
         $seenRecurringAyahs = [];
         foreach ($spots as $spot) {
             $id = (int) $spot->user_id;
@@ -609,22 +611,19 @@ class TeacherDashboardService
             }
             $seenSpots[$spotKey] = true;
             $ayahKey = implode(':', [$id, (int) $spot->surah_number, (int) $spot->ayah_number]);
-            if (! isset($seenAyahs[$ayahKey])) {
-                $seenAyahs[$ayahKey] = true;
-                $metrics[$id]['weak_count']++;
-            }
             if ((int) $spot->affected_attempt_count >= 2 && ! isset($seenRecurringAyahs[$ayahKey])) {
                 $seenRecurringAyahs[$ayahKey] = true;
+                $metrics[$id]['weak_count']++;
                 $metrics[$id]['recurring_weak']++;
-            }
-            if ($metrics[$id]['weak_example'] === null) {
-                $metrics[$id]['weak_example'] = [
-                    'surah_name' => QuranMetadata::name((int) $spot->surah_number),
-                    'surah_number' => (int) $spot->surah_number,
-                    'ayah_number' => (int) $spot->ayah_number,
-                    'spot_type' => $spot->spot_type,
-                    'word_index' => $spot->word_index,
-                ];
+                if ($metrics[$id]['weak_example'] === null) {
+                    $metrics[$id]['weak_example'] = [
+                        'surah_name' => QuranMetadata::name((int) $spot->surah_number),
+                        'surah_number' => (int) $spot->surah_number,
+                        'ayah_number' => (int) $spot->ayah_number,
+                        'spot_type' => $spot->spot_type,
+                        'word_index' => $spot->word_index,
+                    ];
+                }
             }
         }
 
@@ -967,9 +966,30 @@ class TeacherDashboardService
             ->where('user_id', $student->id)
             ->where('is_onboarding_example', false)
             ->latest('last_activity_at')
+            ->latest('id')
             ->limit(30)
-            ->get()
-            ->map(fn (UserSession $session) => $this->presentSession($session))
+            ->get();
+
+        $attemptsBySession = $sessions->isEmpty()
+            ? collect()
+            : AiReciteAttempt::query()
+                ->where('user_id', $student->id)
+                ->whereIn('user_session_id', $sessions->pluck('id'))
+                ->with('assessment:id,status,recognition_data')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->get()
+                ->groupBy('user_session_id');
+
+        $presented = $sessions
+            ->map(function (UserSession $session) use ($attemptsBySession) {
+                $attempt = $attemptsBySession->get($session->id)?->first();
+
+                return $this->presentSession(
+                    $session,
+                    $attempt instanceof AiReciteAttempt ? $this->presentAttemptEvidence($attempt) : null,
+                );
+            })
             ->all();
 
         $saved = UserSession::query()
@@ -980,7 +1000,7 @@ class TeacherDashboardService
             ->first();
 
         return [
-            'sessions' => $sessions,
+            'sessions' => $presented,
             'latest_saved' => $saved ? $this->presentSession($saved) : null,
         ];
     }
@@ -988,7 +1008,7 @@ class TeacherDashboardService
     /**
      * @return array<string, mixed>
      */
-    private function presentSession(UserSession $session): array
+    private function presentSession(UserSession $session, ?array $evidence = null): array
     {
         $meta = is_array($session->metadata) ? $session->metadata : [];
         $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
@@ -1006,6 +1026,7 @@ class TeacherDashboardService
             'started_at' => $session->started_at?->toIso8601String(),
             'ended_at' => $session->ended_at?->toIso8601String(),
             'last_activity_at' => $session->last_activity_at?->toIso8601String(),
+            'evidence' => $evidence,
         ];
     }
 
@@ -1014,12 +1035,13 @@ class TeacherDashboardService
      */
     private function weakSection(User $student): array
     {
-        $items = MemorisationWeakSpot::query()
+        $spots = MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
-            ->orderByDesc('affected_attempt_count')
+            ->where('affected_attempt_count', '>=', 2)
             ->orderByDesc('last_identified_at')
             ->orderByDesc('id')
+            ->orderByDesc('affected_attempt_count')
             ->get()
             ->unique(fn (MemorisationWeakSpot $spot) => implode(':', [
                 (int) $spot->user_id,
@@ -1029,21 +1051,27 @@ class TeacherDashboardService
                 $spot->word_index === null ? 'ayah' : (string) $spot->word_index,
             ]))
             ->take(40)
-            ->map(fn (MemorisationWeakSpot $spot) => [
-                'id' => (int) $spot->id,
-                'spot_type' => $spot->spot_type,
-                'surah_number' => (int) $spot->surah_number,
-                'surah_name' => QuranMetadata::name((int) $spot->surah_number),
-                'ayah_number' => (int) $spot->ayah_number,
-                'word_index' => $spot->word_index,
-                'severity' => $spot->severity,
-                'status' => $spot->status,
-                'trend' => $spot->trend,
-                'affected_attempt_count' => (int) $spot->affected_attempt_count,
-                'first_identified_at' => $spot->first_identified_at?->toIso8601String(),
-                'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
-                'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
-            ])->all();
+            ->values();
+
+        $evidenceAttempts = $this->attemptsForWeakSpots($student, $spots);
+        $items = $spots->map(fn (MemorisationWeakSpot $spot) => [
+            'id' => (int) $spot->id,
+            'spot_type' => $spot->spot_type,
+            'surah_number' => (int) $spot->surah_number,
+            'surah_name' => QuranMetadata::name((int) $spot->surah_number),
+            'ayah_number' => (int) $spot->ayah_number,
+            'word_index' => $spot->word_index,
+            'severity' => $spot->severity,
+            'status' => $spot->status,
+            'trend' => $spot->trend,
+            'affected_attempt_count' => (int) $spot->affected_attempt_count,
+            'first_identified_at' => $spot->first_identified_at?->toIso8601String(),
+            'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
+            'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
+            'evidence' => ($attempt = $this->attemptForWeakSpot($spot, $evidenceAttempts))
+                ? $this->presentAttemptEvidence($attempt)
+                : null,
+        ])->all();
 
         return ['items' => $items];
     }
@@ -1055,8 +1083,9 @@ class TeacherDashboardService
     {
         $attempts = AiReciteAttempt::query()
             ->where('user_id', $student->id)
-            ->with('assessment:id,status')
+            ->with('assessment:id,status,recognition_data')
             ->latest('created_at')
+            ->latest('id')
             ->limit(30)
             ->get();
         $attempts = $this->dedupeScoredAttempts($attempts);
@@ -1092,6 +1121,7 @@ class TeacherDashboardService
                 ] : null,
                 'issues' => $this->wordIssues($attempt),
                 'assessment_status' => $attempt->assessment?->status,
+                'evidence' => $this->presentAttemptEvidence($attempt),
             ])->all(),
             'trend' => $scored->sortByDesc('created_at')->take(30)->sortBy('created_at')->map(fn (AiReciteAttempt $attempt) => [
                 'at' => $attempt->created_at?->toIso8601String(),
@@ -1099,6 +1129,106 @@ class TeacherDashboardService
                 'band' => $attempt->band,
             ])->values()->all(),
         ];
+    }
+
+    /**
+     * @param  Collection<int, MemorisationWeakSpot>  $spots
+     * @return Collection<int, AiReciteAttempt>
+     */
+    private function attemptsForWeakSpots(User $student, Collection $spots): Collection
+    {
+        if ($spots->isEmpty()) {
+            return collect();
+        }
+
+        return AiReciteAttempt::query()
+            ->where('user_id', $student->id)
+            ->with('assessment:id,status,recognition_data')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get();
+    }
+
+    /**
+     * Prefer the check that created or most recently confirmed this finding,
+     * then fall back to the newest check covering the same ayah.
+     *
+     * @param  Collection<int, AiReciteAttempt>  $attempts
+     */
+    private function attemptForWeakSpot(MemorisationWeakSpot $spot, Collection $attempts): ?AiReciteAttempt
+    {
+        $assessmentIds = collect([$spot->last_assessment_id, $spot->source_assessment_id])
+            ->filter()
+            ->map(fn ($id) => (int) $id);
+
+        $linked = $attempts->first(fn (AiReciteAttempt $attempt) => (
+            $attempt->memorisation_assessment_id
+            && $assessmentIds->contains((int) $attempt->memorisation_assessment_id)
+        ));
+        if ($linked instanceof AiReciteAttempt) {
+            return $linked;
+        }
+
+        return $attempts->first(function (AiReciteAttempt $attempt) use ($spot) {
+            $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+            $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
+            $from = (int) ($range['from'] ?? $range['start'] ?? 0);
+            $to = (int) ($range['to'] ?? $range['end'] ?? $from);
+
+            return $surah === (int) $spot->surah_number
+                && $from > 0
+                && (int) $spot->ayah_number >= $from
+                && (int) $spot->ayah_number <= max($from, $to);
+        });
+    }
+
+    /** @return array<string, mixed> */
+    private function presentAttemptEvidence(AiReciteAttempt $attempt): array
+    {
+        return [
+            'attempt_id' => (int) $attempt->id,
+            'audio' => $this->audio->payload($attempt),
+            'transcript' => $this->attemptTranscript($attempt),
+        ];
+    }
+
+    private function attemptTranscript(AiReciteAttempt $attempt): ?string
+    {
+        $recognition = is_array($attempt->assessment?->recognition_data)
+            ? $attempt->assessment->recognition_data
+            : [];
+        $candidates = [
+            data_get($recognition, 'raw.transcript'),
+            data_get($recognition, 'normalised.transcript'),
+            $recognition['transcript'] ?? null,
+        ];
+        foreach ($candidates as $candidate) {
+            $value = trim((string) $candidate);
+            if ($value !== '') {
+                return mb_substr($value, 0, 5000);
+            }
+        }
+
+        $heard = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
+            ->map(function ($word) {
+                if (! is_array($word)) {
+                    return null;
+                }
+
+                return $word['detected_token']
+                    ?? $word['detected']
+                    ?? $word['actual']
+                    ?? $word['recognised']
+                    ?? $word['recognized']
+                    ?? $word['heard']
+                    ?? null;
+            })
+            ->filter(fn ($word) => is_string($word) && trim($word) !== '')
+            ->map(fn (string $word) => trim($word))
+            ->values();
+
+        return $heard->isEmpty() ? null : mb_substr($heard->implode(' '), 0, 5000);
     }
 
     /**
@@ -1200,10 +1330,26 @@ class TeacherDashboardService
     /**
      * @return array<string, mixed>
      */
+    private function focusSection(User $teacher, User $student): array
+    {
+        $weak = $this->weakSection($student);
+        $revision = $this->revisionSection($teacher, $student);
+
+        return [
+            'items' => $weak['items'] ?? [],
+            'plans' => $revision['plans'] ?? [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function revisionSection(User $teacher, User $student): array
     {
         $plans = MemorisationPracticePlan::query()
             ->where('user_id', $student->id)
+            ->where('status', MemorisationPracticePlan::STATUS_ACTIVE)
+            ->whereNotNull('recommended_review_at')
             ->latest('id')
             ->get()
             // A retry can create the same scheduled event more than once. Keep
@@ -1235,9 +1381,12 @@ class TeacherDashboardService
                 ];
             })->all();
 
-        $revisit = MemorisationWeakSpot::query()
+        $revisitSpots = MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+            ->where('affected_attempt_count', '>=', 2)
+            ->orderByDesc('last_identified_at')
+            ->orderByDesc('id')
             ->orderByDesc('affected_attempt_count')
             ->get()
             ->unique(fn (MemorisationWeakSpot $spot) => implode(':', [
@@ -1247,16 +1396,21 @@ class TeacherDashboardService
                 $spot->word_index === null ? 'ayah' : (string) $spot->word_index,
             ]))
             ->take(12)
-            ->map(fn (MemorisationWeakSpot $spot) => [
-                'surah_name' => QuranMetadata::name((int) $spot->surah_number),
-                'surah_number' => (int) $spot->surah_number,
-                'ayah_number' => (int) $spot->ayah_number,
-                'spot_type' => $spot->spot_type,
-                'word_index' => $spot->word_index,
-                'affected_attempt_count' => (int) $spot->affected_attempt_count,
-                'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
-                'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
-            ])->all();
+            ->values();
+        $revisitAttempts = $this->attemptsForWeakSpots($student, $revisitSpots);
+        $revisit = $revisitSpots->map(fn (MemorisationWeakSpot $spot) => [
+            'surah_name' => QuranMetadata::name((int) $spot->surah_number),
+            'surah_number' => (int) $spot->surah_number,
+            'ayah_number' => (int) $spot->ayah_number,
+            'spot_type' => $spot->spot_type,
+            'word_index' => $spot->word_index,
+            'affected_attempt_count' => (int) $spot->affected_attempt_count,
+            'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
+            'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
+            'evidence' => ($attempt = $this->attemptForWeakSpot($spot, $revisitAttempts))
+                ? $this->presentAttemptEvidence($attempt)
+                : null,
+        ])->all();
 
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $student->id)

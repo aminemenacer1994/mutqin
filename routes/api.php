@@ -4,7 +4,6 @@ use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
 use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
-use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
@@ -23,6 +22,7 @@ use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
 use App\Http\Controllers\AskMutqinCommandController;
+use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\ProfileController;
@@ -112,7 +112,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
-            Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->name('api.me.assignments.notes.store');
+            Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
+            Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
         Route::middleware('teacher.features')->group(function () {

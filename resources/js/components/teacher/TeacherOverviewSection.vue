@@ -3,14 +3,6 @@
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
 
     <section class="teacher-overview-summary" :aria-label="t('teacher.nav_overview')">
-      <div class="teacher-section-intro">
-        <div>
-          <p class="teacher-section-intro__eyebrow">{{ t('teacher.overview_at_a_glance') }}</p>
-          <h3>{{ t('teacher.overview_title') }}</h3>
-          <p>{{ t('teacher.overview_subtitle') }}</p>
-        </div>
-        <span class="teacher-section-intro__icon" aria-hidden="true"><i class="bi bi-compass"></i></span>
-      </div>
       <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
     </section>
 
@@ -25,6 +17,7 @@
         @open-student="openStudent"
         @assign-revision="$emit('assign-revision', $event)"
       />
+      <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
     </TeacherSectionPane>
 
     <div class="teacher-overview-detail-grid">
@@ -42,7 +35,7 @@
                 <strong>{{ student.name }}</strong>
                 <small>{{ t('teacher.activity_recorded', { when: formatWhen(student.last_activity_at) }) }}</small>
               </span>
-              <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score">
+              <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">
                 {{ student.ai_success_rate }}%
                 <small>{{ t('teacher.ai_word_match_short') }}</small>
               </span>
@@ -50,7 +43,10 @@
             </button>
           </li>
         </ul>
-        <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
+        <div v-else class="teacher-empty-with-action">
+          <TeacherEmpty inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
+          <button type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
+        </div>
       </TeacherSectionPane>
 
       <TeacherSectionPane
@@ -77,7 +73,7 @@
 </template>
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { studentInitial } from '../../scripts/teacher/formatters'
+import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -129,6 +125,7 @@ export default {
   },
   methods: {
     initial: studentInitial,
+    scoreTone: scoreBadgeTone,
     openStudent(id) {
       this.$emit('open-student', id, 'overview')
     },

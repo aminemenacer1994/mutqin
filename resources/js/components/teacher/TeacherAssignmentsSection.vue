@@ -1,12 +1,6 @@
 <template>
-  <section class="teacher-stack">
-    <header class="teacher-page-header teacher-page-header--context">
-      <div class="teacher-page-header__main">
-        <p class="teacher-page-header__eyebrow">{{ t('teacher.nav_assignments') }}</p>
-        <h2 class="teacher-page-header__title teacher-page-header__title--display">{{ t('teacher.tasks_section_title') }}</h2>
-        <p class="teacher-page-header__subtitle">{{ t('teacher.tasks_section_subtitle') }}</p>
-      </div>
-    </header>
+  <section class="teacher-stack teacher-assignments" :class="{ 'is-compact': compactView }">
+    <h2 class="visually-hidden">{{ t('teacher.nav_assignments') }}</h2>
     <p v-if="success" class="alert alert-success mb-0" role="status">{{ success }}</p>
     <p v-if="error && !formOpen" class="alert alert-danger mb-0" role="alert">{{ error }}</p>
 
@@ -29,6 +23,17 @@
           {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
         </button>
       </div>
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm teacher-density-toggle"
+        :class="{ 'is-active': compactView }"
+        :aria-pressed="compactView ? 'true' : 'false'"
+        :title="t('teacher.compact_view_help')"
+        @click="toggleCompactView"
+      >
+        <i class="bi bi-list" aria-hidden="true"></i>
+        <span>{{ t('teacher.compact_view') }}</span>
+      </button>
       <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">
         <i class="bi bi-plus-lg" aria-hidden="true"></i>
         {{ t('teacher.add_task') }}
@@ -68,13 +73,16 @@
               <span class="teacher-task-row__controls">
               <button type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__message" :aria-label="`${t('teacher.task_conversation')} ${item.studentName}`" :title="t('teacher.task_conversation')" @click="openMessages(item)">
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
-                <span v-if="item.messages.length" class="teacher-task-row__message-count">{{ item.messages.length }}</span>
+                <span class="teacher-task-row__control-label">{{ t('teacher.conversation') }}</span>
+                <span v-if="item.messages.length" class="teacher-task-row__message-count">{{ t('teacher.task_messages_count', { n: item.messages.length }) }}</span>
               </button>
               <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
+                <span class="teacher-task-row__control-label">{{ t('teacher.task_edit') }}</span>
               </button>
-              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_remove')} ${item.studentName}`" :title="t('teacher.task_remove')" @click="openRemove(item)">
+              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_remove_prompt')} ${item.studentName}`" :title="t('teacher.task_remove_prompt')" @click="openRemove(item)">
                 <i class="bi bi-trash" aria-hidden="true"></i>
+                <span class="teacher-task-row__control-label">{{ t('teacher.task_remove_prompt') }}</span>
               </button>
               <button v-else-if="item.studentId" type="button" class="teacher-task-row__go" :aria-label="`${t('teacher.open')} ${item.studentName}`" @click="$emit('open-student', item.studentId)">
                 <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
@@ -99,6 +107,7 @@
       >
         {{ t('teacher.clear_filters') }}
       </button>
+      <button v-else-if="!rows.length" type="button" class="btn btn-primary btn-sm" @click="$emit('new')">{{ t('teacher.add_task') }}</button>
     </div>
 
     <TeacherTaskSheet
@@ -152,10 +161,25 @@
                 <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
               </div>
               <div class="modal-body teacher-message-modal__body">
+                <section class="teacher-message-context" :aria-label="t('teacher.task_details')">
+                  <div class="teacher-message-context__main">
+                    <span class="teacher-task-row__status" :class="`is-${messageItem.statusTone}`"><i :class="messageItem.statusIcon" aria-hidden="true"></i>{{ messageItem.statusLabel }}</span>
+                    <strong>{{ messageItem.title }}</strong>
+                    <span>{{ messageItem.kindLabel }}<template v-if="messageItem.due"> · {{ messageItem.due }}</template><template v-if="messageItem.progress"> · {{ messageItem.progress }}</template></span>
+                    <p v-if="messageItem.assignment.feedback"><i class="bi bi-journal-text" aria-hidden="true"></i>{{ messageItem.assignment.feedback }}</p>
+                  </div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" @click="openMessageStudent">
+                    {{ t('teacher.open_profile') }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                  </button>
+                </section>
                 <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
                   <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="`is-${message.sender}`">
                     <span>{{ message.sender === 'teacher' ? t('teacher.you') : messageItem.studentName }}</span>
-                    <p>{{ message.body }}</p>
+                    <p v-if="message.body">{{ message.body }}</p>
+                    <div v-if="message.audio?.available && message.audio?.url" class="teacher-message-bubble__audio">
+                      <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                      <audio controls preload="metadata" :src="message.audio.url">{{ t('teacher.voice_note') }}</audio>
+                    </div>
                     <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}</time>
                   </article>
                 </div>
@@ -194,7 +218,7 @@ import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
 
-const STEP = 5
+const STEP = 25
 
 export default {
   name: 'TeacherAssignmentsSection',
@@ -227,7 +251,11 @@ export default {
       messageError: '',
       messageSent: false,
       returnFocusEl: null,
+      compactView: false,
     }
+  },
+  mounted() {
+    this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1'
   },
   watch: {
     removeItem(value) {
@@ -284,6 +312,7 @@ export default {
             completionEvidence: this.completionEvidenceLabel(recipient),
             recipientId: recipient.id,
             messages: Array.isArray(recipient.messages) ? recipient.messages : [],
+            occurredAt: recipient.updated_at || assignment.created_at || '',
           }
         })
       })
@@ -296,21 +325,30 @@ export default {
       )) : [...this.flatItems]
       const filtered = this.statusFilter === 'all'
         ? items
-        : items.filter((item) => this.statusFilter === 'done'
-          ? item.status === 'completed'
-          : this.statusFilter === 'overdue'
-            ? item.status === 'overdue'
-            : this.statusFilter === 'progress'
-              ? item.status === 'in_progress' || item.status === 'awaiting_confirmation'
-              : item.status === 'pending')
-      const urgency = { overdue: 0, in_progress: 1, pending: 2, completed: 3 }
-      return filtered.sort((a, b) => (urgency[a.status] ?? 2) - (urgency[b.status] ?? 2))
+        : items.filter((item) => {
+          if (this.statusFilter === 'done') return item.status === 'completed'
+          if (this.statusFilter === 'overdue') return item.status === 'overdue'
+          if (this.statusFilter === 'progress') return item.status === 'in_progress' || item.status === 'awaiting_confirmation'
+          return item.status === 'pending'
+        })
+      return filtered.sort((a, b) => {
+        const urgency = { overdue: 0, pending: 1, in_progress: 2, awaiting_confirmation: 2, completed: 3 }
+        const urgencyDifference = (urgency[a.status] ?? 1) - (urgency[b.status] ?? 1)
+        if (urgencyDifference) return urgencyDifference
+        const dateA = Date.parse(a.occurredAt || '') || 0
+        const dateB = Date.parse(b.occurredAt || '') || 0
+        return dateB - dateA || String(b.key).localeCompare(String(a.key), undefined, { numeric: true })
+      })
     },
     visibleItems() {
       return this.filteredItems.slice(0, this.shown)
     },
   },
   methods: {
+    toggleCompactView() {
+      this.compactView = !this.compactView
+      window.localStorage.setItem('mutqin.teacher.tasks.compact', this.compactView ? '1' : '0')
+    },
     syncModalState(open) {
       document.body.classList.toggle('modal-open', open)
       document.body.classList.toggle('teacher-task-modal-open', open)
@@ -344,6 +382,11 @@ export default {
       this.messageItem = null
       this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
     },
+    openMessageStudent() {
+      const id = this.messageItem?.studentId
+      this.closeMessages()
+      if (id) this.$emit('open-student', id)
+    },
     onMessageKeydown(event) {
       handleModalKeydown(event, { container: this.$refs.messageDialog, open: Boolean(this.messageItem), onEscape: this.closeMessages })
     },
@@ -368,7 +411,7 @@ export default {
       try {
         const date = new Date(message?.created_at)
         if (Number.isNaN(date.getTime())) return ''
-        return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+        return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       } catch (_) {
         return ''
       }

@@ -6,10 +6,11 @@
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
           <span class="teacher-attention-list__reasons">
-            <span v-for="item in reasons(student)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`">
+            <span v-for="item in reasons(student).slice(0, 2)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`">
               <i :class="item.icon" aria-hidden="true"></i>
               {{ item.label }}
             </span>
+            <span v-if="reasons(student).length > 2" class="teacher-attention-list__more" :title="reasons(student).slice(2).map((item) => item.label).join(', ')" :aria-label="reasons(student).slice(2).map((item) => item.label).join(', ')">{{ t('teacher.more_reasons', { n: reasons(student).length - 2 }) }}</span>
           </span>
         </span>
       </button>

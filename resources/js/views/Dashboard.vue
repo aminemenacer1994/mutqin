@@ -2484,9 +2484,9 @@ export default {
         this.assignmentSavingId = 0
       }
     },
-    async sendSupportNote(item, body) {
+    async sendSupportNote(item, body, recording = null) {
       if (this.auth?.learner_teacher_section_enabled !== true) return null
-      const payload = await learningApi.sendLearnerAssignmentMessage(item.id, body)
+      const payload = await learningApi.sendLearnerAssignmentMessage(item.id, body, recording)
       return payload?.message || null
     },
     showCompletedAssignments() {

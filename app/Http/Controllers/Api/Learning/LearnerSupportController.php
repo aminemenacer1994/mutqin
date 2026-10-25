@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\GroupMembershipService;
+use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Services\Teacher\TeacherDashboardService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class LearnerSupportController extends Controller
 {
@@ -84,12 +87,38 @@ class LearnerSupportController extends Controller
         TeacherFeatures::abortUnlessEnabled();
         $user = $request->user();
         abort_unless($user instanceof User, 401);
-        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        $data = $request->validate([
+            'body' => ['nullable', 'string', 'max:2000'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+        ]);
 
-        $message = $assignments->addLearnerMessage($user, $recipient, $data['body']);
+        $message = $assignments->addLearnerMessage(
+            $user,
+            $recipient,
+            (string) ($data['body'] ?? ''),
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+        );
 
         return response()->json([
             'message' => $assignments->presentAssignmentMessage($message),
         ], 201)->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function assignmentMessageAudio(
+        Request $request,
+        TeacherNote $note,
+        TeacherAssignmentMessageAudioService $audio,
+    ): Response {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $response = $audio->stream($user, $note);
+        if ($response === null) {
+            return response()->json(['message' => 'Not found.'], 404);
+        }
+
+        return $response;
     }
 }

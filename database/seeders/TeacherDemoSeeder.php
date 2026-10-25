@@ -737,7 +737,18 @@ class TeacherDemoSeeder extends Seeder
             $practice = $this->practiceRange($definition['number']);
 
             if (in_array($profile, ['excellent', 'good', 'average'], true)) {
-                $this->assignment($teacher, [$student], AssignmentKind::Practice, $practice, now()->subDays(25)->subMinutes(10), now()->addDays(3), null, null);
+                $this->assignment(
+                    $teacher,
+                    [$student],
+                    AssignmentKind::Practice,
+                    $practice,
+                    now()->subDays(25)->subMinutes(10),
+                    now()->addDays(3),
+                    null,
+                    null,
+                    null,
+                    $definition['number'] === TeacherDemoCatalog::HIGH_PERFORMER ? now()->subDays(2) : null,
+                );
             }
 
             if ($definition['number'] === TeacherDemoCatalog::INTERVENTION) {
@@ -792,7 +803,7 @@ class TeacherDemoSeeder extends Seeder
      * @param  list<User>  $students
      * @param  array{surah: int, from: int, to: int}  $range
      */
-    private function assignment(User $teacher, array $students, AssignmentKind $kind, array $range, Carbon $createdAt, Carbon $dueAt, ?Carbon $startedAt, ?string $feedback, ?LearningGroup $group = null): void
+    private function assignment(User $teacher, array $students, AssignmentKind $kind, array $range, Carbon $createdAt, Carbon $dueAt, ?Carbon $startedAt, ?string $feedback, ?LearningGroup $group = null, ?Carbon $completedAt = null): void
     {
         $assignment = new TeacherAssignment;
         $assignment->forceFill([
@@ -815,8 +826,10 @@ class TeacherDemoSeeder extends Seeder
             $recipient->forceFill([
                 'teacher_assignment_id' => $assignment->id,
                 'student_id' => $student->id,
-                'status' => AssignmentStatus::Pending,
+                'status' => $completedAt ? AssignmentStatus::Completed : AssignmentStatus::Pending,
                 'started_at' => $startedAt,
+                'student_completed_at' => $completedAt,
+                'completed_at' => $completedAt,
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ])->save();

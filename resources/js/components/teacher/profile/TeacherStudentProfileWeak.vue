@@ -1,15 +1,10 @@
 <template>
   <TeacherSectionPane tone="warn">
-    <div class="teacher-section-summary teacher-section-summary--compact" role="list">
-      <div role="listitem">
-        <span>{{ t('teacher.hard_ayahs_found') }}</span>
-        <strong>{{ weakRows.length }}</strong>
-        <small>{{ t('teacher.hard_ayahs_found_help') }}</small>
-      </div>
-      <div role="listitem">
-        <span>{{ t('teacher.evidence') }}</span>
-        <strong>{{ evidenceCount }}</strong>
-        <small>{{ t('teacher.evidence_links_help') }}</small>
+    <div class="teacher-section-explainer teacher-section-explainer--warn">
+      <i class="bi bi-lightbulb" aria-hidden="true"></i>
+      <div>
+        <strong>{{ t('teacher.hard_ayahs_explainer_title') }}</strong>
+        <p>{{ t('teacher.hard_ayahs_explainer_body') }}</p>
       </div>
     </div>
     <TeacherRecordList
@@ -38,9 +33,6 @@ export default {
   },
   emits: ['assign-revision'],
   computed: {
-    evidenceCount() {
-      return this.weakRows.filter((row) => row.href).length
-    },
     weakRows() {
       return groupAyahFindings(this.profile.payload.items, this.t).map((group) => ({
         key: group.key,
@@ -52,6 +44,8 @@ export default {
         badge: this.t(Number(group.first?.affected_attempt_count || 0) === 1 ? 'teacher.check_count_one' : 'teacher.check_count_many', { n: Number(group.first?.affected_attempt_count || 0) }),
         badgeTone: 'warn',
         source: group.first?.evidence_url ? this.t('teacher.open_evidence') : '',
+        audio: group.first?.evidence?.audio || null,
+        transcript: group.first?.evidence?.transcript || '',
         actionLabel: this.t('teacher.assign_revision'),
         actionPayload: this.assignPayload(group.first),
       }))

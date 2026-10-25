@@ -13,8 +13,7 @@ export const TEACHER_PROFILE_TABS = [
   { id: 'overview', label: 'teacher.tab_overview', icon: 'bi bi-house-door' },
   { id: 'practice', label: 'teacher.tab_practice', icon: 'bi bi-play-circle' },
   { id: 'ai', label: 'teacher.tab_ai', icon: 'bi bi-mic' },
-  { id: 'weak', label: 'teacher.tab_weak', icon: 'bi bi-exclamation-triangle' },
-  { id: 'revision', label: 'teacher.tab_revision', icon: 'bi bi-arrow-repeat' },
+  { id: 'focus', label: 'teacher.tab_focus', icon: 'bi bi-bullseye' },
   { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
 ]
 

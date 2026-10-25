@@ -19,13 +19,17 @@ use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TeacherAssignmentService
 {
-    public function __construct(private readonly StudentAccessAuthorizer $access) {}
+    public function __construct(
+        private readonly StudentAccessAuthorizer $access,
+        private readonly TeacherAssignmentMessageAudioService $messageAudio,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
@@ -109,7 +113,9 @@ class TeacherAssignmentService
     public function canManage(TeacherAssignment $assignment, bool $forUpdate = false): bool
     {
         $query = $assignment->recipients();
-        if ($forUpdate) $query->lockForUpdate();
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
         $recipients = $query->get(['id', 'started_at', 'completed_at', 'student_completed_at']);
         if ($recipients->isEmpty() || $recipients->contains(fn ($recipient) => $recipient->started_at !== null || $recipient->completed_at !== null || $recipient->student_completed_at !== null)) {
             return false;
@@ -219,6 +225,7 @@ class TeacherAssignmentService
                         'completed_at' => $recipient->completed_at ?? $recipient->student_completed_at,
                     ])->save();
                 }
+
                 continue;
             }
 
@@ -312,8 +319,13 @@ class TeacherAssignmentService
         return $recipient->refresh();
     }
 
-    public function addLearnerMessage(User $student, TeacherAssignmentRecipient $recipient, string $body): TeacherNote
-    {
+    public function addLearnerMessage(
+        User $student,
+        TeacherAssignmentRecipient $recipient,
+        string $body,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
+    ): TeacherNote {
         TeacherFeatures::abortUnlessEnabled();
 
         $recipient->loadMissing('assignment');
@@ -322,11 +334,16 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body);
+        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body, $audio, $durationMs);
     }
 
-    public function addTeacherMessage(User $teacher, TeacherAssignmentRecipient $recipient, string $body): TeacherNote
-    {
+    public function addTeacherMessage(
+        User $teacher,
+        TeacherAssignmentRecipient $recipient,
+        string $body,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
+    ): TeacherNote {
         TeacherFeatures::abortUnlessEnabled();
 
         $recipient->loadMissing('assignment');
@@ -335,7 +352,7 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        return $this->createAssignmentMessage($assignment, $recipient->student, TeacherNoteKind::Feedback, $body);
+        return $this->createAssignmentMessage($assignment, $recipient->student, TeacherNoteKind::Feedback, $body, $audio, $durationMs);
     }
 
     public function linkedRecipientForActivity(
@@ -379,8 +396,7 @@ class TeacherAssignmentService
         TeacherAssignment $assignment,
         ?int $resumeSessionId = null,
         ?int $recipientId = null,
-    ): string
-    {
+    ): string {
         $params = [
             'surah' => $assignment->surah_number,
             'from' => $assignment->ayah_start,
@@ -696,11 +712,13 @@ class TeacherAssignmentService
         User $student,
         TeacherNoteKind $kind,
         string $body,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
     ): TeacherNote {
         $body = trim($body);
-        if ($body === '' || mb_strlen($body) > 2000) {
+        if (($body === '' && $audio === null) || mb_strlen($body) > 2000) {
             throw ValidationException::withMessages([
-                'body' => 'Enter a message of up to 2000 characters.',
+                'body' => 'Enter a message or add a voice note.',
             ]);
         }
 
@@ -713,6 +731,13 @@ class TeacherAssignmentService
             'kind' => $kind->value,
             'body' => $body,
         ])->save();
+
+        if ($audio !== null && ! $this->messageAudio->store($note, $audio, $durationMs)) {
+            $note->delete();
+            throw ValidationException::withMessages([
+                'audio' => 'Use a supported voice recording smaller than 8 MB.',
+            ]);
+        }
 
         return $note->refresh();
     }
@@ -746,6 +771,7 @@ class TeacherAssignmentService
             'sender' => $kind === TeacherNoteKind::Feedback ? 'teacher' : 'student',
             'sender_name' => $kind === TeacherNoteKind::Feedback ? $note->teacher?->name : null,
             'body' => $note->body,
+            'audio' => $this->messageAudio->payload($note),
             'created_at' => $note->created_at?->toIso8601String(),
         ];
     }

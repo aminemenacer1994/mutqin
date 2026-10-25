@@ -1,15 +1,10 @@
 <template>
   <TeacherSectionPane tone="neutral">
-    <div class="teacher-section-summary teacher-section-summary--compact" role="list">
-      <div role="listitem">
-        <span>{{ t('teacher.revisit') }}</span>
-        <strong>{{ revisitRows.length }}</strong>
-        <small>{{ t('teacher.revisit_help') }}</small>
-      </div>
-      <div role="listitem">
-        <span>{{ t('teacher.plans') }}</span>
-        <strong>{{ planRows.length }}</strong>
-        <small>{{ t('teacher.plans_help') }}</small>
+    <div class="teacher-section-explainer">
+      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+      <div>
+        <strong>{{ t('teacher.review_explainer_title') }}</strong>
+        <p>{{ t('teacher.review_explainer_body') }}</p>
       </div>
     </div>
 
@@ -63,6 +58,8 @@ export default {
         title: group.title,
         hint: group.findings.join(' · '),
         href: group.first?.evidence_url || '',
+        audio: group.first?.evidence?.audio || null,
+        transcript: group.first?.evidence?.transcript || '',
       }))
     },
     planRows() {

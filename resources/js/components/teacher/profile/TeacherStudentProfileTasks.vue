@@ -1,12 +1,5 @@
 <template>
   <TeacherSectionPane tone="neutral">
-    <div class="teacher-section-summary" role="list">
-      <div v-for="item in taskSummary" :key="item.key" role="listitem">
-        <span>{{ item.label }}</span>
-        <strong>{{ item.value }}</strong>
-        <small>{{ item.help }}</small>
-      </div>
-    </div>
     <TeacherRecordList v-if="taskRows.length" :rows="taskRows" />
     <TeacherEmpty v-else icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
   </TeacherSectionPane>
@@ -28,15 +21,6 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   computed: {
-    taskSummary() {
-      const assignments = this.profile.payload.assignments || []
-      const count = (statuses) => assignments.filter((item) => statuses.includes(item.status || 'pending')).length
-      return [
-        { key: 'open', label: this.t('teacher.open_tasks'), value: count(['pending', 'in_progress', 'awaiting_confirmation', 'overdue']), help: this.t('teacher.open_tasks_help') },
-        { key: 'overdue', label: this.t('teacher.status_overdue'), value: count(['overdue']), help: this.t('teacher.overdue_tasks_help') },
-        { key: 'done', label: this.t('teacher.status_completed'), value: count(['completed']), help: this.t('teacher.completed_tasks_help') },
-      ]
-    },
     taskRows() {
       return (this.profile.payload.assignments || []).map((item) => {
         const a = item.assignment || {}

@@ -1,12 +1,6 @@
 <template>
   <section class="teacher-stack">
-    <header class="teacher-page-header teacher-page-header--context">
-      <div class="teacher-page-header__main">
-        <p class="teacher-page-header__eyebrow">{{ t('teacher.nav_students') }}</p>
-        <h2 class="teacher-page-header__title teacher-page-header__title--display">{{ t('teacher.students_section_title') }}</h2>
-        <p class="teacher-page-header__subtitle">{{ t('teacher.students_section_subtitle') }}</p>
-      </div>
-    </header>
+    <h2 class="visually-hidden">{{ t('teacher.nav_students') }}</h2>
     <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-student-toolbar d-flex flex-wrap align-items-center gap-2">
       <label class="input-group teacher-search teacher-search--compact flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
@@ -41,6 +35,17 @@
         </label>
       </div>
       <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm teacher-density-toggle"
+        :class="{ 'is-active': compactView }"
+        :aria-pressed="compactView ? 'true' : 'false'"
+        :title="t('teacher.compact_view_help')"
+        @click="toggleCompactView"
+      >
+        <i class="bi bi-list" aria-hidden="true"></i>
+        <span>{{ t('teacher.compact_view') }}</span>
+      </button>
+      <button
         v-if="hasFilters"
         type="button"
         class="btn btn-link teacher-directory-actions__clear"
@@ -60,6 +65,7 @@
       v-else
       :students="students"
       :format-when="formatWhen"
+      :compact="compactView"
       @open="$emit('open-student', $event)"
       @assign="$emit('assign-revision', $event)"
     />
@@ -95,6 +101,12 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision'],
+  data() {
+    return { compactView: false }
+  },
+  mounted() {
+    this.compactView = window.localStorage.getItem('mutqin.teacher.students.compact') === '1'
+  },
   computed: {
     hasFilters() {
       return Boolean(this.filters.q || this.filters.activity || this.filters.attention || this.filters.performance || (this.filters.sort && this.filters.sort !== 'name'))
@@ -112,6 +124,10 @@ export default {
     },
   },
   methods: {
+    toggleCompactView() {
+      this.compactView = !this.compactView
+      window.localStorage.setItem('mutqin.teacher.students.compact', this.compactView ? '1' : '0')
+    },
     resetFilters() {
       this.$emit('update:filters', { ...this.filters, q: '', activity: '', performance: '', attention: '', sort: 'name' })
       this.$emit('search')

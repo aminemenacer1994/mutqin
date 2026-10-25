@@ -2,7 +2,7 @@
   <div
     v-if="featuresEnabled"
     class="user-dashboard teacher-dashboard"
-    data-teacher-ui="2026-10-23"
+    data-teacher-ui="2026-10-25-focus"
     tabindex="-1"
   >
     <div class="container user-dashboard__shell teacher-dashboard__shell">
@@ -101,7 +101,7 @@
               :error="formError"
               :rows="assignmentRows"
               :loading="assignmentsLoading"
-              :students="students"
+              :students="assignmentRoster.length ? assignmentRoster : students"
               :surahs="surahs"
               :on-send-message="sendTeacherMessage"
               @update:form="assignment = $event"

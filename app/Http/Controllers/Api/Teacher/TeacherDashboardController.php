@@ -174,8 +174,18 @@ class TeacherDashboardController extends Controller
     public function storeAssignmentMessage(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
     {
         $teacher = $this->teacher($request);
-        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
-        $message = $assignments->addTeacherMessage($teacher, $recipient, $data['body']);
+        $data = $request->validate([
+            'body' => ['nullable', 'string', 'max:2000'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+        ]);
+        $message = $assignments->addTeacherMessage(
+            $teacher,
+            $recipient,
+            (string) ($data['body'] ?? ''),
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+        );
 
         return $this->json([
             'message' => $assignments->presentAssignmentMessage($message->loadMissing('teacher:id,name')),

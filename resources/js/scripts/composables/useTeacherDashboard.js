@@ -16,6 +16,7 @@ import {
   formatTeacherWhen,
   isTeacherNavActive,
   issueLabel,
+  practiceMinutes,
   revisionLabel,
   sessionLabel,
   studentInitial,
@@ -35,6 +36,7 @@ export function useTeacherDashboard(authRef) {
   const chartDays = ref(30)
   const chartReady = ref(true)
   const students = ref([])
+  const assignmentRoster = ref([])
   const studentsLoading = ref(false)
   const studentsLoadingMore = ref(false)
   const studentMeta = ref({ current_page: 1, last_page: 1, total: 0 })
@@ -163,8 +165,8 @@ export function useTeacherDashboard(authRef) {
 
   const practiceTime = computed(() => {
     const seconds = profile.value?.payload?.metrics?.practice_seconds
-    if (seconds === null || seconds === undefined) return t('teacher.unavailable')
-    const minutes = Math.round(Number(seconds) / 60)
+    const minutes = practiceMinutes(seconds)
+    if (minutes === null) return t('teacher.unavailable')
     return t('teacher.minutes', { n: minutes })
   })
 
@@ -245,6 +247,7 @@ export function useTeacherDashboard(authRef) {
     }
     if (nextView === 'assignments') {
       loadStudents(1)
+      loadAssignmentRoster()
       loadTeacherGroups()
       loadAssignments()
     }
@@ -311,6 +314,24 @@ export function useTeacherDashboard(authRef) {
     }
   }
 
+  async function loadAssignmentRoster() {
+    try {
+      const roster = []
+      let page = 1
+      let lastPage = 1
+      do {
+        const payload = await learningApi.getTeacherStudents({ page, per_page: 50 })
+        roster.push(...(payload.data || []))
+        lastPage = Number(payload.meta?.last_page || 1)
+        page += 1
+      } while (page <= lastPage)
+      assignmentRoster.value = roster
+    } catch {
+      // The currently loaded student list remains available if the roster refresh fails.
+      assignmentRoster.value = students.value
+    }
+  }
+
   function loadMoreStudents() {
     if (studentsLoading.value || studentsLoadingMore.value) return
     return loadStudents(Number(studentMeta.value.current_page || 1) + 1, true)
@@ -333,6 +354,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function resolveProfileSection(section) {
+    if (section === 'weak' || section === 'revision') return 'focus'
     if (profileTabIds().includes(section)) return section
     return 'overview'
   }
@@ -370,6 +392,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function beginCreateAssignment() {
+    if (!assignmentRoster.value.length) loadAssignmentRoster()
     editingAssignmentId.value = null
     assignment.value = defaultAssignmentForm()
     formError.value = ''
@@ -465,7 +488,7 @@ export function useTeacherDashboard(authRef) {
   async function bootstrapData() {
     await loadOverview()
     if (view.value === 'students' || view.value === 'assignments') await loadStudents(1)
-    if (view.value === 'assignments') await loadAssignments()
+    if (view.value === 'assignments') await Promise.all([loadAssignments(), loadAssignmentRoster()])
     const params = new URLSearchParams(window.location.search)
     if (view.value === 'student' && params.get('student')) {
       await loadProfile(params.get('student'), resolveProfileSection(params.get('section') || 'overview'))
@@ -507,6 +530,7 @@ export function useTeacherDashboard(authRef) {
     chartDays,
     chartReady,
     students,
+    assignmentRoster,
     studentsLoading,
     studentsLoadingMore,
     studentMeta,

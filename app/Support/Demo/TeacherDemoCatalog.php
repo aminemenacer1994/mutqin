@@ -32,7 +32,7 @@ final class TeacherDemoCatalog
 
     public const INTERVENTION_AFTER = 90;
 
-    public const INTERVENTION_FEEDBACK = 'Al-Ikhlas 1 to 4 improved after this recitation. Compare the check from before this task with the one after it.';
+    public const INTERVENTION_FEEDBACK = 'Al-Ikhlas 1–4 improved after this recitation. Compare the check from before this task with the one after it.';
 
     public const PRIVATE_NOTE = 'This student repeats the same word in An-Nas 2. This note stays with the teacher.';
 

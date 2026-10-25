@@ -34,11 +34,6 @@
           </div>
         </div>
       </div>
-
-      <p v-if="hasScore" class="teacher-profile-overview__score-note" role="note">
-        <i class="bi bi-info-circle" aria-hidden="true"></i>
-        {{ t('teacher.profile_recite_ai_note') }}
-      </p>
     </div>
   </TeacherSectionPane>
 </template>
@@ -181,13 +176,13 @@ export default {
         return { type: 'tab', tab: 'tasks', label: `${this.t('teacher.open')} ${this.t('teacher.nav_assignments')}`, icon: 'bi bi-clock' }
       }
       if (this.revisionOverdue > 0) {
-        return { type: 'tab', tab: 'revision', label: `${this.t('teacher.open')} ${this.t('teacher.tab_revision')}`, icon: 'bi bi-arrow-repeat' }
+        return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
       }
       if (this.hasScore && this.scoreValue < 65) {
         return { type: 'tab', tab: 'ai', label: `${this.t('teacher.open')} ${this.t('teacher.tab_ai')}`, icon: 'bi bi-mic' }
       }
       if (this.weakCount > 0) {
-        return { type: 'assign', label: this.t('teacher.assign_revision'), icon: 'bi bi-journal-plus' }
+        return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
       }
       if (this.nowOn) {
         return { type: 'tab', tab: 'practice', label: `${this.t('teacher.open')} ${this.t('teacher.tab_practice')}`, icon: 'bi bi-play-circle' }

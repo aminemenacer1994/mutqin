@@ -70,7 +70,7 @@ final class TeacherAnchorStudentEnroller
         $joined = now()->subDays(30);
         $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first() ?? new User;
         $attributes = [
-            'name' => $user->exists ? $user->name : 'Anchor Student',
+            'name' => $user->exists ? $user->name : 'Demo Student',
             'email' => $email,
             'email_verified_at' => $user->email_verified_at ?? $joined,
             'password_set_at' => $user->password_set_at ?? $joined,

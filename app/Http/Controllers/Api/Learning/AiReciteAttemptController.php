@@ -8,6 +8,7 @@ use App\Models\AiReciteAttempt;
 use App\Services\DashboardService;
 use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Learning\SessionAnalysisQueryService;
+use App\Support\AudioPrivacy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -74,8 +75,8 @@ class AiReciteAttemptController extends Controller
 
         $payload = $audio->payload($row->fresh());
         if (! $stored) {
-            $privacyBlocked = \App\Support\AudioPrivacy::rawRecordingRetention()
-                === \App\Support\AudioPrivacy::RETENTION_NEVER;
+            $privacyBlocked = AudioPrivacy::rawRecordingRetention()
+                === AudioPrivacy::RETENTION_NEVER;
             if ($privacyBlocked) {
                 $payload['reason'] = 'privacy_never';
             }
@@ -98,7 +99,7 @@ class AiReciteAttemptController extends Controller
         int $attempt,
         AiReciteAttemptAudioService $audio,
     ): Response {
-        $row = $this->ownedAttempt($request, $attempt);
+        $row = AiReciteAttempt::query()->with('user')->find($attempt);
         if ($row === null) {
             return response()->json(['message' => 'Not found.'], 404);
         }

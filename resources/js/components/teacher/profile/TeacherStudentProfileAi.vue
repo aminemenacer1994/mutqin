@@ -17,11 +17,10 @@
         <small>{{ t('teacher.latest_check_help') }}</small>
       </div>
     </div>
-    <p class="teacher-profile-ai__note" role="note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ t('teacher.profile_recite_ai_note') }}</p>
     <div v-if="attemptGroups.length" class="teacher-history-groups">
-      <details v-for="group in attemptGroups" :key="group.key" class="teacher-history-group" :open="group.rows.length === 1">
+      <details v-for="(group, index) in attemptGroups" :key="group.key" class="teacher-history-group" :open="index === 0">
         <summary class="teacher-history-group__summary">
-          <span class="teacher-history-group__title">{{ group.title }}</span>
+          <span class="teacher-history-group__title">{{ group.title }} <small v-if="arabicNames[group.surah]" lang="ar" dir="rtl">{{ arabicNames[group.surah] }}</small></span>
           <span class="teacher-history-group__count">{{ group.rows.length }} {{ group.rows.length === 1 ? t('teacher.check_one') : t('teacher.check_many') }}</span>
           <i class="bi bi-chevron-down" aria-hidden="true"></i>
         </summary>
@@ -35,6 +34,7 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { ayahRangeLabel, scoreBadgeTone } from '../../../scripts/teacher/formatters'
+import { teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
@@ -43,6 +43,8 @@ export default {
   name: 'TeacherStudentProfileAi',
   components: { TeacherEmpty, TeacherRecordList, TeacherSectionPane },
   mixins: [i18nMixin],
+  data() { return { arabicNames: {} } },
+  mounted() { teacherArabicSurahNames().then((names) => { this.arabicNames = names }) },
   props: {
     profile: { type: Object, required: true },
     issueLabel: { type: Function, required: true },
@@ -89,8 +91,10 @@ export default {
           href: attempt.range?.surah_number && attempt.range?.from
             ? `/memorisation?surah=${attempt.range.surah_number}&from=${attempt.range.from}&to=${attempt.range.to || attempt.range.from}&review=1`
             : '',
+          audio: attempt.evidence?.audio || null,
+          transcript: attempt.evidence?.transcript || '',
         }
-        if (!groups.has(title)) groups.set(title, { key: title, title, rows: [] })
+        if (!groups.has(title)) groups.set(title, { key: title, title, surah: attempt.range?.surah_number, rows: [] })
         groups.get(title).rows.push(row)
       }
       return [...groups.values()]
