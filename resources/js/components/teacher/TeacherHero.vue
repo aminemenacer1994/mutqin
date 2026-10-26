@@ -12,10 +12,6 @@
           </p>
         </div>
       </div>
-      <div class="teacher-hero__signals" :aria-label="t('teacher.class_snapshot')">
-        <span><strong>{{ studentCount }}</strong>{{ t('teacher.kpi_students') }}</span>
-        <span :class="{ 'is-alert': supportCount > 0 }"><strong>{{ supportCount }}</strong>{{ t('teacher.follow_ups') }}</span>
-      </div>
     </div>
   </header>
 </template>

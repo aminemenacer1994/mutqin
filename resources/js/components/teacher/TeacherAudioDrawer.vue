@@ -6,9 +6,9 @@
         <section ref="drawer" class="teacher-audio-drawer__sheet" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1">
           <div class="teacher-audio-drawer__handle" aria-hidden="true"></div>
           <header class="teacher-audio-drawer__head">
-            <span class="teacher-audio-drawer__mark" aria-hidden="true"><i class="bi bi-soundwave"></i></span>
+            <span class="teacher-audio-drawer__mark" aria-hidden="true"><i :class="hasAudio ? 'bi bi-soundwave' : 'bi bi-file-text'"></i></span>
             <div>
-              <span>{{ t('teacher.audio_review') }}</span>
+              <span>{{ !hasAudio && row?.transcript ? t('teacher.recitation_transcript') : t('teacher.audio_review') }}</span>
               <h2 :id="titleId">{{ row?.title || t('teacher.practice_session') }}</h2>
               <p v-if="row?.hint">{{ row.hint }}</p>
             </div>
@@ -47,13 +47,13 @@
             <button type="button" class="teacher-audio-player__speed" :aria-label="t('teacher.playback_speed')" @click="cycleSpeed">{{ speed }}×</button>
           </div>
 
-          <div v-else class="teacher-audio-drawer__no-audio">
+          <div v-else-if="!row?.transcript" class="teacher-audio-drawer__no-audio">
             <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-            <span>{{ row?.transcript ? t('teacher.transcript_only') : t('teacher.recording_unavailable') }}</span>
+            <span>{{ t('teacher.recording_unavailable') }}</span>
           </div>
 
           <section v-if="row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
-            <div><i class="bi bi-card-text" aria-hidden="true"></i><h3>{{ t('teacher.student_transcript') }}</h3></div>
+            <div><h3>{{ t('teacher.transcript_label') }}</h3><small v-if="!hasAudio">{{ t('teacher.transcript_no_recording') }}</small></div>
             <p dir="auto">{{ row.transcript }}</p>
           </section>
         </section>

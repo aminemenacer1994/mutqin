@@ -616,6 +616,10 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/notes`, form)
     return data
   },
+  async sendLearnerTeacherMessage(teacherId, body) {
+    const { data } = await http.post(`/me/teachers/${teacherId}/messages`, { body })
+    return data
+  },
   async getTeacherOverview(days = 30) {
     const { data } = await http.get('/teacher/overview', { params: { days } })
     return data
@@ -624,8 +628,39 @@ export const learningApi = {
     const { data } = await http.get('/teacher/students', { params })
     return data
   },
+  async getTeacherAttendance(params = {}) {
+    const { data } = await http.get('/teacher/attendance', { params })
+    return data
+  },
+  async setTeacherAttendance(groupId, studentId, date, status) {
+    const { data } = await http.put(`/teacher/attendance/groups/${groupId}/students/${studentId}`, { date, status })
+    return data
+  },
   async getTeacherStudent(studentId, section = 'overview') {
     const { data } = await http.get(`/teacher/students/${studentId}`, { params: { section } })
+    return data
+  },
+  async getTeacherStudentReport(studentId, params = {}) {
+    const { data } = await http.get(`/teacher/students/${studentId}/report`, { params })
+    return data
+  },
+  async sendTeacherStudentMessage(studentId, body) {
+    const { data } = await http.post(`/teacher/students/${studentId}/messages`, { body })
+    return data
+  },
+  async saveTeacherRecitationAssessment(studentId, attemptId, score, annotation) {
+    const { data } = await http.put(`/teacher/students/${studentId}/attempts/${attemptId}/assessment`, {
+      tajweed_score: score,
+      annotation,
+    })
+    return data
+  },
+  async deleteTeacherStudent(studentId, confirmation) {
+    const { data } = await http.delete(`/teacher/students/${studentId}`, { data: { confirmation } })
+    return data
+  },
+  async completeTeacherReview(studentId, planId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/reviews/${planId}/complete`)
     return data
   },
   async saveTeacherNote(studentId, payload) {
@@ -668,8 +703,14 @@ export const learningApi = {
     const { data } = await http.delete(`/teacher/assignments/${id}`)
     return data
   },
-  async sendTeacherAssignmentMessage(recipientId, body) {
-    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/notes`, { body })
+  async sendTeacherAssignmentMessage(recipientId, body, recording = null) {
+    const form = new FormData()
+    if (String(body || '').trim()) form.append('body', String(body).trim())
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/notes`, form)
     return data
   },
 }

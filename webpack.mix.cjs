@@ -172,19 +172,11 @@ class PruneMissingManifestEntriesPlugin {
             );
         };
 
-        // Drop ghost keys before a watch rebuild accumulates another stale hash.
-        compiler.hooks.watchRun.tap('PruneMissingManifestEntriesPlugin', prune);
-        compiler.hooks.beforeRun.tap('PruneMissingManifestEntriesPlugin', prune);
-        // Assets are on disk; manifest.transform() may have re-added stale keys.
-        compiler.hooks.afterEmit.tap('PruneMissingManifestEntriesPlugin', prune);
-        // stage -100 guarantees this runs before CustomTasksPlugin.applyVersioning.
-        compiler.hooks.done.tap(
-            { name: 'PruneMissingManifestEntriesPlugin', stage: -100 },
-            prune
-        );
-
+        // A watch compiler runs watchRun instead of beforeRun. Install the
+        // final ENOENT guard while plugins are applied, then retry from both
+        // run hooks in case Mix has not initialised its manifest yet.
         let patchedHash = false;
-        compiler.hooks.beforeRun.tap('PruneMissingManifestEntriesPlugin', () => {
+        const patchManifestHash = () => {
             if (patchedHash || !global.Mix || !global.Mix.manifest) return;
             patchedHash = true;
             const manifestApi = global.Mix.manifest;
@@ -195,9 +187,40 @@ class PruneMissingManifestEntriesPlugin {
                     delete this.manifest[file];
                     return this;
                 }
-                return hash(file);
+
+                try {
+                    return hash(file);
+                } catch (error) {
+                    // A second watcher or cleanup task can remove an asset
+                    // between existsSync() and File.version(). Treat that the
+                    // same as any other stale manifest entry.
+                    if (error && error.code === 'ENOENT') {
+                        delete this.manifest[file];
+                        return this;
+                    }
+                    throw error;
+                }
             };
+        };
+
+        patchManifestHash();
+
+        // Drop ghost keys before a watch rebuild accumulates another stale hash.
+        compiler.hooks.watchRun.tap('PruneMissingManifestEntriesPlugin', () => {
+            patchManifestHash();
+            prune();
         });
+        compiler.hooks.beforeRun.tap('PruneMissingManifestEntriesPlugin', () => {
+            patchManifestHash();
+            prune();
+        });
+        // Assets are on disk; manifest.transform() may have re-added stale keys.
+        compiler.hooks.afterEmit.tap('PruneMissingManifestEntriesPlugin', prune);
+        // stage -100 guarantees this runs before CustomTasksPlugin.applyVersioning.
+        compiler.hooks.done.tap(
+            { name: 'PruneMissingManifestEntriesPlugin', stage: -100 },
+            prune
+        );
     }
 }
 

@@ -1,10 +1,11 @@
-export const TEACHER_VIEWS = ['overview', 'students', 'student', 'assignments', 'settings']
+export const TEACHER_VIEWS = ['overview', 'students', 'student', 'attendance', 'assignments', 'settings']
 
 export const TEACHER_CHART_DAY_OPTIONS = [7, 30, 90]
 
 export const TEACHER_NAV = [
   { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },
   { id: 'students', label: 'teacher.nav_students', icon: 'bi bi-people' },
+  { id: 'attendance', label: 'teacher.nav_attendance', icon: 'bi bi-calendar-check' },
   { id: 'assignments', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
   { id: 'settings', label: 'teacher.nav_settings', icon: 'bi bi-person' },
 ]
@@ -15,11 +16,13 @@ export const TEACHER_PROFILE_TABS = [
   { id: 'ai', label: 'teacher.tab_ai', icon: 'bi bi-mic' },
   { id: 'focus', label: 'teacher.tab_focus', icon: 'bi bi-bullseye' },
   { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
+  { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
 ]
 
 export function defaultAssignmentForm() {
   return {
     kind: 'practice',
+    hifz_category: '',
     student_id: '',
     surah_number: '1',
     ayah_start: 1,

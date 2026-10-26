@@ -184,9 +184,6 @@ export default {
       if (this.weakCount > 0) {
         return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
       }
-      if (this.nowOn) {
-        return { type: 'tab', tab: 'practice', label: `${this.t('teacher.open')} ${this.t('teacher.tab_practice')}`, icon: 'bi bi-play-circle' }
-      }
       return null
     },
   },

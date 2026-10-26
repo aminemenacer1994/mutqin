@@ -2,7 +2,6 @@
 
 namespace App\Support\Demo;
 
-use App\Support\Registration\RegistrationOrganisationDirectory;
 
 /**
  * Closed list of teacher-demo identities.
@@ -87,6 +86,19 @@ final class TeacherDemoCatalog
      */
     private const GROUP_KEYS = ['fajr', 'maghrib', 'year-1', 'year-2', 'class-7a', 'class-7b'];
 
+    // Placeholder until the teacher supplies a different address. Never seed
+    // over the existing personal student account.
+    public const TEACHER_EMAIL = 'teacher.demo.amine@example.com';
+
+    /** Previous demo identities are reset only when they carry the ownership marker. */
+    public const LEGACY_TEACHER_EMAILS = [
+        'teacher.demo.halaqa.fajr@example.com',
+        'teacher.demo.halaqa.maghrib@example.com',
+        'teacher.demo.madrassa@example.com',
+        'teacher.demo.school.7a@example.com',
+        'teacher.demo.school.7b@example.com',
+    ];
+
     /**
      * @var array<string, int>
      */
@@ -118,16 +130,7 @@ final class TeacherDemoCatalog
      */
     public static function organisations(): array
     {
-        $byType = [];
-        foreach (RegistrationOrganisationDirectory::entries() as $entry) {
-            $byType[$entry['type']] = $entry['name'];
-        }
-
-        return [
-            ['key' => 'halaqa', 'type' => 'halaqa', 'name' => $byType['halaqa']],
-            ['key' => 'madrassa', 'type' => 'madrassa', 'name' => $byType['madrassa']],
-            ['key' => 'school', 'type' => 'school', 'name' => $byType['school']],
-        ];
+        return [['key' => 'halaqa', 'type' => 'halaqa', 'name' => 'Amine Menacer Demo Halaqa']];
     }
 
     /**
@@ -138,10 +141,10 @@ final class TeacherDemoCatalog
         return [
             ['key' => 'fajr', 'org' => 'halaqa', 'name' => 'Fajr Circle'],
             ['key' => 'maghrib', 'org' => 'halaqa', 'name' => 'Maghrib Circle'],
-            ['key' => 'year-1', 'org' => 'madrassa', 'name' => 'Year One'],
-            ['key' => 'year-2', 'org' => 'madrassa', 'name' => 'Year Two'],
-            ['key' => 'class-7a', 'org' => 'school', 'name' => 'Class 7A'],
-            ['key' => 'class-7b', 'org' => 'school', 'name' => 'Class 7B'],
+            ['key' => 'year-1', 'org' => 'halaqa', 'name' => 'Year One'],
+            ['key' => 'year-2', 'org' => 'halaqa', 'name' => 'Year Two'],
+            ['key' => 'class-7a', 'org' => 'halaqa', 'name' => 'Class 7A'],
+            ['key' => 'class-7b', 'org' => 'halaqa', 'name' => 'Class 7B'],
         ];
     }
 
@@ -152,39 +155,11 @@ final class TeacherDemoCatalog
     {
         return [
             [
-                'key' => 'halaqa-fajr',
-                'name' => 'Umar Siddiq',
-                'email' => 'teacher.demo.halaqa.fajr@example.com',
+                'key' => 'amine',
+                'name' => 'Amine Menacer',
+                'email' => self::TEACHER_EMAIL,
                 'org' => 'halaqa',
-                'groups' => ['fajr'],
-            ],
-            [
-                'key' => 'halaqa-maghrib',
-                'name' => 'Layla Hassan',
-                'email' => 'teacher.demo.halaqa.maghrib@example.com',
-                'org' => 'halaqa',
-                'groups' => ['maghrib'],
-            ],
-            [
-                'key' => 'madrassa',
-                'name' => 'Ahmed Qureshi',
-                'email' => 'teacher.demo.madrassa@example.com',
-                'org' => 'madrassa',
-                'groups' => ['year-1', 'year-2'],
-            ],
-            [
-                'key' => 'school-7a',
-                'name' => 'Nadia Malik',
-                'email' => 'teacher.demo.school.7a@example.com',
-                'org' => 'school',
-                'groups' => ['class-7a'],
-            ],
-            [
-                'key' => 'school-7b',
-                'name' => 'Tariq Jamil',
-                'email' => 'teacher.demo.school.7b@example.com',
-                'org' => 'school',
-                'groups' => ['class-7b'],
+                'groups' => self::GROUP_KEYS,
             ],
         ];
     }
@@ -226,6 +201,7 @@ final class TeacherDemoCatalog
         return array_values(array_unique(array_merge(
             array_column(self::teachers(), 'email'),
             array_column(self::students(), 'email'),
+            self::LEGACY_TEACHER_EMAILS,
         )));
     }
 

@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { learningApi } from '../api/learning'
 import { classifyRequestFailure } from '../../utils/networkStatus'
@@ -46,12 +46,18 @@ export function useTeacherDashboard(authRef) {
   const profileSection = ref('overview')
   const profileLoading = ref(false)
   const assignmentRows = ref([])
+  const assignmentEntryFilter = ref('all')
   const assignmentsLoading = ref(false)
   const assignmentSaving = ref(false)
   const assignment = ref(defaultAssignmentForm())
   const assignmentFormOpen = ref(false)
   const editingAssignmentId = ref(null)
   const formSuccess = ref('')
+  let successTimer = null
+  watch(formSuccess, (message) => {
+    if (successTimer) clearTimeout(successTimer)
+    successTimer = message ? setTimeout(() => { formSuccess.value = '' }, 3000) : null
+  })
   const attentionPreview = ref([])
   const teacherGroups = ref([])
   let profileRequestId = 0
@@ -235,6 +241,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openView(nextView) {
+    if (nextView !== 'assignments') assignmentEntryFilter.value = 'all'
     if (nextView !== 'student') profileRequestId += 1
     const changed = view.value !== nextView
     view.value = nextView
@@ -254,6 +261,11 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openStudentsFromKpi(key) {
+    if (key === 'overdue') {
+      assignmentEntryFilter.value = 'overdue'
+      openView('assignments')
+      return
+    }
     filters.value = {
       ...defaultStudentFilters(),
       attention: key === 'attention' ? '1' : '',
@@ -262,17 +274,30 @@ export function useTeacherDashboard(authRef) {
     openView('students')
   }
 
+  async function markReviewReviewed({ id, studentId }) {
+    if (!window.confirm(t('teacher.mark_reviewed_confirm'))) return
+    try {
+      await learningApi.completeTeacherReview(studentId, id)
+      formSuccess.value = t('teacher.review_marked')
+      await loadProfile(studentId, 'focus')
+      await loadOverview()
+    } catch (err) {
+      formError.value = teacherErrorMessage(err, t)
+    }
+  }
+
   function prefillAssignmentFromStudent(student) {
     const next = {
       ...defaultAssignmentForm(),
       student_id: student?.id ? String(student.id) : '',
-      kind: 'practice',
+      kind: student?.task_kind || (student?.weak_example ? 'ai_recite' : 'practice'),
+      hifz_category: student?.hifz_category || (student?.weak_example ? 'sabqi' : 'sabaq'),
     }
     const weak = student?.weak_example
     if (weak?.surah_number) {
       next.surah_number = String(weak.surah_number)
-      next.ayah_start = Number(weak.ayah_number) || 1
-      next.ayah_end = Number(weak.ayah_number) || 1
+      next.ayah_start = Number(weak.ayah_start || weak.ayah_number) || 1
+      next.ayah_end = Number(weak.ayah_end || weak.ayah_number) || next.ayah_start
     }
     assignment.value = next
   }
@@ -283,6 +308,7 @@ export function useTeacherDashboard(authRef) {
     assignmentFormOpen.value = true
     openView('assignments')
   }
+
 
   function queueStudentSearch() {
     clearTimeout(searchTimer.value)
@@ -407,6 +433,7 @@ export function useTeacherDashboard(authRef) {
     editingAssignmentId.value = source.id
     assignment.value = {
       kind: source.kind,
+      hifz_category: source.hifz_category || '',
       student_id: String(recipient.student_id),
       surah_number: String(source.surah_number),
       ayah_start: source.ayah_start,
@@ -468,8 +495,8 @@ export function useTeacherDashboard(authRef) {
     }
   }
 
-  async function sendTeacherMessage(recipientId, body) {
-    const payload = await learningApi.sendTeacherAssignmentMessage(recipientId, body)
+  async function sendTeacherMessage(recipientId, body, recording = null) {
+    const payload = await learningApi.sendTeacherAssignmentMessage(recipientId, body, recording)
     return payload?.message || null
   }
 
@@ -508,6 +535,7 @@ export function useTeacherDashboard(authRef) {
   onUnmounted(() => {
     window.removeEventListener('popstate', onHistoryNavigation)
     clearTimeout(searchTimer.value)
+    if (successTimer) clearTimeout(successTimer)
   })
 
   function onHistoryNavigation() {
@@ -539,6 +567,7 @@ export function useTeacherDashboard(authRef) {
     profileSection,
     profileLoading,
     assignmentRows,
+    assignmentEntryFilter,
     assignmentsLoading,
     assignmentSaving,
     assignment,
@@ -562,6 +591,7 @@ export function useTeacherDashboard(authRef) {
     syncUrl,
     openView,
     openStudentsFromKpi,
+    markReviewReviewed,
     queueStudentSearch,
     loadStudents,
     loadMoreStudents,

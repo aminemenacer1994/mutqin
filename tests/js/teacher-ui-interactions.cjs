@@ -46,11 +46,11 @@ async function main() {
     }
   }
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Tasks' }).waitFor()
+  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Messages' }).waitFor()
   await page.goBack({ waitUntil: 'domcontentloaded' })
-  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Focus' }).waitFor()
-  await page.goForward({ waitUntil: 'domcontentloaded' })
   await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Tasks' }).waitFor()
+  await page.goForward({ waitUntil: 'domcontentloaded' })
+  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Messages' }).waitFor()
   await page.screenshot({ path: '/private/tmp/mutqin-profile-360-sepia.png', fullPage: false })
 
   const profileMatrix = []
@@ -109,10 +109,11 @@ async function main() {
   await trigger.click()
   await page.locator('.teacher-task-modal').waitFor()
   const studentPicker = page.locator('.teacher-task-modal__student-picker input')
+  const studentOptionsInitiallyClosed = await studentPicker.getAttribute('aria-expanded') === 'false'
   await studentPicker.fill('Fatima')
   await page.getByRole('option', { name: 'Fatima Noor' }).click()
   const searchableStudentSelected = await studentPicker.inputValue() === 'Fatima Noor'
-  const ayahCountVisible = await page.locator('.teacher-task-modal__ayah-count').isVisible()
+  const unwantedModalDetailsAbsent = await page.locator('.teacher-task-modal__ayah-count, .teacher-task-modal__surah-arabic').count() === 0
   const modal = await page.evaluate(() => {
     const dialog = document.querySelector('.teacher-task-modal__content')?.getBoundingClientRect()
     const content = document.querySelector('.teacher-task-modal__content')
@@ -185,8 +186,24 @@ async function main() {
   await page.keyboard.press('Shift+Tab')
   const focusTrapped = await page.evaluate(() => document.querySelector('.teacher-task-modal')?.contains(document.activeElement) === true)
   await page.keyboard.press('Escape')
-  console.log(JSON.stringify({ tabResults, profileMatrix, modalMatrix, modal, darkModalColors, taskRowOverlap, searchableStudentSelected, ayahCountVisible, escaped, keyboardOpen: true, focusTrapped }, null, 2))
-  if (!escaped || taskRowOverlap || !searchableStudentSelected || !ayahCountVisible || modal.overflow > 0 || modal.dialog.left < 0 || modal.dialog.right > 360 || modal.footer.bottom > 780
+  const density = page.locator('.teacher-assignments .teacher-density-toggle')
+  const densityBefore = await density.innerText()
+  await density.click()
+  const densityAfter = await density.innerText()
+  const densityChangesLabel = densityBefore !== densityAfter
+  await page.locator('.teacher-task-row__message').first().click()
+  await page.locator('.teacher-message-modal').waitFor()
+  await page.screenshot({ path: '/private/tmp/mutqin-conversation-360-dark.png', fullPage: false })
+  const conversation = await page.evaluate(() => {
+    const box = document.querySelector('.teacher-message-modal__content').getBoundingClientRect()
+    return { width: box.width, height: box.height, viewportWidth: innerWidth, viewportHeight: innerHeight, overflow: document.documentElement.scrollWidth - innerWidth }
+  })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.screenshot({ path: '/private/tmp/mutqin-conversation-1440-dark.png', fullPage: false })
+  const desktopConversationHeight = await page.locator('.teacher-message-modal__content').evaluate((element) => element.getBoundingClientRect().height)
+  await page.keyboard.press('Escape')
+  console.log(JSON.stringify({ tabResults, profileMatrix, modalMatrix, modal, darkModalColors, taskRowOverlap, studentOptionsInitiallyClosed, searchableStudentSelected, unwantedModalDetailsAbsent, densityChangesLabel, conversation, desktopConversationHeight, escaped, keyboardOpen: true, focusTrapped }, null, 2))
+  if (!escaped || taskRowOverlap || !studentOptionsInitiallyClosed || !searchableStudentSelected || !unwantedModalDetailsAbsent || !densityChangesLabel || conversation.width > conversation.viewportWidth || conversation.height > conversation.viewportHeight * .9 || conversation.overflow > 0 || desktopConversationHeight > 680 || modal.overflow > 0 || modal.dialog.left < 0 || modal.dialog.right > 360 || modal.footer.bottom > 780
     || modal.styles.contentOpacity !== '1' || modal.styles.headerBackground === 'rgba(0, 0, 0, 0)'
     || darkModalColors.body !== darkModalColors.content || !darkModalColors.body.startsWith('rgb(')
     || !focusTrapped || tabResults.some((result) => result.selected !== 'true' || result.overflow > 0 || result.panel !== 1 || result.overlapsNext)) process.exitCode = 1

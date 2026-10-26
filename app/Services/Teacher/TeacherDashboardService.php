@@ -17,6 +17,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
@@ -40,6 +41,8 @@ class TeacherDashboardService
         private readonly TeacherAssignmentService $assignments,
         private readonly GroupMembershipService $memberships,
         private readonly AiReciteAttemptAudioService $audio,
+        private readonly TeacherAttendanceService $attendance,
+        private readonly TeacherDirectMessageService $directMessages,
     ) {}
 
     /**
@@ -132,6 +135,7 @@ class TeacherDashboardService
             return [
                 'id' => $id,
                 'name' => $user->name,
+                'email' => $user->email,
                 'groups' => $groups->get($id, collect())->map(fn (LearningGroup $group) => [
                     'id' => (int) $group->id,
                     'name' => $group->name,
@@ -239,7 +243,7 @@ class TeacherDashboardService
 
         $this->assertAuthorised($teacher, $student);
         $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
-        $section = in_array($section, ['overview', 'analytics', 'practice', 'focus', 'weak', 'ai', 'revision', 'tasks'], true) ? $section : 'overview';
+        $section = in_array($section, ['overview', 'analytics', 'practice', 'focus', 'weak', 'ai', 'revision', 'tasks', 'messages'], true) ? $section : 'overview';
         $metrics = $this->metricsFor($teacher, [(int) $student->id])[(int) $student->id];
         $groups = $this->sharedGroups($teacher, [(int) $student->id])->get($student->id, collect());
 
@@ -261,9 +265,10 @@ class TeacherDashboardService
             'practice' => $this->practiceSection($student),
             'focus' => $this->focusSection($teacher, $student),
             'weak' => $this->weakSection($student),
-            'ai' => $this->aiSection($student),
+            'ai' => $this->aiSection($teacher, $student),
             'revision' => $this->revisionSection($teacher, $student),
             'tasks' => $this->tasksSection($teacher, $student),
+            'messages' => ['messages' => $this->directMessages->thread($teacher, $student)],
             'analytics' => $this->analyticsSection($teacher, $student, $metrics),
             default => $this->overviewSection($teacher, $student, $metrics),
         };
@@ -472,6 +477,7 @@ class TeacherDashboardService
                 ->values()
                 ->all(),
             'feedback' => $feedback,
+            'direct_threads' => $this->directMessages->threadsForStudent($user),
         ];
     }
 
@@ -498,7 +504,7 @@ class TeacherDashboardService
                 'weak_example' => null,
                 'revision_overdue' => 0,
                 'revision_upcoming' => 0,
-                'assignments' => ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0],
+                'assignments' => ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'attendance_hold' => 0],
                 'active_7' => false,
                 'active_30' => false,
                 'needs_attention' => false,
@@ -537,7 +543,14 @@ class TeacherDashboardService
         }
         foreach ($aiDays as $row) {
             if ($row->created_at) {
-                $days[(int) $row->user_id][$row->created_at->toDateString()] = true;
+                $id = (int) $row->user_id;
+                $days[$id][$row->created_at->toDateString()] = true;
+                // A recorded check still counts as activity when scoring failed.
+                // Keep Last seen and active-window filters on the same source.
+                $at = $row->created_at->toIso8601String();
+                if (isset($metrics[$id]) && ($metrics[$id]['last_activity_at'] === null || $at > $metrics[$id]['last_activity_at'])) {
+                    $metrics[$id]['last_activity_at'] = $at;
+                }
             }
         }
         foreach ($days as $id => $set) {
@@ -631,7 +644,15 @@ class TeacherDashboardService
             ->whereIn('user_id', $ids)
             ->where('status', MemorisationPracticePlan::STATUS_ACTIVE)
             ->whereNotNull('recommended_review_at')
-            ->get(['user_id', 'recommended_review_at']);
+            ->get(['id', 'user_id', 'surah_number', 'start_ayah', 'end_ayah', 'practice_scope', 'recommended_review_at'])
+            ->unique(fn (MemorisationPracticePlan $plan) => implode('|', [
+                (int) $plan->user_id,
+                (int) $plan->surah_number,
+                (int) $plan->start_ayah,
+                (int) $plan->end_ayah,
+                (string) ($plan->practice_scope ?: 'legacy'),
+                $plan->recommended_review_at?->toIso8601String() ?: 'unscheduled',
+            ]));
         foreach ($plans as $plan) {
             $id = (int) $plan->user_id;
             if (! isset($metrics[$id]) || $plan->recommended_review_at === null) {
@@ -647,7 +668,7 @@ class TeacherDashboardService
         $recipients = TeacherAssignmentRecipient::query()
             ->whereIn('student_id', $ids)
             ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
-            ->with('assignment:id,due_at')
+            ->with('assignment:id,teacher_id,learning_group_id,due_at')
             ->get();
         foreach ($recipients as $recipient) {
             $id = (int) $recipient->student_id;
@@ -656,7 +677,8 @@ class TeacherDashboardService
                 && $recipient->assignment?->due_at !== null
                 && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
             if ($overdue) {
-                $metrics[$id]['assignments']['overdue']++;
+                $bucket = $this->attendance->holdsOverdue($recipient->assignment, $id) ? 'attendance_hold' : 'overdue';
+                $metrics[$id]['assignments'][$bucket]++;
             } elseif (isset($metrics[$id]['assignments'][$status])) {
                 $metrics[$id]['assignments'][$status]++;
             }
@@ -671,6 +693,7 @@ class TeacherDashboardService
             $metrics[$id]['needs_attention'] = ! $metrics[$id]['active_7']
                 || $row['revision_overdue'] > 0
                 || $row['assignments']['overdue'] > 0
+                || $row['assignments']['attendance_hold'] > 0
                 || $row['recurring_weak'] > 0
                 || ($row['ai_success_rate'] !== null && $row['ai_success_rate'] < 65);
         }
@@ -807,7 +830,7 @@ class TeacherDashboardService
 
     private function assignmentCounts(User $teacher, array $ids): array
     {
-        $counts = ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'outstanding' => 0];
+        $counts = ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'attendance_hold' => 0, 'outstanding' => 0];
         if ($ids === []) {
             return $counts;
         }
@@ -815,7 +838,7 @@ class TeacherDashboardService
         $recipients = TeacherAssignmentRecipient::query()
             ->whereIn('student_id', $ids)
             ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
-            ->with('assignment:id,due_at')
+            ->with('assignment:id,teacher_id,learning_group_id,due_at')
             ->get();
 
         foreach ($recipients as $recipient) {
@@ -824,7 +847,8 @@ class TeacherDashboardService
                 && $recipient->assignment?->due_at !== null
                 && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
             if ($overdue) {
-                $counts['overdue']++;
+                $bucket = $this->attendance->holdsOverdue($recipient->assignment, (int) $recipient->student_id) ? 'attendance_hold' : 'overdue';
+                $counts[$bucket]++;
                 $counts['outstanding']++;
             } elseif (isset($counts[$status])) {
                 $counts[$status]++;
@@ -893,6 +917,8 @@ class TeacherDashboardService
                 'assignments' => $metrics['assignments'],
             ],
             'calendar' => $this->calendar((int) $student->id),
+            'attendance' => $this->attendance->recentForStudent($teacher, $student),
+            'hifz_this_week' => $this->hifzThisWeek($teacher, $student),
             'latest_saved' => $saved ? $this->presentSession($saved) : null,
         ];
     }
@@ -905,7 +931,7 @@ class TeacherDashboardService
         $overview = $this->overviewSection($teacher, $student, $metrics);
         $practice = $this->practiceSection($student);
         $weak = $this->weakSection($student);
-        $ai = $this->aiSection($student);
+        $ai = $this->aiSection($teacher, $student);
         $revision = $this->revisionSection($teacher, $student);
 
         return [
@@ -955,6 +981,45 @@ class TeacherDashboardService
         }
 
         return $days;
+    }
+
+    /** @return array{sabaq: int, sabqi: int, manzil: int, total: int, manzil_neglected: bool} */
+    private function hifzThisWeek(User $teacher, User $student): array
+    {
+        $start = now()->startOfWeek(Carbon::MONDAY);
+        $counts = ['sabaq' => 0, 'sabqi' => 0, 'manzil' => 0];
+        $assignmentMatch = fn ($query) => $query->where('teacher_id', $teacher->id)->whereNotNull('hifz_category');
+
+        $sessions = UserSession::query()
+            ->where('user_id', $student->id)
+            ->where('is_onboarding_example', false)
+            ->where('status', UserSessionStatus::Completed->value)
+            ->where('last_activity_at', '>=', $start)
+            ->whereHas('assignmentRecipient.assignment', $assignmentMatch)
+            ->with('assignmentRecipient.assignment')
+            ->get();
+        foreach ($sessions as $session) {
+            if ($session->assignmentRecipient?->assignment?->kind !== \App\Enums\AssignmentKind::Practice) continue;
+            $category = $session->assignmentRecipient->assignment->hifz_category;
+            if (isset($counts[$category])) $counts[$category]++;
+        }
+
+        $attempts = AiReciteAttempt::query()
+            ->validScored()
+            ->where('user_id', $student->id)
+            ->where('created_at', '>=', $start)
+            ->whereHas('assignmentRecipient.assignment', $assignmentMatch)
+            ->with('assignmentRecipient.assignment')
+            ->get();
+        foreach ($this->dedupeScoredAttempts($attempts) as $attempt) {
+            if ($attempt->assignmentRecipient?->assignment?->kind !== \App\Enums\AssignmentKind::AiRecite) continue;
+            $category = $attempt->assignmentRecipient->assignment->hifz_category;
+            if (isset($counts[$category])) $counts[$category]++;
+        }
+
+        $total = array_sum($counts);
+
+        return $counts + ['total' => $total, 'manzil_neglected' => $total >= 2 && $counts['manzil'] === 0];
     }
 
     /**
@@ -1079,7 +1144,7 @@ class TeacherDashboardService
     /**
      * @return array<string, mixed>
      */
-    private function aiSection(User $student): array
+    private function aiSection(User $teacher, User $student): array
     {
         $attempts = AiReciteAttempt::query()
             ->where('user_id', $student->id)
@@ -1089,6 +1154,11 @@ class TeacherDashboardService
             ->limit(30)
             ->get();
         $attempts = $this->dedupeScoredAttempts($attempts);
+        $humanAssessments = TeacherRecitationAssessment::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('ai_recite_attempt_id', $attempts->pluck('id'))
+            ->get()
+            ->keyBy('ai_recite_attempt_id');
 
         // Directory and profile use the same full-history denominator. The
         // visible history remains limited to the most recent 30 checks.
@@ -1109,6 +1179,11 @@ class TeacherDashboardService
             'score_window_end' => $scored->max('created_at')?->toIso8601String(),
             'attempts' => $attempts->map(fn (AiReciteAttempt $attempt) => [
                 'id' => (int) $attempt->id,
+                'teacher_assessment' => ($human = $humanAssessments->get($attempt->id)) ? [
+                    'score' => (int) $human->tajweed_score,
+                    'annotation' => $human->annotation,
+                    'updated_at' => $human->updated_at?->toIso8601String(),
+                ] : null,
                 'accuracy_percent' => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true)
                     ? (int) $attempt->accuracy_percent : null,
                 'band' => $attempt->band,
@@ -1321,9 +1396,21 @@ class TeacherDashboardService
     private function tasksSection(User $teacher, User $student): array
     {
         $revision = $this->revisionSection($teacher, $student);
+        $assignments = collect($revision['assignments'] ?? [])->map(function (array $recipient) use ($student) {
+            $attempt = AiReciteAttempt::query()
+                ->where('user_id', $student->id)
+                ->where('teacher_assignment_recipient_id', $recipient['id'])
+                ->with('assessment:id,status,recognition_data')
+                ->latest('created_at')
+                ->latest('id')
+                ->first();
+            $recipient['evidence'] = $attempt ? $this->presentAttemptEvidence($attempt) : null;
+
+            return $recipient;
+        })->all();
 
         return [
-            'assignments' => $revision['assignments'] ?? [],
+            'assignments' => $assignments,
         ];
     }
 
@@ -1651,9 +1738,9 @@ class TeacherDashboardService
     {
         $rank = fn (string $status): int => match ($status) {
             AssignmentStatus::Overdue->value => 0,
-            AssignmentStatus::InProgress->value => 1,
+            AssignmentStatus::Pending->value => 1,
+            AssignmentStatus::InProgress->value => 2,
             AssignmentStatus::AwaitingConfirmation->value => 2,
-            AssignmentStatus::Pending->value => 3,
             AssignmentStatus::Completed->value => 4,
             default => 4,
         };

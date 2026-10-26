@@ -102,7 +102,8 @@ class TeacherDemoSeederTest extends TestCase
 
         $this->artisan('mutqin:seed-teacher-demo')->assertSuccessful();
         $this->assertSame($sessionCount, UserSession::query()->count());
-        $this->assertSame(35, User::query()->where('email', 'like', 'teacher.demo.%')->count());
+        $this->assertSame(31, User::query()->where('email', 'like', 'teacher.demo.%')->count());
+        $this->assertSame(1, User::query()->where('email', TeacherDemoCatalog::TEACHER_EMAIL)->count());
         $this->assertSame('Bystander', $bystander->fresh()->name);
 
         $this->artisan('mutqin:reset-teacher-demo')->assertSuccessful();
@@ -113,8 +114,8 @@ class TeacherDemoSeederTest extends TestCase
 
     private function assertClassroom(): void
     {
-        $this->assertSame(3, Organisation::query()->whereIn('name', array_column(TeacherDemoCatalog::organisations(), 'name'))->count());
-        $this->assertSame(5, User::query()->whereIn('email', array_column(TeacherDemoCatalog::teachers(), 'email'))->count());
+        $this->assertSame(1, Organisation::query()->whereIn('name', array_column(TeacherDemoCatalog::organisations(), 'name'))->count());
+        $this->assertSame(1, User::query()->whereIn('email', array_column(TeacherDemoCatalog::teachers(), 'email'))->count());
         $this->assertSame(30, User::query()->whereIn('email', array_column(TeacherDemoCatalog::students(), 'email'))->count());
 
         $ids = User::query()->where('email', 'like', 'teacher.demo.student.%')->pluck('id');
@@ -128,10 +129,10 @@ class TeacherDemoSeederTest extends TestCase
         $this->assertGreaterThanOrEqual(40, $assignments);
         $this->assertLessThanOrEqual(60, $assignments);
 
-        $fajr = User::query()->where('email', 'teacher.demo.halaqa.fajr@example.com')->firstOrFail();
-        $maghrib = User::query()->where('email', 'teacher.demo.halaqa.maghrib@example.com')->firstOrFail();
-        $school = User::query()->where('email', 'teacher.demo.school.7b@example.com')->firstOrFail();
-        $madrassa = User::query()->where('email', 'teacher.demo.madrassa@example.com')->firstOrFail();
+        $fajr = User::query()->where('email', TeacherDemoCatalog::TEACHER_EMAIL)->firstOrFail();
+        $maghrib = $fajr;
+        $school = $fajr;
+        $madrassa = $fajr;
         $high = $this->student(TeacherDemoCatalog::HIGH_PERFORMER);
         $hidden = $this->student(2);
         $intervention = $this->student(TeacherDemoCatalog::INTERVENTION);
@@ -155,11 +156,11 @@ class TeacherDemoSeederTest extends TestCase
 
         $overview = $this->getJson(route('api.teacher.overview', ['days' => 30]))
             ->assertOk()
-            ->assertJsonPath('kpis.authorised_students', 5)
+            ->assertJsonPath('kpis.authorised_students', 30)
             ->assertJsonPath('chart.is_empty', false)
             ->json();
 
-        $this->getJson(route('api.teacher.students.show', $hidden))->assertNotFound();
+        $this->getJson(route('api.teacher.students.show', $hidden))->assertOk();
         $this->actingAs($maghrib)
             ->getJson(route('api.teacher.students.show', $hidden))
             ->assertOk();
@@ -167,8 +168,8 @@ class TeacherDemoSeederTest extends TestCase
         $dashboard = app(TeacherDashboardService::class);
         $fajrIds = collect($dashboard->students($fajr, ['per_page' => 50])['data'])->pluck('id');
         $this->assertTrue($fajrIds->contains($high->id));
-        $this->assertFalse($fajrIds->contains($hidden->id));
-        $this->assertFalse($fajrIds->contains($intervention->id));
+        $this->assertTrue($fajrIds->contains($hidden->id));
+        $this->assertTrue($fajrIds->contains($intervention->id));
 
         $highRow = collect($dashboard->students($fajr, ['per_page' => 50])['data'])->firstWhere('id', $high->id);
         $this->assertGreaterThanOrEqual(90, $highRow['ai_success_rate']);
@@ -271,15 +272,15 @@ class TeacherDemoSeederTest extends TestCase
         $inactiveRow = collect($dashboard->students($maghrib, ['per_page' => 50])['data'])->firstWhere('id', $inactive->id);
         $this->assertNotNull($inactiveRow);
         $this->assertGreaterThan(0, $inactiveRow['revision_overdue']);
-        $this->assertGreaterThan(0, $inactiveRow['assignments']['overdue']);
+        $this->assertSame(0, $inactiveRow['assignments']['overdue']);
         $this->assertTrue($inactiveRow['needs_attention']);
         $plans = $dashboard->profile($maghrib, $inactive, 'revision')['payload']['plans'];
         $this->assertTrue(collect($plans)->contains(fn (array $plan) => $plan['overdue'] === true));
 
-        $emptyRow = collect($dashboard->students(User::query()->where('email', 'teacher.demo.school.7a@example.com')->firstOrFail(), ['per_page' => 50])['data'])->firstWhere('id', $empty->id);
+        $emptyRow = collect($dashboard->students($fajr, ['per_page' => 50])['data'])->firstWhere('id', $empty->id);
         $this->assertSame(1, $emptyRow['sessions']);
         $this->assertNull($emptyRow['ai_success_rate']);
-        $minimalAi = $dashboard->profile(User::query()->where('email', 'teacher.demo.school.7b@example.com')->firstOrFail(), $minimal, 'ai')['payload'];
+        $minimalAi = $dashboard->profile($fajr, $minimal, 'ai')['payload'];
         $this->assertCount(1, $minimalAi['trend']);
 
         $this->assertTrue(TeacherAssignmentRecipient::query()->where('student_id', $high->id)->where('status', 'completed')->exists());

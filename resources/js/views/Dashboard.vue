@@ -88,6 +88,7 @@
           :completion-message="assignmentCompletionMessage"
           :failed-item="assignmentFailedItem"
           :on-send-note="sendSupportNote"
+          :on-send-direct-message="sendDirectTeacherMessage"
           @start="startSupportAssignment"
           @complete="completeSupportAssignment"
           @view-completed="showCompletedAssignments"
@@ -2487,6 +2488,11 @@ export default {
     async sendSupportNote(item, body, recording = null) {
       if (this.auth?.learner_teacher_section_enabled !== true) return null
       const payload = await learningApi.sendLearnerAssignmentMessage(item.id, body, recording)
+      return payload?.message || null
+    },
+    async sendDirectTeacherMessage(teacherId, body) {
+      if (this.auth?.learner_teacher_section_enabled !== true) return null
+      const payload = await learningApi.sendLearnerTeacherMessage(teacherId, body)
       return payload?.message || null
     },
     showCompletedAssignments() {

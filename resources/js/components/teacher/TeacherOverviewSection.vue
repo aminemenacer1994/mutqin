@@ -20,7 +20,7 @@
       <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
     </TeacherSectionPane>
 
-    <div class="teacher-overview-detail-grid">
+    <div class="teacher-overview-detail-grid teacher-overview-detail-grid--activity-only">
       <TeacherSectionPane
         :title="t('teacher.overview_recent_activity')"
         :hint="t('teacher.overview_recent_activity_hint')"
@@ -49,25 +49,6 @@
         </div>
       </TeacherSectionPane>
 
-      <TeacherSectionPane
-        :title="t('teacher.overview_task_status')"
-        :hint="t('teacher.overview_task_status_hint')"
-        icon="bi bi-clipboard-check"
-        tone="neutral"
-      >
-        <div class="teacher-task-pulse">
-          <div class="teacher-task-pulse__lead">
-            <strong>{{ openTaskCount }}</strong>
-            <span>{{ t('teacher.open_tasks_explained') }}</span>
-          </div>
-          <dl class="teacher-task-pulse__breakdown">
-            <div v-for="item in taskBreakdown" :key="item.key" :class="`is-${item.tone}`">
-              <dt><span aria-hidden="true"></span>{{ item.label }}</dt>
-              <dd>{{ item.value }}</dd>
-            </div>
-          </dl>
-        </div>
-      </TeacherSectionPane>
     </div>
   </section>
 </template>
@@ -98,18 +79,6 @@ export default {
   computed: {
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
-    },
-    openTaskCount() {
-      return Number(this.overview.assignments?.outstanding || 0)
-    },
-    taskBreakdown() {
-      const counts = this.overview.assignments || {}
-      return [
-        { key: 'pending', label: this.t('teacher.status_pending'), value: Number(counts.pending || 0), tone: 'muted' },
-        { key: 'progress', label: this.t('teacher.status_in_progress'), value: Number(counts.in_progress || 0), tone: 'mid' },
-        { key: 'overdue', label: this.t('teacher.status_overdue'), value: Number(counts.overdue || 0), tone: 'danger' },
-        { key: 'completed', label: this.t('teacher.status_completed'), value: Number(counts.completed || 0), tone: 'good' },
-      ]
     },
     attentionRows() {
       if (this.attentionPreview.length) return this.attentionPreview

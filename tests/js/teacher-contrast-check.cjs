@@ -5,8 +5,22 @@ const selectors = [
   '.teacher-pane__hint',
   '.teacher-activity-list__copy small',
   '.teacher-task-row__meta',
+  '.teacher-task-filters .btn.is-active',
+  '.teacher-task-filters .btn:not(.is-active)',
   '.teacher-table__cell--meta',
   '.teacher-task-modal__field-help',
+  '.teacher-student-card__last',
+  '.teacher-student-card__follow-up > span',
+  '.teacher-student-card__metrics dd',
+  '.teacher-student-card__follow-up strong',
+  '.teacher-table__score',
+  '.teacher-table__score--mid',
+  '.teacher-table__score--bad',
+  '.teacher-table__concern',
+  '.teacher-table__concern.is-danger',
+  '.teacher-student-card__follow-up strong.is-warn',
+  '.teacher-student-card__follow-up strong.is-danger',
+  '.teacher-badge',
 ]
 
 function channels(color) {
@@ -32,15 +46,18 @@ async function main() {
   await page.getByRole('button', { name: /login/i }).click()
   await page.waitForURL('**/teacher')
   const results = []
-  for (const theme of ['light', 'sepia', 'dark']) {
-    await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
-    for (const view of ['Overview', 'Students', 'Tasks']) {
-      await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: view, exact: true }).click()
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const theme of ['light', 'sepia', 'dark']) {
+      await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
+      for (const view of ['Overview', 'Students', 'Tasks']) {
+      await page.locator(width < 768 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop').getByRole('button', { name: view, exact: true }).click()
       await page.waitForTimeout(200)
       if (view === 'Tasks') await page.locator('.teacher-task-row__meta').first().waitFor({ state: 'visible' })
       for (const selector of selectors) {
         if (!await page.locator(selector).count()) continue
         const sample = await page.locator(selector).first().evaluate((element) => {
+          if (!element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') return null
           const foreground = getComputedStyle(element).color
           let node = element
           let background = 'rgb(255, 255, 255)'
@@ -54,8 +71,9 @@ async function main() {
         if (!sample) continue
         const a = luminance(channels(sample.foreground))
         const b = luminance(channels(sample.background))
-        results.push({ theme, view, selector, ...sample, ratio: Number(((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2)) })
+        results.push({ width, theme, view, selector, ...sample, ratio: Number(((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2)) })
       }
+    }
     }
   }
   const failures = results.filter((sample) => sample.ratio < 4.5)

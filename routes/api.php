@@ -113,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
             Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
+            Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1')->name('api.me.teachers.messages.store');
             Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
@@ -120,7 +121,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::prefix('teacher')->group(function () {
                 Route::get('/overview', [TeacherDashboardController::class, 'overview'])->name('api.teacher.overview');
                 Route::get('/students', [TeacherDashboardController::class, 'students'])->name('api.teacher.students');
+                Route::get('/attendance', [TeacherDashboardController::class, 'attendance'])->name('api.teacher.attendance');
+                Route::put('/attendance/groups/{group}/students/{student}', [TeacherDashboardController::class, 'setAttendance'])->name('api.teacher.attendance.set');
                 Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
+                Route::delete('/students/{student}', [TeacherDashboardController::class, 'deleteStudent'])->name('api.teacher.students.destroy');
+                Route::get('/students/{student}/report', [TeacherDashboardController::class, 'report'])->name('api.teacher.students.report');
+                Route::get('/students/{student}/messages', [TeacherDashboardController::class, 'studentMessages'])->name('api.teacher.students.messages');
+                Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1')->name('api.teacher.students.messages.store');
+                Route::put('/students/{student}/attempts/{attempt}/assessment', [TeacherDashboardController::class, 'assessRecitation'])->name('api.teacher.students.attempts.assess');
+                Route::post('/students/{student}/reviews/{practicePlan}/complete', [TeacherDashboardController::class, 'completeReview'])->name('api.teacher.students.reviews.complete');
                 Route::post('/students/{student}/notes', [TeacherDashboardController::class, 'storeNote'])->name('api.teacher.students.notes');
                 Route::get('/groups', [TeacherDashboardController::class, 'groups'])->name('api.teacher.groups');
                 Route::post('/groups', [TeacherDashboardController::class, 'storeGroup'])->name('api.teacher.groups.store');

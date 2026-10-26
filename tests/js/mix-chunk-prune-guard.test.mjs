@@ -25,8 +25,18 @@ assert.doesNotMatch(
 )
 assert.match(
   mixSource,
-  /if \(!mix\.inProduction\(\)\) return;/,
+  /if \(!mix\.inProduction\(\)\) \{[\s\S]{0,500}?return;/,
   'production-only cleanup must not delete development lazy chunks',
+)
+assert.match(
+  mixSource,
+  /patchManifestHash\(\);[\s\S]*compiler\.hooks\.watchRun/,
+  'the manifest hash ENOENT guard must be installed before watchRun',
+)
+assert.match(
+  mixSource,
+  /catch \(error\)[\s\S]*error\.code === 'ENOENT'/,
+  'the manifest hash guard must tolerate deletion between the existence check and hashing',
 )
 
 // Mirror the Mix helper: stable + hashed references must both be collected.

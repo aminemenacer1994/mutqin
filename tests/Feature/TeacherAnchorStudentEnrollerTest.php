@@ -43,21 +43,20 @@ class TeacherAnchorStudentEnrollerTest extends TestCase
         }
     }
 
-    public function test_anchor_student_is_visible_to_every_teacher_demo_teacher(): void
+    public function test_teacher_demo_seeder_leaves_personal_student_account_untouched(): void
     {
+        $anchor = User::factory()->create(['email' => 'menacer72@gmail.com', 'name' => 'Existing Student', 'account_role' => 'student']);
         $this->seed(TeacherDemoSeeder::class);
 
-        $anchor = User::query()->where('email', 'menacer72@gmail.com')->first();
-        $this->assertNotNull($anchor);
+        $this->assertSame('Existing Student', $anchor->fresh()->name);
+        $this->assertSame('student', $anchor->fresh()->account_role->value);
+        $this->assertSame(0, $anchor->groupMemberships()->count());
 
         $access = app(StudentAccessAuthorizer::class);
         foreach (TeacherDemoCatalog::teachers() as $teacherDefinition) {
             $teacher = User::query()->where('email', $teacherDefinition['email'])->first();
             $this->assertNotNull($teacher);
-            $this->assertTrue(
-                $access->authorizedStudentIds($teacher)->contains((int) $anchor->id),
-                "Expected {$teacherDefinition['email']} to see menacer72@gmail.com"
-            );
+            $this->assertFalse($access->authorizedStudentIds($teacher)->contains((int) $anchor->id));
         }
     }
 }

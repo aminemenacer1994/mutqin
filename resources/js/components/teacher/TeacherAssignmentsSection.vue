@@ -10,29 +10,31 @@
         <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
         <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.task_search_placeholder')" autocomplete="off">
       </label>
-      <div class="btn-group btn-group-sm teacher-task-filters flex-wrap" role="group" :aria-label="t('teacher.task_filter_label')">
-        <button
-          v-for="filter in taskFilters"
-          :key="filter.id"
-          type="button"
-          class="btn btn-outline-secondary btn-sm"
-          :class="{ 'is-active': statusFilter === filter.id }"
-          :aria-pressed="statusFilter === filter.id ? 'true' : 'false'"
-          @click="setStatusFilter(filter.id)"
-        >
-          {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
-        </button>
+      <div class="teacher-task-filter-shell">
+        <div class="btn-group btn-group-sm teacher-task-filters flex-wrap" role="group" :aria-label="t('teacher.task_filter_label')">
+          <button
+            v-for="filter in taskFilters"
+            :key="filter.id"
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            :class="{ 'is-active': statusFilter === filter.id }"
+            :aria-pressed="statusFilter === filter.id ? 'true' : 'false'"
+            @click="setStatusFilter(filter.id)"
+          >
+            {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
+          </button>
+        </div>
       </div>
       <button
         type="button"
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
         :aria-pressed="compactView ? 'true' : 'false'"
-        :title="t('teacher.compact_view_help')"
+        :title="compactView ? t('teacher.comfortable_view_help') : t('teacher.compact_view_help')"
         @click="toggleCompactView"
       >
-        <i class="bi bi-list" aria-hidden="true"></i>
-        <span>{{ t('teacher.compact_view') }}</span>
+        <i :class="compactView ? 'bi bi-arrows-expand' : 'bi bi-arrows-collapse'" aria-hidden="true"></i>
+        <span>{{ compactView ? t('teacher.comfortable_view') : t('teacher.compact_view') }}</span>
       </button>
       <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">
         <i class="bi bi-plus-lg" aria-hidden="true"></i>
@@ -49,6 +51,10 @@
       v-else-if="filteredItems.length"
       tone="neutral"
     >
+      <div class="teacher-task-list-heading">
+        <strong>{{ t('teacher.tasks_count', { n: filteredItems.length }) }}</strong>
+        <span>{{ t('teacher.tasks_order_help') }}</span>
+      </div>
       <ul class="list-group list-group-flush teacher-task-list teacher-task-list--compact">
         <li v-for="item in visibleItems" :key="item.key" class="list-group-item p-0" :class="`teacher-task-list__item--${item.statusTone}`">
           <div class="teacher-task-row teacher-task-row--compact">
@@ -59,10 +65,13 @@
               <span class="teacher-task-row__student">{{ item.studentName }}</span>
               <span class="teacher-task-row__range">{{ item.title }}</span>
               <span class="teacher-task-row__meta">
+                <span class="teacher-hifz-tag" :class="`is-${item.category || 'uncategorized'}`">{{ item.categoryLabel }}</span>
                 <span>{{ item.kindLabel }}</span>
-                <span v-if="item.due">{{ item.due }}</span>
-                <span v-if="item.progress">{{ item.progress }}</span>
-                <span v-if="item.completionEvidence">{{ item.completionEvidence }}</span>
+                <span v-if="item.status === 'completed' && item.completionEvidence">{{ item.completionEvidence }}</span>
+                <template v-else>
+                  <span v-if="item.due">{{ item.due }}</span>
+                  <span v-if="(item.status === 'in_progress' || item.status === 'awaiting_confirmation') && item.progress">{{ item.progress }}</span>
+                </template>
               </span>
             </button>
             <span class="teacher-task-row__aside">
@@ -71,18 +80,18 @@
                 <span>{{ item.statusLabel }}</span>
               </span>
               <span class="teacher-task-row__controls">
-              <button type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__message" :aria-label="`${t('teacher.task_conversation')} ${item.studentName}`" :title="t('teacher.task_conversation')" @click="openMessages(item)">
+              <button type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon teacher-task-row__message" :aria-label="`${t('teacher.task_conversation')} ${item.studentName}${item.messages.length ? `, ${t('teacher.task_messages_count', { n: item.messages.length })}` : ''}`" :title="`${t('teacher.task_conversation')}${item.messages.length ? ` · ${t('teacher.task_messages_count', { n: item.messages.length })}` : ''}`" @click="openMessages(item)">
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
-                <span class="teacher-task-row__control-label">{{ t('teacher.conversation') }}</span>
-                <span v-if="item.messages.length" class="teacher-task-row__message-count">{{ t('teacher.task_messages_count', { n: item.messages.length }) }}</span>
+                <span class="visually-hidden">{{ t('teacher.conversation') }}</span>
               </button>
-              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
+              <button v-if="item.evidence?.audio?.available || item.evidence?.transcript" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="t('teacher.open_session_review')" :title="t('teacher.open_session_review')" @click="openMessages(item)"><i class="bi bi-play-circle" aria-hidden="true"></i></button>
+              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
-                <span class="teacher-task-row__control-label">{{ t('teacher.task_edit') }}</span>
+                <span class="visually-hidden">{{ t('teacher.task_edit') }}</span>
               </button>
-              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage" :aria-label="`${t('teacher.task_remove_prompt')} ${item.studentName}`" :title="t('teacher.task_remove_prompt')" @click="openRemove(item)">
+              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_remove_prompt')} ${item.studentName}`" :title="t('teacher.task_remove_prompt')" @click="openRemove(item)">
                 <i class="bi bi-trash" aria-hidden="true"></i>
-                <span class="teacher-task-row__control-label">{{ t('teacher.task_remove_prompt') }}</span>
+                <span class="visually-hidden">{{ t('teacher.task_remove_prompt') }}</span>
               </button>
               <button v-else-if="item.studentId" type="button" class="teacher-task-row__go" :aria-label="`${t('teacher.open')} ${item.studentName}`" @click="$emit('open-student', item.studentId)">
                 <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
@@ -154,9 +163,8 @@
             <div class="modal-content teacher-task-modal__content teacher-message-modal__content">
               <div class="modal-header teacher-task-modal__header">
                 <div class="teacher-task-modal__intro">
-                  <span class="teacher-task-modal__eyebrow"><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ t('teacher.task_conversation') }}</span>
                   <h2 id="teacher-message-title" class="modal-title h5 teacher-task-modal__title">{{ messageItem.studentName }}</h2>
-                  <p>{{ messageItem.title }} · {{ messageItem.kindLabel }}</p>
+                  <p>{{ t('teacher.task_conversation') }} · {{ messageItem.title }}</p>
                 </div>
                 <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
               </div>
@@ -164,13 +172,17 @@
                 <section class="teacher-message-context" :aria-label="t('teacher.task_details')">
                   <div class="teacher-message-context__main">
                     <span class="teacher-task-row__status" :class="`is-${messageItem.statusTone}`"><i :class="messageItem.statusIcon" aria-hidden="true"></i>{{ messageItem.statusLabel }}</span>
-                    <strong>{{ messageItem.title }}</strong>
-                    <span>{{ messageItem.kindLabel }}<template v-if="messageItem.due"> · {{ messageItem.due }}</template><template v-if="messageItem.progress"> · {{ messageItem.progress }}</template></span>
-                    <p v-if="messageItem.assignment.feedback"><i class="bi bi-journal-text" aria-hidden="true"></i>{{ messageItem.assignment.feedback }}</p>
+                    <span v-if="messageItem.due">{{ messageItem.due }}</span>
+                    <details v-if="messageItem.assignment.feedback" class="teacher-message-context__note"><summary>{{ t('teacher.teacher_note') }}</summary><p>{{ messageItem.assignment.feedback }}</p></details>
                   </div>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" @click="openMessageStudent">
-                    {{ t('teacher.open_profile') }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                  <button type="button" class="btn btn-outline-secondary btn-sm teacher-message-context__open" :aria-label="t('teacher.open_profile_for', { name: messageItem.studentName })" :title="t('teacher.open_profile')" @click="openMessageStudent">
+                    <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
                   </button>
+                </section>
+                <section v-if="messageItem.evidence?.audio?.available || messageItem.evidence?.transcript" class="teacher-message-evidence" :aria-label="t('teacher.open_session_review')">
+                  <strong>{{ t('teacher.student_recording') }}</strong>
+                  <audio v-if="messageItem.evidence?.audio?.available" controls preload="metadata" :src="messageItem.evidence.audio.url"></audio>
+                  <details v-if="messageItem.evidence?.transcript"><summary>{{ t('teacher.view_transcript') }}</summary><p lang="ar" dir="rtl">{{ messageItem.evidence.transcript }}</p></details>
                 </section>
                 <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
                   <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="`is-${message.sender}`">
@@ -184,17 +196,21 @@
                   </article>
                 </div>
                 <div v-else class="teacher-message-empty">
-                  <i class="bi bi-chat-heart" aria-hidden="true"></i>
-                  <p>{{ t('teacher.teacher_conversation_empty', { student: messageItem.studentName }) }}</p>
+                  <p>{{ t('teacher.messages_empty_short') }}</p>
                 </div>
                 <form class="teacher-message-composer" @submit.prevent="sendMessage">
-                  <label for="teacher-task-reply">{{ t('teacher.reply_to_student') }}</label>
-                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="4" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
+                  <label for="teacher-task-reply">{{ t('teacher.message') }}</label>
+                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="2" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
+                  <div v-if="audioPreviewUrl" class="teacher-message-composer__recording"><audio controls preload="metadata" :src="audioPreviewUrl"></audio><button type="button" class="btn btn-link" @click="discardRecording">{{ t('teacher.remove_recording') }}</button></div>
                   <div class="teacher-message-composer__foot">
+                    <button v-if="recordingSupported" type="button" class="btn btn-outline-secondary teacher-message-composer__mic" :disabled="messageSaving || recordingState === 'stopping'" :aria-label="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" :title="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" @click="recordingState === 'recording' ? stopRecording() : startRecording()"><i class="bi" :class="recordingState === 'recording' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i></button>
+                    <span v-if="recordingState === 'recording'" class="teacher-message-composer__timer">{{ recordingTimeLabel }}</span>
+                    <span v-if="recordingError" class="text-danger" role="alert">{{ recordingError }}</span>
                     <span v-if="messageError" class="text-danger" role="alert">{{ messageError }}</span>
                     <span v-else-if="messageSent" class="text-success" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
-                    <span v-else>{{ messageDraft.length }}/2000</span>
-                    <button type="submit" class="btn btn-primary" :disabled="messageSaving || !messageDraft.trim()">
+                    <span v-else-if="messageDraft.length">{{ messageDraft.length }}/2000</span>
+                    <span v-else></span>
+                    <button type="submit" class="btn btn-primary" :disabled="messageSaving || recordingState === 'recording' || (!messageDraft.trim() && !audioBlob)">
                       <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
                       {{ messageSaving ? t('teacher.saving') : t('teacher.send_reply') }}
                     </button>
@@ -217,8 +233,10 @@ import TeacherMore from './TeacherMore.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
+import { chooseSupportedRecorderMimeType, createObjectUrlFromBlob, extensionForMimeType, revokeObjectUrl, stopMediaRecorderAndCollectBlob } from '../../scripts/audio/recordingPlayback'
 
 const STEP = 25
+const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherAssignmentsSection',
@@ -232,6 +250,7 @@ export default {
     success: { type: String, default: '' },
     error: { type: String, default: '' },
     rows: { type: Array, default: () => [] },
+    initialStatusFilter: { type: String, default: 'all' },
     loading: { type: Boolean, default: false },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
@@ -243,13 +262,24 @@ export default {
       shown: STEP,
       STEP,
       query: '',
-      statusFilter: 'all',
+      statusFilter: this.initialStatusFilter,
       removeItem: null,
       messageItem: null,
       messageDraft: '',
       messageSaving: false,
       messageError: '',
       messageSent: false,
+      messageSentTimer: null,
+      audioRecorder: null,
+      audioStream: null,
+      audioBlob: null,
+      audioPreviewUrl: '',
+      audioDurationMs: 0,
+      recordingStartedAt: 0,
+      recordingElapsedMs: 0,
+      recordingTimer: null,
+      recordingState: 'idle',
+      recordingError: '',
       returnFocusEl: null,
       compactView: false,
     }
@@ -266,14 +296,19 @@ export default {
     },
   },
   beforeUnmount() {
+    if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+    this.discardRecording()
     document.body.classList.remove('modal-open', 'teacher-task-modal-open')
   },
   computed: {
+    recordingSupported() { return typeof window !== 'undefined' && typeof window.MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia) },
+    recordingTimeLabel() { const seconds = Math.floor(this.recordingElapsedMs / 1000); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` },
     taskFilters() {
       const counts = this.flatItems.reduce((result, item) => {
         result.all += 1
         if (item.status === 'completed') result.done += 1
         else if (item.status === 'overdue') result.overdue += 1
+        else if (item.status === 'attendance_hold') result.waiting += 1
         else if (item.status === 'in_progress' || item.status === 'awaiting_confirmation') result.progress += 1
         else result.waiting += 1
         return result
@@ -296,6 +331,8 @@ export default {
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
+            category: assignment.hifz_category || '',
+            categoryLabel: assignment.hifz_category ? this.t(`teacher.hifz_${assignment.hifz_category}`) : this.t('teacher.hifz_uncategorized'),
             title,
             studentId: recipient.student_id,
             studentName: recipient.student_name || this.t('teacher.unavailable'),
@@ -311,6 +348,7 @@ export default {
             progress: this.progressLabel(recipient, assignment),
             completionEvidence: this.completionEvidenceLabel(recipient),
             recipientId: recipient.id,
+            evidence: recipient.evidence || null,
             messages: Array.isArray(recipient.messages) ? recipient.messages : [],
             occurredAt: recipient.updated_at || assignment.created_at || '',
           }
@@ -329,10 +367,10 @@ export default {
           if (this.statusFilter === 'done') return item.status === 'completed'
           if (this.statusFilter === 'overdue') return item.status === 'overdue'
           if (this.statusFilter === 'progress') return item.status === 'in_progress' || item.status === 'awaiting_confirmation'
-          return item.status === 'pending'
+          return item.status === 'pending' || item.status === 'attendance_hold'
         })
       return filtered.sort((a, b) => {
-        const urgency = { overdue: 0, pending: 1, in_progress: 2, awaiting_confirmation: 2, completed: 3 }
+        const urgency = { overdue: 0, attendance_hold: 1, pending: 2, in_progress: 3, awaiting_confirmation: 3, completed: 4 }
         const urgencyDifference = (urgency[a.status] ?? 1) - (urgency[b.status] ?? 1)
         if (urgencyDifference) return urgencyDifference
         const dateA = Date.parse(a.occurredAt || '') || 0
@@ -371,6 +409,8 @@ export default {
       handleModalKeydown(event, { container: this.$refs.removeDialog, open: Boolean(this.removeItem), onEscape: this.closeRemove })
     },
     openMessages(item) {
+      if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+      this.discardRecording()
       this.returnFocusEl = captureReturnFocus()
       this.messageItem = item
       this.messageDraft = ''
@@ -379,6 +419,8 @@ export default {
       this.$nextTick(() => this.$refs.messageClose?.focus())
     },
     closeMessages() {
+      if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+      this.discardRecording()
       this.messageItem = null
       this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
     },
@@ -392,20 +434,89 @@ export default {
     },
     async sendMessage() {
       const body = this.messageDraft.trim()
-      if (!body || !this.messageItem || this.messageSaving) return
+      if ((!body && !this.audioBlob) || !this.messageItem || this.messageSaving) return
       this.messageSaving = true
       this.messageError = ''
       this.messageSent = false
       try {
-        const message = await this.onSendMessage(this.messageItem.recipientId, body)
+        const recording = this.audioBlob ? { blob: this.audioBlob, durationMs: this.audioDurationMs, filename: `voice-note.${extensionForMimeType(this.audioBlob.type)}` } : null
+        const message = await this.onSendMessage(this.messageItem.recipientId, body, recording)
         if (message) this.messageItem.messages.push(message)
         this.messageDraft = ''
+        this.discardRecording()
         this.messageSent = true
+        if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+        this.messageSentTimer = window.setTimeout(() => {
+          this.messageSent = false
+          this.messageSentTimer = null
+        }, 3000)
       } catch (error) {
         this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
       } finally {
         this.messageSaving = false
       }
+    },
+    async startRecording() {
+      if (!this.recordingSupported || this.messageSaving) return
+      this.discardRecording()
+      this.recordingError = ''
+      this.recordingState = 'requesting'
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mimeType = chooseSupportedRecorderMimeType()
+        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+        this.audioStream = stream
+        this.audioRecorder = recorder
+        this.recordingStartedAt = Date.now()
+        recorder.start()
+        this.recordingState = 'recording'
+        this.recordingTimer = window.setInterval(() => {
+          this.recordingElapsedMs = Date.now() - this.recordingStartedAt
+          if (this.recordingElapsedMs >= MAX_RECORDING_MS) this.stopRecording()
+        }, 250)
+      } catch (_) {
+        this.releaseRecordingHardware()
+        this.recordingState = 'idle'
+        this.recordingError = this.t('teacher.microphone_unavailable')
+      }
+    },
+    async stopRecording() {
+      const recorder = this.audioRecorder
+      if (!recorder || this.recordingState !== 'recording') return
+      this.recordingState = 'stopping'
+      window.clearInterval(this.recordingTimer)
+      const durationMs = Math.min(MAX_RECORDING_MS, Math.max(1, Date.now() - this.recordingStartedAt))
+      try {
+        const blob = await stopMediaRecorderAndCollectBlob(recorder, [], { mimeType: recorder.mimeType })
+        this.audioBlob = blob
+        this.audioDurationMs = durationMs
+        this.audioPreviewUrl = createObjectUrlFromBlob(blob)
+        this.recordingState = 'recorded'
+      } catch (_) {
+        this.recordingState = 'idle'
+        this.recordingError = this.t('teacher.recording_failed')
+      } finally {
+        this.releaseRecordingHardware()
+      }
+    },
+    releaseRecordingHardware() {
+      window.clearInterval(this.recordingTimer)
+      this.recordingTimer = null
+      this.audioStream?.getTracks?.().forEach((track) => track.stop())
+      this.audioStream = null
+      this.audioRecorder = null
+    },
+    discardRecording() {
+      if (this.audioRecorder?.state !== 'inactive') {
+        try { this.audioRecorder?.stop() } catch (_) { /* already stopped */ }
+      }
+      this.releaseRecordingHardware()
+      revokeObjectUrl(this.audioPreviewUrl)
+      this.audioBlob = null
+      this.audioPreviewUrl = ''
+      this.audioDurationMs = 0
+      this.recordingElapsedMs = 0
+      this.recordingState = 'idle'
     },
     messageWhen(message) {
       try {
@@ -444,12 +555,14 @@ export default {
     statusTone(status) {
       if (status === 'completed') return 'good'
       if (status === 'overdue') return 'danger'
+      if (status === 'attendance_hold') return 'mid'
       if (status === 'in_progress' || status === 'awaiting_confirmation') return 'mid'
       return 'muted'
     },
     statusIcon(status) {
       if (status === 'completed') return 'bi bi-check2'
       if (status === 'overdue') return 'bi bi-exclamation-circle'
+      if (status === 'attendance_hold') return 'bi bi-calendar-x'
       if (status === 'in_progress' || status === 'awaiting_confirmation') return 'bi bi-arrow-repeat'
       return 'bi bi-clock'
     },

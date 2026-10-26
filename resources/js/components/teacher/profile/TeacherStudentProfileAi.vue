@@ -1,6 +1,6 @@
 <template>
   <TeacherSectionPane tone="recite">
-    <div class="teacher-section-summary" role="list">
+    <div class="teacher-section-summary teacher-section-summary--recite" role="list">
       <div role="listitem">
         <span>{{ t('teacher.ai_check_average') }}</span>
         <strong>{{ averageLabel }}</strong>
@@ -10,11 +10,6 @@
         <span>{{ t('teacher.scored_checks') }}</span>
         <strong>{{ Number(profile.payload?.score_count || 0) }}</strong>
         <small>{{ scoreSummary || t('teacher.no_scored_checks') }}</small>
-      </div>
-      <div role="listitem">
-        <span>{{ t('teacher.latest_check') }}</span>
-        <strong>{{ latestCheck }}</strong>
-        <small>{{ t('teacher.latest_check_help') }}</small>
       </div>
     </div>
     <div v-if="attemptGroups.length" class="teacher-history-groups">
@@ -27,7 +22,7 @@
         <TeacherRecordList :rows="group.rows" />
       </details>
     </div>
-    <TeacherEmpty v-else icon="bi bi-mic" :message="t('teacher.ai_empty')" />
+    <TeacherEmpty v-if="!attemptGroups.length" icon="bi bi-mic" :message="t('teacher.ai_empty')" />
   </TeacherSectionPane>
 </template>
 
@@ -56,17 +51,10 @@ export default {
         ? this.t('teacher.score_n', { n: this.profile.payload.success_rate })
         : this.t('teacher.no_scored_checks')
     },
-    latestCheck() {
-      const latest = this.profile.payload?.attempts?.[0]?.created_at
-      return latest ? this.formatWhen(latest) : this.t('teacher.no_activity')
-    },
     scoreSummary() {
       const count = Number(this.profile.payload?.score_count || 0)
       if (!count) return ''
-      const start = this.formatWhen(this.profile.payload?.score_window_start)
-      const end = this.formatWhen(this.profile.payload?.score_window_end)
-      const window = start && end ? this.t('teacher.profile_recite_score_dates', { start, end }) : ''
-      return this.t('teacher.profile_recite_score_window', { count, window })
+      return this.t('teacher.profile_recite_score_basis', { count })
     },
     attemptGroups() {
       const groups = new Map()
@@ -76,7 +64,11 @@ export default {
         const to = attempt.range?.to
         const title = ayahRangeLabel(name, from, to, this.t)
         const issues = attempt.issues
-        const issueHint = issues && Object.values(issues).some((value) => Number(value) > 0) ? this.issueLabel(issues) : ''
+        const issueHint = !issues
+          ? this.t('teacher.recite_issues_unavailable')
+          : (Object.values(issues).some((value) => Number(value) > 0)
+            ? this.issueLabel(issues)
+            : this.t('teacher.recite_no_issues'))
         const when = this.formatWhen(attempt.created_at)
         const row = {
           key: attempt.id,
@@ -88,7 +80,7 @@ export default {
             ? this.t('teacher.score_n', { n: attempt.accuracy_percent })
             : this.t('teacher.unavailable'),
           badgeTone: scoreBadgeTone(attempt.accuracy_percent),
-          href: attempt.range?.surah_number && attempt.range?.from
+          href: !attempt.evidence?.audio?.available && !attempt.evidence?.transcript && attempt.range?.surah_number && attempt.range?.from
             ? `/memorisation?surah=${attempt.range.surah_number}&from=${attempt.range.from}&to=${attempt.range.to || attempt.range.from}&review=1`
             : '',
           audio: attempt.evidence?.audio || null,

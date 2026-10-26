@@ -11,6 +11,7 @@ use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\MemorisationAssessment;
+use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
 use App\Models\TeacherAssignmentRecipient;
@@ -30,6 +31,187 @@ class TeacherDashboardTest extends TestCase
     {
         parent::setUp();
         $this->enableTeacherFeatures();
+    }
+
+    public function test_teacher_can_assess_recitation_separately_from_ai_score(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $attempt = AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'attempt_number' => 1,
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 7],
+            'accuracy_percent' => 84,
+            'band' => 'mixed',
+        ]);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$hidden, $attempt]), [
+            'tajweed_score' => 4,
+        ])->assertNotFound();
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'tajweed_score' => 6,
+        ])->assertUnprocessable();
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'tajweed_score' => 4,
+            'annotation' => 'Review madd length.',
+        ])->assertOk()->assertJsonPath('assessment.score', 4);
+
+        $profile = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))->assertOk()->json();
+        $this->assertSame(84, $profile['payload']['attempts'][0]['accuracy_percent']);
+        $this->assertSame(4, $profile['payload']['attempts'][0]['teacher_assessment']['score']);
+        $this->assertSame('Review madd length.', $profile['payload']['attempts'][0]['teacher_assessment']['annotation']);
+    }
+
+    public function test_progress_report_is_scoped_to_student_and_period(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $attempt = AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'attempt_number' => 1,
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 7],
+            'accuracy_percent' => 80,
+            'band' => 'mixed',
+        ]);
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'tajweed_score' => 3,
+        ])->assertOk();
+        $this->actingAs($teacher)->getJson(route('api.teacher.students.report', $hidden))->assertNotFound();
+        $summary = $this->actingAs($teacher)->getJson(route('api.teacher.students.report', $student))->assertOk()->json();
+        $this->assertSame(1, $summary['scored_checks']);
+        $this->assertSame(80, $summary['ai_word_match_average']);
+        $this->assertSame(3, $summary['teacher_tajweed_average']);
+        $this->actingAs($teacher)->getJson(route('api.teacher.students.report', ['student' => $student, 'from' => now()->addDay()->toDateString()]))
+            ->assertOk()->assertJsonPath('scored_checks', 0)->assertJsonPath('teacher_tajweed_average', null);
+    }
+
+    public function test_student_and_teacher_can_use_a_general_message_thread(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.messages.store', $hidden), ['body' => 'Private'])->assertNotFound();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.messages.store', $student), ['body' => 'Please practise slowly.'])->assertCreated();
+        $this->actingAs($student)->postJson(route('api.me.teachers.messages.store', $teacher), ['body' => 'I will.'])->assertCreated();
+
+        $messages = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'messages']))->assertOk()->json('payload.messages');
+        $this->assertSame(['teacher', 'student'], array_column($messages, 'sender'));
+        $this->assertSame(['Please practise slowly.', 'I will.'], array_column($messages, 'body'));
+    }
+
+    public function test_teacher_can_permanently_delete_only_own_student_after_email_confirmation(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $this->actingAs($teacher)->deleteJson(route('api.teacher.students.destroy', $hidden), ['confirmation' => $hidden->email])->assertNotFound();
+        $this->actingAs($teacher)->deleteJson(route('api.teacher.students.destroy', $student), ['confirmation' => 'wrong@example.test'])->assertStatus(422);
+        $this->assertNotNull(User::query()->find($student->id));
+        $this->actingAs($teacher)->deleteJson(route('api.teacher.students.destroy', $student), ['confirmation' => $student->email])->assertOk();
+        $this->assertNull(User::withTrashed()->find($student->id));
+    }
+
+    public function test_teacher_cannot_delete_student_shared_with_another_teacher(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $otherTeacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $teacher->organisation_id,
+        ]);
+        $groupId = GroupMembership::query()->where('user_id', $teacher->id)->where('membership_role', MembershipRole::Teacher->value)->value('learning_group_id');
+        (new GroupMembership)->forceFill([
+            'learning_group_id' => $groupId,
+            'user_id' => $otherTeacher->id,
+            'membership_role' => MembershipRole::Teacher->value,
+            'status' => MembershipStatus::Approved->value,
+            'analytics_consent_status' => AnalyticsConsentStatus::None->value,
+        ])->save();
+
+        $this->actingAs($teacher)->deleteJson(route('api.teacher.students.destroy', $student), ['confirmation' => $student->email])->assertStatus(409);
+        $this->assertNotNull(User::query()->find($student->id));
+    }
+
+    public function test_task_creation_requires_a_single_student_or_group(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'student_ids' => [$student->id],
+        ])->assertUnprocessable()->assertJsonValidationErrors('student_id');
+    }
+
+    public function test_teacher_can_complete_only_an_authorised_students_active_review(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $assessment = MemorisationAssessment::query()->create([
+            'user_id' => $student->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 7,
+        ]);
+        $plan = MemorisationPracticePlan::query()->create([
+            'user_id' => $student->id,
+            'assessment_id' => $assessment->id,
+            'title' => 'Review Al-Fatihah',
+            'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 7,
+            'recommended_review_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$hidden, $plan]))->assertNotFound();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $plan]))
+            ->assertOk()->assertJsonPath('status', MemorisationPracticePlan::STATUS_COMPLETED);
+        $this->assertSame('teacher_reviewed', $plan->fresh()->completion_outcome);
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $plan]))->assertStatus(409);
+    }
+
+    public function test_duplicate_scheduled_reviews_match_the_roster_and_focus_counts(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $assessment = MemorisationAssessment::query()->create([
+            'user_id' => $student->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 7,
+        ]);
+        $reviewAt = now()->subDay()->startOfSecond();
+        foreach ([1, 2] as $attempt) {
+            MemorisationPracticePlan::query()->create([
+                'user_id' => $student->id,
+                'assessment_id' => $assessment->id,
+                'title' => 'Review Al-Fatihah',
+                'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+                'surah_number' => 1,
+                'start_ayah' => 1,
+                'end_ayah' => 7,
+                'recommended_review_at' => $reviewAt,
+            ]);
+        }
+
+        $roster = $this->actingAs($teacher)->getJson(route('api.teacher.students'))->assertOk()->json('data');
+        $focus = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'focus']))->assertOk()->json('payload');
+        $this->assertSame(1, $roster[0]['revision_overdue']);
+        $this->assertCount(1, $focus['plans']);
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $focus['plans'][0]['id']]))->assertOk();
+        $this->assertSame(0, MemorisationPracticePlan::query()->where('user_id', $student->id)->where('status', MemorisationPracticePlan::STATUS_ACTIVE)->count());
+    }
+
+    public function test_unscored_recitation_still_updates_last_seen_without_changing_the_score(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'attempt_number' => 1,
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 7],
+            'accuracy_percent' => null,
+            'band' => 'unscored',
+        ]);
+
+        $row = $this->actingAs($teacher)->getJson(route('api.teacher.students'))->assertOk()->json('data.0');
+        $this->assertTrue($row['active_7']);
+        $this->assertNotNull($row['last_activity_at']);
+        $this->assertNull($row['ai_success_rate']);
+        $this->assertSame(0, $row['ai_attempts']);
     }
 
     public function test_only_teachers_can_open_the_dashboard(): void
@@ -265,6 +447,17 @@ class TeacherDashboardTest extends TestCase
             ->assertJsonPath('payload.items.0.evidence.audio.available', true)
             ->assertJsonPath('payload.items.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
 
+        $task = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite', 'hifz_category' => 'sabqi', 'student_id' => $student->id,
+            'surah_number' => 114, 'ayah_start' => 1, 'ayah_end' => 1,
+        ])->assertCreated()->json();
+        $attempt->forceFill(['teacher_assignment_recipient_id' => $task['recipients'][0]['id']])->save();
+        $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'tasks']))
+            ->assertOk()->assertJsonPath('payload.assignments.0.evidence.audio.available', true)
+            ->assertJsonPath('payload.assignments.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
+        $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))
+            ->assertOk()->assertJsonPath('data.0.recipients.0.evidence.audio.available', true);
+
         $this->actingAs($teacher)
             ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
             ->assertOk()
@@ -326,6 +519,7 @@ class TeacherDashboardTest extends TestCase
 
         $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -383,6 +577,7 @@ class TeacherDashboardTest extends TestCase
 
         $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $hidden->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -403,6 +598,7 @@ class TeacherDashboardTest extends TestCase
 
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'ai_recite',
+            'hifz_category' => 'sabqi',
             'learning_group_id' => $group->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -495,6 +691,7 @@ class TeacherDashboardTest extends TestCase
 
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -582,6 +779,7 @@ class TeacherDashboardTest extends TestCase
 
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -652,6 +850,7 @@ class TeacherDashboardTest extends TestCase
 
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -693,6 +892,16 @@ class TeacherDashboardTest extends TestCase
             ->assertJsonPath('message.audio.duration_ms', 4200)
             ->json('message');
 
+        $teacherVoice = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), [
+                'audio' => UploadedFile::fake()->createWithContent(
+                    'feedback.webm',
+                    hex2bin('1A45DFA39F4286810142F7810142F2810442F381084282847765626D4287810242858102').str_repeat("\0", 1024),
+                ),
+                'duration_ms' => 3100,
+            ])->assertCreated()->assertJsonPath('message.sender', 'teacher')
+            ->assertJsonPath('message.audio.available', true)->json('message');
+
         $this->actingAs($teacher)
             ->get($voiceMessage['audio']['url'])
             ->assertOk()
@@ -705,18 +914,23 @@ class TeacherDashboardTest extends TestCase
             ->getJson(route('api.me.support'))
             ->assertOk()
             ->json('assignments.0.messages');
-        $this->assertSame([$learnerMessage['id'], $teacherMessage['id'], $voiceMessage['id']], array_column($supportMessages, 'id'));
-        $this->assertSame(['student', 'teacher', 'student'], array_column($supportMessages, 'sender'));
+        $this->assertSame([$learnerMessage['id'], $teacherMessage['id'], $voiceMessage['id'], $teacherVoice['id']], array_column($supportMessages, 'id'));
+        $this->assertSame(['student', 'teacher', 'student', 'teacher'], array_column($supportMessages, 'sender'));
 
         $teacherMessages = $this->actingAs($teacher)
             ->getJson(route('api.teacher.assignments'))
             ->assertOk()
             ->json('data.0.recipients.0.messages');
-        $this->assertSame(['student', 'teacher', 'student'], array_column($teacherMessages, 'sender'));
+        $this->assertSame(['student', 'teacher', 'student', 'teacher'], array_column($teacherMessages, 'sender'));
 
         $this->actingAs($student)
             ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => '   '])
             ->assertUnprocessable();
+
+        GroupMembership::query()->where('user_id', $student->id)
+            ->update(['analytics_consent_status' => AnalyticsConsentStatus::Revoked->value]);
+        $this->actingAs($teacher)->get($voiceMessage['audio']['url'])->assertNotFound();
+        $this->actingAs($student)->get($teacherVoice['audio']['url'])->assertOk();
     }
 
     public function test_completed_task_can_be_practised_again_and_keeps_the_new_attempt_count(): void
@@ -724,6 +938,7 @@ class TeacherDashboardTest extends TestCase
         [$teacher, $student] = $this->classroom();
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -765,6 +980,7 @@ class TeacherDashboardTest extends TestCase
 
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -791,6 +1007,7 @@ class TeacherDashboardTest extends TestCase
         ]);
         $input = [
             'kind' => 'practice',
+            'hifz_category' => 'sabaq',
             'student_id' => $student->id,
             'surah_number' => 1,
             'ayah_start' => 1,
@@ -804,6 +1021,7 @@ class TeacherDashboardTest extends TestCase
         $this->assertTrue($this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->json('data.0.can_manage'));
         $updated = $this->actingAs($teacher)->putJson(route('api.teacher.assignments.update', $id), [
             'kind' => 'ai_recite',
+            'hifz_category' => 'sabqi',
             'surah_number' => 1,
             'ayah_start' => 2,
             'ayah_end' => 4,
@@ -835,6 +1053,65 @@ class TeacherDashboardTest extends TestCase
         $this->actingAs($user)->get(route('dashboard'))->assertOk();
         $this->actingAs($user)->get(route('progress.dashboard'))->assertOk();
         $this->actingAs($user)->getJson(route('api.me.support'))->assertOk()->assertJsonPath('assignments', []);
+    }
+
+    public function test_attendance_week_is_roster_scoped_and_absence_flags_due_task(): void
+    {
+        [$teacher, $student, $hidden, $group] = $this->classroom();
+        $due = today()->subDay()->toDateString();
+
+        $week = $this->actingAs($teacher)->getJson(route('api.teacher.attendance'))->assertOk()->json();
+        $this->assertSame($group->id, $week['group_id']);
+        $this->assertSame([$student->id], array_column($week['students'], 'id'));
+
+        $assignment = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'manzil',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => $due,
+        ])->assertCreated()->json();
+        $this->assertSame('manzil', $assignment['assignment']['hifz_category']);
+        $this->assertSame('overdue', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $hidden]), [
+            'date' => $due,
+            'status' => 'absent',
+        ])->assertNotFound();
+        $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $student]), [
+            'date' => $due,
+            'status' => 'absent',
+        ])->assertOk();
+
+        $this->assertSame('attendance_hold', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $profile = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', $student))->assertOk()->json('payload');
+        $this->assertSame('absent', $profile['attendance'][0]['status']);
+        $this->assertSame(1, $profile['metrics']['assignments']['attendance_hold']);
+        $this->assertSame(0, $profile['metrics']['assignments']['overdue']);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $student]), [
+            'date' => $due,
+            'status' => 'clear',
+        ])->assertOk();
+        $this->assertSame('overdue', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+    }
+
+    public function test_hifz_category_is_required_for_new_tasks(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $payload = [
+            'kind' => 'practice',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+        ];
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('hifz_category');
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), $payload + ['hifz_category' => 'other'])
+            ->assertUnprocessable()->assertJsonValidationErrors('hifz_category');
     }
 
     /**

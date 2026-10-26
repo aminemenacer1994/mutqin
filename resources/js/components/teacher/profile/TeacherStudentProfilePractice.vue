@@ -1,5 +1,11 @@
 <template>
   <TeacherSectionPane tone="practice">
+    <p v-if="sessionGroups.length" class="teacher-tab-context">{{ t('teacher.practice_tab_context') }}</p>
+    <div v-if="sessionGroups.length" class="teacher-context-stats" :aria-label="t('teacher.practice_summary')">
+      <span><strong>{{ sessionCount }}</strong> {{ t('teacher.session_many') }}</span>
+      <span><strong>{{ totalMinutes }}</strong> {{ t('teacher.minutes_short') }}</span>
+      <span><strong>{{ sessionGroups.length }}</strong> {{ t('teacher.passages') }}</span>
+    </div>
     <div v-if="sessionGroups.length" class="teacher-history-groups">
       <details v-for="(group, index) in sessionGroups" :key="group.key" class="teacher-history-group" :open="index === 0">
         <summary class="teacher-history-group__summary">
@@ -34,6 +40,12 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   computed: {
+    sessionCount() {
+      return (this.profile.payload.sessions || []).length
+    },
+    totalMinutes() {
+      return practiceMinutes((this.profile.payload.sessions || []).reduce((total, session) => total + Number(session.duration_seconds || 0), 0))
+    },
     sessionGroups() {
       const groups = new Map()
       for (const session of this.profile.payload.sessions || []) {
@@ -43,12 +55,9 @@ export default {
           key: session.id,
           icon: 'bi bi-journal-text',
           iconTone: 'accent',
-          title: this.t('teacher.practice_session'),
-          reviewable: true,
-          hint: [
-            this.formatWhen(session.last_activity_at) || this.t('teacher.unavailable'),
-            session.duration_seconds ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) }) : '',
-          ].filter(Boolean).join(' · '),
+          title: this.formatWhen(session.last_activity_at) || this.t('teacher.practice_session'),
+          reviewable: Boolean(session.evidence?.audio?.available || session.evidence?.transcript),
+          hint: session.duration_seconds ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) }) : this.t('teacher.session_duration_unknown'),
           badge: session.status ? this.statusLabel(session.status) : '',
           badgeTone: session.status === 'completed' ? 'good' : 'muted',
           audio: session.evidence?.audio || null,

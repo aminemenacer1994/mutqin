@@ -17,6 +17,7 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\UploadedFile;
@@ -29,6 +30,8 @@ class TeacherAssignmentService
     public function __construct(
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentMessageAudioService $messageAudio,
+        private readonly TeacherAttendanceService $attendance,
+        private readonly AiReciteAttemptAudioService $attemptAudio,
     ) {}
 
     /**
@@ -89,6 +92,7 @@ class TeacherAssignmentService
                 'organisation_id' => $teacher->organisation_id,
                 'learning_group_id' => $groupId,
                 'kind' => $kind->value,
+                'hifz_category' => $input['hifz_category'],
                 'surah_number' => $surah,
                 'ayah_start' => $start,
                 'ayah_end' => $end,
@@ -143,6 +147,7 @@ class TeacherAssignmentService
             $this->assertManageable($teacher, $locked, true);
             $locked->forceFill([
                 'kind' => $input['kind'],
+                'hifz_category' => $input['hifz_category'],
                 'surah_number' => $surah,
                 'ayah_start' => $start,
                 'ayah_end' => $end,
@@ -348,7 +353,7 @@ class TeacherAssignmentService
 
         $recipient->loadMissing('assignment');
         $assignment = $recipient->assignment;
-        if ($assignment === null || (int) $assignment->teacher_id !== (int) $teacher->id || ! $teacher->isTeacher()) {
+        if ($assignment === null || (int) $assignment->teacher_id !== (int) $teacher->id || ! $teacher->isTeacher() || ! $this->access->allows($teacher, $recipient->student)) {
             abort(404);
         }
 
@@ -558,6 +563,27 @@ class TeacherAssignmentService
         ];
 
         if ($assignment) {
+            $latestAttempt = AiReciteAttempt::query()
+                ->where('user_id', $recipient->student_id)
+                ->where('teacher_assignment_recipient_id', $recipient->id)
+                ->with('assessment:id,recognition_data')
+                ->latest('created_at')->latest('id')->first();
+            $recognition = $latestAttempt?->assessment?->recognition_data;
+            $transcript = is_array($recognition)
+                ? (data_get($recognition, 'raw.transcript') ?: data_get($recognition, 'normalised.transcript') ?: ($recognition['transcript'] ?? null))
+                : null;
+            if (! $transcript && $latestAttempt) {
+                $heard = collect(is_array($latestAttempt->word_statuses) ? $latestAttempt->word_statuses : [])
+                    ->map(fn ($word) => is_array($word) ? ($word['detected_token'] ?? $word['actual'] ?? $word['recognised'] ?? $word['recognized'] ?? $word['heard'] ?? null) : null)
+                    ->filter(fn ($word) => is_string($word) && trim($word) !== '')
+                    ->values();
+                $transcript = $heard->isEmpty() ? null : $heard->implode(' ');
+            }
+            $payload['evidence'] = $latestAttempt ? [
+                'attempt_id' => (int) $latestAttempt->id,
+                'audio' => $this->attemptAudio->payload($latestAttempt),
+                'transcript' => $transcript ? mb_substr(trim((string) $transcript), 0, 5000) : null,
+            ] : null;
             $resumeSessionId = $this->resumeSessionId($recipient, $unfinishedSessions);
             $payload['assignment'] = $this->presentAssignment($assignment);
             $payload['progress'] = $this->progressForRecipient(
@@ -584,6 +610,7 @@ class TeacherAssignmentService
         return [
             'id' => (int) $assignment->id,
             'kind' => $assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind,
+            'hifz_category' => $assignment->hifz_category,
             'surah_number' => (int) $assignment->surah_number,
             'surah_name' => QuranMetadata::name((int) $assignment->surah_number),
             'ayah_start' => (int) $assignment->ayah_start,
@@ -796,7 +823,9 @@ class TeacherAssignmentService
             : (string) $recipient->status;
 
         if ($status !== AssignmentStatus::Completed->value && $assignment?->due_at !== null && $assignment->due_at->copy()->endOfDay()->isPast()) {
-            return AssignmentStatus::Overdue->value;
+            return $this->attendance->holdsOverdue($assignment, (int) $recipient->student_id)
+                ? 'attendance_hold'
+                : AssignmentStatus::Overdue->value;
         }
 
         return $status;

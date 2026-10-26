@@ -12,6 +12,7 @@ use App\Services\Organisations\GroupMembershipService;
 use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Services\Teacher\TeacherDashboardService;
+use App\Services\Teacher\TeacherDirectMessageService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -104,6 +105,17 @@ class LearnerSupportController extends Controller
         return response()->json([
             'message' => $assignments->presentAssignmentMessage($message),
         ], 201)->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function storeTeacherMessage(Request $request, User $teacher, TeacherDirectMessageService $messages): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $student = $request->user();
+        abort_unless($student instanceof User, 401);
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+
+        return response()->json(['message' => $messages->present($messages->send($student, $teacher, $student, $data['body']))], 201)
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
     public function assignmentMessageAudio(

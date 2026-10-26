@@ -50,6 +50,21 @@
       </div>
 
       <template v-else>
+        <section v-if="directThreads.length" class="learner-teacher__direct" :aria-label="t('teacher.messages')">
+          <h3>{{ t('teacher.messages') }}</h3>
+          <div v-for="thread in directThreads" :key="thread.teacher_id" class="learner-teacher__direct-thread">
+            <strong>{{ thread.teacher_name }}</strong>
+            <div v-if="thread.messages.length" class="learner-teacher__direct-list">
+              <p v-for="message in thread.messages" :key="message.id" :class="`is-${message.sender}`"><b>{{ message.sender === 'teacher' ? thread.teacher_name : t('teacher.you') }}:</b> {{ message.body }}</p>
+            </div>
+            <p v-else class="learner-teacher__direct-empty">{{ t('teacher.direct_messages_empty_student') }}</p>
+            <form @submit.prevent="sendDirect(thread)">
+              <label :for="`direct-message-${thread.teacher_id}`">{{ t('teacher.message') }}</label>
+              <textarea :id="`direct-message-${thread.teacher_id}`" v-model="directDrafts[thread.teacher_id]" rows="2" maxlength="2000" class="form-control" :placeholder="t('teacher.direct_message_prompt_student')"></textarea>
+              <div><span v-if="directError[thread.teacher_id]" role="alert" class="text-danger">{{ directError[thread.teacher_id] }}</span><button type="submit" class="dash-btn dash-btn--primary" :disabled="directSaving === thread.teacher_id || !directDrafts[thread.teacher_id]?.trim()">{{ t('teacher.send_message') }}</button></div>
+            </form>
+          </div>
+        </section>
         <div class="learner-teacher__block">
           <div v-if="!assignments.length" class="learner-teacher__empty">
             <strong>{{ t('teacher.learner_assignments_empty_title') }}</strong>
@@ -332,11 +347,16 @@ export default {
     completionMessage: { type: String, default: '' },
     failedItem: { type: Object, default: null },
     onSendNote: { type: Function, required: true },
+    onSendDirectMessage: { type: Function, required: true },
   },
   emits: ['start', 'complete', 'view-completed', 'dismiss-completion'],
   data() {
     return {
       activeFilter: 'todo',
+      directDrafts: {},
+      directSent: {},
+      directError: {},
+      directSaving: null,
       listLimit: 4,
       visibleLimit: 4,
       selectedItem: null,
@@ -358,6 +378,12 @@ export default {
     }
   },
   computed: {
+    directThreads() {
+      return (this.support?.direct_threads || []).map((thread) => ({
+        ...thread,
+        messages: [...(thread.messages || []), ...(this.directSent[thread.teacher_id] || [])],
+      }))
+    },
     assignments() {
       return Array.isArray(this.support?.assignments) ? this.support.assignments : []
     },
@@ -435,6 +461,19 @@ export default {
     this.discardRecording()
   },
   methods: {
+    async sendDirect(thread) {
+      const body = this.directDrafts[thread.teacher_id]?.trim()
+      if (!body || this.directSaving) return
+      this.directSaving = thread.teacher_id
+      this.directError = { ...this.directError, [thread.teacher_id]: '' }
+      try {
+        const message = await this.onSendDirectMessage(thread.teacher_id, body)
+        this.directSent = { ...this.directSent, [thread.teacher_id]: [...(this.directSent[thread.teacher_id] || []), message] }
+        this.directDrafts = { ...this.directDrafts, [thread.teacher_id]: '' }
+      } catch (error) {
+        this.directError = { ...this.directError, [thread.teacher_id]: error?.response?.data?.message || this.t('teacher.action_failed') }
+      } finally { this.directSaving = null }
+    },
     setFilter(id) {
       this.activeFilter = id
       this.visibleLimit = this.listLimit

@@ -21,7 +21,7 @@ async function main() {
       await page.evaluate((value) => {
         document.documentElement.dataset.theme = value
       }, theme)
-      for (const view of ['Overview', 'Students', 'Tasks', 'Account']) {
+      for (const view of ['Overview', 'Students', 'Attendance', 'Tasks', 'Account']) {
         const nav = page.locator(width <= 960 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop')
         await nav.getByRole('button', { name: view, exact: true }).click()
         await page.waitForTimeout(350)
@@ -33,11 +33,20 @@ async function main() {
           const taskFilters = document.querySelector('.teacher-task-filters')
           const search = document.querySelector('.teacher-search--tasks')
           const add = document.querySelector('.teacher-task-add')
+          const attendance = document.querySelector('.teacher-attendance__scroll')
+          const filterClipped = taskFilters && window.innerWidth <= 520
+            ? [...taskFilters.querySelectorAll('button')].some((button) => {
+              const bounds = button.getBoundingClientRect()
+              const container = taskFilters.getBoundingClientRect()
+              return bounds.left < container.left - 1 || bounds.right > container.right + 1 || bounds.bottom > container.bottom + 1
+            })
+            : false
           const rect = (el) => el ? { x: Math.round(el.getBoundingClientRect().x), y: Math.round(el.getBoundingClientRect().y), width: Math.round(el.getBoundingClientRect().width), height: Math.round(el.getBoundingClientRect().height) } : null
           return {
             overflow: document.documentElement.scrollWidth - window.innerWidth,
             shell: rect(shell), nav: rect(nav), main: rect(main), navbar: rect(navbar),
-            filters: rect(taskFilters), search: rect(search), add: rect(add),
+            filters: rect(taskFilters), filterClipped, search: rect(search), add: rect(add),
+            attendance: rect(attendance),
             title: document.querySelector('.teacher-page-header__title')?.innerText || null,
             visibleHeading: !!document.querySelector('.teacher-page-header__title:not(.visually-hidden)'),
           }
@@ -52,6 +61,8 @@ async function main() {
   const defects = results.flatMap((result) => {
     const issues = []
     if (result.overflow > 0) issues.push(`page overflow ${result.overflow}px`)
+    if (result.filterClipped) issues.push('task filter hidden or clipped')
+    if (result.view === 'Attendance' && !result.attendance) issues.push('attendance grid missing')
     if (result.main && result.navbar && result.main.y - (result.navbar.y + result.navbar.height) < 12) issues.push('navbar gutter under 12px')
     if (result.view === 'Tasks' && result.filters && result.search) {
       const horizontal = result.filters.x >= result.search.x + result.search.width
@@ -84,6 +95,20 @@ async function main() {
   await page.locator('.teacher-directory-actions__clear').click()
   await page.locator('.teacher-table__row').first().waitFor()
   await page.setViewportSize({ width: 390, height: 900 })
+  const studentDensity = page.locator('.teacher-student-toolbar > .teacher-density-toggle')
+  const densityWidth = await studentDensity.evaluate((element) => element.getBoundingClientRect().width)
+  if (densityWidth < 140) defects.push(`Students compact toggle collapsed to ${Math.round(densityWidth)}px`)
+  if (await page.locator('.teacher-student-cards').isVisible()) {
+    await studentDensity.click()
+    const table = page.locator('.teacher-table-wrap')
+    await table.waitFor({ state: 'visible' })
+    const initialScroll = await table.evaluate((element) => element.scrollLeft)
+    await page.locator('.teacher-table-scrollbar button').last().click()
+    await page.waitForTimeout(450)
+    const afterScroll = await table.evaluate((element) => element.scrollLeft)
+    if (afterScroll <= initialScroll) defects.push('Students compact table right-scroll control did not move the table')
+    await studentDensity.click()
+  }
   await page.locator('.teacher-nav-shell--mobile').getByRole('button', { name: 'Account', exact: true }).click()
   await page.locator('.teacher-account__email').evaluate((node) => { node.textContent = 'very-long-teacher-email-address-for-responsive-quality-check@example-mutqin-organisation.test' })
   const longEmailOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)

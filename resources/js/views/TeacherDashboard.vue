@@ -71,6 +71,7 @@
               @page="loadStudents"
               @open-student="openStudent"
               @assign-revision="openAssignRevision"
+              @deleted="loadStudents(1)"
             />
 
             <TeacherStudentProfileSection
@@ -89,6 +90,7 @@
               @back="openView('students')"
               @change-section="onProfileSection"
               @assign-revision="openAssignRevision"
+              @mark-reviewed="markReviewReviewed"
             />
 
             <TeacherAssignmentsSection
@@ -100,6 +102,7 @@
               :success="formSuccess"
               :error="formError"
               :rows="assignmentRows"
+              :initial-status-filter="assignmentEntryFilter"
               :loading="assignmentsLoading"
               :students="assignmentRoster.length ? assignmentRoster : students"
               :surahs="surahs"
@@ -112,6 +115,8 @@
               @remove="removeAssignment"
               @open-student="openStudent"
             />
+
+            <TeacherAttendanceSection v-else-if="view === 'attendance'" />
 
             <TeacherSettingsSection
               v-else
@@ -135,6 +140,7 @@
 <script>
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
+import TeacherAttendanceSection from '../components/teacher/TeacherAttendanceSection.vue'
 import TeacherHero from '../components/teacher/TeacherHero.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import TeacherOverviewSection from '../components/teacher/TeacherOverviewSection.vue'
@@ -148,6 +154,7 @@ export default {
   components: {
     NetworkFallback,
     TeacherAssignmentsSection,
+    TeacherAttendanceSection,
     TeacherHero,
     TeacherNav,
     TeacherOverviewSection,

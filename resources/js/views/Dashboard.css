@@ -6592,3 +6592,14 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
     display: none;
   }
 }
+.user-dashboard .learner-teacher__direct { display: grid; gap: .85rem; margin-bottom: 1rem; padding: clamp(.85rem, 2vw, 1.25rem); border: 1px solid var(--dash-border); border-radius: 14px; background: var(--dash-card-bg); color: var(--dash-text); }
+.user-dashboard .learner-teacher__direct h3 { margin: 0; font-size: 1rem; }
+.user-dashboard .learner-teacher__direct-thread { display: grid; gap: .55rem; padding-top: .7rem; border-top: 1px solid var(--dash-border); }
+.user-dashboard .learner-teacher__direct-list { display: grid; gap: .45rem; max-height: 260px; overflow: auto; }
+.user-dashboard .learner-teacher__direct-list p { width: fit-content; max-width: min(85%, 580px); margin: 0; padding: .5rem .7rem; border-radius: 10px; background: var(--dash-surface-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.user-dashboard .learner-teacher__direct-list p.is-student { justify-self: end; border: 1px solid var(--dash-border); background: var(--dash-card-bg); }
+.user-dashboard .learner-teacher__direct-empty { margin: 0; color: var(--dash-muted); }
+.user-dashboard .learner-teacher__direct form { display: grid; gap: .45rem; }
+.user-dashboard .learner-teacher__direct form label { font-weight: 650; }
+.user-dashboard .learner-teacher__direct textarea { border-color: var(--dash-border); background: var(--dash-card-bg); color: var(--dash-text); }
+.user-dashboard .learner-teacher__direct form > div { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }

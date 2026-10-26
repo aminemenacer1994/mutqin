@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Models\TeacherNote;
 use App\Models\User;
+use App\Services\Organisations\StudentAccessAuthorizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TeacherAssignmentMessageAudioService
 {
+    public function __construct(private readonly StudentAccessAuthorizer $access) {}
     public const DISK = 'user_files';
 
     public const PREFIX = 'teacher-task-audio';
@@ -88,7 +90,10 @@ class TeacherAssignmentMessageAudioService
     public function stream(User $user, TeacherNote $note): ?Response
     {
         $canListen = $note->teacher_assignment_id !== null
-            && ((int) $note->student_id === (int) $user->id || (int) $note->teacher_id === (int) $user->id);
+            && ((int) $note->student_id === (int) $user->id
+                || ((int) $note->teacher_id === (int) $user->id
+                    && $note->student !== null
+                    && $this->access->allows($user, $note->student)));
         if (! $canListen || ! $note->audio_path) {
             return null;
         }

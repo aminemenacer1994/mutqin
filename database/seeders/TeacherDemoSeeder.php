@@ -21,12 +21,13 @@ use App\Models\Organisation;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
+use App\Models\TeacherAttendanceRecord;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Demo\TeacherDemoReset;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\StudentAccessAuthorizer;
-use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\Demo\TeacherDemoCatalog;
 use App\Support\QuranMetadata;
@@ -93,11 +94,11 @@ class TeacherDemoSeeder extends Seeder
         $this->seedGroups();
         $this->seedTeachers();
         $this->seedStudents();
+        $this->seedAttendance();
         $this->seedAssignments();
         $this->seedNotes();
         $this->refreshAssignmentStatuses();
         $this->assertVolumes();
-        app(TeacherAnchorStudentEnroller::class)->enrolAll();
     }
 
     private function assertRanges(): void
@@ -166,6 +167,30 @@ class TeacherDemoSeeder extends Seeder
             $this->students[$definition['number']] = $user;
             $this->membership($user, $this->groups[$definition['group']], MembershipRole::Student, true);
             $this->seedActivity($user, $definition);
+        }
+    }
+
+    private function seedAttendance(): void
+    {
+        foreach (TeacherDemoCatalog::students() as $definition) {
+            $student = $this->students[$definition['number']];
+            $teacher = $this->teacherForGroup($definition['group']);
+            $group = $this->groups[$definition['group']];
+            foreach ([1, 2, 3, 4, 5, 8, 9, 10, 11, 12] as $dayOffset) {
+                $date = now()->subDays($dayOffset);
+                $status = $definition['profile'] === 'inactive' && $dayOffset <= 5
+                    ? 'absent'
+                    : ($definition['number'] % 9 === 0 && $dayOffset === 3 ? 'excused' : ($definition['number'] % 6 === 0 && $dayOffset === 2 ? 'late' : 'present'));
+                (new TeacherAttendanceRecord)->forceFill([
+                    'teacher_id' => $teacher->id,
+                    'learning_group_id' => $group->id,
+                    'student_id' => $student->id,
+                    'attendance_date' => $date->toDateString(),
+                    'status' => $status,
+                    'created_at' => $date,
+                    'updated_at' => $date,
+                ])->save();
+            }
         }
     }
 
@@ -533,6 +558,17 @@ class TeacherDemoSeeder extends Seeder
             'created_at' => $plan['at'],
             'updated_at' => $plan['at'],
         ])->save();
+        if ($number === 1) {
+            (new TeacherRecitationAssessment)->forceFill([
+                'teacher_id' => $this->teacherForGroup($definition['group'])->id,
+                'student_id' => $user->id,
+                'ai_recite_attempt_id' => $attempt->id,
+                'tajweed_score' => max(1, min(5, (int) round($plan['accuracy'] / 20))),
+                'annotation' => 'Demo teacher assessment. Review pronunciation and apply the relevant tajweed rule before the next attempt.',
+                'created_at' => $plan['at'],
+                'updated_at' => $plan['at'],
+            ])->save();
+        }
         $this->attemptCount++;
 
         return [
@@ -811,6 +847,7 @@ class TeacherDemoSeeder extends Seeder
             'organisation_id' => $teacher->organisation_id,
             'learning_group_id' => $group?->id,
             'kind' => $kind,
+            'hifz_category' => ['sabaq', 'sabqi', 'manzil'][$this->assignmentCount % 3],
             'surah_number' => $range['surah'],
             'ayah_start' => $range['from'],
             'ayah_end' => $range['to'],

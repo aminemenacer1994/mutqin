@@ -20,6 +20,7 @@ class TeacherAssignment extends Model
     {
         return [
             'kind' => AssignmentKind::class,
+            'hifz_category' => 'string',
             'surah_number' => 'integer',
             'ayah_start' => 'integer',
             'ayah_end' => 'integer',

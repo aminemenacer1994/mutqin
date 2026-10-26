@@ -43,11 +43,12 @@ export function groupAyahFindings(items, t) {
   const groups = new Map()
   for (const item of items || []) {
     const key = `${item.surah_number}:${item.ayah_number}`
-    if (!groups.has(key)) groups.set(key, { key, title: ayahRangeLabel(item.surah_name, item.ayah_number, item.ayah_number, t), findings: [], seen: new Set(), first: item })
+    if (!groups.has(key)) groups.set(key, { key, title: ayahRangeLabel(item.surah_name, item.ayah_number, item.ayah_number, t), findings: [], seen: new Set(), first: item, maxChecks: 0 })
     const group = groups.get(key)
     const findingKey = `${item.spot_type || 'unknown'}:${item.word_index ?? 'ayah'}`
     if (group.seen.has(findingKey)) continue
     group.seen.add(findingKey)
+    group.maxChecks = Math.max(group.maxChecks, Number(item.affected_attempt_count || 0))
     const place = item.word_index === null || item.word_index === undefined
       ? t('teacher.ayah_n', { n: item.ayah_number })
       : t('teacher.word_n', { n: Number(item.word_index) + 1 })
@@ -99,7 +100,14 @@ export function sessionLabel(session, t) {
 
 export function issueLabel(issues, t) {
   if (!issues || issues.wrong === null) return t('teacher.unavailable')
-  return t('teacher.issues', issues)
+  return [
+    ['wrong', 'teacher.issue_missed'],
+    ['skipped', 'teacher.issue_skipped'],
+    ['extra', 'teacher.issue_extra'],
+    ['repeated', 'teacher.issue_repeated'],
+  ].filter(([key]) => Number(issues[key]) > 0)
+    .map(([key, label]) => `${Number(issues[key])} ${t(label)}`)
+    .join(' · ')
 }
 
 export function attentionReasonTags(student, t) {

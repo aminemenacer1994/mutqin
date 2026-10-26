@@ -8,7 +8,11 @@
           <div class="teacher-profile-hero__identity">
             <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
             <div class="teacher-profile-hero__copy">
-              <p class="teacher-profile-hero__eyebrow">{{ t('teacher.student_profile') }}</p>
+              <nav class="teacher-profile-hero__eyebrow teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
+                <button type="button" @click="$emit('back')">{{ t('teacher.nav_students') }}</button>
+                <span aria-hidden="true">/</span>
+                <span>{{ activeTabLabel }}</span>
+              </nav>
               <h2>{{ profile.student.name }}</h2>
               <p class="teacher-meta">
                 <i class="bi bi-building" aria-hidden="true"></i>
@@ -18,6 +22,7 @@
             </div>
           </div>
           <div class="teacher-profile-hero__actions">
+            <details ref="reportMenu" class="teacher-profile-hero__report-menu"><summary class="btn btn-outline-secondary"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i> {{ t('teacher.reports') }} <i class="bi bi-chevron-down" aria-hidden="true"></i></summary><div><button type="button" @click="openReport('parent')"><i class="bi bi-people" aria-hidden="true"></i>{{ t('teacher.report_parent') }}</button><button type="button" @click="openReport('semester')"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ t('teacher.report_semester') }}</button></div></details>
             <button type="button" class="btn teacher-profile-hero__back" @click="$emit('back')">
               <i class="bi bi-arrow-left" aria-hidden="true"></i>
               {{ t('teacher.back_students') }}
@@ -29,6 +34,7 @@
           </div>
         </div>
       </header>
+      <TeacherStudentReport :open="Boolean(reportMode)" :mode="reportMode || 'parent'" :profile="profile" @close="reportMode = null" />
 
       <div
         :id="tabsId"
@@ -58,6 +64,8 @@
       </div>
 
       <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" :class="`is-${section}`" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
+        <p v-if="profile.section !== section" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
+        <template v-else>
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
           :profile="profile"
@@ -85,12 +93,15 @@
           :profile="profile"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
+          @mark-reviewed="$emit('mark-reviewed', $event)"
         />
         <TeacherStudentProfileTasks
           v-else-if="section === 'tasks'"
           :profile="profile"
           :format-when="formatWhen"
         />
+        <TeacherStudentProfileMessages v-else-if="section === 'messages'" :profile="profile" :format-when="formatWhen" />
+        </template>
       </div>
     </template>
 
@@ -106,6 +117,8 @@ import TeacherStudentProfileFocus from './profile/TeacherStudentProfileFocus.vue
 import TeacherStudentProfileOverview from './profile/TeacherStudentProfileOverview.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
+import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
+import TeacherStudentReport from './TeacherStudentReport.vue'
 
 export default {
   name: 'TeacherStudentProfileSection',
@@ -116,6 +129,8 @@ export default {
     TeacherStudentProfileOverview,
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
+    TeacherStudentProfileMessages,
+    TeacherStudentReport,
   },
   mixins: [i18nMixin],
   props: {
@@ -131,14 +146,21 @@ export default {
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['back', 'change-section', 'assign-revision'],
+  emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed'],
   data() {
     const uid = Math.random().toString(36).slice(2, 9)
     return {
       tabsId: `teacher-profile-tabs-${uid}`,
       panelId: `teacher-profile-panel-${uid}`,
       tabPrefix: `teacher-profile-tab-${uid}`,
+      reportMode: null,
     }
+  },
+  computed: {
+    activeTabLabel() {
+      const tab = this.tabs.find((item) => item.id === this.section)
+      return tab ? this.t(tab.label) : this.t('teacher.tab_overview')
+    },
   },
   watch: {
     section() {
@@ -149,6 +171,7 @@ export default {
     },
   },
   methods: {
+    openReport(mode) { this.reportMode = mode; if (this.$refs.reportMenu) this.$refs.reportMenu.open = false },
     tabId(id) {
       return `${this.tabPrefix}-${id}`
     },

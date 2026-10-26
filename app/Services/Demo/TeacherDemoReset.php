@@ -98,6 +98,8 @@ class TeacherDemoReset
     private function deleteLearningRows(array $ids): void
     {
         $tables = [
+            'teacher_recitation_assessments' => ['teacher_id', 'student_id'],
+            'teacher_attendance_records' => ['teacher_id', 'student_id'],
             'teacher_notes' => ['teacher_id', 'student_id'],
             'teacher_assignment_recipients' => ['student_id'],
             'teacher_assignments' => ['teacher_id'],
@@ -134,7 +136,8 @@ class TeacherDemoReset
         return Organisation::query()
             ->get()
             ->filter(function (Organisation $organisation) {
-                foreach (TeacherDemoCatalog::organisations() as $definition) {
+                $legacy = array_map(fn (array $entry) => ['name' => $entry['name'], 'type' => $entry['type']], \App\Support\Registration\RegistrationOrganisationDirectory::entries());
+                foreach (array_merge(TeacherDemoCatalog::organisations(), $legacy) as $definition) {
                     $canonical = OrganisationName::canonical($definition['name']);
                     $type = $organisation->type instanceof OrganisationType
                         ? $organisation->type->value
