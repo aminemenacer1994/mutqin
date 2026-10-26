@@ -206,7 +206,7 @@ const startedCtx = {
   assert.match(memorisationSource, /applyBackendStartResult\([\s\S]{0,500}scheduleSavedSessionAutosave/)
   assert.match(memorisationSource, /this\.sessionBroadcast\?\.publish\('session-paused'[\s\S]{0,220}upsertAutosavedSession\(\{\s*immediate:\s*true/)
   assert.match(memorisationSource, /saveSessionForLaterFromExitModal\([\s\S]*?upsertAutosavedSession\(\{\s*immediate:\s*true/)
-  assert.match(memorisationSource, /upsertAutosavedSession\(\{\s*completed:\s*true,\s*immediate:\s*true\s*\}\)/)
+  assert.match(memorisationSource, /upsertAutosavedSession\(\{\s*completed:\s*(?:true|rangeComplete),\s*immediate:\s*true\s*\}\)/)
   assert.match(memorisationSource, /persistAllState\([\s\S]{0,500}flushSavedSessionAutosave/)
   assert.match(memorisationSource, /flushSessionLifecycleForBackground\([\s\S]{0,500}flushSavedSessionAutosave/)
   assert.match(memorisationSource, /addSavedSession\([\s\S]{0,180}silent:\s*true/)
@@ -218,8 +218,8 @@ const startedCtx = {
     memorisationSource,
     /upsertAutosavedSession\([^)]*\)[\s\S]{0,400}loadSavedSessions\(\)/,
   )
-  const completedUpserts = memorisationSource.match(/upsertAutosavedSession\(\{\s*completed:\s*true,\s*immediate:\s*true\s*\}\)/g) || []
-  assert.ok(completedUpserts.length >= 2, 'guest + auth completion paths must both upsert the same completed bookmark')
+  const completedUpserts = memorisationSource.match(/upsertAutosavedSession\(\{\s*completed:\s*(?:true|rangeComplete),\s*immediate:\s*true\s*\}\)/g) || []
+  assert.ok(completedUpserts.length >= 2, 'guest + auth completion paths must both upsert completed bookmarks on session end')
 }
 
 console.log('saved-session-autosave.test.mjs: ok')

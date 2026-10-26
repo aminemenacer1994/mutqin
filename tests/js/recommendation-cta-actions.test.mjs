@@ -70,16 +70,16 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
   })
   assert.equal(mostly[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
   assert.equal(mostly[0].variant, 'primary')
-  assert.equal(mostly[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(mostly[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(mostly[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(mostly.length, 2)
 
   const review = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, {
     weakAyahNumber: 5,
     preferStartFocusedReview: true,
   })
   assert.equal(review[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(review[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(review[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(review[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(review.length, 2)
 }
 
 // Wiring contracts
@@ -112,9 +112,8 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
   assert.equal(focusedCtas[0].labelKey, 'reviewAyahOnce')
   assert.equal(focusedCtas[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
   assert.equal(focusedCtas[0].variant, 'primary')
-  assert.equal(focusedCtas[1].labelKey, 'startFocusedReview')
-  assert.equal(focusedCtas[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(focusedCtas[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(focusedCtas[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(focusedCtas.length, 2)
 }
 
 // Soft nudge: advance without AI check only

@@ -944,9 +944,8 @@ export default {
       return this.auth?.memorisation_url || '/memorisation'
     },
     showLearnerTeacherSection() {
-      if (this.auth?.learner_teacher_section_enabled !== true) return false
-      if (this.supportLoading || this.support !== null) return true
-      return false
+      return this.auth?.learner_teacher_section_enabled === true
+        && (this.supportLoading || this.support !== null)
     },
     savedSessionsHref() {
       const base = this.memorisationUrl.split('?')[0]

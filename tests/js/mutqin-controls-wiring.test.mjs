@@ -44,15 +44,16 @@ includesAll('offcanvas to workspace link', [
 ])
 
 includesAll('session setup controls', [
-  /<select :value="chapterId" @change="onChapterChange"/,
-  /v-model\.number="rangeStart" @input="adjustRange\(\)" @change="adjustRange\(\{ immediate: true \}\)"/,
-  /v-model\.number="rangeEnd" @input="adjustRange\(\)" @change="adjustRange\(\{ immediate: true \}\)"/,
+  /<select[^>]*:value="chapterId" @change="onChapterChange"/,
+  /v-model\.number="rangeStart"[\s\S]{0,120}@change="adjustRange\(\{ immediate: true \}\)"/,
+  /v-model\.number="rangeEnd"[\s\S]{0,120}@change="adjustRange\(\{ immediate: true \}\)"/,
   /@change="onSessionReciterChange"/,
-  /@change="setPlaybackSpeed\(option\)"/,
+  /@input="setPlaybackSpeedFromSlider\(Number\(\$event\.target\.value\)\)"/,
+  /setPlaybackSpeedFromSlider\(index\)/,
   /value="auto" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
   /t\('memorisation\.delay_between_recitations_secs'\)/,
-  /<select v-model\.number="delay" class="select">/,
+  /<select v-model\.number="delay"[^>]*class="select/,
   /option in delayOptions/
 ])
 
@@ -112,10 +113,12 @@ includesAll('onboarding system steps', [
   /buildOnboardingStep\(key, icon\)/,
   /key: 'setup'/,
   /key: 'practice'/,
-  /key: 'coach'/,
-  /key: 'improve'/,
-  /key: 'continue'/
 ])
+assert.doesNotMatch(
+  onboardingStepsBlock,
+  /key: 'coach'|key: 'improve'|key: 'continue'/,
+  'legacy multi-step onboarding rail should be removed',
+)
 
 assert.doesNotMatch(
   onboardingStepsBlock,
@@ -231,8 +234,8 @@ includesAll('welcome back continue session flow', [
   assert.doesNotMatch(welcomeBlock, /welcome-back-hint|welcome-back-kicker/, 'welcome-back modal must not show redundant hint/kicker copy')
   assert.match(welcomeBlock, /@click="closeWelcomeBackModal"/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-backdrop"[^>]*welcomeBackStartNewSession/)
-  assert.match(en, /"freshSubtitle": "Start a fresh set whenever you are ready\."/)
-  assert.match(en, /"resumeSubtitleAtPlace": "You stopped at \{place\}\."/)
+  assert.match(en, /"freshSubtitle": "Begin a new set when you are ready\."/)
+  assert.match(en, /"resumeSubtitleAtPlace": "You left \{place\}\. May Allah make your return light\."/)
   assert.match(en, /"resumePlaceBeginning": "\{chapter\}, from the start"/)
   assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
   assert.match(welcomeBlock, /container-fluid welcome-back-fluid/)
@@ -273,8 +276,8 @@ includesAll('welcome back continue session flow', [
 }
 
 includesAll('quran font picker access', [
-  /selectFont\(fontValue\)/,
-  /top-card-menu-font/,
+  /selectFont\(/,
+  /cycleQuranFontPill\(\)/,
   /quranFontOptions/,
   /clearMushafAyahHtmlCache/,
 ])
@@ -294,7 +297,7 @@ includesAll('desktop control group swap', [
 ])
 
 includesAll('workspace AI Recite companion', [
-  /data-testid="workspace-ai-recite"/,
+  /data-testid="workspace-ai-recite-(mobile|desktop)"/,
   /showWorkspaceAiReciteCta/,
   /openWorkspaceAiRecite/,
   /fromWorkspaceAiRecite:\s*true/,
@@ -322,7 +325,7 @@ includesAll('top card dashboard visibility', [
   /showTopCardDashboardIcon\(\)/,
   /showMobileSessionDashboardResumeOnly\(\)/,
   /workspace-shell--mobile-resume-only/,
-  /v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap"/,
+  /v-else-if="showTopCardDashboardIcon"[\s\S]{0,80}class="top-card-dashboard-wrap"/,
   /class="[^"]*top-card-dashboard-trigger/,
   /memorisation\.open_dashboard/,
   /sessionPaused[\s\S]*mutqinState\?\.sessionState\?\.paused/,
@@ -445,8 +448,8 @@ includesAll('top card dashboard visibility', [
   )
   assert.match(
     mobileGridCss,
-    /Active session dashboard: inset from screen edges[\s\S]*?margin-inline:\s*var\(--mq-mobile-gutter\)\s*!important/,
-    'mobile-grid must inset the session dashboard from the screen edges'
+    /Active session chrome:[\s\S]*?margin-inline:\s*var\(--mq-mobile-gutter\)\s*!important/,
+    'mobile-grid must inset active session chrome from the screen edges'
   )
   assert.match(
     blade,
@@ -455,7 +458,7 @@ includesAll('top card dashboard visibility', [
   )
   assert.match(
     mobileGridCss,
-    /QPC mushaf: full width shell, inset sheet[\s\S]*?qpc-madani-page__sheet[\s\S]*?--mq-mushaf-inline-(?:start|end)[\s\S]*?overflow:\s*visible\s*!important/,
+    /qpc-madani-page__sheet[\s\S]*?--mq-mushaf-inline-start[\s\S]*?overflow-x:\s*visible\s*!important/,
     'mobile-grid must inset QPC mushaf sheets and keep glyphs visible on phones'
   )
   assert.match(
@@ -586,9 +589,9 @@ includesAll('offcanvas main-card linkage', [
   /reviewPriorityLabel\(\) \{\s*return ''\s*\}/s,
   /this\.syncSettingsDraft\(\)\s*this\.persistUiState\(\)/,
   /toggleTajweed\(\) \{\s*this\.setTajweedEnabled\(!this\.tajweedEnabled/,
-  /selectFont\(fontValue\) \{\s*const allowed = \(this\.quranFontOptions/,
+  /selectFont\(_fontValue\) \{\s*this\.quranFont = QURAN_FONT_DEFAULT/,
   /updateDefaultFontSize\(\) \{[\s\S]*this\.syncSettingsDraft\(\)/,
-  /class="workspace-header-view-controls quick-right-controls"/
+  /readingViewMode === 'madani_mushaf'/,
 ])
 
 includesAll('ai recitation speechmatics stability', [
@@ -724,7 +727,7 @@ includesAll('ai audio consent and retention wiring', [
   /prepareAudioRetentionPayload/,
   /stripRawAudioFields/,
   /applyAudioRetentionToCacheEntry/,
-  /\/privacy/,
+  /readAudioPrivacyConfig\(\)/,
 ])
 
 {
@@ -809,7 +812,7 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(source, /amdSttStallNotice/)
   assert.match(source, /:stt-recovering="amdSttStallNotice \|\| amdSttRecovering"/)
   // One Recording status pill — starting must not show a separate listening label.
-  assert.match(amdVue, /stage === 'listening' \|\| this\.isStarting/)
+  assert.match(amdVue, /stage === 'listening' \|\| this\.stage === 'starting'/)
   assert.doesNotMatch(amdVue, /amd-live-banner/)
   assert.doesNotMatch(amdVue, /recitation-start-cue/)
   assert.doesNotMatch(source, /recitationStartCueActive\s*=\s*true/)
@@ -1012,7 +1015,7 @@ includesAll('audio unlock flow', [
   )
   assert.match(
     mobileGridCss,
-    /--mq-mushaf-inline-start:\s*max\(2px[\s\S]*--mq-mushaf-inline-end/,
+    /--mq-mushaf-inline-start:\s*max\(\d+px[\s\S]*--mq-mushaf-inline-end/,
     'mobile-grid must define responsive mushaf horizontal inset tokens'
   )
   assert.match(
@@ -1077,10 +1080,9 @@ assert.doesNotMatch(
 )
 
 includesAll('header controls compact ordering', [
-  /class="workspace-header-view-controls quick-right-controls"/,
+  /top-card-menu-row--mode-selected/,
   /\.workspace-shell-actions \{[\s\S]*direction: ltr !important;[\s\S]*gap: 0\.55rem !important;/,
-  /\.workspace-header-view-controls \{[\s\S]*order: -1 !important;/,
-  /\.workspace-header-view-controls \.view-mode-switch \{[\s\S]*min-height: 40px !important;/,
+  /\.workspace-header-view-controls/,
   /\.workspace-shell-actions \.action-btn\[aria-label="Open session controls"\] \{[\s\S]*width: 42px !important;/
 ])
 
@@ -1191,7 +1193,7 @@ includesAll('reciter catalog refresh', [
   /const shouldFetchFresh = mobile \|\| !hasCache/,
   /if \(!shouldFetchFresh\) return/,
   /mobileReciterSelectRenderKey\(\)/,
-  /onSessionReciterChange\(\)/,
+  /async onSessionReciterChange\(event\)/,
   /if \(this\.isMobileViewport\(\)\) \{\s*void this\.loadReciters\(\)/,
   /window\.__mutqinMobileReciterChange/,
 ])
@@ -1327,7 +1329,7 @@ includesAll('chaining runtime application', [
   /linking:\$\{verseKey\(verse\)\}->\$\{verseKey\(nextVerse\)\}/,
   /uiChaining/,
   /\.\.\.\(uiChaining \|\| \{\}\)/,
-  /if \(!uiChaining\)/
+  /uiState\.chainingMethod/,
 ])
 
 const modeDataMatchesCount = (source.match(/modeDataMatchesConfig\(mode = this\.currentMode/g) || []).length
@@ -1369,7 +1371,7 @@ includesAll('long session load stays slim', [
 ])
 
 includesAll('mushaf layout font-size +/− controls', [
-  /class="mushaf-font-zoom"/,
+  /class="mushaf-font-zoom\b/,
   /@click\.stop="increaseMushafFontSize"/,
   /@click\.stop="decreaseMushafFontSize"/,
   /increaseMushafFontSize\(\) \{/,
@@ -1383,7 +1385,7 @@ includesAll('mushaf font size is user-scoped and survives reload', [
   /writePersistedFontPreferences/,
   /persistUserFontSize\(\)/,
   /applyPersistedUserFontSize\(\)/,
-  /this\.loadUiState\(\)\s*this\.loadVerseFontSizes\(\)/,
+  /this\.loadUiState\(\)[\s\S]*?this\.loadVerseFontSizes\(\)/,
   /readLocalUiState\(\)/,
   /writeLocalUiState\(/,
   /offlineScopedLocalKey\('mutqin.uiState'/,

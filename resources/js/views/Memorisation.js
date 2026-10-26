@@ -605,6 +605,7 @@ import {
   TAJWEED_DEFAULT_REVISION,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
+  buildFullFatihahMushafSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
   resolveStoredTajweedEnabled,
@@ -11290,8 +11291,10 @@ export default {
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
       } else if (shouldAutoOpenOnboarding) {
+        this.onboardingStepIndex = this.readOnboardingStepIndex()
+        this.applyPersistedOnboardingPreferences()
         // Seed Al-Fatihah 1–5 for new accounts (same window as onboarding practice).
-        this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
         this.markOnboardingAutoPresented()
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -18624,7 +18627,7 @@ export default {
     async nextWorkspaceTourStep() {
       if (this.workspaceTourNextDisabled) return
       if (this.workspaceTourIsLastStep) {
-        this.finishWorkspaceTour()
+        this.finishWorkspaceTour({ dismiss: false })
         return
       }
       this.workspaceTourStepIndex += 1
@@ -18638,7 +18641,7 @@ export default {
       this.workspaceTourRect = null
       this.unbindWorkspaceTourListeners()
       this.topCardMenuOpen = false
-      this.teardownWorkspaceTourPreview()
+      this.teardownWorkspaceTourPreview({ fullFatihah: !!dismiss })
       restoreReturnFocus(this.workspaceTourReturnFocusEl)
       this.workspaceTourReturnFocusEl = null
       if (dismiss) {
@@ -18889,7 +18892,7 @@ export default {
       this.ensureWorkspaceTourSamplePlan()
       await this.$nextTick()
     },
-    teardownWorkspaceTourPreview() {
+    teardownWorkspaceTourPreview({ fullFatihah = false } = {}) {
       this.workspaceTourDashboardOpen = false
       if (this.amdOpen) this.closeAmdModal?.({ returnToCompletion: false })
       this.postSessionAiReciteActive = false
@@ -18902,9 +18905,9 @@ export default {
       }
       this.workspaceTourPreviewOwned = false
       this.workspaceTourOpenedPostSession = false
-      void this.commitWorkspaceTourFocusedReview()
+      void this.commitWorkspaceTourFocusedReview({ fullFatihah })
     },
-    async commitWorkspaceTourFocusedReview() {
+    async commitWorkspaceTourFocusedReview({ fullFatihah = false } = {}) {
       this.workspaceTourConfigSnapshot = null
       this.workspaceTourFreshStartPending = true
       this.sessionPaused = false
@@ -18926,12 +18929,14 @@ export default {
         this.centralSession.sessionStatus = 'idle'
         this.centralSession.sessionStartedAt = null
       }
-      // After Skip/Finish: Al-Fatihah 1–5 (default practice window).
-      const next = this.buildDefaultWorkspaceSessionConfig({
-        readingViewMode: isReadingViewMode(this.readingViewMode)
-          ? this.readingViewMode
-          : 'madani_mushaf',
-      })
+      // Dismiss (X / Escape): full Al-Fatihah in Mushaf. Finish tour: 1–5 practice window.
+      const next = fullFatihah
+        ? buildFullFatihahMushafSessionConfig()
+        : this.buildDefaultWorkspaceSessionConfig({
+          readingViewMode: isReadingViewMode(this.readingViewMode)
+            ? this.readingViewMode
+            : 'madani_mushaf',
+        })
       this.chapterId = next.chapterId
       this.rangeStart = next.rangeStart
       this.rangeEnd = next.rangeEnd
@@ -19055,9 +19060,10 @@ export default {
     },
     startOnboardingTour() {
       this.onboardingPhase = 'tour'
-      this.onboardingStepIndex = 0
+      this.onboardingStepIndex = this.readOnboardingStepIndex()
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
-      this.applyOnboardingStep(0)
+      this.applyPersistedOnboardingPreferences()
+      this.applyOnboardingStep(this.onboardingStepIndex)
       this.persistOnboardingProgress()
     },
     prevOnboardingStep() {
@@ -19186,15 +19192,13 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
       if (fullFatihah) {
-        // Legacy full-surah path (1–7). Default Skip/Finish stays on 1–5 below.
         const focus = !!prefs.focusModeEnabled
         const blur = !!prefs.blurModeEnabled && !focus
         const talqin = !!prefs.talqinModeEnabled
         this.applyDefaultWorkspaceSessionConfig({
           openSetup: false,
           silent: true,
-          config: this.buildDefaultWorkspaceSessionConfig({
-            rangeEnd: 7,
+          config: buildFullFatihahMushafSessionConfig({
             focusModeEnabled: focus,
             blurModeEnabled: blur,
             talqinModeEnabled: talqin,
@@ -23680,7 +23684,9 @@ export default {
       this.tab = stepConfig.tab
       this.showTools = false
       if (stepConfig.mode) this.readingViewMode = this.clampReadingViewMode(stepConfig.mode)
-      if (stepMeta.key !== 'practice') {
+      if (stepMeta.key === 'practice') {
+        this.applyPersistedOnboardingPreferences()
+      } else {
         this.blurModeEnabled = !!stepConfig.blur
         this.focusModeEnabled = false
         this.talqinModeEnabled = false
@@ -35483,6 +35489,25 @@ export default {
       return true
     },
 
+    async applyFullFatihahMushafWorkspace({ silent = true } = {}) {
+      const next = buildFullFatihahMushafSessionConfig()
+      this.chapterId = next.chapterId
+      this.rangeStart = next.rangeStart
+      this.rangeEnd = next.rangeEnd
+      this.reciterId = next.reciterId
+      this.readingViewMode = this.clampReadingViewMode(next.readingViewMode)
+      this.showTools = false
+      this.startingFreshSessionSelection = false
+      this.persistUiState()
+      this.persistCentralSessionState()
+      try {
+        await this.loadChapter(this.currentMode)
+      } catch { /* workspace still shows the surah range */ }
+      if (!silent) {
+        this.showBanner(this.t('toasts.defaultSessionLoaded'), 'info', 3200)
+      }
+    },
+
     closeWelcomeBackModal() {
       if (this.welcomeBackContinueInFlight) return
       const registrationMode = this.welcomeBackRegistrationMode
@@ -35495,6 +35520,7 @@ export default {
         this._preRegistrationGuestSnapshot = null
         this.finalizeRegistrationFirstRunPrompts({ includeOnboardingTour: true })
       }
+      void this.applyFullFatihahMushafWorkspace({ silent: true })
     },
 
     welcomeBackStartNewSession() {

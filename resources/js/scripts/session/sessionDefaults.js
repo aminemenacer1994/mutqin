@@ -20,6 +20,7 @@ const DEFAULT_RECITER_ID = 'ar.alafasy'
 
 /** Default / onboarding Al-Fatiha window: ayahs 1–5 (not the full 7-ayah surah). */
 export const FIRST_ONBOARDING_RANGE_END = 5
+export const FULL_FATIHAH_RANGE_END = 7
 export const DEFAULT_WORKSPACE_RANGE_END = FIRST_ONBOARDING_RANGE_END
 
 /**
@@ -94,6 +95,17 @@ export function buildFirstOnboardingSessionConfig(overrides = {}) {
     reciterId: DEFAULT_RECITER_ID,
     repetitionsPerStep: 2,
     selectedLoopCount: 2,
+    ...overrides,
+  })
+}
+
+/** Dismissed Begin-set / welcome-back: full surah in Madani Mushaf (7 ayahs). */
+export function buildFullFatihahMushafSessionConfig(overrides = {}) {
+  return buildDefaultWorkspaceSessionConfig({
+    chapterId: 1,
+    rangeStart: 1,
+    rangeEnd: FULL_FATIHAH_RANGE_END,
+    readingViewMode: 'madani_mushaf',
     ...overrides,
   })
 }

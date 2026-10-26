@@ -119,7 +119,7 @@ function t(key, params = {}) {
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
   assert.doesNotMatch(completionModal, /teacherComplement/)
-  assert.doesNotMatch(completionModal, /post-session-simple__beta-tag/)
+  assert.match(completionModal, /post-session-simple__beta-tag/)
   assert.doesNotMatch(completionModal, /post-session-simple__generated-badge/)
   assert.match(completionModal, /postSessionOutcomeStatChips/)
   assert.match(completionModal, /post-session-simple__outcome-tools/)

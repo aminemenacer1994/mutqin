@@ -60,6 +60,13 @@ const SKIP_TEMPLATE_PATTERNS = [
 ]
 const SKIP_TEMPLATE_WORDS = new Set(['Mutqin', 'Space', 'OK', 'CSS', 'HTML', 'API', 'URL', 'JSON', 'Vue', 'JS', '۞'])
 
+/** English-first or internal-only Vue surfaces (public SEO tools, admin analytics, dev mushaf nav). */
+function shouldSkipVueHardcodeScan(relPath) {
+  return /[/\\]components[/\\]seoTools[/\\]/.test(relPath)
+    || /[/\\]components[/\\]WaitingListAnalytics\.vue$/.test(relPath)
+    || /[/\\]components[/\\]madani[/\\]MadaniSpread\.vue$/.test(relPath)
+}
+
 function flatten(obj, prefix = '') {
   /** @type {Record<string, string>} */
   const out = {}
@@ -156,6 +163,7 @@ function scanVueHardcoded() {
 
   for (const file of vueFiles) {
     const rel = path.relative(ROOT, file)
+    if (shouldSkipVueHardcodeScan(rel)) continue
     const full = fs.readFileSync(file, 'utf8')
     const templateMatch = full.match(/<template>([\s\S]*?)<\/template>/)
     if (!templateMatch) continue

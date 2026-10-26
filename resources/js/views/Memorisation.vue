@@ -3002,15 +3002,20 @@
       :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }"
       aria-live="polite"
     >
-      <div class="welcome-back-backdrop" aria-hidden="true"></div>
+      <div
+        class="welcome-back-backdrop"
+        aria-hidden="true"
+        @click="closeWelcomeBackModal"
+      ></div>
       <div
         class="welcome-back-modal-wrap"
         tabindex="-1"
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcomeBackModalTitle"
+        @keydown="onModalOverlayKeydown($event, { containerRef: 'welcomeBackDialog', onClose: closeWelcomeBackModal })"
       >
-        <div class="welcome-back-dialog mutqin-modal-dialog">
+        <div ref="welcomeBackDialog" class="welcome-back-dialog mutqin-modal-dialog">
           <div class="mutqin-modal-surface welcome-back-modal welcome-back-modal--v2 welcome-back-modal--lean">
             <button
               type="button"

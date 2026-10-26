@@ -62,7 +62,7 @@ function sliceMethod(source, name) {
   assert.match(skip, /fullFatihah:\s*false/)
   const intoFirst = sliceMethod(memorisationJs, 'completeOnboardingIntoFirstSession')
   assert.match(intoFirst, /fullFatihah/)
-  assert.match(intoFirst, /buildDefaultWorkspaceSessionConfig\(/)
+  assert.match(intoFirst, /buildFullFatihahMushafSessionConfig\(/)
   assert.match(intoFirst, /applyFirstOnboardingSessionConfig\(\{ openSetup: false, silent: true, prefs \}\)/)
   const commit = sliceMethod(memorisationJs, 'commitWorkspaceTourFocusedReview')
   assert.match(commit, /buildDefaultWorkspaceSessionConfig/)
@@ -144,7 +144,7 @@ function sliceMethod(source, name) {
 {
   const load = sliceMethod(memorisationJs, 'loadPostSessionRecommendation')
   assert.match(load, /useBackendRecommendations/)
-  assert.match(load, /applyResult\(null, 'error'\)/)
+  assert.match(load, /applyResult\(fallback, fallbackReady \? 'ready' : 'error'\)/)
   assert.match(load, /'empty'/)
   const backendBranch = load.slice(load.indexOf('useBackendRecommendations'))
   const guestFallbackIdx = backendBranch.indexOf('applyResult(snapshotFallback()')

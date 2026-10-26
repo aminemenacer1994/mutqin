@@ -2,8 +2,8 @@
   <section class="waiting-analytics" aria-labelledby="waiting-analytics-title">
     <header class="waiting-analytics__head">
       <div>
-        <h2 id="waiting-analytics-title">Waiting List Analytics</h2>
-        <p>Calendar days in UTC. Sources and campaigns are based on visitor-supplied data.</p>
+        <h2 id="waiting-analytics-title">{{ t('admin.waiting_analytics_title') }}</h2>
+        <p>{{ t('admin.waiting_analytics_lead') }}</p>
       </div>
       <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" :disabled="loading" @click="load">Refresh</button>
     </header>
@@ -40,9 +40,14 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n'
 import { adminApi } from '../scripts/api/admin'
 
 export default {
+  setup() {
+    const { t } = useI18n()
+    return { t }
+  },
   data: () => ({ report: null, loading: false, error: false }),
   computed: {
     metrics() {

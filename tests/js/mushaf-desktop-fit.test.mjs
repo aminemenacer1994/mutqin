@@ -53,7 +53,7 @@ assert.match(pageVue, /DESKTOP_SPREAD_FOLIO_RESERVE_PX/)
 assert.match(pageVue, /DESKTOP_SPREAD_LINE_SLOTS/)
 assert.match(
   memorisationCss,
-  /@media \(min-width: 1080px\)[\s\S]{0,240}grid-template-columns:\s*2\.75rem minmax\(0, 1fr\) 2\.75rem/,
+  /@media \(min-width: 1080px\)[\s\S]{0,400}grid-template-columns:\s*minmax\(2\.75rem, 1fr\) minmax\(0, 56rem\) minmax\(2\.75rem, 1fr\)/,
   'desktop stage always reserves both nav columns',
 )
 assert.doesNotMatch(

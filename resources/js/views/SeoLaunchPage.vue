@@ -40,7 +40,7 @@
       <seo-tool-find-ayah v-else-if="page.tool === 'find-ayah'" />
 
       <div v-if="guideIndex" class="seo-guide-index">
-        <h2>Browse guides</h2>
+        <h2>{{ t('about.seo.browseGuides') }}</h2>
         <nav class="seo-guide-filters" aria-label="Guide categories">
           <a
             :href="guideIndex.all_href"
@@ -64,7 +64,7 @@
             </a>
           </li>
         </ul>
-        <p v-if="!guideIndex.entries.length" class="seo-guide-empty">No guides in this category yet.</p>
+        <p v-if="!guideIndex.entries.length" class="seo-guide-empty">{{ t('about.seo.noGuidesInCategory') }}</p>
       </div>
 
       <div class="info-prose">
@@ -179,6 +179,7 @@
 
 <script>
 import { defineAsyncComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { seoProseHtml } from '../scripts/seoTools/prose.js'
 import {
   rememberSeoTool,
@@ -188,6 +189,10 @@ import {
 
 export default {
   name: 'SeoLaunchPage',
+  setup() {
+    const { t } = useI18n()
+    return { t }
+  },
   components: {
     SeoToolFindAyah: defineAsyncComponent(() => import(
       /* webpackChunkName: "seo-tool-find-ayah" */ '../components/seoTools/SeoToolFindAyah.vue'

@@ -70,7 +70,12 @@ const tAr = makeT(ar)
   for (const id of CORE_TECHNIQUE_IDS) {
     const short = getTechniqueShortLabel(id, tEn)
     const full = getTechniqueLabel(id, tEn)
-    assert.equal(short, full)
+    if (id === 'blur') {
+      assert.equal(short, 'Hide text')
+      assert.equal(full, 'Gradually hide the text')
+    } else {
+      assert.equal(short, full)
+    }
     assert.ok(!/\(Focus\)|\(Blur\)|\(Talqin\)/.test(full), `plain label expected for ${id}`)
   }
 }

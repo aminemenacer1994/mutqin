@@ -55,42 +55,38 @@ import {
   assert.equal(primarySurfaceForPhase(phase), 'completion')
 }
 
-// 2–3. Session Complete contains exactly three actions from the central CTA mapper
-//     (primary / secondary / tertiary) and uses the --3 action layout contract.
+// 2–3. Session Complete uses the central CTA mapper (practice primary + workspace escape).
 {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
-  assert.equal(needsPractice.length, 3)
+  assert.equal(needsPractice.length, 2)
   assert.equal(needsPractice[0].variant, 'primary')
   assert.equal(needsPractice[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
   assert.equal(needsPractice[0].labelKey, 'reviseFocusPhrase')
   assert.equal(needsPractice[1].variant, 'secondary')
-  assert.equal(needsPractice[1].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
-  assert.equal(needsPractice[1].labelKey, 'retest')
-  assert.equal(needsPractice[2].variant, 'ghost')
-  assert.equal(needsPractice[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
-  assert.equal(needsPractice[2].labelKey, 'returnToWorkspace')
+  assert.equal(needsPractice[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPractice[1].labelKey, 'returnToWorkspace')
 
   const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     weakAyahNumber: 4,
   })
-  assert.equal(needsPracticeWeak.length, 3)
+  assert.equal(needsPracticeWeak.length, 2)
   assert.equal(needsPracticeWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const needsPracticeWithNextRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     nextRangeStart: 6,
     nextRangeEnd: 8,
   })
-  assert.equal(needsPracticeWithNextRange.length, 3)
-  assert.notEqual(needsPracticeWithNextRange[0].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
-  assert.equal(needsPracticeWithNextRange[1].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
-  assert.equal(needsPracticeWithNextRange[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPracticeWithNextRange.length, 2)
+  assert.equal(needsPracticeWithNextRange[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(needsPracticeWithNextRange[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
-  // Layout contract used by Memorisation.css / Memorisation.vue
-  const desktopGridClass = 'post-session-simple__actions--3'
+  const revisionDone = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVISION_COMPLETED)
+  assert.equal(revisionDone.length, 2)
+  assert.equal(revisionDone[0].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
+  assert.equal(revisionDone[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+
   const cardClass = 'post-session-simple__action-card'
-  assert.ok(desktopGridClass.includes('--3'))
   assert.ok(cardClass.includes('action-card'))
 }
 

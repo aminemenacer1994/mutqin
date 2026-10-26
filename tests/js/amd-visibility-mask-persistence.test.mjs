@@ -148,8 +148,8 @@ function extractMethod(source, name) {
   )
   assert.match(
     modalVue,
-    /ayahHtml\(html\)\s*\{[\s\S]*?scheduleMushafHtml\(html,\s*true\)/,
-    'ayahHtml updates must apply masked HTML immediately',
+    /ayahHtml\(\)\s*\{[\s\S]*?scheduleMushafHtml\(this\.ayahHtml,\s*!listening\)/,
+    'ayahHtml updates apply immediately when not listening (defer during live STT)',
   )
   assert.match(
     modalVue,

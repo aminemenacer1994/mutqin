@@ -299,7 +299,7 @@ const noExtras = buildSessionAnalysisView({
     accuracy_percent: 72,
     word_statuses: [{ text: 'بسم', status: 'correct', ayah_number: 1 }],
   },
-  practice_plan: { title: 'Repeat weak ayah', why: 'Focus here' },
+  practice_plan: { title: 'Revisit ayah 2', why: 'Focus here' },
   recommendation: { recommended_technique: 'slow_repeat' },
   retention: { weak_spots: [{ id: 1, ayah_number: 2, severity: 'high', status: 'active' }] },
 }, t, { includeRecommendations: false })
