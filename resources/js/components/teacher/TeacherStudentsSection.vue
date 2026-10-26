@@ -39,11 +39,11 @@
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
         :aria-pressed="compactView ? 'true' : 'false'"
-        :title="compactView ? t('teacher.comfortable_view_help') : t('teacher.compact_view_help')"
+        :title="compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view')"
         @click="toggleCompactView"
       >
         <i :class="compactView ? 'bi bi-arrows-expand' : 'bi bi-arrows-collapse'" aria-hidden="true"></i>
-        <span>{{ compactView ? t('teacher.comfortable_view') : t('teacher.compact_view') }}</span>
+        <span>{{ compactView ? t('teacher.compact_view') : t('teacher.comfortable_view') }}</span>
       </button>
       <button
         v-if="hasFilters"
@@ -67,22 +67,7 @@
       :format-when="formatWhen"
       :compact="compactView"
       @open="$emit('open-student', $event)"
-      @assign="$emit('assign-revision', $event)"
-      @delete="openDelete"
     />
-    <div v-if="deleteTarget" class="teacher-delete-confirm" role="dialog" aria-modal="true" :aria-labelledby="deleteTitleId" @keydown.esc="closeDelete">
-        <div class="teacher-delete-confirm__box">
-          <h3 :id="deleteTitleId">{{ t('teacher.delete_student') }}</h3>
-          <p>{{ t('teacher.delete_student_warning') }}</p>
-          <label :for="deleteInputId">{{ t('teacher.delete_student_confirm', { email: deleteTarget.email }) }}</label>
-          <input :id="deleteInputId" ref="deleteField" v-model.trim="deleteConfirmation" class="form-control" autocomplete="off" />
-          <p v-if="deleteError" class="text-danger" role="alert">{{ deleteError }}</p>
-          <div class="teacher-delete-confirm__actions">
-            <button type="button" class="btn btn-outline-secondary" @click="closeDelete">{{ t('common.cancel') }}</button>
-            <button type="button" class="btn btn-danger" :disabled="deleting || !confirmationMatches" @click="deleteStudent">{{ t('teacher.delete_student_permanently') }}</button>
-          </div>
-        </div>
-    </div>
     <nav v-if="pageCount > 1" class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2" :aria-label="t('teacher.pagination_label')">
       <span class="teacher-pagination__summary">
         {{ t('teacher.pagination_summary', { page: currentPage, pages: pageCount, total: meta.total || 0 }) }}
@@ -98,7 +83,6 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { learningApi } from '../../scripts/api/learning'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentTable from './TeacherStudentTable.vue'
 
@@ -115,21 +99,13 @@ export default {
     loadingMore: { type: Boolean, default: false },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision', 'deleted'],
+  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision'],
   data() {
-    const uid = Math.random().toString(36).slice(2, 9)
-    return {
-      compactView: false,
-      deleteTarget: null,
-      deleteConfirmation: '',
-      deleting: false,
-      deleteError: '',
-      deleteTitleId: `teacher-delete-title-${uid}`,
-      deleteInputId: `teacher-delete-input-${uid}`,
-    }
+    return { compactView: true }
   },
   mounted() {
-    this.compactView = window.localStorage.getItem('mutqin.teacher.students.compact') === '1'
+    const saved = window.localStorage.getItem('mutqin.teacher.students.compact')
+    this.compactView = saved === null ? true : saved === '1'
   },
   computed: {
     hasFilters() {
@@ -146,39 +122,8 @@ export default {
       const start = Math.max(1, Math.min(this.currentPage - 2, count - 4))
       return Array.from({ length: Math.min(5, count) }, (_, index) => start + index)
     },
-    confirmationMatches() {
-      return Boolean(this.deleteTarget?.email)
-        && this.deleteConfirmation.toLowerCase() === this.deleteTarget.email.toLowerCase()
-    },
   },
   methods: {
-    openDelete(student) {
-      this.deleteTarget = student
-      this.deleteConfirmation = ''
-      this.deleteError = ''
-      this.$nextTick(() => this.$refs.deleteField?.focus())
-    },
-    closeDelete() {
-      if (this.deleting) return
-      this.deleteTarget = null
-      this.deleteConfirmation = ''
-      this.deleteError = ''
-    },
-    async deleteStudent() {
-      if (!this.confirmationMatches || this.deleting) return
-      this.deleting = true
-      this.deleteError = ''
-      try {
-        await learningApi.deleteTeacherStudent(this.deleteTarget.id, this.deleteConfirmation)
-        this.deleteTarget = null
-        this.deleteConfirmation = ''
-        this.$emit('deleted')
-      } catch (error) {
-        this.deleteError = error?.response?.data?.message || this.t('teacher.action_failed')
-      } finally {
-        this.deleting = false
-      }
-    },
     toggleCompactView() {
       this.compactView = !this.compactView
       window.localStorage.setItem('mutqin.teacher.students.compact', this.compactView ? '1' : '0')

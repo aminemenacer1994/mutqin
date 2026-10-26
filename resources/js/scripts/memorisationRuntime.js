@@ -382,7 +382,7 @@ export function createCentralSessionState() {
     anchorModeEnabled: false,
     anchorCount: 2,
     chaining: {
-      enabled: true,
+      enabled: false,
       method: 'linking',
       repetitions: 1,
       index: 0,

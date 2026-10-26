@@ -22,7 +22,10 @@
         <TeacherRecordList :rows="group.rows" />
       </details>
     </div>
-    <TeacherEmpty v-if="!attemptGroups.length" icon="bi bi-mic" :message="t('teacher.ai_empty')" />
+    <div v-if="!attemptGroups.length" class="teacher-profile-empty">
+      <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
+      <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_task') }}</button>
+    </div>
   </TeacherSectionPane>
 </template>
 
@@ -45,6 +48,7 @@ export default {
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
   },
+  emits: ['assign-revision'],
   computed: {
     averageLabel() {
       return typeof this.profile.payload?.success_rate === 'number'
@@ -69,11 +73,13 @@ export default {
           : (Object.values(issues).some((value) => Number(value) > 0)
             ? this.issueLabel(issues)
             : this.t('teacher.recite_no_issues'))
+        const hasIssues = Boolean(issues && Object.values(issues).some((value) => Number(value) > 0))
         const when = this.formatWhen(attempt.created_at)
         const row = {
           key: attempt.id,
           icon: 'bi bi-mic',
           iconTone: scoreBadgeTone(attempt.accuracy_percent),
+          attention: hasIssues,
           title: when || this.t('teacher.unavailable'),
           hint: issueHint,
           badge: typeof attempt.accuracy_percent === 'number'
@@ -85,6 +91,7 @@ export default {
             : '',
           audio: attempt.evidence?.audio || null,
           transcript: attempt.evidence?.transcript || '',
+          words: attempt.evidence?.words || [],
         }
         if (!groups.has(title)) groups.set(title, { key: title, title, surah: attempt.range?.surah_number, rows: [] })
         groups.get(title).rows.push(row)

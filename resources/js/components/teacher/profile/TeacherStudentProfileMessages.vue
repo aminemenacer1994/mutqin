@@ -13,7 +13,12 @@
       <form class="teacher-direct-thread__composer" @submit.prevent="send">
         <label for="teacher-direct-reply">{{ t('teacher.message') }}</label>
         <textarea id="teacher-direct-reply" v-model="draft" rows="2" maxlength="2000" :placeholder="t('teacher.direct_message_prompt')"></textarea>
-        <div><span v-if="error" role="alert" class="text-danger">{{ error }}</span><button type="submit" class="btn btn-primary" :disabled="saving || !draft.trim()">{{ t('teacher.send_message') }}</button></div>
+        <div>
+          <span v-if="error" role="alert" class="text-danger">{{ error }}</span>
+          <span v-else></span>
+          <button type="button" class="btn btn-outline-secondary" :disabled="saving || !draft" @click="clearDraft"><i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message_short') }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="saving || !draft.trim()"><i class="bi bi-send" aria-hidden="true"></i>{{ saving ? t('teacher.saving_message') : t('teacher.save_conversation') }}</button>
+        </div>
       </form>
     </section>
   </TeacherSectionPane>
@@ -33,6 +38,10 @@ export default {
   watch: { 'profile.student.id'() { this.sent = []; this.draft = ''; this.error = '' } },
   computed: { messages() { return [...(this.profile.payload?.messages || []), ...this.sent] } },
   methods: {
+    clearDraft() {
+      this.draft = ''
+      this.error = ''
+    },
     async send() {
       const body = this.draft.trim()
       if (!body || this.saving) return

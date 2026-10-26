@@ -223,6 +223,20 @@ export const recitationEdgeScenarios = Object.freeze([
     },
   },
   {
+    id: 'mid_ayah_start',
+    label: 'Mid-ayah start (anchor on later words)',
+    targetText: 'الحمد لله رب العالمين',
+    recognitionWords: words(['رب', 'العالمين']),
+    expectedSpeechmaticsAccuracy: 50,
+    expectedApiAccuracy: 50,
+    expected: {
+      types: ['DELETION', 'DELETION', 'MATCH', 'MATCH'],
+      statuses: ['omitted', 'omitted', 'correct', 'correct'],
+      extras: [],
+      resultState: 'needs_practice',
+    },
+  },
+  {
     id: 'fast_skip_middle',
     label: 'Fast recitation with skipped middle word',
     targetText: 'الحمد لله رب العالمين',

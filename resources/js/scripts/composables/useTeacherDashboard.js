@@ -76,7 +76,6 @@ export function useTeacherDashboard(authRef) {
 
   const kpiCards = computed(() => {
     const kpis = overview.value?.kpis || {}
-    const overdueTasks = Number(kpis.overdue_assignments ?? 0)
     return [
       {
         key: 'students',
@@ -97,13 +96,13 @@ export function useTeacherDashboard(authRef) {
         action: t('teacher.kpi_open_week'),
       },
       {
-        key: 'overdue',
-        label: t('teacher.kpi_overdue_tasks'),
-        description: t('teacher.kpi_overdue_help'),
-        value: overdueTasks,
-        icon: 'bi bi-clock-history',
+        key: 'tasks',
+        label: t('teacher.kpi_open_tasks'),
+        description: t('teacher.kpi_open_tasks_help'),
+        value: Number(kpis.outstanding_assignments ?? 0),
+        icon: 'bi bi-list-check',
         tone: 'teal',
-        action: t('teacher.view_all'),
+        action: t('teacher.kpi_open_tasks_action'),
       },
       {
         key: 'attention',
@@ -261,8 +260,8 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openStudentsFromKpi(key) {
-    if (key === 'overdue') {
-      assignmentEntryFilter.value = 'overdue'
+    if (key === 'tasks') {
+      assignmentEntryFilter.value = 'all'
       openView('assignments')
       return
     }
@@ -290,7 +289,7 @@ export function useTeacherDashboard(authRef) {
     const next = {
       ...defaultAssignmentForm(),
       student_id: student?.id ? String(student.id) : '',
-      kind: student?.task_kind || (student?.weak_example ? 'ai_recite' : 'practice'),
+      kind: 'practice',
       hifz_category: student?.hifz_category || (student?.weak_example ? 'sabqi' : 'sabaq'),
     }
     const weak = student?.weak_example

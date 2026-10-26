@@ -520,6 +520,17 @@ function assertStatuses(result, expected) {
   assert.equal(soft.statuses[2].status, 'correct')
 }
 
+// Mid-ayah start: leading words omitted, tail aligned without cascading reds.
+{
+  const midStart = buildQuranAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('رب العالمين'),
+  )
+  assert.equal(midStart.statuses.map((word) => word.status).join('|'), 'omitted|omitted|correct|correct')
+  assert.ok(midStart.mistakes.missing.includes('الحمد'))
+  assert.ok(midStart.mistakes.missing.includes('لله'))
+}
+
 // A skipped word must realign — not substitute the rest of the ayah red.
 {
   const skipped = buildQuranAlignment(

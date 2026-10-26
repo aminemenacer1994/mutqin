@@ -1,7 +1,7 @@
 <template>
   <div>
   <ul class="list-group list-group-flush teacher-records">
-    <li v-for="(row, index) in visibleRows" :key="row.key ?? index" class="list-group-item teacher-records__item d-flex align-items-center gap-3">
+    <li v-for="(row, index) in visibleRows" :key="row.key ?? index" class="list-group-item teacher-records__item d-flex align-items-center gap-3" :class="{ 'has-issues': row.attention }">
       <span class="teacher-records__icon" :class="row.iconTone ? `teacher-records__icon--${row.iconTone}` : ''" aria-hidden="true">
         <i :class="row.icon || 'bi bi-dot'"></i>
       </span>
@@ -20,10 +20,10 @@
       </div>
       <div class="teacher-records__aside">
         <div v-if="showEvidenceActions(row)" class="teacher-records__evidence-actions" :aria-label="t('teacher.recitation_evidence')">
-          <button type="button" class="teacher-records__evidence-icon is-audio" :disabled="!row.audio?.available" :aria-label="`${t(row.audio?.available ? 'teacher.student_recording' : 'teacher.recording_unavailable')}: ${row.title}`" :title="t(row.audio?.available ? 'teacher.student_recording' : 'teacher.recording_unavailable')" @click="openEvidence(row, 'audio')">
-            <i class="bi bi-soundwave" aria-hidden="true"></i>
+          <button type="button" class="teacher-records__evidence-icon is-audio" :class="row.audio?.available ? 'is-available' : 'is-unavailable'" :aria-label="`${t(row.audio?.available ? 'teacher.play_recording' : 'teacher.no_recording')}: ${row.title}`" :title="t(row.audio?.available ? 'teacher.play_recording' : 'teacher.no_recording')" @click="openEvidence(row, 'audio')">
+            <i class="bi" :class="row.audio?.available ? 'bi-play-circle-fill' : 'bi-mic'" aria-hidden="true"></i>
           </button>
-          <button type="button" class="teacher-records__evidence-icon is-transcript" :disabled="!row.transcript" :aria-label="`${t(row.transcript ? 'teacher.view_transcript' : 'teacher.transcript_unavailable')}: ${row.title}`" :title="t(row.transcript ? 'teacher.view_transcript' : 'teacher.transcript_unavailable')" @click="openEvidence(row, 'transcript')">
+          <button type="button" class="teacher-records__evidence-icon is-transcript" :class="row.transcript ? 'is-available' : 'is-unavailable'" :aria-label="`${t(row.transcript ? 'teacher.view_transcript' : 'teacher.no_transcript')}: ${row.title}`" :title="t(row.transcript ? 'teacher.view_transcript' : 'teacher.no_transcript')" @click="openEvidence(row, 'transcript')">
             <i class="bi bi-file-text" aria-hidden="true"></i>
           </button>
         </div>
@@ -77,8 +77,6 @@ export default {
   },
   methods: {
     openEvidence(row, mode) {
-      if (mode === 'audio' && !row.audio?.available) return
-      if (mode === 'transcript' && !row.transcript) return
       this.activeEvidence = row
       this.evidenceMode = mode
     },

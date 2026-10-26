@@ -1,4 +1,5 @@
 import pairsData from '../../../data/mutashabihat_pairs.json'
+import { isValidVerseReference } from './pairCatalog.js'
 
 function importedPairList() {
   const raw = pairsData && pairsData.default !== undefined ? pairsData.default : pairsData
@@ -25,6 +26,9 @@ function canonicalPairEntry(raw, index) {
   const a = raw?.a
   const b = raw?.b
   if (!Array.isArray(a) || !Array.isArray(b)) return null
+  if (!isValidVerseReference(a[0], a[1]) || !isValidVerseReference(b[0], b[1])) {
+    return null
+  }
   const vk1 = verseKey(a[0], a[1])
   const vk2 = verseKey(b[0], b[1])
   const keys = [vk1, vk2].sort()

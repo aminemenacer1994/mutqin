@@ -717,14 +717,13 @@ includesAll('ai memorisation detection modal wiring', [
 ])
 
 includesAll('ai audio consent and retention wiring', [
-  /AiAudioConsentModal/,
   /maybeShowRegistrationAiAudioConsent\(/,
   /ensureAiAudioConsent\(/,
   /shouldPromptAiAudioConsent/,
+  /persistAiAudioConsent/,
   /prepareAudioRetentionPayload/,
   /stripRawAudioFields/,
   /applyAudioRetentionToCacheEntry/,
-  /showAiAudioConsentModal/,
   /\/privacy/,
 ])
 

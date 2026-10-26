@@ -87,10 +87,10 @@ class MutashabihatComparisonService
                 $ops[] = ['kind' => 'equal', 'i' => $i, 'j' => $j];
                 $i++;
                 $j++;
-            } elseif ($dp[$i + 1][$j] >= $dp[$i][$j + 1]) {
+            } elseif ($dp[$i + 1][$j] > $dp[$i][$j + 1]) {
                 $ops[] = ['kind' => 'delete', 'i' => $i];
                 $i++;
-            } elseif ($dp[$i][$j + 1] >= $dp[$i + 1][$j]) {
+            } elseif ($dp[$i][$j + 1] > $dp[$i + 1][$j]) {
                 $ops[] = ['kind' => 'insert', 'j' => $j];
                 $j++;
             } else {

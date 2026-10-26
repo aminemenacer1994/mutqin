@@ -1,4 +1,5 @@
-import { buildAyahComparison, renderComparedAyahWordHtml } from './compareAyahs.js'
+import { buildAyahComparison } from './compareAyahs.js'
+import { sanitizeMutashabihatAyahText } from './displayText.js'
 import {
   findPairsForVerseKey,
   listAllMutashabihatPairs,
@@ -26,6 +27,7 @@ import {
   recordLocalMutashabihatPractice,
 } from './pairStatus.js'
 import { getSurahEdition } from '../lib/quranApis.js'
+import { MUTASHABIHAT_ARABIC_EDITION } from './pairCatalog.js'
 import {
   buildMutashabihatCardRow,
   formatPairTitle,
@@ -66,14 +68,8 @@ export function buildMutashabihatCompareView(ctx, { pair, anchorVerseKey, row } 
     otherVerseKey: other,
     leftLabel: fromRow?.leftCompareLabel || formatVerseLabel(ctx, anchor, { separator: ' · ' }),
     rightLabel: fromRow?.rightCompareLabel || formatVerseLabel(ctx, other, { separator: ' · ' }),
-    leftHtml: fromRow?.leftWordHtml
-      || renderComparedAyahWordHtml(comparison.left, anchor)
-      || fromRow?.leftHtml
-      || comparison.leftHtml,
-    rightHtml: fromRow?.rightWordHtml
-      || renderComparedAyahWordHtml(comparison.right, other)
-      || fromRow?.rightHtml
-      || comparison.rightHtml,
+    leftHtml: fromRow?.leftHtml || comparison.leftHtml || '',
+    rightHtml: fromRow?.rightHtml || comparison.rightHtml || '',
     leftTranslation: fromRow?.leftTranslation || resolveTranslationFromSearchIndex(ctx, anchor),
     rightTranslation: fromRow?.rightTranslation || resolveTranslationFromSearchIndex(ctx, other),
     leftVerseKey: anchor,
@@ -176,26 +172,48 @@ export async function hydrateMutashabihatAyahs(ctx, { keys = [], limit = 0 } = {
   const missing = uniqueKeys.filter((key) => !verseArabic(lookup.get(key)))
   if (!missing.length) return false
 
-  const surahs = [...new Set(missing.map((key) => Number(String(key).split(':')[0] || 0)))]
-    .filter((surah) => surah > 0)
+  /** @type {Map<number, { min: number, max: number }>} */
+  const rangesBySurah = new Map()
+  for (const key of missing) {
+    const [surahRaw, ayahRaw] = String(key).split(':')
+    const surah = Number(surahRaw)
+    const ayah = Number(ayahRaw)
+    if (!surah || !ayah) continue
+    const prev = rangesBySurah.get(surah)
+    if (!prev) {
+      rangesBySurah.set(surah, { min: ayah, max: ayah })
+    } else {
+      prev.min = Math.min(prev.min, ayah)
+      prev.max = Math.max(prev.max, ayah)
+    }
+  }
+
   const translationEdition = ctx.translationEditionId || 'en.sahih'
   const next = { ...(ctx.mutashabihatAyahByKey || {}) }
 
-  await Promise.all(surahs.map(async (surah) => {
+  await Promise.all([...rangesBySurah.entries()].map(async ([surah, range]) => {
     try {
       const [arabicRes, translationRes] = await Promise.all([
-        withTimeout(getSurahEdition(surah, 'quran-uthmani'), 12000, 'mutashabihat-surah-arabic'),
+        withTimeout(
+          getSurahEdition(surah, MUTASHABIHAT_ARABIC_EDITION),
+          12000,
+          'mutashabihat-surah-arabic',
+        ),
         withTimeout(getSurahEdition(surah, translationEdition), 12000, 'mutashabihat-surah-translation').catch(() => null),
       ])
       const ayahs = arabicRes?.data?.data?.ayahs || []
       const translations = translationRes?.data?.data?.ayahs || []
       const tMap = new Map(translations.map((ayah) => [Number(ayah.numberInSurah), String(ayah.text || '').trim()]))
       for (const ayah of ayahs) {
-        const key = `${surah}:${ayah.numberInSurah}`
+        const ayahNumber = Number(ayah.numberInSurah)
+        if (!Number.isFinite(ayahNumber) || ayahNumber < range.min || ayahNumber > range.max) continue
+        const key = `${surah}:${ayahNumber}`
+        const arabic = sanitizeMutashabihatAyahText(ayah.text)
+        if (!arabic) continue
         next[key] = {
           key,
-          arabic: String(ayah.text || '').trim(),
-          translation: tMap.get(Number(ayah.numberInSurah)) || '',
+          arabic,
+          translation: tMap.get(ayahNumber) || next[key]?.translation || '',
         }
       }
     } catch {

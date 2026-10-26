@@ -87,18 +87,24 @@ export default {
     overdueTasks() {
       return Number(this.profile.payload?.metrics?.assignments?.overdue || 0)
     },
+    repeatedAbsence() {
+      return this.profile.payload?.metrics?.repeated_absence === true
+    },
     activeRecently() {
       return this.profile.payload?.metrics?.active_7 === true
     },
     priorityLabel() {
+      if (this.repeatedAbsence) return this.t('teacher.reason_repeated_absence')
       if (this.overdueTasks > 0) return this.t('teacher.kpi_overdue_tasks')
       if (this.revisionOverdue > 0) return this.t('teacher.overdue_revisions')
       if (this.hasScore && this.scoreValue < 65) return this.t('teacher.reason_low_score')
       if (this.weakCount > 0) return this.t('teacher.reason_hard_ayahs')
       if (!this.activeRecently) return this.t('teacher.reason_inactive')
+      if (this.stage.key === 'strong') return this.t('teacher.ready_next_passage')
       return this.stage.label
     },
     priorityDetail() {
+      if (this.repeatedAbsence) return this.t('teacher.repeated_absence_help')
       if (this.overdueTasks > 0) return this.t('teacher.overdue_n', { n: this.overdueTasks })
       if (this.revisionOverdue > 0) return this.t('teacher.overdue_n', { n: this.revisionOverdue })
       if (this.hasScore && this.scoreValue < 65) return this.t('teacher.profile_recite_avg', { score: this.scoreValue })
@@ -106,9 +112,11 @@ export default {
       if (!this.activeRecently) return this.lastSeen
         ? this.t('teacher.profile_last_seen', { when: this.lastSeen })
         : this.t('teacher.no_activity')
+      if (this.stage.key === 'strong') return this.t('teacher.ready_next_passage_help')
       return this.stage.hint
     },
     priorityIcon() {
+      if (this.repeatedAbsence) return 'bi bi-calendar-x'
       if (this.overdueTasks > 0) return 'bi bi-clock'
       if (this.revisionOverdue > 0) return 'bi bi-arrow-repeat'
       if (this.hasScore && this.scoreValue < 65) return 'bi bi-mic'
@@ -116,62 +124,61 @@ export default {
       if (!this.activeRecently) return 'bi bi-moon'
       return this.stageMeta.icon
     },
+    attendanceSummary() {
+      const rows = this.profile.payload?.attendance || []
+      if (!rows.length) {
+        return {
+          value: this.t('teacher.attendance_not_marked'),
+          hint: this.t('teacher.attendance_summary_empty'),
+        }
+      }
+      const present = rows.filter((row) => row.status === 'present').length
+      const absent = rows.filter((row) => row.status === 'absent').length
+      const late = rows.filter((row) => row.status === 'late').length
+      return {
+        value: this.t('teacher.attendance_present_of_n', { present, total: rows.length }),
+        hint: this.t('teacher.attendance_absent_late', { absent, late }),
+      }
+    },
     summaryFacts() {
       const metrics = this.profile.payload?.metrics || {}
-      const facts = [
+      return [
         {
-          key: 'sessions',
+          key: 'practice',
           icon: 'bi bi-play-circle',
-          label: this.t('teacher.sessions_recorded'),
-          value: Number(metrics.sessions || 0),
-          hint: this.t('teacher.sessions_recorded_help'),
+          label: this.t('teacher.practice_summary'),
+          value: this.t('teacher.practice_sessions_time', { sessions: Number(metrics.sessions || 0), time: this.practiceTime }),
+          hint: this.lastSeen ? this.t('teacher.profile_last_seen', { when: this.lastSeen }) : this.t('teacher.no_activity'),
         },
         {
-          key: 'time',
-          icon: 'bi bi-stopwatch',
-          label: this.t('teacher.practice_time'),
-          value: this.practiceTime,
-          hint: this.t('teacher.practice_time_help'),
+          key: 'recite',
+          icon: 'bi bi-soundwave',
+          label: this.t('teacher.profile_recite_avg_label'),
+          value: this.hasScore
+            ? this.t('teacher.profile_recite_avg_with_count', { score: this.scoreValue, count: Number(metrics.ai_attempts || 0) })
+            : this.t('teacher.no_scored_checks'),
+          hint: this.t('teacher.ai_check_average_help'),
         },
         {
-          key: 'days',
+          key: 'attendance',
           icon: 'bi bi-calendar-check',
-          label: this.t('teacher.active_days'),
-          value: Number(metrics.active_days || 0),
-          hint: this.t('teacher.active_days_help'),
+          label: this.t('teacher.nav_attendance'),
+          value: this.attendanceSummary.value,
+          hint: this.attendanceSummary.hint,
         },
-      ]
-      if (this.nowOn) {
-        facts.push({
+        {
           key: 'saved',
           icon: 'bi bi-bookmark-fill',
           label: this.t('teacher.saved_session'),
-          value: this.nowOn,
-          hint: this.t('teacher.saved_session_help'),
-        })
-      }
-      if (this.hasScore) {
-        facts.push({
-          key: 'recite',
-          icon: 'bi bi-mic',
-          label: this.t('teacher.profile_recite_avg_label'),
-          value: this.t('teacher.profile_recite_avg_with_count', {
-            score: this.scoreValue,
-            count: Number(this.profile.payload?.metrics?.ai_attempts || 0),
-          }),
-          hint: this.t('teacher.ai_check_average_help'),
-        })
-      }
-      facts.push({
-        key: 'last',
-        icon: 'bi bi-clock-history',
-        label: this.t('teacher.last'),
-        value: this.lastSeen || this.t('teacher.no_activity'),
-        hint: this.t('teacher.last_activity_help'),
-      })
-      return facts
+          value: this.nowOn || this.t('teacher.no_saved_passage'),
+          hint: this.t('teacher.active_days_n', { n: Number(metrics.active_days || 0) }),
+        },
+      ]
     },
     nextAction() {
+      if (this.repeatedAbsence) {
+        return { type: 'assign', label: this.t('teacher.assign_follow_up'), icon: 'bi bi-journal-plus' }
+      }
       if (this.overdueTasks > 0) {
         return { type: 'tab', tab: 'tasks', label: `${this.t('teacher.open')} ${this.t('teacher.nav_assignments')}`, icon: 'bi bi-clock' }
       }
@@ -183,6 +190,9 @@ export default {
       }
       if (this.weakCount > 0) {
         return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
+      }
+      if (this.stage.key === 'strong') {
+        return { type: 'assign', label: this.t('teacher.assign_next_passage'), icon: 'bi bi-journal-plus' }
       }
       return null
     },

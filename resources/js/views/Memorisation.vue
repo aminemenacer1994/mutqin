@@ -15,8 +15,6 @@
     'post-session-choice-offcanvas-open': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools,
-    'ai-audio-consent-active': showAiAudioConsentModal,
-    'microphone-help-active': showMicrophonePermissionModal,
     'is-fullscreen': isAppFullscreen,
     'has-madani-fullscreen-bar': showMadaniFullscreenBar
   }" :style="appStyleVars" v-cloak>
@@ -1594,7 +1592,43 @@
               </div>
             </div>
             <div v-else class="verses-grid">
-              <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
+              <div
+                v-if="chainingJoinedFlowActive"
+                class="verse-card chaining-joined-flow is-chain-member active"
+                :data-verse-keys="chainingVisualAyahKeys.join(',')"
+                role="group"
+                :aria-label="chainingProgressLabel || getTechniqueDisplayLabel('chaining')"
+              >
+                <div class="verse-header">
+                  <div class="verse-badges">
+                    <span class="verse-status-subtle verse-status-badge-active">{{ chainingProgressLabel || getTechniqueDisplayLabel('chaining') }}</span>
+                  </div>
+                </div>
+                <div
+                  class="verse-arabic verse-arabic-primary verse-arabic-with-end chaining-joined-flow__arabic"
+                  dir="rtl"
+                  lang="ar"
+                  v-if="isDataReady || hasVerses"
+                  :key="`chain-join-${chainingVisualAyahKeys.join('-')}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
+                  v-html="buildChainingJoinedFlowHtml()"
+                  :class="{
+                    'tajweed-enabled': tajweedEnabled && !useStackedQpcMadaniGlyphs,
+                    'verse-arabic--indopak': useStackedIndopakText,
+                    'word-highlight-enabled': true,
+                    'word-by-word-meanings': showWordByWord,
+                  }"
+                  :style="{
+                    '--verse-font-percent': defaultFontSize,
+                    '--quran-font': stackedAyahFontFamily,
+                    '--indopak-nastaleeq-font': stackedAyahFontFamily,
+                    '--qpc-word-size': stackedQpcWordSizePx,
+                    '--qpc-line-height': useStackedIndopakText ? '1.72' : '1.32',
+                    '--qpc-ink': 'var(--mushaf-reading-ink, #f7ebdf)',
+                    fontFamily: stackedAyahFontFamily,
+                  }"
+                ></div>
+              </div>
+              <div v-for="verse in verses" :key="verse.key" v-show="!isVerseFoldedIntoChainingJoin(verse.key)" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: isVerseVisuallyActive(verse.key),
                 'serious-training': false,
                 'hifz-ayah-new': isNewHifzAyah(verse.key),
@@ -5399,6 +5433,8 @@
       :mic-status="amdLearnerMicStatus"
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"
+      :mic-guidance-steps="amdMicGuidanceSteps"
+      :mic-input-level="amdMicInputLevel"
       :live-hint="amdLiveHint"
       :stage-label="amdStageLabel"
       :recording-active-label="amdRecordingActiveLabel"
@@ -5412,7 +5448,7 @@
       :busy="amdBusy"
       :ending-soon="amdEndingSoon"
       :error-action="amdErrorAction"
-      :continue-without-label="t('memorisation.aiCheck.continueWithoutAi')"
+      :continue-without-label="''"
       :close-label="amdLabels.close"
       :tools-label="amdLabels.tools"
       :blur-label="amdLabels.blur"
@@ -5463,35 +5499,7 @@
       @test-again="resetAmdLiveSurface"
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
-      @enable-mic="startAmdAssessment"
-      @continue-without-ai="continuePracticeWithoutAi"
-    />
-
-    <AiAudioConsentModal
-      :open="showAiAudioConsentModal"
-      :title="aiAudioConsentTitle"
-      :lead="aiAudioConsentBody"
-      :browser-prompt="aiAudioConsentBrowserPrompt"
-      :privacy-items="aiAudioConsentPrivacyItems"
-      :privacy-policy-url="aiAudioConsentPrivacyUrl"
-      :privacy-policy-label="aiAudioConsentPrivacyLinkLabel"
-      :accept-label="aiAudioConsentAcceptLabel"
-      :decline-label="aiAudioConsentDeclineLabel"
-      @accept="onAiAudioConsentAccept"
-      @decline="onAiAudioConsentDecline"
-    />
-
-    <MicrophonePermissionModal
-      :open="showMicrophonePermissionModal"
-      :theme="theme"
-      :heading="microphoneHelpHeading"
-      :explanation="microphoneHelpExplanation"
-      :steps="microphoneHelpSteps"
-      :try-again-label="microphoneHelpTryAgainLabel"
-      :cancel-label="microphoneHelpCancelLabel"
-      :continue-without-label="t('memorisation.aiCheck.continueWithoutAi')"
-      @try-again="retryMicrophoneHelp"
-      @cancel="closeMicrophoneHelp"
+      @enable-mic="retryMicrophoneHelp"
       @continue-without-ai="continuePracticeWithoutAi"
     />
 

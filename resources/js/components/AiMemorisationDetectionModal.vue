@@ -238,11 +238,49 @@
                 v-if="micGuidance"
                 class="amd-inline-error__guidance"
               >{{ micGuidance }}</p>
+              <ol
+                v-if="micGuidanceSteps.length"
+                class="amd-inline-error__steps"
+              >
+                <li v-for="(step, index) in micGuidanceSteps" :key="`${index}-${step}`">{{ step }}</li>
+              </ol>
             </section>
           </div>
 
           <footer class="amd-footer amd-footer--sticky" data-amd-footer>
             <div class="amd-footer__inner">
+              <div
+                v-if="showFooterMicStrip"
+                class="amd-footer-mic-strip"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <div
+                  class="amd-mic-status amd-mic-status--compact amd-footer-mic-strip__status"
+                  :data-status="footerMicStatusKey"
+                >
+                  <span class="amd-mic-dot" aria-hidden="true"></span>
+                  <span class="amd-mic-status__label">{{ footerMicStatusLabel }}</span>
+                </div>
+                <div
+                  v-if="showFooterMicLevel"
+                  class="amd-footer-mic-level"
+                  role="meter"
+                  :aria-valuemin="0"
+                  :aria-valuemax="100"
+                  :aria-valuenow="micLevelPercent"
+                  :aria-label="micLevelAriaLabel"
+                >
+                  <span class="amd-footer-mic-level__fill" :style="{ width: `${micLevelPercent}%` }"></span>
+                </div>
+                <button
+                  v-if="showFooterMicRetry"
+                  type="button"
+                  class="amd-footer-mic-retry"
+                  @click.stop="onFooterMicRetry"
+                >{{ footerMicRetryLabel }}</button>
+              </div>
               <div
                 v-if="isReady && !isComplete && !isError && !showInlineError"
                 class="amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer"
@@ -264,7 +302,10 @@
                 </button>
               </div>
 
-              <div v-else-if="canStop" class="amd-footer__stop">
+              <div
+                v-else-if="canStop"
+                class="amd-footer__stop amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer amd-start-wrap--centered"
+              >
                 <button
                   type="button"
                   class="amd-record-btn amd-record-btn--inline amd-record-btn--stop"
@@ -294,25 +335,25 @@
                 </button>
               </div>
 
-              <div v-else-if="isError || showInlineError" class="amd-footer__error-actions">
+              <div
+                v-else-if="isError || showInlineError"
+                class="amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer amd-start-wrap--centered"
+              >
                 <button
-                  v-if="errorAction === 'enable-mic'"
                   type="button"
-                  class="btn-primary"
-                  @click.stop="$emit('enable-mic')"
-                >{{ enableMicLabel }}</button>
-                <button
-                  v-else
-                  type="button"
-                  class="btn-secondary"
-                  @click.stop="$emit('retry')"
-                >{{ tryAgainLabel }}</button>
-                <button
-                  v-if="continueWithoutLabel"
-                  type="button"
-                  class="btn-secondary"
-                  @click.stop="$emit('continue-without-ai')"
-                >{{ continueWithoutLabel }}</button>
+                  class="amd-record-btn amd-record-btn--inline"
+                  :class="{ 'is-busy': busy }"
+                  :aria-label="startLabel"
+                  :title="startHint || startLabel"
+                  :disabled="busy"
+                  :aria-busy="busy ? 'true' : 'false'"
+                  @click.stop="onErrorRecord"
+                >
+                  <span class="amd-record-btn__core" aria-hidden="true">
+                    <i class="bi bi-mic-fill"></i>
+                  </span>
+                  <strong class="amd-record-btn__label">{{ startLabel }}</strong>
+                </button>
               </div>
 
               <div v-else class="amd-footer__spacer" aria-hidden="true"></div>
@@ -326,6 +367,7 @@
 
 <script>
 import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
+import { micInputLevelPercent } from '../scripts/audio/recitationMicInline.js'
 import {
   captureReturnFocus as captureModalReturnFocus,
   restoreReturnFocus as restoreModalReturnFocus,
@@ -357,6 +399,8 @@ export default {
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },
+    micGuidanceSteps: { type: Array, default: () => [] },
+    micInputLevel: { type: Number, default: 0 },
     liveHint: { type: String, default: '' },
     stageLabel: { type: String, default: '' },
     recordingActiveLabel: { type: String, default: 'Recording' },
@@ -568,8 +612,44 @@ export default {
       return this.stopLabel || 'Stop'
     },
     showInlineError() {
-      return !!this.error && !this.isComplete
-        && ['need_access', 'unsupported', 'unavailable', 'denied'].includes(this.micStatusKey)
+      if (!this.error || this.isComplete) return false
+      return [
+        'need_access',
+        'no_device',
+        'unavailable',
+        'unsupported',
+        'denied',
+        'recording_issue',
+      ].includes(this.micStatusKey)
+    },
+    micLevelPercent() {
+      return micInputLevelPercent(this.micInputLevel)
+    },
+    showFooterMicStrip() {
+      return false
+    },
+    showFooterMicLevel() {
+      return this.isListening && !this.isStarting && !this.sttRecovering
+    },
+    showFooterMicRetry() {
+      return (this.isError || this.showInlineError) && (this.errorAction === 'enable-mic' || this.micStatusKey === 'need_access')
+    },
+    footerMicStatusKey() {
+      if (this.showInlineError || (this.isError && this.micGuidance)) return this.micStatusKey
+      return this.headerMicStatusKey
+    },
+    footerMicStatusLabel() {
+      if (this.isError || this.showInlineError) return this.micStatusLabel || this.displayMicStatusLabel
+      return this.displayMicStatusLabel
+    },
+    footerMicRetryLabel() {
+      if (this.errorAction === 'enable-mic' || this.micStatusKey === 'need_access') {
+        return this.startLabel || this.tryAgainLabel || 'Try again'
+      }
+      return this.tryAgainLabel || 'Try again'
+    },
+    micLevelAriaLabel() {
+      return this.recordingActiveLabel || 'Microphone input level'
     },
     peekShortLabel() {
       return this.peekLabel || 'Peek'
@@ -606,6 +686,11 @@ export default {
       if (raw === 'granted' || raw === 'prompt' || raw === 'unknown') return 'ready'
       if (raw === 'denied') return 'need_access'
       if (raw === 'unsupported') return 'unavailable'
+      if (raw === 'listening') return 'listening'
+      if (raw === 'checking') return 'checking'
+      if (raw === 'low_input') return 'low_input'
+      if (raw === 'no_device') return 'no_device'
+      if (raw === 'recording_issue') return 'recording_issue'
       return raw
     },
     headerMicStatusKey() {
@@ -704,6 +789,16 @@ export default {
       if (this.endingSoon || this.isProcessing || this.isComplete) return
       if (!this.isListening) return
       this.$emit('stop')
+    },
+    onFooterMicRetry() {
+      this.onErrorRecord()
+    },
+    onErrorRecord() {
+      if (this.errorAction === 'enable-mic' || this.micStatusKey === 'need_access') {
+        this.$emit('enable-mic')
+        return
+      }
+      this.$emit('retry')
     },
     syncThemeAttr() {
       if (typeof document === 'undefined') {

@@ -19,12 +19,6 @@
         </div>
         <div class="teacher-student-card__actions">
           <span class="teacher-student-card__last">{{ t('teacher.last') }}: {{ lastSeen(student) }}</span>
-          <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('assign', student)">
-            <i class="bi bi-journal-plus" aria-hidden="true"></i><span class="teacher-student-card__assign-label">{{ t('teacher.assign_short') }}</span>
-          </button>
-          <button type="button" class="btn btn-outline-danger btn-sm" :aria-label="t('teacher.delete_student_for', { name: student.name })" :title="t('teacher.delete_student')" @click="$emit('delete', student)">
-            <i class="bi bi-trash" aria-hidden="true"></i>
-          </button>
           <button type="button" class="btn btn-primary btn-sm" :aria-label="t('teacher.open_profile_for', { name: student.name })" :title="t('teacher.open_profile')" @click="$emit('open', student.id)">
             <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
           </button>
@@ -85,26 +79,6 @@
           <span class="teacher-table__actions">
             <button
               type="button"
-              class="teacher-table__action"
-              :aria-label="t('teacher.assign_revision_for', { name: student.name })"
-              :title="t('teacher.assign_revision')"
-              @click.stop="$emit('assign', student)"
-            >
-              <i class="bi bi-journal-plus" aria-hidden="true"></i>
-              <span class="teacher-table__action-label">{{ t('teacher.assign_short') }}</span>
-            </button>
-            <button
-              type="button"
-              class="teacher-table__action teacher-table__action--danger"
-              :aria-label="t('teacher.delete_student_for', { name: student.name })"
-              :title="t('teacher.delete_student')"
-              @click.stop="$emit('delete', student)"
-            >
-              <i class="bi bi-trash" aria-hidden="true"></i>
-              <span class="visually-hidden">{{ t('teacher.delete_student') }}</span>
-            </button>
-            <button
-              type="button"
               class="teacher-table__action teacher-table__action--primary"
               :aria-label="t('teacher.open_profile_for', { name: student.name })"
               :title="t('teacher.open_profile')"
@@ -134,7 +108,7 @@ export default {
     formatWhen: { type: Function, required: true },
     compact: { type: Boolean, default: false },
   },
-  emits: ['open', 'assign', 'delete'],
+  emits: ['open'],
   data() {
     return { hasOverflow: false, canScrollLeft: false, canScrollRight: false }
   },
@@ -166,7 +140,7 @@ export default {
     },
     scoreClass(student) {
       const rate = student.ai_success_rate
-      if (typeof rate !== 'number') return ''
+      if (typeof rate !== 'number') return 'teacher-table__score--empty'
       return `teacher-table__score--${scoreBadgeTone(rate)}`
     },
     scoreHelp(student) {

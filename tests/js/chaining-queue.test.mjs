@@ -73,5 +73,6 @@ for (const technique of workspaceTechniques) {
 assert.match(memorisationJs, /setChainingEnabled\(enabled\)/)
 assert.match(memorisationJs, /setChainingMethod\(method\)/)
 assert.match(memorisationJs, /applyChainingQueueChange\(mode = this\.currentMode/)
+assert.match(memorisationJs, /from '\.\.\/scripts\/techniques\/chainingVisual\.js'/)
 
 console.log('chaining-queue.test.mjs: ok')

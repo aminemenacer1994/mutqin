@@ -15,8 +15,14 @@ async function main() {
   const nav = page.locator('.teacher-nav-shell--mobile')
   await nav.getByRole('button', { name: 'Students', exact: true }).click()
   await page.locator('.teacher-loading-inline').waitFor({ state: 'hidden' })
-  await page.locator('.teacher-student-card__main').first().click()
+  const studentCard = page.locator('.teacher-student-card__main').first()
+  const studentRow = page.locator('.teacher-table__row').first()
+  await (await studentCard.isVisible() ? studentCard : studentRow).click()
   await page.locator('.teacher-profile-hero').waitFor()
+  await page.locator('.teacher-profile-hero__report-button').click()
+  await page.locator('.teacher-report__paper').waitFor()
+  if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) throw new Error('Report caused horizontal page overflow')
+  await page.locator('.teacher-report__toolbar .btn-outline-secondary').click()
   const tabs = page.locator('[role=tablist] [role=tab]')
   const tabResults = []
   for (let index = 0; index < await tabs.count(); index++) {

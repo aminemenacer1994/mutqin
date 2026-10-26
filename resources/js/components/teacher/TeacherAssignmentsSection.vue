@@ -23,6 +23,15 @@
           >
             {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
           </button>
+          <button
+            v-if="hasActiveTaskFilters"
+            type="button"
+            class="btn btn-outline-secondary btn-sm teacher-task-filters__clear"
+            @click="resetFilters"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+            {{ t('teacher.clear_filters') }}
+          </button>
         </div>
       </div>
       <button
@@ -65,8 +74,7 @@
               <span class="teacher-task-row__student">{{ item.studentName }}</span>
               <span class="teacher-task-row__range">{{ item.title }}</span>
               <span class="teacher-task-row__meta">
-                <span class="teacher-hifz-tag" :class="`is-${item.category || 'uncategorized'}`">{{ item.categoryLabel }}</span>
-                <span>{{ item.kindLabel }}</span>
+                <span class="teacher-hifz-tag" :class="`is-${item.category}`">{{ item.categoryLabel }}</span>
                 <span v-if="item.status === 'completed' && item.completionEvidence">{{ item.completionEvidence }}</span>
                 <template v-else>
                   <span v-if="item.due">{{ item.due }}</span>
@@ -108,15 +116,7 @@
         icon="bi bi-clipboard-check"
         :message="rows.length ? t('teacher.task_filter_empty') : t('teacher.assignments_empty')"
       />
-      <button
-        v-if="rows.length && (query || statusFilter !== 'all')"
-        type="button"
-        class="btn btn-outline-secondary btn-sm"
-        @click="resetFilters"
-      >
-        {{ t('teacher.clear_filters') }}
-      </button>
-      <button v-else-if="!rows.length" type="button" class="btn btn-primary btn-sm" @click="$emit('new')">{{ t('teacher.add_task') }}</button>
+      <button v-if="!rows.length" type="button" class="btn btn-primary btn-sm" @click="$emit('new')">{{ t('teacher.add_task') }}</button>
     </div>
 
     <TeacherTaskSheet
@@ -164,7 +164,7 @@
               <div class="modal-header teacher-task-modal__header">
                 <div class="teacher-task-modal__intro">
                   <h2 id="teacher-message-title" class="modal-title h5 teacher-task-modal__title">{{ messageItem.studentName }}</h2>
-                  <p>{{ t('teacher.task_conversation') }} · {{ messageItem.title }}</p>
+                  <p><span>{{ t('teacher.task_conversation') }}</span><br><span>{{ messageItem.title }}</span></p>
                 </div>
                 <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
               </div>
@@ -172,8 +172,8 @@
                 <section class="teacher-message-context" :aria-label="t('teacher.task_details')">
                   <div class="teacher-message-context__main">
                     <span class="teacher-task-row__status" :class="`is-${messageItem.statusTone}`"><i :class="messageItem.statusIcon" aria-hidden="true"></i>{{ messageItem.statusLabel }}</span>
-                    <span v-if="messageItem.due">{{ messageItem.due }}</span>
-                    <details v-if="messageItem.assignment.feedback" class="teacher-message-context__note"><summary>{{ t('teacher.teacher_note') }}</summary><p>{{ messageItem.assignment.feedback }}</p></details>
+                    <span v-if="messageItem.due" class="teacher-message-context__due"><i class="bi bi-calendar-event" aria-hidden="true"></i>{{ messageItem.due }}</span>
+                    <details v-if="messageItem.assignment.feedback" class="teacher-message-context__note"><summary><i class="bi bi-sticky" aria-hidden="true"></i>{{ t('teacher.teacher_note') }}</summary><p>{{ messageItem.assignment.feedback }}</p></details>
                   </div>
                   <button type="button" class="btn btn-outline-secondary btn-sm teacher-message-context__open" :aria-label="t('teacher.open_profile_for', { name: messageItem.studentName })" :title="t('teacher.open_profile')" @click="openMessageStudent">
                     <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
@@ -210,9 +210,10 @@
                     <span v-else-if="messageSent" class="text-success" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
                     <span v-else-if="messageDraft.length">{{ messageDraft.length }}/2000</span>
                     <span v-else></span>
+                    <button type="button" class="btn btn-outline-secondary teacher-message-composer__clear" :disabled="messageSaving || (!messageDraft && !audioBlob)" @click="clearMessageComposer"><i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message_short') }}</button>
                     <button type="submit" class="btn btn-primary" :disabled="messageSaving || recordingState === 'recording' || (!messageDraft.trim() && !audioBlob)">
                       <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-                      {{ messageSaving ? t('teacher.saving') : t('teacher.send_reply') }}
+                      {{ messageSaving ? t('teacher.saving_message') : t('teacher.save_conversation') }}
                     </button>
                   </div>
                 </form>
@@ -301,6 +302,7 @@ export default {
     document.body.classList.remove('modal-open', 'teacher-task-modal-open')
   },
   computed: {
+    hasActiveTaskFilters() { return Boolean(this.query || this.statusFilter !== 'all') },
     recordingSupported() { return typeof window !== 'undefined' && typeof window.MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia) },
     recordingTimeLabel() { const seconds = Math.floor(this.recordingElapsedMs / 1000); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` },
     taskFilters() {
@@ -328,11 +330,12 @@ export default {
         const recipients = row.recipients || []
         return recipients.map((recipient, recipientIndex) => {
           const status = recipient.status || 'pending'
+          const category = assignment.hifz_category || this.inferHifzCategory(assignment)
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
-            category: assignment.hifz_category || '',
-            categoryLabel: assignment.hifz_category ? this.t(`teacher.hifz_${assignment.hifz_category}`) : this.t('teacher.hifz_uncategorized'),
+            category,
+            categoryLabel: this.t(`teacher.hifz_${category}`),
             title,
             studentId: recipient.student_id,
             studentName: recipient.student_name || this.t('teacher.unavailable'),
@@ -343,7 +346,6 @@ export default {
             statusTone: this.statusTone(status),
             statusIcon: this.statusIcon(status),
             statusLabel: this.t(`teacher.status_${status}`),
-            kindLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
             due: assignment.due_at ? `${this.t('teacher.due')}: ${formatTeacherWhen(assignment.due_at)}` : '',
             progress: this.progressLabel(recipient, assignment),
             completionEvidence: this.completionEvidenceLabel(recipient),
@@ -383,6 +385,10 @@ export default {
     },
   },
   methods: {
+    inferHifzCategory(assignment) {
+      if (assignment.kind === 'ai_recite') return 'sabqi'
+      return Number(assignment.repetition_target || 0) >= 5 ? 'manzil' : 'sabaq'
+    },
     toggleCompactView() {
       this.compactView = !this.compactView
       window.localStorage.setItem('mutqin.teacher.tasks.compact', this.compactView ? '1' : '0')
@@ -423,6 +429,12 @@ export default {
       this.discardRecording()
       this.messageItem = null
       this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
+    },
+    clearMessageComposer() {
+      this.messageDraft = ''
+      this.messageError = ''
+      this.messageSent = false
+      this.discardRecording()
     },
     openMessageStudent() {
       const id = this.messageItem?.studentId

@@ -71,7 +71,6 @@
               @page="loadStudents"
               @open-student="openStudent"
               @assign-revision="openAssignRevision"
-              @deleted="loadStudents(1)"
             />
 
             <TeacherStudentProfileSection

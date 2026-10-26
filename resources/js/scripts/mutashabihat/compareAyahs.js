@@ -1,4 +1,8 @@
-import { normalizeQuranText } from '../assessment/QuestionValidationService.js'
+import {
+  normalizeComparisonText,
+  tokenizeDisplayText,
+} from '../memorisation/quranTextNormalizer.js'
+import { sanitizeMutashabihatAyahText } from './displayText.js'
 
 /**
  * @typedef {{ kind: 'shared'|'different'|'inserted'|'omitted', text: string }} CompareSegment
@@ -19,9 +23,7 @@ function escapeHtml(value) {
  * @returns {string[]}
  */
 export function tokenizeDisplayWords(text) {
-  const cleaned = String(text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  if (!cleaned) return []
-  return cleaned.split(/\s+/).filter(Boolean)
+  return tokenizeDisplayText(text)
 }
 
 /**
@@ -52,10 +54,10 @@ function alignNormalizedTokens(leftNorm, rightNorm) {
       ops.push({ kind: 'equal', i, j })
       i += 1
       j += 1
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+    } else if (dp[i + 1][j] > dp[i][j + 1]) {
       ops.push({ kind: 'delete', i })
       i += 1
-    } else if (dp[i][j + 1] >= dp[i + 1][j]) {
+    } else if (dp[i][j + 1] > dp[i + 1][j]) {
       ops.push({ kind: 'insert', j })
       j += 1
     } else {
@@ -86,8 +88,8 @@ function alignNormalizedTokens(leftNorm, rightNorm) {
 export function compareAyahTexts(leftText, rightText) {
   const leftTokens = tokenizeDisplayWords(leftText)
   const rightTokens = tokenizeDisplayWords(rightText)
-  const leftNorm = leftTokens.map((t) => normalizeQuranText(t))
-  const rightNorm = rightTokens.map((t) => normalizeQuranText(t))
+  const leftNorm = leftTokens.map((t) => normalizeComparisonText(t))
+  const rightNorm = rightTokens.map((t) => normalizeComparisonText(t))
   const ops = alignNormalizedTokens(leftNorm, rightNorm)
 
   /** @type {CompareSegment[]} */
@@ -187,26 +189,37 @@ export function phraseFromSpan(segments, span) {
  * @returns {CompareSegment[]}
  */
 export function previewSegmentsAroundSpan(segments = [], span, opts = {}) {
-  const tokens = (segments || []).filter((seg) => String(seg?.text || '').trim())
-  if (!tokens.length) return []
+  const all = segments || []
+  const wordPositions = []
+  for (let i = 0; i < all.length; i += 1) {
+    if (String(all[i]?.text || '').trim()) wordPositions.push(i)
+  }
+  if (!wordPositions.length) return []
 
   const shortAyahMax = Number.isFinite(opts.shortAyahMax) ? opts.shortAyahMax : 16
-  if (tokens.length <= shortAyahMax) return tokens
+  if (wordPositions.length <= shortAyahMax) {
+    return wordPositions.map((index) => all[index])
+  }
 
   const minVisible = Math.max(
-    Math.ceil(tokens.length / 2),
+    Math.ceil(wordPositions.length / 2),
     Number.isFinite(opts.minVisible) ? opts.minVisible : 8,
   )
-  const anchor = span
-    ? Math.floor((span.start + span.end) / 2)
-    : Math.floor(tokens.length / 2)
-  let start = Math.max(0, anchor - Math.floor(minVisible / 2))
-  let end = Math.min(tokens.length, start + minVisible)
-  if (end - start < minVisible) start = Math.max(0, end - minVisible)
+  let anchorPos = Math.floor(wordPositions.length / 2)
+  if (span) {
+    const hit = wordPositions.findIndex((index) => index >= span.start && index < span.end)
+    if (hit >= 0) anchorPos = hit
+  }
+  let startPos = Math.max(0, anchorPos - Math.floor(minVisible / 2))
+  let endPos = Math.min(wordPositions.length, startPos + minVisible)
+  if (endPos - startPos < minVisible) startPos = Math.max(0, endPos - minVisible)
 
-  const slice = tokens.slice(start, end)
-  if (start > 0) slice.unshift({ kind: 'ellipsis', text: '…' })
-  if (end < tokens.length) slice.push({ kind: 'ellipsis', text: '…' })
+  const slice = wordPositions.slice(startPos, endPos).map((index) => ({
+    ...all[index],
+    segmentIndex: index,
+  }))
+  if (startPos > 0) slice.unshift({ kind: 'ellipsis', text: '…' })
+  if (endPos < wordPositions.length) slice.push({ kind: 'ellipsis', text: '…' })
   return slice
 }
 
@@ -242,7 +255,7 @@ export function renderComparedAyahWordHtml(segments, verseKey = '') {
     wordIndex += 1
     const inner = escapeHtml(text)
     const tokenInner = isDiffSegment(seg)
-      ? `<mark class="mutashabihat-diff">${inner}</mark>`
+      ? `<span class="mutashabihat-diff">${inner}</span>`
       : inner
     const keyAttr = key ? ` data-verse-key="${escapeHtml(key)}"` : ''
     parts.push(
@@ -253,7 +266,13 @@ export function renderComparedAyahWordHtml(segments, verseKey = '') {
   return parts.join(' ')
 }
 
-export function renderComparedAyahHtml(segments) {
+/**
+ * @param {CompareSegment[]} segments
+ * @param {{ highlightSpan?: { start: number, end: number } | null, highlightOnlySpan?: boolean }} [options]
+ */
+export function renderComparedAyahHtml(segments, options = {}) {
+  const highlightSpan = options.highlightSpan || null
+  const highlightOnlySpan = options.highlightOnlySpan === true
   const parts = []
   let sharedRun = []
 
@@ -261,6 +280,13 @@ export function renderComparedAyahHtml(segments) {
     if (!sharedRun.length) return
     parts.push(escapeHtml(sharedRun.join(' ')))
     sharedRun = []
+  }
+
+  const shouldHighlightDiff = (seg) => {
+    if (!highlightOnlySpan || !highlightSpan) return true
+    const idx = Number(seg?.segmentIndex)
+    if (!Number.isFinite(idx)) return true
+    return idx >= highlightSpan.start && idx < highlightSpan.end
   }
 
   for (const seg of segments || []) {
@@ -272,8 +298,12 @@ export function renderComparedAyahHtml(segments) {
       continue
     }
     if (isDiffSegment(seg)) {
-      flushShared()
-      parts.push(`<mark class="mutashabihat-diff">${escapeHtml(text)}</mark>`)
+      if (shouldHighlightDiff(seg)) {
+        flushShared()
+        parts.push(`<span class="mutashabihat-diff">${escapeHtml(text)}</span>`)
+      } else {
+        sharedRun.push(text)
+      }
       continue
     }
     sharedRun.push(text)
@@ -310,7 +340,9 @@ export function renderRecallBlankHtml(segments, span) {
  * @param {string} rightText
  */
 export function buildAyahComparison(leftText, rightText) {
-  const diff = compareAyahTexts(leftText, rightText)
+  const left = sanitizeMutashabihatAyahText(leftText)
+  const right = sanitizeMutashabihatAyahText(rightText)
+  const diff = compareAyahTexts(left, right)
   const span = firstDifferenceSpan(diff.left, diff.right)
   const spans = differenceSpans(diff.left, diff.right)
   return {
@@ -319,8 +351,14 @@ export function buildAyahComparison(leftText, rightText) {
     spans,
     leftPhrase: phraseFromSpan(diff.left, span),
     rightPhrase: phraseFromSpan(diff.right, span),
-    leftPreviewHtml: renderComparedAyahHtml(previewSegmentsAroundSpan(diff.left, span)),
-    rightPreviewHtml: renderComparedAyahHtml(previewSegmentsAroundSpan(diff.right, span)),
+    leftPreviewHtml: renderComparedAyahHtml(previewSegmentsAroundSpan(diff.left, span), {
+      highlightSpan: span,
+      highlightOnlySpan: true,
+    }),
+    rightPreviewHtml: renderComparedAyahHtml(previewSegmentsAroundSpan(diff.right, span), {
+      highlightSpan: span,
+      highlightOnlySpan: true,
+    }),
     leftHtml: renderComparedAyahHtml(diff.left),
     rightHtml: renderComparedAyahHtml(diff.right),
     leftBlankHtml: renderRecallBlankHtml(diff.left, span),

@@ -55,6 +55,7 @@ export default {
     taskRows() {
       return (this.profile.payload.assignments || []).map((item) => {
         const a = item.assignment || {}
+        const hifzCategory = a.hifz_category || this.inferHifzCategory(a)
         const kind = a.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'
         const statusKey = item.status || 'pending'
         const tone = statusKey === 'completed'
@@ -67,8 +68,7 @@ export default {
           iconTone: tone,
           title: `${a.surah_name} ${a.ayah_start}–${a.ayah_end}`,
           hint: [
-            a.hifz_category ? this.t(`teacher.hifz_${a.hifz_category}`) : this.t('teacher.hifz_uncategorized'),
-            a.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
+            this.t(`teacher.hifz_${hifzCategory}`),
             a.due_at ? this.t('teacher.task_due_date', { date: this.formatWhen(a.due_at) }) : this.t('teacher.no_due_date'),
             statusKey === 'completed'
               ? this.completionEvidenceLabel(item)
@@ -87,6 +87,10 @@ export default {
     },
   },
   methods: {
+    inferHifzCategory(assignment) {
+      if (assignment.kind === 'ai_recite') return 'sabqi'
+      return Number(assignment.repetition_target || 0) >= 5 ? 'manzil' : 'sabaq'
+    },
     targetLabel(item, assignment) {
       const n = Math.max(1, Number(item.progress?.target || assignment.repetition_target || 1))
       return this.t(n === 1 ? 'teacher.task_target_context_one' : 'teacher.task_target_context_many', { n })

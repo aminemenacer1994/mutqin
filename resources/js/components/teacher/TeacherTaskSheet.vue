@@ -55,24 +55,14 @@
                   </div>
                 </div>
 
-                <div class="teacher-task-modal__field">
-                  <label class="form-label" :for="`${formId}-kind`">{{ t('teacher.kind') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
-                  <select :id="`${formId}-kind`" ref="kindField" class="form-select" :value="form.kind" required @change="patch('kind', $event.target.value)">
-                    <option value="practice">{{ t('teacher.kind_practice') }}</option>
-                    <option value="ai_recite">{{ t('teacher.kind_ai') }}</option>
-                  </select>
-                  <small class="teacher-task-modal__field-help">{{ t(form.kind === 'ai_recite' ? 'teacher.kind_recite_help' : 'teacher.kind_practice_help') }}</small>
-                </div>
-
                 <div class="teacher-task-modal__field teacher-task-modal__field--category">
                   <label class="form-label" :for="`${formId}-category`">{{ t('teacher.hifz_task_type') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
-                  <select :id="`${formId}-category`" class="form-select" :value="form.hifz_category || ''" required @change="patch('hifz_category', $event.target.value)">
+                  <select :id="`${formId}-category`" ref="categoryField" class="form-select" :value="form.hifz_category || ''" required @change="patch('hifz_category', $event.target.value)">
                     <option value="" disabled>{{ t('teacher.hifz_choose_type') }}</option>
                     <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
                     <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
                     <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
                   </select>
-                  <small v-if="form.hifz_category" class="teacher-task-modal__field-help">{{ t(`teacher.hifz_${form.hifz_category}_help`) }}</small>
                 </div>
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--surah">
@@ -100,16 +90,21 @@
                 <div class="teacher-task-modal__field">
                   <label class="form-label" :for="`${formId}-reps`">{{ t('teacher.repetitions') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
                   <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required @input="patch('repetition_target', $event.target.value)">
-                  <small class="teacher-task-modal__field-help">{{ t('teacher.task_target_help') }}</small>
                 </div>
 
-                <div class="teacher-task-modal__field">
+                <div class="teacher-task-modal__field teacher-task-modal__field--date">
                   <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_optional') }}</label>
-                  <input :id="`${formId}-due`" class="form-control" :value="form.due_at" type="date" @input="patch('due_at', $event.target.value)">
+                  <div class="teacher-task-modal__date-row">
+                    <input :id="`${formId}-due`" class="form-control" :value="form.due_at" type="date" @input="patch('due_at', $event.target.value)">
+                    <button v-if="form.due_at" type="button" class="btn btn-link teacher-task-modal__field-clear" :aria-label="t('teacher.clear_due_date')" :title="t('teacher.clear_due_date')" @click="patch('due_at', '')"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                  </div>
                 </div>
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--feedback">
-                  <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="teacher-task-modal__optional">{{ t('teacher.optional_short') }}</span></label>
+                  <div class="teacher-task-modal__field-heading">
+                    <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="teacher-task-modal__optional">{{ t('teacher.optional_short') }}</span></label>
+                    <button v-if="form.feedback" type="button" class="btn btn-link teacher-task-modal__field-clear" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="patch('feedback', '')"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                  </div>
                   <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
                 </div>
               </div>
@@ -178,7 +173,7 @@ export default {
           this.syncStudentQuery()
           this.studentOptionsOpen = false
           this.returnFocusEl = captureReturnFocus()
-          this.$nextTick(() => (this.editing ? this.$refs.kindField : this.$refs.studentField)?.focus({ preventScroll: true }))
+          this.$nextTick(() => (this.editing ? this.$refs.categoryField : this.$refs.studentField)?.focus({ preventScroll: true }))
         } else if (this.returnFocusEl) {
           const target = this.returnFocusEl
           this.returnFocusEl = null

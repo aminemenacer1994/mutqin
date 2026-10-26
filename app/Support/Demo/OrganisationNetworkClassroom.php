@@ -529,6 +529,7 @@ final class OrganisationNetworkClassroom
             'teacher_id' => $teacher->id,
             'organisation_id' => $teacher->organisation_id,
             'kind' => AssignmentKind::AiRecite,
+            'hifz_category' => 'sabqi',
             'surah_number' => $range['surah'],
             'ayah_start' => $range['from'],
             'ayah_end' => $range['to'],

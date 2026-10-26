@@ -348,6 +348,11 @@ import {
 } from '../scripts/techniques/techniqueDisplay'
 import { resolveAnchorIndices } from '../scripts/techniques/anchorWords'
 import { buildChainingGroups } from '../scripts/techniques/chainingQueue.js'
+import {
+  buildChainingJoinedFlowHtml,
+  resolveChainingVisualAyahKeys,
+  shouldRenderChainingJoinedFlow,
+} from '../scripts/techniques/chainingVisual.js'
 import { buildQpcMadaniAnchorIndexesByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
 import {
   REVIEW_AUDIO_STATES,
@@ -380,6 +385,13 @@ import {
   buildRecitationProviderLogMetadata,
 } from '../scripts/audio/recordingResilience'
 import {
+  RECITATION_MIC_LOW_INPUT_GRACE_MS,
+  RECITATION_MIC_LOW_INPUT_RMS,
+  inlineMicStatusFromHelpKind,
+  micInlineGuidanceLead,
+  micInlineGuidanceSteps,
+} from '../scripts/audio/recitationMicInline.js'
+import {
   RECITATION_LIFECYCLE_PHASE,
   reconcileRecitationAfterForeground,
   resolveRecitationLifecyclePhase,
@@ -394,8 +406,6 @@ import {
   resolveAttemptRetryGuidance,
 } from '../scripts/audio/recitationAttemptGuard'
 import {
-  aiAudioConsentMeta,
-  isAiAudioConsentDeclined,
   readAudioPrivacyConfig,
   resolveAiAudioConsentRecord,
   shouldPromptAiAudioConsent,
@@ -568,14 +578,6 @@ const MutashabihatCompareModal = lazyWorkspaceChunk(
 const TajweedColourGuideModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "tajweed-colour-guide" */ '../components/TajweedColourGuideModal.vue'),
   'tajweed-colour-guide'
-)
-const AiAudioConsentModal = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
-  'ai-audio-consent'
-)
-const MicrophonePermissionModal = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "mic-permission-help" */ '../components/MicrophonePermissionModal.vue'),
-  'mic-permission-help'
 )
 const AyahNotesModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue'),
@@ -865,8 +867,6 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AskMutqinModal,
-    AiAudioConsentModal,
-    MicrophonePermissionModal,
     AyahNotesModal,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
@@ -1652,10 +1652,10 @@ export default {
       selfCheckRecordingMimeType: '',
       aiMemorisationCheckerRecordingMimeType: '',
       recordingsLibraryReturnToSelfCheckKey: '',
-      showAiAudioConsentModal: false,
-      showMicrophonePermissionModal: false,
       microphoneHelp: null,
       microphoneHelpRetry: '',
+      recitationMicInputLevel: 0,
+      recitationMicLowInput: false,
       aiAudioConsentSnapshot: typeof window !== 'undefined' ? (window.mutqinAiAudioConsent || null) : null,
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
@@ -8159,11 +8159,27 @@ export default {
       return this.t('common.continue')
     },
     amdLearnerMicStatus() {
+      const helpKind = this.microphoneHelp?.kind
+      if (helpKind) {
+        const fromHelp = inlineMicStatusFromHelpKind(helpKind)
+        if (fromHelp !== 'ready') return fromHelp
+      }
       if (this.amdMicStatus === 'unsupported') return 'unavailable'
-      if (this.amdMicStatus === 'denied') return 'need_access'
-      if (this.amdStage === AMD_STAGES.ERROR && this.amdMicStatus === 'denied') return 'need_access'
+      // Only surface blocked-mic UI after getUserMedia fails — never from Permissions API prefetch.
+      if (
+        this.amdStage === AMD_STAGES.ERROR
+        && (this.amdMicStatus === 'denied' || helpKind === 'not_allowed')
+      ) {
+        return 'need_access'
+      }
       if (this.amdStage === AMD_STAGES.PAUSED) return 'paused'
-      if (this.amdStage === AMD_STAGES.LISTENING || this.amdStage === AMD_STAGES.STARTING) return 'listening'
+      if (this.recitationMicLowInput && (this.amdStage === AMD_STAGES.LISTENING || this.recitationCheckRecording)) {
+        return 'low_input'
+      }
+      if (this.amdStage === AMD_STAGES.STARTING || (this.recitationCheckPreparing && !this.recitationCheckRecording)) {
+        return 'checking'
+      }
+      if (this.amdStage === AMD_STAGES.LISTENING || this.recitationCheckRecording) return 'listening'
       return 'ready'
     },
     amdLearnerMicStatusLabel() {
@@ -8176,7 +8192,11 @@ export default {
       }
       const map = {
         ready: this.t?.('memorisation.amd.micReady') || 'Ready',
+        checking: this.t?.('memorisation.amd.micChecking') || 'Checking…',
         need_access: this.t?.('memorisation.amd.micNeedAccess') || 'Allow microphone',
+        no_device: this.t?.('memorisation.amd.micNoDevice') || 'No microphone',
+        low_input: this.t?.('memorisation.amd.micLowInput') || 'Low input',
+        recording_issue: this.t?.('memorisation.amd.micRecordingIssue') || 'Recording issue',
         paused: this.t?.('memorisation.amd.micPaused') || 'Paused',
         unavailable: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
         unsupported: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
@@ -8192,72 +8212,45 @@ export default {
       })
     },
     amdMicGuidance() {
-      if (this.showMicrophonePermissionModal) return ''
-      if (this.amdLearnerMicStatus === 'need_access') {
-        return this.microphoneHelp?.explanation
-          || resolveMicDeniedGuidance(this.t?.bind(this))
+      const lead = micInlineGuidanceLead(this.microphoneHelp)
+      if (lead) return lead
+      if (this.amdLearnerMicStatus === 'low_input') {
+        return this.t?.('memorisation.amd.micGuidanceLowInput')
+          || 'We are not hearing much from the microphone. Move closer or check your input device, then try again.'
       }
       if (this.amdLearnerMicStatus === 'unavailable' || this.amdLearnerMicStatus === 'unsupported') {
         return this.t?.('memorisation.amd.micGuidanceUnsupported')
           || 'Speech recognition is unavailable here. You can still use Peek.'
       }
+      const err = String(this.amdError || '').trim()
+      if (err) {
+        const startFailed = String(this.t?.('memorisation.amd.startFailed') || 'Could not start the check.').trim()
+        const micHint = this.t?.('memorisation.amd.startFailedMicHint')
+          || 'Check microphone permission in your browser settings for this site, then tap Record again.'
+        if (err === startFailed || /could not start the check/i.test(err)) {
+          return micHint
+        }
+      }
       return ''
     },
-    aiAudioConsentTitle() {
-      return this.t('memorisation.aiCheck.consentTitle') || 'AI voice checks'
+    amdMicGuidanceSteps() {
+      const steps = micInlineGuidanceSteps(this.microphoneHelp)
+      if (steps.length) return steps
+      return []
     },
-    aiAudioConsentBody() {
-      const meta = aiAudioConsentMeta()
-      return this.t('memorisation.aiCheck.consentBody', { processor: meta.processorName })
-        || `We use your microphone to check recitation (via ${meta.processorName}). Choose Allow when your browser asks. Other tools work without AI.`
-    },
-    aiAudioConsentBrowserPrompt() {
-      const prompt = this.t('memorisation.aiCheck.consentBrowserPrompt')
-      return prompt && !String(prompt).startsWith('memorisation.') ? prompt : ''
-    },
-    aiAudioConsentPrivacyItems() {
-      const config = readAudioPrivacyConfig()
-      const retention = config.raw_recording_retention === 'never'
-        ? this.t('memorisation.aiCheck.consentRetentionNever')
-        : (config.raw_recording_retention === 'retain'
-          ? this.t('memorisation.aiCheck.consentRetentionRetain')
-          : this.t('memorisation.aiCheck.consentRetentionTemporaryFor', {
-            hours: config.temporary_ttl_hours,
-          }))
-      const summary = retention && !String(retention).startsWith('memorisation.') ? retention : ''
-      return summary ? [summary] : []
-    },
-    aiAudioConsentPrivacyLinkLabel() {
-      return this.t('memorisation.aiCheck.consentPrivacyLink') || 'Privacy policy'
-    },
-    aiAudioConsentPrivacyUrl() {
-      return readAudioPrivacyConfig().privacy_policy_url || '/privacy'
-    },
-    aiAudioConsentAcceptLabel() {
-      return this.t('memorisation.aiCheck.consentAccept') || 'Agree'
-    },
-    aiAudioConsentDeclineLabel() {
-      return this.t('memorisation.aiCheck.consentDecline') || 'Not now'
-    },
-    microphoneHelpHeading() {
-      return this.microphoneHelp?.heading
-        || this.t('memorisation.aiCheck.micPermissionTitle')
-        || 'Allow microphone access'
-    },
-    microphoneHelpExplanation() {
-      return this.microphoneHelp?.explanation || ''
-    },
-    microphoneHelpSteps() {
-      return Array.isArray(this.microphoneHelp?.steps) ? this.microphoneHelp.steps : []
-    },
-    microphoneHelpTryAgainLabel() {
-      return this.t('common.tryAgain') || 'Try again'
-    },
-    microphoneHelpCancelLabel() {
-      return this.t('common.cancel') || 'Cancel'
+    amdMicInputLevel() {
+      return Number(this.recitationMicInputLevel) || 0
     },
     amdErrorAction() {
-      if (this.amdMicStatus === 'denied' || this.amdLearnerMicStatus === 'need_access') return 'enable-mic'
+      const status = this.amdLearnerMicStatus
+      if (
+        this.amdMicStatus === 'denied'
+        || status === 'need_access'
+        || status === 'no_device'
+        || status === 'recording_issue'
+      ) {
+        return 'enable-mic'
+      }
       return 'retry'
     },
     amdAyahCount() {
@@ -9058,8 +9051,6 @@ export default {
         || this.showAyahNotesModal
         || this.showAdvancedMetricsModal
         || this.postSessionAdaptiveCheckActive
-        || this.showAiAudioConsentModal
-        || this.showMicrophonePermissionModal
         || this.workspaceTourActive
       )
     },
@@ -9228,34 +9219,17 @@ export default {
       return !!this.talqinModeEnabled
     },
     chainingVisualAyahKeys() {
-      if (!this.chainingEnabled) return []
-      const entry = this.activeQueueEntry
-      const verses = Array.isArray(this.verses) ? this.verses : []
-      if (!entry) {
-        if (this.chainingMethod === 'cumulative') {
-          return this.sessionScopedAyahKeys(
-            verses.slice(0, 1).map((verse) => String(verse?.key || '')).filter(Boolean)
-          )
-        }
-        return this.sessionScopedAyahKeys(
-          verses.slice(0, Math.min(2, verses.length)).map((verse) => String(verse?.key || '')).filter(Boolean)
-        )
-      }
-      const chainKey = entry.chainKey
-      const currentKey = String(entry.verse?.key || entry.key || '')
-      if (!chainKey) return currentKey ? [currentKey] : []
-      const repeat = Number(entry.repeatCount || 1)
-      const keys = []
-      const seen = new Set()
-      for (const item of Array.isArray(this.queue) ? this.queue : []) {
-        if (item?.chainKey !== chainKey) continue
-        if (Number(item.repeatCount || 1) !== repeat) continue
-        const key = String(item.verse?.key || item.key || '')
-        if (!key || seen.has(key)) continue
-        seen.add(key)
-        keys.push(key)
-      }
-      return this.sessionScopedAyahKeys(keys.length ? keys : (currentKey ? [currentKey] : []))
+      return resolveChainingVisualAyahKeys({
+        chainingEnabled: !!this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        entry: this.activeQueueEntry,
+        queue: this.queue,
+        verses: this.verses,
+        isInSession: (key) => this.isVerseInSessionScope(key),
+      })
+    },
+    chainingJoinedFlowActive() {
+      return !!this.chainingEnabled && shouldRenderChainingJoinedFlow(this.chainingVisualAyahKeys)
     },
     practiceTechniqueStatusVisible() {
       return !!(this.talqinModeEnabled || this.chainingEnabled || this.anchorModeEnabled)
@@ -11013,7 +10987,6 @@ export default {
     this.postSessionAiReciteBusy = false
     this.showAiMemorisationCheckerModal = false
     this.showSelfCheckModal = false
-    this.showAiAudioConsentModal = false
     this.syncBodyScrollLock(false)
     this.warnIfLocalAppOriginMismatch()
     if (!AI_TEST_MODALS_ENABLED) {
@@ -11785,18 +11758,6 @@ export default {
         this.ensureSecondaryToolsLoaded()
       }
     },
-    showAiAudioConsentModal(newVal) {
-      if (newVal) {
-        // Consent is a blocking decision. Never leave the controls drawer
-        // visible behind it or interactive underneath its backdrop.
-        this.showTools = false
-        this.postSessionOffcanvasOpen = false
-        this.topCardMenuOpen = false
-        this.syncBodyScrollLock(true)
-        return
-      }
-      this.syncBodyScrollLock(false)
-    },
     showHifzPlanModal(newVal) {
       this.syncBodyScrollLock(newVal)
     },
@@ -12163,7 +12124,13 @@ export default {
       }
       this.persistUiState()
       this.persistCentralSessionState()
-      if (this.hasVerses && !this.chainingEnabled) this.rebuildQueue(this.currentMode)
+      if (this.hasVerses) {
+        if (this.chainingEnabled) {
+          this.applyChainingQueueChange(this.currentMode)
+        } else {
+          this.rebuildQueue(this.currentMode)
+        }
+      }
     },
     selectedLoopCount: 'persistUiState',
     gapBetweenVerses: 'persistUiState',
@@ -12737,22 +12704,43 @@ export default {
       })
     },
 
+    isMicrophoneAccessError(error, options = {}) {
+      if (options.unsupported === true) return true
+      const kind = options.kind || classifyMicrophoneAccessError(error, options)
+      return kind !== 'unknown'
+    },
+    resetAmdAfterMicAccessFailure() {
+      this.closeMicrophoneHelp()
+      this.amdMicStatus = 'prompt'
+      this.amdBusy = false
+      this.amdError = ''
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      if (this.amdOpen) {
+        this.amdStage = AMD_STAGES.READY
+      }
+    },
     presentMicrophoneHelp(error, options = {}) {
       const help = resolveMicrophoneHelp(this.t?.bind(this), {
         error,
         unsupported: options.unsupported === true,
+        kind: options.kind,
       })
+      if (this.amdOpen) {
+        return help
+      }
       this.microphoneHelp = help
-      this.microphoneHelpRetry = String(options.retry || (this.amdOpen ? 'amd' : 'recitation'))
-      this.showMicrophonePermissionModal = true
+      this.microphoneHelpRetry = String(options.retry || 'recitation')
       return help
     },
     closeMicrophoneHelp() {
-      this.showMicrophonePermissionModal = false
+      this.microphoneHelp = null
+      this.microphoneHelpRetry = ''
     },
     async retryMicrophoneHelp() {
       const retry = this.microphoneHelpRetry || (this.amdOpen ? 'amd' : 'recitation')
-      this.showMicrophonePermissionModal = false
+      this.closeMicrophoneHelp()
       if (retry === 'amd') {
         await this.startAmdAssessment()
         return
@@ -12780,6 +12768,10 @@ export default {
       this.recitationCheckPreparing = false
       this.recitationCheckRecording = false
       if (this.amdOpen) {
+        if (options.micAccessFailure) {
+          this.resetAmdAfterMicAccessFailure()
+          return
+        }
         this.failAmdAssessment(text, { toast: false })
       }
       if (!text || options.skipBanner) return
@@ -18082,11 +18074,6 @@ export default {
         this.workspaceTourActive = false
         return
       }
-      // Registration consent must finish before the spotlight tour steals clicks.
-      if (this.showAiAudioConsentModal) {
-        this.workspaceTourActive = false
-        return
-      }
       if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
@@ -18097,15 +18084,10 @@ export default {
       }
       this._workspaceTourStartTimer = window.setTimeout(() => {
         this._workspaceTourStartTimer = null
-        if (this.showAiAudioConsentModal) return
         this.initWorkspaceTour()
       }, this.auth?.just_registered || this.showWelcomeBackModal ? 650 : 200)
     },
     initWorkspaceTour() {
-      if (this.showAiAudioConsentModal) {
-        this.workspaceTourActive = false
-        return
-      }
       if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
@@ -18113,10 +18095,6 @@ export default {
       this.startWorkspaceTour(0)
     },
     async startWorkspaceTour(stepIndex = 0) {
-      if (this.showAiAudioConsentModal) {
-        this.workspaceTourActive = false
-        return
-      }
       this.workspaceTourReturnFocusEl = captureReturnFocus()
       this.workspaceTourActive = true
       this.workspaceTourStepIndex = Math.max(0, Number(stepIndex) || 0)
@@ -26333,6 +26311,8 @@ export default {
 
       this.amdScope = this.recitationCheckScope
       this.amdError = ''
+      this.closeMicrophoneHelp()
+      this.amdMicStatus = 'prompt'
       this.amdBusy = false
       this.amdAssessment = null
       this.amdAnalysis = null
@@ -26421,7 +26401,6 @@ export default {
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
       await this.refreshAmdMushafSurface({ force: true })
-      void this.refreshAmdMicStatus?.()
     },
 
     isAmdEntryActive(source = this.amdEntrySource) {
@@ -27841,7 +27820,7 @@ export default {
       this.amdAssessOnStop = false
       this.clearQpcMadaniRecitationSurface()
       this.amdOpen = false
-      this.showMicrophonePermissionModal = false
+      this.closeMicrophoneHelp()
       this.amdEntrySource = null
       this.amdStage = AMD_STAGES.IDLE
       this.amdBusy = false
@@ -27903,6 +27882,9 @@ export default {
       }
       this.markAmdHowtoSeen()
       this.amdError = ''
+      this.closeMicrophoneHelp()
+      // Always attempt the browser permission prompt on Record (never gate on Permissions API alone).
+      this.amdMicStatus = 'prompt'
       // Immediate Record feedback — do not wait on audio unlock / mushaf / STT.
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
@@ -27923,12 +27905,8 @@ export default {
       this.refreshAmdLiveTajweedCoach(0)
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-          this.amdMicStatus = 'unsupported'
-          const help = this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
-            unsupported: true,
-            retry: 'amd',
-          })
-          throw new Error(help.heading)
+          this.resetAmdAfterMicAccessFailure()
+          return
         }
         const hasBrowserStt = !!(this.getSpeechRecognitionConstructor?.() || window.SpeechRecognition || window.webkitSpeechRecognition)
         // Browser STT is optional when Speechmatics can be used; require one path.
@@ -27979,29 +27957,15 @@ export default {
         if (this._amdCompleting || this.amdEndingSoon || !this.amdOpen) {
           return
         }
-        this.amdStage = AMD_STAGES.ERROR
         const kind = classifyMicrophoneAccessError(error)
-        const isMicError = this.showMicrophonePermissionModal
-          || ['not_allowed', 'not_found', 'not_readable', 'security', 'unsupported', 'aborted'].includes(kind)
+        const isMicError = ['not_allowed', 'not_found', 'not_readable', 'security', 'unsupported', 'aborted'].includes(kind)
         if (isMicError) {
-          const help = this.showMicrophonePermissionModal
-            ? this.microphoneHelp
-            : this.presentMicrophoneHelp(error, { retry: 'amd' })
-          this.amdError = help?.heading
-            || error?.message
-            || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
-          if (help?.kind === 'not_allowed') {
-            this.amdMicStatus = 'denied'
-            // A blocked browser prompt is not a recitation attempt. Keep the
-            // chosen ayah, live session, and recommendation untouched so the
-            // learner can recover from settings and retry in place.
-          } else if (help?.kind === 'unsupported') {
-            this.amdMicStatus = 'unsupported'
-          }
+          this.resetAmdAfterMicAccessFailure()
         } else {
+          this.amdStage = AMD_STAGES.ERROR
           this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
+          this.playUiTone?.('error')
         }
-        this.playUiTone?.('error')
       } finally {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdBusy = false
@@ -31464,6 +31428,7 @@ export default {
           interval: null,
           silenceStartedAt: 0,
           lastSpeechAt: 0,
+          lowInputSince: 0,
           active: true,
           throttled: false
         }
@@ -31477,11 +31442,14 @@ export default {
             sum += centered * centered
           }
           const rms = Math.sqrt(sum / samples.length) / 128
+          this.recitationMicInputLevel = rms
           const speaking = rms > 0.014
           if (speaking) {
             vad.lastSpeechAt = now
             vad.silenceStartedAt = 0
+            vad.lowInputSince = 0
             vad.throttled = false
+            if (this.recitationMicLowInput) this.recitationMicLowInput = false
           } else {
             if (!vad.silenceStartedAt) vad.silenceStartedAt = now
             const silenceMs = this.getRecitationSilenceAutoStopThresholdMs()
@@ -31489,6 +31457,18 @@ export default {
               vad.throttled = true
               if (!(this.amdOpen || this.postSessionAiReciteActive)) {
                 this.handleAiRecitationSilenceAutoStop()
+              }
+            }
+            if (this.recitationCheckRecording) {
+              const startedAt = Number(this.recitationCheckStartedAt) || 0
+              const graceElapsed = startedAt > 0 && now - startedAt >= RECITATION_MIC_LOW_INPUT_GRACE_MS
+              if (rms < RECITATION_MIC_LOW_INPUT_RMS) {
+                if (!vad.lowInputSince) vad.lowInputSince = now
+                if (graceElapsed && now - vad.lowInputSince >= 900) {
+                  this.recitationMicLowInput = true
+                }
+              } else {
+                vad.lowInputSince = 0
               }
             }
           }
@@ -31512,6 +31492,8 @@ export default {
       }
       try { vad.source?.disconnect?.() } catch { }
       try { vad.audioContext?.close?.() } catch { }
+      this.recitationMicInputLevel = 0
+      this.recitationMicLowInput = false
       this.recitationVadState = {
         audioContext: null,
         analyser: null,
@@ -31568,37 +31550,18 @@ export default {
       })
     },
     /**
-     * Gate AI mic use. Explicit decline blocks; missing consent opens the modal
-     * only when the learner starts AI Recite — never on registration.
+     * No in-app consent modal — microphone permission is requested via getUserMedia only.
+     * Still records acceptance server-side when policy requires it.
      */
     ensureAiAudioConsent() {
-      if (isAiAudioConsentDeclined(this.resolveCurrentAiAudioConsent())) {
-        return Promise.resolve(false)
-      }
-      if (!shouldPromptAiAudioConsent({
+      if (shouldPromptAiAudioConsent({
         userId: this.aiAudioConsentUserId(),
         serverSnapshot: this.aiAudioConsentSnapshot || (typeof window !== 'undefined' ? window.mutqinAiAudioConsent : null),
       })) {
-        return Promise.resolve(true)
+        void this.persistAiAudioConsent(true)
       }
-      if (this._aiAudioConsentWaiter) return this._aiAudioConsentWaiter
-      this.showAiAudioConsentModal = true
-      this.syncBodyScrollLock(true)
-      this._aiAudioConsentWaiter = new Promise((resolve) => {
-        this._aiAudioConsentResolve = resolve
-      })
-      return this._aiAudioConsentWaiter
+      return Promise.resolve(true)
     },
-    resolvePendingAiAudioConsent(accepted) {
-      const resolve = this._aiAudioConsentResolve
-      this._aiAudioConsentResolve = null
-      this._aiAudioConsentWaiter = null
-      if (typeof resolve === 'function') resolve(!!accepted)
-    },
-    /**
-     * Registration must not open the AI consent / recitation modal.
-     * Consent is requested from ensureAiAudioConsent when AI Recite starts.
-     */
     maybeShowRegistrationAiAudioConsent() {
       return
     },
@@ -31634,22 +31597,6 @@ export default {
           name: error?.name,
         }))
       }
-    },
-    onAiAudioConsentAccept() {
-      this.showAiAudioConsentModal = false
-      this.syncBodyScrollLock(false)
-      void this.persistAiAudioConsent(true).finally(() => {
-        this.resolvePendingAiAudioConsent(true)
-        this.scheduleWorkspaceTourStart()
-      })
-    },
-    onAiAudioConsentDecline() {
-      this.showAiAudioConsentModal = false
-      this.syncBodyScrollLock(false)
-      void this.persistAiAudioConsent(false).finally(() => {
-        this.resolvePendingAiAudioConsent(false)
-        this.scheduleWorkspaceTourStart()
-      })
     },
     applyAudioRetentionToCacheEntry(entry = {}, { failed = false } = {}) {
       const prepared = prepareAudioRetentionPayload(entry)
@@ -32724,9 +32671,13 @@ export default {
     },
     async startRecitationCheckRecording(targetVerse = null, options = {}) {
       if (!this.supportsSelfCheckRecording()) {
+        if (this.amdOpen) {
+          this.resetAmdAfterMicAccessFailure()
+          return
+        }
         const help = this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
           unsupported: true,
-          retry: this.amdOpen ? 'amd' : 'recitation',
+          retry: 'recitation',
         })
         this.reportRecitationCheckFailure(help.heading, { skipBanner: true })
         return
@@ -33062,10 +33013,11 @@ export default {
         }
 
         recorder.start(RECITATION_CHUNK_TIMESLICE_MS)
-        // VAD silence auto-stop is disabled for AMD; skip analyser overhead mid-test.
-        if (!this.amdOpen) {
-          this.startRecitationVad(stream)
-        }
+        // Level meter + silence auto-stop (auto-stop skipped while AMD is open).
+        this.startRecitationVad(stream)
+        this.recitationMicLowInput = false
+        this.recitationMicInputLevel = 0
+        this.closeMicrophoneHelp()
         this.recitationCheckStartedAt = Date.now()
         this._recitationPaceObserver = createRecitationPaceObserver()
         this._amdAdaptiveDripMs = null
@@ -33119,10 +33071,16 @@ export default {
         this.cleanupRecitationCheckMedia()
         const kind = classifyMicrophoneAccessError(error)
         if (kind !== 'unknown') {
-          const help = this.presentMicrophoneHelp(error, {
-            retry: this.amdOpen ? 'amd' : 'recitation',
-          })
-          this.reportRecitationCheckFailure(help.heading, { error, skipBanner: true })
+          if (this.amdOpen) {
+            this.reportRecitationCheckFailure('', {
+              error,
+              skipBanner: true,
+              micAccessFailure: true,
+            })
+          } else {
+            const help = this.presentMicrophoneHelp(error, { retry: 'recitation' })
+            this.reportRecitationCheckFailure(help.heading, { error, skipBanner: true })
+          }
           // Permission is requested before a recording exists. Do not create
           // an insufficient-audio result or reset the active session here.
           return
@@ -38868,6 +38826,24 @@ export default {
       if (!this.chainingEnabled || !key || !this.isVerseInSessionScope(key)) return false
       return this.chainingVisualAyahKeys.includes(key)
     },
+    isVerseFoldedIntoChainingJoin(verseKey) {
+      if (!this.chainingJoinedFlowActive) return false
+      const key = String(verseKey || '')
+      return key && this.chainingVisualAyahKeys.includes(key)
+    },
+    buildChainingJoinedFlowHtml() {
+      if (!this.chainingJoinedFlowActive) return ''
+      const keys = this.chainingVisualAyahKeys
+      const activeKey = String(this.effectiveActiveVerseKey || this.activeVerseKey || '')
+      return buildChainingJoinedFlowHtml(
+        keys,
+        (key) => {
+          const verse = (this.verses || []).find((item) => item.key === key)
+          return verse ? this.getDisplayArabic(verse) : ''
+        },
+        (key) => key === activeKey,
+      )
+    },
     isVerseInSessionScope(verseKey) {
       return isVerseInteractiveOnPage(verseKey, this.mushafSessionVerseKeys)
     },
@@ -43156,8 +43132,12 @@ export default {
           .join(',')
         : ''
       const review = this.shouldShowRecitationReviewHighlights(verse.key) ? 'r1' : 'r0'
+      const chainSig = this.chainingJoinedFlowActive && this.chainingVisualAyahKeys.includes(verse.key)
+        ? `cj:${this.chainingVisualAyahKeys.join(',')}`
+        : 'cj-'
       return [
         verse.key,
+        chainSig,
         this.readingViewMode,
         this.mushafLayoutId || '',
         this.useStackedQpcMadaniGlyphs ? 'sq1' : 'sq0',
@@ -47926,7 +47906,7 @@ export default {
 
       // Apply changes
       this.applySpeed()
-      this.rebuildQueue()
+      this.applyChainingQueueChange(this.currentMode, { restart: true })
       this.persistAllState()
 
       // Show feedback and keep panel open if needed

@@ -112,6 +112,9 @@ export function issueLabel(issues, t) {
 
 export function attentionReasonTags(student, t) {
   const tags = []
+  if (student?.repeated_absence) {
+    tags.push({ key: 'attendance', tone: 'danger', icon: 'bi bi-calendar-x', label: t('teacher.reason_repeated_absence') })
+  }
   if ((student?.assignments?.overdue || 0) > 0) {
     tags.push({ key: 'tasks', tone: 'danger', icon: 'bi bi-clock', label: t('teacher.kpi_overdue_tasks') })
   }

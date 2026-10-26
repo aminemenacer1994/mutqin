@@ -169,34 +169,18 @@
 }
 
 .mutashabihat-compare__arabic {
-  --mutashabihat-arabic-size: clamp(1.32rem, 3.2vw, 1.68rem);
-  --mutashabihat-arabic-line: 2.22;
+  --mutashabihat-arabic-size: clamp(1.38rem, 3.4vw, 1.78rem);
+  --mutashabihat-arabic-line: 2.45;
   margin: 0;
   font-family: var(--mutashabihat-arabic);
   font-size: var(--mutashabihat-arabic-size);
   line-height: var(--mutashabihat-arabic-line);
   font-weight: 400;
+  color: var(--mutashabihat-ink);
   text-align: right;
-  unicode-bidi: isolate;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-.mutashabihat-compare__arabic--highlight word.wbw-word,
-.mutashabihat-compare__arabic--highlight .wbw-word {
-  display: inline;
-  padding: 0.06em 0.08em;
-  margin: 0 0.02em;
-  border-radius: 4px;
-  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
-}
-
-.mutashabihat-compare__arabic--highlight word.wbw-word.highlighted,
-.mutashabihat-compare__arabic--highlight .wbw-word.highlighted {
-  background: var(--mutashabihat-accent);
-  color: #fff;
-  transform: scale(1.04);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--mutashabihat-accent) 35%, transparent);
+  word-break: normal;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .mutashabihat-compare__icon-btn--stop {

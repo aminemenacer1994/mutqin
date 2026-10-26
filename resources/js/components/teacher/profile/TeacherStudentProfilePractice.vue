@@ -16,7 +16,10 @@
         <TeacherRecordList :rows="group.rows" />
       </details>
     </div>
-    <TeacherEmpty v-else icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
+    <div v-else class="teacher-profile-empty">
+      <TeacherEmpty icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
+      <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_first_practice') }}</button>
+    </div>
   </TeacherSectionPane>
 </template>
 
@@ -39,6 +42,7 @@ export default {
     sessionLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
   },
+  emits: ['assign-revision'],
   computed: {
     sessionCount() {
       return (this.profile.payload.sessions || []).length
@@ -62,6 +66,7 @@ export default {
           badgeTone: session.status === 'completed' ? 'good' : 'muted',
           audio: session.evidence?.audio || null,
           transcript: session.evidence?.transcript || '',
+          words: session.evidence?.words || [],
         })
       }
       return [...groups.values()]

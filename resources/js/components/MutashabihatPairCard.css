@@ -1,8 +1,8 @@
 @import "./MutashabihatShared.css";
 
 .mutashabihat-card {
-  --mutashabihat-card-arabic-size: clamp(1rem, 2vw, 1.14rem);
-  --mutashabihat-card-arabic-line: 2;
+  --mutashabihat-card-arabic-size: clamp(1.08rem, 2.2vw, 1.22rem);
+  --mutashabihat-card-arabic-line: 2.35;
   display: grid;
   gap: 0.65rem;
   padding: 0.8rem 0.85rem 0.85rem;

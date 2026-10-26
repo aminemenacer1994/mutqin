@@ -17,6 +17,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherNote;
 use App\Models\User;
@@ -135,7 +136,6 @@ class TeacherDashboardService
             return [
                 'id' => $id,
                 'name' => $user->name,
-                'email' => $user->email,
                 'groups' => $groups->get($id, collect())->map(fn (LearningGroup $group) => [
                     'id' => (int) $group->id,
                     'name' => $group->name,
@@ -153,6 +153,7 @@ class TeacherDashboardService
                 'revision_upcoming' => $metric['revision_upcoming'],
                 'assignments' => $metric['assignments'],
                 'needs_attention' => $metric['needs_attention'],
+                'repeated_absence' => $metric['repeated_absence'],
                 'active_7' => (bool) ($metric['active_7'] ?? false),
             ];
         })->filter()->values();
@@ -508,6 +509,8 @@ class TeacherDashboardService
                 'active_7' => false,
                 'active_30' => false,
                 'needs_attention' => false,
+                'repeated_absence' => false,
+                'absence_weeks' => 0,
             ];
         }
 
@@ -684,6 +687,28 @@ class TeacherDashboardService
             }
         }
 
+        $absenceRows = TeacherAttendanceRecord::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('student_id', $ids)
+            ->whereIn('learning_group_id', $this->access->teacherGroupIds($teacher))
+            ->where('status', 'absent')
+            ->whereDate('attendance_date', '>=', now()->subWeeks(2)->startOfWeek(Carbon::MONDAY)->toDateString())
+            ->get(['student_id', 'attendance_date'])
+            ->groupBy('student_id');
+        foreach ($absenceRows as $studentId => $records) {
+            $weeks = $records->map(fn (TeacherAttendanceRecord $record) => $record->attendance_date
+                ->copy()->startOfWeek(Carbon::MONDAY)->toDateString())->unique()->sortDesc()->values();
+            $consecutive = $weeks->sliding(2)->contains(function (Collection $pair): bool {
+                if ($pair->count() !== 2) return false;
+
+                return (int) Carbon::parse($pair[1])->diffInDays(Carbon::parse($pair[0])) === 7;
+            });
+            if (isset($metrics[(int) $studentId])) {
+                $metrics[(int) $studentId]['absence_weeks'] = $weeks->count();
+                $metrics[(int) $studentId]['repeated_absence'] = $consecutive;
+            }
+        }
+
         $cutoff7 = now()->subDays(7);
         $cutoff30 = now()->subDays(30);
         foreach ($metrics as $id => $row) {
@@ -691,6 +716,7 @@ class TeacherDashboardService
             $metrics[$id]['active_7'] = $last !== null && $last->gte($cutoff7);
             $metrics[$id]['active_30'] = $last !== null && $last->gte($cutoff30);
             $metrics[$id]['needs_attention'] = ! $metrics[$id]['active_7']
+                || $row['repeated_absence']
                 || $row['revision_overdue'] > 0
                 || $row['assignments']['overdue'] > 0
                 || $row['assignments']['attendance_hold'] > 0
@@ -755,6 +781,7 @@ class TeacherDashboardService
                 'last_activity_at' => $metric['last_activity_at'],
                 'active_7' => $metric['active_7'],
                 'needs_attention' => $metric['needs_attention'],
+                'repeated_absence' => $metric['repeated_absence'],
                 'ai_success_rate' => $metric['ai_success_rate'],
             ];
         })->filter(fn (array $row) => $row['name']);
@@ -1261,10 +1288,32 @@ class TeacherDashboardService
     /** @return array<string, mixed> */
     private function presentAttemptEvidence(AiReciteAttempt $attempt): array
     {
+        $words = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
+            ->filter(fn ($word) => is_array($word))
+            ->map(function (array $word): ?array {
+                $text = trim((string) ($word['text'] ?? $word['expected'] ?? $word['word'] ?? ''));
+                if ($text === '') {
+                    return null;
+                }
+
+                return [
+                    'text' => mb_substr($text, 0, 120),
+                    'status' => (string) ($word['status'] ?? 'unknown'),
+                    'detected' => trim((string) ($word['detected_token'] ?? $word['detected'] ?? $word['actual'] ?? '')) ?: null,
+                    'ayah' => isset($word['ayah']) ? (int) $word['ayah'] : null,
+                    'word_index' => isset($word['word_index']) ? (int) $word['word_index'] : null,
+                ];
+            })
+            ->filter()
+            ->take(250)
+            ->values()
+            ->all();
+
         return [
             'attempt_id' => (int) $attempt->id,
             'audio' => $this->audio->payload($attempt),
             'transcript' => $this->attemptTranscript($attempt),
+            'words' => $words,
         ];
     }
 

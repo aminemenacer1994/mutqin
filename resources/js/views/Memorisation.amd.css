@@ -701,6 +701,69 @@
   font-size: 0.9rem;
 }
 
+.amd-inline-error__steps {
+  margin: 0;
+  padding-inline-start: 1.15rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.amd-footer-mic-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  width: 100%;
+  margin-bottom: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
+}
+
+.amd-footer-mic-strip__status {
+  grid-column: 1 / -1;
+}
+
+.amd-footer-mic-level {
+  position: relative;
+  height: 0.35rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  grid-column: 1;
+}
+
+.amd-footer-mic-level__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2e9d62, #b77a45);
+  transition: width 80ms linear;
+}
+
+.amd-footer-mic-retry {
+  grid-column: 2;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.amd-mic-status[data-status="checking"],
+.amd-mic-status[data-status="low_input"],
+.amd-mic-status[data-status="no_device"],
+.amd-mic-status[data-status="recording_issue"] {
+  border-color: color-mix(in srgb, #ea580c 28%, transparent);
+  background: color-mix(in srgb, #ea580c 10%, transparent);
+}
+
 .amd-mushaf-shell {
   min-height: min(52vh, 520px);
   max-height: min(62vh, 640px);
@@ -2980,6 +3043,21 @@
   justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.amd-start-wrap--centered {
+  align-items: center;
+}
+
+.amd-start-wrap--centered .amd-record-btn--inline,
+.amd-footer__stop.amd-start-wrap--centered .amd-record-btn--inline {
+  width: min(100%, 16.5rem) !important;
+  max-width: 16.5rem;
+  margin-inline: auto;
+}
+
+.amd-footer__stop.amd-start-wrap--centered {
+  align-items: center;
 }
 
 .amd-recite-mode {

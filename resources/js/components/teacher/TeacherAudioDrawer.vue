@@ -8,7 +8,7 @@
           <header class="teacher-audio-drawer__head">
             <span class="teacher-audio-drawer__mark" aria-hidden="true"><i :class="hasAudio ? 'bi bi-soundwave' : 'bi bi-file-text'"></i></span>
             <div>
-              <span>{{ !hasAudio && row?.transcript ? t('teacher.recitation_transcript') : t('teacher.audio_review') }}</span>
+              <span>{{ mode === 'transcript' ? t('teacher.recitation_transcript') : t('teacher.audio_review') }}</span>
               <h2 :id="titleId">{{ row?.title || t('teacher.practice_session') }}</h2>
               <p v-if="row?.hint">{{ row.hint }}</p>
             </div>
@@ -47,7 +47,12 @@
             <button type="button" class="teacher-audio-player__speed" :aria-label="t('teacher.playback_speed')" @click="cycleSpeed">{{ speed }}×</button>
           </div>
 
-          <div v-else-if="!row?.transcript" class="teacher-audio-drawer__no-audio">
+          <div v-if="mode === 'transcript' && !row?.transcript" class="teacher-audio-drawer__no-audio">
+            <i class="bi bi-file-text" aria-hidden="true"></i>
+            <span>{{ t('teacher.no_transcript') }}</span>
+          </div>
+
+          <div v-else-if="mode === 'audio' && !hasAudio" class="teacher-audio-drawer__no-audio">
             <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
             <span>{{ t('teacher.recording_unavailable') }}</span>
           </div>
@@ -55,6 +60,17 @@
           <section v-if="row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
             <div><h3>{{ t('teacher.transcript_label') }}</h3><small v-if="!hasAudio">{{ t('teacher.transcript_no_recording') }}</small></div>
             <p dir="auto">{{ row.transcript }}</p>
+          </section>
+
+          <section v-if="row?.words?.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
+            <div class="teacher-audio-evidence__heading">
+              <h3 :id="evidenceTitleId">{{ t('teacher.recitation_text') }}</h3>
+              <span v-if="missCount">{{ t('teacher.misses_n', { n: missCount }) }}</span>
+              <span v-else>{{ t('teacher.recite_no_issues') }}</span>
+            </div>
+            <p class="teacher-audio-evidence__words" lang="ar" dir="rtl">
+              <span v-for="(word, index) in row.words" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`" :class="{ 'is-miss': isMiss(word.status) }" :title="isMiss(word.status) ? evidenceWordTitle(word) : undefined">{{ word.text }}</span>
+            </p>
           </section>
         </section>
       </div>
@@ -80,6 +96,7 @@ export default {
     drawerUid += 1
     return {
       titleId: `teacher-audio-title-${drawerUid}`,
+      evidenceTitleId: `teacher-audio-evidence-title-${drawerUid}`,
       currentTime: 0,
       duration: 0,
       playing: false,
@@ -89,6 +106,9 @@ export default {
   computed: {
     hasAudio() {
       return Boolean(this.row?.audio?.available && this.row?.audio?.url)
+    },
+    missCount() {
+      return (this.row?.words || []).filter((word) => this.isMiss(word.status)).length
     },
   },
   watch: {
@@ -146,6 +166,16 @@ export default {
       const speeds = [1, 1.25, 1.5, 0.75]
       this.speed = speeds[(speeds.indexOf(this.speed) + 1) % speeds.length]
       if (this.$refs.player) this.$refs.player.playbackRate = this.speed
+    },
+    isMiss(status) {
+      return ['incorrect', 'skipped', 'extra', 'repeated', 'wrong'].includes(String(status || '').toLowerCase())
+    },
+    evidenceWordTitle(word) {
+      const status = String(word.status || 'incorrect').toLowerCase()
+      const labelKey = ['incorrect', 'wrong'].includes(status) ? 'teacher.issue_missed' : `teacher.issue_${status}`
+      return word.detected
+        ? `${this.t(labelKey)}: ${word.detected}`
+        : this.t(labelKey)
     },
     formatTime(value) {
       const seconds = Math.max(0, Math.floor(Number(value) || 0))

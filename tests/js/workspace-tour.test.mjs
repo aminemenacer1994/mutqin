@@ -192,15 +192,15 @@ function sliceMethod(source, name) {
     /return\s*$/m,
     'registration must not open the AI consent modal',
   )
-  assert.doesNotMatch(
-    sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'),
-    /showAiAudioConsentModal\s*=\s*true/,
-    'registration path must not set showAiAudioConsentModal',
-  )
   assert.match(
     sliceMethod(memorisationJs, 'ensureAiAudioConsent'),
     /shouldPromptAiAudioConsent/,
-    'AI Recite start prompts consent when still needed',
+    'AI Recite start records consent when still needed without a modal',
+  )
+  assert.doesNotMatch(
+    sliceMethod(memorisationJs, 'ensureAiAudioConsent'),
+    /showAiAudioConsentModal/,
+    'ensureAiAudioConsent must not open the AI consent modal',
   )
 
   const run = (name, ctx) => {

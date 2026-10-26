@@ -25,6 +25,9 @@ async function main() {
         const nav = page.locator(width <= 960 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop')
         await nav.getByRole('button', { name: view, exact: true }).click()
         await page.waitForTimeout(350)
+        if (view === 'Attendance') {
+          await page.locator('.teacher-attendance__scroll, .teacher-attendance__empty').first().waitFor({ state: 'visible', timeout: 5000 })
+        }
         const data = await page.evaluate(() => {
           const shell = document.querySelector('.teacher-dashboard__layout')
           const nav = document.querySelector(window.innerWidth <= 960 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop')
@@ -76,7 +79,7 @@ async function main() {
   })
   await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Tasks', exact: true }).click()
   await page.locator('.teacher-loading-inline').waitFor({ state: 'hidden' })
-  for (const filter of await page.locator('.teacher-task-filters button').all()) {
+  for (const filter of await page.locator('.teacher-task-filters button:has(.teacher-task-filter__count)').all()) {
     const expected = Number(await filter.locator('.teacher-task-filter__count').innerText())
     await filter.click()
     await page.waitForTimeout(30)
@@ -87,7 +90,7 @@ async function main() {
   await page.locator('.teacher-search--tasks input').fill('qa-no-matching-task-zzzz')
   await page.locator('.teacher-task-empty').waitFor()
   if (!await page.locator('.teacher-task-empty').getByText('No tasks match these filters.').count()) defects.push('Tasks search empty state missing')
-  await page.locator('.teacher-task-empty button').click()
+  await page.locator('.teacher-task-filters__clear').click()
   await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Students', exact: true }).click()
   await page.locator('.teacher-student-toolbar .teacher-search input').waitFor({ state: 'visible' })
   await page.locator('.teacher-student-toolbar .teacher-search input').fill('qa-no-matching-student-zzzz')

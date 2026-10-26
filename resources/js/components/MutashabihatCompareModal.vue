@@ -93,7 +93,7 @@
                   <div v-show="leftOpen" class="mutashabihat-compare__panel-body">
                     <p class="mutashabihat-compare__passage-label">{{ leftLabel }}</p>
                     <p
-                      class="mutashabihat-compare__arabic mutashabihat-compare__arabic--highlight"
+                      class="mutashabihat-compare__arabic"
                       dir="rtl"
                       lang="ar"
                       v-html="leftHtml"
@@ -147,7 +147,7 @@
                   <div v-show="rightOpen" class="mutashabihat-compare__panel-body">
                     <p class="mutashabihat-compare__passage-label">{{ rightLabel }}</p>
                     <p
-                      class="mutashabihat-compare__arabic mutashabihat-compare__arabic--highlight"
+                      class="mutashabihat-compare__arabic"
                       dir="rtl"
                       lang="ar"
                       v-html="rightHtml"

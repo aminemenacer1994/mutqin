@@ -20,6 +20,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mutashābihāt practice (Al Quran Cloud)
+    |--------------------------------------------------------------------------
+    |
+    | KFGQPC Unicode (Madani mushaf spelling). Fetched via /memorisation/quran-proxy.
+    |
+    */
+
+    'mutashabihat' => [
+        'arabic_edition' => env('QURAN_MUTASHABIHAT_ARABIC_EDITION', 'quran-simple'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Translation editions (Al Quran Cloud)
     |--------------------------------------------------------------------------
     */

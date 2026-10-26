@@ -19,6 +19,12 @@ class MutashabihatPairSeeder extends Seeder
             return;
         }
 
+        $countsPath = resource_path('data/hafs_ayah_counts.json');
+        $hafsCounts = is_readable($countsPath)
+            ? json_decode((string) file_get_contents($countsPath), true)
+            : [];
+        $hafsCounts = is_array($hafsCounts) ? $hafsCounts : [];
+
         foreach ($raw as $entry) {
             $a = $entry['a'] ?? null;
             $b = $entry['b'] ?? null;
@@ -31,6 +37,11 @@ class MutashabihatPairSeeder extends Seeder
             $surah2 = (int) $b[0];
             $ayah2 = (int) $b[1];
             if ($surah1 < 1 || $surah2 < 1 || $ayah1 < 1 || $ayah2 < 1) {
+                continue;
+            }
+
+            if (! $this->ayahExistsInHafs($hafsCounts, $surah1, $ayah1)
+                || ! $this->ayahExistsInHafs($hafsCounts, $surah2, $ayah2)) {
                 continue;
             }
 
@@ -51,5 +62,17 @@ class MutashabihatPairSeeder extends Seeder
                 ],
             );
         }
+    }
+
+    /**
+     * @param  array<int, int>  $hafsCounts
+     */
+    private function ayahExistsInHafs(array $hafsCounts, int $surah, int $ayah): bool
+    {
+        if ($surah < 1 || $ayah < 1 || $surah > count($hafsCounts)) {
+            return false;
+        }
+
+        return $ayah <= (int) ($hafsCounts[$surah - 1] ?? 0);
     }
 }

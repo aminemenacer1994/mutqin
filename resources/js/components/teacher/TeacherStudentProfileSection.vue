@@ -9,9 +9,9 @@
             <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
             <div class="teacher-profile-hero__copy">
               <nav class="teacher-profile-hero__eyebrow teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
-                <button type="button" @click="$emit('back')">{{ t('teacher.nav_students') }}</button>
-                <span aria-hidden="true">/</span>
-                <span>{{ activeTabLabel }}</span>
+                <button type="button" @click="$emit('back')"><i class="bi bi-people" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                <span><i :class="activeTabIcon" aria-hidden="true"></i>{{ activeTabLabel }}</span>
               </nav>
               <h2>{{ profile.student.name }}</h2>
               <p class="teacher-meta">
@@ -19,10 +19,11 @@
                 {{ profile.student.organisation || t('teacher.no_group') }}
                 <template v-if="profile.student.groups?.length"> · {{ profile.student.groups.map((group) => group.name).join(', ') }}</template>
               </p>
+              <p v-if="profile.student.email" class="teacher-profile-hero__email"><i class="bi bi-envelope" aria-hidden="true"></i>{{ profile.student.email }}</p>
             </div>
           </div>
           <div class="teacher-profile-hero__actions">
-            <details ref="reportMenu" class="teacher-profile-hero__report-menu"><summary class="btn btn-outline-secondary"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i> {{ t('teacher.reports') }} <i class="bi bi-chevron-down" aria-hidden="true"></i></summary><div><button type="button" @click="openReport('parent')"><i class="bi bi-people" aria-hidden="true"></i>{{ t('teacher.report_parent') }}</button><button type="button" @click="openReport('semester')"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ t('teacher.report_semester') }}</button></div></details>
+            <button type="button" class="btn btn-outline-secondary teacher-profile-hero__report-button" @click="openReport('parent')"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> {{ t('teacher.report_title') }}</button>
             <button type="button" class="btn teacher-profile-hero__back" @click="$emit('back')">
               <i class="bi bi-arrow-left" aria-hidden="true"></i>
               {{ t('teacher.back_students') }}
@@ -81,12 +82,14 @@
           :profile="profile"
           :session-label="sessionLabel"
           :format-when="formatWhen"
+          @assign-revision="$emit('assign-revision', $event)"
         />
         <TeacherStudentProfileAi
           v-else-if="section === 'ai'"
           :profile="profile"
           :issue-label="issueLabel"
           :format-when="formatWhen"
+          @assign-revision="$emit('assign-revision', $event)"
         />
         <TeacherStudentProfileFocus
           v-else-if="section === 'focus'"
@@ -161,6 +164,9 @@ export default {
       const tab = this.tabs.find((item) => item.id === this.section)
       return tab ? this.t(tab.label) : this.t('teacher.tab_overview')
     },
+    activeTabIcon() {
+      return this.tabs.find((item) => item.id === this.section)?.icon || 'bi bi-grid'
+    },
   },
   watch: {
     section() {
@@ -171,7 +177,7 @@ export default {
     },
   },
   methods: {
-    openReport(mode) { this.reportMode = mode; if (this.$refs.reportMenu) this.$refs.reportMenu.open = false },
+    openReport(mode) { this.reportMode = mode },
     tabId(id) {
       return `${this.tabPrefix}-${id}`
     },

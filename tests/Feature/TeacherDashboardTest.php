@@ -1092,6 +1092,14 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(0, $profile['metrics']['assignments']['overdue']);
 
         $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $student]), [
+            'date' => today()->subDays(8)->toDateString(),
+            'status' => 'absent',
+        ])->assertOk();
+        $rosterStudent = collect($this->actingAs($teacher)->getJson(route('api.teacher.students'))->assertOk()->json('data'))->firstWhere('id', $student->id);
+        $this->assertTrue($rosterStudent['repeated_absence']);
+        $this->assertTrue($rosterStudent['needs_attention']);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $student]), [
             'date' => $due,
             'status' => 'clear',
         ])->assertOk();

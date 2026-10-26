@@ -1,4 +1,6 @@
 import { buildAyahComparison } from './compareAyahs.js'
+import { sanitizeMutashabihatAyahText } from './displayText.js'
+import { pairHasMinimumOverlap } from './pairCatalog.js'
 
 const lookupCache = new WeakMap()
 const comparisonCache = new Map()
@@ -13,24 +15,47 @@ function verseRecordKey(row) {
 }
 
 function verseArabic(row) {
-  return String(row?.arabic || row?.text || '').trim()
+  return sanitizeMutashabihatAyahText(row?.arabic || row?.text || '')
 }
 
 function verseTranslation(row) {
   return String(row?.translation || '').trim()
 }
 
+function mergeMutashabihatAyahCache(map, ctx) {
+  const cache = ctx?.mutashabihatAyahByKey
+  if (!cache || typeof cache !== 'object') return map
+  for (const [key, row] of Object.entries(cache)) {
+    if (!key || !row) continue
+    const arabic = String(row?.arabic || row?.text || '').trim()
+    const existing = map.get(key)
+    if (existing) {
+      map.set(key, {
+        ...existing,
+        ...row,
+        arabic: arabic || verseArabic(existing),
+        translation: String(row?.translation || existing?.translation || '').trim(),
+      })
+    } else {
+      map.set(key, row)
+    }
+  }
+  return map
+}
+
 export function getVerseLookup(ctx) {
   const index = ctx?.quranSearchIndex
   if (Array.isArray(index) && index.length) {
-    let map = lookupCache.get(index)
+    const cacheKey = { index, revision: Number(ctx?.mutashabihatAyahRevision || 0) }
+    let map = lookupCache.get(cacheKey)
     if (!map) {
       map = new Map()
       for (const row of index) {
         const key = verseRecordKey(row)
         if (key) map.set(key, row)
       }
-      lookupCache.set(index, map)
+      mergeMutashabihatAyahCache(map, ctx)
+      lookupCache.set(cacheKey, map)
     }
     return map
   }
@@ -46,13 +71,7 @@ export function getVerseLookup(ctx) {
     const key = verseRecordKey(row)
     if (key && !map.has(key)) map.set(key, row)
   }
-  const cache = ctx?.mutashabihatAyahByKey
-  if (cache && typeof cache === 'object') {
-    for (const [key, row] of Object.entries(cache)) {
-      if (key && !map.has(key)) map.set(key, row)
-    }
-  }
-  return map
+  return mergeMutashabihatAyahCache(map, ctx)
 }
 
 function lookupVerse(ctx, verseKey) {
@@ -139,6 +158,11 @@ export function buildMutashabihatCardRow(ctx, merged) {
   const comparison = (leftArabic && rightArabic)
     ? getCachedComparison(leftArabic, rightArabic)
     : null
+  const leftWordCount = leftArabic ? leftArabic.trim().split(/\s+/).filter(Boolean).length : 0
+  const rightWordCount = rightArabic ? rightArabic.trim().split(/\s+/).filter(Boolean).length : 0
+  if (comparison && !pairHasMinimumOverlap(comparison.stats, leftWordCount, rightWordCount)) {
+    return null
+  }
   const status = merged.status || 'new'
   const leftPreviewHtml = (comparison?.leftPreviewHtml && leftArabic)
     ? comparison.leftPreviewHtml
