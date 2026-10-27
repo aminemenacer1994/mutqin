@@ -29,7 +29,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
-import { ayahRangeLabel, groupAyahFindings } from '../../../scripts/teacher/formatters'
+import { ayahRangeLabel, groupAyahFindings, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import { teacherArabicAyah, teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
@@ -52,7 +52,7 @@ export default {
   },
   computed: {
     weakRows() {
-      return groupAyahFindings(this.profile.payload.items, this.t).map((group) => ({
+      return groupAyahFindings(this.profile.payload.items, this.t).map((group) => teacherRecitationEvidenceRow({
         key: `fix-${group.key}`,
         icon: 'bi bi-exclamation-triangle',
         iconTone: 'warn',
@@ -63,8 +63,6 @@ export default {
         badge: this.t('teacher.check_count_many', { n: Math.max(2, group.maxChecks) }),
         badgeTone: 'mid',
         href: group.first?.evidence_url || '',
-        audio: group.first?.evidence?.audio || null,
-        transcript: group.first?.evidence?.transcript || '',
         actionLabel: this.t('teacher.assign_revision'),
         actionPayload: {
           id: this.profile.student.id,
@@ -73,6 +71,10 @@ export default {
             ayah_number: group.first?.ayah_number,
           },
         },
+      }, group.first?.evidence, {
+        surah: group.first?.surah_number,
+        from: group.first?.ayah_number,
+        to: group.first?.ayah_number,
       }))
     },
     planRows() {

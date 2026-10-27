@@ -76,14 +76,24 @@ class TeacherAssignmentMessageAudioService
         return true;
     }
 
-    /** @return array{available: bool, url: string|null, mime: string|null, duration_ms: int|null} */
+    /** @return array{available: bool, url: string|null, mime: string|null, duration_ms: int|null, reason:string} */
     public function payload(TeacherNote $note): array
     {
+        $available = false;
+        if ($note->audio_path) {
+            try {
+                $available = Storage::disk($note->audio_disk ?: self::DISK)->exists($note->audio_path);
+            } catch (\Throwable) {
+                $available = false;
+            }
+        }
+
         return [
-            'available' => (bool) $note->audio_path,
-            'url' => $note->audio_path ? '/api/task-messages/'.$note->id.'/audio' : null,
+            'available' => $available,
+            'url' => $available ? '/api/task-messages/'.$note->id.'/audio' : null,
             'mime' => $note->audio_mime,
             'duration_ms' => $note->audio_duration_ms ? (int) $note->audio_duration_ms : null,
+            'reason' => $available ? 'available' : ($note->audio_path ? 'missing' : 'not_recorded'),
         ];
     }
 

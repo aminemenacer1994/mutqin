@@ -350,7 +350,11 @@ class TeacherAssignmentService
 
         $recipient->loadMissing('assignment');
         $assignment = $recipient->assignment;
-        if ($assignment === null || (int) $recipient->student_id !== (int) $student->id) {
+        $teacher = $assignment?->teacher;
+        if ($assignment === null
+            || (int) $recipient->student_id !== (int) $student->id
+            || ! $teacher instanceof User
+            || ! $this->access->allows($teacher, $student)) {
             abort(404);
         }
 

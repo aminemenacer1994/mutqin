@@ -96,6 +96,29 @@ export const adminApi = {
     return data
   },
 
+  async getWaitingListLaunchPreview() {
+    const { data } = await withRetry(() =>
+      http.get('/admin/waiting-list/launch-email/preview', {
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      })
+    )
+    return data
+  },
+
+  async getWaitingListLaunchStatus() {
+    const { data } = await withRetry(() =>
+      http.get('/admin/waiting-list/launch-email/status', {
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      })
+    )
+    return data
+  },
+
+  async sendWaitingListLaunchEmail(payload) {
+    const { data } = await withRetry(() => http.post('/admin/waiting-list/launch-email/send', payload))
+    return data
+  },
+
   async getWaitingListEntry(id) {
     const { data } = await withRetry(() => http.get(`/admin/waiting-list/${id}`))
     return data?.entry || null

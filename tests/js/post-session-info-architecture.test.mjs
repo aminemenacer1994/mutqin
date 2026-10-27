@@ -10,6 +10,11 @@ import {
   formatRecommendationSetLabel,
   formatRecommendationSurahSet,
 } from '../../resources/js/scripts/recommendations/postSessionInfoArchitecture.js'
+import {
+  buildPracticePlanAdjustmentsFromSettings,
+  mergePersistedPracticePlanDetail,
+  resolvePracticePlanIdFromRecommendation,
+} from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 import { buildRevisionScopeOptions } from '../../resources/js/scripts/recommendations/revisionPracticeScope.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -19,6 +24,21 @@ const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), '
 const rec = en.memorisation.postSession.recommendation
 
 const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>/)?.[0] || ''
+
+// Persisted practice-plan ids stay on the client plan model
+{
+  const built = { headline: 'Your practice plan', range: { from: 1, to: 3 } }
+  const stored = { practice_plan_id: 42, assessment_id: 9, source: 'memorisation_detection' }
+  const merged = mergePersistedPracticePlanDetail(built, stored)
+  assert.equal(merged.practice_plan_id, 42)
+  assert.equal(merged.assessment_id, 9)
+  assert.equal(merged.headline, 'Your practice plan')
+  assert.equal(resolvePracticePlanIdFromRecommendation({ plan_detail: { practice_plan_id: 7 } }), 7)
+  assert.deepEqual(
+    buildPracticePlanAdjustmentsFromSettings({ technique: 'focus', repetitions: 4, playback_speed: 0.9 }),
+    { techniques: ['focus'], repetitions: 4, playback_speed: 0.9 },
+  )
+}
 
 // Terminology helpers
 {
@@ -153,7 +173,7 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.equal(rec.weakSpotsTitle, 'Weak areas')
   assert.equal(rec.whatNext, 'What to practise next')
   assert.equal(rec.revisionOptions, 'Revision options')
-  assert.equal(rec.successFlow.title, 'Recommended next steps')
+  assert.equal(rec.successFlow.title, 'Next steps')
   assert.match(rec.successFlow.reinforceTitle, /Revisit ayah/i)
   assert.equal(rec.planDetail.focusVerse, 'Ayah {ayah}')
   assert.equal(rec.singleAyah, 'Ayah {ayah}')
@@ -168,6 +188,9 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
 {
   assert.match(js, /postSessionInfoArchitecture\(\)/)
   assert.match(js, /postSessionNextPracticeRange\(\)/)
+  assert.match(js, /resolvePostSessionPracticePlanId\(\)/)
+  assert.match(js, /syncPostSessionPracticePlanWithSettings/)
+  assert.match(js, /markPostSessionPracticePlanStarted/)
   assert.match(js, /const persistedNext = this\.postSessionNextPracticeRange/)
   assert.match(js, /buildPostSessionInfoArchitecture/)
   assert.match(js, /formatRecommendationAyahLabel/)

@@ -124,7 +124,7 @@ export default {
       const late = rows.filter((row) => row.status === 'late').length
       return {
         value: this.t('teacher.attendance_present_of_n', { present, total: rows.length }),
-        hint: this.t('teacher.attendance_absent_late', { absent, late }),
+        hint: `${this.t('teacher.attendance_absent_late', { absent, late })} · ${this.t('teacher.attendance_teacher_recorded_short')}`,
       }
     },
     summaryFacts() {

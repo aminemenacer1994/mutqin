@@ -18,7 +18,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
-import { groupAyahFindings } from '../../../scripts/teacher/formatters'
+import { groupAyahFindings, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
@@ -34,7 +34,7 @@ export default {
   emits: ['assign-revision'],
   computed: {
     weakRows() {
-      return groupAyahFindings(this.profile.payload.items, this.t).map((group) => ({
+      return groupAyahFindings(this.profile.payload.items, this.t).map((group) => teacherRecitationEvidenceRow({
         key: group.key,
         icon: 'bi bi-exclamation-triangle',
         iconTone: 'warn',
@@ -44,10 +44,12 @@ export default {
         badge: this.t(Number(group.first?.affected_attempt_count || 0) === 1 ? 'teacher.check_count_one' : 'teacher.check_count_many', { n: Number(group.first?.affected_attempt_count || 0) }),
         badgeTone: 'warn',
         source: group.first?.evidence_url ? this.t('teacher.open_evidence') : '',
-        audio: group.first?.evidence?.audio || null,
-        transcript: group.first?.evidence?.transcript || '',
         actionLabel: this.t('teacher.assign_revision'),
         actionPayload: this.assignPayload(group.first),
+      }, group.first?.evidence, {
+        surah: group.first?.surah_number,
+        from: group.first?.ayah_number,
+        to: group.first?.ayah_number,
       }))
     },
   },

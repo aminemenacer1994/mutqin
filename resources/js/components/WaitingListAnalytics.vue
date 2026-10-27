@@ -1,4 +1,5 @@
 <template>
+  <WaitingListLaunchEmail />
   <section class="waiting-analytics" aria-labelledby="waiting-analytics-title">
     <header class="waiting-analytics__head">
       <div>
@@ -42,8 +43,10 @@
 <script>
 import { useI18n } from 'vue-i18n'
 import { adminApi } from '../scripts/api/admin'
+import WaitingListLaunchEmail from './WaitingListLaunchEmail.vue'
 
 export default {
+  components: { WaitingListLaunchEmail },
   setup() {
     const { t } = useI18n()
     return { t }

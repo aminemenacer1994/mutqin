@@ -1833,6 +1833,77 @@ export function buildPersonalPracticePlan(input = {}) {
 }
 
 /**
+ * Keep server-persisted practice-plan identifiers on the client plan view-model.
+ * Display fields come from `built`; database ids and assessment snapshots from `stored`.
+ *
+ * @param {object|null|undefined} built
+ * @param {object|null|undefined} stored
+ */
+export function mergePersistedPracticePlanDetail(built, stored) {
+  if (!built || typeof built !== 'object') {
+    return stored && typeof stored === 'object' ? { ...stored } : built
+  }
+  if (!stored || typeof stored !== 'object') return { ...built }
+
+  const merged = { ...built }
+  const planId = Number(stored.practice_plan_id || stored.practicePlanId || 0)
+  if (planId > 0) merged.practice_plan_id = planId
+  if (stored.assessment_id != null) merged.assessment_id = stored.assessment_id
+  if (stored.source) merged.source = stored.source
+  if (stored.title) merged.title = stored.title
+  if (stored.personalWhy) merged.personalWhy = stored.personalWhy
+  if (stored.mastery) merged.mastery = stored.mastery
+  if (Array.isArray(stored.techniques) && stored.techniques.length) {
+    merged.techniques = stored.techniques
+  }
+  if (Array.isArray(stored.weakWords) && stored.weakWords.length) {
+    merged.weakWords = stored.weakWords
+  } else if (Array.isArray(stored.weak_words) && stored.weak_words.length) {
+    merged.weakWords = stored.weak_words
+  }
+  if (stored.range && typeof stored.range === 'object') {
+    merged.range = { ...(merged.range || {}), ...stored.range }
+  }
+  return merged
+}
+
+/**
+ * @param {object|null|undefined} recommendation
+ * @param {object|null|undefined} [amdPlan]
+ */
+export function resolvePracticePlanIdFromRecommendation(recommendation, amdPlan = null) {
+  const fromAmd = Number(amdPlan?.id || 0)
+  if (fromAmd > 0) return fromAmd
+  const detail = recommendation?.plan_detail
+  if (!detail || typeof detail !== 'object') return 0
+  return Number(detail.practice_plan_id || detail.practicePlanId || 0) || 0
+}
+
+/**
+ * Map recommendation / tools settings to memorisation practice-plan adjustments.
+ *
+ * @param {object} [settings]
+ * @param {object} [extra]
+ */
+export function buildPracticePlanAdjustmentsFromSettings(settings = {}, extra = {}) {
+  const adjustments = { ...extra }
+  const technique = String(settings.technique || '').toLowerCase()
+  if (technique) {
+    adjustments.techniques = [technique === 'chunking' ? 'focus' : technique]
+  }
+  if (settings.repetitions != null && Number.isFinite(Number(settings.repetitions))) {
+    adjustments.repetitions = Number(settings.repetitions)
+  }
+  if (settings.playback_speed != null && Number.isFinite(Number(settings.playback_speed))) {
+    adjustments.playback_speed = Number(settings.playback_speed)
+  }
+  if (settings.practice_scope) {
+    adjustments.practice_scope = settings.practice_scope
+  }
+  return adjustments
+}
+
+/**
  * Merge personal plan fields onto a recommendation for UI + persistence.
  */
 export function applyPersonalPlanToRecommendation(recommendation, plan) {

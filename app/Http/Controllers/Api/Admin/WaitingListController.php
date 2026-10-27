@@ -7,6 +7,7 @@ use App\Models\WaitingListEntry;
 use App\Rules\WaitingListEmail;
 use App\Services\AdminDashboardService;
 use App\Services\WaitingListAnalyticsService;
+use App\Services\WaitingListLaunchCampaignService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,49 @@ class WaitingListController extends Controller
 
         return response()->json($analytics->report())
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function launchEmailPreview(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
+    {
+        $this->admin($request);
+
+        return response()
+            ->json($campaign->preview())
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function launchEmailStatus(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
+    {
+        $this->admin($request);
+
+        return response()
+            ->json([
+                'campaign_key' => $campaign->campaignKey(),
+                'deliveries' => $campaign->deliveryCounts(),
+            ])
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function launchEmailSend(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
+    {
+        $admin = $this->admin($request);
+
+        $validated = $request->validate([
+            'confirm_count' => ['nullable', 'integer', 'min:0'],
+            'test_email' => ['nullable', 'string', 'max:255'],
+            'confirm_send' => ['required', 'accepted'],
+        ]);
+
+        $testEmail = isset($validated['test_email']) ? trim((string) $validated['test_email']) : null;
+        if ($testEmail === '') {
+            $testEmail = null;
+        }
+
+        $confirmCount = (int) ($validated['confirm_count'] ?? 0);
+
+        $result = $campaign->dispatchSend((int) $admin->id, $confirmCount, $testEmail);
+
+        return response()->json($result);
     }
 
     public function index(Request $request): JsonResponse
@@ -134,8 +178,11 @@ class WaitingListController extends Controller
         ];
     }
 
-    private function admin(Request $request): void
+    private function admin(Request $request): \App\Models\User
     {
-        abort_unless($request->user()?->can('access-admin'), 403);
+        $user = $request->user();
+        abort_unless($user?->can('access-admin'), 403);
+
+        return $user;
     }
 }

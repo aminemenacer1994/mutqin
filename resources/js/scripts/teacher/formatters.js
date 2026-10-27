@@ -109,22 +109,63 @@ export function issueLabel(issues, t) {
     .join(' · ')
 }
 
+export function teacherRecitationEvidenceRow(base = {}, evidence = null, rangeFallback = null) {
+  const ev = evidence && typeof evidence === 'object' ? evidence : {}
+  const range = ev.range || rangeFallback || {}
+  return {
+    ...base,
+    audio: ev.audio ?? base.audio ?? null,
+    transcript: ev.transcript ?? base.transcript ?? '',
+    words: ev.words ?? base.words ?? [],
+    range: {
+      surah: range.surah ?? range.surah_number ?? null,
+      from: range.from ?? null,
+      to: range.to ?? null,
+    },
+    evidenceState: ev.state ?? base.evidenceState,
+    transcriptState: ev.transcript_state ?? base.transcriptState,
+  }
+}
+
 export function attentionReasonTags(student, t) {
   const tags = []
   if (student?.repeated_absence) {
     tags.push({ key: 'attendance', tone: 'danger', icon: 'bi bi-calendar-x', label: t('teacher.reason_repeated_absence') })
   }
-  if ((student?.assignments?.overdue || 0) > 0) {
-    tags.push({ key: 'tasks', tone: 'danger', icon: 'bi bi-clock', label: t('teacher.kpi_overdue_tasks') })
+  const overdueTasks = Number(student?.assignments?.overdue || 0)
+  if (overdueTasks > 0) {
+    tags.push({
+      key: 'tasks',
+      tone: 'danger',
+      icon: 'bi bi-clock',
+      label: t(overdueTasks === 1 ? 'teacher.needs_help_overdue_task_one' : 'teacher.needs_help_overdue_task_other', { n: overdueTasks }),
+    })
   }
-  if ((student?.revision_overdue || 0) > 0) {
-    tags.push({ key: 'revision', tone: 'warn', icon: 'bi bi-arrow-repeat', label: t('teacher.overdue_revisions') })
+  const overdueReviews = Number(student?.revision_overdue || 0)
+  if (overdueReviews > 0) {
+    tags.push({
+      key: 'revision',
+      tone: 'warn',
+      icon: 'bi bi-arrow-repeat',
+      label: t(overdueReviews === 1 ? 'teacher.needs_help_review_due_one' : 'teacher.needs_help_review_due_other', { n: overdueReviews }),
+    })
   }
   if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65) {
-    tags.push({ key: 'score', tone: 'danger', icon: 'bi bi-mic', label: t('teacher.reason_low_score') })
+    tags.push({
+      key: 'score',
+      tone: 'danger',
+      icon: 'bi bi-mic',
+      label: t('teacher.needs_help_low_recitation', { n: student.ai_success_rate }),
+    })
   }
-  if ((student?.recurring_weak || 0) > 0) {
-    tags.push({ key: 'weak', tone: 'warn', icon: 'bi bi-exclamation-triangle', label: t('teacher.reason_hard_ayahs') })
+  const weakAyahs = Number(student?.recurring_weak || 0)
+  if (weakAyahs > 0) {
+    tags.push({
+      key: 'weak',
+      tone: 'warn',
+      icon: 'bi bi-exclamation-triangle',
+      label: t(weakAyahs === 1 ? 'teacher.needs_help_hard_ayah_one' : 'teacher.needs_help_hard_ayah_other', { n: weakAyahs }),
+    })
   }
   if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {
     tags.push({ key: 'inactive', tone: 'quiet', icon: 'bi bi-moon', label: t('teacher.reason_inactive') })

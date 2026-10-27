@@ -5891,6 +5891,7 @@ body.modal-open {
   border-radius: 0.9rem 0.9rem 0.25rem 0.9rem;
   background: color-mix(in srgb, var(--dash-accent-light) 62%, var(--dash-card-bg));
 }
+.user-dashboard .learner-teacher__bubble.is-unread { box-shadow: inset 3px 0 0 var(--dash-accent); }
 
 .user-dashboard .learner-teacher__bubble > span,
 .user-dashboard .learner-teacher__bubble > time {

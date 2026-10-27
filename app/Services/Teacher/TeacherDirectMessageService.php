@@ -13,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class TeacherDirectMessageService
 {
-    public function __construct(private readonly StudentAccessAuthorizer $access) {}
+    public function __construct(
+        private readonly StudentAccessAuthorizer $access,
+        private readonly TeacherAssignmentMessageAudioService $messageAudio,
+    ) {}
 
     /** @return list<array<string, mixed>> */
     public function thread(User $teacher, User $student, ?User $viewer = null): array
@@ -26,9 +29,16 @@ class TeacherDirectMessageService
         $notes = TeacherNote::query()
             ->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
-            ->whereNull('teacher_assignment_id')
-            ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::StudentMessage->value])
-            ->with(['teacher:id,name', 'student:id,name'])
+            ->where(function ($query) {
+                $query->where(function ($direct) {
+                    $direct->whereNull('teacher_assignment_id')
+                        ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::StudentMessage->value]);
+                })->orWhere(function ($task) {
+                    $task->whereNotNull('teacher_assignment_id')
+                        ->whereIn('kind', [TeacherNoteKind::Feedback->value, TeacherNoteKind::Note->value]);
+                });
+            })
+            ->with(['teacher:id,name', 'student:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
             ->orderBy('created_at')
             ->orderBy('id')
             ->limit(100)
@@ -110,13 +120,25 @@ class TeacherDirectMessageService
     /** @return array<string, mixed> */
     public function present(TeacherNote $note, ?User $viewer = null): array
     {
-        $sender = $note->kind === TeacherNoteKind::TeacherMessage ? 'teacher' : 'student';
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+        $sender = in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::Feedback], true)
+            ? 'teacher'
+            : 'student';
+        $assignment = $note->assignment;
 
         return [
             'id' => (int) $note->id,
             'sender' => $sender,
             'sender_name' => $sender === 'teacher' ? $note->teacher?->name : $note->student?->name,
             'body' => $note->body,
+            'audio' => $note->teacher_assignment_id ? $this->messageAudio->payload($note) : null,
+            'task' => $assignment ? [
+                'id' => (int) $assignment->id,
+                'surah_number' => (int) $assignment->surah_number,
+                'surah_name' => \App\Support\QuranMetadata::name((int) $assignment->surah_number),
+                'ayah_start' => (int) $assignment->ayah_start,
+                'ayah_end' => (int) $assignment->ayah_end,
+            ] : null,
             'created_at' => $note->created_at?->toIso8601String(),
             'read_at' => $note->read_at?->toIso8601String(),
             'unread' => $viewer !== null && $note->read_at === null && ! $this->sentBy($note, $viewer),
@@ -126,7 +148,8 @@ class TeacherDirectMessageService
 
     private function sentBy(TeacherNote $note, User $viewer): bool
     {
-        $teacherMessage = $note->kind === TeacherNoteKind::TeacherMessage;
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+        $teacherMessage = in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::Feedback], true);
 
         return $teacherMessage
             ? (int) $note->teacher_id === (int) $viewer->id

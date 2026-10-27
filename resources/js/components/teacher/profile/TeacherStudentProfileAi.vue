@@ -31,7 +31,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
-import { ayahRangeLabel, scoreBadgeTone } from '../../../scripts/teacher/formatters'
+import { ayahRangeLabel, scoreBadgeTone, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import { teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
@@ -75,7 +75,7 @@ export default {
             : this.t('teacher.recite_no_issues'))
         const hasIssues = Boolean(issues && Object.values(issues).some((value) => Number(value) > 0))
         const when = this.formatWhen(attempt.created_at)
-        const row = {
+        const row = teacherRecitationEvidenceRow({
           key: attempt.id,
           icon: 'bi bi-mic',
           iconTone: scoreBadgeTone(attempt.accuracy_percent),
@@ -86,13 +86,14 @@ export default {
             ? this.t('teacher.score_n', { n: attempt.accuracy_percent })
             : this.t('teacher.unavailable'),
           badgeTone: scoreBadgeTone(attempt.accuracy_percent),
-          href: !attempt.evidence?.audio?.available && !attempt.evidence?.transcript && attempt.range?.surah_number && attempt.range?.from
+          href: !attempt.evidence?.audio?.available && !attempt.evidence?.transcript && !attempt.evidence?.words?.length && attempt.range?.surah_number && attempt.range?.from
             ? `/memorisation?surah=${attempt.range.surah_number}&from=${attempt.range.from}&to=${attempt.range.to || attempt.range.from}&review=1`
             : '',
-          audio: attempt.evidence?.audio || null,
-          transcript: attempt.evidence?.transcript || '',
-          words: attempt.evidence?.words || [],
-        }
+        }, attempt.evidence, attempt.range ? {
+          surah: attempt.range.surah_number,
+          from: attempt.range.from,
+          to: attempt.range.to,
+        } : null)
         if (!groups.has(title)) groups.set(title, { key: title, title, surah: attempt.range?.surah_number, rows: [] })
         groups.get(title).rows.push(row)
       }

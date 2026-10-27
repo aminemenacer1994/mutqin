@@ -7,7 +7,7 @@
       </span>
       <div class="teacher-records__copy">
         <a v-if="row.href" class="teacher-records__title teacher-records__link" :class="{ 'teacher-quran': row.quran }" :href="row.href">{{ row.title }}</a>
-        <button v-else-if="row.reviewable || row.audio?.available || row.transcript" type="button" class="teacher-records__title teacher-records__title-button" :class="{ 'teacher-quran': row.quran }" @click="openEvidence(row, 'audio')">
+        <button v-else-if="hasReviewEvidence(row)" type="button" class="teacher-records__title teacher-records__title-button" :class="{ 'teacher-quran': row.quran }" @click="openEvidence(row, preferredEvidenceMode(row))">
           {{ row.title }}
         </button>
         <span v-else class="teacher-records__title" :class="{ 'teacher-quran': row.quran }">{{ row.title }}</span>
@@ -20,10 +20,10 @@
       </div>
       <div class="teacher-records__aside">
         <div v-if="showEvidenceActions(row)" class="teacher-records__evidence-actions" :aria-label="t('teacher.recitation_evidence')">
-          <button type="button" class="teacher-records__evidence-icon is-audio" :class="row.audio?.available ? 'is-available' : 'is-unavailable'" :aria-label="`${t(row.audio?.available ? 'teacher.play_recording' : 'teacher.no_recording')}: ${row.title}`" :title="t(row.audio?.available ? 'teacher.play_recording' : 'teacher.no_recording')" @click="openEvidence(row, 'audio')">
-            <i class="bi" :class="row.audio?.available ? 'bi-play-circle-fill' : 'bi-mic'" aria-hidden="true"></i>
+          <button v-if="row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
+            <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
           </button>
-          <button type="button" class="teacher-records__evidence-icon is-transcript" :class="row.transcript ? 'is-available' : 'is-unavailable'" :aria-label="`${t(row.transcript ? 'teacher.view_transcript' : 'teacher.no_transcript')}: ${row.title}`" :title="t(row.transcript ? 'teacher.view_transcript' : 'teacher.no_transcript')" @click="openEvidence(row, 'transcript')">
+          <button v-if="row.transcript || hasCanonicalEvidence(row)" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openEvidence(row, 'transcript')">
             <i class="bi bi-file-text" aria-hidden="true"></i>
           </button>
         </div>
@@ -80,8 +80,17 @@ export default {
       this.activeEvidence = row
       this.evidenceMode = mode
     },
+    hasCanonicalEvidence(row) {
+      return Boolean(row?.range?.surah && row?.range?.from && (row?.words?.length || row?.transcript))
+    },
+    hasReviewEvidence(row) {
+      return Boolean(row?.reviewable || row?.audio?.available || row?.transcript || this.hasCanonicalEvidence(row))
+    },
+    preferredEvidenceMode(row) {
+      return row?.audio?.available ? 'audio' : 'transcript'
+    },
     showEvidenceActions(row) {
-      return Object.prototype.hasOwnProperty.call(row, 'audio') || Object.prototype.hasOwnProperty.call(row, 'transcript')
+      return Boolean(row?.audio?.available || row?.transcript || this.hasCanonicalEvidence(row))
     },
   },
 }

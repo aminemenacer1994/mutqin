@@ -25,7 +25,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
-import { practiceMinutes } from '../../../scripts/teacher/formatters'
+import { practiceMinutes, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import { teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
@@ -55,19 +55,20 @@ export default {
       for (const session of this.profile.payload.sessions || []) {
         const title = this.sessionLabel(session)
         if (!groups.has(title)) groups.set(title, { key: title, title, surah: session.surah_number, rows: [] })
-        groups.get(title).rows.push({
+        groups.get(title).rows.push(teacherRecitationEvidenceRow({
           key: session.id,
           icon: 'bi bi-journal-text',
           iconTone: 'accent',
           title: this.formatWhen(session.last_activity_at) || this.t('teacher.practice_session'),
-          reviewable: Boolean(session.evidence?.audio?.available || session.evidence?.transcript),
+          reviewable: Boolean(session.evidence?.audio?.available || session.evidence?.transcript || session.evidence?.words?.length),
           hint: session.duration_seconds ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) }) : this.t('teacher.session_duration_unknown'),
           badge: session.status ? this.statusLabel(session.status) : '',
           badgeTone: session.status === 'completed' ? 'good' : 'muted',
-          audio: session.evidence?.audio || null,
-          transcript: session.evidence?.transcript || '',
-          words: session.evidence?.words || [],
-        })
+        }, session.evidence, {
+          surah: session.surah_number,
+          from: session.ayah_start || session.ayah_number,
+          to: session.ayah_end || session.ayah_number,
+        }))
       }
       return [...groups.values()]
     },

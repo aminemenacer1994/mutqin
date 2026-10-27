@@ -39,11 +39,12 @@
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
         :aria-pressed="compactView ? 'true' : 'false'"
+        :aria-label="compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view')"
         :title="compactView ? t('teacher.comfortable_view_help') : t('teacher.compact_view_help')"
         @click="toggleCompactView"
       >
         <i :class="compactView ? 'bi bi-arrows-expand' : 'bi bi-arrows-collapse'" aria-hidden="true"></i>
-        <span>{{ compactView ? t('teacher.comfortable_view') : t('teacher.compact_view') }}</span>
+        <span class="visually-hidden">{{ compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view') }}</span>
       </button>
       <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">
         <i class="bi bi-plus-lg" aria-hidden="true"></i>
@@ -186,14 +187,14 @@
                   <details v-if="messageItem.evidence?.transcript"><summary>{{ t('teacher.view_transcript') }}</summary><p lang="ar" dir="rtl">{{ messageItem.evidence.transcript }}</p></details>
                 </section>
                 <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
-                  <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="`is-${message.sender}`">
+                  <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="[`is-${message.sender}`, { 'is-unread': message.unread }]">
                     <span>{{ message.sender === 'teacher' ? t('teacher.you') : messageItem.studentName }}</span>
                     <p v-if="message.body">{{ message.body }}</p>
                     <div v-if="message.audio?.available && message.audio?.url" class="teacher-message-bubble__audio">
                       <i class="bi bi-mic-fill" aria-hidden="true"></i>
                       <audio controls preload="metadata" :src="message.audio.url">{{ t('teacher.voice_note') }}</audio>
                     </div>
-                    <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}</time>
+                    <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}<template v-if="message.sender === 'teacher'"> · {{ message.delivery_status === 'read' ? t('teacher.message_read') : t('teacher.message_sent_status') }}</template></time>
                   </article>
                 </div>
                 <div v-else class="teacher-message-empty">
@@ -206,9 +207,9 @@
                   <div class="teacher-message-composer__foot">
                     <button v-if="recordingSupported" type="button" class="btn btn-outline-secondary teacher-message-composer__mic" :disabled="messageSaving || recordingState === 'stopping'" :aria-label="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" :title="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" @click="recordingState === 'recording' ? stopRecording() : startRecording()"><i class="bi" :class="recordingState === 'recording' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i></button>
                     <span v-if="recordingState === 'recording'" class="teacher-message-composer__timer">{{ recordingTimeLabel }}</span>
-                    <span v-if="recordingError" class="text-danger" role="alert">{{ recordingError }}</span>
-                    <span v-if="messageError" class="text-danger" role="alert">{{ messageError }}</span>
-                    <span v-else-if="messageSent" class="text-success" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
+                    <span v-if="recordingError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ recordingError }}</span>
+                    <span v-if="messageError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ messageError }}</span>
+                    <span v-else-if="messageSent" class="alert alert-success py-1 px-2 mb-0" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
                     <span v-else-if="messageDraft.length">{{ messageDraft.length }}/2000</span>
                     <span v-else></span>
                     <button type="button" class="btn btn-outline-secondary teacher-message-composer__clear" :disabled="messageSaving || (!messageDraft && !audioBlob)" @click="clearMessageComposer"><i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message_short') }}</button>

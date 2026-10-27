@@ -47,14 +47,19 @@
             <button type="button" class="teacher-audio-player__speed" :aria-label="t('teacher.playback_speed')" @click="cycleSpeed">{{ speed }}×</button>
           </div>
 
-          <div v-if="mode === 'transcript' && !row?.transcript" class="teacher-audio-drawer__no-audio">
+          <div v-if="evidenceProcessing" class="teacher-audio-drawer__no-audio" role="status">
+            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+            <span>{{ t('teacher.evidence_processing') }}</span>
+          </div>
+
+          <div v-else-if="mode === 'transcript' && !row?.transcript" class="teacher-audio-drawer__no-audio">
             <i class="bi bi-file-text" aria-hidden="true"></i>
-            <span>{{ t('teacher.no_transcript') }}</span>
+            <span>{{ transcriptUnavailableLabel }}</span>
           </div>
 
           <div v-else-if="mode === 'audio' && !hasAudio" class="teacher-audio-drawer__no-audio">
             <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-            <span>{{ t('teacher.recording_unavailable') }}</span>
+            <span>{{ audioUnavailableLabel }}</span>
           </div>
 
           <section v-if="row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
@@ -62,16 +67,17 @@
             <p dir="auto">{{ row.transcript }}</p>
           </section>
 
-          <section v-if="row?.words?.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
+          <section v-if="canonicalWords.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
             <div class="teacher-audio-evidence__heading">
               <h3 :id="evidenceTitleId">{{ t('teacher.recitation_text') }}</h3>
               <span v-if="missCount">{{ t('teacher.misses_n', { n: missCount }) }}</span>
               <span v-else>{{ t('teacher.recite_no_issues') }}</span>
             </div>
             <p class="teacher-audio-evidence__words" lang="ar" dir="rtl">
-              <span v-for="(word, index) in row.words" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`" :class="{ 'is-miss': isMiss(word.status) }" :title="isMiss(word.status) ? evidenceWordTitle(word) : undefined">{{ word.text }}</span>
+              <span v-for="(word, index) in canonicalWords" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`" :class="{ 'is-miss': isMiss(word.status) }" :title="isMiss(word.status) ? evidenceWordTitle(word) : undefined">{{ word.text }}</span>
             </p>
           </section>
+          <p v-else-if="canonicalLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
         </section>
       </div>
     </Transition>
@@ -80,6 +86,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { teacherCanonicalEvidenceWords } from '../../scripts/teacher/quranContent'
 
 let drawerUid = 0
 
@@ -101,6 +108,9 @@ export default {
       duration: 0,
       playing: false,
       speed: 1,
+      canonicalWords: [],
+      canonicalLoading: false,
+      canonicalRequest: 0,
     }
   },
   computed: {
@@ -108,7 +118,20 @@ export default {
       return Boolean(this.row?.audio?.available && this.row?.audio?.url)
     },
     missCount() {
-      return (this.row?.words || []).filter((word) => this.isMiss(word.status)).length
+      return this.canonicalWords.filter((word) => this.isMiss(word.status)).length
+    },
+    evidenceProcessing() {
+      return this.row?.evidenceState === 'processing'
+    },
+    transcriptUnavailableLabel() {
+      return this.row?.transcriptState === 'processing'
+        ? this.t('teacher.evidence_processing')
+        : this.t('teacher.transcript_not_recorded')
+    },
+    audioUnavailableLabel() {
+      const reason = this.row?.audio?.reason
+      if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
+      return this.t('teacher.recording_not_recorded')
     },
   },
   watch: {
@@ -116,6 +139,7 @@ export default {
       document.body.classList.toggle('teacher-audio-open', value)
       if (value) {
         this.resetPlayer()
+        this.loadCanonicalWords()
         this.$nextTick(() => this.$refs.drawer?.focus({ preventScroll: true }))
       } else {
         this.$refs.player?.pause()
@@ -123,12 +147,26 @@ export default {
     },
     row() {
       this.resetPlayer()
+      if (this.open) this.loadCanonicalWords()
     },
   },
   beforeUnmount() {
     document.body.classList.remove('teacher-audio-open')
   },
   methods: {
+    async loadCanonicalWords() {
+      const request = ++this.canonicalRequest
+      this.canonicalLoading = true
+      this.canonicalWords = []
+      const words = await teacherCanonicalEvidenceWords({
+        range: this.row?.range,
+        words: this.row?.words,
+      })
+      if (request === this.canonicalRequest) {
+        this.canonicalWords = words
+        this.canonicalLoading = false
+      }
+    },
     resetPlayer() {
       this.currentTime = 0
       this.duration = Number(this.row?.audio?.duration_ms || 0) / 1000

@@ -5,7 +5,7 @@
         <h2>{{ t('teacher.nav_attendance') }}</h2>
         <p>{{ t('teacher.attendance_tap_hint') }}</p>
       </div>
-      <label v-if="groups.length" class="teacher-attendance__group">
+      <label v-if="groups.length > 1" class="teacher-attendance__group">
         <span>{{ t('teacher.attendance_group') }}</span>
         <select v-model="groupId" class="form-select form-select-sm" @change="load">
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
@@ -22,12 +22,6 @@
         <strong>{{ weekLabel }}</strong>
         <button type="button" class="btn btn-outline-secondary" :aria-label="t('teacher.attendance_next_week')" @click="shiftWeek(7)"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
         <button type="button" class="btn btn-link teacher-attendance__today" @click="goToday">{{ t('teacher.attendance_this_week') }}</button>
-      </div>
-      <div class="teacher-attendance__range" role="group" :aria-label="t('teacher.attendance_days_visible')">
-        <button v-for="count in dayCountOptions" :key="count" type="button" :class="{ 'is-active': visibleDayCount === count }" :aria-pressed="visibleDayCount === count ? 'true' : 'false'" @click="visibleDayCount = count">
-          <i :class="count === 7 ? 'bi bi-calendar-week' : 'bi bi-calendar-range'" aria-hidden="true"></i>
-          <span>{{ count === 7 ? t('teacher.attendance_week') : t('teacher.attendance_days_n', { n: count }) }}</span>
-        </button>
       </div>
       <div class="teacher-attendance__status-picker" role="toolbar" :aria-label="t('teacher.attendance_mark_as')">
         <button
@@ -87,7 +81,7 @@ export default {
   name: 'TeacherAttendanceSection',
   mixins: [i18nMixin],
   data() {
-    return { groups: [], groupId: null, weekStart: '', days: [], selectedDay: '', visibleDayCount: 3, students: [], loading: true, error: '', success: '', successTimer: null, saving: {}, requestId: 0, selectedStatus: 'present', bulkSavingDay: '' }
+    return { groups: [], groupId: null, weekStart: '', days: [], selectedDay: '', students: [], loading: true, error: '', success: '', successTimer: null, saving: {}, requestId: 0, selectedStatus: 'present', bulkSavingDay: '' }
   },
   computed: {
     weekLabel() {
@@ -103,17 +97,8 @@ export default {
         { value: 'clear', icon: 'bi bi-eraser', label: this.t('teacher.attendance_clear') },
       ]
     },
-    dayCountOptions() {
-      return [1, 3, 5, 7]
-    },
     visibleDays() {
-      if (!this.days.length) return []
-      const count = Math.min(this.visibleDayCount, this.days.length)
-      const anchor = Math.max(0, this.days.indexOf(this.selectedDay))
-      let start = Math.max(0, anchor - count + 1)
-      let end = Math.min(this.days.length, start + count)
-      start = Math.max(0, end - count)
-      return this.days.slice(start, end)
+      return this.days
     },
   },
   mounted() { this.load() },

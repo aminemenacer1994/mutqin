@@ -13,6 +13,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
@@ -23,7 +24,6 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Learning\AiReciteAttemptAudioService;
-use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
@@ -75,8 +75,8 @@ class TeacherDashboardService
             $totalTasks = $completed + $outstanding;
             $completionRate = $totalTasks > 0 ? round(($completed / $totalTasks) * 100, 1) : null;
 
-            $strong = collect($metrics)->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] >= RecitationScoringThresholds::STRONG_ACCURACY_MIN)->count();
-            $developing = collect($metrics)->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] < RecitationScoringThresholds::STRONG_ACCURACY_MIN)->count();
+            $strong = collect($metrics)->filter(fn (array $row) => ($row['recommendation']['type'] ?? null) === 'ready_next')->count();
+            $developing = collect($metrics)->filter(fn (array $row) => in_array(($row['recommendation']['type'] ?? null), ['focus', 'needs_help'], true))->count();
 
             return [
                 'teacher' => $this->teacherProfile($teacher),
@@ -183,9 +183,9 @@ class TeacherDashboardService
 
         $performance = (string) ($filters['performance'] ?? '');
         if ($performance === 'strong') {
-            $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] >= RecitationScoringThresholds::STRONG_ACCURACY_MIN)->values();
+            $rows = $rows->filter(fn (array $row) => ($row['recommendation']['type'] ?? null) === 'ready_next')->values();
         } elseif ($performance === 'developing') {
-            $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] < RecitationScoringThresholds::STRONG_ACCURACY_MIN)->values();
+            $rows = $rows->filter(fn (array $row) => in_array(($row['recommendation']['type'] ?? null), ['focus', 'needs_help'], true))->values();
         } elseif ($performance === 'none') {
             $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] === null)->values();
         }
@@ -947,7 +947,7 @@ class TeacherDashboardService
     {
         $dist = ['learning' => 0, 'practising' => 0, 'revising' => 0, 'mastered' => 0];
         foreach ($metrics as $row) {
-            if (($row['memorised_ayahs'] ?? 0) > 0 && ($row['ai_success_rate'] ?? 0) >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
+            if (($row['recommendation']['type'] ?? null) === 'ready_next') {
                 $dist['mastered']++;
             } elseif (($row['revision_overdue'] ?? 0) > 0 || ($row['revision_upcoming'] ?? 0) > 0) {
                 $dist['revising']++;
@@ -1391,21 +1391,51 @@ class TeacherDashboardService
     /** @return array<string, mixed> */
     private function presentAttemptEvidence(AiReciteAttempt $attempt): array
     {
+        $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+        $assessment = $attempt->assessment;
+        $assessmentStatus = $assessment?->status;
+        $transcript = $this->attemptTranscript($attempt);
         $words = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
             ->filter(fn ($word) => is_array($word))
             ->map(function (array $word): ?array {
-                $text = trim((string) ($word['text'] ?? $word['expected'] ?? $word['word'] ?? ''));
-                if ($text === '') {
+                $text = trim((string) (
+                    $word['expected_word']
+                    ?? $word['displayText']
+                    ?? $word['text']
+                    ?? $word['expected']
+                    ?? $word['word']
+                    ?? ''
+                ));
+                $ayah = isset($word['ayah_number'])
+                    ? (int) $word['ayah_number']
+                    : (isset($word['ayah']) ? (int) $word['ayah'] : null);
+                $wordIndex = isset($word['ayah_word_index'])
+                    ? (int) $word['ayah_word_index']
+                    : (isset($word['word_index']) ? (int) $word['word_index'] : null);
+
+                if ($text === '' && ($ayah === null || $wordIndex === null)) {
                     return null;
                 }
 
-                return [
-                    'text' => mb_substr($text, 0, 120),
+                $payload = [
                     'status' => (string) ($word['status'] ?? 'unknown'),
-                    'detected' => trim((string) ($word['detected_token'] ?? $word['detected'] ?? $word['actual'] ?? '')) ?: null,
-                    'ayah' => isset($word['ayah']) ? (int) $word['ayah'] : null,
-                    'word_index' => isset($word['word_index']) ? (int) $word['word_index'] : null,
+                    'type' => isset($word['type']) ? (string) $word['type'] : null,
+                    'detected' => trim((string) (
+                        $word['recognised_word']
+                        ?? $word['recognized_word']
+                        ?? $word['detected_token']
+                        ?? $word['detected']
+                        ?? $word['actual']
+                        ?? ''
+                    )) ?: null,
+                    'ayah' => $ayah,
+                    'word_index' => $wordIndex,
                 ];
+                if ($text !== '' && ! preg_match('/^word$/iu', $text)) {
+                    $payload['text'] = mb_substr($text, 0, 120);
+                }
+
+                return $payload;
             })
             ->filter()
             ->take(250)
@@ -1415,7 +1445,21 @@ class TeacherDashboardService
         return [
             'attempt_id' => (int) $attempt->id,
             'audio' => $this->audio->payload($attempt),
-            'transcript' => $this->attemptTranscript($attempt),
+            'assessment_status' => $assessmentStatus,
+            'state' => in_array($assessmentStatus, [MemorisationAssessment::STATUS_PENDING, MemorisationAssessment::STATUS_PROCESSING], true)
+                ? 'processing'
+                : 'ready',
+            'transcript' => $transcript,
+            'transcript_state' => $transcript !== null
+                ? 'available'
+                : (in_array($assessmentStatus, [MemorisationAssessment::STATUS_PENDING, MemorisationAssessment::STATUS_PROCESSING], true)
+                    ? 'processing'
+                    : 'not_recorded'),
+            'range' => [
+                'surah' => (int) ($range['surah'] ?? $range['surah_number'] ?? $assessment?->surah_number ?? 0) ?: null,
+                'from' => (int) ($range['from'] ?? $range['start'] ?? $assessment?->start_ayah ?? 0) ?: null,
+                'to' => (int) ($range['to'] ?? $range['end'] ?? $assessment?->end_ayah ?? 0) ?: null,
+            ],
             'words' => $words,
         ];
     }

@@ -17,6 +17,9 @@ return [
         'delete' => 'Delete permanently',
         'delete_confirm' => 'Remove this signup from the waiting list permanently?',
         'deleted_flash' => 'Waiting list signup removed.',
+        'launch_storage_unavailable' => 'Waiting-list email storage is not ready. Run database migrations.',
+        'launch_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
+        'launch_no_recipients' => 'No eligible waiting-list recipients to email.',
     ],
     'contact_messages' => [
         'title' => 'Contact Messages',

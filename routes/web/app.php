@@ -143,6 +143,10 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');
 
+Route::get('/waiting-list/unsubscribe/{entry}', \App\Http\Controllers\WaitingListUnsubscribeController::class)
+    ->middleware('signed')
+    ->name('waiting-list.unsubscribe');
+
 Route::get('/guides', [SeoGuidesController::class, 'index'])->name('seo.guides');
 
 foreach (SeoLaunchPages::paths() as $seoPath) {

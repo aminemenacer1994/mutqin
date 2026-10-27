@@ -239,6 +239,9 @@ import {
   recommendationPrimaryActionKey,
   buildCombinedCheckInsight,
   buildPersonalPracticePlan,
+  mergePersistedPracticePlanDetail,
+  resolvePracticePlanIdFromRecommendation,
+  buildPracticePlanAdjustmentsFromSettings,
   applyPersonalPlanToRecommendation,
   resolveAyahWindow,
   resolveNextPracticeRangeAfterCompleted,
@@ -2566,7 +2569,7 @@ export default {
     controlsPanelTitle() {
       const titles = {
         tools: this.t('memorisation.tools.tabs.setup'),
-        techniques: this.t('memorisation.practice'),
+        techniques: this.t('memorisation.tools.tabs.practice') || this.t('memorisation.practice'),
         saved: this.t('memorisation.saved'),
         stats: this.t('memorisation.insights'),
       }
@@ -4558,8 +4561,7 @@ export default {
         t: this.t.bind(this),
       })
       if (!built) return stored && typeof stored === 'object' ? stored : null
-      // Prefer freshly built plan; keep stored minutes/source if identical range.
-      return built
+      return mergePersistedPracticePlanDetail(built, stored)
     },
     postSessionHasAiEvidence() {
       return !!(
@@ -19921,6 +19923,82 @@ export default {
           || [],
       }
     },
+    resolvePostSessionPracticePlanId() {
+      return resolvePracticePlanIdFromRecommendation(
+        this.postSessionRecommendation,
+        this.amdPracticePlan,
+      )
+    },
+    buildPostSessionPracticePlanAdjustments(settings = null, extra = {}) {
+      const base = settings || this.postSessionRecommendation?.settings || {}
+      const adjustments = buildPracticePlanAdjustmentsFromSettings(base, extra)
+      const scope = normalisePracticeScope(base.practice_scope)
+        || this.postSessionSelectedPracticeScope
+      if (scope === PRACTICE_SCOPE.WEAK_AREAS) {
+        const priorityAyahs = this.postSessionWeakOnlySequence?.ayahIds
+          || this.postSessionRevisionWeakAyahs
+          || []
+        adjustments.priority_ayahs = [...new Set(
+          priorityAyahs.map(Number).filter((ayah) => ayah > 0),
+        )]
+      }
+      return adjustments
+    },
+    applySyncedPracticePlanToRecommendation(savedPlan, settings = null) {
+      if (!savedPlan || !this.postSessionRecommendation) return
+      const nextSettings = {
+        ...(this.postSessionRecommendation.settings || {}),
+        ...(settings || {}),
+        ...(savedPlan.config || {}),
+        practice_scope: savedPlan.practice_scope
+          || settings?.practice_scope
+          || this.postSessionRecommendation.settings?.practice_scope,
+      }
+      const storedDetail = {
+        ...(this.postSessionRecommendation.plan_detail || {}),
+        practice_plan_id: savedPlan.id,
+        assessment_id: savedPlan.assessment_id
+          || this.postSessionRecommendation.plan_detail?.assessment_id,
+        range: savedPlan.range || this.postSessionRecommendation.plan_detail?.range,
+        techniques: savedPlan.techniques,
+        weakWords: savedPlan.weak_words,
+        source: this.postSessionRecommendation.plan_detail?.source || 'memorisation_detection',
+      }
+      this.amdPracticePlan = savedPlan
+      this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+        ...this.postSessionRecommendation,
+        settings: nextSettings,
+        plan_detail: mergePersistedPracticePlanDetail(
+          this.postSessionPersonalPlan,
+          storedDetail,
+        ),
+      })
+    },
+    async syncPostSessionPracticePlanWithSettings(settings = null, extra = {}) {
+      const planId = this.resolvePostSessionPracticePlanId()
+      if (!planId || !this.isLoggedIn || !this.learningBackendEnabled()) return null
+      const adjustments = this.buildPostSessionPracticePlanAdjustments(settings, extra)
+      if (!Object.keys(adjustments).length) return null
+      try {
+        const savedPlan = await memorisationDetectionApi.adjustPlan(planId, adjustments)
+        if (!savedPlan) return null
+        this.applySyncedPracticePlanToRecommendation(savedPlan, settings)
+        return savedPlan
+      } catch (error) {
+        console.warn('Failed to sync practice-plan with settings:', error)
+        return null
+      }
+    },
+    async markPostSessionPracticePlanStarted() {
+      const planId = this.resolvePostSessionPracticePlanId()
+      if (!planId || !this.isLoggedIn || !this.learningBackendEnabled()) return
+      try {
+        await this.syncPostSessionPracticePlanWithSettings()
+        await memorisationDetectionApi.startPlan(planId)
+      } catch (error) {
+        console.warn('Failed to mark practice plan as started:', error)
+      }
+    },
     async submitPostSessionConfidence(confidence) {
       if (this.postSessionActionsBusy) return
       if (!['confident', 'needs_practice'].includes(confidence)) return
@@ -20136,42 +20214,9 @@ export default {
         await this.persistPostSessionRecommendationSettings(nextSettings)
       }
 
-      // A plan produced by AI Recite is a durable record, not just a view
-      // model. Keep its scope in sync with the recommendation selector so a
-      // reload, the practice-history screen, and the launched session all use
-      // the learner's latest choice.
-      const plan = this.amdPracticePlan
-      const planId = Number(plan?.id || 0)
-      if (!planId || !this.isLoggedIn) return
-
-      const priorityAyahs = normalised === PRACTICE_SCOPE.WEAK_AREAS
-        ? (this.postSessionWeakOnlySequence?.ayahIds || this.postSessionRevisionWeakAyahs || [])
-        : (plan.priority_ayahs || this.postSessionRevisionWeakAyahs || [])
-      try {
-        const savedPlan = await memorisationDetectionApi.adjustPlan(planId, {
-          practice_scope: normalised,
-          priority_ayahs: [...new Set(priorityAyahs.map(Number).filter((ayah) => ayah > 0))],
-        })
-        if (!savedPlan) return
-        this.amdPracticePlan = savedPlan
-        this.postSessionRecommendation = this.enrichPostSessionRecommendation({
-          ...this.postSessionRecommendation,
-          settings: {
-            ...nextSettings,
-            ...(savedPlan.config || {}),
-            practice_scope: savedPlan.practice_scope || normalised,
-          },
-          plan_detail: {
-            ...(this.postSessionRecommendation.plan_detail || {}),
-            practice_plan_id: savedPlan.id,
-            range: savedPlan.range || this.postSessionRecommendation.plan_detail?.range,
-          },
-        })
-      } catch (error) {
-        // The recommendation setting has already been saved. Surface a quiet
-        // warning rather than discarding the learner's immediate selection.
-        console.warn('Failed to sync practice-plan scope:', error)
-      }
+      await this.syncPostSessionPracticePlanWithSettings(nextSettings, {
+        practice_scope: normalised,
+      })
     },
     ensurePostSessionPracticeScopeDefault() {
       if (!this.postSessionShowRevisionScopePicker) return
@@ -20241,6 +20286,7 @@ export default {
         if (updated) {
           this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
         }
+        await this.syncPostSessionPracticePlanWithSettings(settings)
         this.postSessionViewState = 'recommendation_ready'
       } catch (error) {
         console.warn('Failed to save recommendation settings:', error)
@@ -21027,6 +21073,7 @@ export default {
             this.postSessionRecommendation = this.enrichPostSessionRecommendation(result.recommendation)
           }
           const config = sessionPayload?.metadata?.config || {}
+          await this.markPostSessionPracticePlanStarted()
           await this.startSessionFromRecommendationPayload({
             chapterId: Number(config.chapterId || this.postSessionSnapshot?.chapterId || 0),
             rangeStart: Number(config.rangeStart || this.postSessionSnapshot?.rangeStart || 0),
@@ -21039,6 +21086,7 @@ export default {
         }
 
         const snap = this.postSessionSnapshot || {}
+        await this.markPostSessionPracticePlanStarted()
         await this.startSessionFromRecommendationPayload({
           chapterId: Number(snap.chapterId || 0),
           rangeStart: Number(snap.rangeStart || 0),
@@ -21310,6 +21358,7 @@ export default {
         this.recommendedPracticePending = true
         this.awaitingMasteryRetest = false
         this.masteryTargetRange = null
+        await this.markPostSessionPracticePlanStarted()
         const planSettings = this.resolveRecommendationStartSettings(activeRecommendation, sessionPayload)
         await this.startSessionFromRecommendationPayload({
           chapterId,

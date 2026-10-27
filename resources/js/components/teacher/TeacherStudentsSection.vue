@@ -39,11 +39,12 @@
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
         :aria-pressed="compactView ? 'true' : 'false'"
-        :title="compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view')"
+        :aria-label="compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view')"
+        :title="compactView ? t('teacher.comfortable_view_help') : t('teacher.compact_view_help')"
         @click="toggleCompactView"
       >
         <i :class="compactView ? 'bi bi-arrows-expand' : 'bi bi-arrows-collapse'" aria-hidden="true"></i>
-        <span>{{ compactView ? t('teacher.compact_view') : t('teacher.comfortable_view') }}</span>
+        <span class="visually-hidden">{{ compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view') }}</span>
       </button>
       <button
         v-if="hasFilters"

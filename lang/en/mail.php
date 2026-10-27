@@ -33,4 +33,16 @@ return [
     'reset_action' => 'Reset password',
     'reset_fallback' => 'If the button does not work, copy and paste this link into your browser:',
     'reset_security' => 'If you didn\'t request a password reset, you can ignore this email. Your password will stay the same.',
+
+    'waitlist_launch_subject' => 'Mutqin is now live — your access is ready 🌿',
+    'waitlist_launch_preheader' => 'Mutqin is live. Start your Qur\'an memorisation journey at mutqin.ai.',
+    'waitlist_launch_heading' => 'Mutqin is now live',
+    'waitlist_launch_greeting' => 'Assalamu alaikum,',
+    'waitlist_launch_body' => 'Alhamdulillah, Mutqin is now live! You joined our waiting list, and we\'re pleased to let you know you can now access the full platform.',
+    'waitlist_launch_action' => 'Start at Mutqin',
+    'waitlist_launch_fallback' => 'If the button does not work, copy and paste this link into your browser:',
+    'waitlist_launch_thanks' => 'Thank you for supporting Mutqin from the beginning.',
+    'waitlist_launch_signoff' => 'The Mutqin Team',
+    'waitlist_launch_footer' => 'You received this email because you joined the Mutqin waiting list.',
+    'waitlist_launch_unsubscribe' => 'Unsubscribe from waiting-list emails',
 ];

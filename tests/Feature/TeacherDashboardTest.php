@@ -521,6 +521,38 @@ class TeacherDashboardTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_attempt_evidence_keeps_word_statuses_without_placeholder_text(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $attempt = AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'attempt_number' => 1,
+            'ayah_range' => ['surah' => 114, 'from' => 1, 'to' => 1, 'surah_name' => 'An-Nas'],
+            'accuracy_percent' => 72,
+            'band' => 'mixed',
+            'word_statuses' => [
+                ['ayah' => 1, 'word_index' => 0, 'status' => 'skipped'],
+                ['text' => 'word', 'ayah' => 1, 'word_index' => 1, 'status' => 'incorrect'],
+                ['text' => 'قُلْ', 'ayah' => 1, 'word_index' => 2, 'status' => 'correct'],
+            ],
+        ]);
+
+        $words = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
+            ->assertOk()
+            ->json('payload.attempts.0.evidence.words');
+
+        $this->assertCount(3, $words);
+        $this->assertSame(0, $words[0]['word_index']);
+        $this->assertSame('skipped', $words[0]['status']);
+        $this->assertArrayNotHasKey('text', $words[0]);
+        $this->assertSame(1, $words[1]['word_index']);
+        $this->assertSame('incorrect', $words[1]['status']);
+        $this->assertArrayNotHasKey('text', $words[1]);
+        $this->assertSame(2, $words[2]['word_index']);
+        $this->assertSame('قُلْ', $words[2]['text']);
+    }
+
     public function test_hard_ayahs_exclude_resolved_history_and_keep_distinct_words(): void
     {
         [$teacher, $student] = $this->classroom();
@@ -985,6 +1017,9 @@ class TeacherDashboardTest extends TestCase
             ->update(['analytics_consent_status' => AnalyticsConsentStatus::Revoked->value]);
         $this->actingAs($teacher)->get($voiceMessage['audio']['url'])->assertNotFound();
         $this->actingAs($student)->get($teacherVoice['audio']['url'])->assertOk();
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => 'Sharing was revoked.'])
+            ->assertNotFound();
     }
 
     public function test_completed_task_can_be_practised_again_and_keeps_the_new_attempt_count(): void

@@ -13,9 +13,17 @@ class WaitingListEntry extends Model
         'first_source',
         'last_source',
         'last_campaign',
+        'unsubscribed_at',
+        'bounced_at',
+        'marked_invalid_at',
     ];
 
-    protected $casts = ['attribution' => 'array'];
+    protected $casts = [
+        'attribution' => 'array',
+        'unsubscribed_at' => 'datetime',
+        'bounced_at' => 'datetime',
+        'marked_invalid_at' => 'datetime',
+    ];
 
     public function getConnectionName(): ?string
     {

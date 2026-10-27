@@ -4534,7 +4534,7 @@
                         data-testid="post-session-next-lead"
                       >
                         {{ t('memorisation.postSession.recommendation.whatNextLead')
-                          || 'Use this short plan for your next practice. It tells you what to recite, how to practise it, and roughly how long it should take.' }}
+                          || 'Your next set, method, and time estimate.' }}
                       </p>
                     </div>
                     <button
