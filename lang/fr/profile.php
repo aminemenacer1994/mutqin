@@ -6,6 +6,7 @@ return [
     'title' => 'Profil',
     'hero_desc' => 'Gérez votre compte — informations personnelles et préférences de l’application.',
     'hero_desc_admin' => 'Gérez le compte de votre équipe — mettez à jour vos informations et vos préférences.',
+    'progress_memorised' => ':count ayahs mémorisées',
     'subscription_snapshot' => 'Aperçu de l\'abonnement',
     'org_snapshot' => 'Accès organisationnel',
     'current_plan' => 'Forfait actuel',

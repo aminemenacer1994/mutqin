@@ -75,10 +75,11 @@
               <span class="teacher-task-row__range">{{ item.title }}</span>
               <span class="teacher-task-row__meta">
                 <span class="teacher-hifz-tag" :class="`is-${item.category}`">{{ item.categoryLabel }}</span>
+                <span>{{ item.actionLabel }}</span>
                 <span v-if="item.status === 'completed' && item.completionEvidence">{{ item.completionEvidence }}</span>
                 <template v-else>
                   <span v-if="item.due">{{ item.due }}</span>
-                  <span v-if="(item.status === 'in_progress' || item.status === 'awaiting_confirmation') && item.progress">{{ item.progress }}</span>
+                  <span v-if="item.status === 'in_progress' && item.progress">{{ item.progress }}</span>
                 </template>
               </span>
             </button>
@@ -213,7 +214,7 @@
                     <button type="button" class="btn btn-outline-secondary teacher-message-composer__clear" :disabled="messageSaving || (!messageDraft && !audioBlob)" @click="clearMessageComposer"><i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message_short') }}</button>
                     <button type="submit" class="btn btn-primary" :disabled="messageSaving || recordingState === 'recording' || (!messageDraft.trim() && !audioBlob)">
                       <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-                      {{ messageSaving ? t('teacher.saving_message') : t('teacher.save_conversation') }}
+                      {{ messageSaving ? t('teacher.saving_message') : t('teacher.send_message') }}
                     </button>
                   </div>
                 </form>
@@ -310,8 +311,7 @@ export default {
         result.all += 1
         if (item.status === 'completed') result.done += 1
         else if (item.status === 'overdue') result.overdue += 1
-        else if (item.status === 'attendance_hold') result.waiting += 1
-        else if (item.status === 'in_progress' || item.status === 'awaiting_confirmation') result.progress += 1
+        else if (item.status === 'in_progress') result.progress += 1
         else result.waiting += 1
         return result
       }, { all: 0, waiting: 0, progress: 0, overdue: 0, done: 0 })
@@ -329,13 +329,14 @@ export default {
         const title = `${assignment.surah_name} ${assignment.ayah_start}–${assignment.ayah_end}`
         const recipients = row.recipients || []
         return recipients.map((recipient, recipientIndex) => {
-          const status = recipient.status || 'pending'
+          const status = this.normalizedStatus(recipient.status)
           const category = assignment.hifz_category || this.inferHifzCategory(assignment)
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
             category,
             categoryLabel: this.t(`teacher.hifz_${category}`),
+            actionLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
             title,
             studentId: recipient.student_id,
             studentName: recipient.student_name || this.t('teacher.unavailable'),
@@ -368,11 +369,11 @@ export default {
         : items.filter((item) => {
           if (this.statusFilter === 'done') return item.status === 'completed'
           if (this.statusFilter === 'overdue') return item.status === 'overdue'
-          if (this.statusFilter === 'progress') return item.status === 'in_progress' || item.status === 'awaiting_confirmation'
-          return item.status === 'pending' || item.status === 'attendance_hold'
+          if (this.statusFilter === 'progress') return item.status === 'in_progress'
+          return item.status === 'pending'
         })
       return filtered.sort((a, b) => {
-        const urgency = { overdue: 0, attendance_hold: 1, pending: 2, in_progress: 3, awaiting_confirmation: 3, completed: 4 }
+        const urgency = { overdue: 0, pending: 1, in_progress: 2, completed: 3 }
         const urgencyDifference = (urgency[a.status] ?? 1) - (urgency[b.status] ?? 1)
         if (urgencyDifference) return urgencyDifference
         const dateA = Date.parse(a.occurredAt || '') || 0
@@ -385,6 +386,9 @@ export default {
     },
   },
   methods: {
+    normalizedStatus(status) {
+      return status === 'awaiting_confirmation' ? 'in_progress' : (status || 'pending')
+    },
     inferHifzCategory(assignment) {
       if (assignment.kind === 'ai_recite') return 'sabqi'
       return Number(assignment.repetition_target || 0) >= 5 ? 'manzil' : 'sabaq'
@@ -567,15 +571,13 @@ export default {
     statusTone(status) {
       if (status === 'completed') return 'good'
       if (status === 'overdue') return 'danger'
-      if (status === 'attendance_hold') return 'mid'
-      if (status === 'in_progress' || status === 'awaiting_confirmation') return 'mid'
+      if (status === 'in_progress') return 'mid'
       return 'muted'
     },
     statusIcon(status) {
       if (status === 'completed') return 'bi bi-check2'
       if (status === 'overdue') return 'bi bi-exclamation-circle'
-      if (status === 'attendance_hold') return 'bi bi-calendar-x'
-      if (status === 'in_progress' || status === 'awaiting_confirmation') return 'bi bi-arrow-repeat'
+      if (status === 'in_progress') return 'bi bi-arrow-repeat'
       return 'bi bi-clock'
     },
   },

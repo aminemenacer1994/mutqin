@@ -3405,7 +3405,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180', 'mutqin-ui-lock-v181', 'mutqin-memorisation-hotfix-v231', 'mutqin-memorisation-session-chrome-final'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180', 'mutqin-ui-lock-v181', 'mutqin-memorisation-hotfix-v231', 'mutqin-memorisation-hotfix-v232', 'mutqin-memorisation-session-chrome-final'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3422,6 +3422,7 @@
           var observer = new MutationObserver(function () {
             if (pinning) return;
             var lock = document.getElementById('mutqin-memorisation-session-chrome-final')
+              || document.getElementById('mutqin-memorisation-hotfix-v232')
               || document.getElementById('mutqin-memorisation-hotfix-v231')
               || document.getElementById('mutqin-ui-lock-v181')
               || document.getElementById('mutqin-ui-lock-v180');
@@ -5122,6 +5123,13 @@
         .profile-hero-identity {
             display: flex;
             gap: 12px;
+            align-items: center;
+        }
+
+        .profile-hero-prefs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
         }
 
@@ -13070,10 +13078,48 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v232">
+  /*
+   * Mobile QPC (plain + tajweed): dense rows must stretch edge-to-edge.
+   * Beats legacy v190 centering and JS inline justify-content.
+   */
+  @media (max-width: 767.98px) {
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-inline: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+      justify-content: center !important;
+      margin-inline: 0 !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+      align-items: stretch !important;
+    }
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {
-      if (!line || line.style.width === 'max-content') return
+      if (!line) return
+      var wasMeasuring = line.style.width === 'max-content'
+      if (wasMeasuring) {
+        line.style.setProperty('width', '100%', 'important')
+        line.style.setProperty('max-width', '100%', 'important')
+      }
       if (line.classList.contains('qpc-madani-line--surah_name')
         || line.classList.contains('qpc-madani-line--basmala')
         || line.classList.contains('qpc-madani-line--basmallah')
@@ -13102,12 +13148,13 @@ body.session-analysis-modal-open {
         // Phone + desktop: centre short rows (≤8 words) or under-filled rows.
         // Phone ratio is looser (0.86) so dense tajweed rows still stretch.
         if (mobile) {
-          var phoneRatio = 0.86
-          sparse = (words.length > 0 && words.length <= 8)
+          var tajweedPage = !!(line.closest && line.closest('.qpc-madani-page--tajweed, .madani-page-sheet--tajweed'))
+          var phoneRatio = tajweedPage ? 0.76 : 0.86
+          sparse = (words.length > 0 && words.length <= 8 && (!(natural > 0) || !(line.clientWidth > 0)))
             || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * phoneRatio)
         } else {
           var ratio = 0.96
-          sparse = (words.length > 0 && words.length <= 8)
+          sparse = (words.length > 0 && words.length <= 8 && (!(natural > 0) || !(line.clientWidth > 0)))
             || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * ratio)
         }
         line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
@@ -13115,7 +13162,7 @@ body.session-analysis-modal-open {
       } else if (line.classList.contains('qpc-madani-line--ayah')) {
         line.classList.add('qpc-madani-line--sparse')
       }
-      line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
+      line.style.removeProperty('justify-content')
       if (mobile && !sparse) {
         line.style.setProperty('width', '100%', 'important')
         line.style.setProperty('max-width', '100%', 'important')

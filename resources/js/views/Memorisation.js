@@ -606,6 +606,7 @@ import {
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   buildFullFatihahMushafSessionConfig,
+  buildTenMinuteHeroSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
   resolveStoredTajweedEnabled,
@@ -972,6 +973,8 @@ export default {
       // Feature 1: Repetitions — start at 1x so the bar never flashes a higher default
       repetitionsPerStep: DEFAULT_SESSION_REPETITIONS,
       selectedLoopCount: DEFAULT_SESSION_REPETITIONS,
+      /** Setup range preset: full surah vs custom ayah inputs. */
+      sessionRangePreset: 'custom',
       /** Ayah number within the current range for per-ayah repeat setup (null → rangeStart). */
       setupIndividualAyah: null,
       /** Opt-in: when false, per-ayah repeats never apply and Setup stays out of the way. */
@@ -13393,6 +13396,16 @@ export default {
       }
 
       try {
+        if (entry.journey === 'ten_minute' || entry.journey === '10_minute') {
+          this.applyTenMinuteHeroSessionPreset({ openSetup: false, silent: true })
+          if (this.chapterId) {
+            await this.loadChapter(this.currentMode)
+          }
+          this.finishDashboardMadaniEntry(entry)
+          this.markDashboardEntryIntentConsumed()
+          return true
+        }
+
         if (entry.aiCheck && entry.surah > 0 && entry.from > 0) {
           await this.openDashboardAiMemoryCheck({
             surah: entry.surah,
@@ -14160,6 +14173,7 @@ export default {
       const focus = !!techniquePrefs.focusModeEnabled
       const blur = !!techniquePrefs.blurModeEnabled && !focus
       const talqin = !!techniquePrefs.talqinModeEnabled
+      this.sessionRangePreset = 'custom'
       this.applyDefaultWorkspaceSessionConfig({
         openSetup,
         silent,
@@ -14169,6 +14183,44 @@ export default {
           talqinModeEnabled: talqin,
         }),
       })
+    },
+
+    applyTenMinuteHeroSessionPreset(options = {}) {
+      const { openSetup = false, silent = true } = options
+      this.sessionRangePreset = 'full_surah'
+      this.applyDefaultWorkspaceSessionConfig({
+        openSetup,
+        silent,
+        config: buildTenMinuteHeroSessionConfig(),
+      })
+      this.applyFullSurahRangeForCurrentChapter()
+      this.syncSettingsDraft?.()
+      this.persistCentralSessionState?.()
+    },
+
+    applyFullSurahRangeForCurrentChapter() {
+      const surahMax = this.resolveCurrentSurahAyahCount()
+      if (!surahMax) return
+      this.rangeStart = 1
+      this.rangeEnd = surahMax
+    },
+
+    onSessionRangePresetChange(preset) {
+      const next = preset === 'full_surah' ? 'full_surah' : 'custom'
+      this.sessionRangePreset = next
+      if (next === 'full_surah') {
+        this.applyFullSurahRangeForCurrentChapter()
+        void this.adjustRange?.({ immediate: true })
+      }
+    },
+
+    markSessionRangePresetCustom() {
+      if (this.sessionRangePreset !== 'full_surah') return
+      const surahMax = this.resolveCurrentSurahAyahCount()
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      if (surahMax > 0 && start === 1 && end === surahMax) return
+      this.sessionRangePreset = 'custom'
     },
 
     buildOnboardingStep(key, icon) {
@@ -14579,10 +14631,11 @@ export default {
     },
 
     openQuranSearchModal() {
+      this.modalReturnFocusEl = captureReturnFocus()
       this.showQuranSearchModal = true
       this.syncBodyScrollLock(true)
       this.$nextTick(() => {
-        if (this.$refs.quranSearchInput) this.$refs.quranSearchInput.focus({ preventScroll: true })
+        focusInitialElement(this.$refs.quranSearchModalDialog, '#quranSearchInput')
       })
     },
 
@@ -14590,6 +14643,8 @@ export default {
       this.stopQuranVoiceSearch()
       this.showQuranSearchModal = false
       this.syncBodyScrollLock(false)
+      restoreReturnFocus(this.modalReturnFocusEl)
+      this.modalReturnFocusEl = null
     },
 
     normalizeQuranSearchText(value) {

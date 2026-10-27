@@ -64,7 +64,7 @@ class LearnerSupportController extends Controller
             : null;
 
         return response()->json([
-            'recipient' => $assignments->presentRecipient($updated),
+            'recipient' => $assignments->presentRecipient($updated, false, null, null, null, (int) $user->id),
             'href' => $updated->assignment
                 ? $assignments->practiceHref($updated->assignment, $resumeSessionId, (int) $updated->id)
                 : null,
@@ -92,6 +92,7 @@ class LearnerSupportController extends Controller
             'body' => ['nullable', 'string', 'max:2000'],
             'audio' => ['nullable', 'file', 'max:8192'],
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'client_message_id' => ['nullable', 'uuid'],
         ]);
 
         $message = $assignments->addLearnerMessage(
@@ -100,10 +101,11 @@ class LearnerSupportController extends Controller
             (string) ($data['body'] ?? ''),
             $request->file('audio'),
             isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+            $data['client_message_id'] ?? null,
         );
 
         return response()->json([
-            'message' => $assignments->presentAssignmentMessage($message),
+            'message' => $assignments->presentAssignmentMessage($message, (int) $user->id),
         ], 201)->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
@@ -112,9 +114,28 @@ class LearnerSupportController extends Controller
         TeacherFeatures::abortUnlessEnabled();
         $student = $request->user();
         abort_unless($student instanceof User, 401);
-        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'client_message_id' => ['nullable', 'uuid'],
+        ]);
 
-        return response()->json(['message' => $messages->present($messages->send($student, $teacher, $student, $data['body']))], 201)
+        return response()->json(['message' => $messages->present($messages->send(
+            $student,
+            $teacher,
+            $student,
+            $data['body'],
+            $data['client_message_id'] ?? null,
+        ), $student)], 201)
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function teacherMessages(Request $request, User $teacher, TeacherDirectMessageService $messages): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $student = $request->user();
+        abort_unless($student instanceof User, 401);
+
+        return response()->json(['messages' => $messages->thread($teacher, $student, $student)])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 

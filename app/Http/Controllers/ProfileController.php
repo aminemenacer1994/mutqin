@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Models\MemorisationProgress;
 use App\Models\User;
 use App\Http\Requests\UpdateAiSessionSettingsRequest;
 use App\Services\Auth\AiAudioConsentService;
@@ -24,6 +25,11 @@ class ProfileController extends Controller
         $isAdmin = $user->isAdmin();
         $planLabels = $this->planLabels();
 
+        $memorisedAyahCount = (int) MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['memorised', 'mastered'])
+            ->count();
+
         return view('profile', [
             'user' => $user,
             'isAdmin' => $isAdmin,
@@ -34,6 +40,7 @@ class ProfileController extends Controller
             'supportedLocales' => ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'],
             'themeModes' => Theme::modes(),
             'currentTheme' => Theme::toDataTheme($user->theme),
+            'memorisedAyahCount' => $memorisedAyahCount,
         ]);
     }
 

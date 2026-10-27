@@ -30,7 +30,6 @@ class TeacherAssignmentService
     public function __construct(
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentMessageAudioService $messageAudio,
-        private readonly TeacherAttendanceService $attendance,
         private readonly AiReciteAttemptAudioService $attemptAudio,
     ) {}
 
@@ -74,6 +73,24 @@ class TeacherAssignmentService
         if ($recipients->isEmpty()) {
             throw ValidationException::withMessages([
                 'learning_group_id' => 'No students in this group have approved practice sharing.',
+            ]);
+        }
+
+        $duplicateExists = TeacherAssignmentRecipient::query()
+            ->whereIn('student_id', $recipients)
+            ->where('status', '!=', AssignmentStatus::Completed->value)
+            ->whereHas('assignment', function ($query) use ($teacher, $kind, $input, $surah, $start, $end) {
+                $query->where('teacher_id', $teacher->id)
+                    ->where('kind', $kind->value)
+                    ->where('hifz_category', (string) $input['hifz_category'])
+                    ->where('surah_number', $surah)
+                    ->where('ayah_start', $start)
+                    ->where('ayah_end', $end);
+            })
+            ->exists();
+        if ($duplicateExists) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This student already has an unresolved task for the same passage and action.',
             ]);
         }
 
@@ -236,15 +253,12 @@ class TeacherAssignmentService
 
             $matches = $this->completedRepeats($recipient, $sessions, $attempts);
 
-            $target = max(1, (int) ($assignment->repetition_target ?? 1));
             $status = AssignmentStatus::Pending;
-            if ($matches >= $target) {
-                // Meeting the target makes a task ready for the learner to
-                // confirm. It is not a completion by itself: that confirmation
-                // is a separate, auditable part of the assignment lifecycle.
-                $status = AssignmentStatus::AwaitingConfirmation;
-            } elseif ($matches > 0 || $recipient->started_at !== null) {
+            if ($matches > 0 || $recipient->started_at !== null) {
                 $status = AssignmentStatus::InProgress;
+            }
+            if ($assignment->due_at !== null && $assignment->due_at->copy()->endOfDay()->isPast()) {
+                $status = AssignmentStatus::Overdue;
             }
 
             $completedAt = $recipient->completed_at;
@@ -330,6 +344,7 @@ class TeacherAssignmentService
         string $body,
         ?UploadedFile $audio = null,
         ?int $durationMs = null,
+        ?string $clientMessageId = null,
     ): TeacherNote {
         TeacherFeatures::abortUnlessEnabled();
 
@@ -339,7 +354,7 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body, $audio, $durationMs);
+        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body, $audio, $durationMs, $clientMessageId);
     }
 
     public function addTeacherMessage(
@@ -348,6 +363,7 @@ class TeacherAssignmentService
         string $body,
         ?UploadedFile $audio = null,
         ?int $durationMs = null,
+        ?string $clientMessageId = null,
     ): TeacherNote {
         TeacherFeatures::abortUnlessEnabled();
 
@@ -357,7 +373,7 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        return $this->createAssignmentMessage($assignment, $recipient->student, TeacherNoteKind::Feedback, $body, $audio, $durationMs);
+        return $this->createAssignmentMessage($assignment, $recipient->student, TeacherNoteKind::Feedback, $body, $audio, $durationMs, $clientMessageId);
     }
 
     public function linkedRecipientForActivity(
@@ -547,6 +563,7 @@ class TeacherAssignmentService
         ?Collection $completedSessions = null,
         ?Collection $scoredAttempts = null,
         ?Collection $unfinishedSessions = null,
+        ?int $viewerId = null,
     ): array {
         $assignment = $recipient->assignment;
         $status = $this->displayStatus($recipient, $assignment);
@@ -593,7 +610,7 @@ class TeacherAssignmentService
                 $unfinishedSessions,
             );
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
-            $payload['messages'] = $this->assignmentMessages($assignment, (int) $recipient->student_id);
+            $payload['messages'] = $this->assignmentMessages($assignment, (int) $recipient->student_id, $viewerId);
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
             }
@@ -741,12 +758,26 @@ class TeacherAssignmentService
         string $body,
         ?UploadedFile $audio = null,
         ?int $durationMs = null,
+        ?string $clientMessageId = null,
     ): TeacherNote {
         $body = trim($body);
         if (($body === '' && $audio === null) || mb_strlen($body) > 2000) {
             throw ValidationException::withMessages([
                 'body' => 'Enter a message or add a voice note.',
             ]);
+        }
+
+        if ($clientMessageId !== null) {
+            $existing = TeacherNote::query()
+                ->where('teacher_id', $assignment->teacher_id)
+                ->where('student_id', $student->id)
+                ->where('teacher_assignment_id', $assignment->id)
+                ->where('kind', $kind->value)
+                ->where('client_message_id', $clientMessageId)
+                ->first();
+            if ($existing) {
+                return $existing;
+            }
         }
 
         $note = new TeacherNote;
@@ -757,6 +788,7 @@ class TeacherAssignmentService
             'teacher_assignment_id' => $assignment->id,
             'kind' => $kind->value,
             'body' => $body,
+            'client_message_id' => $clientMessageId,
         ])->save();
 
         if ($audio !== null && ! $this->messageAudio->store($note, $audio, $durationMs)) {
@@ -772,24 +804,34 @@ class TeacherAssignmentService
     /**
      * @return list<array<string, mixed>>
      */
-    private function assignmentMessages(TeacherAssignment $assignment, int $studentId): array
+    private function assignmentMessages(TeacherAssignment $assignment, int $studentId, ?int $viewerId = null): array
     {
         $notes = $assignment->relationLoaded('notes')
             ? $assignment->notes
             : $assignment->notes()->with('teacher:id,name')->get();
 
-        return $notes
+        $thread = $notes
             ->where('student_id', $studentId)
             ->sortBy(fn (TeacherNote $note) => sprintf('%020d', (int) $note->id))
-            ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note))
+            ->values();
+        $presented = $thread
+            ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note, $viewerId))
             ->values()
             ->all();
+        if ($viewerId !== null) {
+            $unreadIds = $thread->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId))->pluck('id');
+            if ($unreadIds->isNotEmpty()) {
+                TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
+            }
+        }
+
+        return $presented;
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function presentAssignmentMessage(TeacherNote $note): array
+    public function presentAssignmentMessage(TeacherNote $note, ?int $viewerId = null): array
     {
         $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
 
@@ -800,7 +842,19 @@ class TeacherAssignmentService
             'body' => $note->body,
             'audio' => $this->messageAudio->payload($note),
             'created_at' => $note->created_at?->toIso8601String(),
+            'read_at' => $note->read_at?->toIso8601String(),
+            'unread' => $viewerId !== null && $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId),
+            'delivery_status' => $note->read_at === null ? 'sent' : 'read',
         ];
+    }
+
+    private function assignmentMessageSentBy(TeacherNote $note, int $viewerId): bool
+    {
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+
+        return $kind === TeacherNoteKind::Feedback
+            ? (int) $note->teacher_id === $viewerId
+            : (int) $note->student_id === $viewerId;
     }
 
     /**
@@ -822,13 +876,9 @@ class TeacherAssignmentService
             ? $recipient->status->value
             : (string) $recipient->status;
 
-        if ($status !== AssignmentStatus::Completed->value && $assignment?->due_at !== null && $assignment->due_at->copy()->endOfDay()->isPast()) {
-            return $this->attendance->holdsOverdue($assignment, (int) $recipient->student_id)
-                ? 'attendance_hold'
-                : AssignmentStatus::Overdue->value;
-        }
-
-        return $status;
+        return $status === AssignmentStatus::AwaitingConfirmation->value
+            ? AssignmentStatus::InProgress->value
+            : $status;
     }
 
     private function nullableText(mixed $value): ?string

@@ -155,6 +155,7 @@ class TeacherDashboardService
                 'needs_attention' => $metric['needs_attention'],
                 'repeated_absence' => $metric['repeated_absence'],
                 'active_7' => (bool) ($metric['active_7'] ?? false),
+                'recommendation' => $metric['recommendation'],
             ];
         })->filter()->values();
 
@@ -269,7 +270,7 @@ class TeacherDashboardService
             'ai' => $this->aiSection($teacher, $student),
             'revision' => $this->revisionSection($teacher, $student),
             'tasks' => $this->tasksSection($teacher, $student),
-            'messages' => ['messages' => $this->directMessages->thread($teacher, $student)],
+            'messages' => ['messages' => $this->directMessages->thread($teacher, $student, $teacher)],
             'analytics' => $this->analyticsSection($teacher, $student, $metrics),
             default => $this->overviewSection($teacher, $student, $metrics),
         };
@@ -461,13 +462,14 @@ class TeacherDashboardService
             'account_role' => $user->account_role?->value,
             'teacher_dashboard_url' => $user->isTeacher() ? route('teacher.dashboard') : null,
             'assignments' => $assignments
-                ->map(function (TeacherAssignmentRecipient $recipient) use ($completedSessions, $scoredAttempts, $unfinishedSessions) {
+                ->map(function (TeacherAssignmentRecipient $recipient) use ($completedSessions, $scoredAttempts, $unfinishedSessions, $user) {
                     $payload = $this->assignments->presentRecipient(
                         $recipient,
                         false,
                         $completedSessions,
                         $scoredAttempts,
                         $unfinishedSessions,
+                        (int) $user->id,
                     );
                     $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
                     $payload['organisation_name'] = $recipient->assignment?->organisation?->name;
@@ -505,12 +507,18 @@ class TeacherDashboardService
                 'weak_example' => null,
                 'revision_overdue' => 0,
                 'revision_upcoming' => 0,
-                'assignments' => ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'attendance_hold' => 0],
+                'assignments' => ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0],
                 'active_7' => false,
                 'active_30' => false,
                 'needs_attention' => false,
                 'repeated_absence' => false,
                 'absence_weeks' => 0,
+                'recommendation' => [
+                    'type' => 'insufficient_data',
+                    'reason' => 'No authorised practice or recitation evidence is available yet.',
+                    'advisory' => true,
+                    'requires_teacher_approval' => true,
+                ],
             ];
         }
 
@@ -676,13 +684,10 @@ class TeacherDashboardService
         foreach ($recipients as $recipient) {
             $id = (int) $recipient->student_id;
             $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
-            $overdue = $status !== AssignmentStatus::Completed->value
-                && $recipient->assignment?->due_at !== null
-                && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
-            if ($overdue) {
-                $bucket = $this->attendance->holdsOverdue($recipient->assignment, $id) ? 'attendance_hold' : 'overdue';
-                $metrics[$id]['assignments'][$bucket]++;
-            } elseif (isset($metrics[$id]['assignments'][$status])) {
+            if ($status === AssignmentStatus::AwaitingConfirmation->value) {
+                $status = AssignmentStatus::InProgress->value;
+            }
+            if (isset($metrics[$id]['assignments'][$status])) {
                 $metrics[$id]['assignments'][$status]++;
             }
         }
@@ -709,6 +714,15 @@ class TeacherDashboardService
             }
         }
 
+        $humanAssessments = TeacherRecitationAssessment::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('student_id', $ids)
+            ->latest('updated_at')
+            ->latest('id')
+            ->get(['id', 'student_id', 'tajweed_score', 'annotation', 'updated_at'])
+            ->unique('student_id')
+            ->keyBy('student_id');
+
         $cutoff7 = now()->subDays(7);
         $cutoff30 = now()->subDays(30);
         foreach ($metrics as $id => $row) {
@@ -719,12 +733,104 @@ class TeacherDashboardService
                 || $row['repeated_absence']
                 || $row['revision_overdue'] > 0
                 || $row['assignments']['overdue'] > 0
-                || $row['assignments']['attendance_hold'] > 0
                 || $row['recurring_weak'] > 0
-                || ($row['ai_success_rate'] !== null && $row['ai_success_rate'] < 65);
+                || ($row['ai_attempts'] >= 2 && $row['ai_success_rate'] !== null && $row['ai_success_rate'] < 65);
+            $metrics[$id]['recommendation'] = $this->recommendationFor(
+                $metrics[$id],
+                $humanAssessments->get($id),
+            );
         }
 
         return $metrics;
+    }
+
+    /**
+     * Recommendations are advisory summaries of evidence the teacher may inspect.
+     * AI word matching can flag recall risk, but never establishes tajweed quality.
+     *
+     * @param  array<string, mixed>  $metric
+     * @return array<string, mixed>
+     */
+    private function recommendationFor(array $metric, ?TeacherRecitationAssessment $humanAssessment): array
+    {
+        $base = [
+            'advisory' => true,
+            'requires_teacher_approval' => true,
+            'ai_word_match_is_tajweed' => false,
+        ];
+
+        if ((int) $metric['recurring_weak'] > 0) {
+            return $base + [
+                'type' => 'focus',
+                'reason' => sprintf(
+                    '%d recurring ayah finding%s across scored recitation evidence.',
+                    (int) $metric['recurring_weak'],
+                    (int) $metric['recurring_weak'] === 1 ? '' : 's',
+                ),
+                'evidence' => ['recurring_findings' => (int) $metric['recurring_weak']],
+            ];
+        }
+
+        if ((int) $metric['revision_overdue'] > 0) {
+            return $base + [
+                'type' => 'needs_help',
+                'reason' => sprintf('%d scheduled review%s overdue.', (int) $metric['revision_overdue'], (int) $metric['revision_overdue'] === 1 ? ' is' : 's are'),
+                'evidence' => ['overdue_reviews' => (int) $metric['revision_overdue']],
+            ];
+        }
+
+        if ((int) ($metric['assignments']['overdue'] ?? 0) > 0) {
+            return $base + [
+                'type' => 'needs_help',
+                'reason' => sprintf('%d teacher-assigned task%s overdue.', (int) $metric['assignments']['overdue'], (int) $metric['assignments']['overdue'] === 1 ? ' is' : 's are'),
+                'evidence' => ['overdue_tasks' => (int) $metric['assignments']['overdue']],
+            ];
+        }
+
+        if ($metric['repeated_absence']) {
+            return $base + [
+                'type' => 'needs_help',
+                'reason' => 'Teacher-recorded absences occurred in consecutive weeks.',
+                'evidence' => ['attendance_source' => 'teacher_recorded', 'absence_weeks' => (int) $metric['absence_weeks']],
+            ];
+        }
+
+        if ((int) $metric['ai_attempts'] >= 2 && $metric['ai_success_rate'] !== null && (float) $metric['ai_success_rate'] < 65) {
+            return $base + [
+                'type' => 'needs_help',
+                'reason' => sprintf(
+                    'AI word match averages %s%% across %d checks; this indicates recall evidence, not a tajweed assessment.',
+                    rtrim(rtrim(number_format((float) $metric['ai_success_rate'], 1), '0'), '.'),
+                    (int) $metric['ai_attempts'],
+                ),
+                'evidence' => ['word_match_average' => (float) $metric['ai_success_rate'], 'scored_checks' => (int) $metric['ai_attempts']],
+            ];
+        }
+
+        if ($humanAssessment !== null && (int) $humanAssessment->tajweed_score >= 4 && $metric['active_30']) {
+            return $base + [
+                'type' => 'ready_next',
+                'reason' => sprintf(
+                    'Recent teacher assessment: %d/5, with authorised practice activity in the last 30 days.',
+                    (int) $humanAssessment->tajweed_score,
+                ),
+                'evidence' => [
+                    'teacher_assessment_score' => (int) $humanAssessment->tajweed_score,
+                    'teacher_assessed_at' => $humanAssessment->updated_at?->toIso8601String(),
+                    'active_30_days' => true,
+                ],
+            ];
+        }
+
+        $reason = (int) $metric['ai_attempts'] > 0
+            ? 'Recitation evidence is available, but a teacher assessment is still needed before advancing.'
+            : 'No scored recitation evidence is available yet.';
+
+        return $base + [
+            'type' => 'insufficient_data',
+            'reason' => $reason,
+            'evidence' => ['scored_checks' => (int) $metric['ai_attempts']],
+        ];
     }
 
     /**
@@ -857,7 +963,7 @@ class TeacherDashboardService
 
     private function assignmentCounts(User $teacher, array $ids): array
     {
-        $counts = ['pending' => 0, 'in_progress' => 0, 'awaiting_confirmation' => 0, 'completed' => 0, 'overdue' => 0, 'attendance_hold' => 0, 'outstanding' => 0];
+        $counts = ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'outstanding' => 0];
         if ($ids === []) {
             return $counts;
         }
@@ -870,14 +976,10 @@ class TeacherDashboardService
 
         foreach ($recipients as $recipient) {
             $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
-            $overdue = $status !== AssignmentStatus::Completed->value
-                && $recipient->assignment?->due_at !== null
-                && $recipient->assignment->due_at->copy()->endOfDay()->isPast();
-            if ($overdue) {
-                $bucket = $this->attendance->holdsOverdue($recipient->assignment, (int) $recipient->student_id) ? 'attendance_hold' : 'overdue';
-                $counts[$bucket]++;
-                $counts['outstanding']++;
-            } elseif (isset($counts[$status])) {
+            if ($status === AssignmentStatus::AwaitingConfirmation->value) {
+                $status = AssignmentStatus::InProgress->value;
+            }
+            if (isset($counts[$status])) {
                 $counts[$status]++;
                 if ($status !== AssignmentStatus::Completed->value) {
                     $counts['outstanding']++;
@@ -942,6 +1044,7 @@ class TeacherDashboardService
                 'weak_count' => (int) ($metrics['weak_count'] ?? 0),
                 'revision_overdue' => (int) ($metrics['revision_overdue'] ?? 0),
                 'assignments' => $metrics['assignments'],
+                'recommendation' => $metrics['recommendation'],
             ],
             'calendar' => $this->calendar((int) $student->id),
             'attendance' => $this->attendance->recentForStudent($teacher, $student),
@@ -1555,7 +1658,7 @@ class TeacherDashboardService
             ->latest('id')
             ->limit(20)
             ->get()
-            ->map(fn (TeacherAssignmentRecipient $recipient) => $this->assignments->presentRecipient($recipient, true))
+            ->map(fn (TeacherAssignmentRecipient $recipient) => $this->assignments->presentRecipient($recipient, true, null, null, null, (int) $teacher->id))
             ->all();
 
         return [

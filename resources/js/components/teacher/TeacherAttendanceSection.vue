@@ -5,9 +5,17 @@
         <h2>{{ t('teacher.nav_attendance') }}</h2>
         <p>{{ t('teacher.attendance_tap_hint') }}</p>
       </div>
+      <label v-if="groups.length" class="teacher-attendance__group">
+        <span>{{ t('teacher.attendance_group') }}</span>
+        <select v-model="groupId" class="form-select form-select-sm" @change="load">
+          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+        </select>
+      </label>
     </div>
 
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
+    <p v-if="success" class="alert alert-success" role="status">{{ success }}</p>
+    <p v-if="groups.length" class="teacher-attendance__note"><i class="bi bi-person-check" aria-hidden="true"></i> {{ t('teacher.attendance_teacher_recorded_source') }}</p>
     <div v-if="groups.length" class="teacher-attendance__controls">
       <div class="teacher-attendance__weekbar">
         <button type="button" class="btn btn-outline-secondary" :aria-label="t('teacher.attendance_previous_week')" @click="shiftWeek(-7)"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
@@ -79,7 +87,7 @@ export default {
   name: 'TeacherAttendanceSection',
   mixins: [i18nMixin],
   data() {
-    return { groups: [], groupId: null, weekStart: '', days: [], selectedDay: '', visibleDayCount: 3, students: [], loading: true, error: '', saving: {}, requestId: 0, selectedStatus: 'present', bulkSavingDay: '' }
+    return { groups: [], groupId: null, weekStart: '', days: [], selectedDay: '', visibleDayCount: 3, students: [], loading: true, error: '', success: '', successTimer: null, saving: {}, requestId: 0, selectedStatus: 'present', bulkSavingDay: '' }
   },
   computed: {
     weekLabel() {
@@ -109,6 +117,7 @@ export default {
     },
   },
   mounted() { this.load() },
+  beforeUnmount() { window.clearTimeout(this.successTimer) },
   methods: {
     localDate(value) { return new Date(`${value}T12:00:00`) },
     dateString(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` },
@@ -137,6 +146,7 @@ export default {
       this.bulkSavingDay = day
       await Promise.all(this.students.filter((student) => student.attendance?.[day] !== 'present').map((student) => this.setStatus(student, day, 'present')))
       this.bulkSavingDay = ''
+      if (!this.error) this.showSuccess(this.t('teacher.attendance_bulk_saved'))
     },
     onCellKeydown(event, rowIndex, columnIndex) {
       const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']
@@ -176,6 +186,7 @@ export default {
       const id = ++this.requestId
       this.loading = true
       this.error = ''
+      this.success = ''
       try {
         const payload = await learningApi.getTeacherAttendance({ group_id: this.groupId || undefined, week_start: this.weekStart || undefined })
         if (id !== this.requestId) return
@@ -198,10 +209,12 @@ export default {
       const savingKey = `${student.id}:${day}`
       this.saving = { ...this.saving, [savingKey]: true }
       this.error = ''
+      this.success = ''
       if (status === 'clear') delete student.attendance[day]
       else student.attendance[day] = status
       try {
-        await learningApi.setTeacherAttendance(this.groupId, student.id, day, status)
+        const saved = await learningApi.setTeacherAttendance(this.groupId, student.id, day, status)
+        if (saved?.source === 'teacher_recorded' && !this.bulkSavingDay) this.showSuccess(this.t('teacher.attendance_saved'))
       } catch {
         if (previous) student.attendance[day] = previous
         else delete student.attendance[day]
@@ -211,6 +224,11 @@ export default {
         delete next[savingKey]
         this.saving = next
       }
+    },
+    showSuccess(message) {
+      window.clearTimeout(this.successTimer)
+      this.success = message
+      this.successTimer = window.setTimeout(() => { this.success = '' }, 3000)
     },
   },
 }

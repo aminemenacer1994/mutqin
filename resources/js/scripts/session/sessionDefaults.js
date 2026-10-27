@@ -109,3 +109,14 @@ export function buildFullFatihahMushafSessionConfig(overrides = {}) {
     ...overrides,
   })
 }
+
+/** Hero “10-minute session” preset: full opening surah, steady 3× repeats (not time-truncated). */
+export const TEN_MINUTE_SESSION_REPETITIONS = 3
+
+export function buildTenMinuteHeroSessionConfig(overrides = {}) {
+  return buildFullFatihahMushafSessionConfig({
+    repetitionsPerStep: TEN_MINUTE_SESSION_REPETITIONS,
+    selectedLoopCount: TEN_MINUTE_SESSION_REPETITIONS,
+    ...overrides,
+  })
+}

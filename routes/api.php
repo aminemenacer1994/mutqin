@@ -114,6 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
             Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
             Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1')->name('api.me.teachers.messages.store');
+            Route::get('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'teacherMessages'])->name('api.me.teachers.messages.index');
             Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 

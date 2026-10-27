@@ -6,6 +6,7 @@ return [
     'title' => 'الملف الشخصي',
     'hero_desc' => 'أدِر حسابك — بياناتك الشخصية وتفضيلات التطبيق.',
     'hero_desc_admin' => 'أدِر حساب فريقك — حدّث بياناتك وتفضيلات التطبيق.',
+    'progress_memorised' => ':count آية محفوظة',
     'subscription_snapshot' => 'ملخص الاشتراك',
     'org_snapshot' => 'صلاحيات المؤسسة',
     'current_plan' => 'الخطة الحالية',

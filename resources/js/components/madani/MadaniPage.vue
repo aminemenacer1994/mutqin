@@ -100,7 +100,9 @@ import {
   clampMobileMushafWordSize,
   compactMobileMushafDisplayLines,
   isMobileMushafAyahSparse,
+  mushafLineNaturalWidth,
   mobileMushafAyahJustify,
+  mobileMushafInkFillScale,
   mobileMushafFitSafety,
   mobileMushafWordSizePx,
   mobileViewportInnerWidth,
@@ -513,6 +515,35 @@ export default {
         number.style.setProperty('opacity', '1', 'important')
       }
     },
+    boostMobileTajweedInkFill(root, sheet, size, lines) {
+      if (!this.tajweedEnabled || !this.isPhoneViewport()) return size
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return size
+      const ayahLines = (lines || []).filter((line) => {
+        if (!(line instanceof HTMLElement)) return false
+        if (String(line.dataset.lineType || '') !== 'ayah') return false
+        return !line.classList.contains('qpc-madani-line--sparse')
+          && !line.classList.contains('qpc-madani-line--centered')
+          && Number(line.dataset.centered) !== 1
+      })
+      if (!ayahLines.length) return size
+      root.style.setProperty('--qpc-word-size', `${size}px`)
+      void sheet.offsetWidth
+      let scale = 1
+      for (const line of ayahLines) {
+        const rowWidth = Math.max(1, line.clientWidth || this.contentWidth(sheet))
+        const natural = this.lineAdvanceWidth(line)
+        scale = Math.max(
+          scale,
+          mobileMushafInkFillScale({ naturalWidth: natural, availableWidth: rowWidth, minFill: 0.9 }),
+        )
+      }
+      if (!(scale > 1.02)) return size
+      const boosted = clampMobileMushafWordSize(Math.round(size * scale))
+      root.style.setProperty('--qpc-word-size', `${boosted}px`)
+      void sheet.offsetWidth
+      const fitted = this.shrinkWordSizeToFit(root, sheet, boosted, lines)
+      return clampMobileMushafWordSize(fitted)
+    },
     applyMobileAyahRowPacking(sheet, available) {
       if (!(sheet instanceof HTMLElement)) return
       const phone = this.isPhoneViewport()
@@ -545,9 +576,11 @@ export default {
           wordCount,
           ratio: sparseRatio,
           phone,
+          tajweed: !!this.tajweedEnabled,
         })
         line.classList.toggle('qpc-madani-line--sparse', sparse)
-        line.style.setProperty('justify-content', mobileMushafAyahJustify(sparse), 'important')
+        // Let stylesheet hotfixes own justify — inline flex-start was winning the cascade.
+        line.style.removeProperty('justify-content')
         line.style.setProperty('align-self', 'stretch', 'important')
         line.style.setProperty('width', '100%', 'important')
         line.style.setProperty('max-width', '100%', 'important')
@@ -603,8 +636,13 @@ export default {
       for (const [index, line] of ayahLines.entries()) {
         line.style.width = previous[index].width
         line.style.maxWidth = previous[index].maxWidth
-        if (previous[index].justify) {
-          line.style.setProperty('justify-content', previous[index].justify, 'important')
+        // Ayah rows: packing owns justify (shrink measure uses flex-start).
+        if (String(line.dataset.lineType || '') !== 'ayah') {
+          if (previous[index].justify) {
+            line.style.setProperty('justify-content', previous[index].justify, 'important')
+          } else {
+            line.style.removeProperty('justify-content')
+          }
         } else {
           line.style.removeProperty('justify-content')
         }
@@ -760,7 +798,12 @@ export default {
         return
       }
       const sheetWidth = Math.round(sheet.clientWidth)
-      if (this.fitted && Math.abs(sheetWidth - this.lastFitWidth) < 4) return
+      if (this.fitted && Math.abs(sheetWidth - this.lastFitWidth) < 4) {
+        if (this.isPhoneViewport()) {
+          this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+        }
+        return
+      }
 
       const lines = [...sheet.querySelectorAll('.qpc-madani-line')]
       if (!lines.length) {
@@ -957,6 +1000,17 @@ export default {
       if (mobile) this.applyMobileEdgeToEdgeChrome(root, sheet)
       else if (this.sessionScoped) this.applySessionFolioChrome(root)
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      if (mobile && this.tajweedEnabled) {
+        size = this.boostMobileTajweedInkFill(root, sheet, size, targets)
+        root.style.setProperty('--qpc-word-size', `${size}px`)
+        this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      }
+      if (mobile && this.tajweedEnabled) {
+        window.requestAnimationFrame(() => {
+          if (!(this.$refs.sheet instanceof HTMLElement)) return
+          this.applyMobileAyahRowPacking(this.$refs.sheet, this.contentWidth(this.$refs.sheet))
+        })
+      }
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
       this.hasRevealed = true
@@ -1086,12 +1140,7 @@ export default {
       })
     },
     lineAdvanceWidth(line) {
-      const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
-      if (!nodes.length) return line.scrollWidth
-      return nodes.reduce(
-        (sum, node) => sum + Math.max(node.offsetWidth, node.scrollWidth || 0),
-        0,
-      )
+      return mushafLineNaturalWidth(line)
     },
     contentWidth(sheet) {
       const styles = getComputedStyle(sheet)

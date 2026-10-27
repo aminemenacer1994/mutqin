@@ -55,13 +55,16 @@
           <div v-for="thread in directThreads" :key="thread.teacher_id" class="learner-teacher__direct-thread">
             <strong>{{ thread.teacher_name }}</strong>
             <div v-if="thread.messages.length" class="learner-teacher__direct-list">
-              <p v-for="message in thread.messages" :key="message.id" :class="`is-${message.sender}`"><b>{{ message.sender === 'teacher' ? thread.teacher_name : t('teacher.you') }}:</b> {{ message.body }}</p>
+              <p v-for="message in thread.messages" :key="message.id" :class="[`is-${message.sender}`, { 'is-unread': message.unread }]">
+                <b>{{ message.sender_name || (message.sender === 'teacher' ? thread.teacher_name : t('teacher.you')) }}:</b> {{ message.body }}
+                <small v-if="message.created_at">{{ directMessageWhen(message) }}<template v-if="message.sender === 'student'"> · {{ message.delivery_status === 'read' ? t('teacher.message_read') : t('teacher.message_sent_status') }}</template></small>
+              </p>
             </div>
             <p v-else class="learner-teacher__direct-empty">{{ t('teacher.direct_messages_empty_student') }}</p>
             <form @submit.prevent="sendDirect(thread)">
               <label :for="`direct-message-${thread.teacher_id}`">{{ t('teacher.message') }}</label>
               <textarea :id="`direct-message-${thread.teacher_id}`" v-model="directDrafts[thread.teacher_id]" rows="2" maxlength="2000" class="form-control" :placeholder="t('teacher.direct_message_prompt_student')"></textarea>
-              <div><span v-if="directError[thread.teacher_id]" role="alert" class="text-danger">{{ directError[thread.teacher_id] }}</span><button type="submit" class="dash-btn dash-btn--primary" :disabled="directSaving === thread.teacher_id || !directDrafts[thread.teacher_id]?.trim()">{{ t('teacher.send_message') }}</button></div>
+              <div><span v-if="directError[thread.teacher_id]" role="alert" class="alert alert-danger py-1 px-2 mb-0">{{ directError[thread.teacher_id] }}</span><span v-else-if="directSuccess[thread.teacher_id]" role="status" class="alert alert-success py-1 px-2 mb-0">{{ directSuccess[thread.teacher_id] }}</span><span v-else></span><button type="submit" class="dash-btn dash-btn--primary" :disabled="directSaving === thread.teacher_id || !directDrafts[thread.teacher_id]?.trim()">{{ t('teacher.send_message') }}</button></div>
             </form>
           </div>
         </section>
@@ -325,6 +328,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { assignmentProgressLabel } from '../../scripts/teacher/formatters'
+import { learningApi } from '../../scripts/api/learning'
 import {
   chooseSupportedRecorderMimeType,
   createObjectUrlFromBlob,
@@ -333,7 +337,7 @@ import {
   stopMediaRecorderAndCollectBlob,
 } from '../../scripts/audio/recordingPlayback'
 
-const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'awaiting_confirmation', 'overdue'])
+const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue'])
 const MAX_RECORDING_MS = 120000
 
 export default {
@@ -355,8 +359,11 @@ export default {
       activeFilter: 'todo',
       directDrafts: {},
       directSent: {},
+      directSynced: {},
       directError: {},
+      directSuccess: {},
       directSaving: null,
+      directPollTimer: null,
       listLimit: 4,
       visibleLimit: 4,
       selectedItem: null,
@@ -381,7 +388,12 @@ export default {
     directThreads() {
       return (this.support?.direct_threads || []).map((thread) => ({
         ...thread,
-        messages: [...(thread.messages || []), ...(this.directSent[thread.teacher_id] || [])],
+        messages: [...new Map([
+          ...(thread.messages || []),
+          ...(this.directSynced[thread.teacher_id] || []),
+          ...(this.directSent[thread.teacher_id] || []),
+        ].map((message) => [message.id, message])).values()]
+          .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id)),
       }))
     },
     assignments() {
@@ -458,7 +470,11 @@ export default {
   },
   beforeUnmount() {
     if (typeof document !== 'undefined') document.body.classList.remove('modal-open')
+    window.clearInterval(this.directPollTimer)
     this.discardRecording()
+  },
+  mounted() {
+    this.directPollTimer = window.setInterval(() => this.refreshDirectThreads(), 10000)
   },
   methods: {
     async sendDirect(thread) {
@@ -466,13 +482,28 @@ export default {
       if (!body || this.directSaving) return
       this.directSaving = thread.teacher_id
       this.directError = { ...this.directError, [thread.teacher_id]: '' }
+      this.directSuccess = { ...this.directSuccess, [thread.teacher_id]: '' }
       try {
         const message = await this.onSendDirectMessage(thread.teacher_id, body)
         this.directSent = { ...this.directSent, [thread.teacher_id]: [...(this.directSent[thread.teacher_id] || []), message] }
         this.directDrafts = { ...this.directDrafts, [thread.teacher_id]: '' }
+        this.directSuccess = { ...this.directSuccess, [thread.teacher_id]: this.t('teacher.message_sent') }
       } catch (error) {
         this.directError = { ...this.directError, [thread.teacher_id]: error?.response?.data?.message || this.t('teacher.action_failed') }
       } finally { this.directSaving = null }
+    },
+    async refreshDirectThreads() {
+      const threads = this.support?.direct_threads || []
+      await Promise.all(threads.map(async (thread) => {
+        try {
+          const payload = await learningApi.getLearnerTeacherMessages(thread.teacher_id)
+          this.directSynced = { ...this.directSynced, [thread.teacher_id]: payload?.messages || [] }
+        } catch (_) { /* preserve existing messages during transient polling failures */ }
+      }))
+    },
+    directMessageWhen(message) {
+      const date = new Date(message?.created_at)
+      return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     },
     setFilter(id) {
       this.activeFilter = id
@@ -612,12 +643,11 @@ export default {
     },
     statusLabel(row) {
       if (this.isCompleted(row)) return this.t('teacher.status_completed')
-      return this.t(`teacher.status_${row.status}`)
+      return this.t(`teacher.status_${row.status === 'awaiting_confirmation' ? 'in_progress' : row.status}`)
     },
     statusIcon(row) {
       if (this.isCompleted(row)) return 'bi-check2-circle'
       if (row?.status === 'overdue') return 'bi-exclamation-circle'
-      if (row?.status === 'awaiting_confirmation') return 'bi-check-circle'
       if (row?.status === 'in_progress') return 'bi-arrow-repeat'
       return 'bi-circle'
     },
@@ -627,9 +657,11 @@ export default {
       return `${assignment.surah_name} · ${assignment.ayah_start}–${assignment.ayah_end}`
     },
     kindLabel(row) {
-      return row?.assignment?.kind === 'ai_recite'
+      const action = row?.assignment?.kind === 'ai_recite'
         ? this.t('teacher.kind_ai')
         : this.t('teacher.kind_practice')
+      const category = row?.assignment?.hifz_category
+      return category ? `${this.t(`teacher.hifz_${category}`)} · ${action}` : action
     },
     kindIcon(row) {
       return row?.assignment?.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-book'

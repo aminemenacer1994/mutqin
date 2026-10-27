@@ -25,23 +25,84 @@
         if ($initials === '') {
             $initials = mb_strtoupper(mb_substr((string) $user->email, 0, 1));
         }
+        $avatarUrl = filter_var((string) $user->avatar, FILTER_VALIDATE_URL) ?: null;
+        $themeMode = collect($themeModes)->firstWhere('id', $currentTheme) ?? collect($themeModes)->first();
+        $localeCode = strtolower((string) ($user->locale ?: app()->getLocale()));
+        $memorisedAyahCount = (int) ($memorisedAyahCount ?? 0);
     @endphp
 
     <section class="container-fluid shell profile-page" v-pre>
         <div class="profile-stage">
-            <header class="profile-page-head">
-                <div class="profile-hero-identity">
-                    @if ($user->avatar)
-                        <img class="profile-avatar" src="{{ $user->avatar }}" alt="" width="44" height="44">
-                    @else
-                        <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ $initials }}</span>
-                    @endif
-                    <div>
-                        <h1>{{ __('profile.title') }}</h1>
-                        <p>{{ $user->email }}</p>
+            <div class="profile-hero-card">
+                <div class="profile-hero-copy">
+                    <span class="profile-kicker">{{ $isAdmin ? __('profile.kicker_admin') : __('profile.kicker') }}</span>
+                    <div class="profile-hero-identity">
+                        @if ($avatarUrl)
+                            <img
+                                class="profile-avatar"
+                                src="{{ $avatarUrl }}"
+                                alt=""
+                                width="44"
+                                height="44"
+                                data-profile-avatar-img
+                            >
+                            <span class="profile-avatar profile-avatar--initials" aria-hidden="true" data-profile-avatar-fallback hidden>{{ $initials }}</span>
+                        @else
+                            <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ $initials }}</span>
+                        @endif
+                        <div>
+                            <h1 class="profile-hero-name">{{ $user->name }}</h1>
+                            <p class="profile-hero-email">{{ $user->email }}</p>
+                        </div>
+                    </div>
+                    <p>{{ $isAdmin ? __('profile.hero_desc_admin') : __('profile.hero_desc') }}</p>
+                    <div class="profile-hero-prefs">
+                        <span class="profile-inline-badge">{{ __('profile.appearance') }}: {{ __('profile.'.$themeMode['label_key']) }}</span>
+                        <span class="profile-inline-badge">{{ __('profile.language') }}: {{ strtoupper($localeCode) }}</span>
+                        @if (! $isAdmin && $memorisedAyahCount > 0)
+                            <span class="profile-inline-badge">{{ __('profile.progress_memorised', ['count' => $memorisedAyahCount]) }}</span>
+                        @endif
                     </div>
                 </div>
-            </header>
+
+                <aside
+                    class="profile-hero-summary"
+                    aria-label="{{ $isAdmin ? __('profile.org_snapshot') : __('profile.subscription_snapshot') }}"
+                >
+                    <div class="profile-summary-copy">
+                        <span class="profile-summary-label">
+                            {{ $isAdmin ? __('profile.org_plan_label') : __('profile.current_plan') }}
+                        </span>
+                        <strong class="profile-summary-plan">{{ $subscriptionSummary['plan_label'] }}</strong>
+                        @unless ($isAdmin)
+                            <p class="profile-summary-meta">{{ $subscriptionSummary['renewal_label'] }}</p>
+                            @if ($subscriptionSummary['trial_label'])
+                                <p class="profile-summary-meta">{{ $subscriptionSummary['trial_label'] }}</p>
+                            @endif
+                        @endunless
+                    </div>
+
+                    @unless ($isAdmin)
+                        <div class="profile-hero-actions">
+                            @if ($subscriptionSummary['can_manage'])
+                                <form method="POST" action="{{ route('billing.portal') }}">
+                                    @csrf
+                                    <button type="submit" class="billing-secondary-btn profile-action-btn">{{ __('profile.manage_subscription') }}</button>
+                                </form>
+                            @endif
+                            @if ($subscriptionSummary['can_upgrade'])
+                                <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('pricing') }}">
+                                    {{ __('profile.upgrade_plan') }}
+                                </a>
+                            @endif
+                            <a class="billing-secondary-btn profile-action-btn" href="{{ route('dashboard') }}">
+                                <i class="bi bi-graph-up" aria-hidden="true"></i>
+                                {{ __('ui.dashboard') }}
+                            </a>
+                        </div>
+                    @endunless
+                </aside>
+            </div>
 
             @if (session('billing_status'))
                 <div class="billing-alert billing-alert-success" role="status">{{ session('billing_status') }}</div>
@@ -459,6 +520,15 @@
                 if (document.documentElement.dataset.profilePageBooted === '1') return;
                 if (!document.querySelector('[data-profile-form], [data-password-form], [data-profile-toast]')) return;
                 document.documentElement.dataset.profilePageBooted = '1';
+
+            const avatarImg = document.querySelector('[data-profile-avatar-img]');
+            const avatarFallback = document.querySelector('[data-profile-avatar-fallback]');
+            if (avatarImg && avatarFallback) {
+                avatarImg.addEventListener('error', function () {
+                    avatarImg.hidden = true;
+                    avatarFallback.hidden = false;
+                }, { once: true });
+            }
 
             const toastEl = document.querySelector('[data-profile-toast]');
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

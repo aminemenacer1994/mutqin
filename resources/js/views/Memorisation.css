@@ -21811,6 +21811,7 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  align-content: center;
   box-sizing: border-box;
   width: 100%;
   height: 100dvh;
@@ -21827,6 +21828,9 @@ button:active {
 
 .quran-search-modal {
   box-sizing: border-box;
+  position: relative;
+  flex: 0 1 auto;
+  align-self: center;
   width: min(1120px, 100%);
   max-width: 100%;
   height: min(
@@ -41809,14 +41813,46 @@ but not its destructive red. */
   }
 }
 
-.tools-body .offcanvas-audio-panel .radio-group-compact {
-  gap: 4px;
+.tools-body .offcanvas-audio-panel {
+  padding: 0.55rem 0.65rem 0.75rem;
 }
 
-.tools-body .offcanvas-audio-panel .radio-group-compact .radio {
-  min-height: 28px;
-  padding: 3px 8px;
-  font-size: 0.72rem;
+.tools-body .offcanvas-audio-panel .field-stack-compact {
+  gap: 0.65rem;
+}
+
+.tools-body .offcanvas-audio-panel .radio-group-compact,
+.tools-body .sheet--setup .session-range-preset,
+.tools-body .sheet--setup .playback-mode-radios {
+  gap: 0.45rem;
+}
+
+.tools-body .offcanvas-audio-panel .radio-group-compact .radio,
+.tools-body .sheet--setup .session-range-preset .radio,
+.tools-body .sheet--setup .playback-mode-radios .radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  flex: 1 1 8.5rem;
+}
+
+.tools-body .offcanvas-audio-panel .radio-group-compact .radio input[type="radio"],
+.tools-body .sheet--setup .session-range-preset .radio input[type="radio"],
+.tools-body .sheet--setup .playback-mode-radios .radio input[type="radio"] {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
+.tools-body .offcanvas-audio-panel .field-repetitions-clean,
+.tools-body .offcanvas-audio-panel .field.setup-field-row {
+  margin-inline: 0;
 }
 
 .tools-body .offcanvas-audio-panel .select-compact {

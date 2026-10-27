@@ -1919,13 +1919,39 @@
                   </div>
                   <div class="field setup-field-row" data-tour="setup-range">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
+                    <div
+                      class="radio-group radio-group-tight radio-group-compact session-range-preset"
+                      role="radiogroup"
+                      :aria-label="t('sessionSetup.rangePresetLabel')"
+                    >
+                      <label class="radio">
+                        <input
+                          type="radio"
+                          name="session-range-preset"
+                          value="full_surah"
+                          :checked="sessionRangePreset === 'full_surah'"
+                          @change="onSessionRangePresetChange('full_surah')"
+                        >
+                        {{ t('sessionSetup.rangePresetFullSurah') }}
+                      </label>
+                      <label class="radio">
+                        <input
+                          type="radio"
+                          name="session-range-preset"
+                          value="custom"
+                          :checked="sessionRangePreset === 'custom'"
+                          @change="onSessionRangePresetChange('custom')"
+                        >
+                        {{ t('sessionSetup.rangePresetCustom') }}
+                      </label>
+                    </div>
                     <div class="range range-single">
                       <input
                         type="number"
                         class="input"
                         inputmode="numeric"
                         v-model.number="rangeStart"
-                        @change="adjustRange({ immediate: true })"
+                        @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
                         min="1"
                         :max="resolveCurrentSurahAyahCount() || undefined"
                       >
@@ -1935,7 +1961,7 @@
                         class="input"
                         inputmode="numeric"
                         v-model.number="rangeEnd"
-                        @change="adjustRange({ immediate: true })"
+                        @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
                         min="1"
                         :max="resolveCurrentSurahAyahCount() || undefined"
                       >
@@ -2117,14 +2143,14 @@
                   </div>
                   <div class="field setup-field-row">
                     <label>{{ t('memorisation.auto_advance') }}</label>
-                    <div class="radio-group radio-group-tight radio-group-compact">
+                    <div class="radio-group radio-group-tight radio-group-compact playback-mode-radios">
                       <label class="radio">
                         <input type="radio" name="session-auto-advance" value="auto" v-model="playMode">
-                        {{ t('common.yes') }}
+                        {{ t('sessionSetup.playModeAuto') }}
                       </label>
                       <label class="radio">
                         <input type="radio" name="session-auto-advance" value="manual" v-model="playMode">
-                        {{ t('common.no') }}
+                        {{ t('sessionSetup.playModeAdvanced') }}
                       </label>
                     </div>
                   </div>
@@ -5266,8 +5292,16 @@
     <Teleport to="body">
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
       :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'"
-      @click.self.prevent>
-      <section class="quran-search-modal" role="dialog" aria-modal="true" :aria-label="t('memorisation.quranSearch.title')">
+      @click.self.prevent
+      @keydown="onModalOverlayKeydown($event, { containerRef: 'quranSearchModalDialog', onClose: closeQuranSearchModal })">
+      <section
+        ref="quranSearchModalDialog"
+        class="quran-search-modal"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        :aria-label="t('memorisation.quranSearch.title')"
+      >
         <header class="quran-search-header">
           <div></div>
           <button class="quran-search-close pill-control" type="button" @click="closeQuranSearchModal"

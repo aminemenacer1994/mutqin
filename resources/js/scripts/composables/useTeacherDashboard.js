@@ -452,6 +452,7 @@ export function useTeacherDashboard(authRef) {
     formError.value = ''
     const payload = {
       kind: assignment.value.kind,
+      hifz_category: assignment.value.hifz_category || 'sabaq',
       surah_number: Number(assignment.value.surah_number),
       ayah_start: Number(assignment.value.ayah_start),
       ayah_end: Number(assignment.value.ayah_end),

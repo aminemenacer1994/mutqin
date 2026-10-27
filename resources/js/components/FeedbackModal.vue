@@ -24,7 +24,6 @@
             <header class="feedback-modal__header">
               <div class="feedback-modal__header-copy">
                 <h2 id="feedbackModalTitle">{{ t('feedback.title') }}</h2>
-                <p class="feedback-modal__lead">{{ t('feedback.lead') }}</p>
               </div>
               <button
                 type="button"
@@ -39,6 +38,7 @@
 
             <form class="feedback-modal__form" @submit.prevent="submit">
               <div class="feedback-modal__body">
+                <p class="feedback-modal__lead">{{ t('feedback.lead') }}</p>
                 <label class="feedback-modal__field">
                   <span class="feedback-modal__label">{{ t('feedback.typeLabel') }}</span>
                   <select
@@ -395,7 +395,7 @@ export default {
 }
 
 .feedback-modal__lead {
-  margin: 0.45rem 0 0;
+  margin: 0 0 0.85rem;
   color: var(--feedback-muted);
   font-size: 0.9rem;
   line-height: 1.5;

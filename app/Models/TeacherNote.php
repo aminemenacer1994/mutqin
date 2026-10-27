@@ -21,6 +21,7 @@ class TeacherNote extends Model
             'kind' => TeacherNoteKind::class,
             'audio_bytes' => 'integer',
             'audio_duration_ms' => 'integer',
+            'read_at' => 'datetime',
         ];
     }
 

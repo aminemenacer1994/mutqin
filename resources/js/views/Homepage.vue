@@ -501,7 +501,7 @@ export default {
       return isAuthenticated
         ? {
           destination: 'memorisation',
-          href: '/memorisation',
+          href: '/memorisation?journey=ten_minute',
           label: t('homepage.hero.startFirstSession'),
         }
         : {

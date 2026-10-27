@@ -9,7 +9,9 @@ import {
   clampMobileMushafWordSize,
   compactMobileMushafDisplayLines,
   isMobileMushafAyahSparse,
+  mushafLineNaturalWidth,
   mobileMushafAyahJustify,
+  mobileMushafInkFillScale,
   mobileMushafFitSafety,
   mobileMushafHairlinePadding,
   mobileMushafWordSizePx,
@@ -40,9 +42,19 @@ assert.equal(isMobileMushafAyahSparse({ naturalWidth: 120, availableWidth: 360, 
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 340, availableWidth: 360, wordCount: 9 }), false)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 300, availableWidth: 360, wordCount: 6 }), true)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 8, ratio: 0.9 }), true)
-// Phone leftover rows must centre (ratio + word-cap); dense near-full rows still stretch.
+// Phone: centre under-filled rows only (not every ≤8-word printed line).
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 8, phone: true }), true)
+assert.equal(isMobileMushafAyahSparse({ naturalWidth: 330, availableWidth: 360, wordCount: 8, phone: true }), false)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 340, availableWidth: 360, wordCount: 10, phone: true }), false)
+assert.equal(
+  isMobileMushafAyahSparse({ naturalWidth: 280, availableWidth: 360, wordCount: 12, phone: true, tajweed: true }),
+  false,
+)
+assert.equal(
+  isMobileMushafAyahSparse({ naturalWidth: 280, availableWidth: 360, wordCount: 12, phone: true, tajweed: false }),
+  true,
+)
+assert.equal(typeof mushafLineNaturalWidth, 'function')
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 7, phone: true }), true)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 0, availableWidth: 360 }), false)
 // Fatihah L7–L8: short rows centre even before glyph widths are measurable.
@@ -74,6 +86,7 @@ assert.match(blade, /mutqin-memorisation-hotfix-v221/)
 assert.match(blade, /mutqin-memorisation-hotfix-v224/)
 assert.match(blade, /mutqin-memorisation-hotfix-v225/)
 assert.match(blade, /mutqin-memorisation-hotfix-v226/)
+assert.match(blade, /mutqin-memorisation-hotfix-v232/)
 assert.match(blade, /Noto Naskh Arabic/)
 assert.match(blade, /font-size: max\(1\.25rem, calc\(var\(--qpc-word-size, 24px\) \* 1\.05\)\)/)
 assert.match(blade, /ensureMadaniFolioChrome/)
@@ -117,7 +130,7 @@ assert.match(pageVue, /Remasure after paint without hiding/)
 assert.match(pageVue, /--mushaf-reading-surface/)
 assert.doesNotMatch(pageVue, /linear-gradient\(180deg, #f7edd6/)
 assert.match(pageVue, /applyMobileEdgeToEdgeChrome/)
-assert.match(pageVue, /phone,\s*\n\s*\}/)
+assert.match(pageVue, /applyMobileAyahRowPacking\(sheet, this\.contentWidth\(sheet\)\)/)
 assert.match(pageVue, /tajweedEnabled\) \{\s*\n\s*size = clampMobileMushafWordSize\(size \+ 2\)/)
 assert.doesNotMatch(pageVue, /overflow-x',\s*'clip'/)
 assert.match(sessionVue, /fitSizesByPage = \{\}/)
@@ -151,6 +164,13 @@ assert.match(pageVue, /DESKTOP_MUSHAF_SPARSE_RATIO/)
 assert.match(blade, /mutqin-memorisation-hotfix-v211/)
 assert.match(blade, /mutqin-memorisation-hotfix-v212/)
 assert.match(pageVue, /applyMobileAyahRowPacking/)
+assert.match(pageVue, /tajweed:\s*!!this\.tajweedEnabled/)
+assert.match(pageVue, /mushafLineNaturalWidth/)
+assert.match(pageVue, /boostMobileTajweedInkFill/)
+assert.match(pageVue, /removeProperty\('justify-content'\)/)
+assert.match(lineVue, /justify-content: space-between !important/)
+assert.ok(mobileMushafInkFillScale({ naturalWidth: 200, availableWidth: 360 }) > 1.1)
+assert.equal(mobileMushafInkFillScale({ naturalWidth: 330, availableWidth: 360 }), 1)
 assert.doesNotMatch(pageVue, /padPrintedMushafLines/)
 assert.match(lineVue, /qpc-madani-line--sparse/)
 assert.match(lineVue, /justify-content: center !important/)

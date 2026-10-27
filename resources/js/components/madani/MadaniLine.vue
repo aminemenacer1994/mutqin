@@ -359,6 +359,14 @@ export default {
     margin-block-end: calc(var(--qpc-word-size, 22px) * var(--qpc-line-gap, 0.14));
   }
 
+  .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
+    justify-content: space-between !important;
+  }
+
+  .qpc-madani-line--ayah.qpc-madani-line--sparse {
+    justify-content: center !important;
+  }
+
   .qpc-madani-line--empty {
     display: none;
     min-height: 0;

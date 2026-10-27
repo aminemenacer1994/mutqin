@@ -131,13 +131,17 @@
                     <h3>{{ resolvedRevisionTitle }}</h3>
                     <p v-if="revisionPanelHint" class="sa-ov__meta">{{ revisionPanelHint }}</p>
                     <ul v-if="revisionTargets.length" class="sa-ov__revision-list">
-                      <li v-for="target in revisionTargets" :key="target.key">
+                      <li v-for="target in revisionTargets" :key="target.key" class="sa-ov__revision-card">
+                        <div class="sa-ov__revision-card-copy">
+                          <span class="sa-ov__revision-card-label">{{ revisionLinkLabel(target) }}</span>
+                          <span v-if="revisionTargetHint(target)" class="sa-ov__revision-card-hint">{{ revisionTargetHint(target) }}</span>
+                        </div>
                         <a
-                          class="sa-ov__revision-link"
+                          class="sa-ov__revision-link sa-ov__revision-link--primary"
                           :href="revisionHref(target)"
                         >
                           <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                          {{ revisionLinkLabel(target) }}
+                          {{ resolvedRevisionActionLabel }}
                         </a>
                       </li>
                     </ul>
@@ -420,6 +424,9 @@ export default {
     resolvedRevisionHint() {
       return this.revisionHint || this.translate('dashboard.analysis_revision_hint', 'Practise the ayahs that needed care in this check.')
     },
+    resolvedRevisionActionLabel() {
+      return this.translate('dashboard.review_now', 'Review now')
+    },
   },
   watch: {
     open: {
@@ -485,6 +492,14 @@ export default {
         || this.translate('dashboard.analysis_revision_link', 'Revise {ayah}')
       if (template.includes('{ayah}')) return template.replace('{ayah}', ayahLabel)
       return `${template} ${ayahLabel}`.trim()
+    },
+    revisionTargetHint(target) {
+      const surahName = String(this.analysis?.session?.surah_name || '').trim()
+      if (!surahName) return ''
+      const ayah = Number(target?.ayah_number || 0)
+      if (!ayah) return surahName
+      const ayahText = this.translate('dashboard.ayah_n', `Ayah ${ayah}`).replace('{n}', String(ayah))
+      return `${surahName} · ${ayahText}`
     },
     onOverlayKeydown(event) {
       handleModalKeydown(event, {

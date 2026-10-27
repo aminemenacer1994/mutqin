@@ -65,6 +65,9 @@ export default {
     stageMeta() {
       return stageMeta(this.stage.key)
     },
+    recommendation() {
+      return this.profile.payload?.metrics?.recommendation || { type: 'insufficient_data', reason: this.t('teacher.recommendation_insufficient') }
+    },
     nowOn() {
       const saved = this.profile.payload?.latest_saved
       return saved ? this.sessionLabel(saved) : ''
@@ -94,34 +97,18 @@ export default {
       return this.profile.payload?.metrics?.active_7 === true
     },
     priorityLabel() {
-      if (this.repeatedAbsence) return this.t('teacher.reason_repeated_absence')
-      if (this.overdueTasks > 0) return this.t('teacher.kpi_overdue_tasks')
-      if (this.revisionOverdue > 0) return this.t('teacher.overdue_revisions')
-      if (this.hasScore && this.scoreValue < 65) return this.t('teacher.reason_low_score')
-      if (this.weakCount > 0) return this.t('teacher.reason_hard_ayahs')
-      if (!this.activeRecently) return this.t('teacher.reason_inactive')
-      if (this.stage.key === 'strong') return this.t('teacher.ready_next_passage')
-      return this.stage.label
+      if (this.recommendation.type === 'ready_next') return this.t('teacher.ready_next_passage')
+      if (this.recommendation.type === 'focus') return this.t('teacher.recommendation_focus')
+      if (this.recommendation.type === 'needs_help') return this.t('teacher.stage_help')
+      return this.t('teacher.recommendation_insufficient_title')
     },
     priorityDetail() {
-      if (this.repeatedAbsence) return this.t('teacher.repeated_absence_help')
-      if (this.overdueTasks > 0) return this.t('teacher.overdue_n', { n: this.overdueTasks })
-      if (this.revisionOverdue > 0) return this.t('teacher.overdue_n', { n: this.revisionOverdue })
-      if (this.hasScore && this.scoreValue < 65) return this.t('teacher.profile_recite_avg', { score: this.scoreValue })
-      if (this.weakCount > 0) return this.t(this.weakCount === 1 ? 'teacher.profile_weak_one' : 'teacher.profile_weak_n', { n: this.weakCount })
-      if (!this.activeRecently) return this.lastSeen
-        ? this.t('teacher.profile_last_seen', { when: this.lastSeen })
-        : this.t('teacher.no_activity')
-      if (this.stage.key === 'strong') return this.t('teacher.ready_next_passage_help')
-      return this.stage.hint
+      return this.recommendation.reason || this.t('teacher.recommendation_insufficient')
     },
     priorityIcon() {
-      if (this.repeatedAbsence) return 'bi bi-calendar-x'
-      if (this.overdueTasks > 0) return 'bi bi-clock'
-      if (this.revisionOverdue > 0) return 'bi bi-arrow-repeat'
-      if (this.hasScore && this.scoreValue < 65) return 'bi bi-mic'
-      if (this.weakCount > 0) return 'bi bi-exclamation-triangle'
-      if (!this.activeRecently) return 'bi bi-moon'
+      if (this.recommendation.type === 'focus') return 'bi bi-bullseye'
+      if (this.recommendation.type === 'needs_help') return 'bi bi-exclamation-circle'
+      if (this.recommendation.type === 'insufficient_data') return 'bi bi-info-circle'
       return this.stageMeta.icon
     },
     attendanceSummary() {
@@ -176,22 +163,13 @@ export default {
       ]
     },
     nextAction() {
-      if (this.repeatedAbsence) {
-        return { type: 'assign', label: this.t('teacher.assign_follow_up'), icon: 'bi bi-journal-plus' }
-      }
-      if (this.overdueTasks > 0) {
-        return { type: 'tab', tab: 'tasks', label: `${this.t('teacher.open')} ${this.t('teacher.nav_assignments')}`, icon: 'bi bi-clock' }
-      }
-      if (this.revisionOverdue > 0) {
+      if (this.recommendation.type === 'focus') {
         return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
       }
-      if (this.hasScore && this.scoreValue < 65) {
-        return { type: 'tab', tab: 'ai', label: `${this.t('teacher.open')} ${this.t('teacher.tab_ai')}`, icon: 'bi bi-mic' }
+      if (this.recommendation.type === 'needs_help') {
+        return { type: 'tab', tab: this.overdueTasks > 0 ? 'tasks' : 'focus', label: this.t('teacher.review_evidence'), icon: 'bi bi-search' }
       }
-      if (this.weakCount > 0) {
-        return { type: 'tab', tab: 'focus', label: `${this.t('teacher.open')} ${this.t('teacher.tab_focus')}`, icon: 'bi bi-bullseye' }
-      }
-      if (this.stage.key === 'strong') {
+      if (this.recommendation.type === 'ready_next') {
         return { type: 'assign', label: this.t('teacher.assign_next_passage'), icon: 'bi bi-journal-plus' }
       }
       return null

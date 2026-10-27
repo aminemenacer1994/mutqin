@@ -6,7 +6,6 @@ use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
-use App\Models\TeacherAssignment;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -33,7 +32,7 @@ class TeacherAttendanceService
         $days = collect(range(0, 6))->map(fn (int $offset) => $start->copy()->addDays($offset)->toDateString())->all();
 
         if (! $group) {
-            return ['groups' => [], 'group_id' => null, 'week_start' => $start->toDateString(), 'days' => $days, 'students' => []];
+            return ['groups' => [], 'group_id' => null, 'week_start' => $start->toDateString(), 'days' => $days, 'source' => 'teacher_recorded', 'students' => []];
         }
 
         $authorized = $this->access->authorizedStudentIds($teacher);
@@ -57,10 +56,12 @@ class TeacherAttendanceService
             'group_id' => (int) $group->id,
             'week_start' => $start->toDateString(),
             'days' => $days,
+            'source' => 'teacher_recorded',
             'students' => User::query()->whereIn('id', $studentIds)->orderBy('name')->get(['id', 'name'])
                 ->map(fn (User $student) => [
                     'id' => (int) $student->id,
                     'name' => $student->name,
+                    'attendance_source' => 'teacher_recorded',
                     'attendance' => ($records->get($student->id) ?: collect())->mapWithKeys(
                         fn (TeacherAttendanceRecord $record) => [$record->attendance_date->toDateString() => $record->status]
                     )->all(),
@@ -113,19 +114,7 @@ class TeacherAttendanceService
                 'date' => $record->attendance_date->toDateString(),
                 'status' => $record->status,
                 'group' => $record->learningGroup?->name ?: '',
+                'source' => 'teacher_recorded',
             ])->all();
-    }
-
-    public function holdsOverdue(TeacherAssignment $assignment, int $studentId): bool
-    {
-        if (! $assignment->due_at) return false;
-
-        return TeacherAttendanceRecord::query()
-            ->where('teacher_id', $assignment->teacher_id)
-            ->where('student_id', $studentId)
-            ->whereDate('attendance_date', $assignment->due_at->toDateString())
-            ->whereIn('status', ['absent', 'excused'])
-            ->when($assignment->learning_group_id, fn ($query) => $query->where('learning_group_id', $assignment->learning_group_id))
-            ->exists();
     }
 }

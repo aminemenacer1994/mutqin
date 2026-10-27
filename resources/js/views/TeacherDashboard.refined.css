@@ -1613,6 +1613,7 @@ html[data-theme="dark"] .teacher-report {
 .teacher-dashboard .teacher-direct-thread { padding: .8rem; }
 .teacher-dashboard .teacher-direct-thread__list { gap: .45rem; max-height: 280px; }
 .teacher-dashboard .teacher-direct-thread__list article { display: grid; gap: .15rem; padding: .5rem .65rem; }
+.teacher-dashboard .teacher-direct-thread__list article.is-unread { box-shadow: inset 3px 0 0 var(--teacher-accent); }
 .teacher-dashboard .teacher-direct-thread__list p { margin: 0; line-height: 1.5; }
 .teacher-dashboard .teacher-direct-thread__composer { gap: .4rem; padding-top: .2rem; }
 .teacher-message-modal .teacher-task-modal__intro > p { line-height: 1.45; }

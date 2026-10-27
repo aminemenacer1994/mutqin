@@ -174,7 +174,12 @@
     "surahHint": "Pick the surah you want to work on.",
     "noAudioPlayed": "No ayah audio played yet for this session.",
     "to": "to",
+    "rangePresetLabel": "Range scope",
+    "rangePresetFullSurah": "Full surah",
+    "rangePresetCustom": "Custom range",
     "rangeHint": "Keep ranges small for focused memorisation.",
+    "playModeAuto": "Auto",
+    "playModeAdvanced": "Advanced",
     "reciterHint": "Changes the audio voice for the session. Word highlighting stays on for every reciter.",
     "reciterNoWordHighlight": "Audio only for this reciter. Word highlighting is unavailable.",
     "recitersWithWordHighlight": "With word highlighting",
@@ -436,11 +441,11 @@
         },
         "howMemorisation": {
           "question": "How does memorisation work?",
-          "answer": "Choose a short ayah range. Listen, repeat and recite until it feels stronger, then return to revise what you have already memorised. Session setup, Quranic fonts and 5 smart recitation checks are included on Free."
+          "answer": "Choose a short ayah range. Listen, repeat and recite until it feels stronger, then return to revise what you have already memorised. On Free you get basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights."
         },
         "freeTools": {
           "question": "Which tools are free?",
-          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, lesson plans, and more history."
+          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions."
         },
         "whatIsPro": {
           "question": "Do I need Pro to start?",
@@ -452,7 +457,7 @@
         },
         "pricing": {
           "question": "Is Mutqin free? What does Pro cost?",
-          "answer": "Yes. Free covers session setup, Quranic fonts, and 5 smart recitation checks. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions. The price is shown before you upgrade."
+          "answer": "Yes. Free covers basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions. The price is shown before you upgrade."
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
@@ -4499,7 +4504,7 @@
         },
         "freeTools": {
           "question": "Which tools stay free?",
-          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions."
+          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions."
         },
         "yearly": {
           "question": "How does yearly billing work?",
@@ -6354,6 +6359,10 @@
     "profile_tab_revision_hint": "What to revisit soon and scheduled review ranges.",
     "profile_tab_tasks_hint": "Tasks you sent — waiting, in progress, or done.",
     "teaching_focus": "Suggested teaching focus",
+    "recommendation_focus": "Focus recommended",
+    "recommendation_insufficient_title": "More evidence needed",
+    "recommendation_insufficient": "There is not enough authorised activity or recitation evidence for a recommendation yet.",
+    "review_evidence": "Review evidence",
     "profile_session_when": "Practised {when}",
     "weak_spot_hint": "Missed in {n} recent recite checks",
     "weak_spot_hint_one": "Missed in 1 recent recite check",
@@ -6528,6 +6537,9 @@
     "attendance_task_note": "Tasks due on an Absent or Excused day are flagged for follow-up instead of shown as overdue.",
     "attendance_load_error": "Attendance could not be loaded. Try again.",
     "attendance_save_error": "Attendance could not be saved. Your change was reverted.",
+    "attendance_saved": "Attendance saved.",
+    "attendance_bulk_saved": "Attendance saved for the class.",
+    "attendance_teacher_recorded_source": "Teacher-recorded class attendance. Practice activity is tracked separately.",
     "clear_due_date": "Clear due date",
     "clear_message": "Clear message",
     "clear_message_short": "Clear",
@@ -6622,6 +6634,8 @@
     "save_message": "Save message",
     "saving_message": "Saving…",
     "message_sent": "Message sent",
+    "message_sent_status": "Sent",
+    "message_read": "Read",
     "record_voice_note": "Record voice note",
     "stop_voice_note": "Stop recording",
     "remove_voice_note": "Remove voice note",

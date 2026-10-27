@@ -6,6 +6,7 @@ return [
     'title' => 'Profile',
     'hero_desc' => 'Manage your account, personal details, and app preferences.',
     'hero_desc_admin' => 'Manage your team’s account. Update your details and app preferences.',
+    'progress_memorised' => ':count ayahs memorised',
     'subscription_snapshot' => 'Subscription snapshot',
     'org_snapshot' => 'Admin access',
     'current_plan' => 'Current plan',

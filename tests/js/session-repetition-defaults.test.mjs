@@ -5,6 +5,8 @@ import {
   DEFAULT_TAJWEED_ENABLED,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
+  buildTenMinuteHeroSessionConfig,
+  TEN_MINUTE_SESSION_REPETITIONS,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
   resolveStoredTajweedEnabled,
@@ -34,6 +36,17 @@ assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, false, 'mobile session d
   assert.equal(defaults.tajweedEnabled, false)
   assert.equal(defaults.rangeStart, 1)
   assert.equal(defaults.rangeEnd, 5)
+}
+
+// Hero 10-minute preset: full Fatihah Mushaf window at 3× repeats
+{
+  const ten = buildTenMinuteHeroSessionConfig()
+  assert.equal(ten.chapterId, 1)
+  assert.equal(ten.rangeStart, 1)
+  assert.equal(ten.rangeEnd, 7)
+  assert.equal(ten.readingViewMode, 'madani_mushaf')
+  assert.equal(ten.repetitionsPerStep, TEN_MINUTE_SESSION_REPETITIONS)
+  assert.equal(ten.selectedLoopCount, TEN_MINUTE_SESSION_REPETITIONS)
 }
 
 // First onboarding session uses a short Fatihah window

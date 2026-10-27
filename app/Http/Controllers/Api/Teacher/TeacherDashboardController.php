@@ -61,7 +61,11 @@ class TeacherDashboardController extends Controller
         ]);
         $attendance->setStatus($this->teacher($request), $group, $student, $data['date'], $data['status']);
 
-        return $this->json(['date' => $data['date'], 'status' => $data['status']]);
+        return $this->json([
+            'date' => $data['date'],
+            'status' => $data['status'],
+            'source' => 'teacher_recorded',
+        ]);
     }
 
     public function show(Request $request, User $student, TeacherDashboardService $dashboard): JsonResponse
@@ -83,15 +87,26 @@ class TeacherDashboardController extends Controller
 
     public function studentMessages(Request $request, User $student, TeacherDirectMessageService $messages): JsonResponse
     {
-        return $this->json(['messages' => $messages->thread($this->teacher($request), $student)]);
+        $teacher = $this->teacher($request);
+
+        return $this->json(['messages' => $messages->thread($teacher, $student, $teacher)]);
     }
 
     public function sendStudentMessage(Request $request, User $student, TeacherDirectMessageService $messages): JsonResponse
     {
         $teacher = $this->teacher($request);
-        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'client_message_id' => ['nullable', 'uuid'],
+        ]);
 
-        return $this->json(['message' => $messages->present($messages->send($teacher, $teacher, $student, $data['body']))], 201);
+        return $this->json(['message' => $messages->present($messages->send(
+            $teacher,
+            $teacher,
+            $student,
+            $data['body'],
+            $data['client_message_id'] ?? null,
+        ), $teacher)], 201);
     }
 
     public function deleteStudent(Request $request, User $student, StudentAccessAuthorizer $access, LearningHistoryRetentionService $retention): JsonResponse
@@ -239,13 +254,13 @@ class TeacherDashboardController extends Controller
             }, 'learningGroup:id,name', 'notes.teacher:id,name'])
             ->latest('id')
             ->get()
-            ->map(function (TeacherAssignment $assignment) use ($assignments) {
+            ->map(function (TeacherAssignment $assignment) use ($assignments, $teacher) {
                 return [
                     'assignment' => $assignments->presentAssignment($assignment),
                     'can_manage' => $assignments->canManage($assignment),
                     'group_name' => $assignment->learningGroup?->name,
-                    'recipients' => $assignment->recipients->map(function ($recipient) use ($assignments) {
-                        $payload = $assignments->presentRecipient($recipient, true);
+                    'recipients' => $assignment->recipients->map(function ($recipient) use ($assignments, $teacher) {
+                        $payload = $assignments->presentRecipient($recipient, true, null, null, null, (int) $teacher->id);
                         $payload['student_name'] = $recipient->student?->name;
 
                         return $payload;
@@ -311,6 +326,7 @@ class TeacherDashboardController extends Controller
             'body' => ['nullable', 'string', 'max:2000'],
             'audio' => ['nullable', 'file', 'max:8192'],
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'client_message_id' => ['nullable', 'uuid'],
         ]);
         $message = $assignments->addTeacherMessage(
             $teacher,
@@ -318,10 +334,11 @@ class TeacherDashboardController extends Controller
             (string) ($data['body'] ?? ''),
             $request->file('audio'),
             isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+            $data['client_message_id'] ?? null,
         );
 
         return $this->json([
-            'message' => $assignments->presentAssignmentMessage($message->loadMissing('teacher:id,name')),
+            'message' => $assignments->presentAssignmentMessage($message->loadMissing('teacher:id,name'), (int) $teacher->id),
         ], 201);
     }
 

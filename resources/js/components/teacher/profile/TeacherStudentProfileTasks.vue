@@ -57,7 +57,7 @@ export default {
         const a = item.assignment || {}
         const hifzCategory = a.hifz_category || this.inferHifzCategory(a)
         const kind = a.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'
-        const statusKey = item.status || 'pending'
+        const statusKey = item.status === 'awaiting_confirmation' ? 'in_progress' : (item.status || 'pending')
         const tone = statusKey === 'completed'
           ? 'good'
           : (statusKey === 'overdue' ? 'danger' : (statusKey === 'pending' ? 'muted' : 'mid'))
@@ -69,6 +69,7 @@ export default {
           title: `${a.surah_name} ${a.ayah_start}–${a.ayah_end}`,
           hint: [
             this.t(`teacher.hifz_${hifzCategory}`),
+            a.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
             a.due_at ? this.t('teacher.task_due_date', { date: this.formatWhen(a.due_at) }) : this.t('teacher.no_due_date'),
             statusKey === 'completed'
               ? this.completionEvidenceLabel(item)
@@ -76,7 +77,7 @@ export default {
           ].filter(Boolean).join(' · '),
           badge: this.t(`teacher.status_${statusKey}`),
           badgeTone: tone,
-          source: statusKey === 'in_progress' || statusKey === 'awaiting_confirmation' ? this.progressLabel(item) : '',
+          source: statusKey === 'in_progress' ? this.progressLabel(item) : '',
           audio: item.evidence?.audio || null,
           transcript: item.evidence?.transcript || '',
           href: a.surah_number && a.ayah_start

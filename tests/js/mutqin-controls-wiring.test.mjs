@@ -45,8 +45,11 @@ includesAll('offcanvas to workspace link', [
 
 includesAll('session setup controls', [
   /<select[^>]*:value="chapterId" @change="onChapterChange"/,
-  /v-model\.number="rangeStart"[\s\S]{0,120}@change="adjustRange\(\{ immediate: true \}\)"/,
-  /v-model\.number="rangeEnd"[\s\S]{0,120}@change="adjustRange\(\{ immediate: true \}\)"/,
+  /v-model\.number="rangeStart"[\s\S]{0,160}@change="markSessionRangePresetCustom\(\); adjustRange\(\{ immediate: true \}\)"/,
+  /v-model\.number="rangeEnd"[\s\S]{0,160}@change="markSessionRangePresetCustom\(\); adjustRange\(\{ immediate: true \}\)"/,
+  /sessionSetup\.rangePresetFullSurah/,
+  /sessionSetup\.playModeAuto/,
+  /sessionSetup\.playModeAdvanced/,
   /@change="onSessionReciterChange"/,
   /@input="setPlaybackSpeedFromSlider\(Number\(\$event\.target\.value\)\)"/,
   /setPlaybackSpeedFromSlider\(index\)/,

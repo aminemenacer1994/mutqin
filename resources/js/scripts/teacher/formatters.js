@@ -86,7 +86,6 @@ export function assignmentLabel(counts = {}, t) {
   if (counts.overdue) parts.push(t('teacher.overdue_n', { n: counts.overdue }))
   if (counts.pending) parts.push(t('teacher.pending_n', { n: counts.pending }))
   if (counts.in_progress) parts.push(t('teacher.progress_n', { n: counts.in_progress }))
-  if (counts.awaiting_confirmation) parts.push(t('teacher.awaiting_confirmation_n', { n: counts.awaiting_confirmation }))
   if (counts.completed) parts.push(t('teacher.completed_n', { n: counts.completed }))
   return parts.length ? parts.join(' · ') : t('teacher.none')
 }
@@ -158,14 +157,18 @@ export function stageMeta(stageKey) {
 }
 
 export function studentStatus(student, t) {
+  const recommendation = student?.recommendation
+  if (recommendation?.type === 'focus' || recommendation?.type === 'needs_help') {
+    return { key: 'attention', label: t('teacher.stage_help'), hint: recommendation.reason }
+  }
+  if (recommendation?.type === 'ready_next') {
+    return { key: 'strong', label: t('teacher.ready_next_passage'), hint: recommendation.reason }
+  }
   if (!student?.last_activity_at && !student?.sessions) {
     return { key: 'quiet', label: t('teacher.stage_new'), hint: t('teacher.stage_new_hint') }
   }
   if (student?.needs_attention) {
     return { key: 'attention', label: t('teacher.stage_help'), hint: t('teacher.stage_help_hint') }
-  }
-  if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate >= 85) {
-    return { key: 'strong', label: t('teacher.stage_strong'), hint: t('teacher.stage_strong_hint') }
   }
   return { key: 'practising', label: t('teacher.stage_practising'), hint: t('teacher.stage_practising_hint') }
 }

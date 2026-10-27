@@ -155,6 +155,15 @@ export function createDebouncer(fn, wait = 1500) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+function createClientMessageId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const value = Math.floor(Math.random() * 16)
+    const digit = character === 'x' ? value : ((value & 0x3) | 0x8)
+    return digit.toString(16)
+  })
+}
+
 function isRetryable(error) {
   // Never retry intentional cancellations / aborts.
   if (
@@ -609,6 +618,7 @@ export const learningApi = {
     const form = new FormData()
     const text = String(body || '').trim()
     if (text) form.append('body', text)
+    form.append('client_message_id', createClientMessageId())
     if (recording?.blob) {
       form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
       if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
@@ -617,7 +627,11 @@ export const learningApi = {
     return data
   },
   async sendLearnerTeacherMessage(teacherId, body) {
-    const { data } = await http.post(`/me/teachers/${teacherId}/messages`, { body })
+    const { data } = await http.post(`/me/teachers/${teacherId}/messages`, { body, client_message_id: createClientMessageId() })
+    return data
+  },
+  async getLearnerTeacherMessages(teacherId) {
+    const { data } = await http.get(`/me/teachers/${teacherId}/messages`, { headers: { 'Cache-Control': 'no-cache' } })
     return data
   },
   async getTeacherOverview(days = 30) {
@@ -645,7 +659,11 @@ export const learningApi = {
     return data
   },
   async sendTeacherStudentMessage(studentId, body) {
-    const { data } = await http.post(`/teacher/students/${studentId}/messages`, { body })
+    const { data } = await http.post(`/teacher/students/${studentId}/messages`, { body, client_message_id: createClientMessageId() })
+    return data
+  },
+  async getTeacherStudentMessages(studentId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/messages`, { headers: { 'Cache-Control': 'no-cache' } })
     return data
   },
   async saveTeacherRecitationAssessment(studentId, attemptId, score, annotation) {
@@ -706,6 +724,7 @@ export const learningApi = {
   async sendTeacherAssignmentMessage(recipientId, body, recording = null) {
     const form = new FormData()
     if (String(body || '').trim()) form.append('body', String(body).trim())
+    form.append('client_message_id', createClientMessageId())
     if (recording?.blob) {
       form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
       if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))

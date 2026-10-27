@@ -75,18 +75,56 @@ export function isMobileMushafAyahSparse({
   wordCount = 0,
   ratio = MOBILE_MUSHAF_SPARSE_RATIO,
   phone = false,
+  tajweed = false,
 } = {}) {
   const natural = Number(naturalWidth)
   const available = Number(availableWidth)
   const words = Math.trunc(Number(wordCount) || 0)
-  // Short leftover rows centre even when glyph measure is still 0 (Fatihah L7–L8).
-  if (words > 0 && words <= 8) return true
+  let effectiveRatio = phone ? Math.min(Number(ratio) || MOBILE_MUSHAF_SPARSE_RATIO, 0.86) : ratio
+  // Tajweed COLR advances often measure narrower than plain QCF — avoid false sparse.
+  if (phone && tajweed) {
+    effectiveRatio = Math.min(effectiveRatio, 0.76)
+  }
+  // Short opening rows centre before glyph widths exist (Fatihah L7–L8).
+  if (words > 0 && words <= 8 && (!(natural > 0) || !(available > 0))) {
+    return true
+  }
   if (!(natural > 0) || !(available > 0)) return false
-  // Phone + desktop: centre rows that do not nearly fill the painted width.
-  // Phone uses a slightly looser threshold so tajweed under-measure (~90%)
-  // still stretches, while clearly short rows centre.
-  const effectiveRatio = phone ? Math.min(Number(ratio) || MOBILE_MUSHAF_SPARSE_RATIO, 0.86) : ratio
+  // Centre only rows that do not nearly fill the painted width (not every ≤8-word line).
   return natural < available * effectiveRatio
+}
+
+/** Scale factor to grow ink until a row fills the viewport band (tajweed COLR). */
+export function mobileMushafInkFillScale({
+  naturalWidth,
+  availableWidth,
+  minFill = 0.9,
+  maxScale = 1.38,
+} = {}) {
+  const natural = Number(naturalWidth)
+  const available = Number(availableWidth)
+  if (!(natural > 0) || !(available > 0)) return 1
+  const fill = natural / available
+  if (fill >= minFill) return 1
+  return Math.min(maxScale, (minFill / fill) * 0.98)
+}
+
+/** Sum painted word widths (COLR/tajweed uses bbox when advance is tight). */
+export function mushafLineNaturalWidth(line) {
+  if (!(line instanceof HTMLElement)) return 0
+  const nodes = [...line.querySelectorAll('.qpc-madani-word, .madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
+  if (!nodes.length) return Math.max(0, line.scrollWidth || 0)
+  return nodes.reduce((sum, node) => {
+    if (!(node instanceof HTMLElement)) return sum
+    const advance = Math.max(node.offsetWidth, node.scrollWidth || 0)
+    const tajweedGlyph = node.classList.contains('qpc-madani-word--tajweed-glyph')
+      || node.classList.contains('madani-word--glyph')
+    if (tajweedGlyph && typeof node.getBoundingClientRect === 'function') {
+      const rect = node.getBoundingClientRect()
+      return sum + Math.max(advance, rect.width || 0)
+    }
+    return sum + advance
+  }, 0)
 }
 
 export function mobileMushafAyahJustify(sparse) {

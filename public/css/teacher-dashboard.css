@@ -2880,11 +2880,28 @@ a.dash-drawer__row--link:focus-visible,
   color: var(--dash-muted);
 }
 
+.dash-drawer__list--murajaah {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.dash-drawer__list--murajaah > li {
+  min-width: 0;
+}
+
 .dash-drawer__row--murajaah {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 0.9rem 1rem;
+  height: 100%;
+  min-height: 7.5rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--dash-radius-sm);
+  border: 1px solid var(--dash-border);
+  background: var(--dash-card-bg);
+  box-shadow: var(--dash-shadow-sm);
 }
 
 .dash-drawer__murajaah-copy {
@@ -6608,6 +6625,8 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 .user-dashboard .learner-teacher__direct-thread { display: grid; gap: .55rem; padding-top: .7rem; border-top: 1px solid var(--dash-border); }
 .user-dashboard .learner-teacher__direct-list { display: grid; gap: .45rem; max-height: 260px; overflow: auto; }
 .user-dashboard .learner-teacher__direct-list p { width: -moz-fit-content; width: fit-content; max-width: min(85%, 580px); margin: 0; padding: .5rem .7rem; border-radius: 10px; background: var(--dash-surface-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.user-dashboard .learner-teacher__direct-list p.is-unread { box-shadow: inset 3px 0 0 var(--dash-accent); }
+.user-dashboard .learner-teacher__direct-list p small { display: block; margin-top: .2rem; color: var(--dash-muted); font-size: .7rem; }
 .user-dashboard .learner-teacher__direct-list p.is-student { justify-self: end; border: 1px solid var(--dash-border); background: var(--dash-card-bg); }
 .user-dashboard .learner-teacher__direct-empty { margin: 0; color: var(--dash-muted); }
 .user-dashboard .learner-teacher__direct form { display: grid; gap: .45rem; }
@@ -18597,6 +18616,7 @@ html[data-theme="dark"] .teacher-report {
 .teacher-dashboard .teacher-direct-thread { padding: .8rem; }
 .teacher-dashboard .teacher-direct-thread__list { gap: .45rem; max-height: 280px; }
 .teacher-dashboard .teacher-direct-thread__list article { display: grid; gap: .15rem; padding: .5rem .65rem; }
+.teacher-dashboard .teacher-direct-thread__list article.is-unread { box-shadow: inset 3px 0 0 var(--teacher-accent); }
 .teacher-dashboard .teacher-direct-thread__list p { margin: 0; line-height: 1.5; }
 .teacher-dashboard .teacher-direct-thread__composer { gap: .4rem; padding-top: .2rem; }
 .teacher-message-modal .teacher-task-modal__intro > p { line-height: 1.45; }
