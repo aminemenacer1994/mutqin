@@ -6,7 +6,7 @@
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
           <span class="teacher-attention-list__reasons">
-            <span v-for="item in reasons(student)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`">
+            <span v-for="item in reasons(student)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`" :title="item.help || item.label">
               <i :class="item.icon" aria-hidden="true"></i>
               {{ item.label }}
             </span>

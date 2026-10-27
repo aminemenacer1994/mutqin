@@ -9,6 +9,7 @@ use App\Models\GroupMembership;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
 class TeacherDirectMessageService
@@ -78,13 +79,20 @@ class TeacherDirectMessageService
             ])->values()->all();
     }
 
-    public function send(User $sender, User $teacher, User $student, string $body, ?string $clientMessageId = null): TeacherNote
-    {
+    public function send(
+        User $sender,
+        User $teacher,
+        User $student,
+        string $body,
+        ?string $clientMessageId = null,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
+    ): TeacherNote {
         abort_unless($this->access->allows($teacher, $student)
             && in_array((int) $sender->id, [(int) $teacher->id, (int) $student->id], true), 404);
         $body = trim($body);
-        if ($body === '' || mb_strlen($body) > 2000) {
-            throw ValidationException::withMessages(['body' => 'Write a message of up to 2,000 characters.']);
+        if (($body === '' && $audio === null) || mb_strlen($body) > 2000) {
+            throw ValidationException::withMessages(['body' => 'Write a message or add a voice note of up to 2,000 characters.']);
         }
 
         if ($clientMessageId !== null) {
@@ -114,7 +122,29 @@ class TeacherDirectMessageService
             'client_message_id' => $clientMessageId,
         ])->save();
 
-        return $note;
+        if ($audio !== null && ! $this->messageAudio->store($note, $audio, $durationMs)) {
+            $note->delete();
+            throw ValidationException::withMessages([
+                'audio' => 'Use a supported voice recording smaller than 8 MB.',
+            ]);
+        }
+
+        return $note->refresh();
+    }
+
+    public function delete(User $teacher, User $student, int $noteId): void
+    {
+        abort_unless($this->access->allows($teacher, $student), 404);
+        $note = TeacherNote::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->whereKey($noteId)
+            ->firstOrFail();
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+        abort_unless(in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::StudentMessage], true)
+            && $note->teacher_assignment_id === null, 404);
+        abort_unless($kind === TeacherNoteKind::TeacherMessage, 403);
+        $note->delete();
     }
 
     /** @return array<string, mixed> */
@@ -131,7 +161,7 @@ class TeacherDirectMessageService
             'sender' => $sender,
             'sender_name' => $sender === 'teacher' ? $note->teacher?->name : $note->student?->name,
             'body' => $note->body,
-            'audio' => $note->teacher_assignment_id ? $this->messageAudio->payload($note) : null,
+            'audio' => $this->messageAudio->payload($note),
             'task' => $assignment ? [
                 'id' => (int) $assignment->id,
                 'surah_number' => (int) $assignment->surah_number,

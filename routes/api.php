@@ -135,6 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/students/{student}/report', [TeacherDashboardController::class, 'report'])->name('api.teacher.students.report');
                 Route::get('/students/{student}/messages', [TeacherDashboardController::class, 'studentMessages'])->name('api.teacher.students.messages');
                 Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1')->name('api.teacher.students.messages.store');
+                Route::delete('/students/{student}/messages/{note}', [TeacherDashboardController::class, 'deleteStudentMessage'])->name('api.teacher.students.messages.destroy');
                 Route::put('/students/{student}/attempts/{attempt}/assessment', [TeacherDashboardController::class, 'assessRecitation'])->name('api.teacher.students.attempts.assess');
                 Route::post('/students/{student}/reviews/{practicePlan}/complete', [TeacherDashboardController::class, 'completeReview'])->name('api.teacher.students.reviews.complete');
                 Route::post('/students/{student}/notes', [TeacherDashboardController::class, 'storeNote'])->name('api.teacher.students.notes');

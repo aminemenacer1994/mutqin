@@ -658,12 +658,23 @@ export const learningApi = {
     const { data } = await http.get(`/teacher/students/${studentId}/report`, { params })
     return data
   },
-  async sendTeacherStudentMessage(studentId, body) {
-    const { data } = await http.post(`/teacher/students/${studentId}/messages`, { body, client_message_id: createClientMessageId() })
+  async sendTeacherStudentMessage(studentId, body, recording = null) {
+    const form = new FormData()
+    if (String(body || '').trim()) form.append('body', String(body).trim())
+    form.append('client_message_id', createClientMessageId())
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/students/${studentId}/messages`, form)
     return data
   },
   async getTeacherStudentMessages(studentId) {
     const { data } = await http.get(`/teacher/students/${studentId}/messages`, { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async deleteTeacherStudentMessage(studentId, messageId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/messages/${messageId}`)
     return data
   },
   async saveTeacherRecitationAssessment(studentId, attemptId, score, annotation) {

@@ -9,9 +9,7 @@
             <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
             <div class="teacher-profile-hero__copy">
               <nav class="teacher-profile-hero__eyebrow teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
-                <button type="button" @click="$emit('back')"><i class="bi bi-people" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
-                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                <span><i :class="activeTabIcon" aria-hidden="true"></i>{{ activeTabLabel }}</span>
+                <button type="button" @click="$emit('back')"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
               </nav>
               <h2>{{ profile.student.name }}</h2>
               <p class="teacher-meta">
@@ -67,6 +65,12 @@
       <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" :class="`is-${section}`" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
         <p v-if="profile.section !== section" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
         <template v-else>
+        <div v-if="tabHint || tabMetaItems.length" class="teacher-profile-tab-meta">
+          <p v-if="tabHint" class="teacher-profile-tab-meta__hint">{{ tabHint }}</p>
+          <div v-if="tabMetaItems.length" class="teacher-context-stats" :aria-label="activeTabLabel">
+            <span v-for="item in tabMetaItems" :key="item.key"><strong>{{ item.value }}</strong> {{ item.label }}</span>
+          </div>
+        </div>
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
           :profile="profile"
@@ -96,7 +100,7 @@
           :profile="profile"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
-          @mark-reviewed="$emit('mark-reviewed', $event)"
+          @mark-reviewed="openReviewConfirm"
         />
         <TeacherStudentProfileTasks
           v-else-if="section === 'tasks'"
@@ -109,11 +113,35 @@
     </template>
 
     <TeacherEmpty v-else :message="t('teacher.student_unavailable')" />
+
+    <Teleport to="body">
+      <template v-if="reviewConfirm">
+        <div class="modal-backdrop fade show teacher-task-backdrop" @click="closeReviewConfirm"></div>
+        <div class="modal fade show d-block teacher-task-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-review-confirm-title" tabindex="-1" @keydown.esc.prevent="closeReviewConfirm">
+          <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog">
+            <div class="modal-content teacher-task-modal__content">
+              <div class="modal-header teacher-task-modal__header">
+                <h2 id="teacher-review-confirm-title" class="modal-title h5 teacher-task-modal__title">{{ t('teacher.mark_reviewed') }}</h2>
+                <button type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeReviewConfirm"></button>
+              </div>
+              <div class="modal-body teacher-task-modal__body">
+                <p class="mb-0">{{ t('teacher.mark_reviewed_confirm') }}</p>
+              </div>
+              <div class="modal-footer teacher-task-modal__footer">
+                <button type="button" class="btn btn-outline-secondary" @click="closeReviewConfirm">{{ t('teacher.cancel') }}</button>
+                <button type="button" class="btn btn-primary" @click="confirmReview">{{ t('teacher.mark_reviewed') }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Teleport>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { practiceMinutes } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfileAi from './profile/TeacherStudentProfileAi.vue'
 import TeacherStudentProfileFocus from './profile/TeacherStudentProfileFocus.vue'
@@ -157,6 +185,7 @@ export default {
       panelId: `teacher-profile-panel-${uid}`,
       tabPrefix: `teacher-profile-tab-${uid}`,
       reportMode: null,
+      reviewConfirm: null,
     }
   },
   computed: {
@@ -166,6 +195,72 @@ export default {
     },
     activeTabIcon() {
       return this.tabs.find((item) => item.id === this.section)?.icon || 'bi bi-grid'
+    },
+    tabHintKey() {
+      const keys = {
+        overview: 'teacher.profile_tab_overview_hint',
+        practice: 'teacher.profile_tab_practice_hint',
+        ai: 'teacher.profile_tab_ai_hint',
+        focus: 'teacher.profile_tab_focus_hint',
+        tasks: 'teacher.profile_tab_tasks_hint',
+        messages: 'teacher.profile_tab_messages_hint',
+      }
+      return keys[this.section] || ''
+    },
+    tabHint() {
+      if (!this.tabHintKey || this.profile.section !== this.section) return ''
+      if (this.section === 'ai' && typeof this.profile.payload?.success_rate === 'number') {
+        return this.t('teacher.profile_tab_ai_hint_score', { score: this.profile.payload.success_rate })
+      }
+      return this.t(this.tabHintKey)
+    },
+    tabMetaItems() {
+      if (!this.profile || this.profile.section !== this.section) return []
+      const payload = this.profile.payload || {}
+      if (this.section === 'practice') {
+        const sessions = payload.sessions || []
+        if (!sessions.length) return []
+        const groups = new Set(sessions.map((session) => this.sessionLabel(session)))
+        return [
+          { key: 'sessions', value: sessions.length, label: this.t('teacher.session_many') },
+          { key: 'minutes', value: practiceMinutes(sessions.reduce((total, session) => total + Number(session.duration_seconds || 0), 0)), label: this.t('teacher.minutes_short') },
+          { key: 'passages', value: groups.size, label: this.t('teacher.passages') },
+        ]
+      }
+      if (this.section === 'ai') {
+        const count = Number(payload.score_count || 0)
+        if (!count) return []
+        return [
+          { key: 'avg', value: typeof payload.success_rate === 'number' ? `${payload.success_rate}%` : '—', label: this.t('teacher.ai_check_average') },
+          { key: 'checks', value: count, label: this.t('teacher.scored_checks') },
+        ]
+      }
+      if (this.section === 'focus') {
+        const weak = (payload.items || []).length
+        const reviews = (payload.plans || []).length
+        if (!weak && !reviews) return []
+        return [
+          { key: 'weak', value: weak, label: this.t('teacher.focus_ayahs') },
+          { key: 'reviews', value: reviews, label: this.t('teacher.focus_reviews') },
+        ]
+      }
+      if (this.section === 'tasks') {
+        const assignments = payload.assignments || []
+        if (!assignments.length) return []
+        const overdue = assignments.filter((item) => item.status === 'overdue').length
+        const done = assignments.filter((item) => item.status === 'completed').length
+        return [
+          { key: 'all', value: assignments.length, label: this.t('teacher.task_filter_all') },
+          { key: 'overdue', value: overdue, label: this.t('teacher.overdue') },
+          { key: 'done', value: done, label: this.t('teacher.status_completed') },
+        ]
+      }
+      if (this.section === 'messages') {
+        const count = (payload.messages || []).length
+        if (!count) return []
+        return [{ key: 'messages', value: count, label: this.t('teacher.messages') }]
+      }
+      return []
     },
   },
   watch: {
@@ -177,6 +272,13 @@ export default {
     },
   },
   methods: {
+    openReviewConfirm(payload) { this.reviewConfirm = payload },
+    closeReviewConfirm() { this.reviewConfirm = null },
+    confirmReview() {
+      if (!this.reviewConfirm) return
+      this.$emit('mark-reviewed', this.reviewConfirm)
+      this.reviewConfirm = null
+    },
     openReport(mode) { this.reportMode = mode },
     tabId(id) {
       return `${this.tabPrefix}-${id}`

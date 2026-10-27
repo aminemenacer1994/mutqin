@@ -1,6 +1,6 @@
 <template>
   <TeacherSectionPane tone="recite">
-    <div class="teacher-section-summary teacher-section-summary--recite" role="list">
+    <div v-if="attemptGroups.length" class="teacher-section-summary teacher-section-summary--recite" role="list">
       <div role="listitem">
         <span>{{ t('teacher.ai_check_average') }}</span>
         <strong>{{ averageLabel }}</strong>
@@ -22,7 +22,7 @@
         <TeacherRecordList :rows="group.rows" />
       </details>
     </div>
-    <div v-if="!attemptGroups.length" class="teacher-profile-empty">
+    <div v-if="!attemptGroups.length" class="teacher-profile-empty teacher-profile-empty--row">
       <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
       <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_task') }}</button>
     </div>
@@ -68,11 +68,9 @@ export default {
         const to = attempt.range?.to
         const title = ayahRangeLabel(name, from, to, this.t)
         const issues = attempt.issues
-        const issueHint = !issues
-          ? this.t('teacher.recite_issues_unavailable')
-          : (Object.values(issues).some((value) => Number(value) > 0)
-            ? this.issueLabel(issues)
-            : this.t('teacher.recite_no_issues'))
+        const issueHint = !issues || !Object.values(issues).some((value) => Number(value) > 0)
+          ? ''
+          : this.issueLabel(issues)
         const hasIssues = Boolean(issues && Object.values(issues).some((value) => Number(value) > 0))
         const when = this.formatWhen(attempt.created_at)
         const row = teacherRecitationEvidenceRow({

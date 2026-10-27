@@ -126,12 +126,12 @@ export default {
     transcriptUnavailableLabel() {
       return this.row?.transcriptState === 'processing'
         ? this.t('teacher.evidence_processing')
-        : this.t('teacher.transcript_not_recorded')
+        : this.t('teacher.transcript_unavailable')
     },
     audioUnavailableLabel() {
       const reason = this.row?.audio?.reason
       if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
-      return this.t('teacher.recording_not_recorded')
+      return this.t('teacher.recording_unavailable')
     },
   },
   watch: {

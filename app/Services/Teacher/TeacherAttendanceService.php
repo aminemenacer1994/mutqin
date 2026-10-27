@@ -21,18 +21,39 @@ class TeacherAttendanceService
     /** @return array<string, mixed> */
     public function week(User $teacher, ?int $groupId, ?string $weekStart): array
     {
+        $start = $weekStart ? Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY) : now()->startOfWeek(Carbon::MONDAY);
+        $end = $start->copy()->addDays(6);
+
+        return $this->register($teacher, $groupId, $start, $end, $start->toDateString());
+    }
+
+    /** @return array<string, mixed> */
+    public function month(User $teacher, ?int $groupId, ?string $month): array
+    {
+        $start = $month ? Carbon::parse($month.'-01')->startOfMonth() : now()->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        return $this->register($teacher, $groupId, $start, $end, $start->toDateString());
+    }
+
+    /** @return array<string, mixed> */
+    private function register(User $teacher, ?int $groupId, Carbon $start, Carbon $end, string $rangeStart): array
+    {
         $groups = LearningGroup::query()
             ->whereIn('id', $this->access->teacherGroupIds($teacher))
             ->orderBy('name')
             ->get(['id', 'name']);
         $group = $groupId === null ? $groups->first() : $groups->firstWhere('id', $groupId);
-        if ($groupId !== null) abort_unless($group, 404);
-        $start = $weekStart ? Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY) : now()->startOfWeek(Carbon::MONDAY);
-        $end = $start->copy()->addDays(6);
-        $days = collect(range(0, 6))->map(fn (int $offset) => $start->copy()->addDays($offset)->toDateString())->all();
+        if ($groupId !== null) {
+            abort_unless($group, 404);
+        }
+        $days = [];
+        for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addDay()) {
+            $days[] = $cursor->toDateString();
+        }
 
         if (! $group) {
-            return ['groups' => [], 'group_id' => null, 'week_start' => $start->toDateString(), 'days' => $days, 'source' => 'teacher_recorded', 'students' => []];
+            return ['groups' => [], 'group_id' => null, 'week_start' => $rangeStart, 'month' => $start->format('Y-m'), 'days' => $days, 'source' => 'teacher_recorded', 'students' => []];
         }
 
         $authorized = $this->access->authorizedStudentIds($teacher);
@@ -54,7 +75,8 @@ class TeacherAttendanceService
         return [
             'groups' => $groups->map(fn (LearningGroup $row) => ['id' => (int) $row->id, 'name' => $row->name])->all(),
             'group_id' => (int) $group->id,
-            'week_start' => $start->toDateString(),
+            'week_start' => $rangeStart,
+            'month' => $start->format('Y-m'),
             'days' => $days,
             'source' => 'teacher_recorded',
             'students' => User::query()->whereIn('id', $studentIds)->orderBy('name')->get(['id', 'name'])

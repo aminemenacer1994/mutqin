@@ -22,6 +22,7 @@ import {
   studentInitial,
   weakLabel,
 } from '../teacher/formatters'
+import { applyTeacherTaskType, defaultAyahRange, resolveTeacherTaskType } from '../teacher/taskTypes'
 import { teacherErrorMessage } from '../teacher/errors'
 
 export function useTeacherDashboard(authRef) {
@@ -80,7 +81,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'students',
         label: t('teacher.kpi_students'),
-        description: t('teacher.kpi_students_help'),
+        description: '',
         value: kpis.authorised_students ?? '—',
         icon: 'bi bi-people',
         tone: 'teal',
@@ -88,17 +89,17 @@ export function useTeacherDashboard(authRef) {
       },
       {
         key: 'active',
-        label: t('teacher.kpi_active_7d'),
-        description: t('teacher.kpi_active_help'),
-        value: kpis.active_7_days ?? '—',
-        icon: 'bi bi-calendar-week',
+        label: t('teacher.kpi_active_30d'),
+        description: '',
+        value: kpis.active_30_days ?? '—',
+        icon: 'bi bi-calendar3',
         tone: 'teal',
-        action: t('teacher.kpi_open_week'),
+        action: t('teacher.kpi_open_students'),
       },
       {
         key: 'tasks',
         label: t('teacher.kpi_open_tasks'),
-        description: t('teacher.kpi_open_tasks_help'),
+        description: '',
         value: Number(kpis.outstanding_assignments ?? 0),
         icon: 'bi bi-list-check',
         tone: 'teal',
@@ -107,7 +108,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'attention',
         label: t('teacher.kpi_need_support'),
-        description: t('teacher.kpi_support_help'),
+        description: '',
         value: kpis.needs_attention ?? '—',
         icon: 'bi bi-exclamation-circle',
         tone: 'teal',
@@ -128,7 +129,7 @@ export function useTeacherDashboard(authRef) {
         hoverBackgroundColor: cssThemeColor('--accent-strong', color),
         borderRadius: 8,
         borderSkipped: false,
-        maxBarThickness: chartDays.value === 7 ? 28 : 16,
+        maxBarThickness: chartDays.value <= 30 ? 16 : 12,
       }],
     }
   })
@@ -274,7 +275,6 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function markReviewReviewed({ id, studentId }) {
-    if (!window.confirm(t('teacher.mark_reviewed_confirm'))) return
     try {
       await learningApi.completeTeacherReview(studentId, id)
       formSuccess.value = t('teacher.review_marked')
@@ -286,17 +286,22 @@ export function useTeacherDashboard(authRef) {
   }
 
   function prefillAssignmentFromStudent(student) {
-    const next = {
-      ...defaultAssignmentForm(),
+    const taskType = student?.weak_example ? 'revision' : 'new_memorisation'
+    let next = applyTeacherTaskType({
+      ...defaultAssignmentForm(surahs.value),
       student_id: student?.id ? String(student.id) : '',
-      kind: 'practice',
-      hifz_category: student?.hifz_category || (student?.weak_example ? 'sabqi' : 'sabaq'),
-    }
+    }, taskType)
     const weak = student?.weak_example
     if (weak?.surah_number) {
-      next.surah_number = String(weak.surah_number)
-      next.ayah_start = Number(weak.ayah_start || weak.ayah_number) || 1
-      next.ayah_end = Number(weak.ayah_end || weak.ayah_number) || next.ayah_start
+      const surahNumber = String(weak.surah_number)
+      const start = Number(weak.ayah_start || weak.ayah_number) || 1
+      const end = Number(weak.ayah_end || weak.ayah_number) || start
+      next = {
+        ...next,
+        surah_number: surahNumber,
+        ayah_start: start,
+        ayah_end: end,
+      }
     }
     assignment.value = next
   }
@@ -419,7 +424,7 @@ export function useTeacherDashboard(authRef) {
   function beginCreateAssignment() {
     if (!assignmentRoster.value.length) loadAssignmentRoster()
     editingAssignmentId.value = null
-    assignment.value = defaultAssignmentForm()
+    assignment.value = defaultAssignmentForm(surahs.value)
     formError.value = ''
     formSuccess.value = ''
     assignmentFormOpen.value = true
@@ -431,8 +436,9 @@ export function useTeacherDashboard(authRef) {
     if (!row?.can_manage || !source || !recipient) return
     editingAssignmentId.value = source.id
     assignment.value = {
+      task_type: resolveTeacherTaskType(source.kind, source.hifz_category),
       kind: source.kind,
-      hifz_category: source.hifz_category || '',
+      hifz_category: source.hifz_category || 'sabaq',
       student_id: String(recipient.student_id),
       surah_number: String(source.surah_number),
       ayah_start: source.ayah_start,
@@ -466,7 +472,7 @@ export function useTeacherDashboard(authRef) {
       else await learningApi.createTeacherAssignment(payload)
       const wasEditing = Boolean(editingAssignmentId.value)
       editingAssignmentId.value = null
-      assignment.value = { ...defaultAssignmentForm(), surah_number: assignment.value.surah_number }
+      assignment.value = { ...defaultAssignmentForm(surahs.value), surah_number: assignment.value.surah_number }
       assignmentFormOpen.value = false
       formSuccess.value = wasEditing ? t('teacher.task_updated') : t('teacher.assign_success')
       await loadAssignments()

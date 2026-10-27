@@ -48,9 +48,15 @@ class TeacherDashboardController extends Controller
         $data = $request->validate([
             'group_id' => ['nullable', 'integer'],
             'week_start' => ['nullable', 'date_format:Y-m-d'],
+            'month' => ['nullable', 'date_format:Y-m'],
         ]);
 
-        return $this->json($attendance->week($this->teacher($request), $data['group_id'] ?? null, $data['week_start'] ?? null));
+        $teacher = $this->teacher($request);
+        if (! empty($data['month'])) {
+            return $this->json($attendance->month($teacher, $data['group_id'] ?? null, $data['month']));
+        }
+
+        return $this->json($attendance->week($teacher, $data['group_id'] ?? null, $data['week_start'] ?? null));
     }
 
     public function setAttendance(Request $request, LearningGroup $group, User $student, TeacherAttendanceService $attendance): JsonResponse
@@ -96,7 +102,9 @@ class TeacherDashboardController extends Controller
     {
         $teacher = $this->teacher($request);
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
             'client_message_id' => ['nullable', 'uuid'],
         ]);
 
@@ -104,9 +112,20 @@ class TeacherDashboardController extends Controller
             $teacher,
             $teacher,
             $student,
-            $data['body'],
+            (string) ($data['body'] ?? ''),
             $data['client_message_id'] ?? null,
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
         ), $teacher)], 201);
+    }
+
+    public function deleteStudentMessage(Request $request, User $student, TeacherNote $note, TeacherDirectMessageService $messages): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        abort_unless((int) $note->student_id === (int) $student->id, 404);
+        $messages->delete($teacher, $student, (int) $note->id);
+
+        return $this->json(['deleted' => true]);
     }
 
     public function deleteStudent(Request $request, User $student, StudentAccessAuthorizer $access, LearningHistoryRetentionService $retention): JsonResponse
@@ -281,7 +300,7 @@ class TeacherDashboardController extends Controller
             'ayah_start' => ['required', 'integer', 'min:1'],
             'ayah_end' => ['required', 'integer', 'min:1'],
             'repetition_target' => ['nullable', 'integer', 'between:1,50'],
-            'due_at' => ['nullable', 'date'],
+            'due_at' => ['required', 'date'],
             'feedback' => ['nullable', 'string', 'max:2000'],
             'student_id' => ['nullable', 'integer', 'required_without:learning_group_id'],
             'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
@@ -305,7 +324,7 @@ class TeacherDashboardController extends Controller
             'ayah_start' => ['required', 'integer', 'min:1'],
             'ayah_end' => ['required', 'integer', 'min:1'],
             'repetition_target' => ['nullable', 'integer', 'between:1,50'],
-            'due_at' => ['nullable', 'date'],
+            'due_at' => ['required', 'date'],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 

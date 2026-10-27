@@ -51,9 +51,16 @@
               :kpi-cards="kpiCards"
               :attention-preview="attentionPreview"
               :format-when="formatWhen"
+              :chart-days="chartDays"
+              :chart-day-options="TEACHER_CHART_DAY_OPTIONS"
+              :chart-empty="Boolean(overview?.chart?.is_empty)"
+              :chart-ready="true"
+              :chart-data="chartData"
+              :chart-options="chartOptions"
               @open-student="openStudent"
               @select-kpi="openStudentsFromKpi"
               @assign-revision="openAssignRevision"
+              @set-chart-days="setDays"
             />
 
             <TeacherStudentsSection

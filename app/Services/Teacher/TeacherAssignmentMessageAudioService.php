@@ -2,6 +2,7 @@
 
 namespace App\Services\Teacher;
 
+use App\Enums\TeacherNoteKind;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -53,10 +54,13 @@ class TeacherAssignmentMessageAudioService
         $durationMs = $durationMs && $durationMs > 0
             ? min($durationMs, self::MAX_DURATION_MS)
             : null;
+        $folder = $note->teacher_assignment_id
+            ? (string) (int) $note->teacher_assignment_id
+            : 'direct/'.(int) $note->student_id;
         $path = sprintf(
-            '%s/%d/%s.%s',
+            '%s/%s/%s.%s',
             self::PREFIX,
-            (int) $note->teacher_assignment_id,
+            $folder,
             Str::uuid(),
             $this->extensionForMime($mime),
         );
@@ -99,12 +103,13 @@ class TeacherAssignmentMessageAudioService
 
     public function stream(User $user, TeacherNote $note): ?Response
     {
-        $canListen = $note->teacher_assignment_id !== null
-            && ((int) $note->student_id === (int) $user->id
-                || ((int) $note->teacher_id === (int) $user->id
-                    && $note->student !== null
-                    && $this->access->allows($user, $note->student)));
-        if (! $canListen || ! $note->audio_path) {
+        if (! $note->audio_path) {
+            return null;
+        }
+
+        $note->loadMissing('student');
+        $canListen = $this->canStream($user, $note);
+        if (! $canListen) {
             return null;
         }
 
@@ -119,6 +124,28 @@ class TeacherAssignmentMessageAudioService
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    private function canStream(User $user, TeacherNote $note): bool
+    {
+        if ($note->teacher_assignment_id !== null) {
+            return (int) $note->student_id === (int) $user->id
+                || ((int) $note->teacher_id === (int) $user->id
+                    && $note->student !== null
+                    && $this->access->allows($user, $note->student));
+        }
+
+        $kind = $note->kind instanceof TeacherNoteKind
+            ? $note->kind
+            : TeacherNoteKind::tryFrom((string) $note->kind);
+        if (! in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::StudentMessage], true)) {
+            return false;
+        }
+
+        return (int) $note->student_id === (int) $user->id
+            || ((int) $note->teacher_id === (int) $user->id
+                && $note->student !== null
+                && $this->access->allows($user, $note->student));
     }
 
     private function normaliseMime(UploadedFile $file): string

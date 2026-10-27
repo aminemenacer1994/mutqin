@@ -30,13 +30,16 @@ use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\Demo\TeacherDemoCatalog;
+use App\Support\DemoRecitationAudio;
 use App\Support\QuranMetadata;
+use Illuminate\Support\Str;
 use App\Support\Registration\OrganisationName;
 use Database\Seeders\Concerns\GuardsDemoSeeding;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /**
@@ -97,6 +100,7 @@ class TeacherDemoSeeder extends Seeder
         $this->seedAttendance();
         $this->seedAssignments();
         $this->seedNotes();
+        $this->seedMessageDemos();
         $this->refreshAssignmentStatuses();
         $this->assertVolumes();
     }
@@ -176,11 +180,14 @@ class TeacherDemoSeeder extends Seeder
             $student = $this->students[$definition['number']];
             $teacher = $this->teacherForGroup($definition['group']);
             $group = $this->groups[$definition['group']];
-            foreach ([1, 2, 3, 4, 5, 8, 9, 10, 11, 12] as $dayOffset) {
+            for ($dayOffset = 0; $dayOffset <= 34; $dayOffset++) {
+                if ($dayOffset % 7 === 6) {
+                    continue;
+                }
                 $date = now()->subDays($dayOffset);
-                $status = $definition['profile'] === 'inactive' && $dayOffset <= 5
-                    ? 'absent'
-                    : ($definition['number'] % 9 === 0 && $dayOffset === 3 ? 'excused' : ($definition['number'] % 6 === 0 && $dayOffset === 2 ? 'late' : 'present'));
+                $status = $definition['profile'] === 'inactive' && $dayOffset <= 12
+                    ? ($dayOffset % 4 === 0 ? 'absent' : 'present')
+                    : ($definition['number'] % 9 === 0 && $dayOffset % 11 === 3 ? 'excused' : ($definition['number'] % 6 === 0 && $dayOffset % 9 === 2 ? 'late' : 'present'));
                 (new TeacherAttendanceRecord)->forceFill([
                     'teacher_id' => $teacher->id,
                     'learning_group_id' => $group->id,
@@ -451,6 +458,7 @@ class TeacherDemoSeeder extends Seeder
         return [
             'surah' => $range['surah'],
             'ayah' => $ayah,
+            'ayah_number' => $ayah,
             'word_index' => $wordIndex,
             'status' => $status,
             'text' => $text,
@@ -492,6 +500,71 @@ class TeacherDemoSeeder extends Seeder
             'updated_at' => $at,
         ])->save();
         $this->sessionCount++;
+        if (! $paused && $definition['profile'] !== 'new') {
+            $this->sessionReciteAttempt($session, $user, $definition, $range, $at, $index);
+        }
+    }
+
+    /**
+     * @param  array{number: int, email: string, group: string}  $definition
+     * @param  array{surah: int, from: int, to: int}  $range
+     */
+    private function sessionReciteAttempt(UserSession $session, User $user, array $definition, array $range, Carbon $at, int $index): void
+    {
+        $accuracy = max(74, min(97, 92 - ($definition['number'] % 5) + ($index % 4)));
+        $assessment = new MemorisationAssessment;
+        $assessment->forceFill([
+            'user_id' => $user->id,
+            'surah_number' => $range['surah'],
+            'start_ayah' => $range['from'],
+            'end_ayah' => $range['to'],
+            'assessment_type' => MemorisationAssessment::TYPE_DASHBOARD_AI_RECITE,
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'idempotency_key' => 'teacher-demo:'.$definition['email'].':session-assessment:'.$session->id,
+            'surah_name' => QuranMetadata::name($range['surah']),
+            'recognition_data' => ['raw' => ['transcript' => 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ']],
+            'overall_accuracy' => $accuracy,
+            'created_at' => $at,
+            'updated_at' => $at,
+        ])->save();
+
+        $attempt = new AiReciteAttempt;
+        $attempt->forceFill([
+            'user_id' => $user->id,
+            'user_session_id' => $session->id,
+            'memorisation_assessment_id' => $assessment->id,
+            'source' => AiReciteAttempt::SOURCE_DASHBOARD,
+            'attempt_number' => $index + 1,
+            'accuracy_percent' => $accuracy,
+            'band' => RecitationScoringThresholds::bandForAccuracy($accuracy),
+            'peek_used' => false,
+            'duration_ms' => 16000 + ($index * 400),
+            'ayah_range' => [
+                'surah' => $range['surah'],
+                'from' => $range['from'],
+                'to' => $range['to'],
+                'surah_name' => QuranMetadata::name($range['surah']),
+            ],
+            'word_statuses' => [],
+            'created_at' => $at,
+            'updated_at' => $at,
+        ])->save();
+        $this->attachDemoAudio($user, $attempt);
+        $this->attemptCount++;
+    }
+
+    private function attachDemoAudio(User $user, AiReciteAttempt $attempt): void
+    {
+        $bytes = DemoRecitationAudio::silentWavBytes((int) ($attempt->duration_ms ?: 4200));
+        $path = sprintf('ai-recite-audio/%d/%d.wav', $user->id, $attempt->id);
+        Storage::disk('local')->put($path, $bytes);
+        $attempt->forceFill([
+            'audio_disk' => 'local',
+            'audio_path' => $path,
+            'audio_mime' => 'audio/wav',
+            'audio_bytes' => strlen($bytes),
+            'audio_duration_ms' => (int) ($attempt->duration_ms ?: 4200),
+        ])->save();
     }
 
     /**
@@ -558,6 +631,7 @@ class TeacherDemoSeeder extends Seeder
             'created_at' => $plan['at'],
             'updated_at' => $plan['at'],
         ])->save();
+        $this->attachDemoAudio($user, $attempt);
         if ($number === 1) {
             (new TeacherRecitationAssessment)->forceFill([
                 'teacher_id' => $this->teacherForGroup($definition['group'])->id,
@@ -800,7 +874,7 @@ class TeacherDemoSeeder extends Seeder
                 );
             }
 
-            if (in_array($profile, ['average', 'struggling', 'inactive'], true)) {
+            if (in_array($profile, ['average', 'struggling'], true)) {
                 $this->assignment($teacher, [$student], AssignmentKind::Practice, TeacherDemoCatalog::OVERDUE_RANGE, now()->subDays(12), now()->subDay(), null, null);
             }
 
@@ -898,7 +972,7 @@ class TeacherDemoSeeder extends Seeder
         }
     }
 
-    private function note(User $teacher, User $student, TeacherNoteKind $kind, string $body): void
+    private function note(User $teacher, User $student, TeacherNoteKind $kind, string $body): TeacherNote
     {
         $note = new TeacherNote;
         $note->forceFill([
@@ -907,6 +981,70 @@ class TeacherDemoSeeder extends Seeder
             'organisation_id' => $teacher->organisation_id,
             'kind' => $kind,
             'body' => $body,
+        ])->save();
+
+        return $note;
+    }
+
+    private function seedMessageDemos(): void
+    {
+        $intervention = $this->students[TeacherDemoCatalog::INTERVENTION];
+        $teacher = $this->teacherForStudent(TeacherDemoCatalog::INTERVENTION);
+
+        $direct = $this->note($teacher, $intervention, TeacherNoteKind::TeacherMessage, 'Voice note demo: listen to the short feedback clip below.');
+        $this->attachDemoMessageAudio($direct, 2800);
+
+        $recipient = TeacherAssignmentRecipient::query()
+            ->where('student_id', $intervention->id)
+            ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
+            ->latest('id')
+            ->first();
+        if (! $recipient) {
+            return;
+        }
+
+        $assignment = $recipient->assignment;
+        $studentNote = new TeacherNote;
+        $studentNote->forceFill([
+            'teacher_id' => $teacher->id,
+            'student_id' => $intervention->id,
+            'organisation_id' => $teacher->organisation_id,
+            'teacher_assignment_id' => $assignment->id,
+            'kind' => TeacherNoteKind::Note->value,
+            'body' => 'Here is my recitation for this range.',
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ])->save();
+        $this->attachDemoMessageAudio($studentNote, 3600);
+
+        $teacherNote = new TeacherNote;
+        $teacherNote->forceFill([
+            'teacher_id' => $teacher->id,
+            'student_id' => $intervention->id,
+            'organisation_id' => $teacher->organisation_id,
+            'teacher_assignment_id' => $assignment->id,
+            'kind' => TeacherNoteKind::Feedback->value,
+            'body' => '',
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ])->save();
+        $this->attachDemoMessageAudio($teacherNote, 4100);
+    }
+
+    private function attachDemoMessageAudio(TeacherNote $note, int $durationMs): void
+    {
+        $bytes = DemoRecitationAudio::silentWavBytes($durationMs);
+        $folder = $note->teacher_assignment_id
+            ? (string) (int) $note->teacher_assignment_id
+            : 'direct/'.(int) $note->student_id;
+        $path = sprintf('teacher-task-audio/%s/%s.wav', $folder, Str::uuid());
+        Storage::disk('user_files')->put($path, $bytes);
+        $note->forceFill([
+            'audio_disk' => 'user_files',
+            'audio_path' => $path,
+            'audio_mime' => 'audio/wav',
+            'audio_bytes' => strlen($bytes),
+            'audio_duration_ms' => $durationMs,
         ])->save();
     }
 
@@ -924,8 +1062,8 @@ class TeacherDemoSeeder extends Seeder
         if ($this->sessionCount < 300 || $this->sessionCount > 500) {
             throw new RuntimeException("Teacher demo seeded {$this->sessionCount} sessions; expected 300–500.");
         }
-        if ($this->attemptCount < 150 || $this->attemptCount > 250) {
-            throw new RuntimeException("Teacher demo seeded {$this->attemptCount} AI attempts; expected 150–250.");
+        if ($this->attemptCount < 300 || $this->attemptCount > 650) {
+            throw new RuntimeException("Teacher demo seeded {$this->attemptCount} AI attempts; expected 300–650.");
         }
         if ($this->assignmentCount < 40 || $this->assignmentCount > 60) {
             throw new RuntimeException("Teacher demo seeded {$this->assignmentCount} assignments; expected 40–60.");

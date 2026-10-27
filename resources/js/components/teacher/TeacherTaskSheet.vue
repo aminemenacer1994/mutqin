@@ -57,17 +57,15 @@
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--category">
                   <label class="form-label" :for="`${formId}-category`">{{ t('teacher.hifz_task_type') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
-                  <select :id="`${formId}-category`" ref="categoryField" class="form-select" :value="form.hifz_category || ''" required @change="patch('hifz_category', $event.target.value)">
+                  <select :id="`${formId}-category`" ref="categoryField" class="form-select" :value="form.task_type || ''" required @change="onTaskTypeChange($event.target.value)">
                     <option value="" disabled>{{ t('teacher.hifz_choose_type') }}</option>
-                    <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
-                    <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
-                    <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
+                    <option v-for="type in taskTypes" :key="type.id" :value="type.id">{{ t(type.labelKey) }}</option>
                   </select>
                 </div>
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--surah">
                   <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
-                  <select :id="`${formId}-surah`" class="form-select" :value="form.surah_number" required @change="patch('surah_number', $event.target.value)">
+                  <select :id="`${formId}-surah`" class="form-select" :value="form.surah_number" required @change="onSurahChange($event.target.value)">
                     <option v-for="surah in surahs" :key="surah.number" :value="String(surah.number)">{{ surah.number }}. {{ surah.name }}</option>
                   </select>
                 </div>
@@ -93,11 +91,20 @@
                 </div>
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--date">
-                  <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_optional') }}</label>
-                  <div class="teacher-task-modal__date-row">
-                    <input :id="`${formId}-due`" class="form-control" :value="form.due_at" type="date" @input="patch('due_at', $event.target.value)">
-                    <button v-if="form.due_at" type="button" class="btn btn-link teacher-task-modal__field-clear" :aria-label="t('teacher.clear_due_date')" :title="t('teacher.clear_due_date')" @click="patch('due_at', '')"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-                  </div>
+                  <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_date') }} <span class="teacher-task-modal__required" aria-hidden="true">*</span></label>
+                  <input
+                    :id="`${formId}-due`"
+                    class="form-control"
+                    :class="{ 'is-invalid': dueError }"
+                    :value="form.due_at"
+                    type="date"
+                    :min="editing ? undefined : minDueDate"
+                    required
+                    :aria-invalid="dueError ? 'true' : 'false'"
+                    :aria-describedby="dueError ? `${formId}-due-error` : undefined"
+                    @input="patch('due_at', $event.target.value)"
+                  >
+                  <p v-if="dueError" :id="`${formId}-due-error`" class="teacher-task-modal__field-error" role="alert">{{ dueError }}</p>
                 </div>
 
                 <div class="teacher-task-modal__field teacher-task-modal__field--feedback">
@@ -131,6 +138,12 @@ import {
   handleModalKeydown,
   restoreReturnFocus,
 } from '../../utils/modalFocus'
+import {
+  TEACHER_TASK_TYPES,
+  applyTeacherTaskType,
+  defaultAyahRange,
+  surahAyahCount,
+} from '../../scripts/teacher/taskTypes'
 
 let sheetUid = 0
 
@@ -197,17 +210,47 @@ export default {
     selectedSurahAyahCount() {
       return Number(this.selectedSurah?.ayah_count || 0)
     },
+    taskTypes() {
+      return TEACHER_TASK_TYPES
+    },
+    minDueDate() {
+      const today = new Date()
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    },
     rangeError() {
       const start = Number(this.form.ayah_start)
       const end = Number(this.form.ayah_end)
-      if (!this.selectedSurahAyahCount || !start || !end) return ''
+      if (!Number.isInteger(start) || start < 1) return this.t('teacher.ayah_range_from_error')
+      if (!Number.isInteger(end) || end < 1) return this.t('teacher.ayah_range_to_error')
+      if (!this.selectedSurahAyahCount) return ''
       if (start > end) return this.t('teacher.ayah_range_order_error')
-      if (end > this.selectedSurahAyahCount) return this.t('teacher.ayah_range_max_error', { n: this.selectedSurahAyahCount })
+      if (start > this.selectedSurahAyahCount || end > this.selectedSurahAyahCount) {
+        return this.t('teacher.ayah_range_max_error', { n: this.selectedSurahAyahCount })
+      }
+      return ''
+    },
+    dueError() {
+      if (!this.form.due_at) {
+        return this.editing ? this.t('teacher.due_date_required_edit') : this.t('teacher.due_date_required')
+      }
       return ''
     },
     canSubmit() {
       const target = Number(this.form.repetition_target)
-      return Boolean(this.form.student_id && this.form.hifz_category && this.form.surah_number && this.form.ayah_start && this.form.ayah_end && !this.rangeError && Number.isInteger(target) && target >= 1 && target <= 50)
+      return Boolean(
+        this.form.student_id
+        && this.form.task_type
+        && this.form.hifz_category
+        && this.form.surah_number
+        && this.form.ayah_start
+        && this.form.ayah_end
+        && this.form.due_at
+        && !this.rangeError
+        && !this.dueError
+        && Number.isInteger(target)
+        && target >= 1
+        && target <= 50,
+      )
     },
   },
   methods: {
@@ -241,6 +284,22 @@ export default {
     },
     patch(key, value) {
       this.$emit('update:form', { ...this.form, [key]: value })
+    },
+    onTaskTypeChange(taskTypeId) {
+      this.$emit('update:form', applyTeacherTaskType(this.form, taskTypeId))
+    },
+    onSurahChange(surahNumber) {
+      const previousSurah = String(this.form.surah_number)
+      const preserveRange = this.editing && previousSurah === String(surahNumber)
+      const range = preserveRange
+        ? { ayah_start: Number(this.form.ayah_start) || 1, ayah_end: Number(this.form.ayah_end) || 1 }
+        : defaultAyahRange(this.surahs, surahNumber)
+      this.$emit('update:form', {
+        ...this.form,
+        surah_number: String(surahNumber),
+        ayah_start: range.ayah_start,
+        ayah_end: range.ayah_end,
+      })
     },
     onKeydown(event) {
       handleModalKeydown(event, {

@@ -139,6 +139,7 @@ export function attentionReasonTags(student, t) {
       tone: 'danger',
       icon: 'bi bi-clock',
       label: t(overdueTasks === 1 ? 'teacher.needs_help_overdue_task_one' : 'teacher.needs_help_overdue_task_other', { n: overdueTasks }),
+      help: t('teacher.needs_help_overdue_task_help'),
     })
   }
   const overdueReviews = Number(student?.revision_overdue || 0)
@@ -148,6 +149,7 @@ export function attentionReasonTags(student, t) {
       tone: 'warn',
       icon: 'bi bi-arrow-repeat',
       label: t(overdueReviews === 1 ? 'teacher.needs_help_review_due_one' : 'teacher.needs_help_review_due_other', { n: overdueReviews }),
+      help: t('teacher.needs_help_review_due_help'),
     })
   }
   if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65) {
@@ -156,6 +158,7 @@ export function attentionReasonTags(student, t) {
       tone: 'danger',
       icon: 'bi bi-mic',
       label: t('teacher.needs_help_low_recitation', { n: student.ai_success_rate }),
+      help: t('teacher.needs_help_low_recitation_help'),
     })
   }
   const weakAyahs = Number(student?.recurring_weak || 0)
@@ -165,6 +168,7 @@ export function attentionReasonTags(student, t) {
       tone: 'warn',
       icon: 'bi bi-exclamation-triangle',
       label: t(weakAyahs === 1 ? 'teacher.needs_help_hard_ayah_one' : 'teacher.needs_help_hard_ayah_other', { n: weakAyahs }),
+      help: t('teacher.needs_help_hard_ayah_help'),
     })
   }
   if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {

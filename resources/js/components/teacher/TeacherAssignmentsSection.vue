@@ -30,7 +30,7 @@
             @click="resetFilters"
           >
             <i class="bi bi-x-lg" aria-hidden="true"></i>
-            {{ t('teacher.clear_filters') }}
+            <span class="visually-hidden">{{ t('teacher.clear_filters') }}</span>
           </button>
         </div>
       </div>
@@ -163,29 +163,16 @@
         <div ref="messageDialog" class="modal fade show d-block teacher-task-modal teacher-message-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-message-title" tabindex="-1" @keydown="onMessageKeydown">
           <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog teacher-message-modal__dialog">
             <div class="modal-content teacher-task-modal__content teacher-message-modal__content">
-              <div class="modal-header teacher-task-modal__header">
+              <div class="modal-header teacher-task-modal__header teacher-message-modal__header teacher-message-modal__header--simple">
                 <div class="teacher-task-modal__intro">
                   <h2 id="teacher-message-title" class="modal-title h5 teacher-task-modal__title">{{ messageItem.studentName }}</h2>
-                  <p><span>{{ t('teacher.task_conversation') }}</span><br><span>{{ messageItem.title }}</span></p>
+                  <p class="teacher-message-modal__subtitle">{{ messageItem.title }} · {{ messageItem.statusLabel }}</p>
                 </div>
                 <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
               </div>
               <div class="modal-body teacher-message-modal__body">
-                <section class="teacher-message-context" :aria-label="t('teacher.task_details')">
-                  <div class="teacher-message-context__main">
-                    <span class="teacher-task-row__status" :class="`is-${messageItem.statusTone}`"><i :class="messageItem.statusIcon" aria-hidden="true"></i>{{ messageItem.statusLabel }}</span>
-                    <span v-if="messageItem.due" class="teacher-message-context__due"><i class="bi bi-calendar-event" aria-hidden="true"></i>{{ messageItem.due }}</span>
-                    <details v-if="messageItem.assignment.feedback" class="teacher-message-context__note"><summary><i class="bi bi-sticky" aria-hidden="true"></i>{{ t('teacher.teacher_note') }}</summary><p>{{ messageItem.assignment.feedback }}</p></details>
-                  </div>
-                  <button type="button" class="btn btn-outline-secondary btn-sm teacher-message-context__open" :aria-label="t('teacher.open_profile_for', { name: messageItem.studentName })" :title="t('teacher.open_profile')" @click="openMessageStudent">
-                    <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-                  </button>
-                </section>
-                <section v-if="messageItem.evidence?.audio?.available || messageItem.evidence?.transcript" class="teacher-message-evidence" :aria-label="t('teacher.open_session_review')">
-                  <strong>{{ t('teacher.student_recording') }}</strong>
-                  <audio v-if="messageItem.evidence?.audio?.available" controls preload="metadata" :src="messageItem.evidence.audio.url"></audio>
-                  <details v-if="messageItem.evidence?.transcript"><summary>{{ t('teacher.view_transcript') }}</summary><p lang="ar" dir="rtl">{{ messageItem.evidence.transcript }}</p></details>
-                </section>
+                <p v-if="messageItem.assignment.feedback" class="teacher-message-modal__note-line"><strong>{{ t('teacher.task_note_label') }}</strong> {{ messageItem.assignment.feedback }}</p>
+                <audio v-if="messageItem.evidence?.audio?.available" class="teacher-message-modal__audio" controls preload="metadata" :src="messageItem.evidence.audio.url"></audio>
                 <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
                   <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="[`is-${message.sender}`, { 'is-unread': message.unread }]">
                     <span>{{ message.sender === 'teacher' ? t('teacher.you') : messageItem.studentName }}</span>
@@ -198,24 +185,19 @@
                   </article>
                 </div>
                 <div v-else class="teacher-message-empty">
+                  <i class="bi bi-chat-left-text" aria-hidden="true"></i>
                   <p>{{ t('teacher.messages_empty_short') }}</p>
                 </div>
-                <form class="teacher-message-composer" @submit.prevent="sendMessage">
-                  <label for="teacher-task-reply">{{ t('teacher.message') }}</label>
-                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="2" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
-                  <div v-if="audioPreviewUrl" class="teacher-message-composer__recording"><audio controls preload="metadata" :src="audioPreviewUrl"></audio><button type="button" class="btn btn-link" @click="discardRecording">{{ t('teacher.remove_recording') }}</button></div>
+                <form class="teacher-message-composer teacher-message-composer--compact" @submit.prevent="sendMessage">
+                  <label class="visually-hidden" for="teacher-task-reply">{{ t('teacher.message') }}</label>
+                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="3" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
+                  <TeacherVoiceNoteControls ref="taskVoice" :disabled="messageSaving" />
                   <div class="teacher-message-composer__foot">
-                    <button v-if="recordingSupported" type="button" class="btn btn-outline-secondary teacher-message-composer__mic" :disabled="messageSaving || recordingState === 'stopping'" :aria-label="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" :title="recordingState === 'recording' ? t('teacher.stop_recording') : t('teacher.record_voice_note')" @click="recordingState === 'recording' ? stopRecording() : startRecording()"><i class="bi" :class="recordingState === 'recording' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i></button>
-                    <span v-if="recordingState === 'recording'" class="teacher-message-composer__timer">{{ recordingTimeLabel }}</span>
-                    <span v-if="recordingError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ recordingError }}</span>
                     <span v-if="messageError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ messageError }}</span>
-                    <span v-else-if="messageSent" class="alert alert-success py-1 px-2 mb-0" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i> {{ t('teacher.message_sent') }}</span>
-                    <span v-else-if="messageDraft.length">{{ messageDraft.length }}/2000</span>
-                    <span v-else></span>
-                    <button type="button" class="btn btn-outline-secondary teacher-message-composer__clear" :disabled="messageSaving || (!messageDraft && !audioBlob)" @click="clearMessageComposer"><i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message_short') }}</button>
-                    <button type="submit" class="btn btn-primary" :disabled="messageSaving || recordingState === 'recording' || (!messageDraft.trim() && !audioBlob)">
+                    <span v-else-if="messageSent" class="alert alert-success py-1 px-2 mb-0" role="status">{{ t('teacher.message_sent') }}</span>
+                    <span v-else aria-hidden="true"></span>
+                    <button type="submit" class="btn btn-primary teacher-message-composer__send" :disabled="messageSaving || !canSendTaskMessage" :aria-label="messageSaving ? t('teacher.saving_message') : t('teacher.send_message')" :title="t('teacher.send_message')">
                       <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-                      {{ messageSaving ? t('teacher.saving_message') : t('teacher.send_message') }}
                     </button>
                   </div>
                 </form>
@@ -236,14 +218,13 @@ import TeacherMore from './TeacherMore.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
-import { chooseSupportedRecorderMimeType, createObjectUrlFromBlob, extensionForMimeType, revokeObjectUrl, stopMediaRecorderAndCollectBlob } from '../../scripts/audio/recordingPlayback'
+import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
 
 const STEP = 25
-const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherSectionPane, TeacherTaskSheet },
+  components: { TeacherEmpty, TeacherMore, TeacherSectionPane, TeacherTaskSheet, TeacherVoiceNoteControls },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
@@ -273,16 +254,6 @@ export default {
       messageError: '',
       messageSent: false,
       messageSentTimer: null,
-      audioRecorder: null,
-      audioStream: null,
-      audioBlob: null,
-      audioPreviewUrl: '',
-      audioDurationMs: 0,
-      recordingStartedAt: 0,
-      recordingElapsedMs: 0,
-      recordingTimer: null,
-      recordingState: 'idle',
-      recordingError: '',
       returnFocusEl: null,
       compactView: false,
     }
@@ -300,13 +271,15 @@ export default {
   },
   beforeUnmount() {
     if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-    this.discardRecording()
+    this.$refs.taskVoice?.discardRecording()
     document.body.classList.remove('modal-open', 'teacher-task-modal-open')
   },
   computed: {
     hasActiveTaskFilters() { return Boolean(this.query || this.statusFilter !== 'all') },
-    recordingSupported() { return typeof window !== 'undefined' && typeof window.MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia) },
-    recordingTimeLabel() { const seconds = Math.floor(this.recordingElapsedMs / 1000); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` },
+    canSendTaskMessage() {
+      if (this.messageSaving || this.$refs.taskVoice?.isRecordingActive) return false
+      return Boolean(this.messageDraft.trim() || this.$refs.taskVoice?.hasRecording)
+    },
     taskFilters() {
       const counts = this.flatItems.reduce((result, item) => {
         result.all += 1
@@ -421,7 +394,7 @@ export default {
     },
     openMessages(item) {
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-      this.discardRecording()
+      this.$refs.taskVoice?.discardRecording()
       this.returnFocusEl = captureReturnFocus()
       this.messageItem = item
       this.messageDraft = ''
@@ -431,7 +404,7 @@ export default {
     },
     closeMessages() {
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-      this.discardRecording()
+      this.$refs.taskVoice?.discardRecording()
       this.messageItem = null
       this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
     },
@@ -439,7 +412,7 @@ export default {
       this.messageDraft = ''
       this.messageError = ''
       this.messageSent = false
-      this.discardRecording()
+      this.$refs.taskVoice?.discardRecording()
     },
     openMessageStudent() {
       const id = this.messageItem?.studentId
@@ -451,16 +424,16 @@ export default {
     },
     async sendMessage() {
       const body = this.messageDraft.trim()
-      if ((!body && !this.audioBlob) || !this.messageItem || this.messageSaving) return
+      const recording = this.$refs.taskVoice?.recordingPayload?.() || null
+      if ((!body && !recording) || !this.messageItem || this.messageSaving) return
       this.messageSaving = true
       this.messageError = ''
       this.messageSent = false
       try {
-        const recording = this.audioBlob ? { blob: this.audioBlob, durationMs: this.audioDurationMs, filename: `voice-note.${extensionForMimeType(this.audioBlob.type)}` } : null
         const message = await this.onSendMessage(this.messageItem.recipientId, body, recording)
         if (message) this.messageItem.messages.push(message)
         this.messageDraft = ''
-        this.discardRecording()
+        this.$refs.taskVoice?.discardRecording()
         this.messageSent = true
         if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
         this.messageSentTimer = window.setTimeout(() => {
@@ -472,68 +445,6 @@ export default {
       } finally {
         this.messageSaving = false
       }
-    },
-    async startRecording() {
-      if (!this.recordingSupported || this.messageSaving) return
-      this.discardRecording()
-      this.recordingError = ''
-      this.recordingState = 'requesting'
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const mimeType = chooseSupportedRecorderMimeType()
-        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
-        this.audioStream = stream
-        this.audioRecorder = recorder
-        this.recordingStartedAt = Date.now()
-        recorder.start()
-        this.recordingState = 'recording'
-        this.recordingTimer = window.setInterval(() => {
-          this.recordingElapsedMs = Date.now() - this.recordingStartedAt
-          if (this.recordingElapsedMs >= MAX_RECORDING_MS) this.stopRecording()
-        }, 250)
-      } catch (_) {
-        this.releaseRecordingHardware()
-        this.recordingState = 'idle'
-        this.recordingError = this.t('teacher.microphone_unavailable')
-      }
-    },
-    async stopRecording() {
-      const recorder = this.audioRecorder
-      if (!recorder || this.recordingState !== 'recording') return
-      this.recordingState = 'stopping'
-      window.clearInterval(this.recordingTimer)
-      const durationMs = Math.min(MAX_RECORDING_MS, Math.max(1, Date.now() - this.recordingStartedAt))
-      try {
-        const blob = await stopMediaRecorderAndCollectBlob(recorder, [], { mimeType: recorder.mimeType })
-        this.audioBlob = blob
-        this.audioDurationMs = durationMs
-        this.audioPreviewUrl = createObjectUrlFromBlob(blob)
-        this.recordingState = 'recorded'
-      } catch (_) {
-        this.recordingState = 'idle'
-        this.recordingError = this.t('teacher.recording_failed')
-      } finally {
-        this.releaseRecordingHardware()
-      }
-    },
-    releaseRecordingHardware() {
-      window.clearInterval(this.recordingTimer)
-      this.recordingTimer = null
-      this.audioStream?.getTracks?.().forEach((track) => track.stop())
-      this.audioStream = null
-      this.audioRecorder = null
-    },
-    discardRecording() {
-      if (this.audioRecorder?.state !== 'inactive') {
-        try { this.audioRecorder?.stop() } catch (_) { /* already stopped */ }
-      }
-      this.releaseRecordingHardware()
-      revokeObjectUrl(this.audioPreviewUrl)
-      this.audioBlob = null
-      this.audioPreviewUrl = ''
-      this.audioDurationMs = 0
-      this.recordingElapsedMs = 0
-      this.recordingState = 'idle'
     },
     messageWhen(message) {
       try {

@@ -6,6 +6,16 @@
       <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
     </section>
 
+    <TeacherActivityChart
+      :chart-days="chartDays"
+      :day-options="chartDayOptions"
+      :is-empty="chartEmpty"
+      :chart-ready="chartReady"
+      :chart-data="chartData"
+      :chart-options="chartOptions"
+      @set-days="$emit('set-chart-days', $event)"
+    />
+
     <TeacherSectionPane
       :title="t('teacher.overview_need_look')"
       :hint="t('teacher.overview_need_look_hint')"
@@ -55,6 +65,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
+import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -63,6 +74,7 @@ import TeacherSectionPane from './TeacherSectionPane.vue'
 export default {
   name: 'TeacherOverviewSection',
   components: {
+    TeacherActivityChart,
     TeacherAttentionList,
     TeacherEmpty,
     TeacherKpiGrid,
@@ -74,8 +86,14 @@ export default {
     kpiCards: { type: Array, default: () => [] },
     attentionPreview: { type: Array, default: () => [] },
     formatWhen: { type: Function, required: true },
+    chartDays: { type: Number, default: 30 },
+    chartDayOptions: { type: Array, default: () => [30, 90] },
+    chartEmpty: { type: Boolean, default: false },
+    chartReady: { type: Boolean, default: true },
+    chartData: { type: Object, required: true },
+    chartOptions: { type: Object, required: true },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days'],
   computed: {
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)

@@ -1,6 +1,8 @@
+import { defaultAyahRange } from './taskTypes'
+
 export const TEACHER_VIEWS = ['overview', 'students', 'student', 'attendance', 'assignments', 'settings']
 
-export const TEACHER_CHART_DAY_OPTIONS = [7, 30, 90]
+export const TEACHER_CHART_DAY_OPTIONS = [30, 90]
 
 export const TEACHER_NAV = [
   { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },
@@ -19,14 +21,17 @@ export const TEACHER_PROFILE_TABS = [
   { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
 ]
 
-export function defaultAssignmentForm() {
+export function defaultAssignmentForm(surahs = []) {
+  const surahNumber = '1'
+  const range = defaultAyahRange(surahs, surahNumber)
   return {
+    task_type: 'new_memorisation',
     kind: 'practice',
-    hifz_category: '',
+    hifz_category: 'sabaq',
     student_id: '',
-    surah_number: '1',
-    ayah_start: 1,
-    ayah_end: 7,
+    surah_number: surahNumber,
+    ayah_start: range.ayah_start,
+    ayah_end: range.ayah_end,
     repetition_target: 1,
     due_at: '',
     feedback: '',

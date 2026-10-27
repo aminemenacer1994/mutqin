@@ -3,7 +3,7 @@
     <div class="teacher-attendance__header">
       <div>
         <h2>{{ t('teacher.nav_attendance') }}</h2>
-        <p>{{ t('teacher.attendance_tap_hint') }}</p>
+        <p>{{ t('teacher.attendance_register_hint') }}</p>
       </div>
       <label v-if="groups.length > 1" class="teacher-attendance__group">
         <span>{{ t('teacher.attendance_group') }}</span>
@@ -15,60 +15,80 @@
 
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
     <p v-if="success" class="alert alert-success" role="status">{{ success }}</p>
-    <p v-if="groups.length" class="teacher-attendance__note"><i class="bi bi-person-check" aria-hidden="true"></i> {{ t('teacher.attendance_teacher_recorded_source') }}</p>
-    <div v-if="groups.length" class="teacher-attendance__controls">
-      <div class="teacher-attendance__weekbar">
-        <button type="button" class="btn btn-outline-secondary" :aria-label="t('teacher.attendance_previous_week')" @click="shiftWeek(-7)"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
-        <strong>{{ weekLabel }}</strong>
-        <button type="button" class="btn btn-outline-secondary" :aria-label="t('teacher.attendance_next_week')" @click="shiftWeek(7)"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-        <button type="button" class="btn btn-link teacher-attendance__today" @click="goToday">{{ t('teacher.attendance_this_week') }}</button>
-      </div>
-      <div class="teacher-attendance__status-picker" role="toolbar" :aria-label="t('teacher.attendance_mark_as')">
-        <button
-          v-for="option in statusTools"
-          :key="option.value"
-          type="button"
-          :class="[`is-${option.value}`, { 'is-active': selectedStatus === option.value }]"
-          :aria-pressed="selectedStatus === option.value ? 'true' : 'false'"
-          @click="selectedStatus = option.value"
-        >
-          <i :class="option.icon" aria-hidden="true"></i>
-          <span>{{ option.label }}</span>
-          <strong v-if="option.value !== 'clear'">{{ attendanceCount(option.value) }}</strong>
-        </button>
-      </div>
-    </div>
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
     <div v-else-if="!groups.length" class="teacher-attendance__empty">{{ t('teacher.attendance_no_group') }}</div>
     <div v-else-if="!students.length" class="teacher-attendance__empty">{{ t('teacher.attendance_no_students') }}</div>
-    <template v-else>
-      <div class="teacher-attendance__scroll teacher-attendance__roster" role="region" :aria-label="t('teacher.attendance_grid')" tabindex="0">
-        <table ref="attendanceTable" class="teacher-attendance__table teacher-attendance__table--range" :style="{ '--attendance-days': visibleDays.length }">
-          <thead><tr><th scope="col">{{ t('teacher.student') }}</th><th v-for="day in visibleDays" :key="day" scope="col" :class="{ 'is-future': !canMark(day) }"><span>{{ weekday(day) }}</span><strong>{{ dayNumber(day) }}</strong><button type="button" class="teacher-attendance__mark-all" :disabled="!canMark(day) || bulkSavingDay === day" :aria-label="`${t('teacher.attendance_mark_all_present')}: ${formatDay(day)}`" :title="canMark(day) ? t('teacher.attendance_mark_all_present') : t('teacher.attendance_future_disabled')" @click="markAllPresent(day)"><i class="bi bi-check-all" aria-hidden="true"></i></button></th></tr></thead>
-          <tbody>
-            <tr v-for="(student, studentIndex) in students" :key="student.id">
-              <th scope="row">{{ student.name }}</th>
-              <td v-for="(day, dayIndex) in visibleDays" :key="day" :class="{ 'is-future': !canMark(day) }">
-                <button
-                  type="button"
-                  class="teacher-attendance__cell"
-                  :class="`is-${student.attendance?.[day] || 'unmarked'}`"
-                  :disabled="!canMark(day) || saving[`${student.id}:${day}`]"
-                  :aria-label="`${student.name}, ${formatDay(day)}: ${t(`teacher.attendance_${student.attendance?.[day] || 'unmarked'}`)}`"
-                  :title="canMark(day) ? t(`teacher.attendance_${student.attendance?.[day] || 'unmarked'}`) : t('teacher.attendance_future_disabled')"
-                  @click="markStatus(student, day)"
-                  @keydown="onCellKeydown($event, studentIndex, dayIndex)"
-                >
-                  <i :class="statusIcon(student.attendance?.[day])" aria-hidden="true"></i>
-                  <span class="visually-hidden">{{ cellLabel(student.attendance?.[day]) }}</span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div v-else class="teacher-attendance__shell card">
+      <div class="teacher-attendance__calendar" role="application" :aria-label="t('teacher.attendance_calendar')">
+        <div class="teacher-attendance__calendar-head">
+          <button type="button" class="btn btn-outline-secondary btn-sm" :aria-label="t('teacher.attendance_previous_month')" @click="shiftCalendarMonth(-1)"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <div class="teacher-attendance__calendar-title">
+            <strong>{{ calendarMonthLabel }}</strong>
+            <button type="button" class="btn btn-link btn-sm teacher-attendance__today" @click="goToday">{{ t('teacher.attendance_today') }}</button>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" :aria-label="t('teacher.attendance_next_month')" @click="shiftCalendarMonth(1)"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        </div>
+        <div class="teacher-attendance__calendar-weekdays" aria-hidden="true">
+          <span v-for="label in weekdayLabels" :key="label">{{ label }}</span>
+        </div>
+        <div class="teacher-attendance__calendar-grid">
+          <button
+            v-for="cell in calendarCells"
+            :key="cell.date"
+            type="button"
+            class="teacher-attendance__calendar-day"
+            :class="{
+              'is-active': cell.date === focusDay,
+              'is-today': cell.date === today,
+              'is-outside': !cell.inMonth,
+              'is-future': !canMark(cell.date),
+              [`has-${cell.summary}`]: Boolean(cell.summary),
+            }"
+            :disabled="!cell.inMonth || !canMark(cell.date)"
+            :aria-label="formatDay(cell.date)"
+            :aria-pressed="cell.date === focusDay ? 'true' : 'false'"
+            @click="pickCalendarDay(cell.date)"
+          >
+            <strong>{{ cell.day }}</strong>
+            <span v-if="cell.marked" class="teacher-attendance__calendar-dot" aria-hidden="true"></span>
+          </button>
+        </div>
       </div>
-    </template>
+
+      <div v-if="focusDay" class="teacher-attendance__panel">
+        <header class="teacher-attendance__panel-head">
+          <h3>{{ formatDay(focusDay) }}</h3>
+          <div class="teacher-attendance__chips" role="status">
+            <span class="is-present">{{ dayCounts.present }} {{ t('teacher.attendance_present') }}</span>
+            <span class="is-absent">{{ dayCounts.absent }} {{ t('teacher.attendance_absent') }}</span>
+            <span class="is-late">{{ dayCounts.late }} {{ t('teacher.attendance_late') }}</span>
+            <span class="is-excused">{{ dayCounts.excused }} {{ t('teacher.attendance_excused') }}</span>
+            <span class="is-unmarked">{{ dayCounts.unmarked }} {{ t('teacher.attendance_unmarked') }}</span>
+          </div>
+        </header>
+        <div class="teacher-attendance__list" role="list" :aria-label="t('teacher.attendance_grid')">
+          <article v-for="student in students" :key="student.id" class="teacher-attendance__row" role="listitem" :class="`is-${student.attendance?.[focusDay] || 'unmarked'}`">
+            <span class="teacher-attendance__row-name">{{ student.name }}</span>
+            <div class="teacher-attendance__row-actions" role="group" :aria-label="student.name">
+              <button
+                v-for="option in dayStatusOptions"
+                :key="option.value"
+                type="button"
+                class="teacher-attendance__day-btn"
+                :class="[`is-${option.value}`, { 'is-selected': student.attendance?.[focusDay] === option.value }]"
+                :disabled="!canMark(focusDay) || saving[`${student.id}:${focusDay}`]"
+                :aria-label="option.label"
+                :title="option.label"
+                @click="setStatus(student, focusDay, student.attendance?.[focusDay] === option.value ? 'clear' : option.value)"
+              >
+                <i :class="option.icon" aria-hidden="true"></i>
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -81,91 +101,131 @@ export default {
   name: 'TeacherAttendanceSection',
   mixins: [i18nMixin],
   data() {
-    return { groups: [], groupId: null, weekStart: '', days: [], selectedDay: '', students: [], loading: true, error: '', success: '', successTimer: null, saving: {}, requestId: 0, selectedStatus: 'present', bulkSavingDay: '' }
+    return {
+      groups: [],
+      groupId: null,
+      days: [],
+      focusDay: '',
+      calendarMonth: '',
+      students: [],
+      loading: true,
+      error: '',
+      success: '',
+      successTimer: null,
+      saving: {},
+      requestId: 0,
+    }
   },
   computed: {
-    weekLabel() {
-      if (!this.days.length) return ''
-      return `${this.formatDay(this.days[0])} – ${this.formatDay(this.days[6])}`
+    today() {
+      return this.dateString(new Date())
     },
-    statusTools() {
+    calendarMonthLabel() {
+      const anchor = this.monthAnchor()
+      return this.localDate(anchor).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+    },
+    weekdayLabels() {
+      return Array.from({ length: 7 }, (_, index) => {
+        const date = new Date(Date.UTC(2024, 0, 1 + index))
+        return date.toLocaleDateString('en-GB', { weekday: 'short' })
+      })
+    },
+    calendarCells() {
+      const anchor = this.monthAnchor()
+      const monthDate = this.localDate(anchor)
+      const year = monthDate.getFullYear()
+      const month = monthDate.getMonth()
+      const first = new Date(year, month, 1)
+      const startOffset = (first.getDay() + 6) % 7
+      const gridStart = new Date(year, month, 1 - startOffset)
+      const cells = []
+      for (let index = 0; index < 42; index++) {
+        const date = new Date(gridStart)
+        date.setDate(gridStart.getDate() + index)
+        const dateKey = this.dateString(date)
+        const summary = this.daySummary(dateKey)
+        cells.push({
+          date: dateKey,
+          day: date.getDate(),
+          inMonth: date.getMonth() === month,
+          marked: summary.marked,
+          summary: summary.tone,
+        })
+      }
+      return cells
+    },
+    dayStatusOptions() {
       return [
         { value: 'present', icon: 'bi bi-check-lg', label: this.t('teacher.attendance_present') },
         { value: 'absent', icon: 'bi bi-x-lg', label: this.t('teacher.attendance_absent') },
         { value: 'late', icon: 'bi bi-clock', label: this.t('teacher.attendance_late') },
         { value: 'excused', icon: 'bi bi-shield-check', label: this.t('teacher.attendance_excused') },
-        { value: 'clear', icon: 'bi bi-eraser', label: this.t('teacher.attendance_clear') },
       ]
     },
-    visibleDays() {
-      return this.days
+    dayCounts() {
+      const counts = { present: 0, absent: 0, late: 0, excused: 0, unmarked: 0 }
+      if (!this.focusDay) return counts
+      for (const student of this.students) {
+        const status = student.attendance?.[this.focusDay] || 'unmarked'
+        if (counts[status] !== undefined) counts[status] += 1
+        else counts.unmarked += 1
+      }
+      return counts
     },
   },
-  mounted() { this.load() },
+  mounted() {
+    this.calendarMonth = this.today.slice(0, 7)
+    this.load()
+  },
   beforeUnmount() { window.clearTimeout(this.successTimer) },
   methods: {
+    monthAnchor() {
+      const value = this.calendarMonth || this.focusDay || this.today
+      return `${value.slice(0, 7)}-01`
+    },
     localDate(value) { return new Date(`${value}T12:00:00`) },
     dateString(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` },
     formatDay(day) { return formatTeacherWhen(`${day}T12:00:00`) },
-    weekday(day) { return this.localDate(day).toLocaleDateString('en-GB', { weekday: 'short' }) },
-    dayNumber(day) { return this.localDate(day).getDate() },
-    canMark(day) { return day <= this.dateString(new Date()) },
-    cellLabel(status) { return status ? this.t(`teacher.attendance_${status}`) : this.t('teacher.attendance_unmarked') },
-    statusIcon(status) {
-      return {
-        present: 'bi bi-check-lg',
-        absent: 'bi bi-x-lg',
-        late: 'bi bi-clock',
-        excused: 'bi bi-shield-check',
-      }[status] || 'bi bi-dash'
-    },
-    attendanceCount(status) {
-      return this.students.reduce((total, student) => total + this.visibleDays.filter((day) => student.attendance?.[day] === status).length, 0)
-    },
-    markStatus(student, day) {
-      const current = student.attendance?.[day] || 'clear'
-      this.setStatus(student, day, current === this.selectedStatus ? 'clear' : this.selectedStatus)
-    },
-    async markAllPresent(day) {
-      if (!this.canMark(day) || this.bulkSavingDay) return
-      this.bulkSavingDay = day
-      await Promise.all(this.students.filter((student) => student.attendance?.[day] !== 'present').map((student) => this.setStatus(student, day, 'present')))
-      this.bulkSavingDay = ''
-      if (!this.error) this.showSuccess(this.t('teacher.attendance_bulk_saved'))
-    },
-    onCellKeydown(event, rowIndex, columnIndex) {
-      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']
-      const shortcuts = { p: 'present', a: 'absent', l: 'late', e: 'excused', c: 'clear' }
-      const shortcut = shortcuts[String(event.key || '').toLowerCase()]
-      if (shortcut) {
-        event.preventDefault()
-        const student = this.students[rowIndex]
-        const day = this.visibleDays[columnIndex]
-        if (student && day && this.canMark(day)) this.setStatus(student, day, shortcut)
-        return
+    canMark(day) { return day <= this.today },
+    daySummary(day) {
+      if (!this.days.includes(day) || !this.students.length) return { marked: false, tone: '' }
+      let present = 0
+      let absent = 0
+      let late = 0
+      let excused = 0
+      for (const student of this.students) {
+        const status = student.attendance?.[day]
+        if (status === 'present') present++
+        else if (status === 'absent') absent++
+        else if (status === 'late') late++
+        else if (status === 'excused') excused++
       }
-      if (!keys.includes(event.key)) return
-      event.preventDefault()
-      let nextRow = rowIndex
-      let nextColumn = columnIndex
-      if (event.key === 'ArrowLeft') nextColumn--
-      if (event.key === 'ArrowRight') nextColumn++
-      if (event.key === 'ArrowUp') nextRow--
-      if (event.key === 'ArrowDown') nextRow++
-      if (event.key === 'Home') nextColumn = 0
-      if (event.key === 'End') nextColumn = this.visibleDays.length - 1
-      nextRow = Math.max(0, Math.min(this.students.length - 1, nextRow))
-      nextColumn = Math.max(0, Math.min(this.visibleDays.length - 1, nextColumn))
-      this.$refs.attendanceTable?.querySelectorAll('tbody tr')?.[nextRow]?.querySelectorAll('.teacher-attendance__cell')?.[nextColumn]?.focus()
+      const marked = present + absent + late + excused > 0
+      const tone = absent > present ? 'absent' : late > 0 ? 'late' : present > 0 ? 'present' : excused > 0 ? 'excused' : ''
+      return { marked, tone }
+    },
+    pickCalendarDay(day) {
+      if (!day || !this.canMark(day)) return
+      this.focusDay = day
+      if (day.slice(0, 7) !== (this.calendarMonth || this.today.slice(0, 7))) {
+        this.calendarMonth = day.slice(0, 7)
+        this.load()
+      }
+    },
+    shiftCalendarMonth(step) {
+      const anchor = this.monthAnchor()
+      const date = this.localDate(anchor)
+      date.setMonth(date.getMonth() + step, 1)
+      this.calendarMonth = date.toISOString().slice(0, 7)
+      this.load()
     },
     selectDefaultDay() {
-      if (this.days.includes(this.selectedDay) && this.canMark(this.selectedDay)) return
-      const today = this.dateString(new Date())
+      const today = this.today
       if (this.days.includes(today)) {
-        this.selectedDay = today
+        this.focusDay = today
         return
       }
-      this.selectedDay = [...this.days].reverse().find((day) => this.canMark(day)) || this.days[0] || ''
+      this.focusDay = [...this.days].reverse().find((day) => this.canMark(day)) || this.days[0] || ''
     },
     async load() {
       const id = ++this.requestId
@@ -173,11 +233,11 @@ export default {
       this.error = ''
       this.success = ''
       try {
-        const payload = await learningApi.getTeacherAttendance({ group_id: this.groupId || undefined, week_start: this.weekStart || undefined })
+        const month = this.calendarMonth || this.today.slice(0, 7)
+        const payload = await learningApi.getTeacherAttendance({ group_id: this.groupId || undefined, month })
         if (id !== this.requestId) return
         this.groups = payload.groups || []
         this.groupId = payload.group_id
-        this.weekStart = payload.week_start
         this.days = payload.days || []
         this.students = payload.students || []
         this.selectDefaultDay()
@@ -187,8 +247,11 @@ export default {
         if (id === this.requestId) this.loading = false
       }
     },
-    shiftWeek(days) { const date = this.localDate(this.weekStart); date.setDate(date.getDate() + days); this.weekStart = this.dateString(date); this.load() },
-    goToday() { this.weekStart = ''; this.load() },
+    goToday() {
+      this.calendarMonth = this.today.slice(0, 7)
+      this.focusDay = this.today
+      this.load()
+    },
     async setStatus(student, day, status) {
       const previous = student.attendance?.[day]
       const savingKey = `${student.id}:${day}`
@@ -199,7 +262,7 @@ export default {
       else student.attendance[day] = status
       try {
         const saved = await learningApi.setTeacherAttendance(this.groupId, student.id, day, status)
-        if (saved?.source === 'teacher_recorded' && !this.bulkSavingDay) this.showSuccess(this.t('teacher.attendance_saved'))
+        if (saved?.source === 'teacher_recorded') this.showSuccess(this.t('teacher.attendance_saved'))
       } catch {
         if (previous) student.attendance[day] = previous
         else delete student.attendance[day]

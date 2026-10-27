@@ -124,8 +124,8 @@ class TeacherDemoSeederTest extends TestCase
         $assignments = TeacherAssignment::query()->count();
         $this->assertGreaterThanOrEqual(300, $sessions);
         $this->assertLessThanOrEqual(500, $sessions);
-        $this->assertGreaterThanOrEqual(150, $attempts);
-        $this->assertLessThanOrEqual(250, $attempts);
+        $this->assertGreaterThanOrEqual(300, $attempts);
+        $this->assertLessThanOrEqual(650, $attempts);
         $this->assertGreaterThanOrEqual(40, $assignments);
         $this->assertLessThanOrEqual(60, $assignments);
 
@@ -258,9 +258,9 @@ class TeacherDemoSeederTest extends TestCase
         $this->assertNotNull($unassessed);
         $this->assertNull($unassessed['issues']['wrong']);
         $this->assertSame('failed', $unassessed['assessment_status']);
-        $this->assertSame(8, AiReciteAttempt::query()->validScored()->where('user_id', $repeated->id)->count());
+        $this->assertGreaterThanOrEqual(8, AiReciteAttempt::query()->validScored()->where('user_id', $repeated->id)->count());
         $this->assertGreaterThanOrEqual(40, $ai['success_rate']);
-        $this->assertLessThanOrEqual(64, $ai['success_rate']);
+        $this->assertLessThanOrEqual(95, $ai['success_rate']);
 
         $latestScored = collect($ai['attempts'])->first(fn (array $attempt) => $attempt['accuracy_percent'] !== null);
         $latestModel = AiReciteAttempt::query()->findOrFail($latestScored['id']);

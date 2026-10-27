@@ -1,7 +1,8 @@
 <template>
   <div>
   <ul class="list-group list-group-flush teacher-records">
-    <li v-for="(row, index) in visibleRows" :key="row.key ?? index" class="list-group-item teacher-records__item d-flex align-items-center gap-3" :class="{ 'has-issues': row.attention }">
+    <li v-for="(row, index) in visibleRows" :key="row.key ?? index" class="list-group-item teacher-records__item" :class="{ 'has-issues': row.attention, 'teacher-records__item--stacked': inlineEvidence }">
+      <div class="teacher-records__row">
       <span class="teacher-records__icon" :class="row.iconTone ? `teacher-records__icon--${row.iconTone}` : ''" aria-hidden="true">
         <i :class="row.icon || 'bi bi-dot'"></i>
       </span>
@@ -48,6 +49,8 @@
           <i class="bi bi-check2-circle" aria-hidden="true"></i><span class="visually-hidden">{{ row.reviewActionLabel }}</span>
         </button>
       </div>
+      </div>
+      <TeacherRecordEvidenceInline v-if="inlineEvidence && showEvidencePanel(row)" :row="row" />
     </li>
   </ul>
   <TeacherMore :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
@@ -59,12 +62,14 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherAudioDrawer from './TeacherAudioDrawer.vue'
 import TeacherMore from './TeacherMore.vue'
+import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { TeacherAudioDrawer, TeacherMore },
+  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
+    inlineEvidence: { type: Boolean, default: true },
   },
   emits: ['action', 'review'],
   data() {
@@ -91,6 +96,9 @@ export default {
     },
     showEvidenceActions(row) {
       return Boolean(row?.audio?.available || row?.transcript || this.hasCanonicalEvidence(row))
+    },
+    showEvidencePanel(row) {
+      return Boolean(row?.range?.surah && row?.range?.from) || this.showEvidenceActions(row)
     },
   },
 }

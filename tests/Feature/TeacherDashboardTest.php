@@ -110,6 +110,29 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(['Please practise slowly.', 'I will.'], array_column($messages, 'body'));
     }
 
+    public function test_teacher_can_send_direct_message_voice_note(): void
+    {
+        Storage::fake('user_files');
+        [$teacher, $student] = $this->classroom();
+
+        $message = $this->actingAs($teacher)->postJson(route('api.teacher.students.messages.store', $student), [
+            'body' => 'Listen to this note.',
+            'audio' => UploadedFile::fake()->createWithContent(
+                'voice.wav',
+                \App\Support\DemoRecitationAudio::silentWavBytes(800),
+            ),
+            'duration_ms' => 800,
+        ])->assertCreated()
+            ->assertJsonPath('message.audio.available', true)
+            ->assertJsonPath('message.audio.duration_ms', 800)
+            ->json('message');
+
+        $this->actingAs($teacher)
+            ->get($message['audio']['url'])
+            ->assertOk()
+            ->assertHeader('content-type', 'audio/wav');
+    }
+
     public function test_general_messages_are_idempotent_and_track_unread_and_read_state(): void
     {
         [$teacher, $student, $hidden] = $this->classroom();
@@ -504,6 +527,7 @@ class TeacherDashboardTest extends TestCase
         $task = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'ai_recite', 'hifz_category' => 'sabqi', 'student_id' => $student->id,
             'surah_number' => 114, 'ayah_start' => 1, 'ayah_end' => 1,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $attempt->forceFill(['teacher_assignment_recipient_id' => $task['recipients'][0]['id']])->save();
         $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'tasks']))
@@ -610,6 +634,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated();
         $this->assertCount(1, $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data'));
 
@@ -689,6 +714,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 3,
+            'due_at' => today()->addDays(7)->toDateString(),
             'repetition_target' => 1,
             'feedback' => 'Recite slowly.',
         ])->assertCreated()->json();
@@ -782,6 +808,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
 
         $recipientId = $created['recipients'][0]['id'];
@@ -870,6 +897,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
 
         $recipientId = $created['recipients'][0]['id'];
@@ -941,6 +969,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $recipientId = $created['recipients'][0]['id'];
 
@@ -1032,6 +1061,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+        'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $recipientId = $created['recipients'][0]['id'];
 
@@ -1094,15 +1124,10 @@ class TeacherDashboardTest extends TestCase
             'account_role' => AccountRole::Teacher->value,
             'organisation_id' => $teacher->organisation_id,
         ]);
-        $input = [
-            'kind' => 'practice',
-            'hifz_category' => 'sabaq',
+        $input = $this->assignmentInput([
             'student_id' => $student->id,
-            'surah_number' => 1,
-            'ayah_start' => 1,
-            'ayah_end' => 7,
             'repetition_target' => 1,
-        ];
+        ]);
         $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), $input)->assertCreated()->json();
         $id = $created['assignment']['id'];
         $recipientId = $created['recipients'][0]['id'];
@@ -1115,6 +1140,7 @@ class TeacherDashboardTest extends TestCase
             'ayah_start' => 2,
             'ayah_end' => 4,
             'repetition_target' => 2,
+            'due_at' => today()->addDays(7)->toDateString(),
             'feedback' => 'Use a measured pace.',
         ])->assertOk()->json('assignment');
         $this->assertSame('ai_recite', $updated['kind']);
@@ -1211,6 +1237,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
         ];
         $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), $payload)
             ->assertUnprocessable()->assertJsonValidationErrors('hifz_category');
@@ -1228,6 +1255,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 2,
             'ayah_start' => 1,
             'ayah_end' => 5,
+            'due_at' => today()->addDays(7)->toDateString(),
             'repetition_target' => 1,
         ];
 
@@ -1251,6 +1279,22 @@ class TeacherDashboardTest extends TestCase
             ->postJson(route('api.teacher.assignments.store'), $payload)
             ->assertCreated();
         $this->assertSame(2, TeacherAssignmentRecipient::query()->where('student_id', $student->id)->count());
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function assignmentInput(array $overrides = []): array
+    {
+        return array_merge([
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ], $overrides);
     }
 
     /**

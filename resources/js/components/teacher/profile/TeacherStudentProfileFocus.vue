@@ -1,6 +1,12 @@
 <template>
   <TeacherSectionPane tone="neutral">
-    <div class="teacher-focus-grid">
+    <div v-if="isFullyEmpty" class="teacher-profile-empty teacher-profile-empty--row">
+      <TeacherEmpty illustrated icon="bi bi-bullseye" :message="t('teacher.focus_reviews_empty')" />
+      <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)">
+        <i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_task') }}
+      </button>
+    </div>
+    <div v-else class="teacher-focus-grid">
       <section class="teacher-focus-group" :aria-labelledby="`${sectionId}-fix`">
         <h4 :id="`${sectionId}-fix`" class="teacher-section-label">
           <i class="bi bi-tools" aria-hidden="true"></i>
@@ -51,6 +57,9 @@ export default {
     profile: { immediate: true, handler() { this.loadArabic() } },
   },
   computed: {
+    isFullyEmpty() {
+      return !this.weakRows.length && !this.planRows.length
+    },
     weakRows() {
       return groupAyahFindings(this.profile.payload.items, this.t).map((group) => teacherRecitationEvidenceRow({
         key: `fix-${group.key}`,

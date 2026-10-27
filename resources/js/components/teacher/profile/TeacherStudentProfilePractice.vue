@@ -1,11 +1,5 @@
 <template>
   <TeacherSectionPane tone="practice">
-    <p v-if="sessionGroups.length" class="teacher-tab-context">{{ t('teacher.practice_tab_context') }}</p>
-    <div v-if="sessionGroups.length" class="teacher-context-stats" :aria-label="t('teacher.practice_summary')">
-      <span><strong>{{ sessionCount }}</strong> {{ t('teacher.session_many') }}</span>
-      <span><strong>{{ totalMinutes }}</strong> {{ t('teacher.minutes_short') }}</span>
-      <span><strong>{{ sessionGroups.length }}</strong> {{ t('teacher.passages') }}</span>
-    </div>
     <div v-if="sessionGroups.length" class="teacher-history-groups">
       <details v-for="(group, index) in sessionGroups" :key="group.key" class="teacher-history-group" :open="index === 0">
         <summary class="teacher-history-group__summary">
@@ -16,7 +10,7 @@
         <TeacherRecordList :rows="group.rows" />
       </details>
     </div>
-    <div v-else class="teacher-profile-empty">
+    <div v-else class="teacher-profile-empty teacher-profile-empty--row">
       <TeacherEmpty icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
       <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_first_practice') }}</button>
     </div>
@@ -44,12 +38,6 @@ export default {
   },
   emits: ['assign-revision'],
   computed: {
-    sessionCount() {
-      return (this.profile.payload.sessions || []).length
-    },
-    totalMinutes() {
-      return practiceMinutes((this.profile.payload.sessions || []).reduce((total, session) => total + Number(session.duration_seconds || 0), 0))
-    },
     sessionGroups() {
       const groups = new Map()
       for (const session of this.profile.payload.sessions || []) {
@@ -59,9 +47,9 @@ export default {
           key: session.id,
           icon: 'bi bi-journal-text',
           iconTone: 'accent',
-          title: this.formatWhen(session.last_activity_at) || this.t('teacher.practice_session'),
-          reviewable: Boolean(session.evidence?.audio?.available || session.evidence?.transcript || session.evidence?.words?.length),
-          hint: session.duration_seconds ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) }) : this.t('teacher.session_duration_unknown'),
+          title: this.sessionTitle(session),
+          reviewable: true,
+          hint: this.sessionContext(session),
           badge: session.status ? this.statusLabel(session.status) : '',
           badgeTone: session.status === 'completed' ? 'good' : 'muted',
         }, session.evidence, {
@@ -74,6 +62,20 @@ export default {
     },
   },
   methods: {
+    sessionTitle(session) {
+      const when = this.formatWhen(session.last_activity_at) || this.t('teacher.practice_session')
+      const range = session.ayah_start && session.ayah_end
+        ? this.t('teacher.ayahs_range', { from: session.ayah_start, to: session.ayah_end })
+        : (session.ayah_number ? this.t('teacher.ayah_n', { n: session.ayah_number }) : '')
+      return range ? `${when} · ${range}` : when
+    },
+    sessionContext(session) {
+      const when = this.formatWhen(session.last_activity_at) || ''
+      const duration = session.duration_seconds
+        ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) })
+        : ''
+      return [when, duration].filter(Boolean).join(' · ')
+    },
     statusLabel(status) {
       if (status === 'completed') return this.t('teacher.status_completed')
       return this.t('teacher.practice_saved_status')

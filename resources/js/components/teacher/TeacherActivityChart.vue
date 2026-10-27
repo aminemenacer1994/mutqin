@@ -47,7 +47,7 @@ export default {
   mixins: [i18nMixin],
   props: {
     chartDays: { type: Number, required: true },
-    dayOptions: { type: Array, default: () => [7, 30, 90] },
+    dayOptions: { type: Array, default: () => [30, 90] },
     isEmpty: { type: Boolean, default: false },
     chartReady: { type: Boolean, default: true },
     chartData: { type: Object, required: true },

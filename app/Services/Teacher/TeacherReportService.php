@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class TeacherReportService
 {
@@ -64,6 +65,10 @@ class TeacherReportService
             ->when($to, fn (Builder $query) => $query->whereDate('attendance_date', '<=', $to))
             ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
+        $chartEnd = $to ? Carbon::parse($to)->endOfDay() : now();
+        $chartStart = $from ? Carbon::parse($from)->startOfDay() : $chartEnd->copy()->subDays(29)->startOfDay();
+        $chartDays = max(1, $chartStart->diffInDays($chartEnd) + 1);
+
         return [
             'from' => $from,
             'to' => $to,
@@ -73,6 +78,42 @@ class TeacherReportService
             'teacher_tajweed_average' => $teacherScores->isEmpty() ? null : round((float) $teacherScores->avg(), 1),
             'tasks_assigned' => $tasks,
             'attendance' => $attendance->map(fn ($count) => (int) $count)->all(),
+            'activity_chart' => $this->activityChart($student->id, $chartStart, $chartDays),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function activityChart(int $studentId, Carbon $start, int $days): array
+    {
+        $counts = [];
+        $sessions = UserSession::query()
+            ->where('user_id', $studentId)
+            ->where('is_onboarding_example', false)
+            ->where('last_activity_at', '>=', $start)
+            ->get(['last_activity_at']);
+        foreach ($sessions as $session) {
+            if ($session->last_activity_at === null) {
+                continue;
+            }
+            $key = $session->last_activity_at->toDateString();
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        $points = [];
+        $total = 0;
+        for ($offset = 0; $offset < $days; $offset++) {
+            $date = $start->copy()->addDays($offset)->toDateString();
+            $value = (int) ($counts[$date] ?? 0);
+            $total += $value;
+            $points[] = ['date' => $date, 'sessions' => $value];
+        }
+
+        return [
+            'days' => $days,
+            'metric' => 'practice_sessions',
+            'points' => $points,
+            'total' => $total,
+            'is_empty' => $total === 0,
         ];
     }
 }
