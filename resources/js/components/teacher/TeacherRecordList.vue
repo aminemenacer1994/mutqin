@@ -24,7 +24,7 @@
           <button v-if="row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
             <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
           </button>
-          <button v-if="row.transcript || hasCanonicalEvidence(row)" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openEvidence(row, 'transcript')">
+          <button v-if="row.transcript || hasCanonicalEvidence(row)" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
             <i class="bi bi-file-text" aria-hidden="true"></i>
           </button>
         </div>
@@ -50,11 +50,19 @@
         </button>
       </div>
       </div>
-      <TeacherRecordEvidenceInline v-if="inlineEvidence && showEvidencePanel(row)" :row="row" />
+      <TeacherRecordEvidenceMushafInline v-if="inlineEvidence && showEvidencePanel(row) && mushafReviewModal" :row="row" />
+      <TeacherRecordEvidenceInline v-else-if="inlineEvidence && showEvidencePanel(row)" :row="row" />
     </li>
   </ul>
   <TeacherMore :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
-  <TeacherAudioDrawer :open="Boolean(activeEvidence)" :row="activeEvidence" :mode="evidenceMode" @close="activeEvidence = null" />
+  <TeacherAudioDrawer :open="Boolean(activeEvidence)" :row="activeEvidence" :mode="evidenceMode" :text-evidence-in-drawer="!mushafReviewModal" @close="activeEvidence = null" />
+  <TeacherReciteEvidenceModal
+    v-if="mushafReviewModal"
+    :open="Boolean(mushafModalRow)"
+    :row="mushafModalRow"
+    mode="mushaf"
+    @close="mushafModalRow = null"
+  />
   </div>
 </template>
 
@@ -63,17 +71,25 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherAudioDrawer from './TeacherAudioDrawer.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
+import TeacherRecordEvidenceMushafInline from './TeacherRecordEvidenceMushafInline.vue'
+import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline },
+  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherReciteEvidenceModal },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
     inlineEvidence: { type: Boolean, default: true },
+    mushafReviewModal: { type: Boolean, default: false },
   },
   emits: ['action', 'review'],
   data() {
-    return { shown: 5, activeEvidence: null, evidenceMode: 'audio' }
+    return {
+      shown: 5,
+      activeEvidence: null,
+      evidenceMode: 'audio',
+      mushafModalRow: null,
+    }
   },
   computed: {
     visibleRows() {
@@ -84,6 +100,13 @@ export default {
     openEvidence(row, mode) {
       this.activeEvidence = row
       this.evidenceMode = mode
+    },
+    openTranscriptReview(row) {
+      if (this.mushafReviewModal) {
+        this.mushafModalRow = row
+        return
+      }
+      this.openEvidence(row, 'transcript')
     },
     hasCanonicalEvidence(row) {
       return Boolean(row?.range?.surah && row?.range?.from && (row?.words?.length || row?.transcript))

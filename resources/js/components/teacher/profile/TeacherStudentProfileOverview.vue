@@ -131,34 +131,27 @@ export default {
       const metrics = this.profile.payload?.metrics || {}
       return [
         {
-          key: 'practice',
-          icon: 'bi bi-play-circle',
-          label: this.t('teacher.practice_summary'),
-          value: this.t('teacher.practice_sessions_time', { sessions: Number(metrics.sessions || 0), time: this.practiceTime }),
-          hint: this.lastSeen ? this.t('teacher.profile_last_seen', { when: this.lastSeen }) : this.t('teacher.no_activity'),
-        },
-        {
           key: 'recite',
           icon: 'bi bi-soundwave',
           label: this.t('teacher.profile_recite_avg_label'),
           value: this.hasScore
             ? this.t('teacher.profile_recite_avg_with_count', { score: this.scoreValue, count: Number(metrics.ai_attempts || 0) })
             : this.t('teacher.no_scored_checks'),
-          hint: this.t('teacher.ai_check_average_help'),
+          hint: this.t('teacher.profile_overview_recite_help'),
         },
         {
           key: 'attendance',
           icon: 'bi bi-calendar-check',
           label: this.t('teacher.nav_attendance'),
           value: this.attendanceSummary.value,
-          hint: this.attendanceSummary.hint,
+          hint: this.t('teacher.profile_overview_attendance_help'),
         },
         {
           key: 'saved',
           icon: 'bi bi-bookmark-fill',
           label: this.t('teacher.saved_session'),
           value: this.nowOn || this.t('teacher.no_saved_passage'),
-          hint: this.t('teacher.active_days_n', { n: Number(metrics.active_days || 0) }),
+          hint: this.t('teacher.profile_overview_saved_help'),
         },
       ]
     },

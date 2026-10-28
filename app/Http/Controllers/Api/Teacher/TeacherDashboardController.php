@@ -361,6 +361,29 @@ class TeacherDashboardController extends Controller
         ], 201);
     }
 
+    public function approveAssignmentRecipient(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $updated = $assignments->approveByTeacher($teacher, $recipient);
+
+        return $this->json([
+            'recipient' => $assignments->presentRecipient($updated, false, null, null, null, (int) $teacher->id),
+        ]);
+    }
+
+    public function requestAssignmentCorrection(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $updated = $assignments->requestCorrectionByTeacher($teacher, $recipient, $data['note'] ?? null);
+
+        return $this->json([
+            'recipient' => $assignments->presentRecipient($updated, false, null, null, null, (int) $teacher->id),
+        ]);
+    }
+
     public function storeNote(Request $request, User $student, TeacherDashboardService $dashboard): JsonResponse
     {
         $teacher = $this->teacher($request);

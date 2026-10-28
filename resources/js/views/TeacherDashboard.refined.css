@@ -720,7 +720,11 @@ html[data-theme="dark"] .teacher-dashboard .teacher-activity-list__score--warn {
 .teacher-dashboard .teacher-table__cell--concern { text-align: start !important; }
 .teacher-dashboard .teacher-task-list > li { transition: background-color .18s ease, box-shadow .18s ease; }
 .teacher-dashboard .teacher-task-list > li:hover { background: var(--teacher-surface-hover) !important; box-shadow: inset 3px 0 var(--teacher-accent); }
-.teacher-dashboard .teacher-task-row__meta { color: var(--teacher-text-soft) !important; }
+.teacher-dashboard .teacher-task-row__due.is-danger { color: var(--teacher-danger, #a84638) !important; font-weight: 600; }
+.teacher-dashboard .teacher-task-row__due.is-warn { color: var(--teacher-warning, #9a6418) !important; font-weight: 600; }
+.teacher-dashboard .teacher-task-row__due.is-warning { color: color-mix(in srgb, var(--teacher-warning, #b7791f) 88%, var(--teacher-text)) !important; font-weight: 550; }
+.teacher-dashboard .teacher-task-row__due.is-neutral { color: var(--teacher-text-soft) !important; }
+
 .teacher-dashboard .teacher-task-row__open:hover .teacher-task-row__student { color: var(--teacher-accent-ink); text-decoration: underline; text-underline-offset: 2px; }
 .teacher-task-modal__student-picker { position: relative; }
 .teacher-task-modal__student-options { position: absolute; z-index: 20; inset-inline: 0; top: calc(100% + 3px); max-height: 210px; margin: 0; overflow-y: auto; padding: .25rem; color: var(--teacher-text); border: 1px solid var(--teacher-line-strong); border-radius: 9px; background: var(--teacher-surface-raised); box-shadow: var(--teacher-shadow); list-style: none; }
@@ -1572,6 +1576,8 @@ html[data-theme="dark"] .teacher-report {
 .teacher-dashboard .teacher-record-evidence__words { display: flex; flex-wrap: wrap; gap: .35rem .45rem; margin: .35rem 0 0; line-height: 2; font-size: 1.15rem; }
 .teacher-dashboard .teacher-record-evidence__word { display: inline-block; }
 .teacher-dashboard .teacher-record-evidence__word.is-miss { padding: 0 .15rem; border-radius: 4px; background: color-mix(in srgb, var(--teacher-danger) 18%, transparent); }
+.teacher-dashboard .teacher-record-evidence__words.is-assigned,
+.teacher-dashboard .teacher-audio-evidence__words.is-assigned { padding: .35rem .45rem; border-radius: 8px; background: color-mix(in srgb, var(--teacher-accent) 10%, var(--teacher-surface-soft)); }
 .teacher-dashboard .teacher-record-evidence__badge { padding: .12rem .4rem; border-radius: 999px; font-size: .64rem; font-weight: 650; }
 .teacher-dashboard .teacher-record-evidence__badge.is-warn { color: #9a681f; background: color-mix(in srgb, #9a681f 12%, var(--teacher-surface)); }
 .teacher-dashboard .teacher-record-evidence__said p { margin: .2rem 0 0; line-height: 2; font-size: 1.05rem; }
@@ -1816,3 +1822,116 @@ html[data-theme="dark"] .teacher-dashboard .teacher-kpis.row > .teacher-stat-car
   .teacher-message-modal .teacher-message-context__main { grid-template-columns: 1fr; }
   .teacher-message-modal .teacher-message-context__note { grid-column: auto; }
 }
+
+/* AI Recite: modal mushaf review (Madani V2 + word colours). */
+body.teacher-recite-modal-open { overflow: hidden; }
+.teacher-recite-modal { position: fixed; inset: 0; z-index: 1080; display: grid; place-items: center; padding: 1rem; }
+.teacher-recite-modal__scrim { position: absolute; inset: 0; border: 0; background: rgb(15 18 22 / .45); cursor: pointer; }
+.teacher-recite-modal__panel {
+  position: relative;
+  display: grid;
+  gap: .85rem;
+  width: min(44rem, 100%);
+  max-height: min(92dvh, 720px);
+  padding: 1rem 1.05rem 1.1rem;
+  overflow: auto;
+  border: 1px solid var(--teacher-line-strong);
+  border-radius: 14px;
+  background: var(--teacher-surface-raised);
+  box-shadow: 0 18px 48px rgb(0 0 0 / .18);
+  outline: none;
+}
+.teacher-recite-modal__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.teacher-recite-modal__eyebrow { display: block; margin-bottom: .2rem; color: var(--teacher-text-soft); font-size: .66rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.teacher-recite-modal__head h2 { margin: 0; font-size: 1rem; font-weight: 650; line-height: 1.35; }
+.teacher-recite-modal__hint { margin: .25rem 0 0; color: var(--teacher-text-soft); font-size: .72rem; line-height: 1.4; }
+.teacher-recite-modal__close { display: grid; width: 36px; height: 36px; padding: 0; place-items: center; border: 1px solid var(--teacher-line); border-radius: 9px; background: var(--teacher-surface-soft); }
+.teacher-recite-modal__audio { display: grid; grid-template-columns: auto 1fr; gap: .55rem .65rem; align-items: center; padding: .65rem .7rem; border: 1px solid var(--teacher-line); border-radius: 12px; background: var(--teacher-surface-soft); }
+.teacher-recite-modal__play { display: grid; width: 44px; height: 44px; padding: 0; place-items: center; color: var(--teacher-positive); border: 1px solid color-mix(in srgb, var(--teacher-positive) 35%, var(--teacher-line)); border-radius: 999px; background: var(--teacher-positive-soft); font-size: 1.15rem; }
+.teacher-recite-modal__timeline { display: grid; gap: .25rem; min-width: 0; }
+.teacher-recite-modal__timeline input[type="range"] { width: 100%; }
+.teacher-recite-modal__timeline div { display: flex; justify-content: space-between; color: var(--teacher-text-soft); font-size: .66rem; font-variant-numeric: tabular-nums; }
+.teacher-recite-modal__muted { margin: 0; color: var(--teacher-text-soft); font-size: .78rem; }
+.teacher-recite-modal__body { display: grid; gap: .85rem; }
+.teacher-recite-modal__asr { padding: .55rem .65rem; border: 1px dashed var(--teacher-line-strong); border-radius: 10px; background: var(--teacher-surface-soft); }
+.teacher-recite-modal__asr summary { cursor: pointer; font-size: .74rem; font-weight: 650; }
+.teacher-recite-modal__asr small { display: block; margin-top: .35rem; color: var(--teacher-text-soft); font-size: .66rem; }
+.teacher-recite-mushaf__block { display: grid; gap: .45rem; padding: .65rem .7rem; border: 1px solid var(--teacher-line); border-radius: 12px; background: var(--teacher-surface); }
+.teacher-recite-mushaf__block.is-assigned { border-color: color-mix(in srgb, var(--teacher-accent) 28%, var(--teacher-line)); background: color-mix(in srgb, var(--teacher-accent-soft) 55%, var(--teacher-surface)); }
+.teacher-recite-mushaf__block h3 { margin: 0; font-size: .74rem; font-weight: 650; }
+.teacher-recite-mushaf__block-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .35rem; }
+.teacher-recite-mushaf__misses { color: var(--teacher-danger); font-size: .66rem; font-weight: 650; }
+.teacher-recite-mushaf { display: grid; gap: .65rem; }
+.teacher-recite-mushaf__ayah { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .45rem .55rem; align-items: start; }
+.teacher-recite-mushaf__ayah-marker {
+  display: inline-grid;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+  padding: 0 .35rem;
+  place-items: center;
+  color: var(--teacher-accent-ink);
+  border: 1px solid color-mix(in srgb, var(--teacher-accent) 40%, var(--teacher-line));
+  border-radius: 999px;
+  background: var(--teacher-accent-soft);
+  font-size: .62rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.teacher-recite-mushaf__line { margin: 0; line-height: 2.15; font-size: clamp(1.35rem, 2.8vw, 1.65rem); text-align: justify; }
+.teacher-recite-mushaf__word,
+.teacher-recite-mushaf .qpc-madani-word { display: inline; white-space: pre; }
+.teacher-recite-mushaf .recitation-word-correct { color: inherit; }
+.teacher-recite-mushaf .recitation-word-pending { opacity: .72; }
+.teacher-recite-mushaf .recitation-word-partial {
+  color: #8a4f08;
+  text-decoration: underline dashed;
+  text-decoration-color: rgba(138, 79, 8, .9);
+  text-underline-offset: .12em;
+}
+.teacher-recite-mushaf .recitation-word-incorrect {
+  color: #9b2e27;
+  text-decoration: underline double;
+  text-decoration-color: rgba(155, 46, 39, .9);
+  text-underline-offset: .12em;
+}
+.teacher-recite-mushaf .recitation-word-omitted,
+.teacher-recite-mushaf .recitation-word-skipped {
+  opacity: .88;
+  text-decoration: underline dotted;
+  text-decoration-color: rgba(31, 26, 23, .75);
+  text-underline-offset: .12em;
+}
+.teacher-recite-mushaf .recitation-word-extra { color: #5a4a8a; text-decoration: wavy underline; text-underline-offset: .12em; }
+
+/* Inline AI recite: Madani ayahs inside record evidence (compact line size). */
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-record-evidence__mushaf { margin-top: .15rem; }
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf { gap: .5rem; }
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf__line {
+  line-height: 2.05;
+  font-size: clamp(1.12rem, 2.1vw, 1.32rem);
+  text-align: justify;
+}
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf__ayah-marker {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  font-size: .58rem;
+}
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-correct,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-pending,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-partial,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-incorrect,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-omitted,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-skipped,
+.teacher-dashboard .teacher-record-evidence--mushaf .teacher-recite-mushaf .recitation-word-extra {
+  font-size: inherit;
+  line-height: inherit;
+}
+.teacher-recite-modal-enter-active,
+.teacher-recite-modal-leave-active { transition: opacity .18s ease; }
+.teacher-recite-modal-enter-active .teacher-recite-modal__panel,
+.teacher-recite-modal-leave-active .teacher-recite-modal__panel { transition: transform .18s ease, opacity .18s ease; }
+.teacher-recite-modal-enter-from,
+.teacher-recite-modal-leave-to { opacity: 0; }
+.teacher-recite-modal-enter-from .teacher-recite-modal__panel,
+.teacher-recite-modal-leave-to .teacher-recite-modal__panel { transform: translateY(8px); opacity: .96; }

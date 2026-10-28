@@ -119,6 +119,7 @@
               @edit="beginEditAssignment"
               @save="saveAssignment"
               @remove="removeAssignment"
+              @refresh="loadAssignments"
               @open-student="openStudent"
             />
 

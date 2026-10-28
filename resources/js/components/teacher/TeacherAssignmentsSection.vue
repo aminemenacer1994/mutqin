@@ -79,7 +79,7 @@
                 <span>{{ item.actionLabel }}</span>
                 <span v-if="item.status === 'completed' && item.completionEvidence">{{ item.completionEvidence }}</span>
                 <template v-else>
-                  <span v-if="item.due">{{ item.due }}</span>
+                  <span v-if="item.dueText" class="teacher-task-row__due" :class="`is-${item.dueTone}`">{{ item.dueText }}</span>
                   <span v-if="item.status === 'in_progress' && item.progress">{{ item.progress }}</span>
                 </template>
               </span>
@@ -192,6 +192,14 @@
                   <label class="visually-hidden" for="teacher-task-reply">{{ t('teacher.message') }}</label>
                   <textarea id="teacher-task-reply" v-model="messageDraft" rows="3" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
                   <TeacherVoiceNoteControls ref="taskVoice" :disabled="messageSaving" />
+                  <div v-if="messageItem.status === 'awaiting_confirmation'" class="teacher-message-composer__review">
+                    <button type="button" class="btn btn-success btn-sm" :disabled="reviewSaving" @click="approveSubmission">
+                      <i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.task_approve') }}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="reviewSaving" @click="requestCorrection">
+                      <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ t('teacher.task_request_correction') }}
+                    </button>
+                  </div>
                   <div class="teacher-message-composer__foot">
                     <span v-if="messageError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ messageError }}</span>
                     <span v-else-if="messageSent" class="alert alert-success py-1 px-2 mb-0" role="status">{{ t('teacher.message_sent') }}</span>
@@ -213,12 +221,22 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
+import {
+  TASK_STATE,
+  formatTaskDueUrgency,
+  resolveDisplayTaskState,
+  taskStateFromTeacherItem,
+  taskStateIcon,
+  taskStateLabelKey,
+  teacherStatusToneFromDisplay,
+} from '../../scripts/teacher/taskState'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
 import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
+import { learningApi } from '../../scripts/api/learning'
 
 const STEP = 25
 
@@ -240,7 +258,7 @@ export default {
     surahs: { type: Array, default: () => [] },
     onSendMessage: { type: Function, required: true },
   },
-  emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student'],
+  emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student', 'refresh'],
   data() {
     return {
       shown: STEP,
@@ -254,6 +272,7 @@ export default {
       messageError: '',
       messageSent: false,
       messageSentTimer: null,
+      reviewSaving: false,
       returnFocusEl: null,
       compactView: false,
     }
@@ -286,13 +305,15 @@ export default {
         if (item.status === 'completed') result.done += 1
         else if (item.status === 'overdue') result.overdue += 1
         else if (item.status === 'in_progress') result.progress += 1
+        else if (item.status === 'awaiting_confirmation') result.submitted += 1
         else result.waiting += 1
         return result
-      }, { all: 0, waiting: 0, progress: 0, overdue: 0, done: 0 })
+      }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
       return [
         { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
         { id: 'waiting', label: this.t('teacher.task_filter_waiting'), count: counts.waiting },
         { id: 'progress', label: this.t('teacher.task_filter_progress'), count: counts.progress },
+        { id: 'submitted', label: this.t('status_submitted'), count: counts.submitted },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
         { id: 'done', label: this.t('teacher.task_filter_completed'), count: counts.done },
       ]
@@ -305,6 +326,13 @@ export default {
         return recipients.map((recipient, recipientIndex) => {
           const status = this.normalizedStatus(recipient.status)
           const category = assignment.hifz_category || this.inferHifzCategory(assignment)
+          const snapshot = taskStateFromTeacherItem(recipient, assignment)
+          const displayState = snapshot.display
+          const dueUrgency = formatTaskDueUrgency(assignment.due_at, {
+            done: snapshot.base === TASK_STATE.DONE,
+            t: this.t.bind(this),
+            formatDate: formatTeacherWhen,
+          })
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
@@ -318,10 +346,15 @@ export default {
             sourceRow: row,
             canManage: Boolean(row.can_manage) && !assignment.learning_group_id && recipients.length === 1 && recipientIndex === 0,
             status,
-            statusTone: this.statusTone(status),
-            statusIcon: this.statusIcon(status),
-            statusLabel: this.t(`teacher.status_${status}`),
-            due: assignment.due_at ? `${this.t('teacher.due')}: ${formatTeacherWhen(assignment.due_at)}` : '',
+            taskStateDisplay: displayState,
+            statusTone: teacherStatusToneFromDisplay(displayState),
+            statusIcon: `bi ${taskStateIcon(displayState)}`,
+            statusLabel: recipient.review_state === 'needs_correction'
+              ? this.t('teacher.status_needs_correction')
+              : this.t(taskStateLabelKey(displayState)),
+            dueText: dueUrgency.text,
+            dueTone: dueUrgency.tone,
+            due: dueUrgency.text,
             progress: this.progressLabel(recipient, assignment),
             completionEvidence: this.completionEvidenceLabel(recipient),
             recipientId: recipient.id,
@@ -344,11 +377,18 @@ export default {
           if (this.statusFilter === 'done') return item.status === 'completed'
           if (this.statusFilter === 'overdue') return item.status === 'overdue'
           if (this.statusFilter === 'progress') return item.status === 'in_progress'
+          if (this.statusFilter === 'submitted') return item.status === 'awaiting_confirmation'
           return item.status === 'pending'
         })
       return filtered.sort((a, b) => {
-        const urgency = { overdue: 0, pending: 1, in_progress: 2, completed: 3 }
-        const urgencyDifference = (urgency[a.status] ?? 1) - (urgency[b.status] ?? 1)
+        const rank = (item) => {
+          if (item.taskStateDisplay === TASK_STATE.OVERDUE) return 0
+          if (item.taskStateDisplay === TASK_STATE.NOT_STARTED) return 1
+          if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS) return 2
+          if (item.taskStateDisplay === TASK_STATE.WAITING_REVIEW) return 3
+          return 4
+        }
+        const urgencyDifference = rank(a) - rank(b)
         if (urgencyDifference) return urgencyDifference
         const dateA = Date.parse(a.occurredAt || '') || 0
         const dateB = Date.parse(b.occurredAt || '') || 0
@@ -361,7 +401,7 @@ export default {
   },
   methods: {
     normalizedStatus(status) {
-      return status === 'awaiting_confirmation' ? 'in_progress' : (status || 'pending')
+      return status || 'pending'
     },
     inferHifzCategory(assignment) {
       if (assignment.kind === 'ai_recite') return 'sabqi'
@@ -446,6 +486,53 @@ export default {
         this.messageSaving = false
       }
     },
+    async approveSubmission() {
+      if (!this.messageItem?.recipientId || this.reviewSaving) return
+      this.reviewSaving = true
+      this.messageError = ''
+      try {
+        const payload = await learningApi.approveTeacherAssignmentRecipient(this.messageItem.recipientId)
+        if (payload?.recipient) {
+          this.syncMessageItemState(payload.recipient)
+        }
+        this.$emit('refresh')
+      } catch (error) {
+        this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        this.reviewSaving = false
+      }
+    },
+    async requestCorrection() {
+      if (!this.messageItem?.recipientId || this.reviewSaving) return
+      this.reviewSaving = true
+      this.messageError = ''
+      try {
+        const note = this.messageDraft.trim()
+        const payload = await learningApi.requestTeacherAssignmentCorrection(this.messageItem.recipientId, note)
+        if (payload?.recipient) {
+          this.syncMessageItemState(payload.recipient)
+        }
+        this.messageDraft = ''
+        this.$emit('refresh')
+      } catch (error) {
+        this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        this.reviewSaving = false
+      }
+    },
+    syncMessageItemState(recipient) {
+      if (!this.messageItem) return
+      const assignment = this.messageItem.assignment || {}
+      const snapshot = taskStateFromTeacherItem(recipient, assignment)
+      const displayState = snapshot.display
+      this.messageItem.status = recipient.status
+      this.messageItem.statusLabel = recipient.review_state === 'needs_correction'
+        ? this.t('teacher.status_needs_correction')
+        : this.t(taskStateLabelKey(displayState))
+      this.messageItem.statusTone = teacherStatusToneFromDisplay(displayState)
+      this.messageItem.statusIcon = `bi ${taskStateIcon(displayState)}`
+      this.messageItem.taskStateDisplay = displayState
+    },
     messageWhen(message) {
       try {
         const date = new Date(message?.created_at)
@@ -479,18 +566,6 @@ export default {
       return this.t('teacher.learner_assignments_completed_at', {
         date: formatTeacherWhen(recipient.completed_at),
       })
-    },
-    statusTone(status) {
-      if (status === 'completed') return 'good'
-      if (status === 'overdue') return 'danger'
-      if (status === 'in_progress') return 'mid'
-      return 'muted'
-    },
-    statusIcon(status) {
-      if (status === 'completed') return 'bi bi-check2'
-      if (status === 'overdue') return 'bi bi-exclamation-circle'
-      if (status === 'in_progress') return 'bi bi-arrow-repeat'
-      return 'bi bi-clock'
     },
   },
 }

@@ -62,14 +62,22 @@
             <span>{{ audioUnavailableLabel }}</span>
           </div>
 
-          <section v-if="row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
-            <div><h3>{{ t('teacher.transcript_label') }}</h3><small v-if="!hasAudio">{{ t('teacher.transcript_no_recording') }}</small></div>
+          <section v-if="textEvidenceInDrawer && hasAssignedCompare" class="teacher-audio-evidence">
+            <div class="teacher-audio-evidence__heading">
+              <h3>{{ t('teacher.assigned_task_passage') }}</h3>
+            </div>
+            <p v-if="assignedLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
+            <p v-else class="teacher-audio-evidence__words teacher-quran is-assigned" lang="ar" dir="rtl">{{ assignedText }}</p>
+          </section>
+
+          <section v-if="textEvidenceInDrawer && row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
+            <div><h3>{{ transcriptHeading }}</h3><small v-if="!hasAudio">{{ t('teacher.transcript_no_recording') }}</small></div>
             <p dir="auto">{{ row.transcript }}</p>
           </section>
 
-          <section v-if="canonicalWords.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
+          <section v-if="textEvidenceInDrawer && canonicalWords.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
             <div class="teacher-audio-evidence__heading">
-              <h3 :id="evidenceTitleId">{{ t('teacher.recitation_text') }}</h3>
+              <h3 :id="evidenceTitleId">{{ compareHeading }}</h3>
               <span v-if="missCount">{{ t('teacher.misses_n', { n: missCount }) }}</span>
               <span v-else>{{ t('teacher.recite_no_issues') }}</span>
             </div>
@@ -77,7 +85,7 @@
               <span v-for="(word, index) in canonicalWords" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`" :class="{ 'is-miss': isMiss(word.status) }" :title="isMiss(word.status) ? evidenceWordTitle(word) : undefined">{{ word.text }}</span>
             </p>
           </section>
-          <p v-else-if="canonicalLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
+          <p v-else-if="textEvidenceInDrawer && canonicalLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
         </section>
       </div>
     </Transition>
@@ -97,6 +105,7 @@ export default {
     open: { type: Boolean, default: false },
     row: { type: Object, default: null },
     mode: { type: String, default: 'audio' },
+    textEvidenceInDrawer: { type: Boolean, default: true },
   },
   emits: ['close'],
   data() {
@@ -111,9 +120,21 @@ export default {
       canonicalWords: [],
       canonicalLoading: false,
       canonicalRequest: 0,
+      assignedText: '',
+      assignedLoading: false,
     }
   },
   computed: {
+    hasAssignedCompare() {
+      const range = this.row?.assignedRange
+      return Boolean(range?.surah && range?.from)
+    },
+    transcriptHeading() {
+      return this.hasAssignedCompare ? this.t('teacher.recited_passage') : this.t('teacher.transcript_label')
+    },
+    compareHeading() {
+      return this.hasAssignedCompare ? this.t('teacher.recitation_compare_label') : this.t('teacher.recitation_text')
+    },
     hasAudio() {
       return Boolean(this.row?.audio?.available && this.row?.audio?.url)
     },
@@ -155,17 +176,41 @@ export default {
   },
   methods: {
     async loadCanonicalWords() {
+      if (!this.textEvidenceInDrawer) {
+        this.canonicalWords = []
+        this.canonicalLoading = false
+        this.assignedLoading = false
+        return
+      }
       const request = ++this.canonicalRequest
       this.canonicalLoading = true
+      this.assignedLoading = this.hasAssignedCompare
       this.canonicalWords = []
-      const words = await teacherCanonicalEvidenceWords({
-        range: this.row?.range,
-        words: this.row?.words,
-      })
-      if (request === this.canonicalRequest) {
-        this.canonicalWords = words
+      this.assignedText = ''
+      const tasks = []
+      if (this.hasAssignedCompare) {
+        tasks.push(teacherCanonicalEvidenceWords({ range: this.row.assignedRange, words: [] }).then((words) => {
+          if (request !== this.canonicalRequest) return
+          this.assignedText = words.map((word) => word.text).join(' ')
+          this.assignedLoading = false
+        }))
+      }
+      const performanceRange = this.row?.range?.surah && this.row?.range?.from
+        ? this.row.range
+        : (this.row?.practicedRange?.surah ? this.row.practicedRange : null)
+      if (performanceRange) {
+        tasks.push(teacherCanonicalEvidenceWords({
+          range: performanceRange,
+          words: this.row?.words,
+        }).then((words) => {
+          if (request !== this.canonicalRequest) return
+          this.canonicalWords = words
+          this.canonicalLoading = false
+        }))
+      } else {
         this.canonicalLoading = false
       }
+      await Promise.all(tasks)
     },
     resetPlayer() {
       this.currentTime = 0

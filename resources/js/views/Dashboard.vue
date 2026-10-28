@@ -2474,7 +2474,7 @@ export default {
       this.assignmentSavingId = Number(item?.id || 0)
       try {
         this.support = await learningApi.completeLearnerAssignment(item.id)
-        this.assignmentCompletionMessage = this.t('teacher.learner_assignments_completed_success')
+        this.assignmentCompletionMessage = this.t('teacher.learner_assignments_submitted_success')
         clearTimeout(this.assignmentCompletionTimer)
         this.assignmentCompletionTimer = setTimeout(() => this.dismissAssignmentCompletion(), 5000)
       } catch (error) {

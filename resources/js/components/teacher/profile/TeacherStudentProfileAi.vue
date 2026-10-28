@@ -19,7 +19,7 @@
           <span class="teacher-history-group__count">{{ group.rows.length }} {{ group.rows.length === 1 ? t('teacher.check_one') : t('teacher.check_many') }}</span>
           <i class="bi bi-chevron-down" aria-hidden="true"></i>
         </summary>
-        <TeacherRecordList :rows="group.rows" />
+        <TeacherRecordList :rows="group.rows" mushaf-review-modal />
       </details>
     </div>
     <div v-if="!attemptGroups.length" class="teacher-profile-empty teacher-profile-empty--row">
@@ -71,6 +71,13 @@ export default {
         const issueHint = !issues || !Object.values(issues).some((value) => Number(value) > 0)
           ? ''
           : this.issueLabel(issues)
+        const assigned = attempt.evidence?.assigned_range
+        const assignedHint = assigned
+          ? this.t('teacher.assigned_task_short', {
+            range: ayahRangeLabel(assigned.surah_name, assigned.from, assigned.to, this.t),
+          })
+          : ''
+        const hint = [assignedHint, issueHint].filter(Boolean).join(' · ')
         const hasIssues = Boolean(issues && Object.values(issues).some((value) => Number(value) > 0))
         const when = this.formatWhen(attempt.created_at)
         const row = teacherRecitationEvidenceRow({
@@ -79,7 +86,7 @@ export default {
           iconTone: scoreBadgeTone(attempt.accuracy_percent),
           attention: hasIssues,
           title: when || this.t('teacher.unavailable'),
-          hint: issueHint,
+          hint,
           badge: typeof attempt.accuracy_percent === 'number'
             ? this.t('teacher.score_n', { n: attempt.accuracy_percent })
             : this.t('teacher.unavailable'),

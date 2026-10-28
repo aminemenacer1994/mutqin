@@ -151,6 +151,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/assignments/{assignment}', [TeacherDashboardController::class, 'updateAssignment'])->name('api.teacher.assignments.update');
                 Route::delete('/assignments/{assignment}', [TeacherDashboardController::class, 'destroyAssignment'])->name('api.teacher.assignments.destroy');
                 Route::post('/assignment-recipients/{recipient}/notes', [TeacherDashboardController::class, 'storeAssignmentMessage'])->name('api.teacher.assignment-recipients.notes.store');
+                Route::post('/assignment-recipients/{recipient}/approve', [TeacherDashboardController::class, 'approveAssignmentRecipient'])->name('api.teacher.assignment-recipients.approve');
+                Route::post('/assignment-recipients/{recipient}/correction', [TeacherDashboardController::class, 'requestAssignmentCorrection'])->name('api.teacher.assignment-recipients.correction');
             });
         });
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');

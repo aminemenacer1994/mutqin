@@ -530,6 +530,11 @@ class TeacherDashboardTest extends TestCase
         'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $attempt->forceFill(['teacher_assignment_recipient_id' => $task['recipients'][0]['id']])->save();
+        $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
+            ->assertOk()
+            ->assertJsonPath('payload.attempts.0.evidence.assigned_range.surah', 114)
+            ->assertJsonPath('payload.attempts.0.evidence.assigned_range.from', 1)
+            ->assertJsonPath('payload.attempts.0.evidence.assigned_range.to', 1);
         $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'tasks']))
             ->assertOk()->assertJsonPath('payload.assignments.0.evidence.audio.available', true)
             ->assertJsonPath('payload.assignments.0.evidence.transcript', 'قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ');
@@ -763,6 +768,14 @@ class TeacherDashboardTest extends TestCase
         ]);
 
         $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $this->assertArrayHasKey('learning', $support);
+        $this->assertArrayHasKey('feedback_inbox', $support['learning']);
+        $this->assertArrayHasKey('submissions', $support['learning']);
+        $this->assertArrayHasKey('overview', $support);
+        $this->assertArrayHasKey('weekly_completed', $support['overview']);
+        $this->assertArrayHasKey('weekly_goal', $support['overview']);
+        $this->assertArrayHasKey('active_days_this_week', $support['overview']);
+        $this->assertArrayHasKey('practice_streak_days', $support['overview']);
         $this->assertSame(1, $support['assignments'][0]['progress']['attempt_count']);
 
         $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
@@ -926,7 +939,8 @@ class TeacherDashboardTest extends TestCase
             ->assertOk()
             ->json();
 
-        $this->assertSame(AssignmentStatus::Completed->value, $support['assignments'][0]['status']);
+        $this->assertSame(AssignmentStatus::AwaitingConfirmation->value, $support['assignments'][0]['status']);
+        $this->assertSame('submitted', $support['assignments'][0]['review_state']);
         $this->assertArrayNotHasKey('groups', $support);
         $recipient = TeacherAssignmentRecipient::query()->findOrFail($recipientId);
         $this->assertNotNull($recipient->student_completed_at);
@@ -937,6 +951,10 @@ class TeacherDashboardTest extends TestCase
             ->postJson(route('api.me.assignments.complete', $recipientId))
             ->assertOk();
         $this->assertSame($recipient->student_completed_at->toISOString(), $recipient->fresh()->student_completed_at->toISOString());
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.approve', $recipientId))
+            ->assertOk();
 
         $teacherRows = $this->actingAs($teacher)
             ->getJson(route('api.teacher.assignments'))
@@ -1083,6 +1101,9 @@ class TeacherDashboardTest extends TestCase
 
             if ($index === 0) {
                 $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))->assertOk();
+                $this->actingAs($teacher)
+                    ->postJson(route('api.teacher.assignment-recipients.approve', $recipientId))
+                    ->assertOk();
             }
         }
 

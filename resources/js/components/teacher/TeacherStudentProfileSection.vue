@@ -63,8 +63,7 @@
       </div>
 
       <div :id="panelId" class="card teacher-tab-panel teacher-profile-stack" :class="`is-${section}`" role="tabpanel" :aria-labelledby="tabId(section)" tabindex="0">
-        <p v-if="profile.section !== section" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
-        <template v-else>
+        <p v-if="sectionRefreshing" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
         <div v-if="tabHint || tabMetaItems.length" class="teacher-profile-tab-meta">
           <p v-if="tabHint" class="teacher-profile-tab-meta__hint">{{ tabHint }}</p>
           <div v-if="tabMetaItems.length" class="teacher-context-stats" :aria-label="activeTabLabel">
@@ -73,7 +72,7 @@
         </div>
         <TeacherStudentProfileOverview
           v-if="section === 'overview'"
-          :profile="profile"
+          :profile="tabProfile"
           :metric="metric"
           :practice-time="practiceTime"
           :session-label="sessionLabel"
@@ -83,32 +82,31 @@
         />
         <TeacherStudentProfilePractice
           v-else-if="section === 'practice'"
-          :profile="profile"
+          :profile="tabProfile"
           :session-label="sessionLabel"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
         />
         <TeacherStudentProfileAi
           v-else-if="section === 'ai'"
-          :profile="profile"
+          :profile="tabProfile"
           :issue-label="issueLabel"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
         />
         <TeacherStudentProfileFocus
           v-else-if="section === 'focus'"
-          :profile="profile"
+          :profile="tabProfile"
           :format-when="formatWhen"
           @assign-revision="$emit('assign-revision', $event)"
           @mark-reviewed="openReviewConfirm"
         />
         <TeacherStudentProfileTasks
           v-else-if="section === 'tasks'"
-          :profile="profile"
+          :profile="tabProfile"
           :format-when="formatWhen"
         />
-        <TeacherStudentProfileMessages v-else-if="section === 'messages'" :profile="profile" :format-when="formatWhen" />
-        </template>
+        <TeacherStudentProfileMessages v-else-if="section === 'messages'" :profile="tabProfile" :format-when="formatWhen" />
       </div>
     </template>
 
@@ -189,6 +187,16 @@ export default {
     }
   },
   computed: {
+    sectionRefreshing() {
+      return this.profile?.section !== this.section && !this.profile?.sectionPayloads?.[this.section]
+    },
+    tabProfile() {
+      if (!this.profile) return null
+      const payload = this.profile.section === this.section
+        ? this.profile.payload
+        : (this.profile.sectionPayloads?.[this.section] || this.profile.payload)
+      return { ...this.profile, payload }
+    },
     activeTabLabel() {
       const tab = this.tabs.find((item) => item.id === this.section)
       return tab ? this.t(tab.label) : this.t('teacher.tab_overview')
@@ -197,26 +205,16 @@ export default {
       return this.tabs.find((item) => item.id === this.section)?.icon || 'bi bi-grid'
     },
     tabHintKey() {
-      const keys = {
-        overview: 'teacher.profile_tab_overview_hint',
-        practice: 'teacher.profile_tab_practice_hint',
-        ai: 'teacher.profile_tab_ai_hint',
-        focus: 'teacher.profile_tab_focus_hint',
-        tasks: 'teacher.profile_tab_tasks_hint',
-        messages: 'teacher.profile_tab_messages_hint',
-      }
-      return keys[this.section] || ''
+      if (this.section === 'overview') return 'teacher.profile_tab_overview_hint'
+      return ''
     },
     tabHint() {
-      if (!this.tabHintKey || this.profile.section !== this.section) return ''
-      if (this.section === 'ai' && typeof this.profile.payload?.success_rate === 'number') {
-        return this.t('teacher.profile_tab_ai_hint_score', { score: this.profile.payload.success_rate })
-      }
+      if (!this.tabHintKey || this.sectionRefreshing) return ''
       return this.t(this.tabHintKey)
     },
     tabMetaItems() {
-      if (!this.profile || this.profile.section !== this.section) return []
-      const payload = this.profile.payload || {}
+      if (!this.tabProfile || this.sectionRefreshing) return []
+      const payload = this.tabProfile.payload || {}
       if (this.section === 'practice') {
         const sessions = payload.sessions || []
         if (!sessions.length) return []

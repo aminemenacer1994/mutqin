@@ -71,7 +71,8 @@ export default {
         hint: group.findings[0] || '',
         badge: this.t('teacher.check_count_many', { n: Math.max(2, group.maxChecks) }),
         badgeTone: 'mid',
-        href: group.first?.evidence_url || '',
+        reviewable: Boolean(group.first?.evidence),
+        href: group.first?.evidence ? '' : (group.first?.evidence_url || ''),
         actionLabel: this.t('teacher.assign_revision'),
         actionPayload: {
           id: this.profile.student.id,

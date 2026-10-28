@@ -14,7 +14,6 @@
     </div>
 
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
-    <p v-if="success" class="alert alert-success" role="status">{{ success }}</p>
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
     <div v-else-if="!groups.length" class="teacher-attendance__empty">{{ t('teacher.attendance_no_group') }}</div>
@@ -67,26 +66,6 @@
             <span class="is-unmarked">{{ dayCounts.unmarked }} {{ t('teacher.attendance_unmarked') }}</span>
           </div>
         </header>
-        <div class="teacher-attendance__list" role="list" :aria-label="t('teacher.attendance_grid')">
-          <article v-for="student in students" :key="student.id" class="teacher-attendance__row" role="listitem" :class="`is-${student.attendance?.[focusDay] || 'unmarked'}`">
-            <span class="teacher-attendance__row-name">{{ student.name }}</span>
-            <div class="teacher-attendance__row-actions" role="group" :aria-label="student.name">
-              <button
-                v-for="option in dayStatusOptions"
-                :key="option.value"
-                type="button"
-                class="teacher-attendance__day-btn"
-                :class="[`is-${option.value}`, { 'is-selected': student.attendance?.[focusDay] === option.value }]"
-                :disabled="!canMark(focusDay) || saving[`${student.id}:${focusDay}`]"
-                :aria-label="option.label"
-                :title="option.label"
-                @click="setStatus(student, focusDay, student.attendance?.[focusDay] === option.value ? 'clear' : option.value)"
-              >
-                <i :class="option.icon" aria-hidden="true"></i>
-              </button>
-            </div>
-          </article>
-        </div>
       </div>
     </div>
   </section>
@@ -110,9 +89,6 @@ export default {
       students: [],
       loading: true,
       error: '',
-      success: '',
-      successTimer: null,
-      saving: {},
       requestId: 0,
     }
   },
@@ -154,14 +130,6 @@ export default {
       }
       return cells
     },
-    dayStatusOptions() {
-      return [
-        { value: 'present', icon: 'bi bi-check-lg', label: this.t('teacher.attendance_present') },
-        { value: 'absent', icon: 'bi bi-x-lg', label: this.t('teacher.attendance_absent') },
-        { value: 'late', icon: 'bi bi-clock', label: this.t('teacher.attendance_late') },
-        { value: 'excused', icon: 'bi bi-shield-check', label: this.t('teacher.attendance_excused') },
-      ]
-    },
     dayCounts() {
       const counts = { present: 0, absent: 0, late: 0, excused: 0, unmarked: 0 }
       if (!this.focusDay) return counts
@@ -177,7 +145,6 @@ export default {
     this.calendarMonth = this.today.slice(0, 7)
     this.load()
   },
-  beforeUnmount() { window.clearTimeout(this.successTimer) },
   methods: {
     monthAnchor() {
       const value = this.calendarMonth || this.focusDay || this.today
@@ -231,7 +198,6 @@ export default {
       const id = ++this.requestId
       this.loading = true
       this.error = ''
-      this.success = ''
       try {
         const month = this.calendarMonth || this.today.slice(0, 7)
         const payload = await learningApi.getTeacherAttendance({ group_id: this.groupId || undefined, month })
@@ -251,32 +217,6 @@ export default {
       this.calendarMonth = this.today.slice(0, 7)
       this.focusDay = this.today
       this.load()
-    },
-    async setStatus(student, day, status) {
-      const previous = student.attendance?.[day]
-      const savingKey = `${student.id}:${day}`
-      this.saving = { ...this.saving, [savingKey]: true }
-      this.error = ''
-      this.success = ''
-      if (status === 'clear') delete student.attendance[day]
-      else student.attendance[day] = status
-      try {
-        const saved = await learningApi.setTeacherAttendance(this.groupId, student.id, day, status)
-        if (saved?.source === 'teacher_recorded') this.showSuccess(this.t('teacher.attendance_saved'))
-      } catch {
-        if (previous) student.attendance[day] = previous
-        else delete student.attendance[day]
-        this.error = this.t('teacher.attendance_save_error')
-      } finally {
-        const next = { ...this.saving }
-        delete next[savingKey]
-        this.saving = next
-      }
-    },
-    showSuccess(message) {
-      window.clearTimeout(this.successTimer)
-      this.success = message
-      this.successTimer = window.setTimeout(() => { this.success = '' }, 3000)
     },
   },
 }

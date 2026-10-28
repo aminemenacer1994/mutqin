@@ -46,6 +46,7 @@ export function useTeacherDashboard(authRef) {
   const profile = ref(null)
   const profileSection = ref('overview')
   const profileLoading = ref(false)
+  const profileSectionPayloads = ref({})
   const assignmentRows = ref([])
   const assignmentEntryFilter = ref('all')
   const assignmentsLoading = ref(false)
@@ -81,7 +82,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'students',
         label: t('teacher.kpi_students'),
-        description: '',
+        description: t('teacher.kpi_students_help'),
         value: kpis.authorised_students ?? '—',
         icon: 'bi bi-people',
         tone: 'teal',
@@ -90,7 +91,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'active',
         label: t('teacher.kpi_active_30d'),
-        description: '',
+        description: t('teacher.kpi_active_30d_help'),
         value: kpis.active_30_days ?? '—',
         icon: 'bi bi-calendar3',
         tone: 'teal',
@@ -99,7 +100,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'tasks',
         label: t('teacher.kpi_open_tasks'),
-        description: '',
+        description: t('teacher.kpi_open_tasks_help'),
         value: Number(kpis.outstanding_assignments ?? 0),
         icon: 'bi bi-list-check',
         tone: 'teal',
@@ -108,7 +109,7 @@ export function useTeacherDashboard(authRef) {
       {
         key: 'attention',
         label: t('teacher.kpi_need_support'),
-        description: '',
+        description: t('teacher.kpi_support_help'),
         value: kpis.needs_attention ?? '—',
         icon: 'bi bi-exclamation-circle',
         tone: 'teal',
@@ -397,14 +398,29 @@ export function useTeacherDashboard(authRef) {
   async function loadProfile(id, section = 'overview', pushHistory = false) {
     const requestId = ++profileRequestId
     const resolved = resolveProfileSection(section)
+    const studentKey = String(id)
     const sameStudent = profile.value?.student?.id === Number(id)
     profileLoading.value = !sameStudent
     profileSection.value = resolved
+    if (!sameStudent) {
+      profileSectionPayloads.value = {}
+    }
     formError.value = ''
     try {
       const nextProfile = await learningApi.getTeacherStudent(id, resolved)
       if (requestId !== profileRequestId) return
-      profile.value = nextProfile
+      const payloads = {
+        ...(profileSectionPayloads.value[studentKey] || {}),
+        [resolved]: nextProfile.payload,
+      }
+      profileSectionPayloads.value = {
+        ...profileSectionPayloads.value,
+        [studentKey]: payloads,
+      }
+      profile.value = {
+        ...nextProfile,
+        sectionPayloads: payloads,
+      }
       view.value = 'student'
       syncUrl(pushHistory)
     } catch (err) {
@@ -609,6 +625,7 @@ export function useTeacherDashboard(authRef) {
     saveAssignment,
     removeAssignment,
     sendTeacherMessage,
+    loadAssignments,
     openAssignRevision,
     prefillAssignmentFromStudent,
     isNavActive: (id) => isTeacherNavActive(view.value, id),

@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
+use App\Support\TeacherTaskState;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\TeacherNoteKind;
@@ -11,6 +12,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\MemorisationAssessment;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
@@ -241,10 +243,17 @@ class TeacherAssignmentService
             }
 
             if ($recipient->student_completed_at !== null) {
-                if ($recipient->status !== AssignmentStatus::Completed) {
+                $current = $recipient->status instanceof AssignmentStatus
+                    ? $recipient->status
+                    : AssignmentStatus::tryFrom((string) $recipient->status);
+
+                if ($current === AssignmentStatus::Completed) {
+                    continue;
+                }
+
+                if ($current !== AssignmentStatus::AwaitingConfirmation) {
                     $recipient->forceFill([
-                        'status' => AssignmentStatus::Completed->value,
-                        'completed_at' => $recipient->completed_at ?? $recipient->student_completed_at,
+                        'status' => AssignmentStatus::AwaitingConfirmation->value,
                     ])->save();
                 }
 
@@ -323,17 +332,89 @@ class TeacherAssignmentService
                 ]);
             }
             $completedAt = now();
+            $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+            $submissions = is_array($evidence['submissions'] ?? null) ? $evidence['submissions'] : [];
+            $submissions[] = [
+                'activity_count' => (int) $progress['activity_count'],
+                'target' => (int) $progress['target'],
+                'submitted_at' => $completedAt->toIso8601String(),
+            ];
+            unset($evidence['correction_requested_at'], $evidence['correction_note']);
             $recipient->forceFill([
-                'status' => AssignmentStatus::Completed->value,
-                'completed_at' => $recipient->completed_at ?? $completedAt,
+                'status' => AssignmentStatus::AwaitingConfirmation->value,
                 'student_completed_at' => $completedAt,
-                'completion_evidence' => [
+                'completion_evidence' => array_merge($evidence, [
                     'activity_count' => (int) $progress['activity_count'],
                     'target' => (int) $progress['target'],
                     'confirmed_at' => $completedAt->toIso8601String(),
-                ],
+                    'submissions' => $submissions,
+                ]),
             ])->save();
         }
+
+        return $recipient->refresh();
+    }
+
+    public function approveByTeacher(User $teacher, TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $recipient->loadMissing('assignment');
+        $assignment = $recipient->assignment;
+        if ($assignment === null
+            || (int) $assignment->teacher_id !== (int) $teacher->id
+            || ! $teacher->isTeacher()
+            || ! $this->access->allows($teacher, $recipient->student)) {
+            abort(404);
+        }
+
+        if ($recipient->student_completed_at === null) {
+            throw ValidationException::withMessages([
+                'assignment' => 'The student has not submitted this task yet.',
+            ]);
+        }
+
+        $approvedAt = now();
+        $recipient->forceFill([
+            'status' => AssignmentStatus::Completed->value,
+            'completed_at' => $approvedAt,
+        ])->save();
+
+        return $recipient->refresh();
+    }
+
+    public function requestCorrectionByTeacher(
+        User $teacher,
+        TeacherAssignmentRecipient $recipient,
+        ?string $note = null,
+    ): TeacherAssignmentRecipient {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $recipient->loadMissing('assignment');
+        $assignment = $recipient->assignment;
+        if ($assignment === null
+            || (int) $assignment->teacher_id !== (int) $teacher->id
+            || ! $teacher->isTeacher()
+            || ! $this->access->allows($teacher, $recipient->student)) {
+            abort(404);
+        }
+
+        if ($recipient->student_completed_at === null) {
+            throw ValidationException::withMessages([
+                'assignment' => 'The student has not submitted this task yet.',
+            ]);
+        }
+
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        $evidence['correction_requested_at'] = now()->toIso8601String();
+        if ($note !== null && trim($note) !== '') {
+            $evidence['correction_note'] = trim($note);
+        }
+
+        $recipient->forceFill([
+            'status' => AssignmentStatus::InProgress->value,
+            'completion_evidence' => $evidence,
+        ])->save();
 
         return $recipient->refresh();
     }
@@ -577,10 +658,35 @@ class TeacherAssignmentService
             'assignment_id' => (int) $recipient->teacher_assignment_id,
             'student_id' => (int) $recipient->student_id,
             'status' => $status,
+            'review_state' => $this->reviewState($recipient),
+            'student_submitted_at' => $recipient->student_completed_at?->toIso8601String(),
+            'teacher_approved_at' => $status === AssignmentStatus::Completed->value && $recipient->completed_at !== null
+                ? $recipient->completed_at->toIso8601String()
+                : null,
             'started_at' => $recipient->started_at?->toIso8601String(),
             'completed_at' => $recipient->completed_at?->toIso8601String(),
             'updated_at' => $recipient->updated_at?->toIso8601String(),
             'completion_evidence' => $recipient->completion_evidence,
+        ];
+
+        $stateSnapshot = TeacherTaskState::snapshot(
+            $status,
+            $payload['review_state'],
+            $recipient->started_at,
+            $recipient->student_completed_at,
+            $assignment?->due_at,
+        );
+        $payload['task_state'] = $stateSnapshot['base'];
+        $payload['task_state_display'] = $stateSnapshot['display'];
+        $payload['task_overdue_overlay'] = $stateSnapshot['overdue_overlay'];
+        $dueUrgency = TeacherTaskState::dueUrgency(
+            $assignment?->due_at,
+            $stateSnapshot['base'] === TeacherTaskState::DONE,
+        );
+        $payload['due_urgency'] = [
+            'tone' => $dueUrgency['tone'],
+            'text' => $dueUrgency['text'],
+            'days_remaining' => $dueUrgency['days_remaining'],
         ];
 
         if ($assignment) {
@@ -589,22 +695,9 @@ class TeacherAssignmentService
                 ->where('teacher_assignment_recipient_id', $recipient->id)
                 ->with('assessment:id,recognition_data')
                 ->latest('created_at')->latest('id')->first();
-            $recognition = $latestAttempt?->assessment?->recognition_data;
-            $transcript = is_array($recognition)
-                ? (data_get($recognition, 'raw.transcript') ?: data_get($recognition, 'normalised.transcript') ?: ($recognition['transcript'] ?? null))
+            $payload['evidence'] = $latestAttempt
+                ? $this->presentLearnerAttemptEvidence($latestAttempt, $assignment)
                 : null;
-            if (! $transcript && $latestAttempt) {
-                $heard = collect(is_array($latestAttempt->word_statuses) ? $latestAttempt->word_statuses : [])
-                    ->map(fn ($word) => is_array($word) ? ($word['detected_token'] ?? $word['actual'] ?? $word['recognised'] ?? $word['recognized'] ?? $word['heard'] ?? null) : null)
-                    ->filter(fn ($word) => is_string($word) && trim($word) !== '')
-                    ->values();
-                $transcript = $heard->isEmpty() ? null : $heard->implode(' ');
-            }
-            $payload['evidence'] = $latestAttempt ? [
-                'attempt_id' => (int) $latestAttempt->id,
-                'audio' => $this->attemptAudio->payload($latestAttempt),
-                'transcript' => $transcript ? mb_substr(trim((string) $transcript), 0, 5000) : null,
-            ] : null;
             $resumeSessionId = $this->resumeSessionId($recipient, $unfinishedSessions);
             $payload['assignment'] = $this->presentAssignment($assignment);
             $payload['progress'] = $this->progressForRecipient(
@@ -615,6 +708,13 @@ class TeacherAssignmentService
             );
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
             $payload['messages'] = $this->assignmentMessages($assignment, (int) $recipient->student_id, $viewerId);
+            $payload['completion_result'] = $this->presentLearnerCompletionResult(
+                $recipient,
+                $payload['review_state'],
+                $latestAttempt,
+                $payload['messages'],
+                $assignment,
+            );
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
             }
@@ -876,13 +976,33 @@ class TeacherAssignmentService
 
     private function displayStatus(TeacherAssignmentRecipient $recipient, ?TeacherAssignment $assignment): string
     {
+        return $recipient->status instanceof AssignmentStatus
+            ? $recipient->status->value
+            : (string) $recipient->status;
+    }
+
+    private function reviewState(TeacherAssignmentRecipient $recipient): ?string
+    {
         $status = $recipient->status instanceof AssignmentStatus
             ? $recipient->status->value
             : (string) $recipient->status;
 
-        return $status === AssignmentStatus::AwaitingConfirmation->value
-            ? AssignmentStatus::InProgress->value
-            : $status;
+        if ($status === AssignmentStatus::Completed->value) {
+            return 'approved';
+        }
+
+        if ($status === AssignmentStatus::AwaitingConfirmation->value) {
+            return 'submitted';
+        }
+
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        if ($status === AssignmentStatus::InProgress->value
+            && $recipient->student_completed_at !== null
+            && ! empty($evidence['correction_requested_at'])) {
+            return 'needs_correction';
+        }
+
+        return null;
     }
 
     private function nullableText(mixed $value): ?string
@@ -890,5 +1010,188 @@ class TeacherAssignmentService
         $text = trim((string) $value);
 
         return $text === '' ? null : $text;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function presentLearnerCompletionResult(
+        TeacherAssignmentRecipient $recipient,
+        ?string $reviewState,
+        ?AiReciteAttempt $latestAttempt,
+        array $messages,
+        TeacherAssignment $assignment,
+    ): ?array {
+        if (! $this->isLearnerTaskApproved($recipient, $reviewState)) {
+            return null;
+        }
+
+        $snippet = null;
+        foreach (array_reverse($messages) as $message) {
+            if (($message['sender'] ?? null) === 'teacher') {
+                $body = trim((string) ($message['body'] ?? ''));
+                if ($body !== '') {
+                    $snippet = mb_strlen($body) > 140 ? mb_substr($body, 0, 137).'…' : $body;
+                    break;
+                }
+            }
+        }
+        if ($snippet === null) {
+            $snippet = $this->nullableText($assignment->feedback);
+            if ($snippet !== null && mb_strlen($snippet) > 140) {
+                $snippet = mb_substr($snippet, 0, 137).'…';
+            }
+        }
+
+        $accuracy = $latestAttempt?->accuracy_percent;
+        $headlineType = $accuracy !== null ? 'ai_score' : 'teacher_reviewed';
+        $words = is_array($latestAttempt?->word_statuses) ? $latestAttempt->word_statuses : [];
+
+        return [
+            'headline_type' => $headlineType,
+            'accuracy_percent' => $accuracy === null ? null : (int) $accuracy,
+            'feedback_snippet' => $snippet,
+            'has_recitation_review' => $latestAttempt !== null && $words !== [],
+        ];
+    }
+
+    private function isLearnerTaskApproved(TeacherAssignmentRecipient $recipient, ?string $reviewState): bool
+    {
+        if ($reviewState === 'approved') {
+            return true;
+        }
+
+        $status = $recipient->status instanceof AssignmentStatus
+            ? $recipient->status->value
+            : (string) $recipient->status;
+
+        return $status === AssignmentStatus::Completed->value && $recipient->student_completed_at === null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentLearnerAttemptEvidence(AiReciteAttempt $attempt, TeacherAssignment $assignment): array
+    {
+        $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+        $assignedRange = $this->presentAssignmentRange($assignment);
+        $assessment = $attempt->assessment;
+        $assessmentStatus = $assessment?->status;
+        $transcript = $this->attemptTranscript($attempt);
+        $words = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
+            ->filter(fn ($word) => is_array($word))
+            ->map(function (array $word): ?array {
+                $text = trim((string) (
+                    $word['expected_word']
+                    ?? $word['displayText']
+                    ?? $word['text']
+                    ?? $word['expected']
+                    ?? $word['word']
+                    ?? ''
+                ));
+                $ayah = isset($word['ayah_number'])
+                    ? (int) $word['ayah_number']
+                    : (isset($word['ayah']) ? (int) $word['ayah'] : null);
+                $wordIndex = isset($word['ayah_word_index'])
+                    ? (int) $word['ayah_word_index']
+                    : (isset($word['word_index']) ? (int) $word['word_index'] : null);
+
+                if ($text === '' && ($ayah === null || $wordIndex === null)) {
+                    return null;
+                }
+
+                $payload = [
+                    'status' => (string) ($word['status'] ?? 'unknown'),
+                    'type' => isset($word['type']) ? (string) $word['type'] : null,
+                    'detected' => trim((string) (
+                        $word['recognised_word']
+                        ?? $word['recognized_word']
+                        ?? $word['detected_token']
+                        ?? $word['detected']
+                        ?? $word['actual']
+                        ?? ''
+                    )) ?: null,
+                    'ayah' => $ayah,
+                    'word_index' => $wordIndex,
+                ];
+                if ($text !== '' && ! preg_match('/^word$/iu', $text)) {
+                    $payload['text'] = mb_substr($text, 0, 120);
+                }
+
+                return $payload;
+            })
+            ->filter()
+            ->take(250)
+            ->values()
+            ->all();
+
+        return [
+            'attempt_id' => (int) $attempt->id,
+            'audio' => $this->attemptAudio->payload($attempt),
+            'assessment_status' => $assessmentStatus,
+            'state' => in_array($assessmentStatus, [MemorisationAssessment::STATUS_PENDING, MemorisationAssessment::STATUS_PROCESSING], true)
+                ? 'processing'
+                : 'ready',
+            'transcript' => $transcript,
+            'transcript_state' => $transcript !== null
+                ? 'available'
+                : (in_array($assessmentStatus, [MemorisationAssessment::STATUS_PENDING, MemorisationAssessment::STATUS_PROCESSING], true)
+                    ? 'processing'
+                    : 'not_recorded'),
+            'range' => [
+                'surah' => (int) ($range['surah'] ?? $range['surah_number'] ?? $assessment?->surah_number ?? $assignment->surah_number) ?: null,
+                'from' => (int) ($range['from'] ?? $range['start'] ?? $assessment?->start_ayah ?? $assignment->ayah_start) ?: null,
+                'to' => (int) ($range['to'] ?? $range['end'] ?? $assessment?->end_ayah ?? $assignment->ayah_end) ?: null,
+            ],
+            'assigned_range' => $assignedRange,
+            'words' => $words,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function presentAssignmentRange(?TeacherAssignment $assignment): ?array
+    {
+        if ($assignment === null) {
+            return null;
+        }
+        $surah = (int) $assignment->surah_number;
+        $from = (int) $assignment->ayah_start;
+        $to = (int) ($assignment->ayah_end ?: $from);
+
+        return [
+            'surah' => $surah,
+            'from' => $from,
+            'to' => max($from, $to),
+            'surah_name' => QuranMetadata::name($surah),
+        ];
+    }
+
+    private function attemptTranscript(AiReciteAttempt $attempt): ?string
+    {
+        $recognition = is_array($attempt->assessment?->recognition_data)
+            ? $attempt->assessment->recognition_data
+            : [];
+        foreach ([
+            data_get($recognition, 'raw.transcript'),
+            data_get($recognition, 'normalised.transcript'),
+            $recognition['transcript'] ?? null,
+        ] as $candidate) {
+            $value = trim((string) $candidate);
+            if ($value !== '') {
+                return mb_substr($value, 0, 5000);
+            }
+        }
+
+        $heard = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
+            ->map(fn ($word) => is_array($word)
+                ? ($word['detected_token'] ?? $word['detected'] ?? $word['actual'] ?? $word['recognised'] ?? $word['recognized'] ?? $word['heard'] ?? null)
+                : null)
+            ->filter(fn ($word) => is_string($word) && trim($word) !== '')
+            ->map(fn (string $word) => trim($word))
+            ->values();
+
+        return $heard->isEmpty() ? null : mb_substr($heard->implode(' '), 0, 5000);
     }
 }

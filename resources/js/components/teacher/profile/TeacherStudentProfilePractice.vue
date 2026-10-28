@@ -19,7 +19,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
-import { practiceMinutes, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
+import { ayahRangeLabel, practiceMinutes, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import { teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
@@ -43,20 +43,28 @@ export default {
       for (const session of this.profile.payload.sessions || []) {
         const title = this.sessionLabel(session)
         if (!groups.has(title)) groups.set(title, { key: title, title, surah: session.surah_number, rows: [] })
+        const practicedRange = session.practiced_range || (session.surah_number && (session.ayah_start || session.ayah_number) ? {
+          surah: session.surah_number,
+          from: session.ayah_start || session.ayah_number,
+          to: session.ayah_end || session.ayah_number,
+          surah_name: session.surah_name,
+        } : null)
         groups.get(title).rows.push(teacherRecitationEvidenceRow({
           key: session.id,
           icon: 'bi bi-journal-text',
           iconTone: 'accent',
           title: this.sessionTitle(session),
           reviewable: true,
-          hint: this.sessionContext(session),
+          hint: this.sessionContext(session, session.assigned_range),
           badge: session.status ? this.statusLabel(session.status) : '',
           badgeTone: session.status === 'completed' ? 'good' : 'muted',
-        }, session.evidence, {
-          surah: session.surah_number,
-          from: session.ayah_start || session.ayah_number,
-          to: session.ayah_end || session.ayah_number,
-        }))
+          assignedRange: session.evidence?.assigned_range || session.assigned_range || null,
+          practicedRange,
+        }, session.evidence, practicedRange ? {
+          surah: practicedRange.surah,
+          from: practicedRange.from,
+          to: practicedRange.to,
+        } : null))
       }
       return [...groups.values()]
     },
@@ -69,12 +77,16 @@ export default {
         : (session.ayah_number ? this.t('teacher.ayah_n', { n: session.ayah_number }) : '')
       return range ? `${when} · ${range}` : when
     },
-    sessionContext(session) {
+    sessionContext(session, assignedRange = null) {
       const when = this.formatWhen(session.last_activity_at) || ''
       const duration = session.duration_seconds
         ? this.t('teacher.session_duration_minutes', { n: practiceMinutes(session.duration_seconds) })
         : ''
-      return [when, duration].filter(Boolean).join(' · ')
+      const assigned = assignedRange
+        ? ayahRangeLabel(assignedRange.surah_name, assignedRange.from, assignedRange.to, this.t)
+        : ''
+      const assignedLabel = assigned ? this.t('teacher.assigned_task_short', { range: assigned }) : ''
+      return [when, duration, assignedLabel].filter(Boolean).join(' · ')
     },
     statusLabel(status) {
       if (status === 'completed') return this.t('teacher.status_completed')

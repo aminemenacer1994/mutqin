@@ -109,14 +109,51 @@ export function issueLabel(issues, t) {
     .join(' · ')
 }
 
+export function learnerRecitationReviewRow(row) {
+  const assignment = row?.assignment || {}
+  const evidence = row?.evidence || {}
+  const assigned = evidence.assigned_range || {
+    surah: assignment.surah_number,
+    from: assignment.ayah_start,
+    to: assignment.ayah_end,
+    surah_name: assignment.surah_name,
+  }
+  const range = evidence?.range?.surah
+    ? evidence.range
+    : {
+      surah: assignment.surah_number,
+      from: assignment.ayah_start,
+      to: assignment.ayah_end,
+    }
+  const title = assignment.surah_name
+    ? `${assignment.surah_name} · ${assignment.ayah_start}–${assignment.ayah_end}`
+    : ''
+  return teacherRecitationEvidenceRow({
+    title,
+    transcript: evidence.transcript || '',
+    audio: evidence.audio,
+    evidenceState: evidence.state,
+  }, {
+    audio: evidence.audio,
+    transcript: evidence.transcript,
+    words: evidence.words,
+    range,
+    assigned_range: assigned,
+    state: evidence.state,
+  })
+}
+
 export function teacherRecitationEvidenceRow(base = {}, evidence = null, rangeFallback = null) {
   const ev = evidence && typeof evidence === 'object' ? evidence : {}
   const range = ev.range || rangeFallback || {}
+  const assigned = ev.assigned_range ?? base.assignedRange ?? null
   return {
     ...base,
     audio: ev.audio ?? base.audio ?? null,
     transcript: ev.transcript ?? base.transcript ?? '',
     words: ev.words ?? base.words ?? [],
+    assignedRange: assigned,
+    practicedRange: base.practicedRange ?? null,
     range: {
       surah: range.surah ?? range.surah_number ?? null,
       from: range.from ?? null,

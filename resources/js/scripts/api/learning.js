@@ -743,6 +743,14 @@ export const learningApi = {
     const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/notes`, form)
     return data
   },
+  async approveTeacherAssignmentRecipient(recipientId) {
+    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/approve`)
+    return data
+  },
+  async requestTeacherAssignmentCorrection(recipientId, note = '') {
+    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/correction`, { note })
+    return data
+  },
 }
 
 function sanitizeRecommendationSettings(settings) {
