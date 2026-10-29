@@ -1,27 +1,31 @@
 <template>
   <Teleport to="body">
     <Transition name="teacher-recite-modal">
-      <div v-if="open" class="teacher-recite-modal" @keydown.esc.prevent="$emit('close')">
-        <button type="button" class="teacher-recite-modal__scrim" :aria-label="t('teacher.close')" @click="$emit('close')"></button>
+      <div v-if="open" class="teacher-recite-modal user-dashboard dash-student-dialog-root" @keydown.esc.prevent="$emit('close')">
+        <button type="button" class="dash-drawer__backdrop teacher-recite-modal__scrim" :aria-label="t('teacher.close')" @click="$emit('close')"></button>
         <section
           ref="dialog"
-          class="teacher-recite-modal__panel"
+          class="teacher-recite-modal__panel dash-student-dialog dash-student-dialog--wide"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="titleId"
           tabindex="-1"
         >
-          <header class="teacher-recite-modal__head">
-            <div>
-              <span class="teacher-recite-modal__eyebrow">{{ eyebrowLabel }}</span>
-              <h2 :id="titleId">{{ row?.title || t('teacher.profile_recite_attempt') }}</h2>
-              <p v-if="row?.hint" class="teacher-recite-modal__hint">{{ row.hint }}</p>
+          <header class="dash-drawer__head teacher-recite-modal__head">
+            <div class="dash-drawer__head-main">
+              <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
+              <div class="dash-drawer__head-copy">
+                <span class="teacher-recite-modal__eyebrow">{{ eyebrowLabel }}</span>
+                <h2 :id="titleId" class="dash-drawer__title">{{ row?.title || t('teacher.profile_recite_attempt') }}</h2>
+                <p v-if="row?.hint" class="dash-drawer__subtitle teacher-recite-modal__hint">{{ row.hint }}</p>
+              </div>
             </div>
-            <button type="button" class="teacher-recite-modal__close" :aria-label="t('teacher.close')" @click="$emit('close')">
+            <button type="button" class="dash-icon-btn dash-drawer__close teacher-recite-modal__close" :aria-label="t('teacher.close')" @click="$emit('close')">
               <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </header>
 
+          <div class="dash-student-dialog__body">
           <div v-if="hasAudio" class="teacher-recite-modal__audio">
             <audio
               ref="player"
@@ -64,6 +68,7 @@
               <p class="teacher-quran" lang="ar" dir="rtl">{{ row.transcript }}</p>
               <small>{{ t('teacher.transcript_asr_note') }}</small>
             </details>
+          </div>
           </div>
         </section>
       </div>

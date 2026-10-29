@@ -81,6 +81,9 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Verify JS imports resolve
+        run: npm run lint:imports
+
       - name: Run core JS tests
         run: npm run test:mutqin
 

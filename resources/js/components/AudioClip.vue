@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { bindAudioSource, playAudioElement } from '../scripts/audio/recordingPlayback.js'
+import { bindAudioSource, playAudioElement } from '@/scripts/audio/recordingPlayback.js'
 import { claimClipPlayback, releaseClipPlayback } from '../scripts/audio/singleClipPlayback.js'
 
 export default {

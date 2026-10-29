@@ -80,7 +80,7 @@ import {
   playAudioElement,
   probeIndeterminateMediaDuration,
   readMediaDuration,
-} from '../scripts/audio/recordingPlayback.js'
+} from '@/scripts/audio/recordingPlayback.js'
 
 function formatClock(seconds) {
   const total = Math.max(0, Math.floor(Number(seconds) || 0))

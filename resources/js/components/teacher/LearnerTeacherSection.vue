@@ -177,15 +177,25 @@
                       {{ t('teacher.learner_mistake_none') }}
                     </p>
                     <p v-if="completionSnippet(item)" class="learner-teacher__result-snippet">{{ completionSnippet(item) }}</p>
-                    <button
-                      v-if="completionLink(item)"
-                      type="button"
-                      class="dash-text-link learner-teacher__result-link"
-                      :aria-expanded="mistakeDetailsExpanded(item) ? 'true' : 'false'"
-                      @click="onCompletionLinkClick(item)"
-                    >
-                      {{ completionLink(item).label }}
-                    </button>
+                    <div class="learner-teacher__result-actions">
+                      <button
+                        v-if="completionLink(item)"
+                        type="button"
+                        class="dash-text-link learner-teacher__result-link"
+                        :aria-expanded="mistakeDetailsExpanded(item) ? 'true' : 'false'"
+                        @click="onCompletionLinkClick(item)"
+                      >
+                        {{ completionLink(item).label }}
+                      </button>
+                      <button
+                        type="button"
+                        class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__listen-btn"
+                        @click="openAttemptPlayback(item)"
+                      >
+                        <i class="bi bi-headphones" aria-hidden="true"></i>
+                        {{ t('teacher.learner_playback_listen') }}
+                      </button>
+                    </div>
                     <LearnerCompletionMistakePanel
                       v-if="!isMobileLayout && mistakeDetailsExpanded(item)"
                       class="learner-teacher__mistake-inline"
@@ -241,14 +251,14 @@
                       <button
                         type="button"
                         class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__chat-btn"
-                        :class="{ 'has-unread': unreadTeacherMessages(item) }"
+                        :class="{ 'has-unread': taskThreadUnread(item) > 0 }"
                         :aria-label="chatAriaLabel(item)"
                         :title="chatAriaLabel(item)"
-                        @click="openDetails(item)"
+                        @click="openTaskThread(item)"
                       >
                         <i class="bi bi-chat-left-text" aria-hidden="true"></i>
                         <span>{{ t('teacher.learner_message') }}</span>
-                        <span v-if="unreadTeacherMessages(item)" class="learner-teacher__chat-badge">{{ unreadTeacherMessages(item) }}</span>
+                        <span v-if="taskThreadUnread(item)" class="learner-teacher__chat-badge">{{ taskThreadUnread(item) }}</span>
                       </button>
                     </div>
                 </article>
@@ -337,72 +347,46 @@
     </Teleport>
 
     <Teleport to="body">
-    <div v-if="selectedItem" class="user-dashboard learner-teacher__portal">
-    <div class="learner-teacher__modal-backdrop" @click.self="closeDetails">
-      <section
-        ref="detailsModal"
-        class="learner-teacher__modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="learner-teacher-details-title"
-        tabindex="-1"
-        @keydown="handleModalKeydown"
-      >
-        <header class="learner-teacher__modal-head">
-          <div class="learner-teacher__modal-intro">
-            <span class="learner-teacher__modal-kicker"><i class="bi bi-chat-dots" aria-hidden="true"></i>{{ t('teacher.task_conversation') }}</span>
-            <h3 id="learner-teacher-details-title">{{ rangeLabel(selectedItem) }}</h3>
-            <p class="learner-teacher__card-meta">
-              <span>{{ taskTypeLabel(selectedItem) }}</span>
-              <template v-if="cardMetaTail(selectedItem).text">
-                <span class="learner-teacher__meta-sep" aria-hidden="true"> · </span>
-                <span class="learner-teacher__card-due" :class="`is-${cardMetaTail(selectedItem).tone}`">{{ cardMetaTail(selectedItem).text }}</span>
-              </template>
-            </p>
-            <span class="learner-teacher__pill" :class="pillClass(selectedItem)">
-              <i class="bi" :class="statusIcon(selectedItem)" aria-hidden="true"></i>{{ statusLabel(selectedItem) }}
-            </span>
-          </div>
-          <button ref="modalClose" type="button" class="learner-teacher__modal-close" :aria-label="t('common.close')" @click="closeDetails"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-        </header>
-        <div class="learner-teacher__modal-body">
-          <TeacherTaskConversation
-            ref="taskConversation"
-            :messages="selectedItem.messages || []"
-            variant="learner"
-            thread-class="learner-teacher__thread"
-            viewer-role="student"
-            :peer-name="selectedItem.teacher_name || t('teacher.teacher')"
-            :teacher-note="selectedItem.assignment?.feedback || ''"
-            :evidence-audio="selectedItem.evidence?.audio || null"
-            :composer-id="`task-message-${selectedItem.id}`"
-            :composer-placeholder="t('teacher.learner_reply_placeholder')"
-            :on-send="sendTaskMessage"
-          />
-        </div>
-      </section>
-    </div>
-    </div>
+    <LearnerTaskThreadPanel
+      ref="taskThreadPanel"
+      :open="Boolean(threadTask)"
+      :task="threadTask"
+      :pinned-context="threadPinnedContext"
+      :is-mobile-layout="isMobileLayout"
+      :on-send="sendTaskMessageOptimistic"
+      @close="closeTaskThread"
+      @messages-updated="onThreadMessagesUpdated"
+    />
     </Teleport>
 
     <Teleport to="body">
-    <div v-if="selectedDirectThread" class="user-dashboard learner-teacher__portal">
-    <div class="learner-teacher__modal-backdrop" @click.self="closeDirectThread">
-      <section
-        class="learner-teacher__modal"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="`direct-thread-title-${selectedDirectThread.teacher_id}`"
-        tabindex="-1"
-      >
-        <header class="learner-teacher__modal-head">
-          <div class="learner-teacher__modal-intro">
-            <span class="learner-teacher__modal-kicker"><i class="bi bi-chat-left-text" aria-hidden="true"></i>{{ t('teacher.messages') }}</span>
-            <h3 :id="`direct-thread-title-${selectedDirectThread.teacher_id}`">{{ selectedDirectThread.teacher_name }}</h3>
+    <div v-if="selectedDirectThread" class="user-dashboard dash-student-dialog-root">
+    <button
+      type="button"
+      class="dash-drawer__backdrop"
+      :aria-label="t('common.close')"
+      @click="closeDirectThread"
+    ></button>
+    <section
+      class="dash-student-dialog dash-student-dialog--thread"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="`direct-thread-title-${selectedDirectThread.teacher_id}`"
+      tabindex="-1"
+    >
+      <header class="dash-drawer__head">
+        <div class="dash-drawer__head-main">
+          <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-chat-left-text"></i></span>
+          <div class="dash-drawer__head-copy">
+            <h2 :id="`direct-thread-title-${selectedDirectThread.teacher_id}`" class="dash-drawer__title">{{ selectedDirectThread.teacher_name }}</h2>
+            <p class="dash-drawer__subtitle">{{ t('teacher.messages') }}</p>
           </div>
-          <button type="button" class="learner-teacher__modal-close" :aria-label="t('common.close')" @click="closeDirectThread"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-        </header>
-        <div class="learner-teacher__modal-body">
+        </div>
+        <button type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" @click="closeDirectThread">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="dash-student-dialog__body">
           <TeacherTaskConversation
             ref="directConversation"
             :messages="selectedDirectThread.messages || []"
@@ -415,25 +399,39 @@
             :empty-label="t('teacher.direct_messages_empty_student')"
             :on-send="sendDirectMessage"
           />
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
     </div>
     </Teleport>
 
     <Teleport to="body">
-    <div v-if="selectedSubmission" class="user-dashboard learner-teacher__portal">
-      <div class="learner-teacher__modal-backdrop" @click.self="closeSubmission">
-        <section class="learner-teacher__modal learner-teacher__modal--sheet" role="dialog" aria-modal="true" aria-labelledby="learner-submission-title" tabindex="-1">
-          <header class="learner-teacher__modal-head">
-            <div class="learner-teacher__modal-intro">
-              <span class="learner-teacher__modal-kicker"><i class="bi bi-clock-history" aria-hidden="true"></i>{{ t('teacher.learner_submission_history') }}</span>
-              <h3 id="learner-submission-title">{{ selectedSubmission.title }}</h3>
-              <span class="learner-teacher__pill" :class="submissionPillClass(selectedSubmission)">{{ submissionStateLabel(selectedSubmission) }}</span>
+    <div v-if="selectedSubmission" class="user-dashboard dash-student-dialog-root">
+      <button
+        type="button"
+        class="dash-drawer__backdrop"
+        :aria-label="t('common.close')"
+        @click="closeSubmission"
+      ></button>
+      <section
+        class="dash-student-dialog dash-student-dialog--sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="learner-submission-title"
+        tabindex="-1"
+      >
+        <header class="dash-drawer__head">
+          <div class="dash-drawer__head-main">
+            <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
+            <div class="dash-drawer__head-copy">
+              <h2 id="learner-submission-title" class="dash-drawer__title">{{ selectedSubmission.title }}</h2>
+              <p class="dash-drawer__subtitle">{{ submissionStateLabel(selectedSubmission) }}</p>
             </div>
-            <button type="button" class="learner-teacher__modal-close" :aria-label="t('common.close')" @click="closeSubmission"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-          </header>
-          <div class="learner-teacher__modal-body learner-teacher__submission-detail">
+          </div>
+          <button type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" @click="closeSubmission">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="dash-student-dialog__body learner-teacher__submission-detail">
             <dl class="learner-teacher__facts-compact">
               <div><dt>{{ t('teacher.learner_submitted_on') }}</dt><dd>{{ submissionWhen(selectedSubmission.submitted_at) }}</dd></div>
               <div><dt>{{ t('teacher.teacher') }}</dt><dd>{{ selectedSubmission.teacher_name || t('teacher.unavailable') }}</dd></div>
@@ -459,9 +457,8 @@
                 {{ t('teacher.practice_again') }}
               </a>
             </div>
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
     </Teleport>
 
@@ -520,6 +517,13 @@
     </div>
     </Teleport>
 
+    <LearnerAttemptPlaybackModal
+      :open="Boolean(playbackRow)"
+      :row="playbackRow"
+      :is-mobile="isMobileLayout"
+      @close="playbackRow = null"
+    />
+
     <TeacherReciteEvidenceModal
       :open="Boolean(recitationReviewRow)"
       :row="recitationReviewRow"
@@ -562,8 +566,10 @@ import {
 } from '../../scripts/teacher/learnerDashboard.js'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
-import LearnerCompletionMistakePanel from './LearnerCompletionMistakePanel.vue'
+import LearnerAttemptPlaybackModal from '@/components/shared/LearnerAttemptPlaybackModal.vue'
+import LearnerCompletionMistakePanel from '@/components/shared/LearnerCompletionMistakePanel.vue'
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
+import LearnerTaskThreadPanel from './LearnerTaskThreadPanel.vue'
 import {
   buildMistakeSummaryChips,
   countMistakesByType,
@@ -575,7 +581,14 @@ const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue', 'awaiting_
 
 export default {
   name: 'LearnerTeacherSection',
-  components: { TeacherTaskConversation, LearnerTeacherLearning, LearnerCompletionMistakePanel, TeacherReciteEvidenceModal },
+  components: {
+    TeacherTaskConversation,
+    LearnerTeacherLearning,
+    LearnerCompletionMistakePanel,
+    LearnerAttemptPlaybackModal,
+    TeacherReciteEvidenceModal,
+    LearnerTaskThreadPanel,
+  },
   mixins: [i18nMixin],
   props: {
     support: { type: Object, default: null },
@@ -601,6 +614,8 @@ export default {
       listLimit: 4,
       visibleLimit: 4,
       selectedItem: null,
+      threadTask: null,
+      threadPinnedContext: '',
       selectedDirectThread: null,
       selectedSubmission: null,
       recitationReviewRow: null,
@@ -609,6 +624,7 @@ export default {
       mistakeDrawerTitleId: `learner-mistake-drawer-${Math.random().toString(36).slice(2, 9)}`,
       isMobileLayout: false,
       mobileMedia: null,
+      playbackRow: null,
       focusConversationComposer: false,
       previouslyFocused: null,
       feedbackDrawerOpen: false,
@@ -807,6 +823,9 @@ export default {
     selectedItem(value) {
       this.syncModalOpen()
     },
+    threadTask() {
+      this.syncModalOpen()
+    },
     selectedDirectThread(value) {
       this.syncModalOpen()
     },
@@ -852,7 +871,7 @@ export default {
       if (typeof document === 'undefined') return
       document.body.classList.toggle(
         'modal-open',
-        Boolean(this.selectedItem) || Boolean(this.selectedDirectThread) || Boolean(this.selectedSubmission),
+        Boolean(this.threadTask) || Boolean(this.selectedDirectThread) || Boolean(this.selectedSubmission),
       )
     },
     async sendDirectMessage(body, recording = null) {
@@ -872,12 +891,52 @@ export default {
     directUnreadCount(thread) {
       return (thread.messages || []).filter((message) => message.unread && message.sender === 'teacher').length
     },
-    async sendTaskMessage(body, recording = null) {
-      if (!this.selectedItem) return
-      const message = await this.onSendNote(this.selectedItem, body, recording)
-      if (message) {
-        this.selectedItem.messages = [...(this.selectedItem.messages || []), message]
+    async sendTaskMessageOptimistic(task, body, recording = null) {
+      const message = await this.onSendNote(task, body, recording)
+      return { message }
+    },
+    onThreadMessagesUpdated({ taskId, messages, append, threadUnreadCount }) {
+      if (!Array.isArray(this.support?.assignments)) return
+      this.support = {
+        ...this.support,
+        assignments: this.support.assignments.map((row) => {
+          if (Number(row.id) !== Number(taskId)) return row
+          const nextMessages = append
+            ? [...(row.messages || []), append]
+            : (messages || row.messages)
+          return {
+            ...row,
+            messages: nextMessages,
+            thread_unread_count: threadUnreadCount ?? 0,
+          }
+        }),
       }
+      if (this.threadTask && Number(this.threadTask.id) === Number(taskId)) {
+        const updated = this.support.assignments.find((row) => Number(row.id) === Number(taskId))
+        if (updated) this.threadTask = updated
+      }
+    },
+    taskThreadUnread(row) {
+      if (Number.isFinite(Number(row?.thread_unread_count))) {
+        return Math.max(0, Number(row.thread_unread_count))
+      }
+      return this.unreadTeacherMessages(row)
+    },
+    buildThreadPinnedContext(row) {
+      const score = this.completionResult(row)?.accuracy_percent
+      if (score === null || score === undefined) return ''
+      return this.t('teacher.learner_thread_context_score', {
+        task: this.rangeLabel(row),
+        score,
+      })
+    },
+    openTaskThread(row, pinnedContext = '') {
+      this.threadPinnedContext = pinnedContext || this.buildThreadPinnedContext(row)
+      this.threadTask = row
+    },
+    closeTaskThread() {
+      this.threadTask = null
+      this.threadPinnedContext = ''
     },
     async refreshDirectThreads() {
       const threads = this.support?.direct_threads || []
@@ -897,22 +956,11 @@ export default {
       this.showOlderCompleted = false
     },
     openDetails(row) {
-      this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null
-      this.focusConversationComposer = false
-      this.selectedItem = row
-      this.$nextTick(() => {
-        this.$refs.modalClose?.focus()
-        this.$refs.taskConversation?.resetComposer?.()
-      })
+      this.openTaskThread(row)
     },
     openDetailsWithReply(row) {
-      this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null
-      this.focusConversationComposer = true
-      this.selectedItem = row
-      this.$nextTick(() => {
-        this.$refs.taskConversation?.resetComposer?.()
-        this.$refs.taskConversation?.focusComposer?.()
-      })
+      this.openTaskThread(row)
+      this.$nextTick(() => this.$refs.taskThreadPanel?.$refs?.conversation?.focusComposer?.())
     },
     openAssignmentById(recipientId) {
       const row = this.assignments.find((item) => Number(item.id) === Number(recipientId))
@@ -1089,6 +1137,9 @@ export default {
       const locale = this.$i18n?.locale?.value || 'en'
       return formatLearnerDisplayDate(value, this.t.bind(this), locale)
     },
+    openAttemptPlayback(row) {
+      this.playbackRow = row
+    },
     openRecitationReview(row) {
       this.recitationReviewRow = learnerRecitationReviewRow(row)
     },
@@ -1204,8 +1255,7 @@ export default {
       return this.t('teacher.learner_correction_default')
     },
     closeDetails() {
-      this.selectedItem = null
-      this.$nextTick(() => this.previouslyFocused?.focus?.())
+      this.closeTaskThread()
     },
     handleModalKeydown(event) {
       if (event.key === 'Escape') {
@@ -1276,8 +1326,8 @@ export default {
       return (row?.messages || []).filter((message) => message.sender === 'teacher' && message.unread).length
     },
     chatAriaLabel(row) {
-      const unread = this.unreadTeacherMessages(row)
-      const base = `${this.t('teacher.task_conversation')}: ${this.rangeLabel(row)}`
+      const unread = this.taskThreadUnread(row)
+      const base = `${this.t('teacher.learner_message')}: ${this.rangeLabel(row)}`
       return unread ? `${base}. ${this.t('teacher.unread')} (${unread})` : base
     },
     messageWhen(message) {

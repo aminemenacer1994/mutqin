@@ -27,7 +27,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { chooseSupportedRecorderMimeType, createObjectUrlFromBlob, extensionForMimeType, revokeObjectUrl, stopMediaRecorderAndCollectBlob } from '../../scripts/audio/recordingPlayback'
+import { chooseSupportedRecorderMimeType, createObjectUrlFromBlob, extensionForMimeType, revokeObjectUrl, stopMediaRecorderAndCollectBlob } from '@/scripts/audio/recordingPlayback.js'
 
 const MAX_RECORDING_MS = 120000
 

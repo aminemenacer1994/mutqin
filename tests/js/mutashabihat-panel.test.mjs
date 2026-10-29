@@ -8,6 +8,7 @@ const vue = fs.readFileSync(path.join(root, 'resources/js/views/Memorisation.vue
 const compare = fs.readFileSync(path.join(root, 'resources/js/components/MutashabihatCompareModal.vue'), 'utf8')
 const card = fs.readFileSync(path.join(root, 'resources/js/components/MutashabihatPairCard.vue'), 'utf8')
 const cardCss = fs.readFileSync(path.join(root, 'resources/js/components/MutashabihatPairCard.css'), 'utf8')
+const sharedCss = fs.readFileSync(path.join(root, 'resources/js/components/MutashabihatShared.css'), 'utf8')
 
 assert.match(vue, /mutashabihatVisibleRows/)
 assert.match(vue, /mutashabihatPanelInitialLoading/)
@@ -23,5 +24,8 @@ assert.match(compare, /leftOpen: true/)
 assert.match(compare, /audio-control/)
 assert.match(compare, /bi-pause-fill/)
 assert.match(compare, /bi-stop-fill/)
+assert.match(sharedCss, /--mutashabihat-arabic:\s*var\(\s*--mushaf-quran-font/)
+assert.doesNotMatch(sharedCss, /--mutashabihat-arabic:\s*"Amiri Quran"/)
+assert.match(card, /surfaceStyle/)
 
 console.log('mutashabihat-panel.test.mjs passed')

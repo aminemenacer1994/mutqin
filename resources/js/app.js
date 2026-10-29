@@ -148,6 +148,11 @@ function lazyPage(importer, options = {}) {
             onGiveUp: (error) => {
                 reportError(error, { kind: 'chunk_load', feature });
             },
+        }).catch((error) => {
+            if (error && typeof error === 'object') {
+                error.mutqinFeature = feature;
+            }
+            throw error;
         }),
         loadingComponent: options.loadingComponent || PageBootFallback,
         errorComponent: PageLoadError,

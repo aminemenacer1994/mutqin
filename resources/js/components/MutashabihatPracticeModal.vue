@@ -5,6 +5,7 @@
         v-if="open"
         class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium mutashabihat-practice"
         :data-theme="theme"
+        :style="surfaceStyle"
         data-testid="mutashabihat-practice"
       >
         <div class="post-session-simple__backdrop" aria-hidden="true"></div>
@@ -261,7 +262,6 @@ import {
   handleModalKeydown,
   restoreReturnFocus,
 } from '../utils/modalFocus'
-import { QURAN_FONT_FAMILIES, QURAN_FONT_DEFAULT } from '../scripts/quran/quranFonts'
 
 export default {
   name: 'MutashabihatPracticeModal',
@@ -314,10 +314,16 @@ export default {
     }
   },
   computed: {
-    arabicTextStyle() {
+    surfaceStyle() {
       const family = String(this.quranFontFamily || '').trim()
-        || QURAN_FONT_FAMILIES[QURAN_FONT_DEFAULT]
-      return { fontFamily: family }
+      if (!family) return undefined
+      return {
+        '--mutashabihat-arabic': family,
+        '--mushaf-quran-font': family,
+      }
+    },
+    arabicTextStyle() {
+      return { fontFamily: 'var(--mutashabihat-arabic)' }
     },
   },
   watch: {

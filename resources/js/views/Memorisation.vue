@@ -1917,35 +1917,36 @@
                     </select>
                     <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                   </div>
-                  <div class="field setup-field-row" data-tour="setup-range">
+                  <div class="field setup-field-row setup-field-row--range" data-tour="setup-range">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
-                    <div
-                      class="radio-group radio-group-tight radio-group-compact session-range-preset"
-                      role="radiogroup"
-                      :aria-label="t('sessionSetup.rangePresetLabel')"
-                    >
-                      <label class="radio">
-                        <input
-                          type="radio"
-                          name="session-range-preset"
-                          value="full_surah"
-                          :checked="sessionRangePreset === 'full_surah'"
-                          @change="onSessionRangePresetChange('full_surah')"
-                        >
-                        {{ t('sessionSetup.rangePresetFullSurah') }}
-                      </label>
-                      <label class="radio">
-                        <input
-                          type="radio"
-                          name="session-range-preset"
-                          value="custom"
-                          :checked="sessionRangePreset === 'custom'"
-                          @change="onSessionRangePresetChange('custom')"
-                        >
-                        {{ t('sessionSetup.rangePresetCustom') }}
-                      </label>
-                    </div>
-                    <div class="range range-single">
+                    <div class="session-range-block">
+                      <div
+                        class="session-range-preset"
+                        role="radiogroup"
+                        :aria-label="t('sessionSetup.rangePresetLabel')"
+                      >
+                        <label class="session-range-preset__option radio">
+                          <input
+                            type="radio"
+                            name="session-range-preset"
+                            value="full_surah"
+                            :checked="sessionRangePreset === 'full_surah'"
+                            @change="onSessionRangePresetChange('full_surah')"
+                          >
+                          <span class="session-range-preset__label">{{ t('sessionSetup.rangePresetFullSurah') }}</span>
+                        </label>
+                        <label class="session-range-preset__option radio">
+                          <input
+                            type="radio"
+                            name="session-range-preset"
+                            value="custom"
+                            :checked="sessionRangePreset === 'custom'"
+                            @change="onSessionRangePresetChange('custom')"
+                          >
+                          <span class="session-range-preset__label">{{ t('sessionSetup.rangePresetCustom') }}</span>
+                        </label>
+                      </div>
+                      <div class="range range-single session-range-inputs">
                       <input
                         type="number"
                         class="input"
@@ -1965,8 +1966,9 @@
                         min="1"
                         :max="resolveCurrentSurahAyahCount() || undefined"
                       >
+                      </div>
+                      <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                     </div>
-                    <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                   </div>
                   <div class="field setup-field-row">
                     <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
@@ -4881,26 +4883,6 @@
                 </button>
               </template>
             </div>
-            <details v-if="!onboardingSampleSessionActive && postSessionCtaButtons.length > 2" class="post-session-simple__optional">
-              <summary>{{ t('memorisation.postSession.recommendation.moreOptions') }}</summary>
-              <div class="post-session-simple__actions post-session-simple__actions--2">
-                <button
-                  v-for="btn in postSessionCtaButtons.slice(2)"
-                  :key="btn.id"
-                  type="button"
-                  class="post-session-simple__btn"
-                  :class="`post-session-simple__btn--${btn.variant}`"
-                  :disabled="postSessionCtaButtonDisabled(btn)"
-                  :aria-busy="postSessionCtaButtonBusy(btn) ? 'true' : 'false'"
-                  :aria-label="btn.label"
-                  :data-action="btn.dataAction"
-                  @click.stop.prevent="onPostSessionCtaAction(btn.action)"
-                >
-                  <i v-if="btn.icon" :class="btn.icon" aria-hidden="true"></i>
-                  <span>{{ btn.label }}</span>
-                </button>
-              </div>
-            </details>
           </footer>
         </div>
       </div>

@@ -42,6 +42,10 @@ test('isChunkLoadError detects webpack and dynamic import failures', () => {
   assert.equal(recovery.isChunkLoadError({ message: 'Network Error' }), false)
   assert.equal(recovery.isChunkLoadError({ message: 'Failed to fetch' }), false)
   assert.equal(recovery.isChunkLoadError({ message: 'Speechmatics connection failed' }), false)
+  assert.equal(
+    recovery.isChunkLoadError({ message: "Cannot find module '../scripts/audio/recordingPlayback.js'" }),
+    false,
+  )
   assert.equal(recovery.isChunkLoadError(null), false)
 })
 

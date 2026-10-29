@@ -64,7 +64,7 @@ export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 1024
 /** ~1s of 16-bit PCM at 48kHz / 1024-sample frames. Drop older frames instead of dumping. */
 const SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS = 48
 /** Never send more than ~125ms of audio per pump tick after a main-thread stall. */
-export const SPEECHMATICS_MAX_DRAIN_BUFFERS = 6
+export const SPEECHMATICS_MAX_DRAIN_BUFFERS = 8
 /** Back off when the browser WS buffer is this full (Speechmatics closes faster-than-realtime dumps). */
 export const SPEECHMATICS_SOCKET_BACKPRESSURE_BYTES = 256 * 1024
 export {

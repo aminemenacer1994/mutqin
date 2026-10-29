@@ -73,7 +73,8 @@ final class Ackee
         }
 
         if (! preg_match('#^https://[a-z0-9.-]+(?::\d+)?$#i', $server)
-            && ! preg_match('#^http://(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$#i', $server)) {
+            && ! preg_match('#^http://(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$#i', $server)
+            && ! str_starts_with($server, '/')) {
             return '';
         }
 

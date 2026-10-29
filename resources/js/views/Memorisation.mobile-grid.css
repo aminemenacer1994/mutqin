@@ -5241,11 +5241,27 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     white-space: nowrap !important;
   }
 
+  .tools-body .sheet--setup .session-range-preset {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .tools-body .sheet--setup .session-range-preset__option {
+    min-height: 2.75rem !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
   .tools-body .setup-field-row > .select,
 .tools-body .setup-field-row > .input,
 .tools-body .setup-field-row .range,
 .tools-body .setup-field-row .range-control,
 .tools-body .setup-field-row .radio-group,
+.tools-body .setup-field-row .session-range-block,
 .tools-body .setup-field-row .field-hint {
     width: 100% !important;
     max-width: 100% !important;

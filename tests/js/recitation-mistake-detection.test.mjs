@@ -34,6 +34,9 @@ const {
   getRecitationColorCounts,
   deriveWeakAyahsFromWordStatuses,
   RECITATION_THRESHOLDS,
+  tryLiveSelfCorrectionBacktrack,
+  findFuzzyWordIndexWithinWindow,
+  LIVE_SELF_CORRECTION_LOOKBACK,
 } = recitation.namespace
 
 const target = 'قل هو الله أحد'
@@ -621,6 +624,68 @@ function assertStatuses(result, expected) {
     recovered.statuses.slice(4).every((word) => word.status !== 'incorrect'),
     'recovered tail must not stay red',
   )
+}
+
+// Live self-correction: wrong word then correct retry must not stay red on the slot.
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله رب صمد العالمين الرحمن الرحيم'),
+    {
+      lifecycle: 'live',
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    },
+  )
+  assert.equal(live.statuses[3].status, 'correct', 'العالمين self-correction must turn green')
+  assert.notEqual(live.statuses[3].errorCategory, 'incorrect')
+  assert.equal(live.statuses[4].status, 'correct')
+  assert.equal(live.statuses[5].status, 'correct')
+}
+
+// Fuzzy skip-ahead: ASR drops one alef but phrase order is recoverable.
+{
+  const fuzzyTarget = 'رب العالمين'
+  const live = buildRealtimePreviewAlignment(
+    fuzzyTarget,
+    createWordsFromTranscript('رب علمين'),
+    {
+      lifecycle: 'live',
+      lookahead: 0,
+      exactSkipLookahead: 2,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    },
+  )
+  assert.equal(live.statuses[0].status, 'correct')
+  assert.ok(['correct', 'partial'].includes(live.statuses[1].status), 'fuzzy match on العالمين family')
+}
+
+// Error categories on live skip gaps.
+{
+  const live = buildRealtimePreviewAlignment(
+    target,
+    createWordsFromTranscript('قل أحد'),
+    {
+      lifecycle: 'recording',
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: false,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+    },
+  )
+  assert.equal(live.statuses[1].errorCategory, 'skipped')
+  assert.equal(live.statuses[2].errorCategory, 'skipped')
 }
 
 console.log('recitation-mistake-detection: ok')

@@ -41822,13 +41822,90 @@ but not its destructive red. */
 }
 
 .tools-body .offcanvas-audio-panel .radio-group-compact,
-.tools-body .sheet--setup .session-range-preset,
 .tools-body .sheet--setup .playback-mode-radios {
   gap: 0.45rem;
 }
 
+/* Session setup — ayah range: compact segmented control (always one row). */
+.tools-body .sheet--setup .session-range-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.tools-body .sheet--setup .session-range-preset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.22rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--zone-elevated) 90%, var(--surface) 10%);
+  box-sizing: border-box;
+}
+
+.tools-body .sheet--setup .session-range-preset__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0.32rem 0.4rem;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: clamp(0.68rem, 2.6vw, 0.78rem);
+  font-weight: 550;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tools-body .sheet--setup .session-range-preset__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tools-body .sheet--setup .session-range-preset__option:hover {
+  transform: none;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface) 92%);
+}
+
+.tools-body .sheet--setup .session-range-preset__option:has(input:checked),
+.tools-body .sheet--setup .session-range-preset__option:has(input:checked):hover {
+  border: 0;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+
+.tools-body .sheet--setup .session-range-preset__option input[type="radio"] {
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin: 0;
+}
+
+.tools-body .sheet--setup .session-range-inputs {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tools-body .sheet--setup .setup-field-row--range {
+  gap: 0.45rem;
+}
+
 .tools-body .offcanvas-audio-panel .radio-group-compact .radio,
-.tools-body .sheet--setup .session-range-preset .radio,
 .tools-body .sheet--setup .playback-mode-radios .radio {
   display: inline-flex;
   align-items: center;
@@ -41842,7 +41919,6 @@ but not its destructive red. */
 }
 
 .tools-body .offcanvas-audio-panel .radio-group-compact .radio input[type="radio"],
-.tools-body .sheet--setup .session-range-preset .radio input[type="radio"],
 .tools-body .sheet--setup .playback-mode-radios .radio input[type="radio"] {
   flex-shrink: 0;
   width: 1rem;

@@ -118,6 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
+            Route::get('/me/assignments/{recipient}/messages', [LearnerSupportController::class, 'assignmentMessages'])->name('api.me.assignments.messages.index');
             Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
             Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1')->name('api.me.teachers.messages.store');
             Route::get('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'teacherMessages'])->name('api.me.teachers.messages.index');

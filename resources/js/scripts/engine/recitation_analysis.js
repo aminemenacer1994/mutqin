@@ -206,9 +206,21 @@ function withRecognitionDebugFields(payload, heardWord = {}) {
   }
 }
 
+function deriveAlignmentErrorCategory(payload = {}) {
+  const status = String(payload?.status || '').toLowerCase()
+  const type = String(payload?.type || '').toUpperCase()
+  if (status === 'omitted' || type === 'DELETION' || status === 'skipped') return 'skipped'
+  if (payload?.outOfOrder && (status === 'correct' || status === 'partial')) return 'misordered'
+  if (status === 'incorrect') return 'incorrect'
+  if (status === 'partial') return 'partial'
+  return ''
+}
+
 function withHeardAlignmentFields(payload, heardWord = {}, status = payload?.status) {
+  const errorCategory = payload?.errorCategory || deriveAlignmentErrorCategory(payload)
   return withRecognitionDebugFields({
     ...payload,
+    ...(errorCategory ? { errorCategory } : {}),
     rawWord: heardRawWord(heardWord),
     displayWord: status === 'correct' ? String(payload?.text || '') : '',
     ...heardTiming(heardWord),
@@ -357,6 +369,7 @@ function paintLiveSkipGap(
       targetWord: targetWords[skipIndex] || '',
       status: isLiveLifecycle ? 'pending' : 'omitted',
       type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+      errorCategory: 'skipped',
       note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
       actual: '',
       confidence: 0,
@@ -542,6 +555,9 @@ function findLiveOpeningRestartHint(targetWords = [], heardWords = []) {
   return false
 }
 
+/** Recent heard tokens scanned for live self-correction backtrack. */
+export const LIVE_SELF_CORRECTION_LOOKBACK = 8
+
 export function buildRealtimePreviewAlignment(targetText = '', recognitionWords = [], options = {}) {
   const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
@@ -640,8 +656,34 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     if (isLikelyOffTargetTransientNoise(heardWord, targetWords, cursor, matchThresholds)) {
       continue
     }
-    if (shouldSkipLearnerStutterRepeat(heardWords, heardIndex, targetWords, cursor)) {
+    if (shouldSkipLearnerStutterRepeat(heardWords, heardIndex, targetWords, cursor, statuses)) {
       continue
+    }
+    if (isLiveLifecycle && cursor > 0) {
+      const backtrack = tryLiveSelfCorrectionBacktrack({
+        heardWord,
+        heardIndex,
+        cursor,
+        statuses,
+        targetWords,
+        displayWords,
+        targetUnits,
+        matchThresholds: { ...matchThresholds, partialAdvances: options.partialAdvances },
+        correctSimilarity,
+        allowArticleMatch,
+        lookback: Number.isFinite(Number(options.selfCorrectionLookback))
+          ? Math.max(1, Math.min(16, Number(options.selfCorrectionLookback)))
+          : LIVE_SELF_CORRECTION_LOOKBACK,
+      })
+      if (backtrack) {
+        resetLiveStatusesForSelfCorrection(statuses, targetUnits, displayWords, targetWords, backtrack.slot + 1, cursor - 1)
+        statuses[backtrack.slot] = backtrack.classified
+        cursor = backtrack.slot + 1
+        consecutiveIncorrect = 0
+        firstBlockingIndex = -1
+        lostLock = false
+        continue
+      }
     }
     if (
       isLiveLifecycle
@@ -727,6 +769,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
           targetWord,
           status: isLiveLifecycle ? 'pending' : 'omitted',
           type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+          errorCategory: 'skipped',
           note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[cursor] || targetWord} before continuing.`,
           actual: '',
           confidence: 0,
@@ -748,13 +791,23 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       }
     }
 
-    const exactAheadIndex = findExactWordIndexWithinWindow(
+    const skipMatchOptions = { allowArticleMatch }
+    let exactAheadIndex = findExactWordIndexWithinWindow(
       targetWords,
       heardWord.word,
       cursor + 1,
       skipWindow,
-      { allowArticleMatch }
+      skipMatchOptions,
     )
+    if (exactAheadIndex < 0 && skipWindow > 0) {
+      exactAheadIndex = findFuzzyWordIndexWithinWindow(
+        targetWords,
+        heardWord.word,
+        cursor + 1,
+        skipWindow,
+        { allowArticleMatch, correctSimilarity, heardWord },
+      )
+    }
     if (
       exactAheadIndex >= 0
       && shouldApplyExactSkipAhead({
@@ -783,6 +836,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
           targetWord: targetWords[skipIndex] || '',
           status: isLiveLifecycle ? 'pending' : 'omitted',
           type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+          errorCategory: 'skipped',
           note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
           actual: '',
           confidence: 0,
@@ -799,11 +853,16 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       }
       firstBlockingIndex = cursor
       const aheadUnit = targetUnits[exactAheadIndex] || null
+      const aheadSimilarity = getRecitationWordSimilarity(
+        targetWords[exactAheadIndex] || '',
+        heardWord.word,
+        { allowArticleMatch },
+      )
       statuses[exactAheadIndex] = classifyWordMatch({
         displayText: displayWords[exactAheadIndex] || targetWords[exactAheadIndex] || '',
         targetWord: targetWords[exactAheadIndex] || '',
         heardWord,
-        similarity: 1,
+        similarity: aheadSimilarity,
         outOfOrderIndex: exactAheadIndex,
         targetIndex: exactAheadIndex,
         targetUnit: aheadUnit,
@@ -2324,6 +2383,123 @@ function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lo
   return -1
 }
 
+/**
+ * Fuzzy lookahead for ASR phonetic drift (not a substitute for exact Qur'an tokens).
+ * Requires high similarity and rejects soft-letter-only near-misses that must stay amber/red.
+ */
+export function findFuzzyWordIndexWithinWindow(
+  words = [],
+  word = '',
+  fromIndex = 0,
+  lookahead = 5,
+  options = {},
+) {
+  if (!word) return -1
+  const windowSize = Number(lookahead)
+  if (!Number.isFinite(windowSize) || windowSize <= 0) return -1
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
+    ? Number(options.correctSimilarity)
+    : RECITATION_CORRECT_SIMILARITY
+  const heardWord = options.heardWord || { word, confidence: 1 }
+  const end = Math.min(words.length, Math.max(fromIndex, 0) + windowSize)
+  let bestIndex = -1
+  let bestSimilarity = 0
+  for (let index = Math.max(0, fromIndex); index < end; index += 1) {
+    const candidate = words[index] || ''
+    if (!candidate) continue
+    if (findExactWordIndexWithinWindow(words, word, index, 1, { allowArticleMatch }) === index) {
+      return index
+    }
+    const similarity = getRecitationWordSimilarity(candidate, word, { allowArticleMatch })
+    if (similarity < correctSimilarity) continue
+    if (differsOnlyBySoftAsrLetters(candidate, word, { allowArticleMatch })) continue
+    if (similarity > bestSimilarity) {
+      bestSimilarity = similarity
+      bestIndex = index
+    }
+  }
+  if (bestIndex < 0) return -1
+  if (isLowConfidenceRecognitionWord(heardWord) && bestSimilarity < 0.92) return -1
+  return bestIndex
+}
+
+function resetLiveStatusesForSelfCorrection(
+  statuses = [],
+  targetUnits = [],
+  displayWords = [],
+  targetWords = [],
+  fromIndex = 0,
+  toIndex = -1,
+) {
+  const start = Math.max(0, fromIndex)
+  const end = Math.min(statuses.length - 1, toIndex)
+  for (let index = start; index <= end; index += 1) {
+    const unit = targetUnits[index] || null
+    statuses[index] = {
+      text: displayWords[index] || targetWords[index] || '',
+      targetWord: targetWords[index] || '',
+      status: 'pending',
+      note: '',
+      actual: '',
+      confidence: 0,
+      similarity: 0,
+      targetIndex: index,
+      ayahKey: unit?.ayahKey || '',
+      ayahNumber: unit?.ayahNumber ?? null,
+      ayahIndex: Number.isFinite(Number(unit?.ayahIndex)) ? Number(unit.ayahIndex) : 0,
+      ayahWordIndex: Number.isFinite(Number(unit?.ayahWordIndex)) ? Number(unit.ayahWordIndex) : index,
+      ...unmatchedTargetAlignmentFields(),
+    }
+  }
+}
+
+/**
+ * Live-only: learner re-recites a recently missed word — rewind cursor without
+ * keeping a permanent mistake on the corrected slot.
+ */
+export function tryLiveSelfCorrectionBacktrack({
+  heardWord = {},
+  heardIndex = 0,
+  cursor = 0,
+  statuses = [],
+  targetWords = [],
+  displayWords = [],
+  targetUnits = [],
+  matchThresholds = {},
+  correctSimilarity = RECITATION_CORRECT_SIMILARITY,
+  allowArticleMatch = true,
+  lookback = LIVE_SELF_CORRECTION_LOOKBACK,
+} = {}) {
+  const slotCursor = Number(cursor) || 0
+  if (slotCursor <= 0) return null
+  if (isLikelyTransientNoiseWord(heardWord, matchThresholds)) return null
+  const start = Math.max(0, slotCursor - Math.max(1, Number(lookback) || LIVE_SELF_CORRECTION_LOOKBACK))
+  for (let slot = slotCursor - 1; slot >= start; slot -= 1) {
+    const prior = statuses[slot] || {}
+    if (!['incorrect', 'partial', 'uncertain'].includes(String(prior.status || ''))) continue
+    const targetWord = targetWords[slot] || ''
+    const similarity = getRecitationWordSimilarity(targetWord, heardWord.word, { allowArticleMatch })
+    if (similarity < correctSimilarity) continue
+    const classified = classifyWordMatch({
+      displayText: displayWords[slot] || targetWord,
+      targetWord,
+      heardWord,
+      similarity,
+      outOfOrderIndex: -1,
+      targetIndex: slot,
+      targetUnit: targetUnits[slot] || null,
+      ...matchThresholds,
+      correctSimilarity,
+      allowArticleMatch,
+    })
+    if (classified.status !== 'correct' && classified.status !== 'partial') continue
+    if (classified.status === 'partial' && matchThresholds.partialAdvances === false) continue
+    return { slot, classified, heardIndex }
+  }
+  return null
+}
+
 function normalizeRecognitionWords(words = [], options = {}) {
   const provider = options.provider || 'unknown'
   const segmentId = options.segmentId || 'segment'
@@ -3238,12 +3414,22 @@ function findReturnToCurrentTarget(heardWords = [], fromHeardIndex = 0, targetWo
   return -1
 }
 
-export function shouldSkipLearnerStutterRepeat(heardWords = [], heardIndex = 0, targetWords = [], cursor = 0) {
+export function shouldSkipLearnerStutterRepeat(
+  heardWords = [],
+  heardIndex = 0,
+  targetWords = [],
+  cursor = 0,
+  statuses = [],
+) {
   const heardWord = heardWords[heardIndex] || {}
   const word = String(heardWord?.word || '').trim()
   if (!word) return false
   const prevHeard = heardWords[heardIndex - 1] || null
   if (cursor > 0 && word === String(targetWords[cursor - 1] || '')) {
+    const priorStatus = String(statuses[cursor - 1]?.status || '')
+    if (['incorrect', 'partial', 'uncertain'].includes(priorStatus)) {
+      return false
+    }
     return true
   }
   if (heardIndex > 0 && prevHeard?.word === word) {

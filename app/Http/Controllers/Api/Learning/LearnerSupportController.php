@@ -83,6 +83,24 @@ class LearnerSupportController extends Controller
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
+    public function assignmentMessages(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $messages = $assignments->learnerAssignmentThread($user, $recipient);
+        $unread = count(array_filter(
+            $messages,
+            fn (array $message) => ($message['sender'] ?? null) === 'teacher' && ($message['unread'] ?? false),
+        ));
+
+        return response()->json([
+            'messages' => $messages,
+            'thread_unread_count' => $unread,
+        ])->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
     public function storeAssignmentMessage(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
     {
         TeacherFeatures::abortUnlessEnabled();

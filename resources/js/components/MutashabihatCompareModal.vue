@@ -5,6 +5,7 @@
         v-if="open"
         class="post-session-simple post-session-simple--calm-v2 mutashabihat-compare"
         :data-theme="theme"
+        :style="surfaceStyle"
         data-testid="mutashabihat-compare"
       >
         <div class="post-session-simple__backdrop" aria-hidden="true"></div>
@@ -217,6 +218,16 @@ export default {
       rightOpen: true,
       _returnFocusEl: null,
     }
+  },
+  computed: {
+    surfaceStyle() {
+      const family = String(this.quranFontFamily || '').trim()
+      if (!family) return undefined
+      return {
+        '--mutashabihat-arabic': family,
+        '--mushaf-quran-font': family,
+      }
+    },
   },
   watch: {
     open: {

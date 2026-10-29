@@ -366,7 +366,7 @@ import {
   revokeObjectUrl,
   sanitizeAudioDuration,
   stopMediaRecorderAndCollectBlob,
-} from '../scripts/audio/recordingPlayback'
+} from '@/scripts/audio/recordingPlayback.js'
 import {
   RECITATION_PROCESSING_STAGE,
   RECITATION_FAILURE_KIND,
@@ -540,7 +540,12 @@ import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
 const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
-  loader: () => wrapChunkImport(importer, { feature }),
+  loader: () => wrapChunkImport(importer, { feature }).catch((error) => {
+    if (error && typeof error === 'object') {
+      error.mutqinFeature = feature
+    }
+    throw error
+  }),
   errorComponent: PageLoadError,
   delay: 120,
   timeout: 120000,

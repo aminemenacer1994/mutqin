@@ -60,6 +60,7 @@ export function isChunkLoadError(error) {
     const message = String(error.message || error.reason || '');
     const request = String(error.request || error.src || '');
     if (name === 'ChunkLoadError') return true;
+    if (/Cannot find module/i.test(message)) return false;
     if (
         /Loading chunk [\w.-]+ failed/i.test(message)
         || /Failed to fetch dynamically imported module/i.test(message)
@@ -336,6 +337,9 @@ export function wrapChunkImport(importer, options = {}) {
         .then(() => importer())
         .catch((error) => {
             if (!isChunkLoadError(error)) {
+                if (typeof console !== 'undefined' && typeof console.error === 'function') {
+                    console.error(`[Mutqin async load:${options.feature || 'page'}]`, error);
+                }
                 throw error;
             }
 

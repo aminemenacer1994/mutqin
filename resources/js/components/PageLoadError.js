@@ -1,5 +1,6 @@
 import { isBrowserOffline } from '../utils/networkStatus'
 import { clearChunkReloadFlag } from '../utils/chunkLoadRecovery'
+import { classifyAsyncLoadError, logAsyncLoadError } from '../utils/asyncLoadError'
 
 /**
  * Recoverable async-page / lazy-chunk failure. Used by lazyPage() and
@@ -7,7 +8,10 @@ import { clearChunkReloadFlag } from '../utils/chunkLoadRecovery'
  */
 export default {
     name: 'PageLoadError',
-    props: { error: { type: Object, default: null } },
+    props: {
+        error: { type: Object, default: null },
+        feature: { type: String, default: 'page' },
+    },
     data() {
         return {
             offline: isBrowserOffline(),
@@ -15,26 +19,38 @@ export default {
         }
     },
     computed: {
+        loadKind() {
+            return classifyAsyncLoadError(this.error)
+        },
+        isChunkError() {
+            return this.loadKind === 'chunk'
+        },
+        resolvedFeature() {
+            return this.error?.mutqinFeature || this.feature || 'page'
+        },
         title() {
-            return this.offline
-                ? this.t('common.status.offlineTitle')
-                : this.t('common.status.chunkErrorTitle')
+            if (this.offline) return this.t('common.status.offlineTitle')
+            if (this.isChunkError) return this.t('common.status.chunkErrorTitle')
+            return this.t('common.status.bootErrorTitle')
         },
         description() {
-            return this.offline
-                ? this.t('common.status.offlineDesc')
-                : this.t('common.status.chunkErrorDesc')
+            if (this.offline) return this.t('common.status.offlineDesc')
+            if (this.isChunkError) return this.t('common.status.chunkErrorDesc')
+            return this.t('common.status.bootErrorDesc')
         },
         retryLabel() {
-            return this.offline
-                ? this.t('common.status.retry')
-                : this.t('common.status.refresh')
+            if (this.offline) return this.t('common.status.retry')
+            if (this.isChunkError) return this.t('common.status.refresh')
+            return this.t('common.status.retry')
         },
         returnHomeLabel() {
             return this.t('common.status.returnHome')
         },
     },
     mounted() {
+        if (!this.isChunkError) {
+            logAsyncLoadError(this.error, this.resolvedFeature)
+        }
         this.onlineHandler = () => {
             const wasOffline = this.offline
             this.offline = isBrowserOffline()

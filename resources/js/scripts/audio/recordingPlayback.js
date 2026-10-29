@@ -295,3 +295,11 @@ export async function playAudioElement(audio) {
   }
   return true
 }
+
+/** @param {number} seconds */
+export function formatClock(seconds) {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0))
+  const minutes = Math.floor(total / 60)
+  const rest = String(total % 60).padStart(2, '0')
+  return `${minutes}:${rest}`
+}

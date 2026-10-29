@@ -7700,6 +7700,276 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   color: color-mix(in srgb, var(--dash-ink) 82%, var(--dash-muted));
 }
 
+.user-dashboard .learner-teacher__attempt-trend {
+  display: grid;
+  gap: 0.25rem;
+  margin-block-start: 0.15rem;
+}
+
+.user-dashboard .learner-teacher__attempt-trend-btn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  min-block-size: 2.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--dash-border) 88%, transparent);
+  background: color-mix(in srgb, var(--dash-card-bg) 94%, var(--dash-accent-light));
+  color: color-mix(in srgb, var(--dash-ink) 86%, var(--dash-muted));
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.user-dashboard .learner-teacher__attempt-trend-btn:hover,
+.user-dashboard .learner-teacher__attempt-trend-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--dash-accent) 45%, var(--dash-border));
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.user-dashboard .learner-teacher__attempt-trend-scores {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.user-dashboard .learner-teacher__attempt-trend-score.is-final {
+  color: var(--dash-ink);
+  font-weight: 750;
+}
+
+.user-dashboard .learner-teacher__attempt-trend-sep {
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+
+[dir="rtl"] .user-dashboard .learner-teacher__attempt-trend-sep.bi-arrow-right {
+  transform: scaleX(-1);
+}
+
+.user-dashboard .learner-teacher__attempt-trend-more {
+  font-weight: 550;
+  color: color-mix(in srgb, var(--dash-ink) 62%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__attempt-sparkline {
+  color: color-mix(in srgb, var(--dash-accent) 70%, var(--dash-ink));
+  flex-shrink: 0;
+}
+
+.user-dashboard .learner-teacher__attempt-delta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--dash-ink) 72%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__practice-blocked {
+  margin: 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--dash-ink) 68%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__attempt-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.user-dashboard .learner-teacher__attempt-history-row {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--dash-border) 90%, transparent);
+  background: var(--dash-card-bg);
+}
+
+.user-dashboard .learner-teacher__attempt-history-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+}
+
+.user-dashboard .learner-teacher__attempt-history-date {
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--dash-ink) 65%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__attempt-history-score {
+  margin-inline-start: auto;
+  font-weight: 700;
+}
+
+.user-dashboard .learner-teacher__attempt-history-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--dash-ink) 80%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__attempt-history-listen {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-block-size: 2.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.user-dashboard .learner-teacher__card-primary.is-disabled,
+.user-dashboard .learner-teacher__card-primary:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.user-dashboard .learner-teacher__chat-btn.has-unread {
+  position: relative;
+}
+
+.user-dashboard .learner-teacher__chat-btn.has-unread .bi-chat-left-text {
+  color: var(--dash-accent);
+}
+
+.user-dashboard .learner-task-thread-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dash-z-drawer, 1200);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-dashboard .learner-task-thread-root.is-mobile {
+  align-items: stretch;
+}
+
+.user-dashboard .learner-task-thread__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--dash-ink) 35%, transparent);
+}
+
+.user-dashboard .learner-task-thread {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 26rem);
+  max-height: 100dvh;
+  margin-inline-start: auto;
+  background: var(--dash-card-bg);
+  border-inline-start: 1px solid var(--dash-border);
+  box-shadow: var(--dash-shadow-lg, 0 12px 40px rgb(0 0 0 / 18%));
+}
+
+.user-dashboard .learner-task-thread-root.is-mobile .learner-task-thread {
+  width: 100%;
+  max-height: 92dvh;
+  margin-block-start: auto;
+  border-radius: 1rem 1rem 0 0;
+  border-inline-start: 0;
+}
+
+.user-dashboard .learner-task-thread__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.user-dashboard .learner-task-thread__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.user-dashboard .learner-task-thread__subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--dash-ink) 68%, var(--dash-muted));
+}
+
+.user-dashboard .learner-task-thread__close {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+.user-dashboard .learner-task-thread__context {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8125rem;
+  background: color-mix(in srgb, var(--dash-accent-light) 45%, var(--dash-card-bg));
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.user-dashboard .learner-task-thread__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0.65rem 0.95rem 0.95rem;
+  overflow: hidden;
+}
+
+.user-dashboard .learner-task-thread__thread {
+  max-height: min(52dvh, 28rem);
+}
+
+.user-dashboard .learner-task-thread-root.is-mobile .learner-task-thread__thread {
+  max-height: min(46dvh, 22rem);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__day-label {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--dash-ink) 62%, var(--dash-muted));
+  text-align: center;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble.is-teacher {
+  margin-inline-end: auto;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble.is-student {
+  margin-inline-start: auto;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__receipt {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--dash-ink) 58%, var(--dash-muted));
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__retry {
+  margin-block-start: 0.25rem;
+  min-block-size: 2.75rem;
+  padding: 0.25rem 0.55rem;
+  border: 0;
+  background: transparent;
+  color: var(--dash-accent);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button {
+  min-block-size: 2.75rem;
+  min-inline-size: 2.75rem;
+}
+
 .user-dashboard .learner-teacher__feedback-card.is-read {
   opacity: 0.68;
 }
@@ -8221,6 +8491,129 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   color: var(--success-text, #2d6a4f);
 }
 
+.user-dashboard .learner-teacher__result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+}
+
+.user-dashboard .learner-teacher__listen-btn {
+  min-block-size: 2.75rem;
+}
+
+.user-dashboard .learner-playback-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.user-dashboard .learner-playback-shell__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--dash-ink) 44%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.user-dashboard .learner-playback-shell__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.85rem;
+  inline-size: min(100%, 40rem);
+  max-block-size: min(92dvh, 44rem);
+  overflow: auto;
+  padding: 1rem 1.1rem 1.25rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 1rem;
+  background: var(--dash-card-bg);
+  box-shadow: 0 1.5rem 3rem rgb(15 18 22 / 0.18);
+}
+
+.user-dashboard .learner-playback-shell__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.user-dashboard .learner-playback-shell__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.user-dashboard .learner-playback-shell__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .learner-playback-shell__close {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+}
+
+.user-dashboard .learner-playback-shell__body {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.user-dashboard .learner-playback-shell__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.user-dashboard .learner-playback-shell__loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  min-block-size: 2.75rem;
+}
+
+.user-dashboard .learner-playback-track__seek {
+  background: linear-gradient(
+    to inline-end,
+    var(--dash-accent) 0%,
+    var(--dash-accent) var(--playback-seek, 0%),
+    color-mix(in srgb, var(--dash-border) 70%, transparent) var(--playback-seek, 0%),
+    color-mix(in srgb, var(--dash-border) 70%, transparent) 100%
+  );
+}
+
+.user-dashboard .learner-playback-shell.is-mobile {
+  align-items: end;
+  padding: 0;
+}
+
+.user-dashboard .learner-playback-shell.is-mobile .learner-playback-shell__panel {
+  inline-size: 100%;
+  max-block-size: min(94dvh, 100%);
+  border-radius: 1.15rem 1.15rem 0 0;
+  border-inline: 0;
+  border-block-end: 0;
+}
+
+@media (max-width: 767.98px) {
+  .user-dashboard .learner-playback-shell {
+    align-items: end;
+    padding: 0;
+  }
+
+  .user-dashboard .learner-playback-shell__panel {
+    inline-size: 100%;
+    max-block-size: min(94dvh, 100%);
+    border-radius: 1.15rem 1.15rem 0 0;
+  }
+}
+
 /* Recitation review modal on student dashboard (read-only) */
 body.teacher-recite-modal-open { overflow: hidden; }
 
@@ -8356,6 +8749,373 @@ body.teacher-recite-modal-open { overflow: hidden; }
 .user-dashboard .teacher-recite-mushaf .recitation-word-partial,
 .teacher-recite-mushaf .recitation-word-partial {
   color: color-mix(in srgb, var(--warning, #b7791f) 85%, var(--dash-ink));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Student dashboard shells — aligned with teacher dashboard modals/drawers
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.user-dashboard {
+  --dash-student-overlay: color-mix(in srgb, rgb(30 24 18) 45%, transparent);
+  --dash-student-panel: var(--dash-drawer-panel, var(--dash-surface));
+  --dash-student-panel-soft: var(--dash-drawer-panel-soft, var(--dash-card-bg));
+  --dash-student-border: var(--dash-drawer-border, var(--dash-border-strong));
+  --dash-student-shadow:
+    0 24px 60px color-mix(in srgb, var(--dash-ink) 22%, transparent),
+    0 1px 0 color-mix(in srgb, var(--dash-accent) 8%, transparent);
+}
+
+[data-theme="dark"] .user-dashboard {
+  --dash-student-overlay: rgba(8, 6, 4, 0.72);
+  --dash-student-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.55),
+    0 -1px 0 rgba(230, 207, 181, 0.08);
+}
+
+/* Centered dialog (submission, direct messages, playback) */
+.user-dashboard .dash-student-dialog-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1195;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2.4vw, 1.35rem);
+  animation: dash-drawer-root-in 260ms var(--dash-ease) both;
+}
+
+.user-dashboard .dash-student-dialog-root .dash-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: var(--dash-student-overlay);
+}
+
+.user-dashboard .dash-student-dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  inline-size: min(100%, 39rem);
+  max-block-size: min(92dvh, 44rem);
+  overflow: hidden;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 1rem;
+  background: var(--dash-student-panel);
+  color: var(--dash-ink);
+  box-shadow: var(--dash-student-shadow);
+}
+
+.user-dashboard .dash-student-dialog--wide {
+  inline-size: min(100%, 42rem);
+  max-block-size: min(92dvh, 46rem);
+}
+
+.user-dashboard .dash-student-dialog--thread {
+  inline-size: min(100%, 36rem);
+  max-block-size: min(88dvh, 40rem);
+}
+
+.user-dashboard .dash-student-dialog--sheet {
+  inline-size: min(100%, 40rem);
+  max-block-size: min(90dvh, 42rem);
+}
+
+.user-dashboard .dash-student-dialog .dash-drawer__head {
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid var(--dash-student-border);
+  background: color-mix(in srgb, var(--dash-student-panel-soft) 55%, var(--dash-student-panel));
+}
+
+.user-dashboard .dash-student-dialog__body {
+  overflow: auto;
+  padding: 1rem 1.15rem 1.25rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dash-student-panel-soft) 88%, var(--dash-bg)) 0%,
+      var(--dash-student-panel-soft) 14%,
+      var(--dash-student-panel-soft) 100%
+    );
+}
+
+/* Side thread drawer (task messages) — reuses dash-drawer chrome */
+.user-dashboard .dash-student-thread-root {
+  --dash-drawer-width: min(28rem, 100%);
+}
+
+.user-dashboard .dash-student-thread-root .dash-student-thread {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-dashboard .dash-student-thread__context {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  border-bottom: 1px solid var(--dash-student-border);
+  background: color-mix(in srgb, var(--dash-accent-light) 42%, var(--dash-student-panel));
+}
+
+.user-dashboard .dash-student-thread__body {
+  flex: 1;
+  min-height: 0;
+}
+
+.user-dashboard .dash-student-thread__thread {
+  max-height: min(46dvh, 24rem);
+}
+
+/* Legacy class aliases — keep older markup working */
+.user-dashboard .learner-teacher__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2.4vw, 1.35rem);
+  background: transparent;
+}
+
+.user-dashboard .learner-teacher__modal {
+  inline-size: min(100%, 39rem);
+  max-block-size: min(92dvh, 44rem);
+  border: 1px solid var(--dash-student-border);
+  border-radius: 1rem;
+  background: var(--dash-student-panel);
+  box-shadow: var(--dash-student-shadow);
+  overflow: hidden;
+}
+
+.user-dashboard .learner-teacher__modal-head {
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid var(--dash-student-border);
+  background: color-mix(in srgb, var(--dash-student-panel-soft) 55%, var(--dash-student-panel));
+}
+
+.user-dashboard .learner-teacher__modal-close {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--dash-student-border);
+  background: var(--dash-student-panel-soft);
+}
+
+.user-dashboard .learner-teacher__modal-close:hover,
+.user-dashboard .learner-teacher__modal-close:focus-visible {
+  background: color-mix(in srgb, var(--dash-accent-light) 42%, var(--dash-student-panel));
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+/* Conversation thread — teacher message modal parity */
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__thread {
+  display: grid;
+  gap: 0.55rem;
+  max-height: min(46dvh, 26rem);
+  padding: 0.2rem 0;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble {
+  display: grid;
+  gap: 0.2rem;
+  inline-size: -moz-fit-content;
+  inline-size: fit-content;
+  max-inline-size: min(86%, 30rem);
+  padding: 0.72rem 0.85rem;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 0.875rem 0.875rem 0.875rem 0.25rem;
+  background: var(--dash-student-panel-soft);
+  box-shadow: var(--dash-shadow-sm), var(--dash-inset);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble.is-student {
+  margin-inline-start: auto;
+  border-radius: 0.875rem 0.875rem 0.25rem 0.875rem;
+  border-color: color-mix(in srgb, var(--dash-accent) 28%, var(--dash-student-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 58%, var(--dash-student-panel));
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble.is-unread {
+  box-shadow: inset 3px 0 0 var(--dash-accent);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble time {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer {
+  margin-top: 0.65rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--dash-student-border);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-box textarea {
+  min-height: 4.25rem;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 0.75rem;
+  background: var(--dash-student-panel);
+  box-shadow: var(--dash-inset);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-box textarea:focus {
+  border-color: color-mix(in srgb, var(--dash-accent) 40%, var(--dash-student-border));
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button,
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-foot .dash-btn {
+  min-block-size: 2.75rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed color-mix(in srgb, var(--dash-student-border) 85%, transparent);
+  border-radius: 0.85rem;
+  color: var(--dash-muted);
+  text-align: center;
+}
+
+.user-dashboard .teacher-recite-modal__panel.dash-student-dialog {
+  padding: 0;
+  gap: 0;
+  width: auto;
+  overflow: hidden;
+}
+
+.user-dashboard .teacher-recite-modal.dash-student-dialog-root {
+  z-index: 1205;
+  animation: dash-drawer-root-in 260ms var(--dash-ease) both;
+}
+
+.user-dashboard .teacher-recite-modal__scrim.dash-drawer__backdrop {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: var(--dash-student-overlay);
+}
+
+.user-dashboard .teacher-recite-modal__head .teacher-recite-modal__eyebrow {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+/* Playback + recite shells */
+.user-dashboard .learner-playback-shell.dash-student-dialog-root,
+.user-dashboard .teacher-recite-modal.dash-student-dialog-root {
+  z-index: 1205;
+}
+
+.user-dashboard .learner-playback-shell__panel.dash-student-dialog {
+  gap: 0;
+}
+
+.user-dashboard .teacher-recite-modal__scrim {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: var(--dash-student-overlay);
+}
+
+.user-dashboard .teacher-recite-modal__panel:not(.dash-student-dialog) {
+  border: 1px solid var(--dash-student-border);
+  border-radius: 1rem;
+  background: var(--dash-student-panel);
+  box-shadow: var(--dash-student-shadow);
+}
+
+.user-dashboard .teacher-recite-modal__head {
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid var(--dash-student-border);
+  background: color-mix(in srgb, var(--dash-student-panel-soft) 55%, var(--dash-student-panel));
+}
+
+.user-dashboard .teacher-recite-modal__close {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--dash-student-border);
+  background: var(--dash-student-panel-soft);
+}
+
+@media (max-width: 480px) {
+  .user-dashboard .dash-student-dialog-root {
+    align-items: end;
+    padding: 0;
+  }
+
+  .user-dashboard .dash-student-dialog,
+  .user-dashboard .learner-teacher__modal {
+    inline-size: 100%;
+    max-block-size: min(92dvh, 100%);
+    border-radius: 1.15rem 1.15rem 0 0;
+    border-inline: 0;
+    border-bottom: 0;
+  }
+
+  .user-dashboard .dash-student-dialog-root.is-mobile-sheet,
+  .user-dashboard .dash-student-thread-root.is-mobile-sheet {
+    align-items: end;
+    justify-items: stretch;
+  }
+
+  .user-dashboard .dash-student-thread-root.is-mobile-sheet .dash-drawer {
+    inline-size: 100%;
+    max-block-size: min(92dvh, 100%);
+    border-radius: 1.15rem 1.15rem 0 0;
+  }
+
+  .user-dashboard .dash-student-thread-root .dash-drawer__handle {
+    display: block;
+  }
+
+  .user-dashboard .learner-playback-shell.is-mobile-sheet {
+    align-items: end;
+    padding: 0;
+  }
+
+  .user-dashboard .learner-playback-shell.is-mobile-sheet .dash-student-dialog {
+    inline-size: 100%;
+    max-block-size: min(94dvh, 100%);
+    border-radius: 1.15rem 1.15rem 0 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) .dash-drawer {
+    max-block-size: 100dvh;
+    border-radius: 0;
+  }
+
+  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) .dash-student-thread__thread {
+    max-height: min(52dvh, 28rem);
+  }
 }
 
 /* Teacher dashboard: Amiri + Source Serif, clear interaction, performance groups */

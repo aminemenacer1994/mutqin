@@ -2,6 +2,7 @@
   <article
     class="mutashabihat-card"
     :data-testid="testId"
+    :style="surfaceStyle"
   >
     <div class="mutashabihat-card__stack">
       <section class="mutashabihat-card__passage" :aria-labelledby="`mutashabihat-left-${row.key}`">
@@ -50,6 +51,16 @@ export default {
     testId: { type: String, default: 'mutashabihat-card' },
   },
   emits: ['compare'],
+  computed: {
+    surfaceStyle() {
+      const family = String(this.quranFontFamily || '').trim()
+      if (!family) return undefined
+      return {
+        '--mutashabihat-arabic': family,
+        '--mushaf-quran-font': family,
+      }
+    },
+  },
 }
 </script>
 

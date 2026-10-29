@@ -718,7 +718,16 @@ class TeacherAssignmentService
                 $unfinishedSessions,
             );
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
-            $payload['messages'] = $this->assignmentMessages($assignment, (int) $recipient->student_id, $viewerId);
+            $payload['messages'] = $this->assignmentMessages(
+                $assignment,
+                (int) $recipient->student_id,
+                $viewerId,
+                markRead: false,
+            );
+            $payload['thread_unread_count'] = count(array_filter(
+                $payload['messages'],
+                fn (array $message) => ($message['sender'] ?? null) === 'teacher' && ($message['unread'] ?? false),
+            ));
             $payload['completion_result'] = $this->presentLearnerCompletionResult(
                 $recipient,
                 $payload['review_state'],
@@ -733,6 +742,19 @@ class TeacherAssignmentService
                 $payload['messages'],
                 $payload['progress'],
             );
+            $attemptHistory = $this->presentLearnerAttemptHistory(
+                $recipient,
+                $scoredAttempts,
+                $payload['messages'] ?? [],
+                (int) ($payload['progress']['activity_count'] ?? 0),
+                (int) ($payload['progress']['target'] ?? 1),
+            );
+            $payload['attempts'] = $attemptHistory['attempts'];
+            $payload['max_attempts'] = $attemptHistory['max_attempts'];
+            $payload['attempts_left'] = $attemptHistory['attempts_left'];
+            if ($attemptHistory['data_gaps'] !== []) {
+                $payload['attempt_history_gaps'] = $attemptHistory['data_gaps'];
+            }
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
             }
@@ -926,7 +948,30 @@ class TeacherAssignmentService
     /**
      * @return list<array<string, mixed>>
      */
-    private function assignmentMessages(TeacherAssignment $assignment, int $studentId, ?int $viewerId = null): array
+    public function learnerAssignmentThread(User $student, TeacherAssignmentRecipient $recipient): array
+    {
+        abort_unless((int) $recipient->student_id === (int) $student->id, 403);
+        $recipient->loadMissing('assignment');
+        $assignment = $recipient->assignment;
+        abort_if($assignment === null, 404);
+
+        return $this->assignmentMessages(
+            $assignment,
+            (int) $student->id,
+            (int) $student->id,
+            markRead: true,
+        );
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function assignmentMessages(
+        TeacherAssignment $assignment,
+        int $studentId,
+        ?int $viewerId = null,
+        bool $markRead = true,
+    ): array
     {
         $notes = $assignment->relationLoaded('notes')
             ? $assignment->notes
@@ -940,7 +985,7 @@ class TeacherAssignmentService
             ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note, $viewerId))
             ->values()
             ->all();
-        if ($viewerId !== null) {
+        if ($viewerId !== null && $markRead) {
             $unreadIds = $thread->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId))->pluck('id');
             if ($unreadIds->isNotEmpty()) {
                 TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
@@ -1136,6 +1181,91 @@ class TeacherAssignmentService
             'teacher_note' => $note,
             'data_gaps' => $missing,
         ];
+    }
+
+    /**
+     * @param  Collection<int, AiReciteAttempt>|null  $allScoredAttempts
+     * @param  array<int, array<string, mixed>>  $messages
+     * @return array{
+     *     attempts: list<array<string, mixed>>,
+     *     max_attempts: int,
+     *     attempts_left: int,
+     *     data_gaps: list<string>
+     * }
+     */
+    private function presentLearnerAttemptHistory(
+        TeacherAssignmentRecipient $recipient,
+        ?Collection $allScoredAttempts,
+        array $messages,
+        int $activityCount,
+        int $target,
+    ): array {
+        $target = max(1, $target);
+        $recipientId = (int) $recipient->id;
+
+        $recipientAttempts = ($allScoredAttempts ?? collect())
+            ->filter(fn (AiReciteAttempt $attempt) => (int) $attempt->teacher_assignment_recipient_id === $recipientId)
+            ->sortBy(fn (AiReciteAttempt $attempt) => [(string) $attempt->created_at, (int) $attempt->id])
+            ->values();
+
+        $teacherMessages = collect($messages)
+            ->filter(fn (array $message) => ($message['sender'] ?? null) === 'teacher'
+                && trim((string) ($message['body'] ?? '')) !== '')
+            ->values();
+
+        $attempts = [];
+        $gaps = [];
+        $n = 0;
+        foreach ($recipientAttempts as $attempt) {
+            $n++;
+            $score = $attempt->accuracy_percent;
+            if ($score === null) {
+                $gaps[] = 'score';
+            }
+            $audio = $this->attemptAudio->payload($attempt);
+            $attempts[] = [
+                'n' => $n,
+                'score' => $score === null ? null : (int) $score,
+                'completed_at' => $attempt->created_at?->toIso8601String(),
+                'teacher_note' => $this->teacherNoteAtOrBefore($teacherMessages, $attempt->created_at),
+                'has_recording' => (bool) ($audio['available'] ?? false),
+                'recording_url' => ($audio['available'] ?? false) ? ($audio['url'] ?? null) : null,
+                'attempt_id' => (int) $attempt->id,
+            ];
+        }
+
+        if ($attempts === [] && $activityCount > 0) {
+            $gaps[] = 'attempts_unavailable';
+        }
+
+        return [
+            'attempts' => $attempts,
+            'max_attempts' => $target,
+            'attempts_left' => max(0, $target - $activityCount),
+            'data_gaps' => array_values(array_unique($gaps)),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $teacherMessages
+     */
+    private function teacherNoteAtOrBefore(Collection $teacherMessages, ?\Illuminate\Support\Carbon $at): ?string
+    {
+        if ($at === null || $teacherMessages->isEmpty()) {
+            return null;
+        }
+
+        $note = null;
+        foreach ($teacherMessages as $message) {
+            $created = isset($message['created_at'])
+                ? \Illuminate\Support\Carbon::parse($message['created_at'])
+                : null;
+            if ($created !== null && $created->lte($at)) {
+                $note = trim((string) ($message['body'] ?? ''));
+            }
+        }
+
+        return $note !== '' ? $note : null;
     }
 
     /**

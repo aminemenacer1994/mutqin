@@ -136,9 +136,24 @@ const checks = [
     cmd: ['node', '--experimental-vm-modules', 'tests/js/network-status-fallback.test.mjs'],
   },
   {
+    id: 'js-imports',
+    label: 'JS import resolution (verify-js-imports)',
+    cmd: ['node', 'scripts/verify-js-imports.mjs'],
+  },
+  {
     id: 'js-chunk',
     label: 'Chunk / deploy update recovery',
     cmd: ['node', '--experimental-vm-modules', 'tests/js/chunk-load-recovery.test.mjs'],
+  },
+  {
+    id: 'js-async-load-error',
+    label: 'Async load error classifier',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/async-load-error.test.mjs'],
+  },
+  {
+    id: 'js-dashboard-playback',
+    label: 'Dashboard playback smoke (imports)',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/learner-dashboard-playback-smoke.test.mjs'],
   },
   {
     id: 'js-chunk-staging',

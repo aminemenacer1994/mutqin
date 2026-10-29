@@ -1,3 +1,5 @@
+@import "./MutashabihatShared.css";
+
 .mutashabihat-practice .post-session-simple__dialog {
   max-width: min(760px, calc(100vw - 1.25rem));
 }
@@ -51,8 +53,9 @@
 
 .mutashabihat-practice__arabic {
   margin: 0;
+  font-family: var(--mutashabihat-arabic);
   font-size: clamp(1.18rem, 2.7vw, 1.55rem);
-  line-height: 1.95;
+  line-height: 2.15;
   overflow-wrap: anywhere;
 }
 
@@ -99,8 +102,9 @@ html[data-theme="dark"] .mutashabihat-token.is-diff {
 
 .mutashabihat-practice__reveal-phrase {
   margin: 0;
+  font-family: var(--mutashabihat-arabic);
   font-size: clamp(1.15rem, 2.5vw, 1.45rem);
-  line-height: 1.9;
+  line-height: 2.1;
 }
 
 .mutashabihat-practice__options {

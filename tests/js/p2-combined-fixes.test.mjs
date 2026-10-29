@@ -24,6 +24,7 @@ assert.match(memorisationJs, /journey === 'ten_minute'/)
 assert.match(memorisationJs, /applyTenMinuteHeroSessionPreset/)
 
 assert.match(memorisationVue, /session-range-preset/)
+assert.match(memorisationVue, /session-range-preset__option/)
 assert.match(memorisationVue, /sessionSetup\.playModeAuto/)
 assert.match(memorisationVue, /sessionSetup\.playModeAdvanced/)
 

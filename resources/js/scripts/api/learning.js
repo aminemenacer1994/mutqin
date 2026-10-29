@@ -626,6 +626,13 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/notes`, form)
     return data
   },
+  async getLearnerAssignmentMessages(recipientId) {
+    const { data } = await http.get(`/me/assignments/${recipientId}/messages`, { headers: { 'Cache-Control': 'no-cache' } })
+    return {
+      messages: Array.isArray(data?.messages) ? data.messages : [],
+      threadUnreadCount: Number(data?.thread_unread_count ?? 0),
+    }
+  },
   async sendLearnerTeacherMessage(teacherId, body) {
     const { data } = await http.post(`/me/teachers/${teacherId}/messages`, { body, client_message_id: createClientMessageId() })
     return data

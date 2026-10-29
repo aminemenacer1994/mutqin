@@ -101,6 +101,17 @@ const { resolveAdaptiveSpeechmaticsDelays } = delays.namespace
     false,
     'genuine next word is not a stutter',
   )
+  assert.equal(
+    shouldSkipLearnerStutterRepeat(
+      [{ word: 'صمد' }, { word: 'العالمين' }],
+      1,
+      ['رب', 'العالمين', 'الرحمن'],
+      2,
+      [{ status: 'correct' }, { status: 'incorrect' }, { status: 'pending' }],
+    ),
+    false,
+    're-saying a missed target word is self-correction, not stutter',
+  )
 }
 
 // Adaptive Speechmatics tiers.

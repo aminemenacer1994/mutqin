@@ -74,10 +74,30 @@ export function isLocalHost(hostname = '') {
   return /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?$/.test(host)
 }
 
-function isAllowedAckeeServer(server = '') {
-  const value = String(server || '')
+export function isAllowedAckeeServer(server = '') {
+  const value = String(server || '').trim()
+  if (!value) return false
+  if (value.startsWith('/')) return true
   if (/^https:\/\/[a-z0-9.-]+(?::\d+)?$/i.test(value)) return true
   return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(value)
+}
+
+/**
+ * GraphQL endpoint for Ackee. Relative ACKEE_SERVER (e.g. "/ackee") uses same-origin
+ * so Laravel can reverse-proxy without a separate port.
+ *
+ * @param {string} server
+ * @returns {string | null}
+ */
+export function resolveAckeeGraphqlUrl(server = '') {
+  const raw = String(server || '').trim()
+  if (!raw) return null
+  if (raw.startsWith('/')) {
+    if (typeof window === 'undefined') return null
+    const base = raw.replace(/\/+$/, '') || ''
+    return `${window.location.origin}${base}/api`
+  }
+  return `${raw.replace(/\/+$/, '')}/api`
 }
 
 function currentHostname() {
@@ -163,8 +183,10 @@ function recentlySent(eventName) {
 }
 
 async function graphql(server, query, variables) {
+  const endpoint = resolveAckeeGraphqlUrl(server)
+  if (!endpoint) return null
   try {
-    const response = await fetch(`${server}/api`, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -5,8 +5,10 @@ import {
   ACKEE_EVENTS,
   initAckee,
   isAckeeRuntimeEnabled,
+  isAllowedAckeeServer,
   isLocalHost,
   resetAckeeForTests,
+  resolveAckeeGraphqlUrl,
   sanitiseSiteLocation,
   trackEvent,
 } from '../../resources/js/scripts/analytics/ackee.js'
@@ -145,4 +147,11 @@ test('Ackee fetch failures do not throw', () => {
   }
   assert.doesNotThrow(() => initAckee())
   assert.doesNotThrow(() => trackEvent(ACKEE_EVENTS.PRICING_VIEWED))
+})
+
+test('resolveAckeeGraphqlUrl uses same-origin for relative server', () => {
+  installWindow({ href: 'https://app.mutqin.ai/dashboard' })
+  assert.equal(isAllowedAckeeServer('/ackee'), true)
+  assert.equal(resolveAckeeGraphqlUrl('/ackee'), 'https://app.mutqin.ai/ackee/api')
+  assert.equal(resolveAckeeGraphqlUrl(''), null)
 })

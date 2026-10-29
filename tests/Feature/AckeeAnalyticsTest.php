@@ -127,6 +127,7 @@ class AckeeAnalyticsTest extends TestCase
     {
         $this->assertSame('http://127.0.0.1:3000', Ackee::sanitiseServer('http://127.0.0.1:3000/'));
         $this->assertSame('http://localhost:3000', Ackee::sanitiseServer('http://localhost:3000'));
+        $this->assertSame('/ackee', Ackee::sanitiseServer('/ackee'));
         $this->assertSame('', Ackee::sanitiseServer('http://evil.example/'));
     }
 }

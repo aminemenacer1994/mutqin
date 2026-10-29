@@ -254,6 +254,19 @@ mix.js('resources/js/app.js', 'public/js')
        plugins: [new PruneMissingManifestEntriesPlugin()]
    })
    .override((webpackConfig) => {
+       webpackConfig.resolve = webpackConfig.resolve || {};
+       webpackConfig.resolve.alias = {
+           ...(webpackConfig.resolve.alias || {}),
+           '@': path.join(__dirname, 'resources/js'),
+       };
+       if (mix.inProduction()) {
+           webpackConfig.bail = true;
+       }
+       webpackConfig.stats = {
+           ...(webpackConfig.stats || {}),
+           errors: true,
+           errorDetails: true,
+       };
        // Ensure our done-hook runs before CustomTasksPlugin.applyVersioning.
        const pruneIdx = webpackConfig.plugins.findIndex(
            (p) => p && p.constructor && p.constructor.name === 'PruneMissingManifestEntriesPlugin'
