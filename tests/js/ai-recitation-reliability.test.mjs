@@ -37,6 +37,10 @@ import {
   resolveConfirmedWordIndex,
   resolveLivePaceLimit,
 } from '../../resources/js/scripts/memorisationDetection/liveCursor.js'
+import {
+  resolveAmdAssessmentForeignKeys,
+  resolveTeacherTaskAssessmentRange,
+} from '../../resources/js/scripts/memorisationDetection/amdAssessmentPersist.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisationSource = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
@@ -323,6 +327,43 @@ function words(entries) {
   assert.equal(floor, RECITATION_MIN_SILENCE_STOP_MS)
   assert.ok(ceiling <= RECITATION_MAX_SILENCE_STOP_MS)
   assert.ok(ceiling >= floor)
+}
+
+{
+  const dashboard = resolveAmdAssessmentForeignKeys({
+    amdEntrySource: 'dashboard-review',
+    amdRecommendationId: 99,
+    backendSessionId: 42,
+    sessionStatus: 'active',
+  })
+  assert.deepEqual(dashboard, {})
+
+  const postSession = resolveAmdAssessmentForeignKeys({
+    amdEntrySource: 'test-with-ai',
+    amdRecommendationId: 12,
+    backendSessionId: 7,
+    sessionStatus: 'active',
+  })
+  assert.deepEqual(postSession, { user_session_id: 7, session_recommendation_id: 12 })
+
+  const ended = resolveAmdAssessmentForeignKeys({
+    amdEntrySource: 'test-with-ai',
+    backendSessionId: 7,
+    sessionStatus: 'finished',
+  })
+  assert.deepEqual(ended, {})
+}
+
+{
+  const task = resolveTeacherTaskAssessmentRange({
+    assignmentRecipientId: 9,
+    chapterId: 106,
+    rangeStart: 1,
+    rangeEnd: 4,
+    fallbackStartAyah: 1,
+    fallbackEndAyah: 3,
+  })
+  assert.deepEqual(task, { surah_number: 106, start_ayah: 1, end_ayah: 4 })
 }
 
 console.log('AI recitation reliability tests passed')

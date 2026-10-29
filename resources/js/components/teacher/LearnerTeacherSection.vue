@@ -4,15 +4,14 @@
     aria-labelledby="learner-teacher-heading"
     style="--dash-delay: 15ms"
   >
-    <div class="dash-section__head learner-teacher__hero">
+    <div class="dash-section__head learner-teacher__hero learner-teacher__hero--compact">
       <div class="dash-section__head-row">
         <div class="dash-section__title">
           <span class="dash-section__icon learner-teacher__hero-icon" aria-hidden="true">
             <i class="bi bi-mortarboard" aria-hidden="true"></i>
           </span>
           <div class="dash-section__title-copy">
-            <h2 id="learner-teacher-heading">{{ t('teacher.learner_section_title') }}</h2>
-            <p v-if="teacherContextLine" class="learner-teacher__teacher-context">{{ teacherContextLine }}</p>
+            <h2 id="learner-teacher-heading">{{ sectionHeading }}</h2>
           </div>
         </div>
       </div>
@@ -49,67 +48,41 @@
         <div class="learner-teacher__shell">
         <div
           v-if="showWeeklyProgress"
-          class="learner-teacher__progress-strip"
+          class="learner-teacher__progress-strip learner-teacher__progress-strip--compact learner-teacher__progress-strip--slim"
           role="status"
           :aria-label="weeklyProgressLabel"
         >
-          <div class="learner-teacher__progress-main">
-            <span class="learner-teacher__progress-label">{{ weeklyProgressLabel }}</span>
-            <span
-              v-if="overview.weekly_goal > 0"
-              class="learner-teacher__progress-meter"
-              :aria-hidden="true"
-            >
-              <span :style="{ width: `${weeklyProgressPercent}%` }"></span>
-            </span>
-          </div>
-          <div class="learner-teacher__progress-badges">
-            <span v-if="overview.active_days_this_week" class="learner-teacher__progress-badge">
-              <i class="bi bi-calendar2-check" aria-hidden="true"></i>
-              {{ t('teacher.learner_weekly_active_days', { n: overview.active_days_this_week }) }}
-            </span>
-            <span v-if="overview.practice_streak_days" class="learner-teacher__progress-badge is-streak">
-              <i class="bi bi-fire" aria-hidden="true"></i>
-              {{ t('teacher.learner_weekly_streak', { n: overview.practice_streak_days }) }}
-            </span>
-          </div>
+          <span class="learner-teacher__progress-label">{{ weeklyProgressLabel }}</span>
+          <span
+            v-if="weeklyStrip.total > 0"
+            class="learner-teacher__progress-meter"
+            :aria-hidden="true"
+          >
+            <span :style="{ width: `${weeklyStrip.percent}%` }"></span>
+          </span>
+          <span v-if="overview.active_days_this_week" class="learner-teacher__progress-badge">
+            <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+            {{ ldtp('teacher.learner_weekly_active_days', overview.active_days_this_week) }}
+          </span>
+          <span v-if="overview.practice_streak_days" class="learner-teacher__progress-badge is-streak">
+            <i class="bi bi-fire" aria-hidden="true"></i>
+            {{ ldtp('teacher.learner_weekly_streak', overview.practice_streak_days) }}
+          </span>
         </div>
-
-        <section v-if="glanceItems.length" class="learner-teacher__priorities" :aria-label="t('teacher.learner_priorities_title')">
-          <h3 class="learner-teacher__section-title">{{ t('teacher.learner_priorities_title') }}</h3>
-          <ul class="learner-teacher__glance" role="list">
-            <li v-for="item in glanceItems" :key="item.id" class="learner-teacher__glance-item" :class="`is-${item.tone}`" role="listitem">
-              <span class="learner-teacher__glance-icon" aria-hidden="true"><i class="bi" :class="item.icon"></i></span>
-              <span>{{ item.label }}</span>
-            </li>
-          </ul>
-        </section>
 
         <div class="learner-teacher__workspace">
         <section class="learner-teacher__block">
-          <div v-if="feedbackTotalCount" class="learner-teacher__mobile-feedback-bar">
-            <button
-              type="button"
-              class="learner-teacher__feedback-trigger"
-              @click="openFeedbackDrawer"
-            >
-              <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
-              {{ t('teacher.learner_feedback_open') }}
-              <span class="learner-teacher__feedback-trigger-count">{{ feedbackTotalCount }}</span>
-              <span v-if="feedbackUnreadCount" class="learner-teacher__feedback-trigger-new">
-                {{ t('teacher.learner_feedback_unread', { n: feedbackUnreadCount }) }}
-              </span>
-            </button>
-          </div>
-
           <div v-if="!assignments.length" class="learner-teacher__empty">
             <strong>{{ t('teacher.learner_assignments_empty_title') }}</strong>
             <span>{{ t('teacher.learner_assignments_empty') }}</span>
           </div>
 
           <template v-else>
+            <p v-if="nextPendingLine" class="learner-teacher__next-pending">{{ nextPendingLine }}</p>
+
+            <div class="learner-teacher__filters-row">
             <div
-              class="learner-teacher__filters"
+              class="learner-teacher__filters learner-teacher__filters--segmented"
               role="tablist"
               :aria-label="t('teacher.learner_assignments_filter_label')"
             >
@@ -118,7 +91,7 @@
                 :key="filter.id"
                 type="button"
                 class="learner-teacher__filter"
-                :class="[`is-${filter.id}`, { 'is-active': activeFilter === filter.id }]"
+                :class="{ 'is-active': activeFilter === filter.id }"
                 role="tab"
                 :aria-selected="activeFilter === filter.id ? 'true' : 'false'"
                 :aria-controls="`learner-teacher-panel-${filter.id}`"
@@ -127,6 +100,20 @@
                 {{ filter.label }}
                 <span class="learner-teacher__filter-count">{{ filter.count }}</span>
               </button>
+            </div>
+
+            <button
+              type="button"
+              class="dash-icon-btn learner-teacher__feedback-tab-btn"
+              :aria-label="feedbackTabAriaLabel"
+              @click="openFeedbackDrawer"
+            >
+              <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
+              <span
+                v-if="feedbackUnreadCount"
+                class="learner-teacher__feedback-tab-badge"
+              >{{ feedbackUnreadCount }}</span>
+            </button>
             </div>
 
             <p
@@ -140,7 +127,7 @@
               {{ t('teacher.learner_assignments_no_completed') }}
             </p>
 
-            <ul v-if="listItems.length" :id="`learner-teacher-panel-${activeFilter}`" class="learner-teacher__list learner-teacher__card-list" role="tabpanel">
+            <ul v-if="listItems.length" :id="`learner-teacher-panel-${activeFilter}`" class="learner-teacher__list learner-teacher__card-list learner-teacher__card-list--tasks" role="tabpanel">
               <li v-for="(item, index) in listItems" :key="item.id">
                 <article
                   class="learner-teacher__card"
@@ -173,15 +160,40 @@
 
                   <div v-if="isTeacherApproved(item) && completionResult(item)" class="learner-teacher__result">
                     <p class="learner-teacher__result-headline">{{ completionHeadline(item) }}</p>
+                    <ul
+                      v-if="mistakeSummaryChips(item).length"
+                      class="learner-teacher__mistake-chips"
+                      :aria-label="t('teacher.learner_mistake_summary_label')"
+                    >
+                      <li v-for="chip in mistakeSummaryChips(item)" :key="chip.type">
+                        <span class="learner-teacher__mistake-chip" :class="`is-${chip.type}`">
+                          <i class="bi" :class="mistakeChipIcon(chip.type)" aria-hidden="true"></i>
+                          {{ chip.label }}
+                        </span>
+                      </li>
+                    </ul>
+                    <p v-else-if="completionMistakePerfect(item)" class="learner-teacher__mistake-none-inline">
+                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      {{ t('teacher.learner_mistake_none') }}
+                    </p>
                     <p v-if="completionSnippet(item)" class="learner-teacher__result-snippet">{{ completionSnippet(item) }}</p>
                     <button
-                      v-if="canViewRecitationReview(item)"
+                      v-if="completionLink(item)"
                       type="button"
                       class="dash-text-link learner-teacher__result-link"
-                      @click="openRecitationReview(item)"
+                      :aria-expanded="mistakeDetailsExpanded(item) ? 'true' : 'false'"
+                      @click="onCompletionLinkClick(item)"
                     >
-                      {{ t('teacher.learner_view_feedback') }}
+                      {{ completionLink(item).label }}
                     </button>
+                    <LearnerCompletionMistakePanel
+                      v-if="!isMobileLayout && mistakeDetailsExpanded(item)"
+                      class="learner-teacher__mistake-inline"
+                      :result="completionResult(item)"
+                      :mistakes="completionMistakes(item)"
+                      :recording-url="completionRecordingUrl(item)"
+                      :surah="item.assignment?.surah_number"
+                    />
                   </div>
 
                   <div v-if="showCardProgress(item)" class="learner-teacher__card-progress" :aria-label="progressLabel(item)">
@@ -189,7 +201,26 @@
                     <span v-if="showProgressBar(item)" class="learner-teacher__progress" aria-hidden="true"><span :style="{ width: `${progressPercent(item)}%` }"></span></span>
                   </div>
 
-                  <p v-if="actionHint(item)" class="learner-teacher__action-hint">{{ actionHint(item) }}</p>
+                  <p v-if="attemptHintLine(item)" class="learner-teacher__attempts-left">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    {{ attemptHintLine(item) }}
+                  </p>
+
+                  <div v-if="retryContextVisible(item)" class="learner-teacher__retry-context">
+                    <p class="learner-teacher__retry-score">{{ retryScoreLine(item) }}</p>
+                    <button
+                      v-if="retryTeacherNote(item) && !isRetryNoteExpanded(item)"
+                      type="button"
+                      class="learner-teacher__retry-note-toggle"
+                      @click="toggleRetryNote(item)"
+                    >
+                      <span class="learner-teacher__retry-note-clamp">{{ retryTeacherNote(item) }}</span>
+                    </button>
+                    <p
+                      v-else-if="retryTeacherNote(item)"
+                      class="learner-teacher__retry-note-full"
+                    >{{ retryTeacherNote(item) }}</p>
+                  </div>
 
                   <div class="learner-teacher__card-actions">
                       <component
@@ -226,7 +257,12 @@
 
             <div v-if="showViewAll" class="learner-teacher__footer">
               <button type="button" class="dash-text-link" @click="visibleLimit += listLimit">
-                {{ t('teacher.learner_assignments_view_more', { n: Math.min(listLimit, remainingCount) }) }}
+                {{ ldtp('teacher.learner_assignments_view_more', Math.min(listLimit, remainingCount), { n: Math.min(listLimit, remainingCount) }) }}
+              </button>
+            </div>
+            <div v-if="showShowOlderCompleted" class="learner-teacher__footer">
+              <button type="button" class="dash-text-link" @click="showOlderCompleted = true">
+                {{ t('teacher.learner_assignments_show_older') }}
               </button>
             </div>
           </template>
@@ -234,7 +270,7 @@
 
         <LearnerTeacherLearning
           class="learner-teacher__feedback-panel--desktop"
-          :learning="learning"
+          :learning="learningForPanel"
           @open-feedback="openFeedbackFromPanel"
         />
         </div>
@@ -273,7 +309,7 @@
               <h2 :id="feedbackDrawerTitleId" class="dash-drawer__title">{{ t('teacher.learner_feedback_open') }}</h2>
               <p class="dash-drawer__subtitle">{{ t('teacher.learner_feedback_drawer_subtitle') }}</p>
               <p v-if="feedbackUnreadCount" class="dash-drawer__count">
-                {{ t('teacher.learner_feedback_unread', { n: feedbackUnreadCount }) }}
+                {{ ldtp('teacher.learner_feedback_unread', feedbackUnreadCount) }}
               </p>
             </div>
           </div>
@@ -291,7 +327,7 @@
           <div class="dash-drawer__content">
             <LearnerTeacherLearning
               variant="drawer"
-              :learning="learning"
+              :learning="learningForPanel"
               @open-feedback="openFeedbackFromDrawer"
             />
           </div>
@@ -429,6 +465,61 @@
     </div>
     </Teleport>
 
+    <Teleport to="body">
+    <div
+      v-if="mistakeDrawerRow"
+      class="dash-drawer-root user-dashboard"
+      @keydown="onMistakeDrawerKeydown"
+    >
+      <button
+        type="button"
+        class="dash-drawer__backdrop"
+        :aria-label="t('dashboard.drawer_close')"
+        @click="closeMistakeDrawer"
+      ></button>
+      <aside
+        ref="mistakeDrawer"
+        class="dash-drawer"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="mistakeDrawerTitleId"
+      >
+        <div class="dash-drawer__handle" aria-hidden="true"></div>
+        <header class="dash-drawer__head">
+          <div class="dash-drawer__head-main">
+            <span class="dash-drawer__head-icon" aria-hidden="true">
+              <i class="bi bi-list-check"></i>
+            </span>
+            <div class="dash-drawer__head-copy">
+              <h2 :id="mistakeDrawerTitleId" class="dash-drawer__title">{{ t('teacher.learner_view_results') }}</h2>
+              <p class="dash-drawer__subtitle">{{ rangeLabel(mistakeDrawerRow) }}</p>
+            </div>
+          </div>
+          <button
+            ref="mistakeDrawerClose"
+            type="button"
+            class="dash-icon-btn dash-drawer__close"
+            :aria-label="t('dashboard.drawer_close')"
+            @click="closeMistakeDrawer"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="dash-drawer__body">
+          <div class="dash-drawer__content">
+            <LearnerCompletionMistakePanel
+              :result="completionResult(mistakeDrawerRow)"
+              :mistakes="completionMistakes(mistakeDrawerRow)"
+              :recording-url="completionRecordingUrl(mistakeDrawerRow)"
+              :surah="mistakeDrawerRow?.assignment?.surah_number"
+            />
+          </div>
+        </div>
+      </aside>
+    </div>
+    </Teleport>
+
     <TeacherReciteEvidenceModal
       :open="Boolean(recitationReviewRow)"
       :row="recitationReviewRow"
@@ -451,15 +542,40 @@ import {
   taskStateLabelKey,
 } from '../../scripts/teacher/taskState'
 import { learningApi } from '../../scripts/api/learning'
+import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
+import { learnerDashboardT, learnerDashboardTp } from '../../scripts/teacher/learnerDashboardI18n.js'
+import {
+  ALL_TAB_COMPLETED_PREVIEW,
+  buildAllTabList,
+  completionResultLink,
+  learnerAttemptHint,
+  learnerWeeklyProgressFromAssignments,
+  mergeFeedbackReadState,
+  persistFeedbackRead,
+  pickNextPendingAssignment,
+  practiceAgainVariant,
+  readFeedbackReadMap,
+  sortAllTabAssignments,
+  sortFeedbackInbox,
+  weeklyProgressPercent,
+  daysUntilDueLabel,
+} from '../../scripts/teacher/learnerDashboard.js'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
+import LearnerCompletionMistakePanel from './LearnerCompletionMistakePanel.vue'
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
+import {
+  buildMistakeSummaryChips,
+  countMistakesByType,
+  isPerfectCompletionResult,
+  resolveLearnerCompletionAttempt,
+} from '../../scripts/teacher/learnerCompletionMistakes.js'
 
 const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue', 'awaiting_confirmation'])
 
 export default {
   name: 'LearnerTeacherSection',
-  components: { TeacherTaskConversation, LearnerTeacherLearning, TeacherReciteEvidenceModal },
+  components: { TeacherTaskConversation, LearnerTeacherLearning, LearnerCompletionMistakePanel, TeacherReciteEvidenceModal },
   mixins: [i18nMixin],
   props: {
     support: { type: Object, default: null },
@@ -488,10 +604,19 @@ export default {
       selectedDirectThread: null,
       selectedSubmission: null,
       recitationReviewRow: null,
+      expandedMistakeDetailsId: null,
+      mistakeDrawerRow: null,
+      mistakeDrawerTitleId: `learner-mistake-drawer-${Math.random().toString(36).slice(2, 9)}`,
+      isMobileLayout: false,
+      mobileMedia: null,
       focusConversationComposer: false,
       previouslyFocused: null,
       feedbackDrawerOpen: false,
       feedbackDrawerTitleId: `learner-feedback-drawer-${Math.random().toString(36).slice(2, 9)}`,
+      showOlderCompleted: false,
+      expandedRetryNotes: {},
+      feedbackReadVersion: 0,
+      defaultFilterSynced: false,
     }
   },
   computed: {
@@ -510,66 +635,97 @@ export default {
     learning() {
       return this.support?.learning || null
     },
+    learnerLocale() {
+      return this.$i18n?.global?.locale?.value
+        || (typeof document !== 'undefined' ? document.documentElement.getAttribute('lang') : null)
+        || 'en'
+    },
     showWeeklyProgress() {
-      const goal = Number(this.overview.weekly_goal) || 0
-      const done = Number(this.overview.weekly_completed) || 0
-      return goal > 0 || done > 0
+      const strip = this.weeklyStrip
+      return strip.total > 0 || strip.done > 0
+    },
+    weeklyStrip() {
+      const apiTotal = Number(this.overview.weekly_goal) || 0
+      const apiDone = Number(this.overview.weekly_completed) || 0
+      if (apiTotal > 0 || apiDone > 0) {
+        return {
+          done: apiDone,
+          total: apiTotal,
+          percent: weeklyProgressPercent(apiDone, apiTotal),
+        }
+      }
+      return learnerWeeklyProgressFromAssignments(this.assignments, (row) => this.isTeacherApproved(row))
     },
     weeklyProgressLabel() {
-      return this.t('teacher.learner_weekly_progress', {
-        done: this.overview.weekly_completed || 0,
-        goal: this.overview.weekly_goal || 0,
+      const strip = this.weeklyStrip
+      return this.ldt('teacher.learner_weekly_progress', {
+        done: strip.done,
+        total: strip.total,
       })
     },
-    weeklyProgressPercent() {
-      const goal = Number(this.overview.weekly_goal) || 0
-      const done = Number(this.overview.weekly_completed) || 0
-      if (goal <= 0) return done > 0 ? 100 : 0
-      return Math.min(100, Math.round((done / goal) * 100))
+    sectionHeading() {
+      const title = this.ldt('teacher.learner_section_title')
+      const names = [...new Set(this.assignments.map((row) => row?.teacher_name).filter(Boolean))]
+      if (names.length === 1) return `${title} · ${names[0]}`
+      if (names.length > 1) {
+        return `${title} · ${this.ldtp('teacher.learner_teachers_context', names.length, { n: names.length })}`
+      }
+      return title
     },
-    feedbackItems() {
+    feedbackItemsRaw() {
       return Array.isArray(this.learning?.feedback_inbox) ? this.learning.feedback_inbox : []
     },
+    feedbackInboxMerged() {
+      void this.feedbackReadVersion
+      const map = readFeedbackReadMap()
+      return sortFeedbackInbox(mergeFeedbackReadState(this.feedbackItemsRaw, map))
+    },
+    feedbackItems() {
+      return this.feedbackInboxMerged
+    },
     feedbackUnreadCount() {
-      return this.feedbackItems.filter((item) => item.unread).length
+      return this.feedbackInboxMerged.filter((item) => item.unread).length
     },
-    feedbackTotalCount() {
-      return this.feedbackItems.length
+    learningForPanel() {
+      if (!this.learning) return null
+      return { ...this.learning, feedback_inbox: this.feedbackInboxMerged }
     },
-    glanceItems() {
-      const items = []
-      if (this.overview.tasks_due_today) {
-        items.push({
-          id: 'due',
-          tone: 'due',
-          icon: 'bi-calendar-check',
-          label: this.t('teacher.learner_overview_due_today', { n: this.overview.tasks_due_today }),
-        })
+    feedbackTabAriaLabel() {
+      const base = this.ldt('teacher.learner_feedback_open_aria')
+      if (!this.feedbackUnreadCount) return base
+      return `${base}. ${this.ldtp('teacher.learner_feedback_unread', this.feedbackUnreadCount)}`
+    },
+    allTabGroups() {
+      return sortAllTabAssignments(this.assignments, {
+        isTeacherApproved: (row) => this.isTeacherApproved(row),
+        isPending: (row) => ACTIVE_STATUSES.has(row.status) || this.needsCorrection(row),
+      })
+    },
+    allTabHiddenCompletedCount() {
+      return buildAllTabList(this.allTabGroups, ALL_TAB_COMPLETED_PREVIEW).hiddenCompletedCount
+    },
+    showShowOlderCompleted() {
+      return this.activeFilter === 'all'
+        && !this.showOlderCompleted
+        && this.allTabHiddenCompletedCount > 0
+    },
+    nextPendingLine() {
+      const row = pickNextPendingAssignment(
+        this.assignments,
+        (item) => ACTIVE_STATUSES.has(item.status) || this.needsCorrection(item),
+        (item) => this.isTeacherApproved(item),
+      )
+      if (!row?.assignment) return ''
+      const surah = row.assignment.surah_name || ''
+      const ayahs = `${row.assignment.ayah_start}–${row.assignment.ayah_end}`
+      const due = row.assignment.due_at
+      if (!due) return ''
+      const days = daysUntilDueLabel(due)
+      if (days === null) return ''
+      if (days <= 0) {
+        return this.ldt('teacher.learner_next_pending_today', { surah, ayahs })
       }
-      if (this.overview.submitted_awaiting_review) {
-        items.push({
-          id: 'submitted',
-          tone: 'submitted',
-          icon: 'bi-hourglass-split',
-          label: this.t('teacher.learner_overview_submitted', { n: this.overview.submitted_awaiting_review }),
-        })
-      }
-      if (this.overview.revision_overdue) {
-        items.push({
-          id: 'revision',
-          tone: 'revision',
-          icon: 'bi-alarm',
-          label: this.t('teacher.learner_overview_revision_overdue', { n: this.overview.revision_overdue }),
-        })
-      } else if (this.overview.revision_upcoming) {
-        items.push({
-          id: 'revision-soon',
-          tone: 'revision',
-          icon: 'bi-arrow-repeat',
-          label: this.t('teacher.learner_overview_revision_upcoming', { n: this.overview.revision_upcoming }),
-        })
-      }
-      return items
+      return this.ldtp('teacher.learner_next_pending', days, { surah, ayahs, n: days })
     },
     directThreads() {
       return (this.support?.direct_threads || []).map((thread) => ({
@@ -586,7 +742,7 @@ export default {
       return Array.isArray(this.support?.assignments) ? this.support.assignments : []
     },
     pendingCount() {
-      return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status)).length
+      return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status) || this.needsCorrection(row)).length
     },
     completedCount() {
       return this.assignments.filter((row) => this.isTeacherApproved(row)).length
@@ -595,17 +751,17 @@ export default {
       const filters = [
         {
           id: 'all',
-          label: this.t('teacher.learner_assignments_filter_all'),
+          label: this.ldt('teacher.learner_assignments_filter_all'),
           count: this.assignments.length,
         },
         {
           id: 'todo',
-          label: this.t('teacher.learner_assignments_filter_todo'),
+          label: this.ldt('teacher.learner_assignments_filter_todo'),
           count: this.pendingCount,
         },
         {
           id: 'done',
-          label: this.t('teacher.status_completed'),
+          label: this.ldt('teacher.learner_assignments_filter_done'),
           count: this.completedCount,
         },
       ]
@@ -615,7 +771,13 @@ export default {
       if (this.activeFilter === 'done') {
         return this.assignments.filter((row) => this.isTeacherApproved(row))
       }
-      if (this.activeFilter === 'all') return this.assignments
+      if (this.activeFilter === 'all') {
+        const { pending, completed } = this.allTabGroups
+        if (this.showOlderCompleted) {
+          return [...pending, ...completed]
+        }
+        return buildAllTabList(this.allTabGroups, ALL_TAB_COMPLETED_PREVIEW).items
+      }
       if (this.activeFilter === 'todo') {
         return this.assignments.filter((row) => ACTIVE_STATUSES.has(row.status) || this.needsCorrection(row))
       }
@@ -633,20 +795,14 @@ export default {
     showViewAll() {
       return this.remainingCount > 0
     },
-    teacherContextLine() {
-      const names = [...new Set(this.assignments.map((row) => row?.teacher_name).filter(Boolean))]
-      if (names.length === 1) {
-        return this.t('teacher.learner_teacher_context', { name: names[0] })
-      }
-      if (names.length > 1) {
-        return this.t('teacher.learner_teachers_context', { n: names.length })
-      }
-      return ''
-    },
   },
   watch: {
-    assignments() {
-      this.visibleLimit = this.listLimit
+    assignments: {
+      handler() {
+        this.visibleLimit = this.listLimit
+        this.syncDefaultFilter()
+      },
+      immediate: true,
     },
     selectedItem(value) {
       this.syncModalOpen()
@@ -665,11 +821,33 @@ export default {
       document.body.classList.remove('dash-drawer-open')
     }
     window.clearInterval(this.directPollTimer)
+    if (this.mobileMedia?.removeEventListener) {
+      this.mobileMedia.removeEventListener('change', this.syncMobileLayout)
+    }
+    this.setMistakeDrawerScrollLock(false)
   },
   mounted() {
     this.directPollTimer = window.setInterval(() => this.refreshDirectThreads(), 10000)
+    this.syncDefaultFilter()
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.mobileMedia = window.matchMedia('(max-width: 767.98px)')
+      this.syncMobileLayout()
+      this.mobileMedia.addEventListener('change', this.syncMobileLayout)
+    }
   },
   methods: {
+    ldt(key, params = {}) {
+      return learnerDashboardT(this.learnerLocale, this.$i18n, key, params)
+    },
+    ldtp(key, count, params = {}) {
+      return learnerDashboardTp(this.learnerLocale, this.$i18n, key, count, params)
+    },
+    syncDefaultFilter() {
+      if (this.defaultFilterSynced || this.loading) return
+      if (!this.assignments.length) return
+      this.defaultFilterSynced = true
+      this.activeFilter = this.pendingCount > 0 ? 'todo' : 'all'
+    },
     syncModalOpen() {
       if (typeof document === 'undefined') return
       document.body.classList.toggle(
@@ -711,12 +889,12 @@ export default {
       }))
     },
     directMessageWhen(message) {
-      const date = new Date(message?.created_at)
-      return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      return this.displayDate(message?.created_at)
     },
     setFilter(id) {
       this.activeFilter = id
       this.visibleLimit = this.listLimit
+      this.showOlderCompleted = false
     },
     openDetails(row) {
       this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null
@@ -760,11 +938,18 @@ export default {
       }
     },
     openFeedbackFromPanel(item) {
+      this.markFeedbackRead(item)
       this.openFeedback(item)
     },
     openFeedbackFromDrawer(item) {
+      this.markFeedbackRead(item)
       this.closeFeedbackDrawer()
       this.openFeedback(item)
+    },
+    markFeedbackRead(item) {
+      if (!item?.id) return
+      persistFeedbackRead(item.id)
+      this.feedbackReadVersion += 1
     },
     openFeedbackDrawer() {
       this.feedbackDrawerOpen = true
@@ -800,8 +985,109 @@ export default {
     completionSnippet(row) {
       return this.completionResult(row)?.feedback_snippet || ''
     },
-    canViewRecitationReview(row) {
-      return Boolean(this.completionResult(row)?.has_recitation_review)
+    completionLink(row) {
+      return completionResultLink(this.completionResult(row), this.t.bind(this))
+    },
+    completionAttemptBundle(row) {
+      return resolveLearnerCompletionAttempt(row)
+    },
+    completionMistakes(row) {
+      return this.completionAttemptBundle(row).mistakes
+    },
+    completionRecordingUrl(row) {
+      return this.completionAttemptBundle(row).recordingUrl || ''
+    },
+    completionMistakePerfect(row) {
+      return isPerfectCompletionResult(this.completionResult(row))
+    },
+    mistakeSummaryChips(row) {
+      if (this.completionMistakePerfect(row)) return []
+      const counts = countMistakesByType(this.completionMistakes(row))
+      const locale = this.learnerLocale
+      return buildMistakeSummaryChips(counts, this.t.bind(this), locale)
+    },
+    mistakeChipIcon(type) {
+      if (type === 'missed') return 'bi-dash-circle-fill'
+      if (type === 'tajweed') return 'bi-bookmark-star-fill'
+      return 'bi-x-circle-fill'
+    },
+    mistakeDetailsExpanded(row) {
+      return Number(this.expandedMistakeDetailsId) === Number(row.id)
+    },
+    onCompletionLinkClick(row) {
+      const link = this.completionLink(row)
+      if (!link) return
+      if (link.opensFeedback && !link.opensMistakeDetails) {
+        this.openDetails(row)
+        return
+      }
+      if (link.opensMistakeDetails) {
+        if (this.isMobileLayout) {
+          this.openMistakeDrawer(row)
+          return
+        }
+        const next = this.mistakeDetailsExpanded(row) ? null : row.id
+        this.expandedMistakeDetailsId = next
+        return
+      }
+      this.openDetails(row)
+    },
+    openMistakeDrawer(row) {
+      this.mistakeDrawerRow = row
+      this.setMistakeDrawerScrollLock(true)
+      this.$nextTick(() => this.$refs.mistakeDrawerClose?.focus())
+    },
+    closeMistakeDrawer() {
+      this.mistakeDrawerRow = null
+      this.setMistakeDrawerScrollLock(false)
+    },
+    setMistakeDrawerScrollLock(open) {
+      if (typeof document === 'undefined') return
+      document.documentElement.classList.toggle('dash-drawer-open', open)
+      document.body.classList.toggle('dash-drawer-open', open)
+    },
+    onMistakeDrawerKeydown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        this.closeMistakeDrawer()
+      }
+    },
+    syncMobileLayout() {
+      this.isMobileLayout = Boolean(this.mobileMedia?.matches)
+      if (!this.isMobileLayout) {
+        this.closeMistakeDrawer()
+      } else {
+        this.expandedMistakeDetailsId = null
+      }
+    },
+    attemptHintLine(row) {
+      const hint = learnerAttemptHint(row)
+      if (!hint) return ''
+      if (hint.kind === 'retry_requested') return this.ldt('teacher.learner_attempts_retry')
+      return this.ldtp('teacher.learner_attempts_left', hint.remaining)
+    },
+    retryContextVisible(row) {
+      if (this.isTeacherApproved(row)) return false
+      return Boolean(row?.last_attempt?.attempt_number)
+    },
+    retryScoreLine(row) {
+      const attempt = row?.last_attempt
+      if (!attempt) return ''
+      const score = attempt.accuracy_percent ?? '—'
+      return this.t('teacher.learner_last_attempt_score', { n: attempt.attempt_number, score })
+    },
+    retryTeacherNote(row) {
+      return String(row?.last_attempt?.teacher_note || '').trim()
+    },
+    isRetryNoteExpanded(row) {
+      return Boolean(this.expandedRetryNotes[row.id])
+    },
+    toggleRetryNote(row) {
+      this.expandedRetryNotes = { ...this.expandedRetryNotes, [row.id]: true }
+    },
+    displayDate(value) {
+      const locale = this.$i18n?.locale?.value || 'en'
+      return formatLearnerDisplayDate(value, this.t.bind(this), locale)
     },
     openRecitationReview(row) {
       this.recitationReviewRow = learnerRecitationReviewRow(row)
@@ -865,7 +1151,10 @@ export default {
     },
     cardMetaTail(row) {
       if (this.isTeacherApproved(row)) {
-        const text = this.completedWhen(row)
+        const date = this.displayDate(row?.teacher_approved_at || row?.completed_at)
+        const text = date
+          ? this.t('teacher.learner_assignments_completed_at', { date })
+          : ''
         return text ? { text, tone: 'neutral' } : { text: '', tone: 'neutral' }
       }
       if (this.isSubmitted(row)) {
@@ -992,13 +1281,7 @@ export default {
       return unread ? `${base}. ${this.t('teacher.unread')} (${unread})` : base
     },
     messageWhen(message) {
-      try {
-        const date = new Date(message?.created_at)
-        if (Number.isNaN(date.getTime())) return ''
-        return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-      } catch (_) {
-        return ''
-      }
+      return this.displayDate(message?.created_at)
     },
     canConfirm(row) {
       return Number(row?.progress?.activity_count || 0) >= Number(row?.progress?.target || 1)
@@ -1019,7 +1302,12 @@ export default {
     primaryAction(row) {
       if (this.isTeacherApproved(row)) {
         if (!row?.href) return null
-        return { label: this.t('teacher.practice_again'), icon: 'bi-arrow-repeat', href: row.href, variant: 'ghost' }
+        return {
+          label: this.t('teacher.practice_again'),
+          icon: 'bi-arrow-repeat',
+          href: row.href,
+          variant: practiceAgainVariant(this.completionResult(row)?.accuracy_percent),
+        }
       }
       if (this.isSubmitted(row)) {
         return { label: this.t('teacher.view_submission'), icon: 'bi-eye', emit: 'details' }
@@ -1037,18 +1325,10 @@ export default {
       return null
     },
     primaryButtonClass(row) {
-      const variant = this.primaryAction(row)?.variant
-      return variant === 'ghost' ? 'dash-btn--ghost' : 'dash-btn--primary'
-    },
-    actionHint(row) {
-      if (this.isTeacherApproved(row) || this.isSubmitted(row)) return ''
-      const target = Number(row?.progress?.target || 0)
-      const completed = Number(row?.progress?.activity_count ?? row?.progress?.completed ?? 0)
-      if (!target || completed >= target) return ''
-      const remaining = target - completed
-      return remaining === 1
-        ? this.t('teacher.learner_action_hint_one')
-        : this.t('teacher.learner_action_hint_other', { n: remaining })
+      const variant = this.primaryAction(row)?.variant || 'primary'
+      if (variant === 'ghost') return 'dash-btn--ghost'
+      if (variant === 'secondary') return 'dash-btn--secondary'
+      return 'dash-btn--primary'
     },
     instructionPreview(row) {
       const text = this.instructionText(row)
@@ -1060,28 +1340,11 @@ export default {
       return value ? `${this.t('teacher.due')}: ${value}` : ''
     },
     dueValue(row) {
-      const due = row?.assignment?.due_at
-      if (!due) return ''
-      try {
-        const date = new Date(due)
-        if (Number.isNaN(date.getTime())) return ''
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-      } catch (_) {
-        return ''
-      }
+      return this.displayDate(row?.assignment?.due_at)
     },
     completedWhen(row) {
-      const at = row?.teacher_approved_at || row?.completed_at
-      if (!at) return ''
-      try {
-        const date = new Date(at)
-        if (Number.isNaN(date.getTime())) return ''
-        return this.t('teacher.learner_assignments_completed_at', {
-          date: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        })
-      } catch (_) {
-        return ''
-      }
+      const date = this.displayDate(row?.teacher_approved_at || row?.completed_at)
+      return date ? this.t('teacher.learner_assignments_completed_at', { date }) : ''
     },
     metaLine(row) {
       const parts = [this.taskTypeLabel(row), this.progressLabel(row)].filter(Boolean)

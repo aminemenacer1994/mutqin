@@ -83,6 +83,34 @@ class DashboardAiReciteTest extends TestCase
         $this->assertDatabaseCount('ai_recite_attempts', 1);
     }
 
+    public function test_task_ai_recite_auto_starts_recipient_on_first_assessment(): void
+    {
+        $student = User::factory()->pro()->create();
+        $assignment = TeacherAssignment::factory()->create([
+            'kind' => 'ai_recite',
+            'surah_number' => 106,
+            'ayah_start' => 1,
+            'ayah_end' => 4,
+        ]);
+        $recipient = TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'started_at' => null,
+        ]);
+
+        $this->actingAs($student)
+            ->postJson('/api/memorisation/assessments', $this->payload([
+                'surah_number' => 106,
+                'start_ayah' => 1,
+                'end_ayah' => 4,
+                'teacher_assignment_recipient_id' => $recipient->id,
+                'idempotency_key' => 'task-ai-auto-start',
+            ]))
+            ->assertCreated();
+
+        $this->assertNotNull($recipient->fresh()->started_at);
+    }
+
     public function test_dashboard_ai_recite_stats_and_peek_are_user_scoped(): void
     {
         $user = User::factory()->pro()->create();

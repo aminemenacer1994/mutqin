@@ -4,6 +4,12 @@ export {
   buildRecognitionWords,
 } from './api'
 
+export {
+  resolveAmdAssessmentForeignKeys,
+  firstLaravelValidationMessage,
+  resolveTeacherTaskAssessmentRange,
+} from './amdAssessmentPersist'
+
 export { applyBackendAlignmentToResult } from './backendAlignment'
 
 export {

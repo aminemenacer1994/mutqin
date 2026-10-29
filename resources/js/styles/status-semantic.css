@@ -1,0 +1,255 @@
+/*
+ * Semantic status colors — single source for pills/badges (teacher + student).
+ * Soft backgrounds, saturated ink, paired icons in markup.
+ */
+
+:root,
+.user-dashboard,
+.teacher-dashboard {
+  --sem-urgent-ink: #ad4b43;
+  --sem-urgent-bg: #f9eae8;
+  --sem-positive-ink: #26715b;
+  --sem-positive-bg: #e8f3ee;
+  --sem-neutral-ink: #686d65;
+  --sem-neutral-bg: #f4f1ec;
+  --sem-info-ink: #4f6f8e;
+  --sem-info-bg: #eaf0f5;
+  --sem-focus-ink: #9a661f;
+  --sem-focus-bg: #fbf2df;
+  --sem-focus-purple-ink: #6b5b8a;
+  --sem-focus-purple-bg: #efeaf5;
+}
+
+html[data-theme="dark"] .user-dashboard,
+html[data-theme="dark"] .teacher-dashboard,
+[data-theme="dark"] .user-dashboard,
+[data-theme="dark"] .teacher-dashboard {
+  --sem-urgent-ink: #e18a82;
+  --sem-urgent-bg: #3c2523;
+  --sem-positive-ink: #76bba3;
+  --sem-positive-bg: #1d352c;
+  --sem-neutral-ink: #b4b2aa;
+  --sem-neutral-bg: #2b2e28;
+  --sem-info-ink: #91adc8;
+  --sem-info-bg: #24313c;
+  --sem-focus-ink: #e0b367;
+  --sem-focus-bg: #3b3020;
+  --sem-focus-purple-ink: #c4b3de;
+  --sem-focus-purple-bg: #2e2838;
+}
+
+/* Bridge teacher premium tokens when present */
+html {
+  --sem-urgent-ink: var(--teacher-danger, var(--sem-urgent-ink));
+  --sem-urgent-bg: var(--teacher-danger-soft, var(--sem-urgent-bg));
+  --sem-positive-ink: var(--teacher-positive, var(--sem-positive-ink));
+  --sem-positive-bg: var(--teacher-positive-soft, var(--sem-positive-bg));
+  --sem-info-ink: var(--teacher-info, var(--sem-info-ink));
+  --sem-info-bg: var(--teacher-info-soft, var(--sem-info-bg));
+  --sem-focus-ink: var(--teacher-warning, var(--sem-focus-ink));
+  --sem-focus-bg: var(--teacher-warning-soft, var(--sem-focus-bg));
+  --sem-neutral-ink: var(--teacher-text-soft, var(--sem-neutral-ink));
+  --sem-neutral-bg: var(--teacher-surface-hover, var(--sem-neutral-bg));
+  --sem-focus-purple-ink: var(--teacher-focus-purple, var(--sem-focus-purple-ink));
+  --sem-focus-purple-bg: var(--teacher-focus-purple-soft, var(--sem-focus-purple-bg));
+}
+
+.user-dashboard {
+  --sem-urgent-ink: var(--danger, #a84638);
+  --sem-urgent-bg: color-mix(in srgb, var(--danger, #a84638) 12%, var(--dash-card-bg, #fff));
+  --sem-positive-ink: var(--success-text, #2d6a4f);
+  --sem-positive-bg: color-mix(in srgb, var(--success-text, #2d6a4f) 11%, var(--dash-card-bg, #fff));
+  --sem-info-ink: var(--dash-sky, #4f7393);
+  --sem-info-bg: color-mix(in srgb, var(--dash-sky, #4f7393) 12%, var(--dash-card-bg, #fff));
+  --sem-focus-ink: var(--warning, #9a6418);
+  --sem-focus-bg: color-mix(in srgb, var(--warning, #b7791f) 12%, var(--dash-card-bg, #fff));
+  --sem-neutral-ink: var(--dash-muted, #6b635a);
+  --sem-neutral-bg: var(--dash-surface-muted, #f4f1ec);
+}
+
+/* Shared pill surface */
+.sem-pill,
+.user-dashboard .learner-teacher__pill,
+.user-dashboard .learner-teacher__card-urgency,
+.teacher-dashboard .teacher-task-row__status,
+.teacher-dashboard .teacher-badge,
+.teacher-dashboard .teacher-hifz-tag,
+.teacher-dashboard .teacher-table__score,
+.teacher-dashboard .teacher-activity-list__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border-radius: 999px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.sem-pill i,
+.user-dashboard .learner-teacher__pill i,
+.teacher-dashboard .teacher-task-row__status i {
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+/* Urgent / danger / low score */
+.is-danger,
+.is-warn,
+.teacher-table__score--warn,
+.teacher-activity-list__score--warn,
+.teacher-badge--warn,
+.teacher-badge--danger,
+.user-dashboard .learner-teacher__pill.is-overdue,
+.user-dashboard .learner-teacher__card-urgency.is-danger,
+.user-dashboard .learner-teacher__card-due.is-danger,
+.teacher-dashboard .teacher-task-row__due.is-danger,
+.teacher-dashboard .teacher-task-row__status.is-danger,
+.teacher-dashboard .teacher-task-row__icon.is-danger,
+.teacher-dashboard .teacher-attention-list__reason.is-danger,
+.teacher-dashboard .teacher-table__concern.is-danger,
+.teacher-chip--attention {
+  color: var(--sem-urgent-ink) !important;
+  background: var(--sem-urgent-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-urgent-ink) 28%, transparent);
+}
+
+.teacher-chip--attention {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--sem-urgent-ink) 25%, transparent);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+/* Positive / done / high score */
+.is-good,
+.is-approved,
+.teacher-table__score--good,
+.teacher-activity-list__score--good,
+.teacher-badge--good,
+.user-dashboard .learner-teacher__pill.is-approved,
+.teacher-dashboard .teacher-task-row__status.is-good,
+.teacher-dashboard .teacher-task-row__icon.is-good {
+  color: var(--sem-positive-ink) !important;
+  background: var(--sem-positive-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-positive-ink) 22%, transparent);
+}
+
+/* Neutral / waiting / not started */
+.is-muted,
+.is-default,
+.is-neutral,
+.teacher-badge--muted,
+.teacher-table__score--empty,
+.user-dashboard .learner-teacher__pill.is-default,
+.user-dashboard .learner-teacher__pill.is-muted,
+.user-dashboard .learner-teacher__card-urgency.is-neutral,
+.teacher-dashboard .teacher-task-row__status.is-muted,
+.teacher-dashboard .teacher-hifz-tag.is-uncategorized {
+  color: var(--sem-neutral-ink) !important;
+  background: var(--sem-neutral-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-neutral-ink) 18%, transparent);
+}
+
+/* Informational / in progress / review / feedback */
+.is-info,
+.is-submitted,
+.is-active,
+.user-dashboard .learner-teacher__pill.is-submitted,
+.user-dashboard .learner-teacher__pill.is-active,
+.user-dashboard .learner-teacher__card-due.is-submitted,
+.teacher-dashboard .teacher-task-row__status.is-info,
+.teacher-dashboard .teacher-task-row__icon.is-info,
+.teacher-dashboard .teacher-task-row__icon.is-mid,
+.teacher-dashboard .teacher-task-row__status.is-mid {
+  color: var(--sem-info-ink) !important;
+  background: var(--sem-info-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-info-ink) 22%, transparent);
+}
+
+/* Focus / amber — moderate scores, due soon, corrections */
+.is-focus,
+.is-warning,
+.is-correction,
+.is-warn:not(.teacher-table__score--warn),
+.teacher-table__score--mid,
+.teacher-table__score--focus,
+.teacher-activity-list__score--mid,
+.teacher-activity-list__score--focus,
+.teacher-badge--mid,
+.teacher-badge--focus,
+.user-dashboard .learner-teacher__pill.is-correction,
+.user-dashboard .learner-teacher__card-urgency.is-warn,
+.user-dashboard .learner-teacher__card-urgency.is-warning,
+.user-dashboard .learner-teacher__card-due.is-warning,
+.teacher-dashboard .teacher-task-row__due.is-warn,
+.teacher-dashboard .teacher-task-row__due.is-warning {
+  color: var(--sem-focus-ink) !important;
+  background: var(--sem-focus-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-focus-ink) 25%, transparent);
+}
+
+/* Hifz categories */
+.teacher-dashboard .teacher-hifz-tag.is-sabqi,
+.user-dashboard .learner-teacher__hifz-tag.is-sabqi {
+  color: var(--sem-focus-ink) !important;
+  background: var(--sem-focus-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-focus-ink) 30%, transparent);
+}
+
+.teacher-dashboard .teacher-hifz-tag.is-sabaq,
+.teacher-dashboard .teacher-hifz-tag.is-manzil,
+.user-dashboard .learner-teacher__hifz-tag.is-sabaq,
+.user-dashboard .learner-teacher__hifz-tag.is-manzil {
+  color: var(--sem-focus-purple-ink) !important;
+  background: var(--sem-focus-purple-bg) !important;
+  border-color: color-mix(in srgb, var(--sem-focus-purple-ink) 28%, transparent);
+}
+
+/* Recitation mistakes */
+.user-dashboard .teacher-recite-mushaf .recitation-word-incorrect,
+.teacher-recite-mushaf .recitation-word-incorrect,
+.user-dashboard .teacher-recite-mushaf .recitation-word-omitted,
+.user-dashboard .teacher-recite-mushaf .recitation-word-skipped,
+.teacher-recite-mushaf .recitation-word-omitted,
+.teacher-recite-mushaf .recitation-word-skipped {
+  color: var(--sem-urgent-ink);
+  background: color-mix(in srgb, var(--sem-urgent-bg) 75%, transparent);
+}
+
+.user-dashboard .teacher-recite-mushaf .recitation-word-partial,
+.teacher-recite-mushaf .recitation-word-partial {
+  color: var(--sem-focus-ink);
+  background: color-mix(in srgb, var(--sem-focus-bg) 70%, transparent);
+}
+
+/* Card accent borders (learner tasks) */
+.user-dashboard {
+  --lt-tone-overdue: color-mix(in srgb, var(--sem-urgent-ink) 45%, var(--dash-border));
+  --lt-tone-approved: color-mix(in srgb, var(--sem-positive-ink) 38%, var(--dash-border));
+  --lt-tone-submitted: color-mix(in srgb, var(--sem-info-ink) 40%, var(--dash-border));
+  --lt-tone-active: color-mix(in srgb, var(--sem-info-ink) 42%, var(--dash-border));
+  --lt-tone-correction: color-mix(in srgb, var(--sem-focus-ink) 42%, var(--dash-border));
+  --lt-tone-default: var(--dash-border);
+}
+
+.teacher-dashboard .teacher-task-row__status,
+.user-dashboard .learner-teacher__pill {
+  border: 1px solid transparent;
+}
+
+.teacher-dashboard .teacher-task-row__status {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.user-dashboard .learner-teacher__uptodate {
+  color: var(--sem-positive-ink);
+}
+
+.user-dashboard .learner-teacher__uptodate i {
+  color: var(--sem-positive-ink);
+}

@@ -1,3 +1,5 @@
+import { tp as tpMessage } from '../utils/i18nPlural.js'
+
 /**
  * Shared i18n helper for Options API components.
  */
@@ -7,6 +9,11 @@ export const i18nMixin = {
       const translator = this.$t
       if (typeof translator !== 'function') return key
       return translator(key, params)
+    },
+    /** ICU plural messages (Intl.PluralRules + locale JSON). */
+    tp(key, count, params = {}) {
+      if (!this.$i18n) return key
+      return tpMessage(this.$i18n, key, count, params)
     },
   },
   mounted() {

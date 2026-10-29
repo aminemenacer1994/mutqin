@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Support\LearnerCompletionAttempt;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\UploadedFile;
@@ -306,10 +307,7 @@ class TeacherAssignmentService
         }
 
         if ($recipient->started_at === null) {
-            $recipient->forceFill([
-                'started_at' => now(),
-                'status' => AssignmentStatus::InProgress->value,
-            ])->save();
+            $this->markRecipientInProgress($recipient);
         }
 
         return $recipient->refresh();
@@ -481,21 +479,34 @@ class TeacherAssignmentService
             ->first();
         $assignment = $recipient?->assignment;
 
-        $matches = $recipient !== null
-            && $recipient->started_at !== null
+        $rangeMatches = $recipient !== null
             && $assignment !== null
             && $assignment->kind === $kind
             && (int) $assignment->surah_number === $surah
             && (int) $assignment->ayah_start === $ayahStart
             && (int) $assignment->ayah_end === $ayahEnd;
 
-        if (! $matches) {
+        if (! $rangeMatches) {
             throw ValidationException::withMessages([
                 'teacher_assignment_recipient_id' => 'This task link is no longer valid. Return to Tasks and try again.',
             ]);
         }
 
-        return $recipient;
+        return $this->markRecipientInProgress($recipient);
+    }
+
+    private function markRecipientInProgress(TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
+    {
+        if ($recipient->started_at !== null) {
+            return $recipient;
+        }
+
+        $recipient->forceFill([
+            'started_at' => now(),
+            'status' => AssignmentStatus::InProgress->value,
+        ])->save();
+
+        return $recipient->refresh();
     }
 
     public function practiceHref(
@@ -714,6 +725,13 @@ class TeacherAssignmentService
                 $latestAttempt,
                 $payload['messages'],
                 $assignment,
+            );
+            $payload['last_attempt'] = $this->presentLearnerLastAttempt(
+                $recipient,
+                $payload['review_state'] ?? null,
+                $latestAttempt,
+                $payload['messages'],
+                $payload['progress'],
             );
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
@@ -1047,11 +1065,16 @@ class TeacherAssignmentService
         $headlineType = $accuracy !== null ? 'ai_score' : 'teacher_reviewed';
         $words = is_array($latestAttempt?->word_statuses) ? $latestAttempt->word_statuses : [];
 
+        $attemptPayload = $latestAttempt
+            ? LearnerCompletionAttempt::present($latestAttempt, $this->attemptAudio)
+            : null;
+
         return [
             'headline_type' => $headlineType,
             'accuracy_percent' => $accuracy === null ? null : (int) $accuracy,
             'feedback_snippet' => $snippet,
             'has_recitation_review' => $latestAttempt !== null && $words !== [],
+            'attempt' => $attemptPayload,
         ];
     }
 
@@ -1066,6 +1089,53 @@ class TeacherAssignmentService
             : (string) $recipient->status;
 
         return $status === AssignmentStatus::Completed->value && $recipient->student_completed_at === null;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $messages
+     * @param  array<string, mixed>  $progress
+     * @return array<string, mixed>|null
+     */
+    private function presentLearnerLastAttempt(
+        TeacherAssignmentRecipient $recipient,
+        ?string $reviewState,
+        ?AiReciteAttempt $latestAttempt,
+        array $messages,
+        array $progress,
+    ): ?array {
+        if ($this->isLearnerTaskApproved($recipient, $reviewState)) {
+            return null;
+        }
+
+        $attemptNumber = (int) ($progress['activity_count'] ?? 0);
+        if ($attemptNumber < 1) {
+            return null;
+        }
+
+        $note = null;
+        foreach (array_reverse($messages) as $message) {
+            if (($message['sender'] ?? null) !== 'teacher') {
+                continue;
+            }
+            $body = trim((string) ($message['body'] ?? ''));
+            if ($body !== '') {
+                $note = $body;
+                break;
+            }
+        }
+
+        $accuracy = $latestAttempt?->accuracy_percent;
+        $missing = [];
+        if ($accuracy === null) {
+            $missing[] = 'accuracy_percent';
+        }
+
+        return [
+            'attempt_number' => $attemptNumber,
+            'accuracy_percent' => $accuracy === null ? null : (int) $accuracy,
+            'teacher_note' => $note,
+            'data_gaps' => $missing,
+        ];
     }
 
     /**

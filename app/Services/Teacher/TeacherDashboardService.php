@@ -758,38 +758,29 @@ class TeacherDashboardService
                 : (string) $recipient->status;
         };
 
-        $completedThisWeekIds = $assignments
-            ->filter(function (TeacherAssignmentRecipient $recipient) use ($weekStart, $statusValue) {
-                if ($statusValue($recipient) !== AssignmentStatus::Completed->value) {
-                    return false;
-                }
-
-                $completedAt = $recipient->completed_at ?? $recipient->student_completed_at;
-
-                return $completedAt !== null && $completedAt->gte($weekStart);
-            })
-            ->pluck('id');
-
-        $weeklyCompleted = $completedThisWeekIds->count();
-
-        $dueThisWeekCount = $assignments->filter(function (TeacherAssignmentRecipient $recipient) use ($weekStart, $weekEnd) {
+        $dueThisWeek = $assignments->filter(function (TeacherAssignmentRecipient $recipient) use ($weekStart, $weekEnd) {
             $due = $recipient->assignment?->due_at;
 
             return $due !== null && $due->between($weekStart, $weekEnd);
+        });
+
+        $weeklyGoal = $dueThisWeek->count();
+
+        $weeklyCompleted = $dueThisWeek->filter(function (TeacherAssignmentRecipient $recipient) use ($statusValue) {
+            if ($statusValue($recipient) !== AssignmentStatus::Completed->value) {
+                return false;
+            }
+
+            $reviewState = $recipient->review_state instanceof \BackedEnum
+                ? $recipient->review_state->value
+                : (string) ($recipient->review_state ?? '');
+
+            if ($reviewState === 'approved') {
+                return true;
+            }
+
+            return $recipient->student_completed_at === null;
         })->count();
-
-        $weeklyGoal = $dueThisWeekCount;
-        if ($weeklyGoal === 0) {
-            $weeklyGoal = $assignments->filter(function (TeacherAssignmentRecipient $recipient) use ($completedThisWeekIds, $statusValue) {
-                if ($completedThisWeekIds->contains($recipient->id)) {
-                    return true;
-                }
-
-                return $statusValue($recipient) !== AssignmentStatus::Completed->value;
-            })->count();
-        }
-
-        $weeklyGoal = max($weeklyGoal, $weeklyCompleted);
 
         $activeDaysThisWeek = UserSession::query()
             ->where('user_id', $user->id)

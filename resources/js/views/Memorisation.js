@@ -627,6 +627,9 @@ import {
   buildAssessmentAyahs,
   buildHiddenWordSeed,
   buildRecognitionWords,
+  resolveAmdAssessmentForeignKeys,
+  firstLaravelValidationMessage,
+  resolveTeacherTaskAssessmentRange,
   applyBackendAlignmentToResult,
   createMistakeFeedbackController,
   memorisationDetectionApi,
@@ -26295,6 +26298,28 @@ export default {
     openAiMemorisationCheckerForSession() {
       this.openAiRecitationCheckForSession()
     },
+    async ensureTeacherAssignmentStarted(recipientId = null) {
+      const id = Number(recipientId || this.teacherAssignmentRecipientId || 0)
+      if (!(id > 0) || !this.isLoggedIn) return null
+      try {
+        const payload = await learningApi.startLearnerAssignment(id)
+        const assignment = payload?.recipient?.assignment
+        if (!assignment?.surah_number) return null
+        const from = Math.max(1, Number(assignment.ayah_start || 1))
+        const to = Math.max(from, Number(assignment.ayah_end || from))
+        return {
+          surah: Number(assignment.surah_number),
+          from,
+          to,
+        }
+      } catch (error) {
+        console.warn('Teacher assignment could not be marked in progress', {
+          recipientId: id,
+          status: Number(error?.response?.status || 0) || undefined,
+        })
+        return null
+      }
+    },
     async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, to = 0, returnTo = null, assignmentRecipientId = null } = {}) {
       const chapterId = Number(surah || 0)
       const ayahNumber = Number(ayah || 0)
@@ -26302,6 +26327,17 @@ export default {
 
       this.dashboardAiCheckReturnTo = returnTo === 'dashboard' ? '/dashboard' : null
       this.teacherAssignmentRecipientId = Number(assignmentRecipientId || 0) || null
+      let rangeSurah = chapterId
+      let rangeFrom = ayahNumber
+      let rangeTo = Math.max(ayahNumber, Number(to || ayahNumber))
+      if (this.teacherAssignmentRecipientId) {
+        const authoritative = await this.ensureTeacherAssignmentStarted(this.teacherAssignmentRecipientId)
+        if (authoritative) {
+          rangeSurah = authoritative.surah
+          rangeFrom = authoritative.from
+          rangeTo = authoritative.to
+        }
+      }
       this.welcomeBackWorkspaceHidden = true
       this.showTools = false
       this.showWelcomeBackModal = false
@@ -26310,30 +26346,30 @@ export default {
         const baseConfig = this.buildSessionConfig(this.currentMode || 'beginner') || {}
         this.applySessionConfig({
           ...baseConfig,
-          chapterId,
-          rangeStart: ayahNumber,
-          rangeEnd: Math.max(ayahNumber, Number(to || ayahNumber)),
+          chapterId: rangeSurah,
+          rangeStart: rangeFrom,
+          rangeEnd: rangeTo,
         })
         this.currentMode = this.currentMode === 'advanced' ? 'advanced' : 'beginner'
         await this.loadVerses(this.currentMode)
         this.isDataReady = true
 
-        const verseKey = `${chapterId}:${ayahNumber}`
+        const verseKey = `${rangeSurah}:${rangeFrom}`
         const verse = (Array.isArray(this.verses) ? this.verses : []).find((row) => (
-          String(row?.key) === verseKey || Number(row?.number) === ayahNumber
+          String(row?.key) === verseKey || Number(row?.number) === rangeFrom
         )) || (Array.isArray(this.mushafDisplayVerses) ? this.mushafDisplayVerses : []).find((row) => (
-          String(row?.key) === verseKey || Number(row?.number) === ayahNumber
+          String(row?.key) === verseKey || Number(row?.number) === rangeFrom
         )) || {
           key: verseKey,
-          number: ayahNumber,
-          surah: chapterId,
-          chapterId,
-          chapterName: this.currentChapter?.name_simple || `Surah ${chapterId}`,
+          number: rangeFrom,
+          surah: rangeSurah,
+          chapterId: rangeSurah,
+          chapterName: this.currentChapter?.name_simple || `Surah ${rangeSurah}`,
         }
 
         await this.openAiMemorisationDetection({
           verse,
-          scope: Number(assignmentRecipientId || 0) > 0 && Number(to || ayahNumber) > ayahNumber
+          scope: Number(assignmentRecipientId || 0) > 0 && rangeTo > rangeFrom
             ? 'session'
             : 'ayah',
           fromDashboardReview: true,
@@ -28241,11 +28277,28 @@ export default {
       const assignmentRecipientId = this.amdEntrySource === 'dashboard-review'
         ? (Number(this.teacherAssignmentRecipientId || 0) || null)
         : null
+      const amdForeignKeys = resolveAmdAssessmentForeignKeys({
+        amdEntrySource: this.amdEntrySource,
+        amdRecommendationId: this.amdRecommendationId,
+        backendSessionId: this.mutqinState?.sessionState?.backendSessionId
+          || this.backendSessionSnapshot?.id,
+        sessionStatus: this.centralSession?.sessionStatus
+          || this.mutqinState?.sessionState?.status,
+      })
+      const taskRange = resolveTeacherTaskAssessmentRange({
+        assignmentRecipientId,
+        chapterId: this.chapterId,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
+        fallbackSurah: ayahs[0]?.surah_number || this.chapterId,
+        fallbackStartAyah: numbers[0] || this.rangeStart,
+        fallbackEndAyah: numbers[numbers.length - 1] || this.rangeEnd,
+      })
       const payload = {
-        surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
+        surah_number: taskRange.surah_number,
         surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
-        start_ayah: numbers[0] || Number(this.rangeStart || 1),
-        end_ayah: numbers[numbers.length - 1] || Number(this.rangeEnd || numbers[0] || 1),
+        start_ayah: taskRange.start_ayah,
+        end_ayah: taskRange.end_ayah,
         assessment_type: this.amdEntrySource === 'workspace-ai-recite' || assignmentRecipientId
           ? 'dashboard_ai_recite'
           : 'memorisation_detection',
@@ -28269,11 +28322,8 @@ export default {
         } : undefined,
         speechmatics_model: provider === 'speechmatics' ? 'enhanced' : undefined,
         alignment_lifecycle: 'final',
-        session_recommendation_id: this.amdEntrySource === 'workspace-ai-recite'
-          ? undefined
-          : (this.amdRecommendationId || undefined),
+        ...amdForeignKeys,
         previous_assessment_id: this.amdPreviousAssessmentId || undefined,
-        user_session_id: this.mutqinState?.sessionState?.backendSessionId || undefined,
         tajweed_practice_check: tajweedPracticeCheck || undefined,
         idempotency_key: idempotencyKey,
       }
@@ -28373,14 +28423,23 @@ export default {
         return finishSubmission(data)
       } catch (error) {
         const status = Number(error?.response?.status || 0)
+        const validationMessage = firstLaravelValidationMessage(error)
         console.error('AMD assessment failed', {
           status: status || undefined,
           reason: String(error?.message || 'request_failed').slice(0, 160),
+          validation: validationMessage || undefined,
         })
         this._amdSubmitStatus = 'failed'
         if (status === 419) {
           this.amdError = this.t?.('memorisation.amd.sessionExpired')
             || 'Your session expired. Refresh the page, then try the assessment again.'
+        } else if (
+          (status === 422 || status === 429)
+          && validationMessage
+          && validationMessage.length <= 180
+          && !/[<>]/.test(validationMessage)
+        ) {
+          this.amdError = validationMessage
         } else {
           this.amdError = this.resolveRecitationFailureText(error, { context: 'amd_backend_submit' })
         }

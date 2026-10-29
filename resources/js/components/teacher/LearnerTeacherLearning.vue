@@ -7,7 +7,7 @@
     <header class="learner-teacher__feedback-head">
       <h3 class="learner-teacher__section-title">{{ t('teacher.learner_feedback_inbox') }}</h3>
       <span v-if="unreadCount" class="learner-teacher__feedback-new">
-        {{ t('teacher.learner_feedback_unread', { n: unreadCount }) }}
+        {{ ldtp('teacher.learner_feedback_unread', unreadCount) }}
       </span>
     </header>
 
@@ -20,7 +20,7 @@
         <button
           type="button"
           class="learner-teacher__feedback-card"
-          :class="{ 'is-unread': item.unread }"
+          :class="{ 'is-unread': item.unread, 'is-read': !item.unread && item.read_at }"
           @click="$emit('open-feedback', item)"
         >
           <span class="learner-teacher__feedback-icon" aria-hidden="true">
@@ -55,6 +55,9 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
+import { mergeFeedbackReadState, readFeedbackReadMap, sortFeedbackInbox } from '../../scripts/teacher/learnerDashboard.js'
+import { learnerDashboardTp } from '../../scripts/teacher/learnerDashboardI18n.js'
 
 const PREVIEW_LIMIT = 4
 
@@ -74,7 +77,9 @@ export default {
   },
   computed: {
     feedbackItems() {
-      return Array.isArray(this.learning?.feedback_inbox) ? this.learning.feedback_inbox : []
+      const raw = Array.isArray(this.learning?.feedback_inbox) ? this.learning.feedback_inbox : []
+      const map = readFeedbackReadMap()
+      return sortFeedbackInbox(mergeFeedbackReadState(raw, map))
     },
     feedbackPreview() {
       const limit = this.variant === 'drawer' || this.showAllFeedback ? 20 : this.previewLimit
@@ -83,13 +88,19 @@ export default {
     unreadCount() {
       return this.feedbackItems.filter((item) => item.unread).length
     },
+    learnerLocale() {
+      return this.$i18n?.global?.locale?.value
+        || (typeof document !== 'undefined' ? document.documentElement.getAttribute('lang') : null)
+        || 'en'
+    },
   },
   methods: {
+    ldtp(key, count, params = {}) {
+      return learnerDashboardTp(this.learnerLocale, this.$i18n, key, count, params)
+    },
     formatWhen(value) {
-      if (!value) return ''
-      const date = new Date(value)
-      if (Number.isNaN(date.getTime())) return ''
-      return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+      const locale = this.learnerLocale
+      return formatLearnerDisplayDate(value, this.t.bind(this), locale)
     },
   },
 }
