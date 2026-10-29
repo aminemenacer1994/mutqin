@@ -53,15 +53,18 @@
             <div class="learner-teacher__progress-main">
               <span class="learner-teacher__progress-label">{{ weeklyProgressLabel }}</span>
               <span
-                v-if="weeklyStrip.total > 0"
+                v-if="Number(overview.weekly_goal) > 0"
                 class="learner-teacher__progress-meter"
                 role="progressbar"
                 :aria-valuemin="0"
-                :aria-valuemax="weeklyStrip.total"
-                :aria-valuenow="weeklyStrip.done"
+                :aria-valuemax="Number(overview.weekly_goal) || 0"
+                :aria-valuenow="Number(overview.weekly_completed) || 0"
                 :aria-label="weeklyProgressLabel"
               >
-                <span class="learner-teacher__progress-meter-fill" :style="weeklyProgressFillStyle"></span>
+                <span
+                  class="learner-teacher__progress-meter-fill"
+                  :style="{ width: `${weeklyProgressPercent}%`, '--learner-weekly-fill': `${weeklyProgressPercent}%` }"
+                ></span>
               </span>
             </div>
             <div
@@ -158,7 +161,7 @@
                 <article
                   :id="`learner-task-card-${item.id}`"
                   class="learner-teacher__card"
-                  :class="[cardToneClass(item), { 'is-priority': isPriorityCard(item, index), 'is-collapsed': !isCardExpanded(item) }]"
+                  :class="[cardToneClass(item), { 'is-priority': isPriorityCard(item, index) }]"
                 >
                   <div class="learner-teacher__card-head">
                     <div class="learner-teacher__card-title-row">
@@ -222,22 +225,11 @@
                           <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
                           <span v-if="taskFeedbackUnread(item)" class="learner-teacher__dot" :aria-hidden="true"></span>
                         </button>
-                        <button
-                          type="button"
-                          class="learner-teacher__icon-hit is-muted learner-teacher__icon-hit--expand"
-                          :aria-expanded="isCardExpanded(item) ? 'true' : 'false'"
-                          :aria-controls="`learner-task-card-body-${item.id}`"
-                          :aria-label="isCardExpanded(item) ? t('teacher.learner_card_collapse') : t('teacher.learner_card_expand')"
-                          @click="toggleCardExpanded(item.id)"
-                        >
-                          <i class="bi" :class="isCardExpanded(item) ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-                        </button>
                       </div>
                     </div>
                   </div>
 
                   <div
-                    v-show="isCardExpanded(item)"
                     :id="`learner-task-card-body-${item.id}`"
                     class="learner-teacher__card-body"
                   >
@@ -320,11 +312,6 @@
                     <span>{{ progressLabel(item) }}</span>
                     <span v-if="showProgressBar(item)" class="learner-teacher__progress" aria-hidden="true"><span :style="{ width: `${progressPercent(item)}%` }"></span></span>
                   </div>
-
-                  <p v-if="attemptHintLine(item)" class="learner-teacher__attempts-left">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                    {{ attemptHintLine(item) }}
-                  </p>
 
                   <div v-if="retryContextVisible(item)" class="learner-teacher__retry-context">
                     <p class="learner-teacher__retry-score">{{ retryScoreLine(item) }}</p>
@@ -426,7 +413,6 @@
       ref="taskThreadPanel"
       :open="Boolean(threadTask)"
       :task="threadTask"
-      :pinned-context="threadPinnedContext"
       :is-mobile-layout="isMobileLayout"
       :on-send="sendTaskMessageOptimistic"
       @close="closeTaskThread"
@@ -629,9 +615,7 @@ import {
   buildAllTabList,
   completionAiScoreSummary,
   completionResultLink,
-  learnerAttemptHint,
   learnerTaskAttemptCount,
-  learnerWeeklyProgressFromAssignments,
   mergeFeedbackReadState,
   persistFeedbackRead,
   practiceAgainVariant,
@@ -693,7 +677,6 @@ export default {
       visibleLimit: 4,
       selectedItem: null,
       threadTask: null,
-      threadPinnedContext: '',
       selectedDirectThread: null,
       selectedSubmission: null,
       recitationReviewRow: null,
@@ -709,7 +692,6 @@ export default {
       feedbackDrawerTitleId: `learner-feedback-drawer-${Math.random().toString(36).slice(2, 9)}`,
       showOlderCompleted: false,
       expandedRetryNotes: {},
-      expandedCardIds: {},
       feedbackReadVersion: 0,
       defaultFilterSynced: false,
     }
@@ -736,41 +718,21 @@ export default {
         || 'en'
     },
     showWeeklyProgress() {
-      const strip = this.weeklyStrip
-      return strip.total > 0 || strip.done > 0
-    },
-    weeklyStrip() {
-      const fromAssignments = learnerWeeklyProgressFromAssignments(
-        this.assignments,
-        (row) => this.isTeacherApproved(row),
-      )
-      if (fromAssignments.total > 0) {
-        return fromAssignments
-      }
-      const apiTotal = Number(this.overview.weekly_goal) || 0
-      const apiDone = Number(this.overview.weekly_completed) || 0
-      if (apiTotal > 0 || apiDone > 0) {
-        return {
-          done: apiDone,
-          total: apiTotal,
-          percent: weeklyProgressPercent(apiDone, apiTotal),
-        }
-      }
-      return fromAssignments
-    },
-    weeklyProgressFillStyle() {
-      const pct = Math.min(100, Math.max(0, Number(this.weeklyStrip.percent) || 0))
-      return {
-        '--learner-weekly-fill': `${pct}%`,
-        width: `${pct}%`,
-      }
+      const goal = Number(this.overview.weekly_goal) || 0
+      const done = Number(this.overview.weekly_completed) || 0
+      return goal > 0 || done > 0
     },
     weeklyProgressLabel() {
-      const strip = this.weeklyStrip
       return this.ldt('teacher.learner_weekly_progress', {
-        done: strip.done,
-        total: strip.total,
+        done: Number(this.overview.weekly_completed) || 0,
+        total: Number(this.overview.weekly_goal) || 0,
       })
+    },
+    weeklyProgressPercent() {
+      return weeklyProgressPercent(
+        Number(this.overview.weekly_completed) || 0,
+        Number(this.overview.weekly_goal) || 0,
+      )
     },
     introHeaderTitle() {
       if (this.showWeeklyProgress) return this.t('teacher.learner_header_this_week')
@@ -1043,21 +1005,11 @@ export default {
       }
       return this.unreadTeacherMessages(row)
     },
-    buildThreadPinnedContext(row) {
-      const score = this.completionResult(row)?.accuracy_percent
-      if (score === null || score === undefined) return ''
-      return this.t('teacher.learner_thread_context_score', {
-        task: this.rangeLabel(row),
-        score,
-      })
-    },
-    openTaskThread(row, pinnedContext = '') {
-      this.threadPinnedContext = pinnedContext || this.buildThreadPinnedContext(row)
+    openTaskThread(row) {
       this.threadTask = row
     },
     closeTaskThread() {
       this.threadTask = null
-      this.threadPinnedContext = ''
     },
     async refreshDirectThreads() {
       const threads = this.support?.direct_threads || []
@@ -1129,26 +1081,6 @@ export default {
       if (!item?.id) return
       persistFeedbackRead(item.id)
       this.feedbackReadVersion += 1
-    },
-    isCardExpanded(row) {
-      const id = Number(row?.id)
-      if (Object.prototype.hasOwnProperty.call(this.expandedCardIds, id)) {
-        return Boolean(this.expandedCardIds[id])
-      }
-      return !this.isTeacherApproved(row) || this.needsCorrection(row)
-    },
-    toggleCardExpanded(id) {
-      const row = this.assignments.find((item) => Number(item.id) === Number(id))
-      if (!row) return
-      this.expandedCardIds = {
-        ...this.expandedCardIds,
-        [Number(id)]: !this.isCardExpanded(row),
-      }
-    },
-    expandTaskCard(id) {
-      const cardId = Number(id)
-      if (!Number.isFinite(cardId)) return
-      this.expandedCardIds = { ...this.expandedCardIds, [cardId]: true }
     },
     taskAttemptCount(row) {
       return learnerTaskAttemptCount(row)
@@ -1230,9 +1162,6 @@ export default {
       const id = Number(row?.id)
       const opening = !this.mistakeDetailsExpanded(row)
       this.expandedMistakeDetailsId = opening ? id : null
-      if (opening) {
-        this.expandTaskCard(id)
-      }
     },
     mistakeDetailsExpanded(row) {
       return Number(this.expandedMistakeDetailsId) === Number(row.id)
@@ -1282,12 +1211,6 @@ export default {
       } else {
         this.expandedMistakeDetailsId = null
       }
-    },
-    attemptHintLine(row) {
-      const hint = learnerAttemptHint(row)
-      if (!hint) return ''
-      if (hint.kind === 'retry_requested') return this.ldt('teacher.learner_attempts_retry')
-      return this.ldtp('teacher.learner_attempts_left', hint.remaining)
     },
     retryContextVisible(row) {
       if (this.isTeacherApproved(row)) return false
@@ -1520,7 +1443,6 @@ export default {
     openTaskFeedback(row) {
       const items = this.taskFeedbackItems(row)
       if (items.length) {
-        this.expandTaskCard(row.id)
         this.openFeedbackFromPanel(items[0])
         return
       }

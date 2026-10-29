@@ -23,11 +23,6 @@
       </button>
     </header>
 
-    <p v-if="pinnedContext" class="learner-task-thread-modal__context" role="status">
-      <i class="bi bi-pin-angle" aria-hidden="true"></i>
-      {{ pinnedContext }}
-    </p>
-
     <div class="dash-modal__body learner-task-thread-modal__body">
       <TeacherTaskConversation
         ref="conversation"
@@ -73,7 +68,6 @@ export default {
   props: {
     open: { type: Boolean, default: false },
     task: { type: Object, default: null },
-    pinnedContext: { type: String, default: '' },
     isMobileLayout: { type: Boolean, default: false },
     onSend: { type: Function, required: true },
   },
