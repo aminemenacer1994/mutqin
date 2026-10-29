@@ -61,6 +61,14 @@ return [
         'name' => env('DEMO_LOGIN_NAME', 'Tester — Beginner (EN)'),
     ],
 
+    'demo_login_enabled' => (bool) env('DEMO_LOGIN_ENABLED', false),
+
+    'demo_accounts' => [
+        'student_email' => env('DEMO_STUDENT_EMAIL'),
+        'teacher_email' => env('DEMO_TEACHER_EMAIL'),
+        'password' => env('DEMO_PASSWORD'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

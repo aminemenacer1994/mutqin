@@ -80,6 +80,8 @@
     "filters": "Filters",
     "relative": {
       "justNow": "Just now",
+      "today": "Today",
+      "yesterday": "Yesterday",
       "minutesAgo": "{n}m ago",
       "hoursAgo": "{n}h ago",
       "daysAgo": "{n}d ago"
@@ -6675,6 +6677,14 @@
     "open_session_review": "Open session review",
     "support_title": "Teacher support",
     "learner_section_title": "From your teacher",
+    "learner_section_from_label": "From your teacher",
+    "learner_teacher_fallback": "Your teacher",
+    "learner_teachers_multiple": "Your teachers",
+    "learner_upcoming_title": "Upcoming",
+    "learner_upcoming_empty": "Nothing due. Well done.",
+    "learner_upcoming_due_today": "Due today",
+    "learner_upcoming_due_days_one": "Due in {n} day",
+    "learner_upcoming_due_days_other": "Due in {n} days",
     "learner_teacher_context": "Teacher: {name}",
     "learner_teachers_context_one": "{n} teacher",
     "learner_teachers_context_other": "{n} teachers",

@@ -1,85 +1,63 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open && task"
-      class="dash-drawer-root user-dashboard dash-student-thread-root"
-      :class="{ 'is-mobile-sheet': isMobileLayout }"
-      @keydown="onKeydown"
-    >
+  <DashModalRoot
+    :open="open && Boolean(task)"
+    :labelled-by="titleId"
+    root-class="learner-task-thread-modal"
+    panel-class="learner-task-thread-modal__panel"
+    @close="close"
+  >
+    <header class="dash-modal__head learner-task-thread-modal__head">
+      <div class="dash-modal__head-copy">
+        <h2 :id="titleId">{{ taskTitle }}</h2>
+        <p class="dash-modal__subtitle">{{ teacherName }}</p>
+      </div>
       <button
+        ref="closeBtn"
         type="button"
-        class="dash-drawer__backdrop"
-        :aria-label="t('dashboard.drawer_close')"
+        class="dash-modal__close dash-icon-btn"
+        :aria-label="t('common.close')"
         @click="close"
-      ></button>
-      <aside
-        ref="panel"
-        class="dash-drawer dash-student-thread"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="titleId"
-        tabindex="-1"
       >
-        <div class="dash-drawer__handle" aria-hidden="true"></div>
-        <header class="dash-drawer__head">
-          <div class="dash-drawer__head-main">
-            <span class="dash-drawer__head-icon" aria-hidden="true">
-              <i class="bi bi-chat-dots"></i>
-            </span>
-            <div class="dash-drawer__head-copy">
-              <h2 :id="titleId" class="dash-drawer__title">{{ taskTitle }}</h2>
-              <p class="dash-drawer__subtitle">{{ teacherName }}</p>
-            </div>
-          </div>
-          <button
-            ref="closeBtn"
-            type="button"
-            class="dash-icon-btn dash-drawer__close"
-            :aria-label="t('common.close')"
-            @click="close"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </header>
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
 
-        <p v-if="pinnedContext" class="dash-student-thread__context" role="status">
-          <i class="bi bi-pin-angle" aria-hidden="true"></i>
-          {{ pinnedContext }}
-        </p>
+    <p v-if="pinnedContext" class="learner-task-thread-modal__context" role="status">
+      <i class="bi bi-pin-angle" aria-hidden="true"></i>
+      {{ pinnedContext }}
+    </p>
 
-        <div class="dash-drawer__body dash-student-thread__body">
-          <div class="dash-drawer__content">
-            <TeacherTaskConversation
-              ref="conversation"
-              :messages="displayMessages"
-              variant="learner"
-              thread-class="dash-student-thread__thread"
-              viewer-role="student"
-              :peer-name="teacherName"
-              :teacher-note="''"
-              :compose="true"
-              :task-id="task.id"
-              :composer-id="composerId"
-              :composer-placeholder="t('teacher.learner_thread_composer_placeholder')"
-              :empty-label="t('teacher.learner_thread_empty')"
-              :on-send="handleSend"
-            />
-          </div>
-        </div>
-      </aside>
+    <div class="dash-modal__body learner-task-thread-modal__body">
+      <TeacherTaskConversation
+        ref="conversation"
+        :messages="displayMessages"
+        variant="learner"
+        thread-class="learner-task-thread-modal__thread"
+        viewer-role="student"
+        :peer-name="teacherName"
+        :teacher-note="''"
+        :compose="true"
+        :task-id="task?.id"
+        :composer-id="composerId"
+        :composer-placeholder="t('teacher.learner_thread_composer_placeholder')"
+        :empty-label="t('teacher.learner_thread_empty')"
+        :on-send="handleSend"
+      />
     </div>
-  </Teleport>
+  </DashModalRoot>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
+import DashModalRoot from '../dashboard/DashModalRoot.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import {
   createOptimisticMessage,
   markOptimisticFailed,
   normalizeThreadMessages,
 } from '../../scripts/teacher/learnerTaskThread.js'
+import { captureReturnFocus, restoreReturnFocus } from '../../utils/modalFocus.js'
 
 function createClientMessageId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
@@ -88,7 +66,7 @@ function createClientMessageId() {
 
 export default {
   name: 'LearnerTaskThreadPanel',
-  components: { TeacherTaskConversation },
+  components: { DashModalRoot, TeacherTaskConversation },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -130,12 +108,12 @@ export default {
   watch: {
     open(value) {
       if (value && this.task) {
-        this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null
+        this.previouslyFocused = captureReturnFocus()
         this.refreshThread(true)
-        this.lockScroll(true)
         this.$nextTick(() => this.$refs.closeBtn?.focus())
       } else {
-        this.lockScroll(false)
+        restoreReturnFocus(this.previouslyFocused)
+        this.previouslyFocused = null
         this.localMessages = []
       }
     },
@@ -167,6 +145,7 @@ export default {
       const clientMessageId = createClientMessageId()
       const optimistic = createOptimisticMessage(this.task.id, body, recording, clientMessageId)
       this.localMessages = [...this.localMessages, optimistic]
+      this.$nextTick(() => this.$refs.conversation?.scrollThread?.())
       try {
         const payload = await this.onSend(this.task, body, recording, clientMessageId)
         const serverRow = payload?.message || payload
@@ -175,7 +154,9 @@ export default {
           this.$emit('messages-updated', {
             taskId: this.task.id,
             append: serverRow,
+            threadUnreadCount: 0,
           })
+          this.$nextTick(() => this.$refs.conversation?.scrollThread?.())
           return normalizeThreadMessages([serverRow], this.task.id)[0]
         }
         throw new Error('missing message')
@@ -186,22 +167,7 @@ export default {
     },
     close() {
       this.$emit('close')
-      this.$nextTick(() => this.previouslyFocused?.focus?.())
     },
-    onKeydown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        this.close()
-      }
-    },
-    lockScroll(open) {
-      if (typeof document === 'undefined') return
-      document.documentElement.classList.toggle('dash-drawer-open', open)
-      document.body.classList.toggle('dash-drawer-open', open)
-    },
-  },
-  beforeUnmount() {
-    this.lockScroll(false)
   },
 }
 </script>

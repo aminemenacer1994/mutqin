@@ -93,6 +93,7 @@
           @complete="completeSupportAssignment"
           @view-completed="showCompletedAssignments"
           @dismiss-completion="dismissAssignmentCompletion"
+          @support-thread-update="patchLearnerSupportThread"
         />
 
         <div class="user-dashboard__content">
@@ -808,6 +809,7 @@ import {
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
+import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
@@ -2487,7 +2489,18 @@ export default {
     async sendSupportNote(item, body, recording = null) {
       if (this.auth?.learner_teacher_section_enabled !== true) return null
       const payload = await learningApi.sendLearnerAssignmentMessage(item.id, body, recording)
-      return payload?.message || null
+      const message = payload?.message || null
+      if (message && item?.id) {
+        this.support = applyAssignmentThreadUpdate(this.support, {
+          taskId: item.id,
+          append: message,
+          threadUnreadCount: 0,
+        })
+      }
+      return message
+    },
+    patchLearnerSupportThread(payload) {
+      this.support = applyAssignmentThreadUpdate(this.support, payload)
     },
     async sendDirectTeacherMessage(teacherId, body) {
       if (this.auth?.learner_teacher_section_enabled !== true) return null

@@ -366,7 +366,7 @@ import {
   revokeObjectUrl,
   sanitizeAudioDuration,
   stopMediaRecorderAndCollectBlob,
-} from '@/scripts/audio/recordingPlayback.js'
+} from '../scripts/audio/recordingPlayback.js'
 import {
   RECITATION_PROCESSING_STAGE,
   RECITATION_FAILURE_KIND,
@@ -525,6 +525,7 @@ import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import {
   buildMutashabihatCompareView,
   detectDriftForWorkspaceRecite,
+  countMutashabihatCardRows,
   hydrateMutashabihatAyahs,
   hydrateMutashabihatPanelRows,
   listMutashabihatCardRows,
@@ -6793,7 +6794,9 @@ export default {
       return !!this.mutashabihatHydrating
     },
     mutashabihatHasMore() {
-      return listMutashabihatRankedPairs(this).length > this.mutashabihatVisibleLimit
+      void this.mutashabihatAyahRevision
+      const limit = this.mutashabihatVisibleLimit
+      return countMutashabihatCardRows(this, { moreThan: limit }) > limit
     },
     mutashabihatCompareAudioVerseKey() {
       if (!this.mutashabihatCompareOpen || !this.manualOnlyPlayback) return ''
@@ -11606,6 +11609,7 @@ export default {
     },
     chapterId(nextId, prevId) {
       if (Number(nextId || 0) === Number(prevId || 0)) return
+      this.mutashabihatVisibleLimit = 3
       this.mutashabihatPanelReady = false
       void this.ensureMutashabihatProgressLoaded?.()
     },

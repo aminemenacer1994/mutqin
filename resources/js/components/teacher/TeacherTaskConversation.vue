@@ -23,26 +23,17 @@
           <article
             v-for="(message, index) in group.messages"
             :key="message.id"
-            class="teacher-task-conversation__bubble"
-            :class="learnerBubbleClasses(message, group.messages, index)"
           >
-            <p v-if="message.body" class="teacher-task-conversation__body" dir="auto">{{ message.body }}</p>
-            <div v-if="message.type === 'voice' && message.audioUrl" class="teacher-task-conversation__voice">
-              <AudioClip :src="message.audioUrl" :label="t('teacher.learner_attempt_listen')" />
-              <span v-if="message.durationMs" class="teacher-task-conversation__voice-duration">{{ voiceDurationLabel(message.durationMs) }}</span>
-            </div>
-            <time v-if="message.sentAt" :datetime="message.sentAt">{{ messageTime(message.sentAt) }}</time>
-            <p v-if="showLearnerReceipt(message)" class="teacher-task-conversation__receipt">
-              {{ readReceiptLabel(message) }}
-            </p>
-            <button
-              v-if="message.failed"
-              type="button"
-              class="teacher-task-conversation__retry"
-              @click="retryFailed(message)"
-            >
-              {{ t('common.retry') }}
-            </button>
+            <MessageBubble
+              :message="message"
+              :sender-role="message.senderRole"
+              :time-label="messageTime(message.sentAt)"
+              :receipt-label="showLearnerReceipt(message) ? readReceiptLabel(message) : ''"
+              :play-label="t('teacher.learner_attempt_listen')"
+              :voice-aria-label="t('teacher.voice_note')"
+              :grouped="Boolean(group.messages[index - 1] && group.messages[index - 1].senderRole === message.senderRole)"
+              @retry="retryFailed"
+            />
           </article>
         </section>
       </template>
@@ -99,7 +90,7 @@
           <button
             v-if="recordingSupported && recordingState !== 'recorded'"
             type="button"
-            class="teacher-task-conversation__record-button"
+            class="dash-btn dash-btn--ghost dash-btn--sm teacher-task-conversation__record-button"
             :class="{ 'is-recording': recordingState === 'recording' }"
             :disabled="saving || sendBlocked || recordingState === 'requesting' || recordingState === 'stopping'"
             @click="recordingState === 'recording' ? stopRecording() : startRecording()"
@@ -122,6 +113,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import MessageBubble from '../dashboard/MessageBubble.vue'
 import AudioClip from '../AudioClip.vue'
 import {
   chooseSupportedRecorderMimeType,
@@ -149,7 +141,7 @@ const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherTaskConversation',
-  components: { AudioClip },
+  components: { MessageBubble, AudioClip },
   mixins: [i18nMixin],
   props: {
     messages: { type: Array, default: () => [] },
@@ -257,6 +249,8 @@ export default {
           'is-grouped': grouped,
           'is-pending': message.pending,
           'is-failed': message.failed,
+          'has-voice': message.type === 'voice' && message.audioUrl,
+          'has-text': Boolean(message.body),
         },
       ]
     },

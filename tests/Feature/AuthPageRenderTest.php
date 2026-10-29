@@ -24,6 +24,33 @@ class AuthPageRenderTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
+    public function test_login_page_hides_demo_try_card_when_disabled(): void
+    {
+        config([
+            'app.demo_login_enabled' => false,
+        ]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertDontSee('auth-demo-card', false);
+    }
+
+    public function test_login_page_shows_demo_try_card_when_enabled(): void
+    {
+        config([
+            'app.demo_login_enabled' => true,
+            'app.demo_accounts.student_email' => 'student@mutqin.test',
+            'app.demo_accounts.teacher_email' => 'teacher@mutqin.test',
+            'app.demo_accounts.password' => 'DemoPass1!',
+        ]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('auth-demo-card', false)
+            ->assertSee('student@mutqin.test', false)
+            ->assertSee('teacher@mutqin.test', false);
+    }
+
     public function test_login_page_renders_the_dedicated_login_form(): void
     {
         config(['app.show_demo_accounts' => true]);

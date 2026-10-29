@@ -80,6 +80,8 @@
     "filters": "Filters",
     "relative": {
       "justNow": "للتو الآن",
+      "today": "اليوم",
+      "yesterday": "أمس",
       "minutesAgo": "{n}m ago",
       "hoursAgo": "{n}h ago",
       "daysAgo": "{n}d ago"
@@ -6626,6 +6628,14 @@
     "issue_repeated": "repeated",
     "open_session_review": "Open session review",
     "learner_section_title": "From your teacher",
+    "learner_section_from_label": "From your teacher",
+    "learner_teacher_fallback": "Your teacher",
+    "learner_teachers_multiple": "Your teachers",
+    "learner_upcoming_title": "Upcoming",
+    "learner_upcoming_empty": "Nothing due. Well done.",
+    "learner_upcoming_due_today": "Due today",
+    "learner_upcoming_due_days_one": "Due in {n} day",
+    "learner_upcoming_due_days_other": "Due in {n} days",
     "learner_section_subtitle": "Tasks, messages, and class sharing in one place.",
     "learner_assignments_title": "Tasks",
     "learner_assignments_subtitle": "Practice your teacher set for you. Start with the next open task.",

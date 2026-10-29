@@ -18,6 +18,7 @@
   --dash-border-strong: var(--border-strong, var(--border));
   --dash-on-accent: var(--text-on-accent, #fff);
   --dash-overlay: var(--overlay, rgba(20, 14, 10, 0.45));
+  --overlay-bg: rgba(28, 24, 20, 0.45);
   --dash-success: var(--success-text, #2d6a4f);
   --dash-success-bg: var(--success-bg, rgba(45, 106, 79, 0.11));
   --dash-teal: #3f6f6d;
@@ -1238,7 +1239,7 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 .dash-glance__meta--note {
-  font-style: italic;
+  font-style: normal;
 }
 
 .dash-glance-actions {
@@ -5057,7 +5058,7 @@ a.dash-ai-results__attempt {
   margin: 0.25rem 0 0;
   color: var(--dash-ink);
   font-size: 0.8rem;
-  font-style: italic;
+  font-style: normal;
   line-height: 1.4;
 }
 
@@ -7249,7 +7250,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   font-size: 0.75rem;
   line-height: 1.35;
   color: color-mix(in srgb, var(--dash-ink) 68%, var(--dash-muted));
-  font-style: italic;
+  font-style: normal;
 }
 
 .user-dashboard .learner-teacher__card-due.is-submitted {
@@ -7372,7 +7373,26 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 
 .user-dashboard .learner-teacher__workspace {
   display: grid;
-  gap: clamp(1.25rem, 2.5vw, 1.5rem);
+  gap: 12px;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "sidebar"
+    "tasks";
+}
+
+.user-dashboard .learner-teacher__sidebar {
+  grid-area: sidebar;
+  display: grid;
+  gap: 12px;
+}
+
+.user-dashboard .learner-teacher__block {
+  grid-area: tasks;
+  min-width: 0;
+}
+
+.user-dashboard .dash-section--learner-teacher {
+  overflow: visible;
 }
 
 .user-dashboard .learner-teacher__progress-strip {
@@ -7489,16 +7509,8 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   font-weight: 650;
 }
 
-@media (max-width: 959px) {
-  .user-dashboard .learner-teacher__feedback-panel--desktop {
-    display: none !important;
-  }
-}
-
-@media (min-width: 960px) {
-  .user-dashboard .learner-teacher__feedback-tab-btn {
-    display: none;
-  }
+.user-dashboard .learner-teacher__feedback-tab-btn {
+  display: none;
 }
 
 .user-dashboard .learner-teacher__hero--compact .dash-section__title-copy h2 {
@@ -7968,6 +7980,33 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 .user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button {
   min-block-size: 2.75rem;
   min-inline-size: 2.75rem;
+  flex-shrink: 0;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button.is-recording {
+  border-color: color-mix(in srgb, var(--danger, #a84638) 35%, var(--dash-border));
+  color: var(--danger, #a84638);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-tools {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-foot .dash-btn--primary {
+  flex-shrink: 0;
+  min-inline-size: 7.5rem;
 }
 
 .user-dashboard .learner-teacher__feedback-card.is-read {
@@ -8131,7 +8170,9 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 @media (min-width: 960px) {
   .user-dashboard .learner-teacher__workspace {
     grid-template-columns: minmax(0, 1.7fr) minmax(17.5rem, 22rem);
+    grid-template-areas: "tasks sidebar";
     align-items: start;
+    gap: 16px;
   }
 
   .user-dashboard .learner-teacher__workspace .learner-teacher__card-list {
@@ -8773,7 +8814,8 @@ body.teacher-recite-modal-open { overflow: hidden; }
 }
 
 /* Centered dialog (submission, direct messages, playback) */
-.user-dashboard .dash-student-dialog-root {
+.user-dashboard .dash-student-dialog-root,
+.user-dashboard.dash-student-dialog-root {
   position: fixed;
   inset: 0;
   z-index: 1195;
@@ -8783,7 +8825,8 @@ body.teacher-recite-modal-open { overflow: hidden; }
   animation: dash-drawer-root-in 260ms var(--dash-ease) both;
 }
 
-.user-dashboard .dash-student-dialog-root .dash-drawer__backdrop {
+.user-dashboard .dash-student-dialog-root .dash-drawer__backdrop,
+.user-dashboard.dash-student-dialog-root > .dash-drawer__backdrop {
   position: absolute;
   inset: 0;
   backdrop-filter: blur(10px);
@@ -8791,7 +8834,8 @@ body.teacher-recite-modal-open { overflow: hidden; }
   background: var(--dash-student-overlay);
 }
 
-.user-dashboard .dash-student-dialog {
+.user-dashboard .dash-student-dialog,
+.user-dashboard.dash-student-dialog-root > .dash-student-dialog {
   position: relative;
   z-index: 1;
   display: grid;
@@ -8839,35 +8883,332 @@ body.teacher-recite-modal-open { overflow: hidden; }
     );
 }
 
-/* Side thread drawer (task messages) — reuses dash-drawer chrome */
-.user-dashboard .dash-student-thread-root {
-  --dash-drawer-width: min(28rem, 100%);
+/* Task thread — centered dash modal (matches admin modal chrome) */
+.dash-modal-root.user-dashboard,
+.learner-task-thread-modal.user-dashboard {
+  --dash-bg: var(--bg, #f7f2ea);
+  --dash-surface: var(--surface-strong, var(--surface, #fffaf3));
+  --dash-ink: var(--text, #1f1a17);
+  --dash-muted: color-mix(in srgb, var(--text-muted, #6b5c4f) 92%, var(--text, #1f1a17));
+  --dash-accent: var(--accent, #9a6738);
+  --dash-accent-strong: var(--accent-strong, #7a5228);
+  --dash-accent-light: var(--accent-light, #f3e4d4);
+  --dash-border: rgba(78, 58, 38, 0.14);
+  --dash-border-strong: rgba(78, 58, 38, 0.22);
+  --dash-line: var(--dash-border);
+  --dash-card: var(--dash-surface);
+  --dash-soft: color-mix(in srgb, var(--dash-surface) 94%, var(--dash-bg));
+  --dash-radius-lg: clamp(16px, 2vw, 22px);
+  --dash-shadow-lift: 0 28px 80px rgba(31, 24, 18, 0.22);
+  --dash-student-overlay: color-mix(in srgb, rgb(30 24 18) 45%, transparent);
+  --dash-student-panel: var(--dash-surface);
+  --dash-student-panel-soft: var(--dash-soft);
+  --dash-student-border: var(--dash-border-strong);
+  --dash-shadow-sm: 0 1px 2px rgba(31, 24, 18, 0.04), 0 4px 10px rgba(31, 24, 18, 0.03);
+  --dash-inset: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2.4vw, 1.25rem);
+  overflow-y: auto;
 }
 
-.user-dashboard .dash-student-thread-root .dash-student-thread {
-  display: flex;
-  flex-direction: column;
+.dash-modal-root.user-dashboard .dash-modal__backdrop,
+.user-dashboard .dash-drawer__backdrop.dash-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  cursor: default;
 }
 
-.user-dashboard .dash-student-thread__context {
+.dash-modal-root.user-dashboard .dash-modal__backdrop,
+.learner-task-thread-modal__backdrop,
+.user-dashboard .dash-drawer__backdrop.dash-modal__backdrop,
+.user-dashboard .dash-student-dialog-root > .dash-drawer__backdrop {
+  background: var(--overlay-bg) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+html[data-theme="dark"] .user-dashboard {
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+}
+
+.dash-modal-root.user-dashboard .dash-modal,
+.learner-task-thread-modal__panel.dash-modal {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  width: min(44rem, 100%);
+  max-height: min(90dvh, 44rem);
+  overflow: hidden;
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-radius-lg);
+  background:
+    radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--dash-accent) 10%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--dash-soft), var(--dash-card) 5rem);
+  box-shadow: var(--dash-shadow-lift), var(--dash-inset);
+  animation: dash-modal-in 220ms var(--dash-ease) both;
+}
+
+@keyframes dash-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dash-modal-root.user-dashboard .dash-modal__head,
+.learner-task-thread-modal__head {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.35rem 1.4rem 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-line) 85%, transparent);
+}
+
+.dash-modal-root.user-dashboard .dash-modal__head-copy {
+  min-width: 0;
+}
+
+.dash-modal-root.user-dashboard .dash-modal__head h2,
+.learner-task-thread-modal__head h2 {
   margin: 0;
-  padding: 0.55rem 1.1rem;
+  font-family: var(--dash-serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.3rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.dash-modal-root.user-dashboard .dash-modal__subtitle,
+.learner-task-thread-modal__head .dash-modal__subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--dash-muted);
   font-size: 0.8125rem;
   font-weight: 550;
-  border-bottom: 1px solid var(--dash-student-border);
-  background: color-mix(in srgb, var(--dash-accent-light) 42%, var(--dash-student-panel));
 }
 
-.user-dashboard .dash-student-thread__body {
-  flex: 1;
+.dash-modal-root.user-dashboard .dash-modal__close {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: var(--dash-soft);
+  color: var(--dash-ink);
+  cursor: pointer;
+}
+
+.dash-modal-root.user-dashboard .dash-modal__close:hover,
+.dash-modal-root.user-dashboard .dash-modal__close:focus-visible {
+  background: color-mix(in srgb, var(--dash-accent-light) 42%, var(--dash-soft));
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.dash-modal-root.user-dashboard .dash-modal__body,
+.learner-task-thread-modal__body {
+  display: flex;
+  flex-direction: column;
+  min-height: min(52dvh, 30rem);
+  padding: 1rem 1.25rem 1.25rem;
+  overflow: hidden;
+}
+.learner-task-thread-modal__context {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.45rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.4;
+  color: var(--dash-muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-line) 85%, transparent);
+  background: transparent;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation.is-learner {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   min-height: 0;
+  gap: 0;
 }
 
-.user-dashboard .dash-student-thread__thread {
-  max-height: min(46dvh, 24rem);
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__thread {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 0.65rem;
+  min-height: 10rem;
+  max-height: none;
+  overflow: auto;
+  padding: 0.15rem 0.1rem 0.35rem;
+  overscroll-behavior: contain;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__day-label {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  text-align: center;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble {
+  display: grid;
+  gap: 0.35rem;
+  inline-size: auto;
+  max-inline-size: 92%;
+  min-inline-size: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 0.875rem 0.875rem 0.875rem 0.25rem;
+  background: var(--dash-student-panel-soft);
+  box-shadow: var(--dash-shadow-sm), var(--dash-inset);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble.has-voice {
+  min-inline-size: min(92%, 17.5rem);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble.has-text.has-voice {
+  min-inline-size: min(92%, 19rem);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble.is-student {
+  margin-inline-start: auto;
+  border-radius: 0.875rem 0.875rem 0.25rem 0.875rem;
+  border-color: color-mix(in srgb, var(--dash-accent) 28%, var(--dash-student-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 58%, var(--dash-student-panel));
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble.is-teacher {
+  margin-inline-end: auto;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__body {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__voice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: min(100%, 15rem);
+  padding: 0.15rem 0;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__voice .audio-clip {
+  flex-shrink: 0;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__voice .audio-clip__toggle {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 24%, var(--dash-student-border));
+  background: var(--dash-student-panel);
+  color: var(--dash-accent-strong);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__voice-duration {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__bubble time {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--dash-muted);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer {
+  flex-shrink: 0;
+  margin-top: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--dash-student-border);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-box textarea {
+  width: 100%;
+  min-height: 5.25rem;
+  max-height: 11rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 0.75rem;
+  background: var(--dash-student-panel);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-shadow: var(--dash-inset);
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-box textarea:focus {
+  border-color: color-mix(in srgb, var(--dash-accent) 40%, var(--dash-student-border));
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-tools {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__record-button,
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-foot .dash-btn {
+  min-height: 2.75rem;
+}
+
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation__empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  border: 1px dashed color-mix(in srgb, var(--dash-student-border) 85%, transparent);
+  border-radius: 0.85rem;
+  color: var(--dash-muted);
+  text-align: center;
+}
+
+.user-dashboard .dash-student-dialog--thread .teacher-task-conversation.is-learner {
+  display: flex;
+  flex-direction: column;
+  min-height: min(52dvh, 30rem);
+  gap: 0;
+}
+
+.user-dashboard .dash-student-dialog--thread .teacher-task-conversation__thread {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  max-height: min(50dvh, 28rem);
+  overflow: auto;
 }
 
 /* Legacy class aliases — keep older markup working */
@@ -8951,6 +9292,28 @@ body.teacher-recite-modal-open { overflow: hidden; }
   overflow-wrap: anywhere;
 }
 
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble.has-voice {
+  min-inline-size: min(88%, 16rem);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__voice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: min(100%, 14rem);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__voice .audio-clip {
+  flex-shrink: 0;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__voice-duration {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+}
+
 .user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__bubble time {
   font-size: 0.7rem;
   font-weight: 650;
@@ -8980,6 +9343,33 @@ body.teacher-recite-modal-open { overflow: hidden; }
 .user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button,
 .user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-foot .dash-btn {
   min-block-size: 2.75rem;
+  gap: 0.4rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__recording {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px dashed color-mix(in srgb, var(--dash-student-border) 90%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--dash-student-panel-soft) 80%, var(--dash-student-panel));
+  font-size: 0.8125rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__recording-remove {
+  display: inline-grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--dash-student-border);
+  border-radius: 0.65rem;
+  background: var(--dash-student-panel);
+  color: var(--danger, #a84638);
+  cursor: pointer;
 }
 
 .user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__empty {
@@ -9074,19 +9464,41 @@ body.teacher-recite-modal-open { overflow: hidden; }
   }
 
   .user-dashboard .dash-student-dialog-root.is-mobile-sheet,
-  .user-dashboard .dash-student-thread-root.is-mobile-sheet {
+  .user-dashboard.dash-student-dialog-root.is-mobile-sheet {
     align-items: end;
     justify-items: stretch;
+    padding: 0;
   }
 
-  .user-dashboard .dash-student-thread-root.is-mobile-sheet .dash-drawer {
-    inline-size: 100%;
-    max-block-size: min(92dvh, 100%);
+  .dash-modal-root.user-dashboard.learner-task-thread-modal,
+  .learner-task-thread-modal.user-dashboard {
+    align-items: end;
+    padding: 0;
+  }
+
+  .learner-task-thread-modal.user-dashboard .dash-modal,
+  .learner-task-thread-modal__panel.dash-modal {
+    width: 100%;
+    max-height: min(94dvh, 100%);
     border-radius: 1.15rem 1.15rem 0 0;
+    border-inline: 0;
+    border-bottom: 0;
   }
 
-  .user-dashboard .dash-student-thread-root .dash-drawer__handle {
-    display: block;
+  .learner-task-thread-modal.user-dashboard .dash-modal__body,
+  .learner-task-thread-modal__body {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-foot {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learner-task-thread-modal.user-dashboard .teacher-task-conversation__composer-foot .dash-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .user-dashboard .learner-playback-shell.is-mobile-sheet {
@@ -9101,20 +9513,409 @@ body.teacher-recite-modal-open { overflow: hidden; }
   }
 }
 
-@media (min-width: 900px) {
-  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) {
-    justify-content: flex-end;
-    align-items: stretch;
-    padding: 0;
-  }
+/* ── Shared message bubble (thread + inbox) ── */
+.user-dashboard .message-bubble,
+.learner-task-thread-modal.user-dashboard .message-bubble {
+  display: grid;
+  gap: 0.35rem;
+  inline-size: -moz-fit-content;
+  inline-size: fit-content;
+  max-inline-size: min(88%, 22rem);
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
 
-  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) .dash-drawer {
-    max-block-size: 100dvh;
-    border-radius: 0;
-  }
+.user-dashboard .message-bubble.is-grouped {
+  margin-top: -0.15rem;
+}
 
-  .user-dashboard .dash-student-thread-root:not(.is-mobile-sheet) .dash-student-thread__thread {
-    max-height: min(52dvh, 28rem);
+.user-dashboard .message-bubble.is-teacher {
+  margin-inline-end: auto;
+  border: 1px solid var(--dash-student-border, var(--dash-border-strong));
+  border-radius: 0.85rem 0.85rem 0.85rem 0.25rem;
+  background: color-mix(in srgb, var(--dash-accent-light, #f3e4d4) 38%, var(--dash-card-bg));
+  color: var(--dash-ink);
+}
+
+.user-dashboard .message-bubble.is-student {
+  margin-inline-start: auto;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 22%, var(--dash-border-strong));
+  border-radius: 0.85rem 0.85rem 0.25rem 0.85rem;
+  background: color-mix(in srgb, var(--dash-accent-light) 52%, var(--dash-card-bg));
+  color: var(--dash-ink);
+}
+
+.user-dashboard .message-bubble.is-voice-only {
+  padding: 0.4rem 0.55rem;
+  min-inline-size: 0;
+}
+
+.user-dashboard .message-bubble__body {
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.user-dashboard .message-bubble__voice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: min(100%, 14rem);
+}
+
+.user-dashboard .message-bubble.is-student .audio-clip__toggle,
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student .audio-clip__toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 28%, var(--dash-border));
+  background: var(--dash-card-bg);
+  color: var(--dash-accent-strong);
+}
+
+.user-dashboard .message-bubble__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.5rem;
+}
+
+.user-dashboard .message-bubble__time {
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .message-bubble__receipt {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .message-bubble.is-student .message-bubble__time,
+.user-dashboard .message-bubble.is-student .message-bubble__receipt {
+  color: color-mix(in srgb, var(--dash-muted) 92%, var(--dash-ink));
+}
+
+.user-dashboard .teacher-task-conversation__day {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-box textarea {
+  min-height: 3.25rem;
+  max-height: 8rem;
+  font-size: 0.875rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__composer-foot {
+  gap: 0.5rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner .teacher-task-conversation__record-button {
+  max-width: 100%;
+}
+
+/* ── App button system ── */
+.user-dashboard .app-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-inline: 16px;
+  border-radius: 12px;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.user-dashboard .app-btn--primary {
+  background: var(--dash-accent-strong, var(--dash-accent));
+  color: var(--dash-on-accent, #fff);
+}
+
+.user-dashboard .app-btn--secondary {
+  border: 1.5px solid var(--dash-accent-strong, var(--dash-accent));
+  background: transparent;
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .app-btn--tertiary {
+  min-height: auto;
+  padding: 4px 0;
+  background: transparent;
+  color: var(--dash-accent-strong, var(--dash-accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.user-dashboard .app-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.user-dashboard .app-btn.is-disabled,
+.user-dashboard .app-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.user-dashboard .app-btn .bi {
+  font-size: 1.125rem;
+}
+
+/* ── From your teacher — compact intro + weekly stats ── */
+.user-dashboard .learner-teacher__intro {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 1rem;
+  background: var(--dash-card-bg);
+  box-shadow: inset 3px 0 0 var(--dash-accent);
+}
+
+.user-dashboard .learner-teacher__intro-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__intro-copy {
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__intro-stats {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border) 85%, transparent);
+}
+
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-main {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-label {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--dash-ink);
+}
+
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-meter {
+  display: block;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-card-bg));
+  overflow: hidden;
+}
+
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--dash-accent) 88%, var(--dash-ink)),
+    var(--dash-accent-strong, var(--dash-accent))
+  );
+}
+
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.user-dashboard .learner-teacher__section-banner {
+  position: sticky;
+  top: calc(var(--dash-app-header-offset, 3.5rem) + env(safe-area-inset-top, 0px));
+  z-index: 3;
+  margin: 0;
+  padding: 12px clamp(1rem, 3vw, 1.5rem);
+  border-block-end: 1px solid var(--dash-border);
+  background: color-mix(in srgb, var(--dash-accent-light) 22%, var(--dash-card-bg));
+  box-shadow: inset 3px 0 0 var(--dash-accent);
+}
+
+.user-dashboard .learner-teacher__section-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+}
+
+.user-dashboard .learner-teacher__section-avatar {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent) 18%, var(--dash-card-bg));
+  color: var(--dash-accent-strong);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.user-dashboard .learner-teacher__section-eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .learner-teacher__section-name {
+  margin: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dashboard .learner-teacher__section-skeleton {
+  display: block;
+  width: 8rem;
+  height: 1rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--dash-muted) 25%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__upcoming-panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--dash-accent-light) 18%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__upcoming-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.user-dashboard .learner-teacher__upcoming-icon {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-card-bg));
+  color: var(--dash-accent-strong);
+  font-size: 0.9rem;
+}
+
+.user-dashboard .learner-teacher__upcoming-panel .learner-teacher__section-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.user-dashboard .learner-teacher__upcoming-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .learner-teacher__upcoming-list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-dashboard .learner-teacher__upcoming-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.45rem 0.35rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.user-dashboard .learner-teacher__upcoming-row:hover,
+.user-dashboard .learner-teacher__upcoming-row:focus-visible {
+  background: color-mix(in srgb, var(--dash-accent-light) 45%, var(--dash-card-bg));
+  outline: none;
+}
+
+.user-dashboard .learner-teacher__upcoming-main {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__upcoming-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.user-dashboard .learner-teacher__upcoming-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .learner-teacher__upcoming-date {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.user-dashboard .learner-teacher__upcoming-go {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--dash-muted);
+}
+
+.user-dashboard .learner-teacher__upcoming-due.is-urgent {
+  color: color-mix(in srgb, var(--warning, #9a6418) 88%, var(--dash-ink));
+  font-weight: 650;
+}
+
+.user-dashboard .learner-teacher__card {
+  padding: 16px;
+  gap: 12px;
+}
+
+@media (max-width: 639px) {
+  .user-dashboard .learner-teacher__card {
+    padding: 12px;
   }
 }
 

@@ -133,18 +133,33 @@ export function listMutashabihatCardRows(ctx, { limit = 0, status = 'all', query
   return rows
 }
 
+/** Count pairs that can render as cards (both ayah previews ready). Stops early when `moreThan` is exceeded. */
+export function countMutashabihatCardRows(ctx, { moreThan = 0, status = 'all', query = '' } = {}) {
+  const ranked = listMutashabihatRankedPairs(ctx, { status, query })
+  let count = 0
+  for (const item of ranked) {
+    const row = buildMutashabihatCardRow(ctx, item)
+    if (!row || !rowPreviewsReady(row)) continue
+    count += 1
+    if (moreThan > 0 && count > moreThan) return count
+  }
+  return count
+}
+
 /** Fetch ayah text until visible rows can render without empty previews. */
 export async function hydrateMutashabihatPanelRows(ctx, { target = 0 } = {}) {
   const want = Math.max(1, Number(target || ctx.mutashabihatVisibleLimit || 3))
   const ranked = listMutashabihatRankedPairs(ctx)
   if (!ranked.length) return []
 
-  const maxPairs = Math.min(ranked.length, 48)
-  await hydrateMutashabihatAyahs(ctx, { limit: maxPairs })
-  let best = listMutashabihatCardRows(ctx, { limit: want })
-  if (best.length < want) {
-    await hydrateMutashabihatAyahs(ctx, { limit: maxPairs })
+  const maxPairs = Math.min(ranked.length, 64)
+  let scan = Math.min(Math.max(want, 6), maxPairs)
+  let best = []
+  while (scan <= maxPairs) {
+    await hydrateMutashabihatAyahs(ctx, { limit: scan })
     best = listMutashabihatCardRows(ctx, { limit: want })
+    if (best.length >= want || scan >= maxPairs) break
+    scan = Math.min(scan + 8, maxPairs)
   }
 
   ctx.mutashabihatAyahRevision = Number(ctx.mutashabihatAyahRevision || 0) + 1

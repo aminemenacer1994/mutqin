@@ -35,6 +35,8 @@
 
         <div class="auth-divider"><span>{{ __('ui.auth_or') }}</span></div>
 
+        @include('partials.demo-login-card')
+
         <form method="POST" action="{{ route('login') }}" class="auth-form">
             @csrf
 

@@ -124,6 +124,60 @@ export function replaceOptimisticMessage(messages, optimisticId, serverMessage) 
     .sort((a, b) => String(a.sentAt || '').localeCompare(String(b.sentAt || '')) || Number(a.id) - Number(b.id))
 }
 
+export function messagePreviewFromRow(raw) {
+  if (!raw || typeof raw !== 'object') return ''
+  const body = sanitizeThreadText(raw.body)
+  if (body) return body.slice(0, 120)
+  if (raw.audio?.available || raw.type === 'voice') return 'voice'
+  return ''
+}
+
+/**
+ * Immutable support patch after thread send/refetch (fixes prop mutation in child).
+ */
+export function applyAssignmentThreadUpdate(support, { taskId, messages, append, threadUnreadCount } = {}) {
+  if (!support || !Array.isArray(support.assignments)) return support
+  const id = Number(taskId)
+  return {
+    ...support,
+    assignments: support.assignments.map((row) => {
+      if (Number(row.id) !== id) return row
+      let nextMessages = Array.isArray(row.messages) ? [...row.messages] : []
+      if (append) {
+        const appendId = append.id ?? append.client_message_id
+        const exists = nextMessages.some((m) => (
+          (appendId != null && Number(m.id) === Number(appendId))
+          || (append.client_message_id && m.client_message_id === append.client_message_id)
+        ))
+        if (!exists) nextMessages.push(append)
+      } else if (Array.isArray(messages)) {
+        nextMessages = messages
+      }
+      const previewSource = append || nextMessages[nextMessages.length - 1]
+      return {
+        ...row,
+        messages: nextMessages,
+        thread_unread_count: threadUnreadCount ?? row.thread_unread_count ?? 0,
+        last_message_preview: messagePreviewFromRow(previewSource) || row.last_message_preview,
+      }
+    }),
+  }
+}
+
+export function mergeThreadAppendMessages(existing, append, taskId) {
+  const normalized = normalizeThreadMessage(append, taskId)
+  if (!normalized) return existing || []
+  const list = Array.isArray(existing) ? [...existing] : []
+  const dup = list.some((m) => (
+    Number(m.id) === Number(normalized.id)
+    || (normalized.clientMessageId && m.clientMessageId === normalized.clientMessageId)
+  ))
+  if (dup) return list
+  return [...list, normalized].sort(
+    (a, b) => String(a.sentAt || '').localeCompare(String(b.sentAt || '')) || String(a.id).localeCompare(String(b.id)),
+  )
+}
+
 export function canSendNow(lastSentAtMs, now = Date.now(), cooldownMs = SEND_COOLDOWN_MS) {
   if (!lastSentAtMs) return true
   return now - lastSentAtMs >= cooldownMs

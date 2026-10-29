@@ -12,7 +12,10 @@ const sharedCss = fs.readFileSync(path.join(root, 'resources/js/components/Mutas
 
 assert.match(vue, /mutashabihatVisibleRows/)
 assert.match(vue, /mutashabihatPanelInitialLoading/)
-assert.match(vue, /v-else-if="mutashabihatVisibleRows.length"/)
+assert.match(vue, /mutashabihatHasMore/)
+assert.match(vue, /loadMoreMutashabihatPairs/)
+assert.match(vue, /memorisation\.mutashabihat\.loadMore/)
+assert.match(vue, /mutashabihat-load-more/)
 assert.doesNotMatch(card, /mutashabihat-card__ref/)
 assert.match(card, /mutashabihat-card__compare/)
 assert.doesNotMatch(card, /v-if="row\.leftPreviewHtml"/)

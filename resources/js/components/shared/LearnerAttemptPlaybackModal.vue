@@ -8,7 +8,7 @@
     >
       <button
         type="button"
-        class="dash-drawer__backdrop learner-playback-shell__scrim"
+        class="dash-drawer__backdrop learner-playback-shell__scrim dash-modal__backdrop"
         :aria-label="t('dashboard.drawer_close')"
         @click="close"
       ></button>

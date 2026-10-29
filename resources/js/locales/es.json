@@ -80,6 +80,8 @@
     "filters": "Filtros",
     "relative": {
       "justNow": "Justo ahora",
+      "today": "Hoy",
+      "yesterday": "Ayer",
       "minutesAgo": "hace {n} min",
       "hoursAgo": "hace {n} h",
       "daysAgo": "hace {n} d"

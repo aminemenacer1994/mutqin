@@ -33,7 +33,23 @@ class LoginController extends Controller
     {
         BillingIntent::rememberFromRequest(request());
 
-        return view('auth.login');
+        $demoLogin = null;
+        if (config('app.demo_login_enabled')) {
+            $student = config('app.demo_accounts.student_email');
+            $teacher = config('app.demo_accounts.teacher_email');
+            $password = config('app.demo_accounts.password');
+            if (is_string($student) && $student !== ''
+                && is_string($teacher) && $teacher !== ''
+                && is_string($password) && $password !== '') {
+                $demoLogin = [
+                    'studentEmail' => $student,
+                    'teacherEmail' => $teacher,
+                    'password' => $password,
+                ];
+            }
+        }
+
+        return view('auth.login', compact('demoLogin'));
     }
 
     /**

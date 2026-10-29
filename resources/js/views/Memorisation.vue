@@ -2615,39 +2615,33 @@
                   >
                     {{ t('common.loading') }}
                   </p>
-                  <ul v-else-if="mutashabihatVisibleRows.length" class="mutashabihat-pair-list">
-                    <li
-                      v-for="row in mutashabihatVisibleRows"
-                      :key="row.key"
-                      class="mutashabihat-pair-list__item"
+                  <template v-else>
+                    <ul v-if="mutashabihatVisibleRows.length" class="mutashabihat-pair-list">
+                      <li
+                        v-for="row in mutashabihatVisibleRows"
+                        :key="row.key"
+                        class="mutashabihat-pair-list__item"
+                      >
+                        <MutashabihatPairCard
+                          :row="row"
+                          :quran-font-family="quranFontFamily"
+                          :compare-label="t('memorisation.mutashabihat.compare')"
+                          :left-heading="row.leftCompareLabel || row.leftLabel"
+                          :right-heading="row.rightCompareLabel || row.rightLabel"
+                          @compare="openMutashabihatCompareFromPayload({ row, pair: row.pair, anchorVerseKey: row.leftVerseKey })"
+                        />
+                      </li>
+                    </ul>
+                    <button
+                      v-if="mutashabihatHasMore"
+                      type="button"
+                      class="mutashabihat-load-more"
+                      :disabled="mutashabihatHydrating"
+                      @click="loadMoreMutashabihatPairs"
                     >
-                      <MutashabihatPairCard
-                        :row="row"
-                        :quran-font-family="quranFontFamily"
-                        :compare-label="t('memorisation.mutashabihat.compare')"
-                        :left-heading="row.leftCompareLabel || row.leftLabel"
-                        :right-heading="row.rightCompareLabel || row.rightLabel"
-                        @compare="openMutashabihatCompareFromPayload({ row, pair: row.pair, anchorVerseKey: row.leftVerseKey })"
-                      />
-                    </li>
-                  </ul>
-                  <button
-                    v-if="mutashabihatHasMore && !mutashabihatPanelInitialLoading && !mutashabihatHydrating"
-                    type="button"
-                    class="mutashabihat-load-more"
-                    :disabled="mutashabihatHydrating"
-                    @click="loadMoreMutashabihatPairs"
-                  >
-                    {{ t('memorisation.mutashabihat.loadMore') }}
-                  </button>
-                  <button
-                    v-else-if="mutashabihatHasMore && mutashabihatHydrating && !mutashabihatPanelInitialLoading"
-                    type="button"
-                    class="mutashabihat-load-more"
-                    disabled
-                  >
-                    {{ t('common.loading') }}
-                  </button>
+                      {{ mutashabihatHydrating ? t('common.loading') : t('memorisation.mutashabihat.loadMore') }}
+                    </button>
+                  </template>
                 </div>
               </div>
             </section>

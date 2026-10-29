@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import {
+  applyAssignmentThreadUpdate,
   canSendNow,
   createOptimisticMessage,
   groupThreadMessagesByDay,
   latestStudentMessageId,
   markOptimisticFailed,
+  mergeThreadAppendMessages,
   normalizeThreadMessages,
   readReceiptLabel,
   recordingStateReducer,
@@ -53,5 +55,17 @@ assert.equal(recordingStateReducer('requesting', 'start'), 'recording')
 assert.equal(recordingStateReducer('recording', 'stop'), 'recorded')
 assert.equal(recordingStateReducer('recorded', 'discard'), 'idle')
 assert.equal(recordingStateReducer('idle', 'permission_denied'), 'error')
+
+const support = {
+  assignments: [{ id: 7, messages: [{ id: 1, sender: 'teacher', body: 'Hi', created_at: '2026-03-10T10:00:00Z' }] }],
+}
+const sent = { id: 99, sender: 'student', body: 'Reply', created_at: '2026-03-10T10:05:00Z' }
+const patched = applyAssignmentThreadUpdate(support, { taskId: 7, append: sent, threadUnreadCount: 0 })
+assert.equal(patched.assignments[0].messages.length, 2)
+assert.equal(patched.assignments[0].last_message_preview, 'Reply')
+
+const merged = mergeThreadAppendMessages([], sent, 7)
+assert.equal(merged.length, 1)
+assert.equal(merged[0].senderRole, 'student')
 
 console.log('learner-task-thread.test.mjs: ok')
