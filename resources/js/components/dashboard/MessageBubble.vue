@@ -20,10 +20,12 @@
     <button
       v-if="message.failed"
       type="button"
-      class="message-bubble__retry dash-btn dash-btn--ghost dash-btn--sm"
+      class="message-bubble__retry teacher-task-conversation__icon-btn"
+      :aria-label="t('common.retry')"
+      :title="t('common.retry')"
       @click="$emit('retry', message)"
     >
-      {{ t('common.retry') }}
+      <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
     </button>
   </article>
 </template>

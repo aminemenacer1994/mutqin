@@ -159,6 +159,16 @@ export function learnerAttemptHint(row) {
   return { kind: 'extra_attempt', remaining: target - completed }
 }
 
+/** Completed tries the teacher can see (activity count or last attempt number). */
+export function learnerTaskAttemptCount(row) {
+  const activity = Number(row?.progress?.activity_count ?? row?.progress?.completed ?? 0)
+  if (activity > 0) return activity
+  const fromLast = Number(row?.last_attempt?.attempt_number ?? 0)
+  if (fromLast > 0) return fromLast
+  const fromResult = Number(row?.completion_result?.attempt?.attempt_number ?? 0)
+  return fromResult > 0 ? fromResult : 0
+}
+
 /** @returns {'redo'|'resume'|'start'} */
 export function learnerPrimaryActionKey(row) {
   if (row?.review_state === 'needs_correction') return 'redo'
@@ -172,9 +182,51 @@ export function completionScoreBand(accuracyPercent) {
     return 'neutral'
   }
   const n = Number(accuracyPercent)
-  if (n >= 100) return 'perfect'
-  if (n >= 70) return 'solid'
+  if (n >= 90) return 'high'
+  if (n >= 70) return 'mid'
   return 'low'
+}
+
+/**
+ * @param {object|null|undefined} result completion_result payload
+ * @param {(key: string, params?: object) => string} t
+ * @param {(key: string, count: number, params?: object) => string} [tp] plural helper
+ */
+export function completionAiScoreSummary(result, t, tp) {
+  if (!result || result.accuracy_percent === null || result.accuracy_percent === undefined) {
+    return null
+  }
+  const percent = Number(result.accuracy_percent)
+  if (Number.isNaN(percent)) return null
+  const band = completionScoreBand(percent)
+  const mistakes = Array.isArray(result?.attempt?.mistakes) ? result.attempt.mistakes : []
+  const fixCount = mistakes.length
+
+  if (percent >= 100 && fixCount === 0) {
+    return {
+      percent,
+      band,
+      label: t('teacher.learner_ai_score_perfect'),
+    }
+  }
+
+  let bandLabel = t('teacher.learner_ai_score_band_needs_work')
+  if (band === 'high') bandLabel = t('teacher.learner_ai_score_band_excellent')
+  else if (band === 'mid') bandLabel = t('teacher.learner_ai_score_band_good')
+
+  if (fixCount <= 0) {
+    return { percent, band, label: bandLabel }
+  }
+
+  const fixLabel = typeof tp === 'function'
+    ? tp('teacher.learner_ai_score_words_to_fix', fixCount, { n: fixCount })
+    : t('teacher.learner_ai_score_words_to_fix_other', { n: fixCount })
+
+  return {
+    percent,
+    band,
+    label: `${bandLabel} · ${fixLabel}`,
+  }
 }
 
 export function mergeFeedbackReadState(items, localReadMap = {}) {

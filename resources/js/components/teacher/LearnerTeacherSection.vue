@@ -36,11 +36,12 @@
           <div class="learner-teacher__intro-identity">
             <span class="learner-teacher__section-avatar" aria-hidden="true">{{ teacherInitials }}</span>
             <div class="learner-teacher__intro-copy">
-              <p class="learner-teacher__section-eyebrow">{{ t('teacher.learner_section_from_label') }}</p>
+              <p v-if="showTeacherFromEyebrow" class="learner-teacher__section-eyebrow">{{ t('teacher.learner_section_from_label') }}</p>
               <h2 id="learner-teacher-heading" class="learner-teacher__section-name">
                 <span v-if="loading" class="learner-teacher__section-skeleton" aria-hidden="true"></span>
-                <template v-else>{{ primaryTeacherName }}</template>
+                <template v-else>{{ introHeaderTitle }}</template>
               </h2>
+              <p v-if="introHeaderSubtitle" class="learner-teacher__section-subtitle">{{ introHeaderSubtitle }}</p>
             </div>
           </div>
           <div
@@ -54,9 +55,13 @@
               <span
                 v-if="weeklyStrip.total > 0"
                 class="learner-teacher__progress-meter"
-                :aria-hidden="true"
+                role="progressbar"
+                :aria-valuemin="0"
+                :aria-valuemax="weeklyStrip.total"
+                :aria-valuenow="weeklyStrip.done"
+                :aria-label="weeklyProgressLabel"
               >
-                <span :style="{ width: `${weeklyStrip.percent}%` }"></span>
+                <span class="learner-teacher__progress-meter-fill" :style="weeklyProgressFillStyle"></span>
               </span>
             </div>
             <div
@@ -85,7 +90,9 @@
         />
 
         <LearnerTeacherUpcoming
+          v-if="showUpcomingPanel"
           :assignments="assignments"
+          :todo-ids="todoAssignmentIds"
           :is-complete="isTeacherApproved"
           @open-task="scrollToAssignment"
         />
@@ -98,7 +105,6 @@
           </div>
 
           <template v-else>
-            <p v-if="nextPendingLine" class="learner-teacher__next-pending">{{ nextPendingLine }}</p>
 
             <div class="learner-teacher__filters-row">
             <div
@@ -152,24 +158,89 @@
                 <article
                   :id="`learner-task-card-${item.id}`"
                   class="learner-teacher__card"
-                  :class="[cardToneClass(item), { 'is-priority': isPriorityCard(item, index) }]"
+                  :class="[cardToneClass(item), { 'is-priority': isPriorityCard(item, index), 'is-collapsed': !isCardExpanded(item) }]"
                 >
                   <div class="learner-teacher__card-head">
                     <div class="learner-teacher__card-title-row">
                       <span class="learner-teacher__card-icon" :class="`is-${item.assignment?.kind || 'practice'}`" aria-hidden="true">
                         <i :class="kindIcon(item)"></i>
                       </span>
-                      <strong>{{ rangeLabel(item) }}</strong>
+                      <div class="learner-teacher__card-title-copy">
+                        <strong>{{ rangeLabel(item) }}</strong>
+                        <p class="learner-teacher__card-meta">
+                          <span>{{ taskTypeLabel(item) }}</span>
+                          <template v-if="taskAttemptCount(item)">
+                            <span class="learner-teacher__meta-sep" aria-hidden="true"> · </span>
+                            <span class="learner-teacher__attempt-badge">{{ taskAttemptCountLabel(item) }}</span>
+                          </template>
+                          <template v-if="cardMetaTail(item).text">
+                            <span class="learner-teacher__meta-sep" aria-hidden="true"> · </span>
+                            <span class="learner-teacher__card-due" :class="`is-${cardMetaTail(item).tone}`">{{ cardMetaTail(item).text }}</span>
+                          </template>
+                        </p>
+                      </div>
                     </div>
-                    <p class="learner-teacher__card-meta">
-                      <span>{{ taskTypeLabel(item) }}</span>
-                      <template v-if="cardMetaTail(item).text">
-                        <span class="learner-teacher__meta-sep" aria-hidden="true"> · </span>
-                        <span class="learner-teacher__card-due" :class="`is-${cardMetaTail(item).tone}`">{{ cardMetaTail(item).text }}</span>
-                      </template>
-                    </p>
+                    <div class="learner-teacher__card-head-tools">
+                      <div class="learner-teacher__card-toolbar" role="toolbar" :aria-label="rangeLabel(item)">
+                        <component
+                          :is="primaryAction(item)?.href ? 'a' : 'button'"
+                          v-if="primaryAction(item)"
+                          class="learner-teacher__icon-hit"
+                          :class="[
+                            primaryButtonClass(item) === 'dash-btn--primary' ? 'is-accent' : '',
+                            { 'is-disabled': savingId === item.id && !primaryAction(item)?.href },
+                          ]"
+                          :href="primaryAction(item)?.href || undefined"
+                          :disabled="!primaryAction(item)?.href && savingId === item.id"
+                          :aria-label="primaryAction(item).label"
+                          :title="primaryAction(item).label"
+                          @click="!primaryAction(item)?.href && onPrimaryAction(item)"
+                        >
+                          <i class="bi" :class="primaryAction(item).icon" aria-hidden="true"></i>
+                        </component>
+                        <button
+                          type="button"
+                          class="learner-teacher__icon-hit learner-teacher__icon-hit--message"
+                          :class="{ 'has-unread': taskThreadUnread(item) > 0 }"
+                          :aria-label="chatAriaLabel(item)"
+                          :title="chatTooltip(item)"
+                          :data-tip="chatTooltip(item)"
+                          @click="openTaskThread(item)"
+                        >
+                          <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                          <span v-if="taskThreadUnread(item)" class="learner-teacher__chat-badge">{{ taskThreadUnread(item) }}</span>
+                        </button>
+                        <button
+                          v-if="taskHasFeedback(item)"
+                          type="button"
+                          class="learner-teacher__icon-hit is-muted learner-teacher__icon-hit--feedback"
+                          :class="{ 'has-unread': taskFeedbackUnread(item) > 0 }"
+                          :aria-label="taskFeedbackAriaLabel(item)"
+                          :title="taskFeedbackAriaLabel(item)"
+                          @click="openTaskFeedback(item)"
+                        >
+                          <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
+                          <span v-if="taskFeedbackUnread(item)" class="learner-teacher__dot" :aria-hidden="true"></span>
+                        </button>
+                        <button
+                          type="button"
+                          class="learner-teacher__icon-hit is-muted learner-teacher__icon-hit--expand"
+                          :aria-expanded="isCardExpanded(item) ? 'true' : 'false'"
+                          :aria-controls="`learner-task-card-body-${item.id}`"
+                          :aria-label="isCardExpanded(item) ? t('teacher.learner_card_collapse') : t('teacher.learner_card_expand')"
+                          @click="toggleCardExpanded(item.id)"
+                        >
+                          <i class="bi" :class="isCardExpanded(item) ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
+                  <div
+                    v-show="isCardExpanded(item)"
+                    :id="`learner-task-card-body-${item.id}`"
+                    class="learner-teacher__card-body"
+                  >
                   <p v-if="correctionNote(item)" class="learner-teacher__card-note is-correction">
                     <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ correctionNote(item) }}
                   </p>
@@ -180,46 +251,64 @@
                   </details>
 
                   <div v-if="isTeacherApproved(item) && completionResult(item)" class="learner-teacher__result">
-                    <p class="learner-teacher__result-headline">{{ completionHeadline(item) }}</p>
-                    <ul
-                      v-if="mistakeSummaryChips(item).length"
-                      class="learner-teacher__mistake-chips"
-                      :aria-label="t('teacher.learner_mistake_summary_label')"
-                    >
-                      <li v-for="chip in mistakeSummaryChips(item)" :key="chip.type">
-                        <span class="learner-teacher__mistake-chip" :class="`is-${chip.type}`">
-                          <i class="bi" :class="mistakeChipIcon(chip.type)" aria-hidden="true"></i>
-                          {{ chip.label }}
-                        </span>
-                      </li>
-                    </ul>
-                    <p v-else-if="completionMistakePerfect(item)" class="learner-teacher__mistake-none-inline">
-                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                      {{ t('teacher.learner_mistake_none') }}
-                    </p>
-                    <p v-if="completionSnippet(item)" class="learner-teacher__result-snippet">{{ completionSnippet(item) }}</p>
-                    <div class="learner-teacher__result-actions">
-                      <button
-                        v-if="completionLink(item)"
-                        type="button"
-                        class="dash-text-link learner-teacher__result-link"
-                        :aria-expanded="mistakeDetailsExpanded(item) ? 'true' : 'false'"
-                        @click="onCompletionLinkClick(item)"
+                    <div class="learner-teacher__result-score">
+                      <div class="learner-teacher__result-score-copy">
+                        <div
+                          v-if="completionAiScoreSummaryRow(item)"
+                          class="learner-teacher__ai-score-badge"
+                          :class="`is-${completionAiScoreSummaryRow(item).band}`"
+                          role="status"
+                        >
+                          <span class="learner-teacher__ai-score-badge-value">{{ completionAiScoreSummaryRow(item).percent }}%</span>
+                          <span class="learner-teacher__ai-score-badge-label">{{ completionAiScoreSummaryRow(item).label }}</span>
+                        </div>
+                        <p v-else-if="completionAiScoreRow(item)" class="learner-teacher__result-headline">
+                          <span class="learner-teacher__result-check-mark" aria-hidden="true">
+                            <i class="bi bi-patch-check"></i>
+                          </span>
+                          <span class="learner-teacher__result-headline-body">
+                            <span class="learner-teacher__result-headline-value">{{ completionAiScoreRow(item).percent }}%</span>
+                            <span class="learner-teacher__result-headline-context">{{ completionAiScoreContext(item) }}</span>
+                          </span>
+                        </p>
+                        <p v-else class="learner-teacher__result-headline">{{ completionHeadline(item) }}</p>
+                        <p v-if="completionMistakePerfect(item)" class="learner-teacher__mistake-none-inline">
+                          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                          {{ t('teacher.learner_mistake_none') }}
+                        </p>
+                      </div>
+                      <div
+                        class="learner-teacher__result-actions learner-teacher__result-actions--icons"
+                        role="toolbar"
+                        :aria-label="t('teacher.learner_view_results')"
                       >
-                        {{ completionLink(item).label }}
-                      </button>
-                      <button
-                        type="button"
-                        class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__listen-btn"
-                        @click="openAttemptPlayback(item)"
-                      >
-                        <i class="bi bi-headphones" aria-hidden="true"></i>
-                        {{ t('teacher.learner_playback_listen') }}
-                      </button>
+                        <button
+                          v-if="completionLink(item)?.opensMistakeDetails"
+                          type="button"
+                          class="learner-teacher__icon-hit is-muted"
+                          :class="{ 'is-active': mistakeDetailsExpanded(item) }"
+                          :aria-expanded="mistakeDetailsExpanded(item) ? 'true' : 'false'"
+                          :aria-label="t('teacher.learner_view_results')"
+                          :title="t('teacher.learner_view_results')"
+                          @click="toggleMistakeDetails(item)"
+                        >
+                          <i class="bi bi-list-check" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="learner-teacher__icon-hit is-muted"
+                          :aria-label="t('teacher.learner_playback_listen')"
+                          :title="t('teacher.learner_playback_listen')"
+                          @click="openAttemptPlayback(item)"
+                        >
+                          <i class="bi bi-headphones" aria-hidden="true"></i>
+                        </button>
+                      </div>
                     </div>
                     <LearnerCompletionMistakePanel
-                      v-if="!isMobileLayout && mistakeDetailsExpanded(item)"
-                      class="learner-teacher__mistake-inline"
+                      v-if="completionLink(item)?.opensMistakeDetails && mistakeDetailsExpanded(item)"
+                      class="learner-teacher__mistake-expand"
+                      hide-perfect-banner
                       :result="completionResult(item)"
                       :mistakes="completionMistakes(item)"
                       :recording-url="completionRecordingUrl(item)"
@@ -252,36 +341,7 @@
                       class="learner-teacher__retry-note-full"
                     >{{ retryTeacherNote(item) }}</p>
                   </div>
-
-                  <div class="learner-teacher__card-actions">
-                      <component
-                        :is="primaryAction(item)?.href ? 'a' : 'button'"
-                        v-if="primaryAction(item)"
-                        class="dash-btn dash-btn--sm learner-teacher__card-primary"
-                        :class="[
-                          primaryButtonClass(item),
-                          { 'is-disabled': savingId === item.id && !primaryAction(item)?.href },
-                        ]"
-                        :href="primaryAction(item)?.href || undefined"
-                        :disabled="!primaryAction(item)?.href && savingId === item.id"
-                        @click="!primaryAction(item)?.href && onPrimaryAction(item)"
-                      >
-                        <i class="bi" :class="primaryAction(item).icon" aria-hidden="true"></i>
-                        {{ primaryAction(item).label }}
-                      </component>
-                      <button
-                        type="button"
-                        class="dash-btn dash-btn--ghost dash-btn--sm learner-teacher__chat-btn"
-                        :class="{ 'has-unread': taskThreadUnread(item) > 0 }"
-                        :aria-label="chatAriaLabel(item)"
-                        :title="chatAriaLabel(item)"
-                        @click="openTaskThread(item)"
-                      >
-                        <i class="bi bi-chat-left-text" aria-hidden="true"></i>
-                        <span>{{ t('teacher.learner_message') }}</span>
-                        <span v-if="taskThreadUnread(item)" class="learner-teacher__chat-badge">{{ taskThreadUnread(item) }}</span>
-                      </button>
-                    </div>
+                  </div>
                 </article>
               </li>
             </ul>
@@ -412,6 +472,7 @@
             :composer-id="`direct-message-${selectedDirectThread.teacher_id}`"
             :composer-placeholder="t('teacher.direct_message_prompt_student')"
             :empty-label="t('teacher.direct_messages_empty_student')"
+            :ui-direction="directThreadDirection"
             :on-send="sendDirectMessage"
           />
       </div>
@@ -566,19 +627,20 @@ import { learnerDashboardT, learnerDashboardTp } from '../../scripts/teacher/lea
 import {
   ALL_TAB_COMPLETED_PREVIEW,
   buildAllTabList,
+  completionAiScoreSummary,
   completionResultLink,
   learnerAttemptHint,
+  learnerTaskAttemptCount,
   learnerWeeklyProgressFromAssignments,
   mergeFeedbackReadState,
   persistFeedbackRead,
-  pickNextPendingAssignment,
   practiceAgainVariant,
   readFeedbackReadMap,
   sortAllTabAssignments,
   sortFeedbackInbox,
   weeklyProgressPercent,
-  daysUntilDueLabel,
 } from '../../scripts/teacher/learnerDashboard.js'
+import { shouldShowUpcomingPanel } from '../../scripts/teacher/learnerUpcoming.js'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
 import LearnerTeacherUpcoming from './LearnerTeacherUpcoming.vue'
@@ -587,8 +649,6 @@ import LearnerCompletionMistakePanel from '@/components/shared/LearnerCompletion
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 import LearnerTaskThreadPanel from './LearnerTaskThreadPanel.vue'
 import {
-  buildMistakeSummaryChips,
-  countMistakesByType,
   isPerfectCompletionResult,
   resolveLearnerCompletionAttempt,
 } from '../../scripts/teacher/learnerCompletionMistakes.js'
@@ -614,6 +674,7 @@ export default {
     savingId: { type: Number, default: 0 },
     completionMessage: { type: String, default: '' },
     failedItem: { type: Object, default: null },
+    studentFirstName: { type: String, default: '' },
     onSendNote: { type: Function, required: true },
     onSendDirectMessage: { type: Function, required: true },
   },
@@ -648,6 +709,7 @@ export default {
       feedbackDrawerTitleId: `learner-feedback-drawer-${Math.random().toString(36).slice(2, 9)}`,
       showOlderCompleted: false,
       expandedRetryNotes: {},
+      expandedCardIds: {},
       feedbackReadVersion: 0,
       defaultFilterSynced: false,
     }
@@ -678,6 +740,13 @@ export default {
       return strip.total > 0 || strip.done > 0
     },
     weeklyStrip() {
+      const fromAssignments = learnerWeeklyProgressFromAssignments(
+        this.assignments,
+        (row) => this.isTeacherApproved(row),
+      )
+      if (fromAssignments.total > 0) {
+        return fromAssignments
+      }
       const apiTotal = Number(this.overview.weekly_goal) || 0
       const apiDone = Number(this.overview.weekly_completed) || 0
       if (apiTotal > 0 || apiDone > 0) {
@@ -687,7 +756,14 @@ export default {
           percent: weeklyProgressPercent(apiDone, apiTotal),
         }
       }
-      return learnerWeeklyProgressFromAssignments(this.assignments, (row) => this.isTeacherApproved(row))
+      return fromAssignments
+    },
+    weeklyProgressFillStyle() {
+      const pct = Math.min(100, Math.max(0, Number(this.weeklyStrip.percent) || 0))
+      return {
+        '--learner-weekly-fill': `${pct}%`,
+        width: `${pct}%`,
+      }
     },
     weeklyProgressLabel() {
       const strip = this.weeklyStrip
@@ -695,6 +771,45 @@ export default {
         done: strip.done,
         total: strip.total,
       })
+    },
+    introHeaderTitle() {
+      if (this.showWeeklyProgress) return this.t('teacher.learner_header_this_week')
+      const name = String(this.studentFirstName || '').trim()
+      if (name) return name
+      return this.primaryTeacherName
+    },
+    introHeaderSubtitle() {
+      const teacher = this.primaryTeacherName
+      const fallback = this.t('teacher.learner_teacher_fallback')
+      if (teacher === fallback) return ''
+      if (this.showWeeklyProgress) {
+        return this.ldt('teacher.learner_teacher_context', { name: teacher })
+      }
+      if (String(this.studentFirstName || '').trim()) {
+        return this.ldt('teacher.learner_teacher_context', { name: teacher })
+      }
+      return ''
+    },
+    showTeacherFromEyebrow() {
+      if (this.feedbackInboxMerged.some((item) => String(item.preview || item.body || '').trim())) {
+        return true
+      }
+      if (this.assignments.some((row) => this.taskThreadUnread(row) > 0)) return true
+      return this.directThreads.some((thread) => (
+        (thread.messages || []).some((message) => message.unread && message.sender === 'teacher')
+      ))
+    },
+    todoAssignmentIds() {
+      return this.assignments
+        .filter((row) => ACTIVE_STATUSES.has(row.status) || this.needsCorrection(row))
+        .map((row) => row.id)
+    },
+    showUpcomingPanel() {
+      return shouldShowUpcomingPanel(
+        this.assignments,
+        (row) => this.isTeacherApproved(row),
+        this.todoAssignmentIds,
+      )
     },
     sectionHeading() {
       const title = this.ldt('teacher.learner_section_title')
@@ -742,6 +857,9 @@ export default {
       if (!this.feedbackUnreadCount) return base
       return `${base}. ${this.ldtp('teacher.learner_feedback_unread', this.feedbackUnreadCount)}`
     },
+    directThreadDirection() {
+      return ['ar', 'ur'].includes(String(this.learnerLocale).split('-')[0]) ? 'rtl' : 'ltr'
+    },
     allTabGroups() {
       return sortAllTabAssignments(this.assignments, {
         isTeacherApproved: (row) => this.isTeacherApproved(row),
@@ -755,24 +873,6 @@ export default {
       return this.activeFilter === 'all'
         && !this.showOlderCompleted
         && this.allTabHiddenCompletedCount > 0
-    },
-    nextPendingLine() {
-      const row = pickNextPendingAssignment(
-        this.assignments,
-        (item) => ACTIVE_STATUSES.has(item.status) || this.needsCorrection(item),
-        (item) => this.isTeacherApproved(item),
-      )
-      if (!row?.assignment) return ''
-      const surah = row.assignment.surah_name || ''
-      const ayahs = `${row.assignment.ayah_start}–${row.assignment.ayah_end}`
-      const due = row.assignment.due_at
-      if (!due) return ''
-      const days = daysUntilDueLabel(due)
-      if (days === null) return ''
-      if (days <= 0) {
-        return this.ldt('teacher.learner_next_pending_today', { surah, ayahs })
-      }
-      return this.ldtp('teacher.learner_next_pending', days, { surah, ayahs, n: days })
     },
     directThreads() {
       return (this.support?.direct_threads || []).map((thread) => ({
@@ -1030,6 +1130,34 @@ export default {
       persistFeedbackRead(item.id)
       this.feedbackReadVersion += 1
     },
+    isCardExpanded(row) {
+      const id = Number(row?.id)
+      if (Object.prototype.hasOwnProperty.call(this.expandedCardIds, id)) {
+        return Boolean(this.expandedCardIds[id])
+      }
+      return !this.isTeacherApproved(row) || this.needsCorrection(row)
+    },
+    toggleCardExpanded(id) {
+      const row = this.assignments.find((item) => Number(item.id) === Number(id))
+      if (!row) return
+      this.expandedCardIds = {
+        ...this.expandedCardIds,
+        [Number(id)]: !this.isCardExpanded(row),
+      }
+    },
+    expandTaskCard(id) {
+      const cardId = Number(id)
+      if (!Number.isFinite(cardId)) return
+      this.expandedCardIds = { ...this.expandedCardIds, [cardId]: true }
+    },
+    taskAttemptCount(row) {
+      return learnerTaskAttemptCount(row)
+    },
+    taskAttemptCountLabel(row) {
+      const n = this.taskAttemptCount(row)
+      if (!n) return ''
+      return this.ldtp('teacher.learner_task_attempts_count', n)
+    },
     openFeedbackDrawer() {
       this.feedbackDrawerOpen = true
       this.setFeedbackDrawerScrollLock(true)
@@ -1061,8 +1189,19 @@ export default {
       }
       return this.t('teacher.learner_completion_teacher_reviewed')
     },
-    completionSnippet(row) {
-      return this.completionResult(row)?.feedback_snippet || ''
+    completionAiScoreRow(row) {
+      const result = this.completionResult(row)
+      if (!result || result.headline_type !== 'ai_score') return null
+      if (result.accuracy_percent === null || result.accuracy_percent === undefined) return null
+      return { percent: result.accuracy_percent }
+    },
+    completionAiScoreSummaryRow(row) {
+      const result = this.completionResult(row)
+      if (!result || result.headline_type !== 'ai_score') return null
+      return completionAiScoreSummary(result, this.t.bind(this), (key, count, params) => this.ldtp(key, count, params))
+    },
+    completionAiScoreContext() {
+      return this.t('teacher.learner_completion_ai_score_context')
     },
     completionLink(row) {
       return completionResultLink(this.completionResult(row), this.t.bind(this))
@@ -1079,16 +1218,21 @@ export default {
     completionMistakePerfect(row) {
       return isPerfectCompletionResult(this.completionResult(row))
     },
-    mistakeSummaryChips(row) {
-      if (this.completionMistakePerfect(row)) return []
-      const counts = countMistakesByType(this.completionMistakes(row))
-      const locale = this.learnerLocale
-      return buildMistakeSummaryChips(counts, this.t.bind(this), locale)
-    },
-    mistakeChipIcon(type) {
-      if (type === 'missed') return 'bi-dash-circle-fill'
-      if (type === 'tajweed') return 'bi-bookmark-star-fill'
-      return 'bi-x-circle-fill'
+    toggleMistakeDetails(row) {
+      if (this.isMobileLayout) {
+        if (this.mistakeDetailsExpanded(row)) {
+          this.closeMistakeDrawer()
+        } else {
+          this.openMistakeDrawer(row)
+        }
+        return
+      }
+      const id = Number(row?.id)
+      const opening = !this.mistakeDetailsExpanded(row)
+      this.expandedMistakeDetailsId = opening ? id : null
+      if (opening) {
+        this.expandTaskCard(id)
+      }
     },
     mistakeDetailsExpanded(row) {
       return Number(this.expandedMistakeDetailsId) === Number(row.id)
@@ -1356,9 +1500,40 @@ export default {
     unreadTeacherMessages(row) {
       return (row?.messages || []).filter((message) => message.sender === 'teacher' && message.unread).length
     },
+    taskFeedbackItems(row) {
+      const id = Number(row?.id)
+      if (!Number.isFinite(id)) return []
+      return this.feedbackInboxMerged.filter((item) => Number(item.recipient_id) === id)
+    },
+    taskFeedbackUnread(row) {
+      return this.taskFeedbackItems(row).filter((item) => item.unread).length
+    },
+    taskHasFeedback(row) {
+      if (this.taskFeedbackItems(row).length > 0) return true
+      return Boolean(this.completionLink(row)?.opensFeedback)
+    },
+    taskFeedbackAriaLabel(row) {
+      const unread = this.taskFeedbackUnread(row)
+      const base = this.t('teacher.learner_view_feedback')
+      return unread ? `${base} · ${this.t('teacher.unread')} (${unread})` : base
+    },
+    openTaskFeedback(row) {
+      const items = this.taskFeedbackItems(row)
+      if (items.length) {
+        this.expandTaskCard(row.id)
+        this.openFeedbackFromPanel(items[0])
+        return
+      }
+      this.openDetails(row)
+    },
+    chatTooltip(row) {
+      const unread = this.taskThreadUnread(row)
+      const base = this.t('teacher.learner_message_task_tooltip')
+      return unread ? `${base} · ${this.t('teacher.unread')} (${unread})` : base
+    },
     chatAriaLabel(row) {
       const unread = this.taskThreadUnread(row)
-      const base = `${this.t('teacher.learner_message')}: ${this.rangeLabel(row)}`
+      const base = `${this.t('teacher.learner_message_task_tooltip')}: ${this.rangeLabel(row)}`
       return unread ? `${base}. ${this.t('teacher.unread')} (${unread})` : base
     },
     messageWhen(message) {

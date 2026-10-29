@@ -33,12 +33,15 @@ export default {
   mixins: [i18nMixin],
   props: {
     assignments: { type: Array, default: () => [] },
+    todoIds: { type: Array, default: () => [] },
     isComplete: { type: Function, required: true },
   },
   emits: ['open-task'],
   computed: {
     items() {
-      return buildUpcomingAssignments(this.assignments, this.isComplete, 3)
+      return buildUpcomingAssignments(this.assignments, this.isComplete, 3, {
+        excludeTodoIds: this.todoIds,
+      })
     },
     learnerLocale() {
       return this.$i18n?.global?.locale?.value

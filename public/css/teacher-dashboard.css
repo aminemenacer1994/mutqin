@@ -7583,7 +7583,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   background: transparent;
   color: color-mix(in srgb, var(--dash-ink) 58%, var(--dash-muted));
   font-size: 0.8125rem;
-  font-weight: 650;
+  font-weight: 500;
   box-shadow: none;
   transform: none;
 }
@@ -7596,7 +7596,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 .user-dashboard .learner-teacher__filters--segmented .learner-teacher__filter.is-active {
   background: var(--dash-card-bg);
   color: var(--dash-accent-strong, var(--dash-accent));
-  font-weight: 750;
+  font-weight: 600;
   box-shadow:
     0 1px 2px color-mix(in srgb, var(--dash-ink) 12%, transparent),
     inset 0 0 0 1px color-mix(in srgb, var(--dash-accent) 18%, var(--dash-border));
@@ -7611,7 +7611,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-card-bg));
   color: color-mix(in srgb, var(--dash-ink) 72%, var(--dash-muted));
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .user-dashboard .learner-teacher__filters--segmented .learner-teacher__filter.is-active .learner-teacher__filter-count {
@@ -8169,7 +8169,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 
 @media (min-width: 960px) {
   .user-dashboard .learner-teacher__workspace {
-    grid-template-columns: minmax(0, 1.7fr) minmax(17.5rem, 22rem);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     grid-template-areas: "tasks sidebar";
     align-items: start;
     gap: 16px;
@@ -9716,23 +9716,43 @@ html[data-theme="dark"] .user-dashboard {
   color: var(--dash-ink);
 }
 
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-main {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+}
+
 .user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-meter {
   display: block;
+  width: 100%;
   height: 0.3rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-card-bg));
   overflow: hidden;
 }
 
+.user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-meter-fill,
 .user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-meter > span {
   display: block;
   height: 100%;
+  min-width: 0;
+  max-width: 100%;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--dash-accent) 88%, var(--dash-ink)),
     var(--dash-accent-strong, var(--dash-accent))
   );
+  transition: width 280ms var(--dash-ease, ease);
+}
+
+.user-dashboard .learner-teacher__progress-meter > span,
+.user-dashboard .learner-teacher__progress-meter-fill {
+  transition: width 280ms var(--dash-ease, ease);
+}
+
+[dir="rtl"] .user-dashboard .learner-teacher__progress-meter-fill {
+  margin-inline-start: auto;
 }
 
 .user-dashboard .learner-teacher__intro-stats .learner-teacher__progress-badges {
@@ -9789,6 +9809,14 @@ html[data-theme="dark"] .user-dashboard {
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-dashboard .learner-teacher__section-subtitle {
+  margin: 0.15rem 0 0;
+  color: color-mix(in srgb, var(--dash-ink) 58%, var(--dash-muted));
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .user-dashboard .learner-teacher__section-skeleton {
@@ -9917,6 +9945,1181 @@ html[data-theme="dark"] .user-dashboard {
   .user-dashboard .learner-teacher__card {
     padding: 12px;
   }
+}
+
+/* Learner teacher UX — lighter type, collapsible cards, icon actions, RTL thread */
+.user-dashboard .dash-section--learner-teacher .learner-teacher__section-name,
+.user-dashboard .dash-section--learner-teacher .learner-teacher__progress-label {
+  font-weight: 600;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__section-eyebrow {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.user-dashboard .learner-teacher__intro-stats {
+  gap: 0.5rem;
+}
+
+.user-dashboard .learner-teacher__card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+  gap: 0.65rem 0.85rem;
+  width: 100%;
+}
+
+.user-dashboard .learner-teacher__card-title-row {
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__card-title-copy {
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__card-title-row strong {
+  font-weight: 600;
+}
+
+.user-dashboard .learner-teacher__card-meta {
+  margin: 0.12rem 0 0;
+}
+
+.user-dashboard .learner-teacher__attempt-badge {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--dash-accent-strong) 90%, var(--dash-ink));
+}
+
+.user-dashboard .learner-teacher__card-head-tools {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.15rem 0.35rem;
+  flex-shrink: 0;
+}
+
+.user-dashboard .learner-teacher__card-actions--icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+/* Bare icon controls — no boxed buttons */
+.user-dashboard .learner-teacher__icon-hit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: color-mix(in srgb, var(--dash-ink) 58%, var(--dash-muted));
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.user-dashboard .learner-teacher__icon-hit .bi {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.user-dashboard .learner-teacher__icon-hit.is-accent,
+.user-dashboard .learner-teacher__icon-hit.is-accent .bi {
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .learner-teacher__icon-hit.is-muted {
+  color: color-mix(in srgb, var(--dash-ink) 48%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__icon-hit:hover:not(:disabled):not(.is-disabled) {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 5%, transparent);
+}
+
+.user-dashboard .learner-teacher__icon-hit:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.user-dashboard .learner-teacher__icon-hit:disabled,
+.user-dashboard .learner-teacher__icon-hit.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.user-dashboard .learner-teacher__icon-hit.has-unread {
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .learner-teacher__icon-hit--message:hover:not(:disabled):not(.is-disabled),
+.user-dashboard .learner-teacher__icon-hit--message:focus-visible {
+  color: var(--dash-accent-strong, var(--dash-accent));
+  background: color-mix(in srgb, var(--dash-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dash-accent) 22%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .user-dashboard .learner-teacher__icon-hit--message::after {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 6;
+    inset-inline-end: 0;
+    top: calc(100% + 0.3rem);
+    width: -moz-max-content;
+    width: max-content;
+    max-width: min(14rem, 70vw);
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--dash-ink) 92%, #000);
+    color: var(--dash-card-bg, #fff);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: start;
+    white-space: normal;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 0.14s ease, transform 0.14s ease;
+  }
+
+  .user-dashboard .learner-teacher__icon-hit--message:hover::after,
+  .user-dashboard .learner-teacher__icon-hit--message:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-dashboard .learner-teacher__icon-hit .learner-teacher__chat-badge {
+  position: absolute;
+  top: 0.1rem;
+  inset-inline-end: 0.05rem;
+  min-width: 0.95rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: var(--dash-accent-strong, var(--dash-accent));
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.user-dashboard .learner-teacher__card-body {
+  display: grid;
+  gap: 0.55rem;
+  padding-block-start: 0.35rem;
+}
+
+.user-dashboard .learner-teacher__card.is-collapsed .learner-teacher__card-body {
+  display: none;
+}
+
+.user-dashboard .learner-teacher__result {
+  gap: 0;
+  padding: 0.5rem 0 0;
+  margin-top: 0.15rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--dash-border) 88%, transparent);
+  background: transparent;
+  border-radius: 0;
+  border-inline: 0;
+  border-bottom: 0;
+}
+
+.user-dashboard .learner-teacher__result-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+.user-dashboard .learner-teacher__result-copy {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__result-headline {
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.user-dashboard .learner-teacher__result-headline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.55rem;
+}
+
+.user-dashboard .learner-teacher__result-actions--icons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.1rem;
+  max-width: 100%;
+  padding-block-start: 0.05rem;
+}
+
+.user-dashboard .learner-teacher__result-details {
+  display: inline-flex;
+}
+
+.user-dashboard .learner-teacher__result-details[open] {
+  flex: 1 1 100%;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.user-dashboard .learner-teacher__result-details > summary {
+  list-style: none;
+}
+
+.user-dashboard .learner-teacher__result-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.user-dashboard .learner-teacher__result-details[open] .learner-teacher__result-details-toggle {
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .learner-teacher__result-details .learner-teacher__mistake-panel {
+  grid-column: 1 / -1;
+  margin-top: 0.45rem;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__shell {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__block,
+.user-dashboard .dash-section--learner-teacher .learner-teacher__card-list--tasks {
+  width: 100%;
+  max-width: none;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__card-list--tasks .learner-teacher__card {
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  gap: 0;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__workspace {
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .user-dashboard .dash-section--learner-teacher .learner-teacher__workspace {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas: "tasks sidebar";
+    align-items: start;
+    gap: 1rem;
+  }
+}
+
+.user-dashboard .teacher-task-conversation__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--dash-border);
+  border-radius: 0.5rem;
+  background: var(--dash-card-bg);
+  color: color-mix(in srgb, var(--dash-ink) 72%, var(--dash-muted));
+  cursor: pointer;
+}
+
+.user-dashboard .teacher-task-conversation__icon-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dash-ink) 5%, var(--dash-card-bg));
+  color: var(--dash-ink);
+}
+
+.user-dashboard .teacher-task-conversation__icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.user-dashboard .teacher-task-conversation__icon-btn--send {
+  border-color: color-mix(in srgb, var(--dash-accent) 40%, var(--dash-border));
+  background: var(--dash-accent);
+  color: #fff;
+}
+
+.user-dashboard .teacher-task-conversation__composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.user-dashboard .teacher-task-conversation__composer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-inline-start: auto;
+}
+
+.user-dashboard .teacher-task-conversation__composer-count {
+  font-size: 0.72rem;
+  color: var(--dash-muted);
+}
+
+.teacher-task-conversation.is-rtl .teacher-task-conversation__icon-row,
+.teacher-task-conversation.is-rtl .teacher-task-conversation__composer-foot {
+  flex-direction: row-reverse;
+}
+
+.teacher-task-conversation.is-rtl .teacher-task-conversation__composer-actions {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+.teacher-task-conversation.is-rtl .teacher-task-conversation__composer-box textarea {
+  text-align: start;
+}
+
+.learner-task-thread-modal.user-dashboard[dir="rtl"] .dash-modal__head {
+  flex-direction: row-reverse;
+  text-align: start;
+}
+
+/* Compact learner messaging — modal, thread, composer bar */
+.learner-task-thread-modal.user-dashboard .dash-modal__head.learner-task-thread-modal__head {
+  padding: 0.75rem 0.85rem 0.55rem;
+  gap: 0.5rem;
+}
+
+.learner-task-thread-modal.user-dashboard .dash-modal__head h2 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.learner-task-thread-modal.user-dashboard .dash-modal__subtitle {
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 450;
+}
+
+.learner-task-thread-modal.user-dashboard .dash-modal__close {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+}
+
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__context {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 450;
+  line-height: 1.35;
+}
+
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__body {
+  min-height: 0;
+  padding: 0.5rem 0.65rem 0.65rem;
+  gap: 0;
+}
+
+.teacher-task-conversation.is-learner.is-compact {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: 0.35rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(42dvh, 18rem);
+  gap: 0.25rem;
+  padding: 0.1rem 0;
+  overflow: auto;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__day {
+  gap: 0.2rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__day-label {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__empty {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.8125rem;
+  gap: 0;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer {
+  margin-top: 0;
+  padding-top: 0.45rem;
+  gap: 0.3rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border) 90%, transparent);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea {
+  min-height: 2.35rem;
+  max-height: 6rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  border-radius: 0.5rem;
+  resize: none;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__recording {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 0.45rem;
+  font-size: 0.75rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__recording-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--dash-muted);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__recording-pill.is-live {
+  color: color-mix(in srgb, var(--danger, #b42318) 85%, var(--dash-ink));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__recording-audio {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 1.75rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-status {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--dash-muted);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-status.is-error {
+  color: color-mix(in srgb, var(--danger, #b42318) 90%, var(--dash-ink));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-status.is-success {
+  color: color-mix(in srgb, var(--success-text, #2d6a4f) 90%, var(--dash-ink));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-bar-spacer {
+  flex: 1 1 auto;
+  min-width: 0.25rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn {
+  width: 2.125rem;
+  height: 2.125rem;
+  min-width: 2.125rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: color-mix(in srgb, var(--dash-ink) 52%, var(--dash-muted));
+  font-size: 1rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dash-ink) 5%, transparent);
+  color: var(--dash-ink);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn--send {
+  border: 0;
+  background: transparent;
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn--send:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dash-accent-light) 35%, transparent);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-count {
+  min-width: 1.25rem;
+  padding-inline: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--dash-muted);
+  text-align: center;
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble,
+.user-dashboard .dash-student-dialog--thread .message-bubble {
+  gap: 0.2rem;
+  max-inline-size: min(92%, 18rem);
+  padding: 0.4rem 0.55rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  border-radius: 0.65rem;
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble.is-grouped,
+.user-dashboard .dash-student-dialog--thread .message-bubble.is-grouped {
+  margin-top: -0.28rem;
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble__foot,
+.user-dashboard .dash-student-dialog--thread .message-bubble__foot {
+  gap: 0.2rem 0.35rem;
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble__time,
+.learner-task-thread-modal.user-dashboard .message-bubble__receipt,
+.user-dashboard .dash-student-dialog--thread .message-bubble__time,
+.user-dashboard .dash-student-dialog--thread .message-bubble__receipt {
+  font-size: 0.625rem;
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student .audio-clip__toggle,
+.user-dashboard .dash-student-dialog--thread .message-bubble.is-student .audio-clip__toggle {
+  width: 2rem;
+  height: 2rem;
+}
+
+.user-dashboard .dash-student-dialog--thread .dash-drawer__head {
+  padding: 0.65rem 0.75rem;
+}
+
+.user-dashboard .dash-student-dialog--thread .dash-student-dialog__body {
+  padding: 0.5rem 0.65rem 0.65rem;
+}
+
+.teacher-task-conversation.is-rtl.is-compact .teacher-task-conversation__composer-bar {
+  flex-direction: row-reverse;
+}
+
+/* Full-width results, uniform icons, compact messaging overlay */
+.user-dashboard .learner-teacher__result {
+  width: 100%;
+}
+
+.user-dashboard .learner-teacher__mistake-expand,
+.user-dashboard .learner-teacher__mistake-expand .learner-teacher__mistake-panel {
+  width: 100%;
+  max-width: none;
+}
+
+.user-dashboard .learner-teacher__mistake-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.user-dashboard .learner-teacher__mistake-row-main {
+  min-width: 0;
+  width: 100%;
+}
+
+.user-dashboard .learner-teacher__mistake-ayah-text {
+  width: 100%;
+  text-align: start;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.user-dashboard .learner-teacher__mistake-type {
+  font-weight: 500;
+}
+
+.user-dashboard .learner-teacher__mistake-type .bi {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.user-dashboard .learner-teacher__mistake-audio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: 0;
+}
+
+.user-dashboard .learner-teacher__icon-hit.is-active {
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .learner-teacher__icon-hit .bi {
+  display: inline-block;
+  font-size: 1.125rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.user-dashboard .audio-clip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-dashboard .audio-clip__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  max-width: 2.25rem;
+  max-height: 2.25rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: color-mix(in srgb, var(--dash-ink) 52%, var(--dash-muted));
+  cursor: pointer;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+
+.user-dashboard .audio-clip__toggle:hover:not(:disabled) {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 5%, transparent);
+}
+
+.user-dashboard .audio-clip__toggle .bi {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.user-dashboard .audio-clip__toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.learner-task-thread-modal.user-dashboard {
+  padding: 0.5rem;
+  align-items: flex-end;
+}
+
+@media (min-width: 640px) {
+  .learner-task-thread-modal.user-dashboard {
+    place-items: center;
+    padding: clamp(0.75rem, 2.4vw, 1.25rem);
+  }
+}
+
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__panel.dash-modal,
+.learner-task-thread-modal__panel.dash-modal {
+  width: 100%;
+  max-width: 32rem;
+  max-height: min(92dvh, 40rem);
+  border-radius: 1rem 1rem 0 0;
+}
+
+@media (min-width: 640px) {
+  .learner-task-thread-modal.user-dashboard .learner-task-thread-modal__panel.dash-modal,
+  .learner-task-thread-modal__panel.dash-modal {
+    width: min(92vw, 34rem);
+    border-radius: var(--dash-radius-lg, 1rem);
+  }
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble {
+  max-inline-size: min(100%, 20rem);
+}
+
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student .audio-clip__toggle,
+.user-dashboard .dash-student-dialog--thread .message-bubble.is-student .audio-clip__toggle {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  max-width: 2.25rem;
+  max-height: 2.25rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn .bi {
+  font-size: 1.0625rem;
+  line-height: 1;
+}
+
+/* Single toolbar + compact score row (learner task cards) */
+.user-dashboard .learner-teacher__card-head {
+  align-items: flex-start;
+  gap: 0.5rem 0.65rem;
+}
+
+.user-dashboard .learner-teacher__card-head-tools {
+  flex: 0 1 auto;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
+.user-dashboard .learner-teacher__card-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.05rem;
+  max-width: 100%;
+}
+
+.user-dashboard .learner-teacher__card-toolbar .learner-teacher__icon-hit {
+  flex-shrink: 0;
+}
+
+.user-dashboard .learner-teacher__icon-hit--expand {
+  margin-inline-start: 0.15rem;
+  padding-inline-start: 0.15rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--dash-border) 90%, transparent);
+}
+
+.user-dashboard .learner-teacher__result-score {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+.user-dashboard .learner-teacher__result-score-copy {
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__result-actions--icons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.05rem;
+}
+
+.user-dashboard .learner-teacher__result-score .learner-teacher__result-headline {
+  margin: 0;
+}
+
+.user-dashboard .learner-teacher__card-body .learner-teacher__result {
+  gap: 0.65rem;
+  padding: 0.65rem 0 0;
+  margin-top: 0.35rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--dash-border) 82%, transparent);
+  background: transparent;
+  border-radius: 0;
+  border-inline: 0;
+  border-bottom: 0;
+}
+
+.user-dashboard .learner-teacher__card-body .learner-teacher__mistake-expand {
+  margin-block-start: 0.15rem;
+}
+
+@media (max-width: 639px) {
+  .user-dashboard .learner-teacher__card-head {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .user-dashboard .learner-teacher__card-head-tools {
+    margin-inline-start: 0;
+    width: 100%;
+  }
+
+  .user-dashboard .learner-teacher__card-toolbar {
+    justify-content: flex-start;
+    gap: 0;
+    padding-block-start: 0.25rem;
+    border-block-start: 1px solid color-mix(in srgb, var(--dash-border) 75%, transparent);
+  }
+
+  .user-dashboard .learner-teacher__card-toolbar .learner-teacher__icon-hit {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .user-dashboard .learner-teacher__icon-hit--expand {
+    margin-inline-start: auto;
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__card-toolbar {
+  border-color: color-mix(in srgb, var(--dash-border-strong) 88%, transparent);
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__icon-hit.is-muted {
+  color: color-mix(in srgb, var(--dash-ink) 72%, #fff);
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__icon-hit:hover:not(:disabled):not(.is-disabled) {
+  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  color: color-mix(in srgb, var(--dash-ink) 96%, #fff);
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__card-body .learner-teacher__result {
+  border-block-start-color: var(--dash-border-strong);
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__result-headline,
+[data-theme="dark"] .user-dashboard .learner-teacher__mistake-none-inline {
+  color: color-mix(in srgb, var(--dash-ink) 92%, #fff);
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__icon-hit--expand {
+  border-inline-start-color: var(--dash-border-strong);
+}
+
+@media (max-width: 639px) {
+  [data-theme="dark"] .user-dashboard .learner-teacher__card-toolbar {
+    border-block-start-color: var(--dash-border-strong);
+  }
+}
+
+/* Learner messaging — 60% thread / 40% compose */
+.teacher-task-conversation:not(.is-learner) .teacher-task-conversation__shell {
+  display: contents;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 0.45rem;
+}
+
+@media (min-width: 640px) {
+  .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__shell {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 0;
+    align-items: stretch;
+    min-height: min(50dvh, 22rem);
+  }
+
+  .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+    max-height: none;
+    padding-inline-end: 0.65rem;
+    border-inline-end: 1px solid color-mix(in srgb, var(--dash-border) 88%, transparent);
+  }
+
+  .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer {
+    margin-top: 0;
+    padding: 0.15rem 0 0 0.65rem;
+    border-top: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea {
+  flex: 1 1 auto;
+  min-height: 5.5rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-foot--learner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-utilities {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-utilities .teacher-task-conversation__composer-count {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin-top: -0.15rem;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-primary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding-block-start: 0.35rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--dash-border) 85%, transparent);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn.is-utility {
+  width: 100%;
+  min-width: 0;
+  height: 2rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--dash-ink) 4%, var(--dash-card-bg));
+  color: color-mix(in srgb, var(--dash-ink) 58%, var(--dash-muted));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn.is-utility.is-danger {
+  color: color-mix(in srgb, var(--danger, #b42318) 82%, var(--dash-ink));
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn.is-utility:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dash-ink) 7%, var(--dash-card-bg));
+  color: var(--dash-ink);
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-primary .teacher-task-conversation__icon-btn--send {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  border-radius: 999px;
+  background: var(--dash-accent-strong, var(--dash-accent));
+  color: #fff;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-primary .teacher-task-conversation__icon-btn--send:hover:not(:disabled) {
+  filter: brightness(1.05);
+  background: var(--dash-accent-strong, var(--dash-accent));
+  color: #fff;
+}
+
+.teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-primary .teacher-task-conversation__icon-btn.is-active {
+  color: color-mix(in srgb, var(--danger, #b42318) 90%, var(--dash-ink));
+}
+
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__body {
+  display: flex;
+  flex-direction: column;
+  min-height: min(58dvh, 26rem);
+  padding: 0.55rem 0.65rem 0.65rem;
+}
+
+@media (min-width: 640px) {
+  .learner-task-thread-modal.user-dashboard .learner-task-thread-modal__panel.dash-modal,
+  .learner-task-thread-modal__panel.dash-modal {
+    width: min(94vw, 44rem);
+    max-height: min(88dvh, 34rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .user-dashboard .learner-teacher__result-score {
+    grid-template-columns: 1fr;
+  }
+
+  .user-dashboard .learner-teacher__result-actions--icons {
+    justify-content: flex-start;
+    padding-block-start: 0.15rem;
+  }
+
+  .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+    max-height: min(38dvh, 14rem);
+  }
+
+  .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea {
+    min-height: 3.25rem;
+  }
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+  border-inline-end-color: var(--dash-border-strong);
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-primary {
+  border-block-start-color: var(--dash-border-strong);
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__icon-btn.is-utility {
+  background: color-mix(in srgb, var(--dash-ink) 6%, var(--dash-card-bg));
+  color: color-mix(in srgb, var(--dash-ink) 78%, #fff);
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea {
+  background: color-mix(in srgb, var(--dash-card-bg) 94%, var(--dash-ink));
+  border-color: var(--dash-border-strong);
+  color: color-mix(in srgb, var(--dash-ink) 94%, #fff);
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea::-moz-placeholder {
+  color: color-mix(in srgb, var(--dash-ink) 52%, var(--dash-muted));
+}
+
+[data-theme="dark"] .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea::placeholder {
+  color: color-mix(in srgb, var(--dash-ink) 52%, var(--dash-muted));
+}
+
+/* AI score row + lighter task tabs (learner section) */
+.user-dashboard .learner-teacher__result-headline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  line-height: 1.45;
+}
+
+.user-dashboard .learner-teacher__result-check-mark {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-block-start: 0.05rem;
+  color: color-mix(in srgb, var(--dash-accent-strong, var(--dash-accent)) 88%, var(--dash-ink));
+}
+
+.user-dashboard .learner-teacher__result-check-mark .bi {
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+.user-dashboard .learner-teacher__result-headline-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__icon-hit--feedback {
+  position: relative;
+}
+
+.user-dashboard .learner-teacher__icon-hit--feedback .learner-teacher__dot {
+  position: absolute;
+  top: 0.2rem;
+  inset-inline-end: 0.12rem;
+}
+
+.user-dashboard .learner-teacher__icon-hit--feedback.has-unread {
+  color: var(--dash-accent-strong, var(--dash-accent));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 0.55rem;
+  background: var(--dash-card-bg);
+}
+
+.user-dashboard .learner-teacher__ai-score-badge-value {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.user-dashboard .learner-teacher__ai-score-badge-label {
+  font-size: 0.78rem;
+  font-weight: 550;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--dash-ink) 72%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-high {
+  border-color: color-mix(in srgb, var(--dash-success, #2f855a) 35%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-success, #2f855a) 10%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-high .learner-teacher__ai-score-badge-value {
+  color: var(--dash-success, #276749);
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-mid {
+  border-color: color-mix(in srgb, var(--dash-warning, #b7791f) 38%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-warning, #b7791f) 12%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-mid .learner-teacher__ai-score-badge-value {
+  color: color-mix(in srgb, var(--dash-warning, #9a6418) 88%, var(--dash-ink));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-low {
+  border-color: color-mix(in srgb, var(--dash-danger, #c53030) 32%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-danger, #c53030) 10%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__ai-score-badge.is-low .learner-teacher__ai-score-badge-value {
+  color: var(--dash-danger, #a84638);
+}
+
+.user-dashboard .learner-teacher__result-headline-value {
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: -0.02em;
+  color: var(--dash-ink);
+}
+
+.user-dashboard .learner-teacher__result-headline-context {
+  font-weight: 450;
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--dash-ink) 62%, var(--dash-muted));
+}
+
+.user-dashboard .learner-teacher__result-actions--icons .learner-teacher__icon-hit {
+  width: 2rem;
+  height: 2rem;
+}
+
+.user-dashboard .learner-teacher__result-actions--icons .learner-teacher__icon-hit .bi {
+  font-size: 1rem;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__filters--segmented .learner-teacher__filter {
+  font-weight: 500;
+}
+
+.user-dashboard .dash-section--learner-teacher .learner-teacher__filters--segmented .learner-teacher__filter.is-active {
+  font-weight: 600;
+}
+
+[data-theme="dark"] .user-dashboard .learner-teacher__result-headline-context {
+  color: color-mix(in srgb, var(--dash-ink) 72%, #fff);
 }
 
 /* Teacher dashboard: Amiri + Source Serif, clear interaction, performance groups */

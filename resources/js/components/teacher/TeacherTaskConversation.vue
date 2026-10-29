@@ -1,5 +1,9 @@
 <template>
-  <div class="teacher-task-conversation" :class="[`is-${variant}`]">
+  <div
+    class="teacher-task-conversation"
+    :class="[`is-${variant}`, { 'is-rtl': isRtl, 'is-compact': variant === 'learner' }]"
+    :dir="uiDirectionResolved"
+  >
     <p v-if="teacherNote && variant !== 'learner'" class="teacher-task-conversation__note">
       <strong>{{ t('teacher.teacher_note') }}</strong> {{ teacherNote }}
     </p>
@@ -11,6 +15,7 @@
       :src="evidenceAudio.url"
     ></audio>
 
+    <div class="teacher-task-conversation__shell">
     <div
       ref="threadEl"
       class="teacher-task-conversation__thread"
@@ -55,7 +60,6 @@
         </article>
       </template>
       <div v-if="!normalizedMessages.length" class="teacher-task-conversation__empty">
-        <i class="bi bi-chat-left-text" aria-hidden="true"></i>
         <span>{{ emptyLabel || t('teacher.task_conversation_empty') }}</span>
       </div>
     </div>
@@ -68,46 +72,134 @@
         <textarea
           :id="composerId"
           v-model="draft"
-          rows="2"
+          rows="1"
           maxlength="2000"
+          dir="auto"
           :placeholder="composerPlaceholder || t('teacher.message_teacher_placeholder')"
           :disabled="saving || sendBlocked"
           @keydown.enter.exact.prevent="onEnterSend"
         ></textarea>
         <div v-if="recordingState !== 'idle'" class="teacher-task-conversation__recording" :class="`is-${recordingState}`">
-          <span v-if="recordingState === 'requesting'"><i class="bi bi-mic" aria-hidden="true"></i>{{ t('teacher.preparing_recording') }}</span>
-          <span v-else-if="recordingState === 'recording'"><i class="bi bi-record-circle-fill" aria-hidden="true"></i>{{ t('teacher.recording_voice_note') }} · {{ recordingTimeLabel }}</span>
+          <span v-if="recordingState === 'requesting'" class="teacher-task-conversation__recording-pill">{{ t('teacher.preparing_recording') }}</span>
+          <span v-else-if="recordingState === 'recording'" class="teacher-task-conversation__recording-pill is-live">
+            <i class="bi bi-record-circle-fill" aria-hidden="true"></i>{{ recordingTimeLabel }}
+          </span>
           <template v-else-if="audioPreviewUrl">
-            <audio controls preload="metadata" :src="audioPreviewUrl">{{ t('teacher.voice_note') }}</audio>
-            <button type="button" class="teacher-task-conversation__recording-remove" :aria-label="t('teacher.remove_voice_note')" @click="discardRecording">
-              <i class="bi bi-trash3" aria-hidden="true"></i>
+            <audio class="teacher-task-conversation__recording-audio" controls preload="metadata" :src="audioPreviewUrl">{{ t('teacher.voice_note') }}</audio>
+            <button type="button" class="teacher-task-conversation__icon-btn" :aria-label="t('teacher.remove_voice_note')" @click="discardRecording">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </template>
         </div>
       </div>
-      <div class="teacher-task-conversation__composer-foot">
-        <div class="teacher-task-conversation__composer-tools">
+      <p
+        v-if="composerStatusText"
+        class="teacher-task-conversation__composer-status"
+        :class="{ 'is-error': Boolean(errorText), 'is-success': sent && !errorText }"
+        role="status"
+      >{{ composerStatusText }}</p>
+      <div
+        v-if="variant === 'learner'"
+        class="teacher-task-conversation__composer-foot teacher-task-conversation__composer-foot--learner"
+      >
+        <div
+          class="teacher-task-conversation__composer-utilities"
+          role="toolbar"
+          :aria-label="t('teacher.learner_thread_toolbar_label')"
+        >
+          <button
+            type="button"
+            class="teacher-task-conversation__icon-btn is-utility"
+            :aria-label="t('teacher.learner_thread_clear_draft')"
+            :title="t('teacher.learner_thread_clear_draft')"
+            :disabled="saving || (!draft.trim() && !audioBlob)"
+            @click="clearDraft"
+          >
+            <i class="bi bi-eraser" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="teacher-task-conversation__icon-btn is-utility"
+            :aria-label="t('teacher.learner_thread_new_chat')"
+            :title="t('teacher.learner_thread_new_chat')"
+            :disabled="saving"
+            @click="startNewComposer"
+          >
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="teacher-task-conversation__icon-btn is-utility"
+            :aria-label="t('teacher.learner_thread_upload_pdf')"
+            :title="t('teacher.learner_thread_upload_pdf')"
+            :disabled="saving"
+            @click="uploadPdfPlaceholder"
+          >
+            <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="teacher-task-conversation__icon-btn is-utility is-danger"
+            :aria-label="t('teacher.learner_thread_clear_conversation')"
+            :title="t('teacher.learner_thread_clear_conversation')"
+            :disabled="saving"
+            @click="clearConversationDraft"
+          >
+            <i class="bi bi-trash3" aria-hidden="true"></i>
+          </button>
+          <span v-if="draft.length && !errorText && !sent" class="teacher-task-conversation__composer-count">{{ draft.length }}</span>
+        </div>
+        <div class="teacher-task-conversation__composer-primary">
           <button
             v-if="recordingSupported && recordingState !== 'recorded'"
             type="button"
-            class="dash-btn dash-btn--ghost dash-btn--sm teacher-task-conversation__record-button"
-            :class="{ 'is-recording': recordingState === 'recording' }"
+            class="teacher-task-conversation__icon-btn"
+            :class="{ 'is-active': recordingState === 'recording' }"
+            :aria-label="recordingState === 'recording' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
+            :title="recordingState === 'recording' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
             :disabled="saving || sendBlocked || recordingState === 'requesting' || recordingState === 'stopping'"
             @click="recordingState === 'recording' ? stopRecording() : startRecording()"
           >
             <i class="bi" :class="recordingState === 'recording' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i>
-            {{ recordingState === 'recording' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note') }}
           </button>
+          <button
+            type="submit"
+            class="teacher-task-conversation__icon-btn teacher-task-conversation__icon-btn--send"
+            :aria-label="saving ? t('teacher.saving') : t('teacher.send_message')"
+            :title="saving ? t('teacher.saving') : t('teacher.send_message')"
+            :disabled="saving || sendBlocked || recordingState === 'recording' || !hasComposerContent"
+          >
+            <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send-fill'" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div v-else class="teacher-task-conversation__composer-foot">
+        <div class="teacher-task-conversation__composer-tools">
           <span v-if="errorText" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ errorText }}</span>
           <span v-else-if="sent" class="alert alert-success py-1 px-2 mb-0" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.message_sent') }}</span>
-          <span v-else-if="draft.length">{{ draft.length }}/2000</span>
         </div>
-        <button type="submit" class="dash-btn dash-btn--primary" :disabled="saving || sendBlocked || recordingState === 'recording' || !hasComposerContent">
-          <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-          {{ saving ? t('teacher.saving') : t('teacher.send_message') }}
-        </button>
+        <div class="teacher-task-conversation__composer-actions">
+          <button
+            v-if="recordingSupported && recordingState !== 'recorded'"
+            type="button"
+            class="teacher-task-conversation__icon-btn"
+            :class="{ 'is-active': recordingState === 'recording' }"
+            :disabled="saving || sendBlocked || recordingState === 'requesting' || recordingState === 'stopping'"
+            @click="recordingState === 'recording' ? stopRecording() : startRecording()"
+          >
+            <i class="bi" :class="recordingState === 'recording' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i>
+          </button>
+          <button
+            type="submit"
+            class="teacher-task-conversation__icon-btn teacher-task-conversation__icon-btn--send"
+            :disabled="saving || sendBlocked || recordingState === 'recording' || !hasComposerContent"
+          >
+            <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
     </form>
+    </div>
   </div>
 </template>
 
@@ -157,6 +249,7 @@ export default {
     composerLabel: { type: String, default: '' },
     composerPlaceholder: { type: String, default: '' },
     emptyLabel: { type: String, default: '' },
+    uiDirection: { type: String, default: '' },
     onSend: { type: Function, default: null },
   },
   data() {
@@ -212,6 +305,20 @@ export default {
     },
     sendBlocked() {
       return !canSendNow(this.lastSentAtMs)
+    },
+    uiDirectionResolved() {
+      if (this.uiDirection === 'rtl' || this.uiDirection === 'ltr') return this.uiDirection
+      const locale = this.$i18n?.locale?.value || 'en'
+      return ['ar', 'ur'].includes(String(locale).split('-')[0]) ? 'rtl' : 'ltr'
+    },
+    isRtl() {
+      return this.uiDirectionResolved === 'rtl'
+    },
+    composerStatusText() {
+      if (this.variant !== 'learner') return ''
+      if (this.errorText) return this.errorText
+      if (this.sent) return this.t('teacher.message_sent')
+      return ''
     },
   },
   watch: {
@@ -414,6 +521,24 @@ export default {
       this.errorText = ''
       this.sent = false
       this.discardRecording()
+    },
+    clearDraft() {
+      this.draft = ''
+      if (this.taskId) saveThreadDraft(this.taskId, '')
+      this.discardRecording()
+    },
+    startNewComposer() {
+      this.resetComposer()
+      if (this.taskId) saveThreadDraft(this.taskId, '')
+      this.$nextTick(() => this.focusComposer())
+    },
+    clearConversationDraft() {
+      this.resetComposer()
+      if (this.taskId) saveThreadDraft(this.taskId, '')
+    },
+    uploadPdfPlaceholder() {
+      this.sent = false
+      this.errorText = this.t('teacher.export_pdf_soon')
     },
     focusComposer() {
       if (typeof document === 'undefined') return

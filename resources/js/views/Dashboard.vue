@@ -87,6 +87,7 @@
           :saving-id="assignmentSavingId"
           :completion-message="assignmentCompletionMessage"
           :failed-item="assignmentFailedItem"
+          :student-first-name="learnerFirstName"
           :on-send-note="sendSupportNote"
           :on-send-direct-message="sendDirectTeacherMessage"
           @start="startSupportAssignment"
@@ -962,6 +963,12 @@ export default {
         || String(this.auth?.name || '').split(/\s+/)[0]
         || this.t('dashboard.dear_friend')
       return this.t('dashboard.greeting', { name })
+    },
+    learnerFirstName() {
+      return this.data?.welcome?.first_name
+        || this.auth?.first_name
+        || String(this.auth?.name || '').split(/\s+/)[0]
+        || ''
     },
     continueCta() {
       const key = this.data?.continue?.cta_key

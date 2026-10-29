@@ -4,6 +4,7 @@
     :labelled-by="titleId"
     root-class="learner-task-thread-modal"
     panel-class="learner-task-thread-modal__panel"
+    :dir="textDirection"
     @close="close"
   >
     <header class="dash-modal__head learner-task-thread-modal__head">
@@ -41,6 +42,7 @@
         :composer-id="composerId"
         :composer-placeholder="t('teacher.learner_thread_composer_placeholder')"
         :empty-label="t('teacher.learner_thread_empty')"
+        :ui-direction="textDirection"
         :on-send="handleSend"
       />
     </div>
@@ -93,6 +95,12 @@ export default {
     },
     teacherName() {
       return this.task?.teacher_name || this.t('teacher.teacher')
+    },
+    textDirection() {
+      const locale = this.$i18n?.locale?.value
+        || (typeof document !== 'undefined' ? document.documentElement.getAttribute('lang') : null)
+        || 'en'
+      return ['ar', 'ur'].includes(String(locale).split('-')[0]) ? 'rtl' : 'ltr'
     },
     displayMessages() {
       const server = normalizeThreadMessages(this.task?.messages || [], this.task?.id)

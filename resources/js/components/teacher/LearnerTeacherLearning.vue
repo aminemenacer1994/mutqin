@@ -2,10 +2,10 @@
   <section
     class="learner-teacher__feedback-panel"
     :class="{ 'is-drawer': variant === 'drawer' }"
-    :aria-label="t('teacher.learner_feedback_inbox')"
+    :aria-label="panelAriaLabel"
   >
     <header class="learner-teacher__feedback-head">
-      <h3 class="learner-teacher__section-title">{{ t('teacher.learner_feedback_inbox') }}</h3>
+      <h3 class="learner-teacher__section-title">{{ panelTitle }}</h3>
       <span v-if="unreadCount" class="learner-teacher__feedback-new">
         {{ ldtp('teacher.learner_feedback_unread', unreadCount) }}
       </span>
@@ -41,15 +41,6 @@
         </button>
       </li>
     </ul>
-
-    <button
-      v-if="variant !== 'drawer' && feedbackItems.length > previewLimit"
-      type="button"
-      class="learner-teacher__hub-more"
-      @click="showAllFeedback = !showAllFeedback"
-    >
-      {{ showAllFeedback ? t('teacher.learner_view_all_less') : t('teacher.learner_view_all_feedback', { n: feedbackItems.length }) }}
-    </button>
   </section>
 </template>
 
@@ -59,7 +50,7 @@ import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
 import { mergeFeedbackReadState, readFeedbackReadMap, sortFeedbackInbox } from '../../scripts/teacher/learnerDashboard.js'
 import { learnerDashboardTp } from '../../scripts/teacher/learnerDashboardI18n.js'
 
-const PREVIEW_LIMIT = 4
+const SIDEBAR_PREVIEW_LIMIT = 2
 
 export default {
   name: 'LearnerTeacherLearning',
@@ -69,12 +60,6 @@ export default {
     variant: { type: String, default: 'panel' },
   },
   emits: ['open-feedback'],
-  data() {
-    return {
-      showAllFeedback: false,
-      previewLimit: PREVIEW_LIMIT,
-    }
-  },
   computed: {
     feedbackItems() {
       const raw = Array.isArray(this.learning?.feedback_inbox) ? this.learning.feedback_inbox : []
@@ -82,11 +67,19 @@ export default {
       return sortFeedbackInbox(mergeFeedbackReadState(raw, map))
     },
     feedbackPreview() {
-      const limit = this.variant === 'drawer' || this.showAllFeedback ? 20 : this.previewLimit
+      const limit = this.variant === 'drawer' ? 20 : SIDEBAR_PREVIEW_LIMIT
       return this.feedbackItems.slice(0, limit)
     },
     unreadCount() {
       return this.feedbackItems.filter((item) => item.unread).length
+    },
+    panelTitle() {
+      return this.variant === 'drawer'
+        ? this.t('teacher.learner_feedback_inbox')
+        : this.t('teacher.learner_feedback_latest')
+    },
+    panelAriaLabel() {
+      return this.panelTitle
     },
     learnerLocale() {
       return this.$i18n?.global?.locale?.value

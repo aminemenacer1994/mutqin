@@ -13,7 +13,7 @@
     ></audio>
     <button
       type="button"
-      class="dash-icon-btn audio-clip__toggle"
+      class="audio-clip__toggle"
       :disabled="error || (!src && !loadedSrc)"
       :aria-label="toggleAriaLabel"
       :title="toggleAriaLabel"

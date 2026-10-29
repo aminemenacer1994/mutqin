@@ -1,6 +1,6 @@
 <template>
   <div class="learner-teacher__mistake-panel">
-    <p v-if="perfect" class="learner-teacher__mistake-perfect">
+    <p v-if="perfect && !hidePerfectBanner" class="learner-teacher__mistake-perfect">
       <i class="bi bi-check2-circle" aria-hidden="true"></i>
       {{ t('teacher.learner_mistake_none') }}
     </p>
@@ -78,6 +78,7 @@ export default {
     mistakes: { type: Array, default: () => [] },
     recordingUrl: { type: String, default: '' },
     surah: { type: Number, default: null },
+    hidePerfectBanner: { type: Boolean, default: false },
   },
   data() {
     return {

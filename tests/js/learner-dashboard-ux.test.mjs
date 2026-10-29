@@ -4,21 +4,28 @@ import { formatIcuPluralMessage, pluralFormForCount } from '../../resources/js/u
 import {
   PRACTICE_THRESHOLD,
   buildAllTabList,
+  completionAiScoreSummary,
   completionResultLink,
   completionScoreBand,
   isDueThisWeek,
   learnerPrimaryActionKey,
+  learnerTaskAttemptCount,
   learnerWeeklyProgressFromAssignments,
   practiceAgainVariant,
   sortAllTabAssignments,
   weeklyProgressPercent,
 } from '../../resources/js/scripts/teacher/learnerDashboard.js'
+import { buildUpcomingAssignments, shouldShowUpcomingPanel } from '../../resources/js/scripts/teacher/learnerUpcoming.js'
 
 const t = (key, params = {}) => {
   if (key === 'common.relative.today') return 'Today'
   if (key === 'common.relative.yesterday') return 'Yesterday'
   if (key === 'teacher.learner_view_feedback') return 'View feedback'
   if (key === 'teacher.learner_view_results') return 'View results'
+  if (key === 'teacher.learner_ai_score_band_good') return 'Good'
+  if (key === 'teacher.learner_ai_score_band_excellent') return 'Excellent'
+  if (key === 'teacher.learner_ai_score_band_needs_work') return 'Keep practising'
+  if (key === 'teacher.learner_ai_score_perfect') return 'Perfect match'
   return `${key}:${JSON.stringify(params)}`
 }
 
@@ -107,8 +114,37 @@ assert.equal(weekly.total, 3)
 assert.equal(weekly.percent, 67)
 
 assert.equal(learnerPrimaryActionKey({ review_state: 'needs_correction' }), 'redo')
-assert.equal(completionScoreBand(100), 'perfect')
-assert.equal(completionScoreBand(88), 'solid')
+assert.equal(completionScoreBand(100), 'high')
+assert.equal(completionScoreBand(90), 'high')
+assert.equal(completionScoreBand(88), 'mid')
 assert.equal(completionScoreBand(65), 'low')
+
+const upcomingRows = [
+  { id: 1, status: 'pending', assignment: { due_at: '2026-03-20T00:00:00Z' } },
+  { id: 2, status: 'pending', assignment: { due_at: '2026-03-22T00:00:00Z' } },
+]
+assert.equal(shouldShowUpcomingPanel([upcomingRows[0]], () => false, [1]), false)
+assert.equal(
+  shouldShowUpcomingPanel(upcomingRows, (row) => row.status === 'completed', [1], fixedNow),
+  true,
+)
+const upcomingOnlyFuture = buildUpcomingAssignments(upcomingRows, () => false, 3, {
+  excludeTodoIds: [1],
+  now: fixedNow,
+})
+assert.equal(upcomingOnlyFuture.length, 1)
+assert.equal(upcomingOnlyFuture[0].id, 2)
+
+const aiSummary = completionAiScoreSummary(
+  { accuracy_percent: 88, attempt: { mistakes: [{}, {}] } },
+  t,
+  (key, count, params) => `${key}:${count}:${JSON.stringify(params)}`,
+)
+assert.equal(aiSummary.band, 'mid')
+assert.match(aiSummary.label, /Good/)
+
+assert.equal(learnerTaskAttemptCount({ progress: { activity_count: 2 } }), 2)
+assert.equal(learnerTaskAttemptCount({ last_attempt: { attempt_number: 3 } }), 3)
+assert.equal(learnerTaskAttemptCount({}), 0)
 
 console.log('learner-dashboard-ux.test.mjs: ok')
