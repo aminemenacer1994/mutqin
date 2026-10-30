@@ -1,4 +1,4 @@
-@if (config('app.show_demo_accounts'))
+@if (\App\Support\DemoAccounts::routeEnabled())
     <aside class="auth-tester-notice" role="note" aria-label="{{ __('ui.auth_demo_title') }}">
         <div class="auth-tester-notice__copy">
             <p class="auth-tester-notice__title">{{ __('ui.auth_demo_title') }}</p>

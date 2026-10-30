@@ -5788,6 +5788,7 @@ export default {
         || 'Practise the full range'
     },
     postSessionShowRevisionScopePicker() {
+      if (this.postSessionIsRepeatRecommendation) return false
       if (!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck)) return false
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return false
       // Success / mostly-secure paths use technique-led next steps, not the

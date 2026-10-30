@@ -1,6 +1,6 @@
 <template>
-  <main id="mainContent" class="user-dashboard" tabindex="-1">
-    <div class="container user-dashboard__shell">
+  <main id="mainContent" class="user-dashboard user-dashboard--progress" tabindex="-1">
+    <div class="container-fluid user-dashboard__shell">
       <div v-if="loading && !data" class="user-dashboard__loading" role="status" aria-live="polite">
         <div class="dash-spinner" aria-hidden="true"></div>
         <span>{{ t('dashboard.loading') }}</span>
@@ -31,7 +31,7 @@
         <header class="dash-hero dash-section dash-reveal">
           <div class="dash-hero__top">
             <div class="dash-hero__greeting">
-              <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
+              <span class="dash-kicker dash-hero__kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
               <p v-if="showHeroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
             </div>
@@ -1288,6 +1288,29 @@ export default {
     dailyWeakAllItems() {
       const items = this.dailyRevision.weak_all_items
       return Array.isArray(items) ? items : this.dailyWeakItems
+    },
+    dailyRecommendedPractice() {
+      const item = this.dailyRevision.recommended_practice || this.recommendedNext
+      return item?.surah_name && item?.ayah_start && item?.href ? item : null
+    },
+    dailyRecommendedRange() {
+      const item = this.dailyRecommendedPractice
+      if (!item) return ''
+      const start = Number(item.ayah_start || 0)
+      const end = Number(item.ayah_end || start)
+      return start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+    },
+    dailyDueCount() {
+      const total = Number(this.dailyRevision.due_total)
+      if (Number.isFinite(total) && total >= 0) return total
+      return this.dailyDueAllItems.length
+    },
+    dailyWeakCount() {
+      const total = Number(this.dailyRevision.weak_total)
+      if (Number.isFinite(total) && total >= 0) return total
+      return this.dailyWeakAllItems.length
     },
     snapshotCards() {
       const snap = this.data?.snapshot || {}

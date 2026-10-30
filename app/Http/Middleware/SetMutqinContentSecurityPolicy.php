@@ -12,20 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetMutqinContentSecurityPolicy
 {
-    private const POLICY = "default-src 'self'; "
-        ."base-uri 'self'; "
-        ."form-action 'self'; "
-        ."frame-ancestors 'none'; "
-        ."object-src 'none'; "
-        ."script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; "
-        ."style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-        ."font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://fonts.bunny.net; "
-        ."img-src 'self' data: blob: https:; "
-        ."media-src 'self' blob: https:; "
-        ."connect-src 'self' https: wss:; "
-        ."worker-src 'self' blob:; "
-        ."manifest-src 'self';";
-
     public function handle(Request $request, Closure $next): Response
     {
         /** @var Response $response */
@@ -36,13 +22,36 @@ class SetMutqinContentSecurityPolicy
         }
 
         $existing = strtolower((string) $response->headers->get('Content-Security-Policy', ''));
-        if ($existing === '' || ! str_contains($existing, "script-src 'none'")) {
+        if ($existing !== '' && ! str_contains($existing, "script-src 'none'")) {
             return $response;
         }
 
-        $response->headers->set('Content-Security-Policy', self::POLICY);
+        $response->headers->set('Content-Security-Policy', self::buildPolicy());
 
         return $response;
+    }
+
+    public static function buildPolicy(): string
+    {
+        $scriptSrc = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com";
+        if (! app()->isProduction() || config('app.debug')) {
+            // Webpack watch/dev lazy chunks and some tooling still rely on eval.
+            $scriptSrc .= " 'unsafe-eval'";
+        }
+
+        return "default-src 'self'; "
+            ."base-uri 'self'; "
+            ."form-action 'self'; "
+            ."frame-ancestors 'none'; "
+            ."object-src 'none'; "
+            ."script-src {$scriptSrc}; "
+            ."style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.bunny.net; "
+            ."font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://fonts.bunny.net https://verses.quran.foundation; "
+            ."img-src 'self' data: blob: https:; "
+            ."media-src 'self' blob: https:; "
+            ."connect-src 'self' https: wss:; "
+            ."worker-src 'self' blob:; "
+            ."manifest-src 'self';";
     }
 
     private function isHtmlDocument(Request $request, Response $response): bool

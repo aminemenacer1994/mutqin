@@ -261,6 +261,9 @@ mix.js('resources/js/app.js', 'public/js')
        };
        if (mix.inProduction()) {
            webpackConfig.bail = true;
+       } else {
+           // Default Mix devtool uses eval-* wrappers; that breaks our CSP in local dev.
+           webpackConfig.devtool = 'cheap-module-source-map';
        }
        webpackConfig.stats = {
            ...(webpackConfig.stats || {}),

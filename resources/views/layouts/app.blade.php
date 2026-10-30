@@ -5079,7 +5079,7 @@
 
         .profile-page,
         .admin-page {
-            padding-block: calc(var(--nav-h) + 16px) 24px;
+            padding-block: calc(var(--nav-h) + 8px) 20px;
         }
 
         .profile-page {
@@ -5122,8 +5122,42 @@
 
         .profile-hero-identity {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             align-items: center;
+        }
+
+        .profile-avatar-wrap {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .profile-hero-intro {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .profile-hero-greeting {
+            margin: 0;
+            color: var(--text);
+            font-size: clamp(1.05rem, 2.4vw, 1.28rem);
+            font-weight: 750;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-hero-stat {
+            margin: 0.35rem 0 0;
+            color: var(--accent-strong);
+            font-size: 0.82rem;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .profile-hero-stat--muted {
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         .profile-hero-prefs {
@@ -5135,9 +5169,9 @@
 
         .profile-avatar {
             flex: 0 0 auto;
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
             object-fit: cover;
             background: var(--accent-light);
             border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));

@@ -26,7 +26,7 @@
             'login_event_id' => session('mutqin_login_event_id'),
             'just_registered' => !empty($justRegistered),
             'just_logged_in' => !empty($justLoggedIn),
-            'show_tester_guide' => (bool) config('app.show_demo_accounts') && Auth::check(),
+            'show_tester_guide' => \App\Support\DemoAccounts::routeEnabled() && Auth::check(),
             'app_url' => rtrim((string) config('app.url'), '/'),
             'csrf_token' => csrf_token(),
             'login_url' => route('login'),

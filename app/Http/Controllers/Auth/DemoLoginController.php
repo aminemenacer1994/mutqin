@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\EnsureDemoLoginAccount;
 use App\Support\AuthRedirect;
+use App\Support\DemoAccounts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +21,7 @@ class DemoLoginController extends Controller
 
     public function __invoke(Request $request, EnsureDemoLoginAccount $ensureDemoLoginAccount): RedirectResponse
     {
-        if (! config('app.show_demo_accounts')) {
+        if (! DemoAccounts::routeEnabled()) {
             abort(404);
         }
 
