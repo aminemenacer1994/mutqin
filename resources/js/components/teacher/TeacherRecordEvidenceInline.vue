@@ -26,7 +26,6 @@
     <div v-if="canonicalWords.length || canonicalLoading" class="teacher-record-evidence__compare">
       <div class="teacher-record-evidence__compare-head">
         <span class="teacher-record-evidence__label">{{ compareLabel }}</span>
-        <span v-if="missCount" class="teacher-record-evidence__badge is-warn">{{ t('teacher.misses_n', { n: missCount }) }}</span>
       </div>
       <p v-if="canonicalLoading" class="teacher-record-evidence__muted">{{ t('teacher.loading_quran_text') }}</p>
       <div v-else class="teacher-record-evidence__words teacher-quran" lang="ar" dir="rtl">
@@ -34,8 +33,6 @@
           v-for="(word, index) in canonicalWords"
           :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`"
           class="teacher-record-evidence__word"
-          :class="{ 'is-miss': isMiss(word.status) }"
-          :title="wordTitle(word)"
         >{{ word.text }}</span>
       </div>
     </div>
@@ -97,7 +94,6 @@ export default {
         ? this.t('teacher.recitation_compare_label')
         : this.t('teacher.recitation_text')
     },
-    missCount() { return this.canonicalWords.filter((word) => this.isMiss(word.status)).length },
   },
   watch: {
     row: { immediate: true, handler() { this.loadWords() } },
@@ -144,14 +140,6 @@ export default {
       }
 
       await Promise.all(tasks)
-    },
-    isMiss(status) {
-      return ['incorrect', 'skipped', 'extra', 'repeated', 'wrong'].includes(String(status || '').toLowerCase())
-    },
-    wordTitle(word) {
-      if (!this.isMiss(word.status)) return ''
-      if (word.detected) return `${this.t('teacher.transcript_label')}: ${word.detected}`
-      return this.t('teacher.issue_missed')
     },
   },
 }

@@ -6327,7 +6327,7 @@
     "no_recording": "No recording",
     "no_transcript": "No transcript",
     "recitation_text": "Recitation text",
-    "misses_n": "{n} misses highlighted",
+    "misses_n": "",
     "workspace_label": "Teacher dashboard",
     "class_snapshot": "Class summary",
     "follow_ups": "Follow-ups",

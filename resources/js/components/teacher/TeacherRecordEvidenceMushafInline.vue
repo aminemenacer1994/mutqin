@@ -7,9 +7,8 @@
     <p v-else-if="audioUnavailableLabel" class="teacher-record-evidence__muted">{{ audioUnavailableLabel }}</p>
 
     <div v-if="hasMushafRange" class="teacher-record-evidence__mushaf">
-      <div v-if="compareLabel || missCount" class="teacher-record-evidence__compare-head">
-        <span v-if="compareLabel" class="teacher-record-evidence__label">{{ compareLabel }}</span>
-        <span v-if="missCount" class="teacher-record-evidence__badge is-warn">{{ t('teacher.misses_n', { n: missCount }) }}</span>
+      <div v-if="compareLabel" class="teacher-record-evidence__compare-head">
+        <span class="teacher-record-evidence__label">{{ compareLabel }}</span>
       </div>
       <p v-if="loading" class="teacher-record-evidence__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
       <TeacherReciteMushafAyahs v-else-if="ayahs.length" :ayahs="ayahs" />
@@ -50,15 +49,6 @@ export default {
     compareLabel() {
       if (!this.hasAssignedCompare) return ''
       return this.t('teacher.recitation_compare_label')
-    },
-    missCount() {
-      let count = 0
-      for (const ayah of this.ayahs) {
-        for (const part of ayah.parts || []) {
-          if (/recitation-word-(incorrect|partial|omitted|skipped|extra)/.test(part.className || '')) count++
-        }
-      }
-      return count
     },
   },
   watch: {

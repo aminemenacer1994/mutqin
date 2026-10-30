@@ -57,7 +57,6 @@
             <section class="teacher-recite-mushaf__block">
               <div class="teacher-recite-mushaf__block-head">
                 <h3>{{ t('teacher.recitation_compare_label') }}</h3>
-                <span v-if="missCount" class="teacher-recite-mushaf__misses">{{ t('teacher.misses_n', { n: missCount }) }}</span>
               </div>
               <p v-if="loading" class="teacher-recite-modal__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
               <TeacherReciteMushafAyahs v-else :ayahs="ayahs" />
@@ -120,15 +119,6 @@ export default {
       const reason = this.row?.audio?.reason
       if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
       return this.t('teacher.recording_unavailable')
-    },
-    missCount() {
-      let count = 0
-      for (const ayah of this.ayahs) {
-        for (const part of ayah.parts || []) {
-          if (/recitation-word-(incorrect|partial|omitted|skipped|extra)/.test(part.className || '')) count++
-        }
-      }
-      return count
     },
   },
   watch: {

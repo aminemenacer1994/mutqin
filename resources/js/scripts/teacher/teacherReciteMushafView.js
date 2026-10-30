@@ -1,4 +1,3 @@
-import { normaliseMadaniRecitationVisualStatus } from '../mushaf/qpcMadaniRecitationDom.js'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../mushaf/mushafLayouts.js'
 import { loadMushafVersePageIndex } from '../mushaf/qpcMadaniVersePage.js'
 import {
@@ -20,43 +19,14 @@ function versesForRange(range) {
   return verses
 }
 
-function statusMapFromWords(words = []) {
-  const map = new Map()
-  for (const word of words) {
-    const ayah = Number(word?.ayah)
-    const index = Number(word?.word_index)
-    if (!Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(index) || index < 0) continue
-    map.set(`${ayah}:${index}`, word)
-  }
-  return map
-}
-
-function wordIndexFromMushafWord(rawWord = {}) {
-  const location = String(rawWord?.location || '')
-  const parts = location.split(':')
-  if (parts.length >= 3) {
-    const position = Number(parts[2])
-    if (Number.isInteger(position) && position > 0) return position - 1
-  }
-  const position = Number(rawWord?.word)
-  return Number.isInteger(position) && position > 0 ? position - 1 : 0
-}
-
-function recitationClass(statusEntry) {
-  const visual = normaliseMadaniRecitationVisualStatus(statusEntry || {}, false)
-  if (visual === 'notAttempted') return 'recitation-word-pending'
-  if (visual === 'omitted') return 'recitation-word-omitted'
-  return `recitation-word-${visual}`
-}
-
 function fallbackPartsForAyah(ayah, canonicalWords) {
   return (canonicalWords || [])
     .filter((word) => Number(word.ayah) === ayah)
     .map((word) => ({
       text: word.text,
       fontFamily: '',
-      className: `teacher-recite-mushaf__word ${recitationClass(word)}`,
-      title: word.detected || '',
+      className: 'teacher-recite-mushaf__word recitation-word-correct',
+      title: '',
     }))
 }
 
@@ -68,6 +38,9 @@ function buildAyahRowsFromCanonical(verses, canonicalWords) {
 }
 
 /**
+ * Build mushaf ayah rows for teacher evidence.
+ * Miss/status highlighting is intentionally not painted — passages render as clean mushaf text.
+ *
  * @param {object} row Teacher evidence row (range, words, assignedRange, …)
  * @returns {Promise<{ ayahs: Array<{ ayah: number, parts: object[] }>, assignedAyahs: Array<{ ayah: number, parts: object[] }> }>}
  */
@@ -91,19 +64,16 @@ export async function buildTeacherReciteMushafView(row) {
       : Promise.resolve([]),
   ])
 
-  const performanceStatuses = statusMapFromWords(performanceCanonical)
-  const assignedStatuses = statusMapFromWords(assignedCanonical)
-
   let ayahs = buildAyahRowsFromCanonical(performanceVerses, performanceCanonical)
   let assignedAyahs = buildAyahRowsFromCanonical(assignedVerses, assignedCanonical)
 
   try {
     const index = await loadMushafVersePageIndex(MUSHAF_LAYOUT_MADANI_V2)
     if (performanceVerses.length) {
-      ayahs = await paintMadaniAyahs(performanceVerses, index, performanceStatuses, performanceCanonical)
+      ayahs = await paintMadaniAyahs(performanceVerses, index, performanceCanonical)
     }
     if (assignedVerses.length) {
-      assignedAyahs = await paintMadaniAyahs(assignedVerses, index, assignedStatuses, assignedCanonical, true)
+      assignedAyahs = await paintMadaniAyahs(assignedVerses, index, assignedCanonical)
     }
   } catch {
     /* canonical fallback already set */
@@ -112,7 +82,7 @@ export async function buildTeacherReciteMushafView(row) {
   return { ayahs, assignedAyahs }
 }
 
-async function paintMadaniAyahs(verses, index, statusMap, canonicalFallback, neutral = false) {
+async function paintMadaniAyahs(verses, index, canonicalFallback) {
   const wordsByKey = await loadStackedQpcWordsForVerses(verses, index)
   const pages = new Set()
   for (const verse of verses) {
@@ -129,17 +99,12 @@ async function paintMadaniAyahs(verses, index, statusMap, canonicalFallback, neu
       return { ayah: verse.number, parts: fallbackPartsForAyah(verse.number, canonicalFallback) }
     }
     const parts = mushafWords.map((rawWord) => {
-      const wordIndex = wordIndexFromMushafWord(rawWord)
-      const status = statusMap.get(`${verse.number}:${wordIndex}`)
       const ink = resolveStackedQpcWordInk(rawWord)
-      const visual = neutral || !status
-        ? 'recitation-word-correct'
-        : recitationClass(status)
       return {
         text: ink.text,
         fontFamily: ink.fontFamily,
-        className: `qpc-madani-word teacher-recite-mushaf__word ${visual}`,
-        title: status?.detected || '',
+        className: 'qpc-madani-word teacher-recite-mushaf__word recitation-word-correct',
+        title: '',
       }
     })
     return { ayah: verse.number, parts }

@@ -78,11 +78,9 @@
           <section v-if="textEvidenceInDrawer && canonicalWords.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
             <div class="teacher-audio-evidence__heading">
               <h3 :id="evidenceTitleId">{{ compareHeading }}</h3>
-              <span v-if="missCount">{{ t('teacher.misses_n', { n: missCount }) }}</span>
-              <span v-else>{{ t('teacher.recite_no_issues') }}</span>
             </div>
             <p class="teacher-audio-evidence__words" lang="ar" dir="rtl">
-              <span v-for="(word, index) in canonicalWords" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`" :class="{ 'is-miss': isMiss(word.status) }" :title="isMiss(word.status) ? evidenceWordTitle(word) : undefined">{{ word.text }}</span>
+              <span v-for="(word, index) in canonicalWords" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`">{{ word.text }}</span>
             </p>
           </section>
           <p v-else-if="textEvidenceInDrawer && canonicalLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
@@ -137,9 +135,6 @@ export default {
     },
     hasAudio() {
       return Boolean(this.row?.audio?.available && this.row?.audio?.url)
-    },
-    missCount() {
-      return this.canonicalWords.filter((word) => this.isMiss(word.status)).length
     },
     evidenceProcessing() {
       return this.row?.evidenceState === 'processing'
@@ -249,16 +244,6 @@ export default {
       const speeds = [1, 1.25, 1.5, 0.75]
       this.speed = speeds[(speeds.indexOf(this.speed) + 1) % speeds.length]
       if (this.$refs.player) this.$refs.player.playbackRate = this.speed
-    },
-    isMiss(status) {
-      return ['incorrect', 'skipped', 'extra', 'repeated', 'wrong'].includes(String(status || '').toLowerCase())
-    },
-    evidenceWordTitle(word) {
-      const status = String(word.status || 'incorrect').toLowerCase()
-      const labelKey = ['incorrect', 'wrong'].includes(status) ? 'teacher.issue_missed' : `teacher.issue_${status}`
-      return word.detected
-        ? `${this.t(labelKey)}: ${word.detected}`
-        : this.t(labelKey)
     },
     formatTime(value) {
       const seconds = Math.max(0, Math.floor(Number(value) || 0))
