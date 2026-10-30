@@ -12,7 +12,7 @@ const section = fs.readFileSync(
 const login = fs.readFileSync(path.join(root, 'resources/views/auth/login.blade.php'), 'utf8')
 const dashboard = fs.readFileSync(path.join(root, 'resources/js/views/Dashboard.vue'), 'utf8')
 
-assert.match(section, /learner-teacher__section-banner/, 'header banner always in template')
+assert.match(section, /learner-teacher__intro/, 'learner intro header in template')
 assert.match(section, /learner_teacher_fallback/, 'teacher name fallback while loading')
 assert.match(section, /support-thread-update/, 'thread updates emit to parent store')
 assert.doesNotMatch(section, /this\.support\s*=\s*\{/, 'must not mutate support prop locally')

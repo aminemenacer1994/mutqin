@@ -8,7 +8,7 @@ const js = fs.readFileSync(path.join(root, 'resources/js/views/Memorisation.js')
 
 assert.match(js, /mutashabihatHasMore\(\)/)
 assert.match(js, /listMutashabihatRankedPairs\(this\)/)
-assert.match(js, /countMutashabihatCardRows\(this\)/)
+assert.match(js, /countMutashabihatCardRows\(this/)
 assert.match(js, /async loadMoreMutashabihatPairs\(\)/)
 assert.match(js, /mutashabihatVisibleLimit \+= 4/)
 

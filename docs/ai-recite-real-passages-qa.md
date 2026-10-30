@@ -1,6 +1,6 @@
 # AI Recite — Real Qur’an Passage QA
 
-Generated: 2026-10-27
+Generated: 2026-10-29
 
 Reference edition: **quran-uthmani** (Al Quran Cloud), with Mutqin assessment basmala stripping for surahs ≥ 2.
 Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat scoring.

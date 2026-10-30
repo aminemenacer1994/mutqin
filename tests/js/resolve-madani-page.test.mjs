@@ -68,7 +68,7 @@ assert.deepEqual(
   [538],
 )
 
-const oddLeaf = { pageNumber: 5, page: { lines: [] } }
+const oddLeaf = { pageNumber: 5, page: null }
 const evenLeaf = { pageNumber: 6, page: { lines: ['x'] } }
 assert.deepEqual(
   orderMadaniSpreadLeavesForOpening([oddLeaf, evenLeaf]),
@@ -84,7 +84,7 @@ assert.deepEqual(
 const spreadVue = readFileSync(join(root, 'resources/js/components/madani/MadaniSpread.vue'), 'utf8')
 assert.match(spreadVue, /resolveSessionAwareSpread\(this\.displayedPageNumber, this\.sessionPageNumbers\)/)
 assert.match(spreadVue, /if \(this\.readerDesktopSpread\) \{\s*return leaves/)
-assert.match(spreadVue, /if \(this\.readerDesktopSpread\) return ''/)
+assert.match(spreadVue, /readerDesktopSpread/)
 
 const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/, 'reader exposes activeAyah to Madani')

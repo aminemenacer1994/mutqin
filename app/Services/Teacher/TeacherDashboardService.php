@@ -766,21 +766,9 @@ class TeacherDashboardService
 
         $weeklyGoal = $dueThisWeek->count();
 
-        $weeklyCompleted = $dueThisWeek->filter(function (TeacherAssignmentRecipient $recipient) use ($statusValue) {
-            if ($statusValue($recipient) !== AssignmentStatus::Completed->value) {
-                return false;
-            }
-
-            $reviewState = $recipient->review_state instanceof \BackedEnum
-                ? $recipient->review_state->value
-                : (string) ($recipient->review_state ?? '');
-
-            if ($reviewState === 'approved') {
-                return true;
-            }
-
-            return $recipient->student_completed_at === null;
-        })->count();
+        $weeklyCompleted = $dueThisWeek->filter(
+            fn (TeacherAssignmentRecipient $recipient) => $statusValue($recipient) === AssignmentStatus::Completed->value,
+        )->count();
 
         $activeDaysThisWeek = UserSession::query()
             ->where('user_id', $user->id)

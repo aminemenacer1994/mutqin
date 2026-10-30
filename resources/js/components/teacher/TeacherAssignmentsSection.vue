@@ -228,7 +228,7 @@ import {
   taskStateFromTeacherItem,
   taskStateIcon,
   taskStateLabelKey,
-  teacherStatusToneFromDisplay,
+  teacherListStatusTone,
 } from '../../scripts/teacher/taskState'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
@@ -347,7 +347,7 @@ export default {
             canManage: Boolean(row.can_manage) && !assignment.learning_group_id && recipients.length === 1 && recipientIndex === 0,
             status,
             taskStateDisplay: displayState,
-            statusTone: teacherStatusToneFromDisplay(displayState),
+            statusTone: teacherListStatusTone(recipient, displayState),
             statusIcon: `bi ${taskStateIcon(displayState)}`,
             statusLabel: recipient.review_state === 'needs_correction'
               ? this.t('teacher.status_needs_correction')
@@ -529,7 +529,7 @@ export default {
       this.messageItem.statusLabel = recipient.review_state === 'needs_correction'
         ? this.t('teacher.status_needs_correction')
         : this.t(taskStateLabelKey(displayState))
-      this.messageItem.statusTone = teacherStatusToneFromDisplay(displayState)
+      this.messageItem.statusTone = teacherListStatusTone(recipient, displayState)
       this.messageItem.statusIcon = `bi ${taskStateIcon(displayState)}`
       this.messageItem.taskStateDisplay = displayState
     },

@@ -8,6 +8,10 @@ import {
   completionResultLink,
   completionScoreBand,
   isDueThisWeek,
+  isLearnerSubmitted,
+  isLearnerTaskApproved,
+  learnerCompletedPerformanceLabel,
+  learnerNeedsCorrection,
   learnerPrimaryActionKey,
   learnerTaskAttemptCount,
   learnerWeeklyProgressFromAssignments,
@@ -114,6 +118,16 @@ assert.equal(weekly.total, 3)
 assert.equal(weekly.percent, 67)
 
 assert.equal(learnerPrimaryActionKey({ review_state: 'needs_correction' }), 'redo')
+
+assert.equal(isLearnerTaskApproved({ status: 'completed', review_state: 'approved' }), true)
+assert.equal(isLearnerTaskApproved({ status: 'awaiting_confirmation', review_state: 'submitted' }), false)
+assert.equal(isLearnerSubmitted({ status: 'awaiting_confirmation', review_state: 'submitted' }), true)
+assert.equal(
+  isLearnerSubmitted({ status: 'in_progress', review_state: 'needs_correction' }),
+  false,
+)
+assert.equal(learnerNeedsCorrection({ review_state: 'needs_correction' }), true)
+
 assert.equal(completionScoreBand(100), 'high')
 assert.equal(completionScoreBand(90), 'high')
 assert.equal(completionScoreBand(88), 'mid')
@@ -123,6 +137,10 @@ const upcomingRows = [
   { id: 1, status: 'pending', assignment: { due_at: '2026-03-20T00:00:00Z' } },
   { id: 2, status: 'pending', assignment: { due_at: '2026-03-22T00:00:00Z' } },
 ]
+assert.equal(
+  shouldShowUpcomingPanel([upcomingRows[0]], () => false, [], fixedNow),
+  true,
+)
 assert.equal(shouldShowUpcomingPanel([upcomingRows[0]], () => false, [1]), false)
 assert.equal(
   shouldShowUpcomingPanel(upcomingRows, (row) => row.status === 'completed', [1], fixedNow),
@@ -146,5 +164,18 @@ assert.match(aiSummary.label, /Good/)
 assert.equal(learnerTaskAttemptCount({ progress: { activity_count: 2 } }), 2)
 assert.equal(learnerTaskAttemptCount({ last_attempt: { attempt_number: 3 } }), 3)
 assert.equal(learnerTaskAttemptCount({}), 0)
+
+assert.equal(
+  learnerCompletedPerformanceLabel(
+    { completion_result: { accuracy_percent: 90 }, progress: { activity_count: 1 } },
+    t,
+  ),
+  'teacher.learner_assignments_done_score:{"n":90}',
+)
+
+assert.equal(
+  learnerCompletedPerformanceLabel({ progress: { activity_count: 1 } }, t),
+  'teacher.learner_assignments_done_passed_first:{}',
+)
 
 console.log('learner-dashboard-ux.test.mjs: ok')

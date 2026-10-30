@@ -1,4 +1,4 @@
-import { HAFS_AYAH_COUNTS_PER_SURAH } from '../mutashabihat/hafsAyahCounts'
+import { HAFS_AYAH_COUNTS_PER_SURAH } from '../mutashabihat/hafsAyahCounts.js'
 
 /** Teacher-facing task choices mapped to existing kind + hifz_category values. */
 export const TEACHER_TASK_TYPES = [

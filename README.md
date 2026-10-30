@@ -72,7 +72,7 @@ composer test
 composer test:quran-integrity
 npm run test:quran-integrity
 
-# JavaScript unit tests
+# JavaScript unit tests (all tests/js/*.test.mjs except Playwright integration suites)
 npm run test:mutqin
 node tests/js/billing.test.mjs
 

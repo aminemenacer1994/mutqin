@@ -59,7 +59,7 @@ assert.equal(reloaded.activeVerseKey, '2:30')
 assert.equal(reloaded.page, index['2:30'])
 assert.notEqual(reloaded.page, 1)
 assert.notEqual(reloaded.page, 50)
-assert.deepEqual(reloaded.visiblePages, [5, 6])
+assert.deepEqual(reloaded.visiblePages, [6])
 
 const paused = resolveMadaniResumeView({
   ...sitting,
@@ -113,7 +113,7 @@ const desktop = resolveMadaniResumeView(sitting, { index, viewportWidth: 1400 })
 assert.equal(mobile.activeVerseKey, desktop.activeVerseKey)
 assert.equal(mobile.page, desktop.page)
 assert.deepEqual(mobile.visiblePages, [mobile.page])
-assert.deepEqual(desktop.visiblePages, [5, 6])
+assert.deepEqual(desktop.visiblePages, [6])
 const fingerprint = buildMadaniAutosaveFingerprint(sitting)
 assert.equal(buildMadaniAutosaveFingerprint({ ...sitting, qpcMadaniPinnedPage: 12 }), fingerprint)
 assert.equal(shouldWriteMadaniAutosave({

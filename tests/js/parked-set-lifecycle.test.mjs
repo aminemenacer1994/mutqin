@@ -249,7 +249,7 @@ const t = (key) => {
   assert.match(source, /clearContinueSession\(\)/)
   assert.match(
     en.memorisation?.welcomeBack?.continuePreviousSession || '',
-    /Return to this set/,
+    /Return to your place/,
   )
   assert.equal(en.memorisation?.postSession?.actions?.returnToWorkspace, 'Back to mushaf')
 }

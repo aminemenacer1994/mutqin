@@ -192,3 +192,9 @@ export function teacherStatusToneFromDisplay(displayState) {
   if (displayState === TASK_STATE.IN_PROGRESS) return 'mid'
   return 'muted'
 }
+
+/** Teacher assignment list row tone — matches learner correction emphasis. */
+export function teacherListStatusTone(row, displayState) {
+  if (row?.review_state === 'needs_correction') return 'danger'
+  return teacherStatusToneFromDisplay(displayState)
+}

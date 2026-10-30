@@ -169,11 +169,11 @@ assert.match(lineVue, /qpc-madani-surah-name[\s\S]*margin-inline:\s*auto/)
 assert.doesNotMatch(lineVue, /qpc-madani-surah-header__frame/)
 assert.match(lineVue, /MadaniSurahHeading/, 'IndoPak uses MadaniSurahHeading for surah_name')
 assert.match(lineVue, /isIndopakLayout/, 'Surah heading is layout-gated so Madani stays on the simple header')
-assert.match(pageVue, /Math\.min\(cap \* requested, widthFit\)/)
+assert.match(pageVue, /Math\.min\(cap \* scale, widthFit/)
 assert.match(pageVue, /desktopSpreadStableWordSize/)
 assert.match(
   memorisationCss,
-  /grid-template-columns:\s*2\.75rem minmax\(0, 1fr\) 2\.75rem/,
+  /grid-template-columns:\s*minmax\(2\.75rem, 1fr\) minmax\(0, 56rem\) minmax\(2\.75rem, 1fr\)/,
   'desktop mushaf stage keeps a fixed three-column layout',
 )
 assert.doesNotMatch(memorisationJs, /scale \* 1\.72/)

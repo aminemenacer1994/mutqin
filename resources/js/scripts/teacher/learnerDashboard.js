@@ -109,6 +109,12 @@ export function buildAllTabList(groups, preview = ALL_TAB_COMPLETED_PREVIEW) {
   }
 }
 
+export function sortLearnerCompletedAssignments(assignments, isTeacherApproved = isLearnerTaskApproved) {
+  return (Array.isArray(assignments) ? assignments : [])
+    .filter(isTeacherApproved)
+    .sort((a, b) => completedSortKey(b) - completedSortKey(a) || Number(b.id) - Number(a.id))
+}
+
 /**
  * Earliest pending assignment for "Next:" line.
  */
@@ -125,6 +131,15 @@ export function daysUntilDueLabel(dueAt, now = new Date()) {
 /** Matches LearnerTeacherSection tab "Done" semantics. */
 export function isLearnerTaskApproved(row) {
   return row?.status === 'completed' && (row?.review_state === 'approved' || !row?.student_submitted_at)
+}
+
+export function isLearnerSubmitted(row) {
+  if (row?.review_state === 'needs_correction') return false
+  return row?.status === 'awaiting_confirmation' || row?.review_state === 'submitted'
+}
+
+export function learnerNeedsCorrection(row) {
+  return row?.review_state === 'needs_correction'
 }
 
 /**
@@ -167,6 +182,24 @@ export function learnerTaskAttemptCount(row) {
   if (fromLast > 0) return fromLast
   const fromResult = Number(row?.completion_result?.attempt?.attempt_number ?? 0)
   return fromResult > 0 ? fromResult : 0
+}
+
+/**
+ * Middle segment for approved task meta, e.g. "Score: 90%" or "Passed (1st try)".
+ */
+export function learnerCompletedPerformanceLabel(row, t, tp) {
+  const result = row?.completion_result
+  const raw = result?.accuracy_percent
+  if (raw !== null && raw !== undefined && !Number.isNaN(Number(raw))) {
+    return t('teacher.learner_assignments_done_score', { n: Math.round(Number(raw)) })
+  }
+  const attempts = learnerTaskAttemptCount(row) || 1
+  if (attempts === 1) return t('teacher.learner_assignments_done_passed_first')
+  if (attempts === 2) return t('teacher.learner_assignments_done_passed_second')
+  if (typeof tp === 'function') {
+    return tp('teacher.learner_assignments_done_passed_tries', attempts, { n: attempts })
+  }
+  return t('teacher.learner_assignments_done_passed_tries_other', { n: attempts })
 }
 
 /** @returns {'redo'|'resume'|'start'} */

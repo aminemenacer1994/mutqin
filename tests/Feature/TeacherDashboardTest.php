@@ -971,6 +971,68 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(AssignmentStatus::Completed->value, $tasks[0]['status']);
     }
 
+    public function test_correction_request_survives_status_refresh_for_teacher_and_learner(): void
+    {
+        [$teacher, $student] = $this->classroom();
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+
+        $recipientId = $created['recipients'][0]['id'];
+
+        $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))->assertOk();
+        $session = $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'assignment-correction-session',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk()->json('session');
+        $this->actingAs($student)->postJson(route('api.session.end'), [
+            'session_id' => $session['id'],
+            'idempotency_key' => 'assignment-correction-session-end',
+            'range_complete' => true,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk();
+
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.complete', $recipientId))
+            ->assertOk();
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.correction', $recipientId), [
+                'note' => 'Repeat ayah 3',
+            ])
+            ->assertOk();
+
+        $learnerSupport = $this->actingAs($student)
+            ->getJson(route('api.me.support'))
+            ->assertOk()
+            ->json();
+
+        $learnerRow = collect($learnerSupport['assignments'] ?? [])
+            ->firstWhere('id', $recipientId);
+        $this->assertNotNull($learnerRow);
+        $this->assertSame(AssignmentStatus::InProgress->value, $learnerRow['status']);
+        $this->assertSame('needs_correction', $learnerRow['review_state']);
+
+        $teacherRows = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.assignments'))
+            ->assertOk()
+            ->json('data');
+
+        $teacherRecipient = $teacherRows[0]['recipients'][0];
+        $this->assertSame(AssignmentStatus::InProgress->value, $teacherRecipient['status']);
+        $this->assertSame('needs_correction', $teacherRecipient['review_state']);
+    }
+
     public function test_student_and_teacher_can_exchange_messages_on_the_assigned_task(): void
     {
         Storage::fake('user_files');

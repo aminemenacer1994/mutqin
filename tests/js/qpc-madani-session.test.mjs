@@ -41,6 +41,6 @@ assert.match(memorisationVue, /:range-start-ayah="''"/)
 assert.match(memorisationVue, /:range-end-ayah="''"/)
 assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/)
 assert.match(memorisationJs, /qpcMadaniSessionStartAyah\(\)[\s\S]{0,220}rangeStart/)
-assert.match(memorisationJs, /qpcMadaniCurrentPage\(\)[\s\S]{0,520}resolveQpcMadaniPageForVerseKey/)
+assert.match(memorisationJs, /qpcMadaniCurrentPage\(\)[\s\S]{0,800}resolveMushafPageForVerseKey/)
 
 console.log('qpc-madani-session.test.mjs: ok')

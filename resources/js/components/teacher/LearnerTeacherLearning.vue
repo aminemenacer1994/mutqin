@@ -4,43 +4,94 @@
     :class="{ 'is-drawer': variant === 'drawer' }"
     :aria-label="panelAriaLabel"
   >
-    <header class="learner-teacher__feedback-head">
-      <h3 class="learner-teacher__section-title">{{ panelTitle }}</h3>
-      <span v-if="unreadCount" class="learner-teacher__feedback-new">
-        {{ ldtp('teacher.learner_feedback_unread', unreadCount) }}
-      </span>
+    <header class="learner-teacher__feedback-head" :class="{ 'is-collapsible': mobileCollapsible && variant !== 'drawer' }">
+      <button
+        v-if="mobileCollapsible && variant !== 'drawer'"
+        type="button"
+        class="learner-teacher__panel-toggle"
+        :aria-expanded="panelOpen ? 'true' : 'false'"
+        :aria-controls="panelBodyId"
+        @click="panelOpen = !panelOpen"
+      >
+        <span class="learner-teacher__panel-toggle-label">
+          <span class="learner-teacher__sidebar-panel-icon" aria-hidden="true"><i class="bi bi-chat-left-quote"></i></span>
+          <h3 class="learner-teacher__section-title">{{ panelTitle }}</h3>
+          <span v-if="unreadCount" class="learner-teacher__feedback-new">
+            {{ ldtp('teacher.learner_feedback_unread', unreadCount) }}
+          </span>
+        </span>
+        <i class="bi learner-teacher__panel-toggle-icon" :class="panelOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+      </button>
+      <template v-else>
+        <span class="learner-teacher__sidebar-panel-icon" aria-hidden="true"><i class="bi bi-chat-left-quote"></i></span>
+        <h3 class="learner-teacher__section-title">{{ panelTitle }}</h3>
+        <span v-if="unreadCount" class="learner-teacher__feedback-new">
+          {{ ldtp('teacher.learner_feedback_unread', unreadCount) }}
+        </span>
+      </template>
     </header>
 
-    <p v-if="!feedbackItems.length" class="learner-teacher__feedback-empty">
-      {{ t('teacher.learner_feedback_empty') }}
+    <div
+      v-show="variant === 'drawer' || !mobileCollapsible || panelOpen"
+      :id="panelBodyId"
+      class="learner-teacher__panel-body"
+    >
+    <p v-if="pending" class="learner-teacher__feedback-state is-loading" role="status" aria-live="polite">
+      <span class="learner-teacher__feedback-skeleton" aria-hidden="true">
+        <span class="learner-teacher__feedback-skeleton-line is-wide"></span>
+        <span class="learner-teacher__feedback-skeleton-line"></span>
+        <span class="learner-teacher__feedback-skeleton-line is-short"></span>
+      </span>
+      <span class="learner-teacher__feedback-state-label">{{ t('teacher.loading') }}</span>
     </p>
 
+    <div v-else-if="!feedbackItems.length" class="learner-teacher__feedback-state is-empty">
+      <span class="learner-teacher__feedback-empty-icon" aria-hidden="true">
+        <i class="bi bi-chat-left-quote"></i>
+      </span>
+      <p class="learner-teacher__feedback-empty">{{ t('teacher.learner_feedback_empty') }}</p>
+    </div>
+
     <ul v-else class="learner-teacher__feedback-grid">
-      <li v-for="item in feedbackPreview" :key="`fb-${item.id}`">
-        <button
-          type="button"
-          class="learner-teacher__feedback-card"
-          :class="{ 'is-unread': item.unread, 'is-read': !item.unread && item.read_at }"
-          @click="$emit('open-feedback', item)"
-        >
-          <span class="learner-teacher__feedback-icon" aria-hidden="true">
-            <i class="bi bi-chat-left-quote"></i>
-          </span>
-          <span class="learner-teacher__feedback-body">
-            <span class="learner-teacher__feedback-top">
-              <strong>{{ item.task_title || t('teacher.feedback') }}</strong>
-              <span v-if="item.unread" class="learner-teacher__dot" :aria-label="t('teacher.unread')"></span>
+      <li
+        v-for="item in feedbackPreview"
+        :key="`fb-${item.id}`"
+        class="learner-teacher__feedback-item"
+        :class="{ 'is-unread': item.unread, 'is-read': !item.unread && item.read_at }"
+      >
+        <div class="learner-teacher__feedback-row">
+          <button
+            type="button"
+            class="learner-teacher__feedback-main-hit"
+            @click="$emit('open-feedback', item)"
+          >
+            <span class="learner-teacher__feedback-icon" aria-hidden="true">
+              <i class="bi bi-chat-left-quote"></i>
             </span>
-            <span class="learner-teacher__feedback-sender">
-              {{ item.teacher_name || t('teacher.teacher') }}
-              <time>{{ formatWhen(item.created_at) }}</time>
+            <span class="learner-teacher__feedback-body">
+              <span class="learner-teacher__feedback-top">
+                <strong>{{ item.task_title || t('teacher.feedback') }}</strong>
+                <span v-if="item.unread" class="learner-teacher__dot" :aria-label="t('teacher.unread')"></span>
+              </span>
+              <span class="learner-teacher__feedback-sender">
+                {{ item.teacher_name || t('teacher.teacher') }}
+                <time>{{ formatWhen(item.created_at) }}</time>
+              </span>
+              <p class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</p>
             </span>
-            <p class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</p>
-          </span>
-          <i class="bi bi-chevron-right learner-teacher__feedback-go" aria-hidden="true"></i>
-        </button>
+          </button>
+          <button
+            type="button"
+            class="learner-teacher__feedback-action"
+            @click="$emit('open-feedback', item)"
+          >
+            <i class="bi" :class="actionIcon(item)" aria-hidden="true"></i>
+            {{ actionLabel(item) }}
+          </button>
+        </div>
       </li>
     </ul>
+    </div>
   </section>
 </template>
 
@@ -58,8 +109,24 @@ export default {
   props: {
     learning: { type: Object, default: null },
     variant: { type: String, default: 'panel' },
+    pending: { type: Boolean, default: false },
+    mobileCollapsible: { type: Boolean, default: false },
   },
   emits: ['open-feedback'],
+  data() {
+    return {
+      panelOpen: true,
+      panelBodyId: `learner-feedback-panel-${Math.random().toString(36).slice(2, 9)}`,
+    }
+  },
+  watch: {
+    mobileCollapsible: {
+      handler(value) {
+        this.panelOpen = !value
+      },
+      immediate: true,
+    },
+  },
   computed: {
     feedbackItems() {
       const raw = Array.isArray(this.learning?.feedback_inbox) ? this.learning.feedback_inbox : []
@@ -94,6 +161,14 @@ export default {
     formatWhen(value) {
       const locale = this.learnerLocale
       return formatLearnerDisplayDate(value, this.t.bind(this), locale)
+    },
+    actionLabel(item) {
+      return item?.unread
+        ? this.t('teacher.learner_feedback_read_now')
+        : this.t('teacher.learner_view_feedback')
+    },
+    actionIcon(item) {
+      return item?.unread ? 'bi-envelope-open' : 'bi-chat-square-text'
     },
   },
 }

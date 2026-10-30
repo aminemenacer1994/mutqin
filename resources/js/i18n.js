@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n'
-import enMessages from './locales/en.json'
-import { wrapChunkImport } from './utils/chunkLoadRecovery'
+import enMessages from './locales/en.json' with { type: 'json' }
+import { wrapChunkImport } from './utils/chunkLoadRecovery.js'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
 /** Locales shown in the UI language switcher. */

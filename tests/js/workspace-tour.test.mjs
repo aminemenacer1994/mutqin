@@ -464,3 +464,5 @@ function sliceMethod(source, name) {
   assert.match(advance, /step\.key === 'ai'/)
   assert.doesNotMatch(advance, /findIndex\(\(step\) => step\.key === 'plan'\)/)
 }
+
+console.log('workspace-tour.test.mjs: ok')

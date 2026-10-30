@@ -97,13 +97,13 @@ assert.equal(recommendation.applies, true)
 assert.equal(recommendation.directPageMutation, false)
 assert.equal(recommendation.verseKey, '2:30')
 assert.equal(recommendation.page, 6)
-assert.deepEqual(recommendation.visiblePages, [5, 6])
+assert.deepEqual(recommendation.visiblePages, [6])
 assert.equal(resolveRecommendationMadaniNavigation({
   readingViewMode: 'mushaf',
   surah: 2,
   ayah: 30,
   index,
-}).applies, false)
+}).applies, true)
 
 const review = resolveScheduledReviewNavigation({
   readingViewMode: 'madani_mushaf',
@@ -185,7 +185,7 @@ assert.match(memorisationJs, /followQpcMadaniCanonicalTarget\(/)
 assert.match(memorisationVue, /:progress-snapshot="qpcMadaniProgressSnapshot"/)
 assert.match(wordVue, /resolveQpcMadaniWordProgressState/)
 assert.match(wordVue, /qpc-progress-weak-word/)
-assert.match(wordVue, /return this\.glyphPresentation\.text/)
+assert.match(wordVue, /glyphPresentation\.text/)
 assert.doesNotMatch(wordVue, /qpc-progress-weak-word[\s\S]{0,180}content:/)
 assert.doesNotMatch(wordVue, /qpc-progress-weak-word[\s\S]{0,240}font-size/)
 

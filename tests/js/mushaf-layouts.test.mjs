@@ -23,7 +23,7 @@ assert.deepEqual(listMushafLayouts().map((layout) => layout.id), ['madani-v2', '
 assert.ok(isMushafLayoutId('indopak-15-qudratullah'))
 assert.equal(isMushafLayoutId('unknown'), false)
 
-assert.equal(madani.name, 'Madani')
+assert.equal(madani.name, 'KFGQPC V2 (1421H)')
 assert.equal(madani.variant, 'V2')
 assert.equal(madani.pageCount, 604)
 assert.equal(madani.defaultLinesPerPage, 15)
@@ -31,7 +31,7 @@ assert.equal(madani.direction, 'rtl')
 assert.equal(madani.fontFamily, 'QCF2')
 
 assert.equal(indopak.id, 'indopak-15-qudratullah')
-assert.equal(indopak.name, 'IndoPak 15 Lines')
+assert.equal(indopak.name, 'Indopak 15 lines (Qudratullah)')
 assert.equal(indopak.variant, 'Qudratullah')
 assert.equal(indopak.pageCount, 610)
 assert.equal(indopak.defaultLinesPerPage, 15)

@@ -252,6 +252,14 @@ class TeacherAssignmentService
                     continue;
                 }
 
+                $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+                $awaitingTeacherCorrection = $current === AssignmentStatus::InProgress
+                    && ! empty($evidence['correction_requested_at']);
+
+                if ($awaitingTeacherCorrection) {
+                    continue;
+                }
+
                 if ($current !== AssignmentStatus::AwaitingConfirmation) {
                     $recipient->forceFill([
                         'status' => AssignmentStatus::AwaitingConfirmation->value,

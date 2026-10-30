@@ -27,8 +27,9 @@ export function buildUpcomingAssignments(assignments, isComplete, max = 3, optio
  * @param {Date} [now]
  */
 export function shouldShowUpcomingPanel(assignments, isComplete, todoIds = [], now = new Date()) {
-  if (!Array.isArray(assignments) || assignments.length <= 1) return false
-  return buildUpcomingAssignments(assignments, isComplete, 1, { excludeTodoIds: todoIds, now }).length > 0
+  void todoIds
+  if (!Array.isArray(assignments) || assignments.length === 0) return false
+  return buildUpcomingAssignments(assignments, isComplete, 1, { now }).length > 0
 }
 
 export function dueDaysFromNow(dueAt, now = new Date()) {
@@ -38,4 +39,13 @@ export function dueDaysFromNow(dueAt, now = new Date()) {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const end = new Date(due.getFullYear(), due.getMonth(), due.getDate())
   return Math.round((end - start) / 86400000)
+}
+
+/** @returns {'start'|'review'} */
+export function upcomingTaskActionKey(row) {
+  if (!row || typeof row !== 'object') return 'start'
+  if (row?.progress?.resume_available || row?.status === 'in_progress' || row?.started_at) {
+    return 'review'
+  }
+  return 'start'
 }

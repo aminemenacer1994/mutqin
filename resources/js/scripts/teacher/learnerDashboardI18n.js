@@ -1,4 +1,4 @@
-import enMessages from '../../locales/en.json'
+import enMessages from '../../locales/en.json' with { type: 'json' }
 import { formatIcuPluralMessage, formatNamedParams, pluralFormForCount } from '../../utils/icuPluralFormat.js'
 import { unwrapLocale } from '../../utils/i18nFormat.js'
 
