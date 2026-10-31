@@ -1,6 +1,6 @@
 require('./bootstrap.js');
 
-import { createApp, defineAsyncComponent } from 'vue';
+import { createApp, defineAsyncComponent, h } from 'vue';
 import NetworkStatusBanner from './components/NetworkStatusBanner.vue';
 import { setupI18n, setLocale, resolveEnMessage } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
@@ -87,6 +87,24 @@ if (typeof window !== 'undefined') {
     } catch (_) { /* best-effort */ }
 })();
 
+function bootFallbackVnode(title, description) {
+    return h('div', {
+        class: 'memorisation-boot-fallback',
+        role: 'status',
+        'aria-live': 'polite',
+    }, [
+        h('div', { class: 'memorisation-boot-card' }, [
+            h('div', { class: 'memorisation-boot-card__icon', 'aria-hidden': 'true' }, [
+                h('i', { class: 'bi bi-hourglass-split' }),
+            ]),
+            h('div', { class: 'memorisation-boot-card__copy' }, [
+                h('strong', title),
+                h('p', description),
+            ]),
+        ]),
+    ]);
+}
+
 const PageBootFallback = {
     computed: {
         loadingTitle() {
@@ -96,19 +114,9 @@ const PageBootFallback = {
             return this.t('common.status.loadingDesc');
         },
     },
-    template: `
-        <div class="memorisation-boot-fallback" role="status" aria-live="polite">
-            <div class="memorisation-boot-card">
-                <div class="memorisation-boot-card__icon" aria-hidden="true">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-                <div class="memorisation-boot-card__copy">
-                    <strong>{{ loadingTitle }}</strong>
-                    <p>{{ loadingDesc }}</p>
-                </div>
-            </div>
-        </div>
-    `,
+    render() {
+        return bootFallbackVnode(this.loadingTitle, this.loadingDesc);
+    },
 };
 
 const MemorisationBootFallback = {
@@ -120,19 +128,9 @@ const MemorisationBootFallback = {
             return this.t('memorisation.a11y.workspacePreparing');
         },
     },
-    template: `
-        <div class="memorisation-boot-fallback" role="status" aria-live="polite">
-            <div class="memorisation-boot-card">
-                <div class="memorisation-boot-card__icon" aria-hidden="true">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-                <div class="memorisation-boot-card__copy">
-                    <strong>{{ loadingTitle }}</strong>
-                    <p>{{ loadingDesc }}</p>
-                </div>
-            </div>
-        </div>
-    `,
+    render() {
+        return bootFallbackVnode(this.loadingTitle, this.loadingDesc);
+    },
 };
 
 /**

@@ -1,3 +1,4 @@
+import { h } from 'vue'
 import { isBrowserOffline } from '../utils/networkStatus'
 import { clearChunkReloadFlag } from '../utils/chunkLoadRecovery'
 import { classifyAsyncLoadError, logAsyncLoadError } from '../utils/asyncLoadError'
@@ -65,23 +66,33 @@ export default {
             window.removeEventListener('offline', this.onlineHandler)
         }
     },
-    template: `
-        <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
-            <div class="memorisation-boot-card">
-                <div class="memorisation-boot-card__icon" aria-hidden="true">
-                    <i class="bi" :class="offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'"></i>
-                </div>
-                <div class="memorisation-boot-card__copy">
-                    <strong>{{ title }}</strong>
-                    <p>{{ description }}</p>
-                </div>
-                <div class="memorisation-boot-actions">
-                    <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" @click="reload">{{ retryLabel }}</button>
-                    <a class="memorisation-boot-btn memorisation-boot-btn--secondary" href="/">{{ returnHomeLabel }}</a>
-                </div>
-            </div>
-        </div>
-    `,
+    render() {
+        return h('div', {
+            class: 'memorisation-boot-fallback memorisation-boot-fallback-error',
+            role: 'alert',
+        }, [
+            h('div', { class: 'memorisation-boot-card' }, [
+                h('div', { class: 'memorisation-boot-card__icon', 'aria-hidden': 'true' }, [
+                    h('i', { class: ['bi', this.offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'] }),
+                ]),
+                h('div', { class: 'memorisation-boot-card__copy' }, [
+                    h('strong', this.title),
+                    h('p', this.description),
+                ]),
+                h('div', { class: 'memorisation-boot-actions' }, [
+                    h('button', {
+                        type: 'button',
+                        class: 'memorisation-boot-btn memorisation-boot-btn--primary',
+                        onClick: () => this.reload(),
+                    }, this.retryLabel),
+                    h('a', {
+                        class: 'memorisation-boot-btn memorisation-boot-btn--secondary',
+                        href: '/',
+                    }, this.returnHomeLabel),
+                ]),
+            ]),
+        ])
+    },
     methods: {
         reload() {
             clearChunkReloadFlag()

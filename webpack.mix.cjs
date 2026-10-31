@@ -265,7 +265,7 @@ mix.js('resources/js/app.js', 'public/js')
    // styles instead of injecting them into the route's JavaScript bundle so
    // the browser can fetch CSS in parallel and reach an interactive workspace
    // sooner.
-   .vue({ extractStyles: 'css/vue-styles.css' })
+   .vue({ extractStyles: 'css/vue-styles.css', runtimeOnly: true })
    .sass('resources/sass/app.scss', 'public/css')
    .sass('resources/sass/teacher-dashboard.scss', 'public/css')
    .options({
