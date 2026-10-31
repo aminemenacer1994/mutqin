@@ -725,7 +725,7 @@
           </template>
 
           <template v-else-if="directoryTab === 'waiting'">
-            <WaitingListAnalytics ref="waitingAnalytics" />
+            <WaitingListAnalytics ref="waitingAnalytics" :show-launch-email="canManageWaitlistLaunchEmail" />
             <div class="admin-toolbar">
               <div class="admin-toolbar__row">
                 <div class="admin-toolbar__search-wrap">
@@ -1854,6 +1854,9 @@ export default {
     },
     contactInboxUrl() {
       return this.auth?.contact_inbox_url || this.data?.contacts?.view_all_href || '/admin/contact-messages'
+    },
+    canManageWaitlistLaunchEmail() {
+      return this.data?.meta?.capabilities?.waitlist_launch_email === true
     },
     snapshotCards() {
       const snapshot = this.data?.snapshot || {}

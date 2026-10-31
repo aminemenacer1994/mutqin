@@ -26,7 +26,7 @@ class WaitingListLaunchEmailTest extends TestCase
         config()->set('mutqin.waiting_list.launch_email.campaign_key', 'waitlist_launch_2026');
     }
 
-    public function test_launch_email_preview_requires_admin(): void
+    public function test_launch_email_preview_requires_super_admin(): void
     {
         $this->getJson(route('api.admin.waiting-list.launch-email.preview'))
             ->assertUnauthorized();
@@ -190,7 +190,10 @@ class WaitingListLaunchEmailTest extends TestCase
         $html = $mail->render();
 
         $this->assertStringContainsString('https://mutqin.ai', $html);
-        $this->assertStringContainsString('waiting-list/unsubscribe', $html);
         $this->assertStringContainsString(__('mail.waitlist_launch_subject'), $html);
+        $this->assertStringContainsString('Amina', $html);
+        $this->assertStringNotContainsString('waiting list', strtolower($html));
+        $this->assertStringNotContainsString('Unsubscribe', $html);
+        $this->assertStringNotContainsString('signed up at mutqin.ai', strtolower($html));
     }
 }

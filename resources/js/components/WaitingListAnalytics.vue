@@ -1,5 +1,5 @@
 <template>
-  <WaitingListLaunchEmail />
+  <WaitingListLaunchEmail v-if="showLaunchEmail" />
   <section class="waiting-analytics" aria-labelledby="waiting-analytics-title">
     <header class="waiting-analytics__head">
       <div>
@@ -47,6 +47,12 @@ import WaitingListLaunchEmail from './WaitingListLaunchEmail.vue'
 
 export default {
   components: { WaitingListLaunchEmail },
+  props: {
+    showLaunchEmail: {
+      type: Boolean,
+      default: false,
+    },
+  },
   setup() {
     const { t } = useI18n()
     return { t }

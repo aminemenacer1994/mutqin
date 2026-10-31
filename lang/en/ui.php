@@ -246,7 +246,7 @@ return [
     'waiting_list_email_disposable' => 'Please use a personal or work email address we can reach you on.',
     'waiting_list_email_unreachable' => 'That email domain does not look reachable. Check for typos or try another address.',
     'waiting_list_unsubscribed_title' => 'You’re unsubscribed',
-    'waiting_list_unsubscribed_body' => 'We won’t send you further waiting-list emails from Mutqin. You can still visit mutqin.ai anytime.',
+    'waiting_list_unsubscribed_body' => 'We won’t send you further launch updates from Mutqin. You can still visit mutqin.ai anytime.',
     'contact_message_sent' => 'Your message has been sent successfully.',
     'contact_name_required' => 'Please enter your name.',
     'contact_email_required' => 'Please enter your email address.',

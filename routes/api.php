@@ -78,12 +78,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
         Route::get('/admin/waiting-list', [AdminWaitingListController::class, 'index'])->name('api.admin.waiting-list.index');
         Route::get('/admin/waiting-list/analytics', [AdminWaitingListController::class, 'analytics'])->name('api.admin.waiting-list.analytics');
-        Route::get('/admin/waiting-list/launch-email/preview', [AdminWaitingListController::class, 'launchEmailPreview'])
-            ->name('api.admin.waiting-list.launch-email.preview');
-        Route::get('/admin/waiting-list/launch-email/status', [AdminWaitingListController::class, 'launchEmailStatus'])
-            ->name('api.admin.waiting-list.launch-email.status');
-        Route::post('/admin/waiting-list/launch-email/send', [AdminWaitingListController::class, 'launchEmailSend'])
-            ->name('api.admin.waiting-list.launch-email.send');
+        Route::middleware('can:manage-waitlist-launch-email')->group(function () {
+            Route::get('/admin/waiting-list/launch-email/preview', [AdminWaitingListController::class, 'launchEmailPreview'])
+                ->name('api.admin.waiting-list.launch-email.preview');
+            Route::get('/admin/waiting-list/launch-email/status', [AdminWaitingListController::class, 'launchEmailStatus'])
+                ->name('api.admin.waiting-list.launch-email.status');
+            Route::post('/admin/waiting-list/launch-email/send', [AdminWaitingListController::class, 'launchEmailSend'])
+                ->name('api.admin.waiting-list.launch-email.send');
+        });
         Route::get('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'show'])
             ->whereNumber('entry')
             ->name('api.admin.waiting-list.show');

@@ -61,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
             return $user instanceof User && $user->isAdmin();
         });
 
+        Gate::define('manage-waitlist-launch-email', function ($user) {
+            return $user instanceof User && $user->isSuperAdmin();
+        });
+
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);

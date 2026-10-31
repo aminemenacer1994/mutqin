@@ -328,6 +328,15 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function isAdmin(): bool
     {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Platform super admin (Mutqin ops console). Sensitive bulk actions such as
+     * waiting-list launch email require this role explicitly.
+     */
+    public function isSuperAdmin(): bool
+    {
         // Privilege is the persisted role flag — never granted from a request email.
         if (! $this->hasPersistedAdminRole()) {
             return false;

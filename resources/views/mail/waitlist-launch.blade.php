@@ -1,13 +1,33 @@
 @extends('mail.layout')
 
+@push('email-head')
+        .email-wordmark,
+        .email-heading,
+        .email-tagline,
+        .email-body-copy { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important; }
+        .email-heading { font-weight: 600 !important; }
+@endpush
+
 @section('title', __('mail.waitlist_launch_subject'))
 @section('preheader', __('mail.waitlist_launch_preheader'))
 @section('heading', __('mail.waitlist_launch_heading'))
 
 @section('content')
-<p style="margin:0 0 16px;">{{ __('mail.waitlist_launch_greeting') }}</p>
+@php
+    $name = trim((string) ($recipientName ?? ''));
+    $useNamedGreeting = $name !== '' && strcasecmp($name, 'there') !== 0;
+    $copyFont = "font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;";
+@endphp
+<div class="email-launch">
+<p class="email-body-copy" style="margin:0 0 12px;{{ $copyFont }}">
+    @if ($useNamedGreeting)
+        {{ __('mail.waitlist_launch_greeting_named', ['name' => $name]) }}
+    @else
+        {{ __('mail.waitlist_launch_greeting') }}
+    @endif
+</p>
 
-<p style="margin:0 0 16px;">{{ __('mail.waitlist_launch_body') }}</p>
+<p class="email-body-copy" style="margin:0 0 20px;{{ $copyFont }}">{{ __('mail.waitlist_launch_body') }}</p>
 
 @include('mail.components.action', [
     'url' => $platformUrl,
@@ -15,17 +35,6 @@
     'fallbackIntro' => __('mail.waitlist_launch_fallback'),
 ])
 
-<p style="margin:0;">{{ __('mail.waitlist_launch_thanks') }}</p>
-<p style="margin:16px 0 0;font-weight:600;">{{ __('mail.waitlist_launch_signoff') }}</p>
-@endsection
-
-@section('footer')
-<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#8a9a92;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    {{ __('mail.waitlist_launch_footer') }}
-</p>
-@if (! empty($unsubscribeUrl))
-<p style="margin:0;font-size:12px;line-height:1.5;color:#8a9a92;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <a href="{{ $unsubscribeUrl }}" style="color:#1f6b4f;text-decoration:underline;">{{ __('mail.waitlist_launch_unsubscribe') }}</a>
-</p>
-@endif
+<p class="email-body-copy" style="margin:16px 0 0;{{ $copyFont }}">{{ __('mail.waitlist_launch_signoff') }}</p>
+</div>
 @endsection

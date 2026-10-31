@@ -42,12 +42,17 @@ class MailPreviewCommandTest extends TestCase
         $this->assertFileExists($directory.'/verify-en.txt');
         $this->assertFileExists($directory.'/reset-en.html');
         $this->assertFileExists($directory.'/reset-en.txt');
+        $this->assertFileExists($directory.'/launch-en.html');
+        $this->assertFileExists($directory.'/launch-en.txt');
 
         $html = File::get($directory.'/verify-en.html');
         $this->assertStringContainsString(__('mail.verify_action'), $html);
         $this->assertStringContainsString('v:roundrect', $html);
         $this->assertStringContainsString(TransactionalMail::previewActionUrls()['verify'], $html);
         $this->assertStringNotContainsString('{{', $html);
+
+        $launchHtml = File::get($directory.'/launch-en.html');
+        $this->assertStringNotContainsString('waiting list', strtolower($launchHtml));
 
         $this->assertSame(0, $this->sentMessageCount());
 

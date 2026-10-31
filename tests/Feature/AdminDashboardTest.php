@@ -149,6 +149,7 @@ class AdminDashboardTest extends TestCase
             ->getJson('/api/admin/dashboard?days=7')
             ->assertOk()
             ->assertJsonPath('data.meta.role', 'super_admin')
+            ->assertJsonPath('data.meta.capabilities.waitlist_launch_email', true)
             ->assertJsonPath('data.chart.days', 7)
             ->assertJsonPath('data.snapshot.pending_contacts.value', 1)
             ->assertJsonPath('data.snapshot.waiting_list_total.value', 1)

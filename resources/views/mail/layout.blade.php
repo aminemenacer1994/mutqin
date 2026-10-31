@@ -45,6 +45,7 @@
         }
         [data-ogsc] .email-bg { background-color: #141816 !important; }
         [data-ogsc] .email-card { background-color: #ffffff !important; }
+        @stack('email-head')
     </style>
 </head>
 <body id="body" class="email-bg" style="margin:0;padding:0;background-color:#eef3ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#123527;width:100%;">
@@ -90,15 +91,13 @@
                             @yield('content')
                         </td>
                     </tr>
+                    @hasSection('footer')
                     <tr>
                         <td class="email-pad" align="left" style="padding:0 40px 28px;">
-                            @hasSection('footer')
-                                @yield('footer')
-                            @else
-                                <p style="margin:0;font-size:12px;line-height:1.5;color:#8a9a92;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">{{ __('mail.footer') }}</p>
-                            @endif
+                            @yield('footer')
                         </td>
                     </tr>
+                    @endif
                 </table>
                 <table role="presentation" class="email-container" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;width:100%;border-collapse:collapse;">
                     <tr>

@@ -1,20 +1,20 @@
 @extends('mail.text.layout')
 
 @php
+    $name = trim((string) ($recipientName ?? ''));
+    $useNamedGreeting = $name !== '' && strcasecmp($name, 'there') !== 0;
+    $greeting = $useNamedGreeting
+        ? __('mail.waitlist_launch_greeting_named', ['name' => $name])
+        : __('mail.waitlist_launch_greeting');
     $lines = [
-        __('mail.waitlist_launch_greeting'),
+        $greeting,
         '',
         __('mail.waitlist_launch_body'),
         '',
         __('mail.waitlist_launch_action').': '.$platformUrl,
         '',
-        __('mail.waitlist_launch_thanks'),
         __('mail.waitlist_launch_signoff'),
     ];
 @endphp
 
 {{ implode("\n", $lines) }}
-
-@if (! empty($unsubscribeUrl))
-{{ "\n".__('mail.waitlist_launch_unsubscribe').': '.$unsubscribeUrl }}
-@endif

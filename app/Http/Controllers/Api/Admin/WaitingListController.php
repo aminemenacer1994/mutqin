@@ -24,7 +24,7 @@ class WaitingListController extends Controller
 
     public function launchEmailPreview(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
     {
-        $this->admin($request);
+        $this->superAdmin($request);
 
         return response()
             ->json($campaign->preview())
@@ -33,7 +33,7 @@ class WaitingListController extends Controller
 
     public function launchEmailStatus(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
     {
-        $this->admin($request);
+        $this->superAdmin($request);
 
         return response()
             ->json([
@@ -45,7 +45,7 @@ class WaitingListController extends Controller
 
     public function launchEmailSend(Request $request, WaitingListLaunchCampaignService $campaign): JsonResponse
     {
-        $admin = $this->admin($request);
+        $admin = $this->superAdmin($request);
 
         $validated = $request->validate([
             'confirm_count' => ['nullable', 'integer', 'min:0'],
@@ -182,6 +182,14 @@ class WaitingListController extends Controller
     {
         $user = $request->user();
         abort_unless($user?->can('access-admin'), 403);
+
+        return $user;
+    }
+
+    private function superAdmin(Request $request): \App\Models\User
+    {
+        $user = $this->admin($request);
+        abort_unless($user->can('manage-waitlist-launch-email'), 403);
 
         return $user;
     }

@@ -72,6 +72,9 @@ class AdminDashboardService
                 'generated_at' => now()->toIso8601String(),
                 'chart_days' => $chartDays,
                 'role' => 'super_admin',
+                'capabilities' => [
+                    'waitlist_launch_email' => $admin->can('manage-waitlist-launch-email'),
+                ],
             ],
             'welcome' => [
                 'greeting' => 'Assalamu alaikum, '.$this->firstName($admin),

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 class MailPreviewCommand extends Command
 {
     protected $signature = 'mutqin:mail-preview
-                            {template? : verify, reset, or all}
+                            {template? : verify, reset, launch, or all}
                             {--to=* : Recipient email (repeatable; or set MAIL_PREVIEW_RECIPIENTS)}
                             {--locale=en : Locale (en, fr, es)}
                             {--write= : Write HTML/text files instead of sending}
@@ -38,7 +38,7 @@ class MailPreviewCommand extends Command
         $template = strtolower(trim((string) $this->argument('template') ?: 'all'));
         $templates = $this->templates($template);
         if ($templates === []) {
-            $this->error('Unknown template. Use verify, reset, or all.');
+            $this->error('Unknown template. Use verify, reset, launch, or all.');
 
             return self::FAILURE;
         }
@@ -146,6 +146,25 @@ class MailPreviewCommand extends Command
      */
     private function renderTemplate(string $name, string $locale): array
     {
+        if ($name === 'launch') {
+            $platformUrl = TransactionalMail::homeUrl();
+            $data = [
+                'recipientName' => 'Amine Preview',
+                'platformUrl' => $platformUrl,
+                'unsubscribeUrl' => $platformUrl.'/waiting-list/unsubscribe/preview',
+            ];
+
+            return [
+                'name' => $name,
+                'subject' => '['.$locale.' preview] '.__('mail.waitlist_launch_subject'),
+                'html' => view('mail.waitlist-launch', $data)->render(),
+                'text' => view('mail.text.waitlist-launch', $data)->render(),
+                'data' => $data,
+                'htmlView' => 'mail.waitlist-launch',
+                'textView' => 'mail.text.waitlist-launch',
+            ];
+        }
+
         $urls = TransactionalMail::previewActionUrls();
         $expireMinutes = $name === 'verify'
             ? (int) config('auth.verification.expire', 60)
@@ -167,6 +186,8 @@ class MailPreviewCommand extends Command
             'html' => view($htmlView, $data)->render(),
             'text' => view($textView, $data)->render(),
             'data' => $data,
+            'htmlView' => $htmlView,
+            'textView' => $textView,
         ];
     }
 
@@ -186,8 +207,8 @@ class MailPreviewCommand extends Command
      */
     private function sendPreview(array $recipients, array $rendered): void
     {
-        $htmlView = $rendered['name'] === 'verify' ? 'mail.verify-email' : 'mail.reset-password';
-        $textView = $rendered['name'] === 'verify' ? 'mail.text.verify-email' : 'mail.text.reset-password';
+        $htmlView = $rendered['htmlView'] ?? ($rendered['name'] === 'verify' ? 'mail.verify-email' : 'mail.reset-password');
+        $textView = $rendered['textView'] ?? ($rendered['name'] === 'verify' ? 'mail.text.verify-email' : 'mail.text.reset-password');
 
         Mail::send(
             ['html' => $htmlView, 'text' => $textView],

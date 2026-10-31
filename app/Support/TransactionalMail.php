@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\App;
  */
 final class TransactionalMail
 {
-    public const TEMPLATES = ['verify', 'reset'];
+    public const TEMPLATES = ['verify', 'reset', 'launch'];
 
     public static function brandName(): string
     {

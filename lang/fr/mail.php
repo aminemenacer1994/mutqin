@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'footer' => 'Vous avez reçu ce message parce qu\'une action a été demandée sur votre compte Mutqin.',
+    'footer' => '',
     'tagline' => 'Mémorisation du Coran, guidée.',
     'logo_alt' => 'Mutqin',
     'fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
@@ -33,4 +33,14 @@ return [
     'reset_action' => 'Réinitialiser le mot de passe',
     'reset_fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
     'reset_security' => 'Si vous n\'avez pas demandé cette réinitialisation, ignorez cet e-mail. Votre mot de passe restera inchangé.',
+
+    'waitlist_launch_subject' => 'Mutqin est en ligne',
+    'waitlist_launch_preheader' => 'Connectez-vous sur mutqin.ai pour mémoriser avec un accompagnement.',
+    'waitlist_launch_heading' => 'Mutqin est en ligne',
+    'waitlist_launch_greeting' => 'Assalamu alaikum,',
+    'waitlist_launch_greeting_named' => 'Assalamu alaikum, :name,',
+    'waitlist_launch_body' => 'Alhamdulillah, Mutqin est ouvert. Connectez-vous pour utiliser la plateforme complète : mémorisation guidée, pratique de récitation et suivi de progression.',
+    'waitlist_launch_action' => 'Ouvrir Mutqin',
+    'waitlist_launch_fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
+    'waitlist_launch_signoff' => 'L’équipe Mutqin',
 ];
