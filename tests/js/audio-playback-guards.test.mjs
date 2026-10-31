@@ -84,6 +84,16 @@ describe('audio playback guards', () => {
     assert.doesNotMatch(swSource, /cacheFirst\(request, AUDIO_CACHE\)/)
   })
 
+  it('does not network-first intercept arbitrary same-origin API traffic', () => {
+    assert.doesNotMatch(swSource, /isSameOrigin \|\| isQuranApi/)
+    assert.match(swSource, /url\.pathname === '\/css\/vue-styles\.css'/)
+  })
+
+  it('networkFirst falls back to Response.error instead of throwing', () => {
+    assert.match(swSource, /async function networkFirst/)
+    assert.match(swSource, /Response\.error\(\)/)
+  })
+
   it('unlocks advanceLocked when cancelling the gap timer (prevents frozen transport)', () => {
     assert.match(
       memorisationSource,

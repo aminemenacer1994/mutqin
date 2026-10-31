@@ -1215,14 +1215,14 @@ export default {
   --qpc-line-height: 1.32;
   --qpc-surah-title-scale: 2.45;
   --qpc-ink: var(--mushaf-reading-ink, #1b140d);
-  --qpc-rule: color-mix(in srgb, var(--accent, #8d6a35) 48%, transparent);
+  --qpc-rule: color-mix(in srgb, var(--accent) 48%, transparent);
   box-sizing: border-box;
   width: min(100%, 40rem);
   max-width: 100%;
   margin: 1rem auto 2rem;
   padding: 0.55rem;
   overflow: visible;
-  background: var(--mushaf-reading-surface, var(--zone-chrome, #f0e9de));
+  background: var(--mushaf-reading-surface, var(--surface-strong));
   color: var(--qpc-ink);
   box-shadow: 0 10px 28px color-mix(in srgb, var(--text, #1b140d) 12%, transparent);
 }

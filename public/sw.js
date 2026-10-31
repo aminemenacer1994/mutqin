@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v96';
-const RUNTIME_CACHE = 'mutqin-runtime-v96';
+const SHELL_CACHE = 'mutqin-shell-v97';
+const RUNTIME_CACHE = 'mutqin-runtime-v97';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
 const SHELL_URLS = [
@@ -49,6 +49,9 @@ async function networkFirst(request, cacheName) {
   } catch (error) {
     const cached = await cache.match(request);
     if (cached) return cached;
+    if (typeof Response !== 'undefined' && typeof Response.error === 'function') {
+      return Response.error();
+    }
     throw error;
   }
 }
@@ -57,9 +60,16 @@ async function cacheFirstHashedAsset(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request);
-  if (response && response.ok) await cache.put(request, response.clone());
-  return response;
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) await cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    if (typeof Response !== 'undefined' && typeof Response.error === 'function') {
+      return Response.error();
+    }
+    throw error;
+  }
 }
 
 self.addEventListener('fetch', event => {
@@ -76,17 +86,21 @@ self.addEventListener('fetch', event => {
   const isUnhashedMixJs = isSameOrigin
     && /^\/js\/[a-z0-9_-]+\.js$/i.test(url.pathname)
     && !/\.[a-f0-9]{8}\.js$/i.test(url.pathname);
+  const isUnhashedMixCss = isSameOrigin
+    && /^\/css\/[a-z0-9_-]+\.css$/i.test(url.pathname)
+    && !/\.[a-f0-9]{8}\.css$/i.test(url.pathname);
   const isEntryBuildAsset = isSameOrigin && (
     url.pathname === '/js/app.js'
     || url.pathname === '/js/memorisation.js'
     || url.pathname === '/css/app.css'
+    || url.pathname === '/css/vue-styles.css'
     || url.pathname === '/css/teacher-dashboard.css'
     || url.pathname === '/mix-manifest.json'
     || url.pathname === '/sw.js'
     || isUnhashedMixJs
+    || isUnhashedMixCss
   );
   const isAudio = request.destination === 'audio' || /audio|mp3|opus|webm/i.test(url.pathname);
-  const isQuranApi = /api\.quran\.com|api\.alquran\.cloud|cdn\.islamic\.network/i.test(url.host);
   const isManifestOrIcon = isSameOrigin && (
     url.pathname === '/manifest.webmanifest'
     || url.pathname.startsWith('/icons/')
@@ -120,7 +134,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (isSameOrigin || isQuranApi) {
-    event.respondWith(networkFirst(request, RUNTIME_CACHE));
-  }
+  // Do not intercept API, auth, or other dynamic same-origin traffic — SW caching
+  // caused Failed to fetch / boot failures on https://app.mutqin.ai.
 });

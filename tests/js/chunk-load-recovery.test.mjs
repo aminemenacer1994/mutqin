@@ -257,6 +257,25 @@ test('expired reload guard clears itself', () => {
   assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), null)
 })
 
+test('syncChunkReloadFlagWithAssetBuild clears reload guard when build marker changes', () => {
+  const store = memoryStore({
+    [recovery.CHUNK_RELOAD_SESSION_KEY]: JSON.stringify({ attemptedAt: Date.now() }),
+    [recovery.CHUNK_RELOAD_BUILD_KEY]: 'v207-oldbuild',
+  })
+  const previousDocument = global.document
+  global.document = {
+    documentElement: { dataset: { mutqinAssetBuild: 'v207-newbuild' } },
+    querySelector: () => null,
+  }
+  try {
+    recovery.syncChunkReloadFlagWithAssetBuild(store)
+    assert.equal(store.getItem(recovery.CHUNK_RELOAD_BUILD_KEY), 'v207-newbuild')
+    assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), null)
+  } finally {
+    global.document = previousDocument
+  }
+})
+
 test('buildFreshReloadUrl strips legacy force params', () => {
   const url = recovery.buildFreshReloadUrl('https://app.mutqin.ai/memorisation?mutqin_force=1&_=9&keep=1')
   assert.match(url, /keep=1/)
@@ -286,6 +305,7 @@ test('existing recovery is wired for pages, bootstrap, locales, and workspace', 
   const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
   const i18n = readFileSync(join(root, 'resources/js/i18n.js'), 'utf8')
   assert.match(appSource, /installChunkLoadRecovery/)
+  assert.match(appSource, /syncChunkReloadFlagWithAssetBuild\(\)/)
   assert.match(appSource, /recoverFromStaleChunk\(error/)
   assert.match(appSource, /errorComponent: PageLoadError/)
   assert.match(memorisation, /BEFORE_CHUNK_RELOAD_EVENT/)

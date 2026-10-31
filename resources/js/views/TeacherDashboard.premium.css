@@ -5,87 +5,44 @@
  * decisions here so the three themes and responsive states cannot drift apart.
  */
 
-html {
-  --teacher-bg: #f4f5f3;
-  --teacher-surface: #ffffff;
-  --teacher-surface-raised: #ffffff;
-  --teacher-surface-soft: #f8f8f6;
-  --teacher-surface-hover: #f4f1ec;
-  --teacher-text: #252823;
-  --teacher-text-soft: #686d65;
-  --teacher-text-faint: #8a8f86;
-  --teacher-line: #e2e5df;
-  --teacher-line-strong: #d2d7cf;
-  --teacher-accent: #725233;
-  --teacher-accent-hover: #5d4229;
-  --teacher-accent-soft: #f1e9df;
-  --teacher-accent-ink: #4d3824;
-  --teacher-positive: #26715b;
-  --teacher-positive-soft: #e8f3ee;
-  --teacher-warning: #9a661f;
-  --teacher-warning-soft: #fbf2df;
-  --teacher-danger: #ad4b43;
-  --teacher-danger-soft: #f9eae8;
+/*
+ * Teacher workspace — authoritative presentation layer.
+ *
+ * Teacher semantic tokens alias app.scss / html[data-theme] chroma only.
+ * Do not hardcode parallel hex palettes on html.
+ */
+
+body.teacher-page {
+  --teacher-bg: var(--bg);
+  --teacher-surface: var(--surface-strong);
+  --teacher-surface-raised: var(--surface-strong);
+  --teacher-surface-soft: var(--surface-soft);
+  --teacher-surface-hover: color-mix(in srgb, var(--accent) 7%, var(--surface-strong));
+  --teacher-text: var(--text);
+  --teacher-text-soft: var(--text-muted);
+  --teacher-text-faint: color-mix(in srgb, var(--text-muted) 78%, transparent);
+  --teacher-line: var(--border);
+  --teacher-line-strong: var(--border-strong);
+  --teacher-accent: var(--accent);
+  --teacher-accent-hover: var(--accent-strong);
+  --teacher-accent-soft: var(--accent-light);
+  --teacher-accent-ink: var(--accent-strong);
+  --teacher-positive: var(--success);
+  --teacher-positive-soft: var(--success-soft);
+  --teacher-warning: var(--warning);
+  --teacher-warning-soft: var(--warning-soft);
+  --teacher-danger: var(--danger);
+  --teacher-danger-soft: var(--danger-soft);
   --teacher-info: #4f6f8e;
-  --teacher-info-soft: #eaf0f5;
-  --teacher-shadow-sm: 0 1px 2px rgba(28, 32, 27, .04), 0 8px 24px rgba(28, 32, 27, .045);
-  --teacher-shadow-md: 0 18px 50px rgba(28, 32, 27, .09);
+  --teacher-info-soft: color-mix(in srgb, var(--surface-strong) 88%, #4f6f8e 12%);
+  --teacher-shadow-sm: var(--shadow-sm);
+  --teacher-shadow-md: var(--shadow-md);
   --teacher-radius-sm: 10px;
   --teacher-radius: 16px;
   --teacher-radius-lg: 22px;
 }
 
-html[data-theme="sepia"] {
-  --teacher-bg: #eee8de;
-  --teacher-surface: #fffdf9;
-  --teacher-surface-raised: #fffaf2;
-  --teacher-surface-soft: #f7f1e8;
-  --teacher-surface-hover: #f3eadf;
-  --teacher-text: #29251f;
-  --teacher-text-soft: #71695f;
-  --teacher-text-faint: #91877b;
-  --teacher-line: #e3d9cc;
-  --teacher-line-strong: #d4c4b1;
-  --teacher-accent: #93683b;
-  --teacher-accent-hover: #79532f;
-  --teacher-accent-soft: #f2e4d2;
-  --teacher-accent-ink: #593d25;
-  --teacher-shadow-sm: 0 1px 2px rgba(55, 42, 27, .04), 0 10px 28px rgba(55, 42, 27, .055);
-  --teacher-shadow-md: 0 20px 54px rgba(55, 42, 27, .12);
-}
-
-html[data-theme="dark"] {
-  --teacher-bg: #121311;
-  --teacher-surface: #1b1d1a;
-  --teacher-surface-raised: #20231f;
-  --teacher-surface-soft: #252822;
-  --teacher-surface-hover: #2b2e28;
-  --teacher-text: #f2f0e9;
-  --teacher-text-soft: #b4b2aa;
-  --teacher-text-faint: #8d9188;
-  --teacher-line: #343830;
-  --teacher-line-strong: #454a40;
-  --teacher-accent: #d1a06b;
-  --teacher-accent-hover: #e1b27d;
-  --teacher-accent-soft: #382d21;
-  --teacher-accent-ink: #f2d6b5;
-  --teacher-positive: #76bba3;
-  --teacher-positive-soft: #1d352c;
-  --teacher-warning: #e0b367;
-  --teacher-warning-soft: #3b3020;
-  --teacher-danger: #e18a82;
-  --teacher-danger-soft: #3c2523;
-  --teacher-info: #91adc8;
-  --teacher-info-soft: #24313c;
-  --teacher-shadow-sm: 0 1px 0 rgba(255, 255, 255, .025), 0 12px 34px rgba(0, 0, 0, .18);
-  --teacher-shadow-md: 0 24px 70px rgba(0, 0, 0, .42);
-}
-
 /* Final polish: keep the workspace calm, dense and usable across themes. */
-html[data-theme="light"], html[data-theme="sepia"], html[data-theme="dark"] {
-  color-scheme: light;
-}
-html[data-theme="dark"] { color-scheme: dark; }
 
 /* Workspace and type */
 .teacher-dashboard {

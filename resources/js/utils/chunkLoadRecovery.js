@@ -11,6 +11,7 @@
  */
 
 export const CHUNK_RELOAD_SESSION_KEY = 'mutqin.chunkReload';
+export const CHUNK_RELOAD_BUILD_KEY = 'mutqin.chunkReloadBuild';
 export const CHUNK_RELOAD_TTL_MS = 10 * 60 * 1000;
 export const CHUNK_RELOAD_NOTICE_ID = 'mutqin-chunk-reload-notice';
 export const BEFORE_CHUNK_RELOAD_EVENT = 'mutqin:before-chunk-reload';
@@ -153,6 +154,28 @@ export function clearChunkReloadFlag(store = defaultSessionStore()) {
     try {
         store.removeItem(CHUNK_RELOAD_SESSION_KEY);
     } catch (_) { /* ignore */ }
+}
+
+/**
+ * After `npm run prod` while a tab still runs watch-mode app.js, chunk recovery
+ * may reload once and still 404. A fresh HTML shell carries a new build marker;
+ * allow another controlled reload in that session.
+ *
+ * @param {Storage | null | undefined} store
+ */
+export function syncChunkReloadFlagWithAssetBuild(store = defaultSessionStore()) {
+    if (!store || typeof document === 'undefined') return;
+    const build = document.documentElement?.dataset?.mutqinAssetBuild
+        || document.querySelector('meta[name="mutqin-asset-build"]')?.content
+        || '';
+    if (!build) return;
+    try {
+        const previous = store.getItem(CHUNK_RELOAD_BUILD_KEY);
+        if (previous !== build) {
+            store.setItem(CHUNK_RELOAD_BUILD_KEY, build);
+            clearChunkReloadFlag(store);
+        }
+    } catch (_) { /* ignore quota / private mode */ }
 }
 
 /**

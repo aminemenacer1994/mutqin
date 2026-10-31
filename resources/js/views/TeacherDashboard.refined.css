@@ -5,23 +5,23 @@
   --teacher-surface: var(--surface, rgba(255, 255, 255, .96));
   --teacher-surface-raised: var(--surface-strong, #fff);
   --teacher-surface-soft: color-mix(in srgb, var(--surface, #fff) 82%, var(--bg, #f6f3ee));
-  --teacher-surface-hover: color-mix(in srgb, var(--accent, #a0784c) 7%, var(--surface, #fff));
-  --teacher-text: var(--text, #1a2e24);
-  --teacher-text-soft: var(--text-muted, #6b7f76);
-  --teacher-text-faint: color-mix(in srgb, var(--text-muted, #6b7f76) 78%, transparent);
-  --teacher-line: var(--border, rgba(160, 120, 76, .12));
-  --teacher-line-strong: color-mix(in srgb, var(--accent, #a0784c) 34%, var(--border, rgba(160, 120, 76, .12)));
-  --teacher-accent: var(--accent, #a0784c);
-  --teacher-accent-hover: var(--accent-strong, #8b653b);
-  --teacher-accent-ink: var(--accent-strong, #8b653b);
-  --teacher-accent-soft: color-mix(in srgb, var(--accent, #a0784c) 13%, var(--surface, #fff));
+  --teacher-surface-hover: color-mix(in srgb, var(--accent) 7%, var(--surface, #fff));
+  --teacher-text: var(--text);
+  --teacher-text-soft: var(--text-muted);
+  --teacher-text-faint: color-mix(in srgb, var(--text-muted) 78%, transparent);
+  --teacher-line: var(--border);
+  --teacher-line-strong: color-mix(in srgb, var(--accent) 34%, var(--border));
+  --teacher-accent: var(--accent);
+  --teacher-accent-hover: var(--accent-strong);
+  --teacher-accent-ink: var(--accent-strong);
+  --teacher-accent-soft: color-mix(in srgb, var(--accent) 13%, var(--surface, #fff));
   --teacher-positive: var(--success, #2e7d64);
   --teacher-positive-soft: color-mix(in srgb, var(--success, #2e7d64) 13%, var(--surface, #fff));
   --teacher-warning: var(--warning, #9a6207);
   --teacher-warning-soft: color-mix(in srgb, var(--warning, #9a6207) 12%, var(--surface, #fff));
   --teacher-danger: var(--danger, #b55041);
   --teacher-danger-soft: color-mix(in srgb, var(--danger, #b55041) 12%, var(--surface, #fff));
-  --teacher-shadow: 0 10px 30px color-mix(in srgb, var(--text, #1a2e24) 8%, transparent);
+  --teacher-shadow: 0 10px 30px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .teacher-dashboard { color: var(--teacher-text) !important; background: var(--teacher-bg) !important; }
@@ -752,13 +752,13 @@ html[data-theme="dark"] .teacher-dashboard .teacher-activity-list__score--warn {
   --teacher-surface: var(--surface, #fff);
   --teacher-surface-raised: var(--surface-strong, #fff);
   --teacher-surface-soft: color-mix(in srgb, var(--surface, #fff) 84%, var(--bg, #f6f3ee));
-  --teacher-text: var(--text, #1a2e24);
-  --teacher-text-soft: color-mix(in srgb, var(--text, #1a2e24) 82%, var(--surface, #fff));
-  --teacher-line: var(--border, rgba(160, 120, 76, .16));
-  --teacher-line-strong: color-mix(in srgb, var(--accent, #a0784c) 34%, var(--teacher-line));
-  --teacher-accent: var(--accent, #a0784c);
-  --teacher-accent-hover: var(--accent-strong, #8b653b);
-  --teacher-accent-ink: var(--accent-strong, #8b653b);
+  --teacher-text: var(--text);
+  --teacher-text-soft: color-mix(in srgb, var(--text) 82%, var(--surface, #fff));
+  --teacher-line: var(--border);
+  --teacher-line-strong: color-mix(in srgb, var(--accent) 34%, var(--teacher-line));
+  --teacher-accent: var(--accent);
+  --teacher-accent-hover: var(--accent-strong);
+  --teacher-accent-ink: var(--accent-strong);
   --teacher-accent-soft: color-mix(in srgb, var(--teacher-accent) 14%, var(--teacher-surface));
   position: fixed;
   inset: 0;
@@ -848,7 +848,7 @@ body.teacher-audio-open { overflow: hidden; }
 .teacher-dashboard .teacher-task-filters.btn-group .btn:hover { border-color: var(--teacher-accent) !important; background: var(--teacher-surface-hover) !important; }
 .teacher-dashboard .teacher-task-filters.btn-group .btn.is-active,
 .teacher-dashboard .teacher-task-filters.btn-group .btn[aria-pressed="true"] { color: var(--teacher-surface-raised) !important; border-color: var(--teacher-accent-ink) !important; background: var(--teacher-accent-ink) !important; box-shadow: none !important; }
-html[data-theme="sepia"] .teacher-dashboard .teacher-task-filters.btn-group .btn.is-active { border-color: #80502d !important; background: #80502d !important; }
+html[data-theme="sepia"] .teacher-dashboard .teacher-task-filters.btn-group .btn.is-active { border-color: var(--accent-strong) !important; background: var(--accent) !important; }
 .teacher-dashboard .teacher-task-filters.btn-group .btn.is-active .teacher-task-filter__count { color: inherit; background: color-mix(in srgb, var(--teacher-surface-raised) 20%, transparent); }
 .teacher-dashboard .teacher-density-toggle { width: auto; min-width: 2.75rem; padding: .55rem .65rem; font-size: .75rem; font-weight: 700; }
 .teacher-dashboard .teacher-density-toggle i { font-size: .95rem; }

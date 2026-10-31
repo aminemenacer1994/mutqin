@@ -18,8 +18,18 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->name('marketing.waiting-list.store');
 
 Route::fallback(function (Request $request) {
-    $path = '/'.ltrim($request->path(), '/');
-    $target = MutqinDomains::appUrl($path === '//' ? '/' : $path);
+    $path = ltrim($request->path(), '/');
+    if ($path !== '') {
+        $candidate = public_path($path);
+        $publicRoot = realpath(public_path()) ?: public_path();
+        $resolved = realpath($candidate);
+        if ($resolved !== false && str_starts_with($resolved, $publicRoot) && is_file($resolved)) {
+            return response()->file($resolved);
+        }
+    }
+
+    $targetPath = '/'.ltrim($request->path(), '/');
+    $target = MutqinDomains::appUrl($targetPath === '//' ? '/' : $targetPath);
     $query = $request->getQueryString();
 
     if (is_string($query) && $query !== '') {

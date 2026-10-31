@@ -10,6 +10,14 @@ class MemorisationRoutingTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_memorisation_html_uses_memorisation_page_body_class(): void
+    {
+        $this->get(route('memorisation.demo'))
+            ->assertOk()
+            ->assertSee('class="memorisation-page', false)
+            ->assertSee('data-theme=', false);
+    }
+
     public function test_guest_root_still_shows_the_landing_page(): void
     {
         $this->get('/')

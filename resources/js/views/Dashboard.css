@@ -1939,7 +1939,7 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 .dash-strength--building {
-  color: var(--warning-text, #8b653b);
+  color: var(--warning-text, var(--warning-strong));
   background: var(--warning-bg, rgba(196, 154, 108, 0.16));
 }
 
@@ -1963,7 +1963,7 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 .dash-strength--inline.dash-strength--building {
-  color: color-mix(in srgb, var(--warning-text, #8b653b) 88%, var(--dash-muted));
+  color: color-mix(in srgb, var(--warning-text, var(--warning-strong)) 88%, var(--dash-muted));
 }
 
 .dash-strength--inline.dash-strength--strong {
@@ -2090,7 +2090,7 @@ body.dash-drawer-open {
   --dash-surface-muted: var(--surface-soft, var(--surface, #fff6eb));
   --dash-ink: var(--text, #1f1a17);
   --dash-muted: color-mix(in srgb, var(--text-muted, #6b5c4f) 92%, var(--text, #1f1a17));
-  --dash-accent: var(--accent, #9a6738);
+  --dash-accent: var(--accent);
   --dash-accent-strong: var(--accent-strong, #7a5228);
   --dash-accent-light: var(--accent-light, #f3e4d4);
   --dash-border: rgba(78, 58, 38, 0.14);
@@ -4648,7 +4648,7 @@ a.dash-ai-results__attempt {
 .dash-toast button:hover,
 .dash-toast button:focus-visible {
   background: var(--accent-light, rgba(154, 103, 56, 0.12));
-  outline: 2px solid var(--accent, #9a6738);
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 

@@ -111,7 +111,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   --ask-accent-soft: rgba(200, 154, 88, 0.14);
   --ask-chip: #fff8ec;
   --ask-surface: #f6ead4;
-  --ask-brown: #9a6738;
+  --ask-brown: var(--accent);
 }
 
 .ask-mutqin-overlay[data-theme="dark"] .ask-mutqin-modal {

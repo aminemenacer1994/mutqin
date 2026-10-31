@@ -336,16 +336,16 @@ export default {
 }
 
 .qpc-madani-word.is-range-start {
-  box-shadow: inset -0.07em 0 0 color-mix(in srgb, #8d6a35 28%, transparent);
+  box-shadow: inset -0.07em 0 0 color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .qpc-madani-word.is-range-end {
-  box-shadow: inset 0.07em 0 0 color-mix(in srgb, #8d6a35 28%, transparent);
+  box-shadow: inset 0.07em 0 0 color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .qpc-madani-word.is-ayah-active {
   background: color-mix(in srgb, #c4a35a 22%, transparent);
-  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, #8d6a35 38%, transparent);
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 .qpc-madani-word.is-playing-ayah {
@@ -413,7 +413,7 @@ export default {
 }
 
 .qpc-madani-word.qpc-progress-weak-word--active {
-  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #8d6a35 78%, transparent);
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, var(--accent) 78%, transparent);
 }
 
 .qpc-madani-word.qpc-progress-confidence-high {

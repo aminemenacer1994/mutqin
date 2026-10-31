@@ -179,7 +179,7 @@ html:has(.madani-fullscreen-bar--top) {
 
 .madani-fullscreen-bar__icon--play {
   width: calc(var(--madani-fs-bar-icon) + 0.15rem);
-  color: color-mix(in srgb, var(--accent-strong, #8d6a35) 85%, #000);
+  color: color-mix(in srgb, var(--accent-strong) 85%, #000);
 }
 
 .madani-fullscreen-bar__icon--play i {

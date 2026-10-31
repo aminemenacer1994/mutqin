@@ -26,9 +26,9 @@
 }
 
 html[data-theme="light"] .articles-page {
-  --card-bg: #fffdf9;
-  --search-bg: #fffdf9;
-  --empty-bg: color-mix(in srgb, #fffdf9 88%, var(--bg));
+  --card-bg: var(--surface-strong);
+  --search-bg: var(--surface-strong);
+  --empty-bg: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
 }
 
 html[data-theme="sepia"] .articles-page {

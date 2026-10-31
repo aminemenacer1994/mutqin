@@ -10,6 +10,7 @@ import {
     clearChunkReloadFlag,
     installChunkLoadRecovery,
     recoverFromStaleChunk,
+    syncChunkReloadFlagWithAssetBuild,
     wrapChunkImport,
 } from './utils/chunkLoadRecovery';
 import PageLoadError from './components/PageLoadError';
@@ -62,6 +63,7 @@ if (typeof window !== 'undefined') {
     installChunkLoadRecovery({
         noticeMessage: resolveEn('common.status.chunkUpdating'),
     });
+    syncChunkReloadFlagWithAssetBuild();
 }
 
 // Watch/dev Mix emits stable chunk names (homepage.js, memorisation.js, ...).

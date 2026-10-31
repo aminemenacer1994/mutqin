@@ -144,6 +144,36 @@ function isStableNamedChunkFile(name) {
     return /^[a-z][a-z0-9_-]+\.js$/i.test(name) && name !== 'app.js';
 }
 
+function isProductionChunkRuntime(appJs) {
+    return typeof appJs === 'string' && appJs.includes('}[e]+".js"');
+}
+
+/** @param {string} [appJsPath] */
+function listMissingDevStableChunks(appJsPath) {
+    const abs = appJsPath || path.join(jsDir, 'app.js');
+    try {
+        const content = fs.readFileSync(abs, 'utf8');
+        if (isProductionChunkRuntime(content)) return [];
+        const referenced = collectReferencedChunkFiles(content);
+        return [...referenced].filter(
+            (name) => isStableNamedChunkFile(name) && !fs.existsSync(path.join(jsDir, name))
+        );
+    } catch {
+        return [];
+    }
+}
+
+function warnMissingDevStableChunks(contextLabel) {
+    const missing = listMissingDevStableChunks();
+    if (missing.length === 0) return;
+    console.warn(
+        `[mix] ${contextLabel}: watch/dev app.js references lazy chunks that are not on disk:\n`,
+        missing.map((name) => `  - ${name}`).join('\n'),
+        '\n[mix] This often happens after `npm run prod` while `npm run watch` is still running.',
+        '\n[mix] Fix: stop watch, run `npm run dev` once (full compile), then start watch again.'
+    );
+}
+
 function addVueStylesManifestEntry(manifest) {
     const vueStylesKey = '/css/vue-styles.css';
     const vueStylesPath = path.join(publicDir, 'css/vue-styles.css');
@@ -308,6 +338,7 @@ mix.then(() => {
         } catch {
             /* ignore */
         }
+        warnMissingDevStableChunks('Dev build incomplete');
         return;
     }
 
@@ -355,6 +386,19 @@ mix.then(() => {
 
     // Always keep every lazy chunk the current app.js runtime can request.
     let skipPrune = false;
+    try {
+        const appContent = fs.readFileSync(path.join(jsDir, 'app.js'), 'utf8');
+        if (!isProductionChunkRuntime(appContent)) {
+            skipPrune = true;
+            console.warn(
+                '[mix] Skipping production chunk prune because public/js/app.js is a watch/dev runtime.',
+                'Stop `npm run watch` before `npm run prod`, or run `npm run dev` after prod to restore lazy chunks.'
+            );
+        }
+    } catch {
+        /* ignore */
+    }
+
     const referenced = new Set();
     try {
         const scanChunkReferences = (filePath) => {

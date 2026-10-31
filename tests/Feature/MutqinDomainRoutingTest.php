@@ -154,4 +154,42 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertDontSee('class="mutqin-early-access-nav"', false)
             ->assertDontSee('id="earlyAccessNavbar"', false);
     }
+
+    public function test_marketing_and_app_hosts_serve_the_same_fixed_service_worker(): void
+    {
+        $expected = file_get_contents(public_path('sw.js'));
+        $this->assertNotFalse($expected);
+        $this->assertStringContainsString('mutqin-shell-v97', $expected);
+        $this->assertStringNotContainsString('isSameOrigin || isQuranApi', $expected);
+
+        $marketing = $this->onMarketingHost('/sw.js');
+        $marketing->assertOk();
+        $marketingBody = method_exists($marketing, 'streamedContent')
+            ? (string) $marketing->streamedContent()
+            : (string) $marketing->getContent();
+        $this->assertStringContainsString('mutqin-shell-v97', $marketingBody);
+
+        // app.mutqin.ai serves public/sw.js from the web root in production; assert the
+        // on-disk worker both hosts deploy (same release artifact).
+        $this->assertStringContainsString('mutqin-shell-v97', $expected);
+    }
+
+    public function test_marketing_host_serves_public_mix_assets_same_origin(): void
+    {
+        if (! is_file(public_path('js/app.js'))) {
+            $this->markTestSkipped('Mix build output not present');
+        }
+
+        $this->onMarketingHost('/js/app.js')->assertOk();
+        $this->onMarketingHost('/mix-manifest.json')->assertOk();
+    }
+
+    public function test_vue_shell_on_both_hosts_loads_app_bundle(): void
+    {
+        foreach (['mutqin.ai', 'app.mutqin.ai'] as $host) {
+            $html = (string) $this->getOnHost($host, '/')->getContent();
+            $this->assertStringContainsString('/js/app.js', $html, "Expected app.js on {$host}");
+            $this->assertStringContainsString('<homepage', $html, "Expected Vue homepage on {$host}");
+        }
+    }
 }

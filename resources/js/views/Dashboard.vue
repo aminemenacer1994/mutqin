@@ -1497,29 +1497,44 @@ export default {
       return null
     },
     chartPalette() {
+      const root = typeof document !== 'undefined' ? document.documentElement : null
+      const read = (name, fallback) => {
+        if (!root || typeof getComputedStyle !== 'function') return fallback
+        const value = getComputedStyle(root).getPropertyValue(name).trim()
+        return value || fallback
+      }
+      const accent = read('--accent', '#8b5e3c')
+      const accentStrong = read('--accent-strong', '#765035')
+      const text = read('--text', '#1f1a17')
+      const textMuted = read('--text-muted', '#554c45')
+      const surfaceStrong = read('--surface-strong', '#ffffff')
+      const border = read('--border', 'rgba(78, 58, 38, 0.24)')
+      const success = read('--success', '#2d6a4f')
+      const successStrong = read('--success-strong', '#245a42')
+
       if (this.darkTheme) {
         return {
-          ayahs: '#5a9a78',
-          ayahsHover: '#6cab88',
-          sessions: '#c49a6c',
-          sessionsHover: '#d4aa7c',
-          muted: '#d4c8bc',
-          ink: '#f4ede4',
-          tooltipBg: '#181614',
-          tooltipBorder: 'rgba(230, 207, 181, 0.14)',
-          grid: 'rgba(230, 207, 181, 0.08)',
+          ayahs: success,
+          ayahsHover: successStrong,
+          sessions: accent,
+          sessionsHover: accentStrong,
+          muted: textMuted,
+          ink: text,
+          tooltipBg: read('--surface-strong', '#121212'),
+          tooltipBorder: border,
+          grid: `color-mix(in srgb, ${border} 35%, transparent)`,
         }
       }
       return {
-        ayahs: '#2d6a4f',
-        ayahsHover: '#3a7d5f',
-        sessions: '#a0784c',
-        sessionsHover: '#8b653b',
-        muted: '#5c6b64',
-        ink: '#1a2e24',
-        tooltipBg: '#ffffff',
-        tooltipBorder: 'rgba(160, 120, 76, 0.12)',
-        grid: 'rgba(160, 120, 76, 0.08)',
+        ayahs: success,
+        ayahsHover: successStrong,
+        sessions: accent,
+        sessionsHover: accentStrong,
+        muted: textMuted,
+        ink: text,
+        tooltipBg: surfaceStrong,
+        tooltipBorder: border,
+        grid: `color-mix(in srgb, ${border} 35%, transparent)`,
       }
     },
     chartInstanceKey() {

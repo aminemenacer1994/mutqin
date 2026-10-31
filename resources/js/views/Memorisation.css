@@ -1160,77 +1160,16 @@
 
 }
 
-:root {
-  color-scheme: light;
-  --bg: #f6f3ee;
-  --theme-color: #8b5e3c;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: rgba(255, 255, 255, 0.92);
-  --border: rgba(78, 58, 38, 0.22);
-  --border-strong: rgba(78, 58, 38, 0.36);
-  --text: #1f1a17;
-  --text-muted: #4f4640;
-  --text-disabled: #6e645c;
-  --accent: #8b5e3c;
-  --accent-strong: #a86a3f;
-  --accent-soft: #d8c1a8;
-  --accent-light: rgba(154, 103, 56, 0.10);
-  --accent-wash: rgba(228, 211, 194, 0.42);
-  /* Shared button colour semantics — Bootstrap custom danger (#b55041) */
-  --bs-danger: #b55041;
-  --bs-danger-rgb: 181, 80, 65;
-  --success: #2e7d64;
-  --success-strong: #23624e;
-  --success-soft: rgba(46, 125, 100, 0.14);
-  --warning: #9a6207;
-  --warning-strong: #7a4d05;
-  --warning-soft: rgba(154, 98, 7, 0.14);
-  --danger: #b55041;
-  --danger-strong: #9a4336;
-  --danger-soft: rgba(181, 80, 65, 0.14);
-  --error: var(--danger);
-  --error-strong: var(--danger-strong);
-  --error-soft: var(--danger-soft);
-  --destructive: var(--danger);
-  --destructive-strong: var(--danger-strong);
-  --destructive-soft: var(--danger-soft);
-  --control-disabled-opacity: 0.72;
-  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 48%, transparent);
-  --focus-ring-color: var(--accent);
-  --zone-canvas: #f6f3ee;
-  /* Light workspace card creams; dark Mushaf uses --workspace-card-surface-dark */
-  --zone-reading-cream: #faf7f1;
-  --zone-chrome-cream: #f0e9de;
-  --zone-reading: var(--zone-reading-cream);
-  --zone-chrome: var(--zone-chrome-cream);
-  /* Same surface recipe as light .workspace-shell (accent pinned so dark UI cannot retint it) */
-  --workspace-card-surface:
-    radial-gradient(circle at top right, color-mix(in srgb, #9a6738 10%, transparent), transparent 34%),
-    linear-gradient(165deg, color-mix(in srgb, var(--zone-chrome-cream) 90%, white 10%), var(--zone-chrome-cream));
-  /* Toolbar/header chrome (theme) — separate from cream Mushaf reading paper */
-  --toolbar-header-bg: var(--workspace-card-surface);
-  --toolbar-header-bg-solid: var(--zone-chrome-cream);
-  --toolbar-header-border: var(--zone-divider);
-  --toolbar-control-bg: #ffffff;
-  --toolbar-control-hover-bg: color-mix(in srgb, var(--zone-chrome-cream) 70%, #ffffff);
-  --toolbar-control-active-bg: #1c1917;
-  --toolbar-control-active-fg: #fffaf3;
-  --toolbar-control-border: rgba(28, 25, 23, 0.1);
-  --toolbar-control-fg: #1c1917;
-  --toolbar-control-muted-bg: rgba(255, 255, 255, 0.72);
-  /* Mushaf paper + ink follow the active theme (overridden in dark / sepia) */
-  --mushaf-reading-surface: var(--zone-chrome-cream);
-  --mushaf-reading-ink: #18181b;
-  --ayah-mark-ink: #1a1712;
-  --zone-panel: #ece4d8;
-  --zone-elevated: #fffaf3;
-  --zone-action: #e8dfd0;
-  --zone-divider: rgba(154, 103, 56, 0.18);
-  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);
-  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);
-  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);
-  --shadow-xxl: 0 36px 96px rgba(63, 39, 18, 0.22), 0 14px 40px rgba(63, 39, 18, 0.12);
-  --radius: 16px;
+/* Workspace + Mushaf tokens — scoped to memorisation only. Global --bg/--accent
+   come from app.scss; do not redeclare them on :root (vue-styles loads globally). */
+body.memorisation-page {
+  --navbar-offset: 64px;
+  --tools-width: 440px;
+  --tools-footer-h: 78px;
+  --font-ar: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
+  --font-ui: "SF Pro Text", "SF Pro Display", "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  --font-surah-latin: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", ui-serif, Georgia, serif;
+  --font-surah-arabic: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif;
   --primary-action-radius: 999px;
   --primary-action-min-height: 2.45rem;
   --primary-action-padding-y: 0.45rem;
@@ -1243,60 +1182,50 @@
   --motion-enter: 220ms;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-press-scale: 0.97;
-  --navbar-offset: 64px;
-  --tools-width: 440px;
-  --tools-footer-h: 78px;
-  --font-ar: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
-  --font-ui: "SF Pro Text", "SF Pro Display", "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
-  --font-surah-latin: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", ui-serif, Georgia, serif;
-  --font-surah-arabic: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif;
 }
 
-html[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #14110f;
-  --theme-color: #14110f;
-  --surface: #121212;
-  --surface-strong: #121212;
-  --border: rgba(255, 255, 255, 0.22);
-  --border-strong: rgba(255, 255, 255, 0.34);
-  --text: rgba(255, 255, 255, 0.94);
-  --text-muted: rgba(255, 255, 255, 0.82);
-  --text-disabled: rgba(255, 255, 255, 0.58);
-  --accent: #d4a574;
-  --accent-strong: #e8bf8f;
-  --accent-soft: #5f4530;
-  --accent-light: rgba(212, 165, 116, 0.16);
-  --accent-wash: rgba(212, 165, 116, 0.1);
-  --success: #6fbf98;
-  --success-strong: #8fd4a8;
-  --success-soft: rgba(111, 191, 152, 0.18);
-  --warning: #e0b35a;
-  --warning-strong: #f0c56e;
-  --warning-soft: rgba(224, 179, 90, 0.18);
-  --bs-danger: #e08a7c;
-  --bs-danger-rgb: 224, 138, 124;
-  --danger: #e08a7c;
-  --danger-strong: #f0a090;
-  --danger-soft: rgba(224, 138, 124, 0.18);
-  --error: var(--danger);
-  --error-strong: var(--danger-strong);
-  --error-soft: var(--danger-soft);
-  --destructive: var(--danger);
-  --destructive-strong: var(--danger-strong);
-  --destructive-soft: var(--danger-soft);
-  --control-disabled-opacity: 0.68;
-  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 58%, transparent);
-  --focus-ring-color: var(--accent);
-  --zone-canvas: #14110f;
+html[data-theme="light"] body.memorisation-page {
+  --zone-canvas: var(--bg);
+  --zone-reading-cream: var(--surface-strong);
+  /* Match page chrome to --bg (surface-soft was #f3f0ea vs bg #f6f3ee banding). */
+  --zone-chrome-cream: var(--bg);
+  --zone-reading: var(--zone-reading-cream);
+  --zone-chrome: var(--bg);
+  --workspace-card-surface:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
+    linear-gradient(165deg, color-mix(in srgb, var(--zone-chrome-cream) 90%, white 10%), var(--zone-chrome-cream));
+  --toolbar-header-bg: var(--workspace-card-surface);
+  --toolbar-header-bg-solid: var(--zone-chrome-cream);
+  --toolbar-header-border: var(--zone-divider);
+  --toolbar-control-bg: var(--surface-strong);
+  --toolbar-control-hover-bg: color-mix(in srgb, var(--zone-chrome-cream) 70%, var(--surface-strong));
+  --toolbar-control-active-bg: var(--text);
+  --toolbar-control-active-fg: var(--surface-strong);
+  --toolbar-control-border: color-mix(in srgb, var(--text) 10%, transparent);
+  --toolbar-control-fg: var(--text);
+  --toolbar-control-muted-bg: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  --mushaf-reading-surface: var(--surface-strong);
+  --mushaf-reading-ink: var(--text);
+  --ayah-mark-ink: var(--text);
+  --zone-panel: var(--bg);
+  --zone-elevated: var(--surface-strong);
+  --zone-action: color-mix(in srgb, var(--bg) 92%, var(--accent) 8%);
+  --zone-divider: var(--border);
+}
+
+html[data-theme="light"] body.memorisation-page .tools-top {
+  background: var(--zone-chrome);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] body.memorisation-page {
+  --zone-canvas: var(--bg);
   --zone-reading: #1a1714;
   --zone-chrome: #221d19;
   --zone-panel: #1e1a17;
   --zone-elevated: #2a2521;
   --zone-action: #252019;
   --zone-divider: rgba(208, 160, 107, 0.22);
-  /* Same surface recipe as dark .workspace-shell — also remap the light alias
-     so legacy `var(--workspace-card-surface)` / cream fallbacks stay dark */
   --workspace-card-surface-dark:
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 36%),
     linear-gradient(180deg, var(--zone-chrome), color-mix(in srgb, var(--zone-chrome) 88%, var(--zone-reading) 12%));
@@ -1313,58 +1242,42 @@ html[data-theme="dark"] {
   --toolbar-control-border: rgba(245, 242, 234, 0.14);
   --toolbar-control-fg: #f7ebdf;
   --toolbar-control-muted-bg: rgba(255, 255, 255, 0.06);
-  /* Mushaf paper matches dark workspace-shell (not light cream) */
   --mushaf-reading-surface: var(--zone-chrome);
   --mushaf-reading-ink: #f7ebdf;
   --ayah-mark-ink: #f0e6d4;
-  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);
-  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);
-  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);
-  --shadow-xxl: 0 40px 110px rgba(0, 0, 0, 0.52), 0 16px 48px rgba(0, 0, 0, 0.32);
 }
 
-html[data-theme="sepia"] {
-  color-scheme: light;
-  /* Align canvas with app.scss / THEME_CHROME sepia */
-  --bg: #f1e7d8;
-  --theme-color: #8b5e3c;
-  --surface: #fffaf3;
-  --surface-strong: #fff8eb;
-  --border: rgba(78, 58, 38, 0.26);
-  --border-strong: rgba(78, 58, 38, 0.4);
-  --text: #352516;
-  --text-muted: #5c4a3a;
-  --text-disabled: #6f5a48;
-  --accent: #8b5e3c;
-  --accent-strong: #a86a3f;
-  --accent-soft: #dcc3a6;
-  --accent-light: rgba(184, 130, 78, 0.12);
-  --accent-wash: rgba(221, 194, 162, 0.35);
-  --zone-canvas: #f1e7d8;
-  --zone-reading-cream: #f7f0e3;
-  --zone-chrome-cream: #eadcc6;
+html[data-theme="sepia"] body.memorisation-page {
+  --zone-canvas: var(--bg);
+  --zone-reading-cream: var(--surface-strong);
+  --zone-chrome-cream: var(--bg);
   --zone-reading: var(--zone-reading-cream);
-  --zone-chrome: var(--zone-chrome-cream);
-  --zone-panel: #e4d4bc;
-  --zone-elevated: #fdf6ea;
-  --zone-action: #dfd0b8;
-  --zone-divider: rgba(143, 96, 51, 0.2);
+  --zone-chrome: var(--bg);
+  --zone-panel: var(--bg);
+  --zone-elevated: var(--surface-strong);
+  --zone-action: color-mix(in srgb, var(--bg) 92%, var(--accent) 8%);
+  --zone-divider: var(--border);
   --workspace-card-surface:
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
     linear-gradient(165deg, color-mix(in srgb, var(--zone-chrome) 90%, white 10%), var(--zone-chrome));
   --toolbar-header-bg: var(--workspace-card-surface);
   --toolbar-header-bg-solid: var(--zone-chrome);
   --toolbar-header-border: var(--zone-divider);
-  --toolbar-control-bg: #fff8ed;
-  --toolbar-control-hover-bg: color-mix(in srgb, var(--zone-chrome) 70%, #fff8ed);
-  --toolbar-control-active-bg: #352516;
-  --toolbar-control-active-fg: #fff8ed;
-  --toolbar-control-border: rgba(53, 37, 22, 0.12);
-  --toolbar-control-fg: #352516;
-  --toolbar-control-muted-bg: rgba(255, 248, 237, 0.75);
-  --mushaf-reading-surface: var(--zone-chrome);
-  --mushaf-reading-ink: #352516;
-  --ayah-mark-ink: #352516;
+  --toolbar-control-bg: var(--surface-strong);
+  --toolbar-control-hover-bg: color-mix(in srgb, var(--zone-chrome) 70%, var(--surface-strong));
+  --toolbar-control-active-bg: var(--text);
+  --toolbar-control-active-fg: var(--surface-strong);
+  --toolbar-control-border: color-mix(in srgb, var(--text) 10%, transparent);
+  --toolbar-control-fg: var(--text);
+  --toolbar-control-muted-bg: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  --mushaf-reading-surface: var(--surface-strong);
+  --mushaf-reading-ink: var(--text);
+  --ayah-mark-ink: var(--text);
+}
+
+html[data-theme="sepia"] body.memorisation-page .tools-top {
+  background: var(--zone-chrome);
+  box-shadow: none;
 }
 
 [v-cloak] {
@@ -11397,9 +11310,13 @@ body.memorisation-page nav.navbar.app-navbar .navbar-shell::after {
 }
 
 body.memorisation-page nav.navbar.app-navbar {
-  background: var(--surface-strong) !important;
+  background: var(--bg) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="sepia"] body.memorisation-page nav.navbar.app-navbar {
+  background: var(--bg) !important;
 }
 
 /* Mobile dark: solid nav matches workspace --bg so PWA status bar / safe-area stay warm */
@@ -19205,7 +19122,7 @@ html[data-theme="sepia"] .player-dock-card .player-bar {
   border-radius: 10px !important;
 }
 
-:root {
+body.memorisation-page {
   --bg-body: #f7f3ef;
   --surface-elevated: #fffbf7;
 
@@ -41269,7 +41186,7 @@ but not its destructive red. */
   --saved-border: rgba(154, 103, 56, 0.14);
   --saved-text: #1f1a17;
   --saved-muted: #6c6258;
-  --saved-accent: #9a6738;
+  --saved-accent: var(--accent);
   --saved-accent-strong: #6e4726;
   display: flex !important;
   flex-direction: column !important;
@@ -56409,11 +56326,11 @@ full button labels */
   --ps-ink: var(--text, #1f1a17);
   --ps-muted: color-mix(in srgb, var(--text, #1f1a17) 62%, transparent);
   --ps-label: var(--text, #1f1a17);
-  --ps-accent: var(--accent, #9a6738);
+  --ps-accent: var(--accent);
   --ps-accent-soft: var(--accent-soft, #d8c1a8);
   --ps-card: color-mix(in srgb, var(--surface, #fffaf3) 96%, #fff);
   --ps-line: var(--border, rgba(78, 58, 38, 0.22));
-  --ps-seg: color-mix(in srgb, var(--accent, #9a6738) 10%, var(--bg, #f3eee6));
+  --ps-seg: color-mix(in srgb, var(--accent) 10%, var(--bg, #f3eee6));
   --ps-mint: var(--success, #2e7d64);
   --ps-mint-soft: color-mix(in srgb, var(--success, #2e7d64) 12%, #fff);
   --ps-mint-border: color-mix(in srgb, var(--success, #2e7d64) 32%, transparent);
@@ -58504,10 +58421,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary {
-  background: linear-gradient(135deg, var(--accent, #9a6738), var(--accent-strong, #6e4726)) !important;
-  border-color: color-mix(in srgb, var(--accent, #9a6738) 48%, transparent) !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong, #6e4726)) !important;
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #9a6738) 22%, transparent) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 22%, transparent) !important;
   font-weight: 700 !important;
   min-height: 2.45rem !important;
 }
@@ -59843,7 +59760,7 @@ never recolour tajweed text */
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #18181b) 16%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--mushaf-reading-surface, #f0e9de) 62%, #ffffff);
+  background: color-mix(in srgb, var(--mushaf-reading-surface, var(--surface-strong)) 62%, #ffffff);
   color: var(--mushaf-reading-ink, #18181b);
   box-shadow: none;
   cursor: pointer;
@@ -59860,7 +59777,7 @@ never recolour tajweed text */
 .app .main.mushaf-mode-active .mushaf-font-zoom__btn:focus-visible,
 .main.mushaf-mode-active .mushaf-font-zoom__btn:hover:not(:disabled),
 .main.mushaf-mode-active .mushaf-font-zoom__btn:focus-visible {
-  background: color-mix(in srgb, var(--mushaf-reading-surface, #f0e9de) 40%, #ffffff);
+  background: color-mix(in srgb, var(--mushaf-reading-surface, var(--surface-strong)) 40%, #ffffff);
   border-color: color-mix(in srgb, var(--accent, #2f8f6b) 42%, var(--mushaf-reading-ink, #18181b));
   outline: none;
 }
@@ -59990,7 +59907,7 @@ never recolour tajweed text */
 .top-card-icon-controls .top-card-ellipsis {
   background: #ffffff !important;
   border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
-  color: color-mix(in srgb, var(--accent, #9a6738) 82%, #3f3f46) !important;
+  color: color-mix(in srgb, var(--accent) 82%, #3f3f46) !important;
   border-radius: 999px !important;
   box-shadow: none !important;
   transform: none !important;
@@ -60134,7 +60051,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-t
   margin: 0;
   padding: 0;
   border: 0;
-  background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent);
+  background: color-mix(in srgb, var(--zone-divider, var(--border)) 72%, transparent);
   opacity: 1;
   flex: 0 0 auto;
   align-self: stretch;
@@ -60168,7 +60085,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-t
     height: 2px !important;
     margin: 0.35rem 0 !important;
     border: 0 !important;
-    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-divider, var(--border)) 72%, transparent) !important;
     align-self: stretch !important;
   }
 
@@ -60208,7 +60125,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-t
     height: 1.85rem !important;
     margin: 0 !important;
     border: 0 !important;
-    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-divider, var(--border)) 72%, transparent) !important;
     align-self: center !important;
     flex: 0 0 2px !important;
   }
@@ -61568,7 +61485,7 @@ readable contrast */
   min-width: 0 !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  background: linear-gradient(135deg, var(--accent, #9a6738), var(--accent-strong, #7b4b22)) !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong, #7b4b22)) !important;
   border: 1px solid transparent !important;
   border-radius: 15px !important;
   font-size: 0.9rem !important;
@@ -61924,7 +61841,7 @@ and mode toggles only.
 .active-practice-setup {
   --aps-cream: color-mix(in srgb, var(--zone-reading, #faf7f1) 88%, white);
   --aps-green: var(--success, #2e7d64);
-  --aps-gold: var(--accent, #9a6738);
+  --aps-gold: var(--accent);
   margin: 0.35rem 0 0;
   padding: 0.55rem 0.7rem;
   border-radius: 14px;
@@ -62130,7 +62047,7 @@ and mode toggles only.
   max-width: min(92vw, 28rem);
   padding: 0.55rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent, #9a6738) 30%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
   background: color-mix(in srgb, var(--zone-elevated, #fff9f0) 92%, white);
   color: var(--text);
   font-size: 0.82rem;
@@ -64279,7 +64196,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   font-size: 0.72rem;
   font-weight: 650;
   white-space: nowrap;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-hero {
@@ -64338,7 +64255,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border-radius: 0.7rem;
   border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 22%, rgba(28, 25, 23, 0.1));
   background: #fff;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
   font-size: 1.05rem;
 }
 
@@ -64357,7 +64274,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-continue em {
@@ -64384,7 +64301,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 28%, rgba(28, 25, 23, 0.1));
   background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #fff);
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
   font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
@@ -64416,7 +64333,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent, #c48a4a) 14%, #fff);
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -64468,7 +64385,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border-radius: 0.7rem;
   border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 16%, rgba(28, 25, 23, 0.1));
   background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #fff);
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-panel-head h4 {
@@ -64505,7 +64422,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
 .workspace-tour__dash-range span.is-active {
   background: color-mix(in srgb, var(--accent, #c48a4a) 14%, #fff);
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-stats {
@@ -64544,7 +64461,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border-radius: 0.7rem;
   border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 18%, rgba(28, 25, 23, 0.1));
   background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #fff);
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-stat--learning .workspace-tour__dash-stat-icon {
@@ -64588,7 +64505,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 .workspace-tour__dash-card-head strong {
   font-size: 1.45rem;
   font-weight: 700;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-actions {
@@ -64676,7 +64593,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 }
 
 .workspace-tour__dash-analytics i {
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__dash-analytics strong {
@@ -64793,7 +64710,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__close {
@@ -64867,7 +64784,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   margin-inline-start: auto;
   border-color: color-mix(in srgb, var(--accent, #c48a4a) 42%, #d8cfc4);
   background: #f0e2cf;
-  color: var(--accent-strong, #9a6738);
+  color: var(--accent-strong);
 }
 
 .workspace-tour__tooltip.is-left,
@@ -67679,7 +67596,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   gap: 0.28rem;
   padding: 0.14rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, #8d6a35 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   background: color-mix(in srgb, #fffdf8 88%, #f3e6c8);
 }
 
@@ -67687,7 +67604,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: color-mix(in srgb, #5c4528 72%, #8d6a35);
+  color: color-mix(in srgb, #5c4528 72%, var(--accent));
 }
 
 .madani-qpc-icon-btn {
@@ -67713,7 +67630,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .madani-qpc-chrome__tools .madani-qpc-icon-btn:hover:not(:disabled),
 .madani-qpc-chrome__tools .madani-qpc-icon-btn:focus-visible {
-  background: color-mix(in srgb, #8d6a35 14%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .madani-qpc-icon-btn:disabled {
@@ -67807,7 +67724,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   box-shadow:
     0 2px 12px color-mix(in srgb, var(--text, #1b140d) 20%, transparent),
     inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
-  color: color-mix(in srgb, var(--text, #1b140d) 78%, var(--accent-strong, #8d6a35));
+  color: color-mix(in srgb, var(--text, #1b140d) 78%, var(--accent-strong));
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -67852,7 +67769,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .madani-qpc-viewport .madani-qpc-icon-btn--nav:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent, #8d6a35) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -67882,7 +67799,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     width: 1.65rem;
     height: 2.35rem;
     border-radius: 0.45rem;
-    border: 1px solid color-mix(in srgb, #8d6a35 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
     background: color-mix(in srgb, #fffdf8 82%, transparent);
     backdrop-filter: blur(6px);
     box-shadow: 0 2px 10px rgba(62, 41, 18, 0.08);
@@ -67897,7 +67814,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   .madani-qpc-icon-btn--nav:hover:not(:disabled),
   .madani-qpc-icon-btn--nav:focus-visible {
     background: color-mix(in srgb, #fffdf8 96%, #f3e6c8);
-    border-color: color-mix(in srgb, #8d6a35 42%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   }
 
   .madani-qpc-icon-btn--nav:hover:not(:disabled) i,
@@ -68540,7 +68457,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .verses-grid .verse-arabic--qpc-madani .qpc-madani-word.highlighted,
 .verses-grid .verse-arabic--qpc-madani .qpc-madani-word.is-ayah-active {
   background: color-mix(in srgb, #c4a35a 22%, transparent);
-  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, #8d6a35 38%, transparent);
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 /* Stacked ayah cards — same IndoPak Nastaleeq face + Unicode text as mushaf */
@@ -69218,7 +69135,7 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
   --ps-ui-raised: #fff8ec;
   --ps-ui-line: rgba(90, 62, 34, 0.16);
   --ps-ui-line-strong: rgba(90, 62, 34, 0.26);
-  --ps-ui-bronze: #9a6738;
+  --ps-ui-bronze: var(--accent);
   --ps-ui-green: #2e6b4a;
 }
 

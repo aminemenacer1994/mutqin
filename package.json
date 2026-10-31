@@ -5,6 +5,8 @@
         "watch": "mix watch",
         "prod": "mix --production",
         "build": "mix --production",
+        "postbuild": "node scripts/theme-built-css-gate.mjs",
+        "test:theme": "node tests/js/theme-fallback-ban.test.mjs && node tests/js/theme-chrome.test.mjs && node scripts/theme-built-css-gate.mjs",
         "lint:imports": "node scripts/verify-js-imports.mjs",
         "precommit": "npm run lint:imports",
         "prebuild": "node scripts/verify-js-imports.mjs",

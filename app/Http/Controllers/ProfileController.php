@@ -117,6 +117,10 @@ class ProfileController extends Controller
             'theme' => $theme,
         ])->save();
 
+        if ($request->hasSession()) {
+            $request->session()->put('mutqin_theme', $theme);
+        }
+
         return response()->json([
             'theme' => $theme,
         ])

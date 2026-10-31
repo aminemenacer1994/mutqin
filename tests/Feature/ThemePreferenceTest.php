@@ -103,6 +103,15 @@ class ThemePreferenceTest extends TestCase
             ->assertCookie('mutqin_theme', 'dark-mode', false);
     }
 
+    public function test_guest_explicit_light_mode_renders_light_on_memorisation_demo(): void
+    {
+        $this->withUnencryptedCookie('mutqin_theme', 'light-mode')
+            ->withUnencryptedCookie('mutqin_theme_set', '1')
+            ->get(route('memorisation.demo'))
+            ->assertOk()
+            ->assertSee('data-theme="light"', false);
+    }
+
     public function test_colour_mode_dropdown_lists_existing_themes_only(): void
     {
         $html = $this->get(route('home'))

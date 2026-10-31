@@ -382,24 +382,7 @@
       }
     </style>
     <style id="mutqin-button-colour-semantics">
-      :root {
-        --bs-danger: #dc2626;
-        --bs-danger-rgb: 220, 38, 38;
-        --success: #2e7d64;
-        --success-strong: #23624e;
-        --danger: #dc2626;
-        --danger-strong: #b91c1c;
-        --destructive: var(--danger);
-        --destructive-strong: var(--danger-strong);
-      }
-      [data-theme="dark"] {
-        --bs-danger: #ef4444;
-        --bs-danger-rgb: 239, 68, 68;
-        --success: #3f8f6f;
-        --success-strong: #2f6f58;
-        --danger: #ef4444;
-        --danger-strong: #dc2626;
-      }
+      /* Semantic danger/success match resources/sass/app.scss — no route-local palette fork. */
       .app .mutqin-modal-btn--primary,
       .app .btn-primary,
       .app .tools-btn-primary,
@@ -459,8 +442,8 @@
       .app .mutqin-modal-btn--destructive,
       .app .session-exit-action-chip--end {
         color: #fff !important;
-        background: var(--bs-danger, #dc2626) !important;
-        border-color: var(--bs-danger, #dc2626) !important;
+        background: var(--bs-danger) !important;
+        border-color: var(--bs-danger) !important;
       }
       .app .action-btn-exit:not(.post-session-choice-custom),
       .app .action-btn.mutqin-btn--destructive,
@@ -1139,7 +1122,7 @@
           height: 2px !important;
           margin: 0.35rem 0 !important;
           border: 0 !important;
-          background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
+          background: color-mix(in srgb, var(--zone-divider, var(--border)) 72%, transparent) !important;
         }
         .app .workspace-shell-head-utility-row > .top-card-icon-controls {
           grid-column: 2 !important;
@@ -1792,9 +1775,9 @@
         }
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:hover,
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:focus-visible {
-          background: var(--toolbar-control-hover-bg, color-mix(in srgb, #f0e9de 70%, #ffffff)) !important;
-          border-color: color-mix(in srgb, var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) 55%, var(--accent, #c48a4a)) !important;
-          color: var(--toolbar-control-fg, #1c1917) !important;
+          background: var(--toolbar-control-hover-bg, color-mix(in srgb, var(--surface-soft) 70%, var(--surface-strong))) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) 55%, var(--accent)) !important;
+          color: var(--toolbar-control-fg, var(--text)) !important;
           outline: none;
         }
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger i {
@@ -1819,25 +1802,7 @@
           max-width: none !important;
           box-sizing: border-box !important;
         }
-        /* Toolbar chrome + cream reading paper tokens (network-first hotfix) */
-        :root {
-          --zone-chrome-cream: #f0e9de;
-          --mushaf-reading-surface: #f0e9de;
-          --mushaf-reading-ink: #18181b;
-          --workspace-card-surface:
-            radial-gradient(circle at top right, color-mix(in srgb, #9a6738 10%, transparent), transparent 34%),
-            linear-gradient(165deg, color-mix(in srgb, #f0e9de 90%, white 10%), #f0e9de);
-          --toolbar-header-bg: var(--workspace-card-surface);
-          --toolbar-header-bg-solid: #f0e9de;
-          --toolbar-header-border: rgba(154, 103, 56, 0.18);
-          --toolbar-control-bg: #ffffff;
-          --toolbar-control-hover-bg: color-mix(in srgb, #f0e9de 70%, #ffffff);
-          --toolbar-control-active-bg: #1c1917;
-          --toolbar-control-active-fg: #fffaf3;
-          --toolbar-control-border: rgba(28, 25, 23, 0.1);
-          --toolbar-control-fg: #1c1917;
-          --toolbar-control-muted-bg: rgba(255, 255, 255, 0.72);
-        }
+        /* Mushaf toolbar uses memorisation-page tokens from vue-styles — no global :root override. */
         .app .main.mushaf-mode-active .mushaf-shell,
         .app .main.mushaf-mode-active .mushaf-shell {
           background: var(--toolbar-header-bg) !important;
@@ -1869,7 +1834,7 @@
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible {
           background: var(--toolbar-control-hover-bg) !important;
-          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, var(--accent, #9a6738)) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, var(--accent)) !important;
           color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active {
@@ -1962,8 +1927,8 @@
         .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
         .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
         .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
-          color: #18181b !important;
-          -webkit-text-fill-color: #18181b !important;
+          color: var(--mushaf-reading-ink, var(--text)) !important;
+          -webkit-text-fill-color: var(--mushaf-reading-ink, var(--text)) !important;
         }
         .app .main.mushaf-mode-active .madani-word.highlighted,
         .app .main.mushaf-mode-active .madani-word.phrase-highlighted {
@@ -2013,17 +1978,38 @@
           color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
           -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
         }
-        /* Dark UI: Mushaf paper matches Session Overview / workspace-shell card */
-        [data-theme="dark"] {
+        /* Light memorisation workspace — same tokens as Memorisation.css (HTML ships even when built vue-styles is stale). */
+        html[data-theme="light"] body.memorisation-page {
+          --zone-canvas: var(--bg);
+          --zone-chrome-cream: var(--bg);
+          --zone-chrome: var(--bg);
+          --zone-panel: var(--bg);
+          --mushaf-reading-surface: var(--surface-strong);
+          --mushaf-reading-ink: var(--text);
+        }
+
+        html[data-theme="sepia"] body.memorisation-page {
+          --zone-canvas: var(--bg);
+          --zone-chrome-cream: var(--bg);
+          --zone-chrome: var(--bg);
+          --zone-panel: var(--bg);
+          --zone-elevated: var(--surface-strong);
+          --toolbar-control-bg: var(--surface-strong);
+          --mushaf-reading-surface: var(--surface-strong);
+          --mushaf-reading-ink: var(--text);
+        }
+
+        /* Dark mushaf chrome — scoped to memorisation body (inherits app.scss dark chroma). */
+        html[data-theme="dark"] body.memorisation-page {
           --workspace-card-surface-dark:
-            radial-gradient(circle at top right, color-mix(in srgb, #d4a574 10%, transparent), transparent 36%),
+            radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 36%),
             linear-gradient(180deg, #221d19, color-mix(in srgb, #221d19 88%, #1a1714 12%));
           --toolbar-header-bg: var(--workspace-card-surface-dark);
           --toolbar-header-bg-solid: #221d19;
           --toolbar-header-border: rgba(208, 160, 107, 0.22);
           --toolbar-control-bg: #2a2521;
-          --toolbar-control-hover-bg: color-mix(in srgb, #2a2521 80%, #d4a574 20%);
-          --toolbar-control-active-bg: #d4a574;
+          --toolbar-control-hover-bg: color-mix(in srgb, #2a2521 80%, var(--accent) 20%);
+          --toolbar-control-active-bg: var(--accent);
           --toolbar-control-active-fg: #1a1208;
           --toolbar-control-border: rgba(245, 242, 234, 0.14);
           --toolbar-control-fg: #f7ebdf;
@@ -2771,7 +2757,7 @@
         --ps-ink: var(--text, #1f1a17) !important;
         --ps-muted: color-mix(in srgb, var(--text, #1f1a17) 62%, transparent) !important;
         --ps-label: var(--text, #1f1a17) !important;
-        --ps-accent: var(--accent, #9a6738) !important;
+        --ps-accent: var(--accent) !important;
         --ps-card: color-mix(in srgb, var(--surface, #fffaf3) 96%, #fff) !important;
         --ps-line: var(--border, rgba(78, 58, 38, 0.22)) !important;
         --ps-check-bg: color-mix(in srgb, var(--success, #2e7d64) 14%, #fff) !important;
@@ -3719,34 +3705,8 @@
     </script>
     @endif
     <style>
-        /* Theme Variables - NO SHADOWS */
+        /* Profile / marketing shell layout tokens — chroma lives in resources/sass/app.scss only. */
         :root {
-            color-scheme: light;
-            --bg: #f6f3ee;
-            --theme-color: #8b5e3c;
-            --surface: rgba(255, 255, 255, 0.96);
-            --surface-strong: #ffffff;
-            --surface-elevated: #fffaf4;
-            --surface-soft: rgba(249, 242, 233, 0.78);
-            --border: rgba(160, 120, 76, 0.12);
-            --text: #1a2e24;
-            --text-muted: #6b7f76;
-            --accent: #a0784c;
-            --accent-strong: #8b653b;
-            --accent-light: rgba(160, 120, 76, 0.1);
-            --text-on-accent: #fffaf5;
-            --text-on-accent-muted: rgba(255, 250, 245, 0.82);
-            --field-bg: rgba(255, 255, 255, 0.9);
-            --field-bg-strong: rgba(255, 255, 255, 0.97);
-            --overlay: rgba(17, 13, 10, 0.34);
-            --success-bg: rgba(24, 128, 86, 0.11);
-            --success-text: #146c46;
-            --danger-bg: rgba(178, 59, 59, 0.1);
-            --danger-text: #913232;
-            --warning-bg: rgba(196, 154, 108, 0.16);
-            --warning-text: #8b653b;
-            
-            /* Responsive system tokens */
             --nav-h: 64px;
             --shell-max: 1400px;
             --profile-max: 1080px;
@@ -3757,60 +3717,57 @@
             --nav-icon: 40px;
             --text-base: clamp(14px, 0.95vw + 10px, 16px);
             --text-sm: clamp(12px, 0.65vw + 9px, 14px);
+            --surface-elevated: var(--surface-strong);
+            --field-bg: color-mix(in srgb, var(--surface-strong) 92%, var(--bg));
+            --field-bg-strong: var(--surface-strong);
+            --text-on-accent: #fffaf5;
+            --text-on-accent-muted: rgba(255, 250, 245, 0.82);
+            --overlay: rgba(17, 13, 10, 0.34);
+            --success-bg: rgba(45, 106, 79, 0.11);
+            --success-text: var(--success, #2d6a4f);
+            --danger-bg: rgba(181, 80, 65, 0.1);
+            --danger-text: var(--danger-strong, #9a4336);
+            --warning-bg: rgba(154, 98, 7, 0.14);
+            --warning-text: var(--warning-strong, #7a4d05);
         }
 
         html[data-theme="dark"],
         [data-theme="dark"] {
-            color-scheme: dark;
-            --bg: #14110f;
-            --theme-color: #14110f;
-            --surface: #181614;
-            --surface-strong: #121212;
-            --surface-elevated: #24211d;
-            --surface-soft: rgba(48, 40, 33, 0.42);
-            --border: rgba(230, 207, 181, 0.14);
-            --text: #f4ede4;
-            --text-muted: #c9bbac;
-            --accent: #c49a6c;
-            --accent-strong: #d4aa7c;
-            --accent-light: rgba(196, 154, 108, 0.15);
+            --surface-elevated: var(--surface-strong);
+            --field-bg: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
+            --field-bg-strong: var(--surface-strong);
             --text-on-accent: #fff4e6;
             --text-on-accent-muted: rgba(255, 244, 230, 0.82);
-            --field-bg: rgba(34, 30, 27, 0.96);
-            --field-bg-strong: rgba(39, 34, 30, 0.98);
             --overlay: rgba(4, 4, 4, 0.52);
-            --success-bg: rgba(63, 154, 114, 0.18);
-            --success-text: #b8f0d5;
-            --danger-bg: rgba(175, 82, 82, 0.18);
-            --danger-text: #ffd1ca;
-            --warning-bg: rgba(196, 154, 108, 0.18);
-            --warning-text: #ffd6a7;
+            --success-bg: rgba(106, 171, 136, 0.18);
+            --success-text: var(--success, #6aab88);
+            --danger-bg: rgba(224, 138, 124, 0.18);
+            --danger-text: var(--danger-strong, #f0a090);
+            --warning-bg: rgba(224, 179, 90, 0.18);
+            --warning-text: var(--warning-strong, #f0c56e);
         }
 
+        html[data-theme="sepia"],
         [data-theme="sepia"] {
-            --bg: #f1e7d8;
-            --theme-color: #8b5e3c;
-            --surface: #fff8eb;
-            --surface-strong: #fff8eb;
-            --surface-elevated: #fff4e3;
-            --surface-soft: #efdfc8;
-            --border: rgba(139, 94, 60, 0.15);
-            --text: #3d2b1f;
-            --text-muted: #8b7355;
-            --accent: #b87333;
-            --accent-strong: #9a5a2a;
-            --accent-light: rgba(184, 115, 51, 0.1);
+            --surface-elevated: var(--surface-strong);
+            --field-bg: color-mix(in srgb, var(--surface-strong) 95%, var(--bg));
+            --field-bg-strong: var(--surface-strong);
             --text-on-accent: #fff7ec;
             --text-on-accent-muted: rgba(255, 247, 236, 0.82);
-            --field-bg: rgba(255, 250, 241, 0.95);
-            --field-bg-strong: rgba(255, 250, 241, 0.98);
             --overlay: rgba(44, 31, 20, 0.24);
-            --success-bg: rgba(38, 133, 88, 0.12);
-            --success-text: #1f7b50;
-            --danger-bg: rgba(173, 76, 62, 0.12);
-            --danger-text: #984336;
-            --warning-bg: rgba(184, 115, 51, 0.12);
-            --warning-text: #9a5a2a;
+            --success-bg: rgba(45, 106, 79, 0.12);
+            --success-text: var(--success, #2d6a4f);
+            --danger-bg: rgba(181, 80, 65, 0.12);
+            --danger-text: var(--danger-strong, #9a4336);
+            --warning-bg: rgba(154, 98, 7, 0.12);
+            --warning-text: var(--warning-strong, #7a4d05);
+        }
+
+        html[data-theme="light"],
+        [data-theme="light"] {
+            --surface-elevated: var(--surface-strong);
+            --field-bg: color-mix(in srgb, var(--surface-strong) 92%, var(--bg));
+            --field-bg-strong: var(--surface-strong);
         }
 
         * {
@@ -3983,7 +3940,7 @@
 
         /* App Navbar - NO SHADOWS */
         .app-navbar {
-            background: var(--surface-strong);
+            background: var(--bg);
             border-bottom: 1px solid var(--border);
             padding: 0;
             position: sticky;
@@ -4002,8 +3959,8 @@
         }
 
         [data-theme="sepia"] .app-navbar {
-            background: #fff8eb !important;
-            background-color: #fff8eb !important;
+            background: var(--bg);
+            background-color: var(--bg);
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
         }
@@ -8025,7 +7982,7 @@
         /* The marketing home needs one calm, uninterrupted header rather than
            a second, boxed desktop off-canvas panel. */
         body.marketing-home .app-navbar {
-            background: var(--surface-strong) !important;
+            background: var(--bg) !important;
             border-bottom: 1px solid var(--border) !important;
             box-shadow: none !important;
             backdrop-filter: none !important;
@@ -8154,7 +8111,7 @@
         }
     </style>
 </head>
-<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home' : '' }}">
+<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home ' : '' }}{{ request()->routeIs('memorisation', 'memorisation.demo') ? 'memorisation-page ' : '' }}">
     @php
         $usesEarlyAccessNav = \App\Support\MutqinDomains::usesEarlyAccessNav(request());
     @endphp
@@ -8596,7 +8553,7 @@
                 } catch (e) {}
             }
             const themeModes = Array.isArray(window.mutqinThemeModes) ? window.mutqinThemeModes : [];
-            const defaultTheme = window.mutqinDefaultTheme || 'dark';
+            const defaultTheme = window.mutqinDefaultTheme || 'sepia';
 
             function findThemeMode(value) {
                 const raw = String(value || '').toLowerCase();

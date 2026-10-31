@@ -62,7 +62,8 @@ If the host rewrites `public/` in place:
 - `public/sw.js` **never caches HTML documents** (network-only).
 - Entry bundles + `mix-manifest.json` are network-only.
 - Contenthashed chunks may be cache-first (immutable).
-- Cache names are versioned (`mutqin-shell-v84`, …); activate deletes older Mutqin caches.
+- Cache names are versioned (`mutqin-shell-v97`, …); activate deletes older Mutqin caches.
+- The worker only handles HTML (network-only), Mix entry assets, contenthashed chunks, icons/manifest, and CDN audio. It does **not** intercept `/api/*`, Laravel proxies, or other dynamic same-origin GETs (avoids `Failed to fetch` boot failures).
 - On `MUTQIN_ASSET_BUILD` change, layout script unregisters SWs and deletes `mutqin-*` caches without forcing a navigation reload.
 
 ## Client recovery (`ChunkLoadError`)

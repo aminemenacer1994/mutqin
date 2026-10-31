@@ -918,7 +918,7 @@ export default {
   --plan-field: var(--field-bg, rgba(255, 255, 255, 0.9));
   --plan-text: var(--text, #1f1a17);
   --plan-muted: var(--text-muted, #6c6258);
-  --plan-accent: var(--accent, #9a6738);
+  --plan-accent: var(--accent);
   --plan-accent-strong: var(--accent-strong, #6e4726);
   --plan-accent-soft: var(--accent-light, rgba(154, 103, 56, 0.1));
 }

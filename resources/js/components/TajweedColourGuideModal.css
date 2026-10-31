@@ -167,7 +167,7 @@
 }
 
 .tajweed-colour-guide__card:hover {
-  border-color: color-mix(in srgb, var(--accent, #9a6738) 28%, var(--guide-line));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--guide-line));
   transform: translateY(-1px);
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 42%, transparent) inset,
