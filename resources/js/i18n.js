@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json' with { type: 'json' }
 import { wrapChunkImport } from './utils/chunkLoadRecovery.js'
+import { cspSafeMessageCompiler } from './utils/cspSafeMessageCompiler.js'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
 /** Locales shown in the UI language switcher. */
@@ -153,6 +154,8 @@ export async function setupI18n() {
     fallbackLocale: 'en',
     missingWarn: false,
     fallbackWarn: false,
+    // Production CSP forbids eval. Do not use vue-i18n's new Function compiler.
+    messageCompiler: cspSafeMessageCompiler,
     messages: { en: enMessages },
   })
   await loadLocaleMessages(i18n, getSavedLocale())
