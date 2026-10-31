@@ -1130,7 +1130,7 @@ class SessionLifecycleTest extends TestCase
                 'ayah_number' => 1,
                 'client_revision' => 3,
             ])
-            ->assertStatus(409)
+            ->assertOk()
             ->assertJsonPath('saved', false)
             ->assertJsonPath('stale', true);
 
@@ -1158,7 +1158,7 @@ class SessionLifecycleTest extends TestCase
                 'ayah_number' => 2,
                 'client_revision' => 1,
             ])
-            ->assertStatus(409)
+            ->assertOk()
             ->assertJsonPath('saved', false)
             ->assertJsonPath('conflict', true);
 

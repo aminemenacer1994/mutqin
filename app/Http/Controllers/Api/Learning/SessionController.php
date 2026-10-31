@@ -322,7 +322,7 @@ class SessionController extends Controller
                 'stale' => false,
                 'conflict' => true,
                 'session' => null,
-                'status' => 409,
+                'status' => 200,
             ];
         }
 
@@ -348,7 +348,7 @@ class SessionController extends Controller
                 'stale' => true,
                 'conflict' => false,
                 'session' => $unfinished,
-                'status' => 409,
+                'status' => 200,
             ];
         }
 
@@ -363,7 +363,7 @@ class SessionController extends Controller
                         'stale' => true,
                         'conflict' => false,
                         'session' => $unfinished,
-                        'status' => 409,
+                        'status' => 200,
                     ];
                 }
             } catch (\Throwable) {

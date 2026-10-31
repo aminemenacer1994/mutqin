@@ -100,6 +100,26 @@ export function resolveAckeeGraphqlUrl(server = '') {
   return `${raw.replace(/\/+$/, '')}/api`
 }
 
+/**
+ * Mutqin CSP connect-src is `'self' https: wss:` — not http://127.0.0.1:3000 from localhost:8000.
+ * Use ACKEE_SERVER=/ackee (same-origin proxy) for local Docker Ackee.
+ *
+ * @param {string} server
+ * @returns {boolean}
+ */
+export function isConnectSrcPermittedForAckee(server = '') {
+  const endpoint = resolveAckeeGraphqlUrl(server)
+  if (!endpoint) return false
+  if (typeof window === 'undefined') return true
+  try {
+    const target = new URL(endpoint)
+    if (target.origin === window.location.origin) return true
+    return target.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function currentHostname() {
   if (typeof window === 'undefined') return ''
   try {
@@ -122,6 +142,7 @@ export function isAckeeRuntimeEnabled(config = readConfig()) {
   if (isLocalHost(host) && !config.allowLocalhost) return false
   const env = currentEnvironment()
   if ((env === 'local' || env === 'testing') && !config.allowLocalhost) return false
+  if (!isConnectSrcPermittedForAckee(config.server)) return false
   return true
 }
 

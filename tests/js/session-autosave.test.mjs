@@ -16,6 +16,8 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
   buildCheckpointPayload,
+  seedSessionAutosaveRevisionFromBackend,
+  applyCheckpointServerRejection,
   flushActionToPath,
   isStaleAutosaveResponse,
   nextClientRevision,
@@ -221,6 +223,53 @@ const learningSource = readFileSync(join(root, 'resources/js/scripts/api/learnin
   assert.equal(result.ok, true)
   assert.equal(result.transport, 'beacon')
   assert.equal(beaconCalls, 1)
+}
+
+// --- checkpoint payload omits orphan session_id when not live/paused/unfinished ---
+{
+  const payload = buildCheckpointPayload({
+    sessionId: 999,
+    unfinished: false,
+    active: false,
+    paused: false,
+    sessionState: {},
+    clientRevision: 2,
+  })
+  assert.equal(payload.session_id, undefined)
+  const bound = buildCheckpointPayload({
+    sessionId: 999,
+    unfinished: true,
+    active: false,
+    paused: false,
+    sessionState: {},
+    clientRevision: 2,
+  })
+  assert.equal(bound.session_id, 999)
+}
+
+// --- applyCheckpointServerRejection clears stale binding on conflict ---
+{
+  const vm = {
+    backendSessionSnapshot: { id: 12 },
+    backendUnfinishedSession: true,
+    mutqinState: { sessionState: { backendSessionId: 12 } },
+    sessionAutosave: { clientRevision: 4 },
+  }
+  const out = applyCheckpointServerRejection(vm, { conflict: true, saved: false })
+  assert.equal(out.handled, true)
+  assert.equal(out.kind, 'conflict')
+  assert.equal(vm.backendSessionSnapshot, null)
+  assert.equal(vm.backendUnfinishedSession, false)
+  assert.equal(vm.mutqinState.sessionState.backendSessionId, null)
+}
+
+// --- seedSessionAutosaveRevisionFromBackend adopts server revision ---
+{
+  const sessionAutosave = { clientRevision: 0 }
+  seedSessionAutosaveRevisionFromBackend(sessionAutosave, { metadata: { client_revision: 7 } })
+  assert.equal(sessionAutosave.clientRevision, 7)
+  seedSessionAutosaveRevisionFromBackend(sessionAutosave, { metadata: { client_revision: 5 } })
+  assert.equal(sessionAutosave.clientRevision, 7)
 }
 
 // --- Memorisation wiring source guards ---

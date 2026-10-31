@@ -312,4 +312,8 @@ test('existing recovery is wired for pages, bootstrap, locales, and workspace', 
   assert.match(memorisation, /errorComponent: PageLoadError/)
   assert.match(memorisation, /webpackChunkName: "ask-mutqin-index"/)
   assert.match(i18n, /wrapChunkImport\(loader/)
+  assert.match(appSource, /mountMutqinVueIslands/)
+  assert.match(appSource, /readIslandPropsFromElement/)
+  assert.match(appSource, /querySelectorAll\(tag\)/)
+  assert.doesNotMatch(appSource, /\.mount\(['"]#app['"]\)/)
 })

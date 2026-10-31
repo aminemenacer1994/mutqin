@@ -112,7 +112,11 @@ export function buildCheckpointPayload(ctx = {}) {
     metadata: slimMeta,
   }
 
-  if (sessionId > 0) payload.session_id = sessionId
+  const mayBindSessionId = !!ctx.unfinished
+    || !!ctx.active
+    || !!ctx.paused
+    || ctx.bindSessionId === true
+  if (sessionId > 0 && mayBindSessionId) payload.session_id = sessionId
   if (paused) {
     payload.status = 'paused'
     payload.paused_at = ctx.pausedAt || nowIso
@@ -180,6 +184,62 @@ export function isStaleAutosaveResponse(input = {}) {
   }
 
   return false
+}
+
+/**
+ * Keep local autosave revision in sync with the authoritative backend session row.
+ * @param {object|null|undefined} sessionAutosave
+ * @param {object|null|undefined} session
+ */
+export function seedSessionAutosaveRevisionFromBackend(sessionAutosave, session) {
+  if (!sessionAutosave || !session || typeof session !== 'object') return
+  const serverRev = Number(session?.metadata?.client_revision || 0)
+  if (!Number.isFinite(serverRev) || serverRev <= 0) return
+  const localRev = Number(sessionAutosave.clientRevision || 0)
+  sessionAutosave.clientRevision = Math.max(localRev, serverRev)
+}
+
+/**
+ * Apply server checkpoint rejection (409 conflict / stale revision) to local binding state.
+ *
+ * @param {object} vm Memorisation component instance (mutates backend session fields).
+ * @param {object|null|undefined} result JSON body from POST /api/session (action=save).
+ * @returns {{ handled: boolean, kind?: 'conflict'|'stale' }}
+ */
+export function applyCheckpointServerRejection(vm, result) {
+  if (!result || typeof result !== 'object' || !vm || typeof vm !== 'object') {
+    return { handled: false }
+  }
+
+  if (result.conflict) {
+    vm.backendSessionSnapshot = null
+    vm.backendUnfinishedSession = false
+    if (vm.mutqinState?.sessionState && typeof vm.mutqinState.sessionState === 'object') {
+      vm.mutqinState.sessionState.backendSessionId = null
+    }
+    return { handled: true, kind: 'conflict' }
+  }
+
+  if (result.stale) {
+    const session = result.session && typeof result.session === 'object' ? result.session : null
+    const serverRev = Number(session?.metadata?.client_revision || 0)
+    if (serverRev > 0 && vm.sessionAutosave) {
+      const localRev = Number(vm.sessionAutosave.clientRevision || 0)
+      vm.sessionAutosave.clientRevision = Math.max(localRev, serverRev)
+    }
+    if (session) {
+      vm.backendSessionSnapshot = {
+        ...(vm.backendSessionSnapshot && typeof vm.backendSessionSnapshot === 'object'
+          ? vm.backendSessionSnapshot
+          : {}),
+        ...session,
+      }
+      vm.backendUnfinishedSession = !!result.unfinished
+    }
+    return { handled: true, kind: 'stale' }
+  }
+
+  return { handled: false }
 }
 
 /**
@@ -300,6 +360,8 @@ export default {
   buildCheckpointPayload,
   shouldAutosave,
   isStaleAutosaveResponse,
+  applyCheckpointServerRejection,
+  seedSessionAutosaveRevisionFromBackend,
   resolveLifecycleFlushAction,
   readKeepaliveCsrf,
   postKeepalive,

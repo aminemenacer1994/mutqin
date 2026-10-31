@@ -12,9 +12,10 @@ import {
     recoverFromStaleChunk,
     syncChunkReloadFlagWithAssetBuild,
     wrapChunkImport,
+    debugAgentLog,
 } from './utils/chunkLoadRecovery';
 import PageLoadError from './components/PageLoadError';
-import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
+import { installErrorTracking, reportError, attachVueErrorHandler } from './scripts/observability/errorTracking';
 import {
     openFeedbackModal,
     setFeedbackModalEnsureMounted,
@@ -167,10 +168,6 @@ const MadaniSpread = lazyPage(
     () => import(/* webpackChunkName: "madani-page" */ './components/madani/MadaniSpread.vue'),
     { feature: 'madani-page' }
 );
-const MadaniSessionScroll = lazyPage(
-    () => import(/* webpackChunkName: "madani-page" */ './components/madani/MadaniSessionScroll.vue'),
-    { feature: 'madani-page' }
-);
 const Homepage = lazyPage(
     () => import(/* webpackChunkName: "homepage" */ './views/Homepage.vue'),
     { feature: 'homepage' }
@@ -245,10 +242,88 @@ const Memorisation = lazyPage(
     { feature: 'memorisation', loadingComponent: MemorisationBootFallback, delay: 0 }
 );
 
+const PrivacyPolicyPage = lazyPage(
+    () => import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue'),
+    { feature: 'privacy' }
+);
+const SeoLaunchPage = lazyPage(
+    () => import(/* webpackChunkName: "seo-launch" */ './views/SeoLaunchPage.vue'),
+    { feature: 'seo-launch' }
+);
+
+/**
+ * Blade uses `:auth='@json(...)'` for the old in-DOM Vue template. Per-island mount
+ * must read those attributes manually (colon-prefixed names are not Vue bind syntax here).
+ *
+ * @param {Element} el
+ * @returns {Record<string, unknown> | null}
+ */
+function readIslandPropsFromElement(el) {
+    if (!el?.attributes?.length) return null;
+    const props = {};
+    let found = false;
+    for (const attr of el.attributes) {
+        let name = String(attr.name || '');
+        if (name.startsWith(':')) {
+            name = name.slice(1);
+        } else if (name.startsWith('v-bind:')) {
+            name = name.slice(7);
+        } else {
+            continue;
+        }
+        if (!name) continue;
+        const camel = name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+        const raw = attr.value;
+        try {
+            props[camel] = JSON.parse(raw);
+        } catch {
+            props[camel] = raw;
+        }
+        found = true;
+    }
+    return found ? props : null;
+}
+
+/**
+ * Mount each Blade `<homepage>` / `<memorisation>` island on its own app instance.
+ * Avoids compiling #app innerHTML at runtime (production CSP blocks `unsafe-eval`).
+ */
+function mountMutqinVueIslands(i18n, componentByTag) {
+    const root = document.getElementById('app');
+    if (!root) return;
+
+    const mountIsland = (el, component) => {
+        if (!el || !component) return;
+        const props = readIslandPropsFromElement(el);
+        const islandApp = props ? createApp(component, props) : createApp(component);
+        islandApp.use(i18n);
+        islandApp.mixin(i18nMixin);
+        islandApp.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
+        attachVueErrorHandler(islandApp);
+        islandApp.mount(el);
+    };
+
+    const mounted = new WeakSet();
+    for (const [tag, component] of Object.entries(componentByTag)) {
+        if (!component) continue;
+        root.querySelectorAll(tag).forEach((el) => {
+            if (mounted.has(el)) return;
+            mounted.add(el);
+            mountIsland(el, component);
+        });
+    }
+}
+
 async function bootstrapApp() {
-    const app = createApp({});
+    debugAgentLog('H3', 'app.js:bootstrapApp', 'start', {
+        build: document.documentElement?.dataset?.mutqinAssetBuild || '',
+        host: window.location.host,
+    });
 
     const i18n = await setupI18n();
+    debugAgentLog('H1', 'app.js:bootstrapApp', 'after setupI18n', {
+        locale: i18n?.global?.locale?.value,
+    });
 
     // /teacher: load the dashboard chunk before mount so UI updates ship with the
     // same refresh as app.js (avoids a stale lazy chunk after deploy).
@@ -261,40 +336,35 @@ async function bootstrapApp() {
         TeacherDashboardComponent = mod.default;
     }
 
-    app.use(i18n);
-    app.mixin(i18nMixin);
-    app.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
-    installErrorTracking(app);
+    installErrorTracking(null);
     window.mutqinSetLocale = (locale) => setLocale(i18n, locale);
     window.mutqinGetLocale = () => i18n.global.locale.value;
     window.dispatchEvent(new CustomEvent('mutqin:i18n-ready', { detail: { locale: i18n.global.locale.value } }));
 
-    app.component('network-status-banner', NetworkStatusBanner);
-    app.component('madani-spread', MadaniSpread);
-    app.component('madani-session-scroll', MadaniSessionScroll);
-    app.component('homepage', Homepage);
-    app.component('memorisation', Memorisation);
-    app.component('user-dashboard', UserDashboard);
-    app.component('teacher-dashboard', TeacherDashboardComponent);
-    app.component('admin-dashboard', AdminDashboard);
-    app.component('admin-feedback', AdminFeedback);
-    app.component('about', About);
-    app.component('about-us-page', AboutUsPage);
-    app.component('pricing-page', PricingPage);
-    app.component('our-mission-page', OurMissionPage);
-    app.component('donation-page', DonationPage);
-    app.component('waiting-list-page', WaitingListPage);
-    app.component('articles-page', ArticlesPage);
-    app.component('article-detail-page', ArticleDetailPage);
-    app.component('privacy-policy-page', lazyPage(
-        () => import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue'),
-        { feature: 'privacy' }
-    ));
-    app.component('seo-launch-page', lazyPage(
-        () => import(/* webpackChunkName: "seo-launch" */ './views/SeoLaunchPage.vue'),
-        { feature: 'seo-launch' }
-    ));
-    app.mount('#app');
+    const componentByTag = {
+        'network-status-banner': NetworkStatusBanner,
+        // Standalone Madani page Blade island (not the Memorisation workspace children).
+        'madani-spread': MadaniSpread,
+        homepage: Homepage,
+        memorisation: Memorisation,
+        'user-dashboard': UserDashboard,
+        'teacher-dashboard': TeacherDashboardComponent,
+        'admin-dashboard': AdminDashboard,
+        'admin-feedback': AdminFeedback,
+        about: About,
+        'about-us-page': AboutUsPage,
+        'pricing-page': PricingPage,
+        'our-mission-page': OurMissionPage,
+        'donation-page': DonationPage,
+        'waiting-list-page': WaitingListPage,
+        'articles-page': ArticlesPage,
+        'article-detail-page': ArticleDetailPage,
+        'privacy-policy-page': PrivacyPolicyPage,
+        'seo-launch-page': SeoLaunchPage,
+    };
+
+    mountMutqinVueIslands(i18n, componentByTag);
+    debugAgentLog('H3', 'app.js:bootstrapApp', 'after mount', {});
     document.documentElement.dataset.mutqinAppMounted = '1';
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
     useSeo();
@@ -407,6 +477,11 @@ function scheduleFeedbackModalMount(i18n) {
 }
 
 function showBootstrapFailure(error) {
+    debugAgentLog('H3', 'app.js:showBootstrapFailure', 'bootstrap failed', {
+        name: String(error?.name || ''),
+        message: String(error?.message || error || '').slice(0, 400),
+        stack: String(error?.stack || '').slice(0, 500),
+    });
     reportError(error, { kind: 'bootstrap', feature: 'shell' });
     const mountTarget = document.getElementById('app');
     if (!mountTarget) return;
@@ -446,9 +521,14 @@ function showBootstrapFailure(error) {
 }
 
 bootstrapApp().catch((error) => {
+    debugAgentLog('H4', 'app.js:bootstrapCatch', 'bootstrapApp rejected', {
+        name: String(error?.name || ''),
+        message: String(error?.message || error || '').slice(0, 400),
+    });
     const outcome = recoverFromStaleChunk(error, {
         noticeMessage: resolveEn('common.status.chunkUpdating'),
     });
+    debugAgentLog('H4', 'app.js:bootstrapCatch', 'recover outcome', { outcome });
     if (outcome === 'reloading') return;
     showBootstrapFailure(error);
 });

@@ -475,12 +475,18 @@ import {
   buildCheckpointPayload,
   flushActionToPath,
   isStaleAutosaveResponse,
+  applyCheckpointServerRejection,
+  seedSessionAutosaveRevisionFromBackend,
   nextClientRevision,
   postKeepalive,
   readKeepaliveCsrf,
   resolveLifecycleFlushAction,
   shouldAutosave,
 } from '../scripts/session/sessionAutosave'
+import {
+  getSilentUnlockWavUrl,
+  isSilentUnlockWavSrc,
+} from '../scripts/audio/silentUnlockWav'
 import {
   AUTOSAVED_SESSION_STATUS,
   SAVED_SESSION_AUTOSAVE_DEBOUNCE_MS,
@@ -562,6 +568,17 @@ const SessionAnalysisModal = lazyWorkspaceChunk(
 const WorkspaceAiReciteResultModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "workspace-recite-result" */ '../components/WorkspaceAiReciteResultModal.vue'),
   'workspace-recite-result'
+)
+
+// Mushaf page renderers: previously registered on the shared #app instance.
+// Island-mounted Memorisation must declare them locally or the workspace mushaf is empty.
+const MadaniSpread = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "madani-page" */ '../components/madani/MadaniSpread.vue'),
+  'madani-page'
+)
+const MadaniSessionScroll = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "madani-page" */ '../components/madani/MadaniSessionScroll.vue'),
+  'madani-page'
 )
 
 const preloadAiMemorisationDetectionModal = () => wrapChunkImport(
@@ -884,6 +901,8 @@ export default {
     AyahNotesModal,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
+    MadaniSpread,
+    MadaniSessionScroll,
     MutashabihatCompareModal,
     MutashabihatPairCard,
     TajweedColourGuideModal,
@@ -16547,7 +16566,7 @@ export default {
         try {
           const unlockAudio = new Audio()
           unlockAudio.muted = true
-          unlockAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+          unlockAudio.src = getSilentUnlockWavUrl()
           const playPromise = unlockAudio.play()
           if (playPromise?.then) {
             playPromise.then(() => {
@@ -16575,7 +16594,7 @@ export default {
       const previousSrc = audio.currentSrc || audio.getAttribute('src') || ''
       const previousNormalized = this.normalizeAudioUrl(previousSrc)
       const previousTime = Number(audio.currentTime || 0)
-      const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+      const silentSrc = getSilentUnlockWavUrl()
       const unlockSrc = targetUrl || previousSrc || silentSrc
       const isSilentUnlock = !targetUrl && !previousSrc
 
@@ -16622,7 +16641,7 @@ export default {
             return
           }
           // Silent unlock: never tear down a real URL assigned after unlock started.
-          if (isSilentUnlock && (nowSrc === silentSrc || String(nowSrc).startsWith('data:audio/wav;base64,UklGRig'))) {
+          if (isSilentUnlock && isSilentUnlockWavSrc(nowSrc)) {
             try {
               audio.removeAttribute('src')
               audio.load()
@@ -16641,7 +16660,7 @@ export default {
             audio.muted = false
             if (isSilentUnlock) {
               const nowSrc = audio.currentSrc || audio.getAttribute('src') || ''
-              if (nowSrc === silentSrc || String(nowSrc).startsWith('data:audio/wav;base64,UklGRig')) {
+              if (isSilentUnlockWavSrc(nowSrc)) {
                 try {
                   audio.removeAttribute('src')
                   audio.load()
@@ -16799,6 +16818,7 @@ export default {
       const unfinished = result?.unfinished !== false && !!session
       this.backendSessionSnapshot = session
       this.backendUnfinishedSession = unfinished
+      seedSessionAutosaveRevisionFromBackend(this.sessionAutosave, session)
       if (session?.id && this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.backendSessionId = session.id
       }
@@ -36582,6 +36602,8 @@ export default {
         this.backendSessionSnapshot = session
         this.backendUnfinishedSession = !!unfinished
 
+        seedSessionAutosaveRevisionFromBackend(this.sessionAutosave, session)
+
         if (preferredSessionId && invalidRequested) {
           this.sessionLifecycleError = 'resume_invalid'
           if (this.continueSessionPayload) {
@@ -47265,6 +47287,7 @@ export default {
         sessionId: this.backendSessionSnapshot?.id
           || this.mutqinState?.sessionState?.backendSessionId
           || null,
+        unfinished: !!this.backendUnfinishedSession,
         surahNumber: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
         ayahNumber: this.resolveLiveAbsoluteAyahNumber() || Number(this.rangeStart || 0) || null,
         currentStep: Number(this.queueIndex || 0),
@@ -47283,6 +47306,7 @@ export default {
 
     scheduleSessionCheckpoint() {
       if (!this.learningBackendEnabled()) return
+      if (!this.sessionLifecycleHydrated) return
       if (!shouldAutosave({
         backendEnabled: true,
         onboardingSample: !!this.onboardingSampleSessionActive,
@@ -47309,6 +47333,7 @@ export default {
 
     async pushSessionCheckpoint(force = false) {
       if (!this.learningBackendEnabled()) return null
+      if (!this.sessionLifecycleHydrated && !force) return null
       if (!shouldAutosave({
         backendEnabled: true,
         onboardingSample: !!this.onboardingSampleSessionActive,
@@ -47381,7 +47406,7 @@ export default {
         }
 
         if (result?.stale || result?.conflict) {
-          // Server newer or no unfinished row — do not invent progress.
+          applyCheckpointServerRejection(this, result)
           return result
         }
 

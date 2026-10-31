@@ -48,7 +48,7 @@ class SetMutqinContentSecurityPolicy
             ."style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.bunny.net; "
             ."font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://fonts.bunny.net https://verses.quran.foundation; "
             ."img-src 'self' data: blob: https:; "
-            ."media-src 'self' blob: https:; "
+            ."media-src 'self' blob: data: https:; "
             ."connect-src 'self' https: wss:; "
             ."worker-src 'self' blob:; "
             ."manifest-src 'self';";

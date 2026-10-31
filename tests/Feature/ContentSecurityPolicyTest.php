@@ -18,6 +18,16 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString('https://fonts.bunny.net', (string) $policy);
     }
 
+    public function test_build_policy_omits_unsafe_eval_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config(['app.debug' => false]);
+
+        $policy = SetMutqinContentSecurityPolicy::buildPolicy();
+
+        $this->assertStringNotContainsString("'unsafe-eval'", $policy);
+    }
+
     public function test_build_policy_includes_required_asset_hosts(): void
     {
         $policy = SetMutqinContentSecurityPolicy::buildPolicy();
@@ -30,5 +40,6 @@ class ContentSecurityPolicyTest extends TestCase
             "font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://fonts.bunny.net https://verses.quran.foundation",
             $policy
         );
+        $this->assertStringContainsString("media-src 'self' blob: data: https:", $policy);
     }
 }

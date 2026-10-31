@@ -17,6 +17,34 @@ export const CHUNK_RELOAD_NOTICE_ID = 'mutqin-chunk-reload-notice';
 export const BEFORE_CHUNK_RELOAD_EVENT = 'mutqin:before-chunk-reload';
 export const CHUNK_RELOAD_QUERY_PARAM = 'mutqin_chunk_reload';
 
+/** @param {string} hypothesisId @param {string} location @param {string} message @param {Record<string, unknown>} [data] */
+export function debugAgentLog(hypothesisId, location, message, data = {}) {
+    const enabled = typeof window !== 'undefined'
+        && (window.location.search.includes('mutqin_debug=48e238')
+            || window.sessionStorage?.getItem('mutqin_debug') === '48e238');
+    if (!enabled) return;
+    const payload = {
+        sessionId: '48e238',
+        hypothesisId,
+        location,
+        message,
+        data,
+        timestamp: Date.now(),
+        runId: window.__mutqinDebugRunId || 'pre-fix',
+    };
+    try {
+        window.__mutqinDebugLog = window.__mutqinDebugLog || [];
+        window.__mutqinDebugLog.push(payload);
+    } catch (_) { /* ignore */ }
+    // #region agent log
+    fetch('http://127.0.0.1:7443/ingest/899f6d94-ccf1-43b2-abe5-cf3a39f67a6e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '48e238' },
+        body: JSON.stringify(payload),
+    }).catch(() => {});
+    // #endregion
+}
+
 /**
  * Mix production lazy assets: /js/<name>.<8-hex>.js (and watch aliases /js/<name>.js).
  *
@@ -275,6 +303,13 @@ export function notifyBeforeChunkReload(error) {
  * @returns {'reloading' | 'give_up' | 'not_chunk_error'}
  */
 export function recoverFromStaleChunk(error, options = {}) {
+    debugAgentLog('H4', 'chunkLoadRecovery.js:recoverFromStaleChunk', 'recover invoked', {
+        name: String(error?.name || ''),
+        message: String(error?.message || error || '').slice(0, 240),
+        isChunk: isChunkLoadError(error),
+        isStaleAsset: isStaleAssetResourceError(error),
+        likelyStale: isLikelyStaleDeploymentError(error, { offline: options.offline }),
+    });
     if (!isChunkLoadError(error) && !isStaleAssetResourceError(error)) {
         return 'not_chunk_error';
     }
@@ -359,6 +394,13 @@ export function wrapChunkImport(importer, options = {}) {
     const attempt = (n) => Promise.resolve()
         .then(() => importer())
         .catch((error) => {
+            debugAgentLog('H2', 'chunkLoadRecovery.js:wrapChunkImport', 'import failed', {
+                feature: options.feature || 'page',
+                attempt: n,
+                name: String(error?.name || ''),
+                message: String(error?.message || error || '').slice(0, 240),
+                isChunk: isChunkLoadError(error),
+            });
             if (!isChunkLoadError(error)) {
                 if (typeof console !== 'undefined' && typeof console.error === 'function') {
                     console.error(`[Mutqin async load:${options.feature || 'page'}]`, error);

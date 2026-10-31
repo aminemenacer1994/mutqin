@@ -85,6 +85,9 @@ test('localhost and development stay off unless allowed', () => {
 
   window.mutqinAckee.allowLocalhost = true
   window.mutqinAckee.server = 'http://127.0.0.1:3000'
+  assert.equal(isAckeeRuntimeEnabled(), false)
+
+  window.mutqinAckee.server = '/ackee'
   assert.equal(isAckeeRuntimeEnabled(), true)
 })
 

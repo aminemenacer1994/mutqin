@@ -8,6 +8,16 @@ const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.
 const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const memorisationCss = readFileSync(join(root, 'resources/js/views/Memorisation.css'), 'utf8')
 
+assert.match(
+  memorisationJs,
+  /MadaniSpread,\s*\n\s*MadaniSessionScroll,/,
+  'mushaf renderers must be local components on the Memorisation island'
+)
+assert.match(
+  memorisationJs,
+  /webpackChunkName: "madani-page"/,
+  'mushaf renderers share the madani-page chunk'
+)
 assert.match(memorisationJs, /sessionMadaniLineWords/, 'template filters words via sessionMadaniLineWords')
 assert.match(memorisationJs, /syncSessionScrubAttrsToDocument/, 'session scrub attrs synced to documentElement')
 assert.match(memorisationJs, /getMadaniChapterRangeVerses/, 'mushaf session pages load chapter-range verses only')
