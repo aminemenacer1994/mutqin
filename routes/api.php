@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
 use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
+use App\Http\Middleware\ForwardMarketingClientErrors;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
@@ -29,7 +30,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/client-errors', [ClientErrorController::class, 'store'])
-    ->middleware('throttle:20,1')
+    ->middleware([ForwardMarketingClientErrors::class, 'throttle:20,1'])
     ->name('api.client-errors.store');
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');

@@ -304,6 +304,10 @@ async function bootstrapApp() {
         return;
     }
 
+    if (typeof window !== 'undefined' && window.mutqinRestrictMarketingHost) {
+        return;
+    }
+
     scheduleFeedbackModalMount(i18n);
 }
 

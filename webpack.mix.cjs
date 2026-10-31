@@ -466,6 +466,7 @@ mix.then(() => {
     for (const name of [...keepNames].sort()) {
         if (name === 'app.js' || name === 'app.css') continue;
         if (!/\.js$/i.test(name)) continue;
+        if (isStableNamedChunkFile(name)) continue;
         const key = `/js/${name}`;
         pruned[key] = key;
     }

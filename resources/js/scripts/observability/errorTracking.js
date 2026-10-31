@@ -112,6 +112,11 @@ function buildPayload(error, context = {}) {
 
 function postClientError(payload) {
   if (typeof window === 'undefined' || typeof fetch !== 'function') return
+  // mutqin.ai is a marketing-only Cloud app; same-origin /api/* POSTs fail there.
+  // Server-side forward handles ingest after deploy; until then, skip noisy failures.
+  if (typeof window !== 'undefined' && window.mutqinRestrictMarketingHost) {
+    return
+  }
   const token = typeof document !== 'undefined'
     ? document.head?.querySelector('meta[name="csrf-token"]')?.content
     : ''

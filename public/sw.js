@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v97';
-const RUNTIME_CACHE = 'mutqin-runtime-v97';
+const SHELL_CACHE = 'mutqin-shell-v98';
+const RUNTIME_CACHE = 'mutqin-runtime-v98';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
 const SHELL_URLS = [
@@ -49,10 +49,12 @@ async function networkFirst(request, cacheName) {
   } catch (error) {
     const cached = await cache.match(request);
     if (cached) return cached;
-    if (typeof Response !== 'undefined' && typeof Response.error === 'function') {
-      return Response.error();
+    // Do not reject the SW fetch event — that surfaces as uncaught Failed to fetch.
+    try {
+      return await fetch(request);
+    } catch {
+      return cached || new Response('', { status: 504, statusText: 'Offline' });
     }
-    throw error;
   }
 }
 
@@ -60,16 +62,9 @@ async function cacheFirstHashedAsset(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   const cached = await cache.match(request);
   if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    if (response && response.ok) await cache.put(request, response.clone());
-    return response;
-  } catch (error) {
-    if (typeof Response !== 'undefined' && typeof Response.error === 'function') {
-      return Response.error();
-    }
-    throw error;
-  }
+  const response = await fetch(request);
+  if (response && response.ok) await cache.put(request, response.clone());
+  return response;
 }
 
 self.addEventListener('fetch', event => {
