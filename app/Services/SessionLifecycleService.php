@@ -9,6 +9,7 @@ use App\Support\SessionDefaults;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -58,6 +59,210 @@ class SessionLifecycleService
         }
 
         return null;
+    }
+
+    /**
+     * Unfinished lookup for GET /api/session/current.
+     * Does not select the full metadata document — oversized JSON 500s this read.
+     */
+    public function currentUnfinishedForApi(User $user): ?UserSession
+    {
+        return $this->firstReadableUnfinished($user, 0);
+    }
+
+    public function findOwnedUnfinishedForApi(User $user, int $sessionId): ?UserSession
+    {
+        if ($sessionId <= 0) {
+            return $this->currentUnfinishedForApi($user);
+        }
+
+        return $this->firstReadableUnfinished($user, $sessionId);
+    }
+
+    private function firstReadableUnfinished(User $user, int $sessionId): ?UserSession
+    {
+        $columns = $this->apiSessionColumns();
+        $query = UserSession::query()->where('user_id', $user->id);
+
+        if ($sessionId > 0) {
+            $query->where('id', $sessionId);
+        } else {
+            $query->whereIn('status', array_merge(
+                UserSessionStatus::unfinishedDatabaseValues(),
+                [UserSessionStatus::None->value],
+            ))
+                ->orderByDesc('last_activity_at')
+                ->orderByDesc('id')
+                ->limit(25);
+        }
+
+        foreach ($query->get($columns) as $session) {
+            $this->applySlimMetadata($session);
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
+        }
+
+        if ($sessionId > 0) {
+            return null;
+        }
+
+        $legacy = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('status')->orWhere('status', '');
+            })
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get($columns);
+
+        foreach ($legacy as $session) {
+            $this->applySlimMetadata($session);
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function apiSessionColumns(): array
+    {
+        return array_values(array_filter(
+            Schema::getColumnListing('user_sessions'),
+            static fn (string $column) => ! in_array($column, ['metadata', 'completion_settings'], true)
+        ));
+    }
+
+    private function applySlimMetadata(UserSession $session): void
+    {
+        if (! Schema::hasColumn('user_sessions', 'metadata')) {
+            $session->setAttribute('metadata', []);
+            $session->syncOriginalAttribute('metadata');
+
+            return;
+        }
+
+        $row = DB::table('user_sessions')
+            ->where('id', $session->id)
+            ->selectRaw(implode(', ', [
+                "json_extract(metadata, '$.client_revision') as client_revision",
+                "json_extract(metadata, '$.active') as meta_active",
+                "json_extract(metadata, '$.paused') as meta_paused",
+                "json_extract(metadata, '$.completed') as meta_completed",
+                "json_extract(metadata, '$.completed_at') as completed_at",
+                "json_extract(metadata, '$.discarded_example') as discarded_example",
+                "json_extract(metadata, '$.activeVerseKey') as active_verse_key",
+                "json_extract(metadata, '$.activeKey') as active_key",
+                "json_extract(metadata, '$.current_index') as current_index",
+                "json_extract(metadata, '$.mode') as mode",
+                "json_extract(metadata, '$.appliedPracticeSetup') as applied_practice_setup",
+                "json_extract(metadata, '$.config.chapterId') as config_chapter_id",
+                "json_extract(metadata, '$.config.rangeStart') as config_range_start",
+                "json_extract(metadata, '$.config.rangeEnd') as config_range_end",
+                "json_extract(metadata, '$.config.reciterId') as config_reciter_id",
+                "json_extract(metadata, '$.config.reciter') as config_reciter",
+                "json_extract(metadata, '$.config.playbackSpeed') as config_playback_speed",
+                "json_extract(metadata, '$.config.playback_speed') as config_playback_speed_snake",
+                "json_extract(metadata, '$.config.repetitionsPerStep') as config_repetitions",
+                "json_extract(metadata, '$.config.repetitions') as config_repetitions_alt",
+                "json_extract(metadata, '$.config.technique') as config_technique",
+                "json_extract(metadata, '$.config.focusModeEnabled') as config_focus",
+                "json_extract(metadata, '$.config.blurModeEnabled') as config_blur",
+                "json_extract(metadata, '$.config.talqinModeEnabled') as config_talqin",
+                "json_extract(metadata, '$.config.readingViewMode') as config_reading_view",
+                "json_extract(metadata, '$.config.appliedPracticeSetup') as config_applied_practice",
+            ]))
+            ->first();
+
+        $config = array_filter([
+            'chapterId' => $this->unwrapJsonNumber($row->config_chapter_id ?? null),
+            'rangeStart' => $this->unwrapJsonNumber($row->config_range_start ?? null),
+            'rangeEnd' => $this->unwrapJsonNumber($row->config_range_end ?? null),
+            'reciterId' => $this->unwrapJsonScalar($row->config_reciter_id ?? null),
+            'reciter' => $this->unwrapJsonScalar($row->config_reciter ?? null),
+            'playbackSpeed' => $this->unwrapJsonNumber($row->config_playback_speed ?? null),
+            'playback_speed' => $this->unwrapJsonNumber($row->config_playback_speed_snake ?? null),
+            'repetitionsPerStep' => $this->unwrapJsonNumber($row->config_repetitions ?? null),
+            'repetitions' => $this->unwrapJsonNumber($row->config_repetitions_alt ?? null),
+            'technique' => $this->unwrapJsonScalar($row->config_technique ?? null),
+            'focusModeEnabled' => $this->unwrapJsonBool($row->config_focus ?? null),
+            'blurModeEnabled' => $this->unwrapJsonBool($row->config_blur ?? null),
+            'talqinModeEnabled' => $this->unwrapJsonBool($row->config_talqin ?? null),
+            'readingViewMode' => $this->unwrapJsonScalar($row->config_reading_view ?? null),
+            'appliedPracticeSetup' => $this->unwrapJsonScalar($row->config_applied_practice ?? null),
+        ], static fn ($value) => $value !== null);
+
+        $metadata = array_filter([
+            'client_revision' => $this->unwrapJsonNumber($row->client_revision ?? null),
+            'active' => $this->unwrapJsonBool($row->meta_active ?? null),
+            'paused' => $this->unwrapJsonBool($row->meta_paused ?? null),
+            'completed' => $this->unwrapJsonBool($row->meta_completed ?? null),
+            'completed_at' => $this->unwrapJsonScalar($row->completed_at ?? null),
+            'discarded_example' => $this->unwrapJsonBool($row->discarded_example ?? null),
+            'activeVerseKey' => $this->unwrapJsonScalar($row->active_verse_key ?? null),
+            'activeKey' => $this->unwrapJsonScalar($row->active_key ?? null),
+            'current_index' => $this->unwrapJsonNumber($row->current_index ?? null),
+            'mode' => $this->unwrapJsonScalar($row->mode ?? null),
+            'appliedPracticeSetup' => $this->unwrapJsonScalar($row->applied_practice_setup ?? null),
+            'config' => $config ?: null,
+        ], static fn ($value) => $value !== null);
+
+        $session->setAttribute('metadata', $metadata);
+        $session->syncOriginalAttribute('metadata');
+    }
+
+    private function unwrapJsonScalar(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+
+        return $value;
+    }
+
+    private function unwrapJsonNumber(mixed $value): int|float|null
+    {
+        $value = $this->unwrapJsonScalar($value);
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return str_contains((string) $value, '.') ? (float) $value : (int) $value;
+    }
+
+    private function unwrapJsonBool(mixed $value): ?bool
+    {
+        $value = $this->unwrapJsonScalar($value);
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_numeric($value)) {
+            return (int) $value === 1;
+        }
+
+        $normalized = strtolower(trim((string) $value));
+
+        return match ($normalized) {
+            '1', 'true' => true,
+            '0', 'false' => false,
+            default => null,
+        };
     }
 
     public function isUnfinished(UserSession $session): bool

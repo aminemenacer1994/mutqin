@@ -1037,6 +1037,43 @@ class SessionLifecycleTest extends TestCase
             ->assertJsonPath('session.metadata.config.rangeEnd', 10);
     }
 
+    public function test_current_session_omits_bulky_metadata_and_still_returns_resume_fields(): void
+    {
+        $user = User::factory()->create();
+        $marker = 'BULKY-VERSE-PAYLOAD-'.str_repeat('x', 4000);
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 2,
+            'status' => UserSessionStatus::Paused,
+            'is_onboarding_example' => false,
+            'paused_at' => now(),
+            'last_activity_at' => now(),
+            'started_at' => now(),
+            'metadata' => [
+                'paused' => true,
+                'client_revision' => 4,
+                'verses' => [$marker],
+                'config' => [
+                    'chapterId' => 1,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 5,
+                    'verses' => [$marker],
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.metadata.client_revision', 4)
+            ->assertJsonPath('session.metadata.config.chapterId', 1)
+            ->assertJsonPath('session.metadata.config.rangeEnd', 5);
+
+        $this->assertStringNotContainsString($marker, $response->getContent());
+    }
+
     public function test_mid_session_checkpoint_updates_progress_without_completing(): void
     {
         $user = User::factory()->create();

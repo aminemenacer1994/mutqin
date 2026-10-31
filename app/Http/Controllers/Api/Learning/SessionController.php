@@ -65,8 +65,8 @@ class SessionController extends Controller
     {
         $requestedId = (int) $request->query('id', $request->query('session_id', 0));
         $session = $requestedId > 0
-            ? $this->lifecycle->findOwnedUnfinished($request->user(), $requestedId)
-            : $this->lifecycle->currentUnfinished($request->user());
+            ? $this->lifecycle->findOwnedUnfinishedForApi($request->user(), $requestedId)
+            : $this->lifecycle->currentUnfinishedForApi($request->user());
 
         if ($session) {
             $this->authorize('view', $session);
