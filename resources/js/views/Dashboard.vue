@@ -140,9 +140,10 @@
               <span>{{ t('dashboard.weekly_empty_message') }}</span>
             </div>
             <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
-              <Bar
+              <DashboardWeeklyChart
                 v-if="chartReady"
                 :key="chartInstanceKey"
+                :chart-key="chartInstanceKey"
                 :data="chartData"
                 :options="chartOptions"
                 :aria-label="t('dashboard.chart_aria')"
@@ -798,21 +799,12 @@
 </template>
 
 <script>
-import { Bar } from 'vue-chartjs'
-import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  Tooltip,
-} from 'chart.js'
+import { defineAsyncComponent } from 'vue'
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
-import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
@@ -827,9 +819,15 @@ import {
 } from '../utils/modalFocus'
 import './Dashboard.css'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
+const DashboardWeeklyChart = defineAsyncComponent(() => import(
+  /* webpackChunkName: "dashboard-weekly-chart" */
+  '../components/DashboardWeeklyChart.vue'
+))
 
-const METRIC_META = [
+const SessionAnalysisModal = defineAsyncComponent(() => import(
+  /* webpackChunkName: "session-analysis-modal" */
+  '../components/SessionAnalysisModal.vue'
+))
   { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed', hintKey: 'metric_completed_hint', drawer: 'sessions', icon: 'bi bi-journal-check' },
   { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved', hintKey: 'metric_saved_hint', hrefPanel: 'saved', icon: 'bi bi-bookmark-heart' },
   { key: 'memorised_ayahs', tone: 'info', labelKey: 'metric_memorised', hintKey: 'metric_memorised_hint', altHintKey: 'metric_completed_ayahs_hint', drawer: 'hifz', icon: 'bi bi-stars' },
@@ -878,7 +876,7 @@ const DRAWER_ICONS = {
 export default {
   name: 'UserDashboard',
   components: {
-    Bar,
+    DashboardWeeklyChart,
     NetworkFallback,
     LearnerTeacherSection,
     DashAnimatedNumber,

@@ -883,7 +883,8 @@ class NextSessionRecommendationService
             $user,
             (int) $context['surah']['id'],
             (int) $context['range_start'],
-            (int) $context['range_end']
+            (int) $context['range_end'],
+            $context
         )) {
             $progress = $progress->map(function (MemorisationProgress $row) {
                 $meta = is_array($row->metadata) ? $row->metadata : [];
@@ -2966,9 +2967,19 @@ class NextSessionRecommendationService
         ], true);
     }
 
-    private function rangeHasReliableWeakSpots(User $user, int $surah, int $from, int $to): bool
+    private function rangeHasReliableWeakSpots(User $user, int $surah, int $from, int $to, ?array $context = null): bool
     {
         if ($surah <= 0 || $from <= 0 || $to < $from) {
+            return false;
+        }
+
+        if ($context !== null && $this->rangeHasReliableWeakSpotsInContext($context, $surah, $from, $to)) {
+            return true;
+        }
+
+        $learner = is_array($context['learner'] ?? null) ? $context['learner'] : null;
+        $openWeak = is_array($learner['open_weak_spots'] ?? null) ? $learner['open_weak_spots'] : [];
+        if ($learner !== null && count($openWeak) < 16) {
             return false;
         }
 
@@ -2980,6 +2991,35 @@ class NextSessionRecommendationService
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->where('affected_attempt_count', '>=', 2)
             ->exists();
+    }
+
+    private function rangeHasReliableWeakSpotsInContext(array $context, int $surah, int $from, int $to): bool
+    {
+        $learner = is_array($context['learner'] ?? null) ? $context['learner'] : [];
+        $spots = is_array($learner['open_weak_spots'] ?? null) ? $learner['open_weak_spots'] : [];
+
+        foreach ($spots as $spot) {
+            if (! is_array($spot)) {
+                continue;
+            }
+            if ((int) ($spot['surah_number'] ?? 0) !== $surah) {
+                continue;
+            }
+            $ayah = (int) ($spot['ayah_number'] ?? 0);
+            if ($ayah < $from || $ayah > $to) {
+                continue;
+            }
+            if ((string) ($spot['spot_type'] ?? '') !== MemorisationWeakSpot::TYPE_WORD) {
+                continue;
+            }
+            if ((int) ($spot['attempts'] ?? 0) < 2) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

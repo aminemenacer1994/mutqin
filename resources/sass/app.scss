@@ -35,10 +35,12 @@
   --surface: #fbfaf7;
   --surface-soft: #f3f0ea;
   --surface-strong: #ffffff;
+  --surface-2: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-strong));
   --border: rgba(78, 58, 38, 0.24);
   --border-strong: rgba(78, 58, 38, 0.36);
   --text: #1f1a17;
   --text-muted: #554c45;
+  --text-subtle: #6a6158;
   --text-disabled: #6e645c;
   --accent: #8b5e3c;
   --accent-strong: #765035;
@@ -100,10 +102,12 @@ html[data-theme="sepia"] {
   --surface: #fffaf3;
   --surface-soft: #f6eddf;
   --surface-strong: #fffdf8;
+  --surface-2: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-strong));
   --border: rgba(78, 58, 38, 0.26);
   --border-strong: rgba(78, 58, 38, 0.4);
   --text: #352516;
   --text-muted: #5c4a3a;
+  --text-subtle: #6f5c49;
   --text-disabled: #6f5a48;
   --accent: #8b5e3c;
   --accent-strong: #765035;
@@ -117,11 +121,13 @@ html[data-theme="dark"] {
   --surface: #121212;
   --surface-soft: #1b1815;
   --surface-strong: #24201c;
+  --surface-2: color-mix(in srgb, var(--surface-soft) 58%, var(--surface-strong));
   --border: rgba(255, 255, 255, 0.22);
   --border-strong: rgba(255, 255, 255, 0.34);
   --text: rgba(255, 255, 255, 0.94);
-  --text-muted: rgba(255, 255, 255, 0.82);
-  --text-disabled: rgba(255, 255, 255, 0.58);
+  --text-muted: rgba(255, 255, 255, 0.78);
+  --text-subtle: rgba(255, 255, 255, 0.72);
+  --text-disabled: rgba(255, 255, 255, 0.52);
   --accent: #d4a574;
   --accent-strong: #e8bf8f;
   --accent-light: rgba(212, 165, 116, 0.16);
@@ -410,6 +416,37 @@ html[data-theme="dark"] .app-navbar {
     background-position: center !important;
     background-repeat: no-repeat !important;
     background-size: 1em auto !important;
+  }
+
+  /* Mobile drawer: primary labels at full contrast; subtitles/icons tiered for dark UI */
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link {
+    color: var(--text);
+  }
+
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link-copy small,
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link-chevron,
+  html[data-theme="dark"] .mobile-nav-section-label,
+  html[data-theme="dark"] .mobile-nav-identity-meta {
+    color: var(--text-subtle);
+  }
+
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link-icon {
+    color: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-soft));
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+  }
+
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link:hover,
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link:focus-visible {
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+  }
+
+  html[data-theme="dark"] .app-navbar .offcanvas-body .nav-link.active {
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-soft));
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border-strong));
+    box-shadow: inset 3px 0 0 var(--accent-strong);
   }
 }
 

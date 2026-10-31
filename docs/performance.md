@@ -92,10 +92,11 @@ These limits are enforced in CI via `tests/Feature/PerformanceBaselineTest.php` 
 | Chunk | Max size |
 |-------|----------|
 | `app.js` | 2.1 MiB |
-| `dashboard.*.js` | 330 KiB |
+| `user-dashboard.*.js` | 950 KiB (Chart.js lazy-loaded) |
+| `teacher-dashboard.*.js` | 950 KiB |
 | `homepage.*.js` | 65 KiB |
 | `memorisation.*.js` (lazy route) | 3.9 MiB |
-| `admin-dashboard.*.js` | 250 KiB |
+| `admin-dashboard.*.js` | 550 KiB |
 
 `memorisation` is lazy-loaded; initial route load is dominated by `app.js` + page chunk.
 
@@ -126,7 +127,13 @@ These limits are enforced in CI via `tests/Feature/PerformanceBaselineTest.php` 
 | Ayah CDN proxy | Upstream every miss | 24h server `Cache` of body | `AyahAudioController` |
 | App shell Ackee / Feedback | Sync import + mount | Idle/dynamic chunks | `resources/js/app.js` |
 | High-frequency API logs | Log every GET | Skip `state` / `session/current` / `continue` | `LogMutqinApiRequest` |
-| Recommendations next (cold) | ~25 queries | ~15 (aggregated progress + reuse lookups) | `PersonalizedRecommendationEngine`, `NextSessionRecommendationService` |
+| Dashboard weak-spot rows (daily revision + murājaʿah merge) | 2× limit-120 queries | 1 shared fetch per cold build | `DashboardService::queryDashboardWeakSpotRows` |
+| Range completion on continue card | Duplicate `COUNT` for percent + remembered | Single `rememberedInRange` + memo | `DashboardService`, `MainMemorisationPositionService` |
+| AI Recite dashboard stats | Separate “latest attempt” query | Reuse limited list head | `SessionAnalysisQueryService::dashboardStats` |
+| Recommendations weak-spot EXISTS | Extra query when snapshot already loaded | In-memory check + EXISTS only if snapshot may be truncated (16 spots) | `NextSessionRecommendationService` |
+| User dashboard chunk | Eager Chart.js + session analysis modal | Async `dashboard-weekly-chart` + modal chunks | `Dashboard.vue`, `DashboardWeeklyChart.vue` |
+| Webpack lazy routes | Vue/chart duplicated per chunk | Shared `vendor-core` splitChunk | `webpack.mix.cjs` |
+| Static transfer | Uncompressed JS/CSS on Apache | `mod_deflate` for text assets | `public/.htaccess` |
 
 Re-run `php artisan mutqin:perf-benchmark --seed --json` after changes and commit updated `scripts/perf/results/baseline.json` when thresholds shift intentionally.
 

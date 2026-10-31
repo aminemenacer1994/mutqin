@@ -21,6 +21,11 @@ use Illuminate\Validation\ValidationException;
  */
 class SessionLifecycleService
 {
+    /** @var list<string>|null */
+    private static ?array $apiSessionColumnsCache = null;
+
+    private static ?bool $hasMetadataColumnCache = null;
+
     public function currentUnfinished(User $user): ?UserSession
     {
         // Prefer indexed unfinished statuses — avoid loading the full session history.
@@ -81,7 +86,6 @@ class SessionLifecycleService
 
     private function firstReadableUnfinished(User $user, int $sessionId): ?UserSession
     {
-        $columns = $this->apiSessionColumns();
         $query = UserSession::query()->where('user_id', $user->id);
 
         if ($sessionId > 0) {
@@ -96,8 +100,8 @@ class SessionLifecycleService
                 ->limit(25);
         }
 
-        foreach ($query->get($columns) as $session) {
-            $this->applySlimMetadata($session);
+        foreach ($this->apiSessionRows($query)->get() as $session) {
+            $this->hydrateSlimMetadataForApi($session);
             if ($this->isUnfinished($session)) {
                 return $session;
             }
@@ -114,11 +118,10 @@ class SessionLifecycleService
             })
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
-            ->limit(10)
-            ->get($columns);
+            ->limit(10);
 
-        foreach ($legacy as $session) {
-            $this->applySlimMetadata($session);
+        foreach ($this->apiSessionRows($legacy)->get() as $session) {
+            $this->hydrateSlimMetadataForApi($session);
             if ($this->isUnfinished($session)) {
                 return $session;
             }
@@ -128,19 +131,144 @@ class SessionLifecycleService
     }
 
     /**
+     * @param  \Illuminate\Database\Eloquent\Builder<UserSession>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<UserSession>
+     */
+    private function apiSessionRows($query)
+    {
+        $query->select($this->apiSessionColumns());
+        if ($this->hasMetadataColumn()) {
+            $query->selectRaw(implode(', ', $this->slimMetadataJsonExtracts()));
+        }
+
+        return $query;
+    }
+
+    /**
      * @return list<string>
      */
     private function apiSessionColumns(): array
     {
-        return array_values(array_filter(
-            Schema::getColumnListing('user_sessions'),
+        $this->bootApiSessionSchemaCache();
+
+        return self::$apiSessionColumnsCache ?? [];
+    }
+
+    private function hasMetadataColumn(): bool
+    {
+        $this->bootApiSessionSchemaCache();
+
+        return (bool) self::$hasMetadataColumnCache;
+    }
+
+    private function bootApiSessionSchemaCache(): void
+    {
+        if (self::$apiSessionColumnsCache !== null) {
+            return;
+        }
+
+        $columns = Schema::getColumnListing('user_sessions');
+        self::$hasMetadataColumnCache = in_array('metadata', $columns, true);
+        self::$apiSessionColumnsCache = array_values(array_filter(
+            $columns,
             static fn (string $column) => ! in_array($column, ['metadata', 'completion_settings'], true)
         ));
     }
 
+    /**
+     * @return list<string>
+     */
+    private function slimMetadataJsonExtracts(): array
+    {
+        return [
+            "json_extract(metadata, '$.client_revision') as client_revision",
+            "json_extract(metadata, '$.active') as meta_active",
+            "json_extract(metadata, '$.paused') as meta_paused",
+            "json_extract(metadata, '$.completed') as meta_completed",
+            "json_extract(metadata, '$.completed_at') as completed_at",
+            "json_extract(metadata, '$.discarded_example') as discarded_example",
+            "json_extract(metadata, '$.activeVerseKey') as active_verse_key",
+            "json_extract(metadata, '$.activeKey') as active_key",
+            "json_extract(metadata, '$.current_index') as current_index",
+            "json_extract(metadata, '$.mode') as mode",
+            "json_extract(metadata, '$.appliedPracticeSetup') as applied_practice_setup",
+            "json_extract(metadata, '$.config.chapterId') as config_chapter_id",
+            "json_extract(metadata, '$.config.rangeStart') as config_range_start",
+            "json_extract(metadata, '$.config.rangeEnd') as config_range_end",
+            "json_extract(metadata, '$.config.reciterId') as config_reciter_id",
+            "json_extract(metadata, '$.config.reciter') as config_reciter",
+            "json_extract(metadata, '$.config.playbackSpeed') as config_playback_speed",
+            "json_extract(metadata, '$.config.playback_speed') as config_playback_speed_snake",
+            "json_extract(metadata, '$.config.repetitionsPerStep') as config_repetitions",
+            "json_extract(metadata, '$.config.repetitions') as config_repetitions_alt",
+            "json_extract(metadata, '$.config.technique') as config_technique",
+            "json_extract(metadata, '$.config.focusModeEnabled') as config_focus",
+            "json_extract(metadata, '$.config.blurModeEnabled') as config_blur",
+            "json_extract(metadata, '$.config.talqinModeEnabled') as config_talqin",
+            "json_extract(metadata, '$.config.readingViewMode') as config_reading_view",
+            "json_extract(metadata, '$.config.appliedPracticeSetup') as config_applied_practice",
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function slimMetadataExtractAttributeKeys(): array
+    {
+        return [
+            'client_revision',
+            'meta_active',
+            'meta_paused',
+            'meta_completed',
+            'completed_at',
+            'discarded_example',
+            'active_verse_key',
+            'active_key',
+            'current_index',
+            'mode',
+            'applied_practice_setup',
+            'config_chapter_id',
+            'config_range_start',
+            'config_range_end',
+            'config_reciter_id',
+            'config_reciter',
+            'config_playback_speed',
+            'config_playback_speed_snake',
+            'config_repetitions',
+            'config_repetitions_alt',
+            'config_technique',
+            'config_focus',
+            'config_blur',
+            'config_talqin',
+            'config_reading_view',
+            'config_applied_practice',
+        ];
+    }
+
+    private function hydrateSlimMetadataForApi(UserSession $session): void
+    {
+        if (! $this->hasMetadataColumn()) {
+            $session->setAttribute('metadata', []);
+            $session->syncOriginalAttribute('metadata');
+
+            return;
+        }
+
+        $row = (object) [];
+        foreach ($this->slimMetadataExtractAttributeKeys() as $key) {
+            $row->{$key} = $session->getAttribute($key);
+        }
+
+        $this->applySlimMetadataFromExtractRow($session, $row);
+
+        foreach ($this->slimMetadataExtractAttributeKeys() as $key) {
+            $session->offsetUnset($key);
+        }
+    }
+
     private function applySlimMetadata(UserSession $session): void
     {
-        if (! Schema::hasColumn('user_sessions', 'metadata')) {
+        if (! $this->hasMetadataColumn()) {
             $session->setAttribute('metadata', []);
             $session->syncOriginalAttribute('metadata');
 
@@ -149,36 +277,21 @@ class SessionLifecycleService
 
         $row = DB::table('user_sessions')
             ->where('id', $session->id)
-            ->selectRaw(implode(', ', [
-                "json_extract(metadata, '$.client_revision') as client_revision",
-                "json_extract(metadata, '$.active') as meta_active",
-                "json_extract(metadata, '$.paused') as meta_paused",
-                "json_extract(metadata, '$.completed') as meta_completed",
-                "json_extract(metadata, '$.completed_at') as completed_at",
-                "json_extract(metadata, '$.discarded_example') as discarded_example",
-                "json_extract(metadata, '$.activeVerseKey') as active_verse_key",
-                "json_extract(metadata, '$.activeKey') as active_key",
-                "json_extract(metadata, '$.current_index') as current_index",
-                "json_extract(metadata, '$.mode') as mode",
-                "json_extract(metadata, '$.appliedPracticeSetup') as applied_practice_setup",
-                "json_extract(metadata, '$.config.chapterId') as config_chapter_id",
-                "json_extract(metadata, '$.config.rangeStart') as config_range_start",
-                "json_extract(metadata, '$.config.rangeEnd') as config_range_end",
-                "json_extract(metadata, '$.config.reciterId') as config_reciter_id",
-                "json_extract(metadata, '$.config.reciter') as config_reciter",
-                "json_extract(metadata, '$.config.playbackSpeed') as config_playback_speed",
-                "json_extract(metadata, '$.config.playback_speed') as config_playback_speed_snake",
-                "json_extract(metadata, '$.config.repetitionsPerStep') as config_repetitions",
-                "json_extract(metadata, '$.config.repetitions') as config_repetitions_alt",
-                "json_extract(metadata, '$.config.technique') as config_technique",
-                "json_extract(metadata, '$.config.focusModeEnabled') as config_focus",
-                "json_extract(metadata, '$.config.blurModeEnabled') as config_blur",
-                "json_extract(metadata, '$.config.talqinModeEnabled') as config_talqin",
-                "json_extract(metadata, '$.config.readingViewMode') as config_reading_view",
-                "json_extract(metadata, '$.config.appliedPracticeSetup') as config_applied_practice",
-            ]))
+            ->selectRaw(implode(', ', $this->slimMetadataJsonExtracts()))
             ->first();
 
+        if (! $row) {
+            $session->setAttribute('metadata', []);
+            $session->syncOriginalAttribute('metadata');
+
+            return;
+        }
+
+        $this->applySlimMetadataFromExtractRow($session, $row);
+    }
+
+    private function applySlimMetadataFromExtractRow(UserSession $session, object $row): void
+    {
         $config = array_filter([
             'chapterId' => $this->unwrapJsonNumber($row->config_chapter_id ?? null),
             'rangeStart' => $this->unwrapJsonNumber($row->config_range_start ?? null),

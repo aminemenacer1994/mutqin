@@ -3718,6 +3718,8 @@
             --text-base: clamp(14px, 0.95vw + 10px, 16px);
             --text-sm: clamp(12px, 0.65vw + 9px, 14px);
             --surface-elevated: var(--surface-strong);
+            --surface-2: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-strong));
+            --text-subtle: color-mix(in srgb, var(--text-muted) 82%, var(--text));
             --field-bg: color-mix(in srgb, var(--surface-strong) 92%, var(--bg));
             --field-bg-strong: var(--surface-strong);
             --text-on-accent: #fffaf5;
@@ -3734,6 +3736,8 @@
         html[data-theme="dark"],
         [data-theme="dark"] {
             --surface-elevated: var(--surface-strong);
+            --surface-2: color-mix(in srgb, var(--surface-soft) 58%, var(--surface-strong));
+            --text-subtle: rgba(255, 255, 255, 0.72);
             --field-bg: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
             --field-bg-strong: var(--surface-strong);
             --text-on-accent: #fff4e6;
@@ -7379,7 +7383,7 @@
             }
 
             .mobile-nav-identity-meta {
-                color: var(--text-muted);
+                color: var(--text-subtle);
                 font-size: 0.74rem;
                 line-height: 1.3;
             }
@@ -7428,7 +7432,7 @@
                 min-width: 0;
                 min-height: 60px;
                 padding: 8px 10px;
-                color: var(--text-muted);
+                color: var(--text);
                 font-family: inherit;
                 font-weight: 500;
                 line-height: 1.2;
@@ -7446,13 +7450,13 @@
 
             .app-navbar .offcanvas-body .nav-link.active {
                 color: var(--text);
-                background: color-mix(in srgb, var(--success-text) 9%, var(--surface) 91%);
-                border-color: color-mix(in srgb, var(--success-text) 24%, var(--border) 76%);
-                box-shadow: inset 3px 0 0 var(--success-text);
+                background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
+                border-color: color-mix(in srgb, var(--accent) 32%, var(--border-strong));
+                box-shadow: inset 3px 0 0 var(--accent-strong);
             }
 
             html[dir="rtl"] .app-navbar .offcanvas-body .nav-link.active {
-                box-shadow: inset -3px 0 0 var(--success-text);
+                box-shadow: inset -3px 0 0 var(--accent-strong);
             }
 
             .app-navbar .offcanvas-body .nav-link-icon {
@@ -7463,6 +7467,8 @@
                 height: 44px;
                 border-radius: 12px;
                 background: var(--surface-soft);
+                border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+                color: var(--accent-strong);
                 font-size: 1.1rem;
             }
 
@@ -7487,7 +7493,7 @@
 
             .app-navbar .offcanvas-body .nav-link-copy small {
                 display: block !important;
-                color: var(--text-muted);
+                color: var(--text-subtle);
                 font-size: 0.74rem;
                 line-height: 1.3;
                 white-space: normal;
@@ -7499,7 +7505,7 @@
                 display: block !important;
                 grid-column: 3;
                 justify-self: end;
-                color: var(--text-muted);
+                color: var(--text-subtle);
             }
 
             .app-navbar .offcanvas-body .nav-link > span:not(.nav-link-copy) {
@@ -7525,7 +7531,7 @@
             }
 
             .mobile-nav-section-label {
-                color: var(--text-muted);
+                color: var(--text-subtle);
                 font-size: 0.72rem;
                 font-weight: 800;
                 letter-spacing: 0.1em;

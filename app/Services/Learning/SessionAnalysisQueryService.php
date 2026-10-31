@@ -233,12 +233,7 @@ class SessionAnalysisQueryService
             ->limit(200)
             ->get($attemptColumns);
 
-        $latest = AiReciteAttempt::query()
-            ->where('user_id', $user->id)
-            ->where('source', AiReciteAttempt::SOURCE_DASHBOARD)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->first(['id', 'ayah_range', 'accuracy_percent', 'band', 'created_at']);
+        $latest = $attempts->first();
 
         $accuracies = $attempts
             ->pluck('accuracy_percent')

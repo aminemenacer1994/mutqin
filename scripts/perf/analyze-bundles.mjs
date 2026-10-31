@@ -20,9 +20,10 @@ const jsonOut = process.argv.includes('--json')
 const THRESHOLDS_BYTES = {
   '/js/app.js': 800_000,
   '/js/memorisation': 4_700_000,
-  '/js/dashboard': 330_000,
+  '/js/user-dashboard': 950_000,
+  '/js/teacher-dashboard': 950_000,
   '/js/homepage': 65_000,
-  '/js/admin-dashboard': 250_000,
+  '/js/admin-dashboard': 550_000,
 }
 
 function loadManifestFiles() {

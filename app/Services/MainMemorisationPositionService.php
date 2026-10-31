@@ -22,6 +22,9 @@ class MainMemorisationPositionService
 {
     public const METADATA_KEY = 'main_position';
 
+    /** @var array<string, array{remembered_count: int, range_ayah_count: int}> */
+    private array $rememberedInRangeMemo = [];
+
     /**
      * @return array{surah_number: int, surah_name: string|null, ayah_start: int, ayah_end: int, source: string|null}|null
      */
@@ -253,6 +256,11 @@ class MainMemorisationPositionService
         $surah = (int) ($position['surah_number'] ?? 0);
         $start = (int) ($position['ayah_start'] ?? 0);
         $end = (int) ($position['ayah_end'] ?? $start);
+        $memoKey = $user->id.':'.$surah.':'.$start.':'.$end;
+        if (isset($this->rememberedInRangeMemo[$memoKey])) {
+            return $this->rememberedInRangeMemo[$memoKey];
+        }
+
         $total = max(1, $end - $start + 1);
         $done = 0;
         if ($surah > 0 && $start > 0) {
@@ -264,7 +272,7 @@ class MainMemorisationPositionService
                 ->count();
         }
 
-        return [
+        return $this->rememberedInRangeMemo[$memoKey] = [
             'remembered_count' => $done,
             'range_ayah_count' => $total,
         ];

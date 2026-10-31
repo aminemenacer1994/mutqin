@@ -295,6 +295,22 @@ mix.js('resources/js/app.js', 'public/js')
            // Default Mix devtool uses eval-* wrappers; that breaks our CSP in local dev.
            webpackConfig.devtool = 'cheap-module-source-map';
        }
+       webpackConfig.optimization = {
+           ...(webpackConfig.optimization || {}),
+           splitChunks: {
+               ...(webpackConfig.optimization?.splitChunks || {}),
+               cacheGroups: {
+                   ...(webpackConfig.optimization?.splitChunks?.cacheGroups || {}),
+                   mutqinVendor: {
+                       test: /[\\/]node_modules[\\/](vue|@vue|vue-i18n|axios|chart\.js|vue-chartjs)[\\/]/,
+                       name: 'vendor-core',
+                       chunks: 'all',
+                       priority: 20,
+                       reuseExistingChunk: true,
+                   },
+               },
+           },
+       };
        webpackConfig.stats = {
            ...(webpackConfig.stats || {}),
            errors: true,

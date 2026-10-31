@@ -34,6 +34,9 @@ class DashboardService
 {
     private const BUILD_CACHE_TTL_SECONDS = 90;
 
+    /** @var Collection<int, MemorisationWeakSpot>|null */
+    private ?Collection $dashboardWeakSpotRows = null;
+
     public function __construct(
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
@@ -195,6 +198,20 @@ class DashboardService
      * @return array<string, mixed>
      */
     private function buildFresh(User $user, int $chartDays): array
+    {
+        $this->dashboardWeakSpotRows = $this->queryDashboardWeakSpotRows($user);
+
+        try {
+            return $this->buildFreshPayload($user, $chartDays);
+        } finally {
+            $this->dashboardWeakSpotRows = null;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFreshPayload(User $user, int $chartDays): array
     {
         $unfinished = $this->lifecycle->currentUnfinished($user);
         $lastPosition = UserLastPosition::query()->where('user_id', $user->id)->first();
@@ -700,16 +717,27 @@ class DashboardService
             ->unique('key')
             ->values();
 
-        $weakItems = MemorisationWeakSpot::query()
-            ->where('user_id', $user->id)
-            ->whereIn('status', [
+        $weakSpotRows = $this->dashboardWeakSpotRows ?? $this->queryDashboardWeakSpotRows($user);
+        $weakItems = $weakSpotRows
+            ->filter(fn (MemorisationWeakSpot $spot) => in_array((string) $spot->status, [
                 MemorisationWeakSpot::STATUS_ACTIVE,
                 MemorisationWeakSpot::STATUS_IMPROVING,
-            ])
-            ->orderByRaw("case severity when 'high' then 3 when 'medium' then 2 else 1 end desc")
-            ->orderByDesc('last_identified_at')
-            ->limit(120)
-            ->get()
+            ], true))
+            ->sort(function (MemorisationWeakSpot $a, MemorisationWeakSpot $b): int {
+                $rank = static fn (MemorisationWeakSpot $spot): int => match ((string) $spot->severity) {
+                    'high' => 3,
+                    'medium' => 2,
+                    default => 1,
+                };
+                $bySeverity = $rank($b) <=> $rank($a);
+                if ($bySeverity !== 0) {
+                    return $bySeverity;
+                }
+
+                return ($b->last_identified_at?->getTimestamp() ?? 0)
+                    <=> ($a->last_identified_at?->getTimestamp() ?? 0);
+            })
+            ->take(120)
             ->map(function (MemorisationWeakSpot $spot): array {
                 $surah = (int) $spot->surah_number;
                 $ayah = (int) $spot->ayah_number;
@@ -829,12 +857,12 @@ class DashboardService
             $rangeStart = (int) ($config['rangeStart'] ?? $unfinished->ayah_number ?? 0);
             $rangeEnd = (int) ($config['rangeEnd'] ?? $unfinished->ayah_number ?? 0);
             $surah = (int) ($unfinished->surah_number ?? $config['chapterId'] ?? 0);
-            $completion = $this->rangeCompletionPercent($user, $surah, $rangeStart, $rangeEnd);
             $remembered = $this->mainPosition->rememberedInRange($user, [
                 'surah_number' => $surah,
                 'ayah_start' => $rangeStart,
                 'ayah_end' => $rangeEnd,
             ]);
+            $completion = $this->completionPercentFromRemembered($remembered);
 
             return [
                 'action_type' => $isPausedOrInterrupted ? 'resume_session' : 'continue_session',
@@ -1001,7 +1029,7 @@ class DashboardService
                 'last_ayah' => $to,
                 'remembered_count' => $remembered['remembered_count'],
                 'range_ayah_count' => $remembered['range_ayah_count'],
-                'completion_percent' => $this->rangeCompletionPercent($user, $surah, $from, $to),
+                'completion_percent' => $this->completionPercentFromRemembered($remembered),
                 'last_activity_at' => optional($lastPosition?->last_opened_at)->toIso8601String(),
                 'recommended_technique' => null,
                 'message' => 'Continue your memorisation.',
@@ -2101,20 +2129,7 @@ class DashboardService
      */
     private function mergeWeakSpotHistory(User $user, Collection $items): Collection
     {
-        $spots = MemorisationWeakSpot::query()
-            ->where('user_id', $user->id)
-            ->where(function ($query) {
-                $query->whereIn('status', [
-                    MemorisationWeakSpot::STATUS_ACTIVE,
-                    MemorisationWeakSpot::STATUS_IMPROVING,
-                ])->orWhere(function ($resolved) {
-                    $resolved->where('status', MemorisationWeakSpot::STATUS_RESOLVED)
-                        ->where('last_identified_at', '>=', now()->subDays(21));
-                });
-            })
-            ->orderByDesc('last_identified_at')
-            ->limit(120)
-            ->get();
+        $spots = $this->dashboardWeakSpotRows ?? $this->queryDashboardWeakSpotRows($user);
 
         $byAyah = [];
         foreach ($spots as $spot) {
@@ -2996,15 +3011,47 @@ class DashboardService
             return null;
         }
 
-        $total = ($end - $start) + 1;
-        $done = MemorisationProgress::query()
-            ->where('user_id', $user->id)
-            ->where('surah_number', $surah)
-            ->whereBetween('ayah_number', [$start, $end])
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->count();
+        return $this->completionPercentFromRemembered(
+            $this->mainPosition->rememberedInRange($user, [
+                'surah_number' => $surah,
+                'ayah_start' => $start,
+                'ayah_end' => $end,
+            ])
+        );
+    }
 
-        return (int) round(($done / max(1, $total)) * 100);
+    /**
+     * @param  array{remembered_count?: int, range_ayah_count?: int}  $remembered
+     */
+    private function completionPercentFromRemembered(array $remembered): ?int
+    {
+        $total = (int) ($remembered['range_ayah_count'] ?? 0);
+        if ($total <= 0) {
+            return null;
+        }
+
+        return (int) round(((int) ($remembered['remembered_count'] ?? 0) / $total) * 100);
+    }
+
+    /**
+     * @return Collection<int, MemorisationWeakSpot>
+     */
+    private function queryDashboardWeakSpotRows(User $user): Collection
+    {
+        return MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereIn('status', [
+                    MemorisationWeakSpot::STATUS_ACTIVE,
+                    MemorisationWeakSpot::STATUS_IMPROVING,
+                ])->orWhere(function ($resolved) {
+                    $resolved->where('status', MemorisationWeakSpot::STATUS_RESOLVED)
+                        ->where('last_identified_at', '>=', now()->subDays(21));
+                });
+            })
+            ->orderByDesc('last_identified_at')
+            ->limit(120)
+            ->get();
     }
 
     private function planCompletionPercent(MemorisationPracticePlan $plan): ?int
