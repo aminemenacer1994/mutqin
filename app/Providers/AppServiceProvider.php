@@ -65,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
             return $user instanceof User && $user->isSuperAdmin();
         });
 
+        Gate::define('manage-registered-user-broadcast-email', function ($user) {
+            return $user instanceof User && $user->isSuperAdmin();
+        });
+
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);

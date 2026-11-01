@@ -84,11 +84,11 @@ class DashboardController extends Controller
 
     public function userShow(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
     {
-        $this->admin($request);
+        $admin = $this->admin($request);
         $model = $this->findUser($user);
 
         return response()
-            ->json($dashboard->userDetail($model))
+            ->json($dashboard->userDetail($model, $admin))
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
@@ -112,21 +112,34 @@ class DashboardController extends Controller
 
     public function userUpdate(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
     {
-        $this->admin($request);
+        $admin = $this->admin($request);
         $model = $this->findUser($user);
 
-        $validated = $request->validate([
+        $rules = [
             'name' => ['sometimes', 'required', 'string', 'max:120'],
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($model->id)],
             'password' => ['nullable', 'string', Password::defaults()],
             'locale' => ['nullable', 'string', Rule::in(['en', 'ar', 'fr', 'es', 'tr', 'id', 'ur'])],
             'subscription_status' => ['nullable', 'string', Rule::in(['none', 'trialing', 'active', 'canceled', 'past_due'])],
             'subscription_tier' => ['nullable', 'string', 'max:64'],
-        ]);
+        ];
+
+        if ($admin->isSuperAdmin()) {
+            $rules['ai_recite_lifetime_limit'] = ['nullable', 'integer', 'min:1', 'max:1000000'];
+        }
+
+        $validated = $request->validate($rules);
+
+        if (! $admin->isSuperAdmin()) {
+            unset($validated['ai_recite_lifetime_limit']);
+        }
+
+        $updated = $dashboard->updateUser($model, $validated);
+        $fresh = $model->fresh();
 
         return response()->json([
-            'user' => $dashboard->updateUser($model, $validated),
-            'detail' => $dashboard->userDetail($model->fresh()),
+            'user' => $updated,
+            'detail' => $dashboard->userDetail($fresh, $admin),
         ]);
     }
 

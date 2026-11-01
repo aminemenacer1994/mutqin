@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
+use App\Http\Controllers\Api\Admin\RegisteredUserBroadcastController as AdminRegisteredUserBroadcastController;
 use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
 use App\Http\Middleware\ForwardMarketingClientErrors;
@@ -85,6 +86,14 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('api.admin.waiting-list.launch-email.status');
             Route::post('/admin/waiting-list/launch-email/send', [AdminWaitingListController::class, 'launchEmailSend'])
                 ->name('api.admin.waiting-list.launch-email.send');
+        });
+        Route::middleware('can:manage-registered-user-broadcast-email')->group(function () {
+            Route::get('/admin/users/broadcast-email/preview', [AdminRegisteredUserBroadcastController::class, 'preview'])
+                ->name('api.admin.users.broadcast-email.preview');
+            Route::get('/admin/users/broadcast-email/status', [AdminRegisteredUserBroadcastController::class, 'status'])
+                ->name('api.admin.users.broadcast-email.status');
+            Route::post('/admin/users/broadcast-email/send', [AdminRegisteredUserBroadcastController::class, 'send'])
+                ->name('api.admin.users.broadcast-email.send');
         });
         Route::get('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'show'])
             ->whereNumber('entry')

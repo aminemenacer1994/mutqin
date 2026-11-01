@@ -139,6 +139,23 @@ return [
         'cloud_mysql_retention_days' => (int) env('MUTQIN_CLOUD_MYSQL_BACKUP_RETENTION_DAYS', 30),
     ],
 
+    /*
+     * Optional default lifetime cap on AI voice checks (MemorisationAssessment rows).
+     * Null / empty = no default cap; per-user override via users.ai_recite_lifetime_limit.
+     */
+    'ai_recite' => [
+        'default_lifetime_limit' => env('MUTQIN_AI_RECITE_DEFAULT_LIFETIME_LIMIT'),
+    ],
+
+    'registered_users' => [
+        'broadcast_email' => [
+            'campaign_key' => (string) env('MUTQIN_REGISTERED_USER_BROADCAST_CAMPAIGN_KEY', 'registered_broadcast_2026'),
+            'batch_size' => max(1, (int) env('MUTQIN_REGISTERED_USER_BROADCAST_BATCH_SIZE', 25)),
+            'batch_delay_seconds' => max(1, (int) env('MUTQIN_REGISTERED_USER_BROADCAST_BATCH_DELAY_SECONDS', 60)),
+            'queue' => (string) env('MUTQIN_REGISTERED_USER_BROADCAST_QUEUE', 'default'),
+        ],
+    ],
+
     'waiting_list' => [
         // Set true only in local/dev if DNS checks block legitimate test signups.
         'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', true), FILTER_VALIDATE_BOOL),

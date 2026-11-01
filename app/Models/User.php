@@ -83,6 +83,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'ai_audio_consent_version',
         'ai_audio_consent_at',
         'ai_session_settings',
+        'ai_recite_lifetime_limit',
     ];
 
     /**
@@ -112,6 +113,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'subscription_current_period_ends_at' => 'datetime',
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
+            'ai_recite_lifetime_limit' => 'integer',
             'account_role' => AccountRole::class,
         ];
     }

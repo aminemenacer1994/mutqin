@@ -14,6 +14,7 @@ use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Services\UserAiReciteUsageService;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,11 +22,33 @@ use Illuminate\Validation\ValidationException;
 
 class MemorisationDetectionController extends Controller
 {
+    private function assertAiVoiceCheckAllowed(Request $request): ?JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return null;
+        }
+
+        $usage = app(UserAiReciteUsageService::class)->inspect($user);
+        if ($usage['allowed']) {
+            return null;
+        }
+
+        return response()->json([
+            'message' => UserAiReciteUsageService::LEARNER_MESSAGE,
+            'reason' => UserAiReciteUsageService::REASON,
+        ], 429);
+    }
+
     public function storeAssessment(
         StoreMemorisationAssessmentRequest $request,
         RecitationAssessmentService $service,
         TeacherAssignmentService $assignments,
     ): JsonResponse {
+        if ($blocked = $this->assertAiVoiceCheckAllowed($request)) {
+            return $blocked;
+        }
+
         $payload = $request->validated();
         $recipient = $assignments->linkedRecipientForActivity(
             $request->user(),
@@ -71,6 +94,10 @@ class MemorisationDetectionController extends Controller
         StoreFailedMemorisationAssessmentRequest $request,
         RecitationAssessmentService $service,
     ): JsonResponse {
+        if ($blocked = $this->assertAiVoiceCheckAllowed($request)) {
+            return $blocked;
+        }
+
         $payload = $request->validated();
         $assessment = $service->recordFailed(
             $request->user(),

@@ -254,6 +254,8 @@
             </p>
           </div>
 
+          <RegisteredUserBroadcastEmail v-if="canManageRegisteredUserBroadcastEmail" />
+
           <p v-if="usersLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
           <p v-else-if="usersError" class="admin-empty" role="alert">{{ t('admin.drawer_load_error') }}</p>
           <div v-else-if="!users.length" class="admin-users-empty" role="status">
@@ -1049,6 +1051,58 @@
                 </div>
               </section>
 
+              <section v-if="canViewUserAiReciteUsage && detail.ai_recite_usage" class="admin-drawer-section">
+                <div class="admin-drawer-section__head">
+                  <h3 class="admin-drawer-section__title">{{ t('admin.ai_recite_usage_title') }}</h3>
+                </div>
+                <p class="admin-muted">{{ t('admin.ai_recite_usage_lead') }}</p>
+                <dl class="admin-kv-list">
+                  <div>
+                    <dt>{{ t('admin.ai_recite_usage_voice_checks') }}</dt>
+                    <dd>{{ detail.ai_recite_usage.voice_checks_used }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ t('admin.ai_recite_usage_scored') }}</dt>
+                    <dd>{{ detail.ai_recite_usage.scored_checks }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ t('admin.ai_recite_usage_limit') }}</dt>
+                    <dd>
+                      {{
+                        detail.ai_recite_usage.voice_checks_limit == null
+                          ? t('admin.ai_recite_usage_unlimited')
+                          : detail.ai_recite_usage.voice_checks_limit
+                      }}
+                    </dd>
+                  </div>
+                  <div v-if="detail.ai_recite_usage.voice_checks_limit != null">
+                    <dt>{{ t('admin.ai_recite_usage_remaining') }}</dt>
+                    <dd>{{ detail.ai_recite_usage.voice_checks_remaining }}</dd>
+                  </div>
+                </dl>
+                <label class="admin-inline-field admin-inline-field--block">
+                  <span class="admin-inline-field__label-text">{{ t('admin.ai_recite_limit_field') }}</span>
+                  <input
+                    v-model.trim="aiReciteLimitDraft"
+                    type="number"
+                    min="1"
+                    inputmode="numeric"
+                    class="admin-inline-field__input"
+                    :placeholder="t('admin.ai_recite_limit_placeholder')"
+                  >
+                </label>
+                <p class="admin-muted">{{ t('admin.ai_recite_limit_hint') }}</p>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--sm"
+                  :disabled="aiReciteLimitSaving"
+                  @click="saveAiReciteLimit"
+                >
+                  {{ aiReciteLimitSaving ? t('admin.saving') : t('admin.ai_recite_limit_save') }}
+                </button>
+                <p v-if="aiReciteLimitError" class="admin-form__error" role="alert">{{ aiReciteLimitError }}</p>
+              </section>
+
               <section class="admin-drawer-section">
                 <div class="admin-drawer-section__head">
                   <h3 class="admin-drawer-section__title">{{ t('admin.user_surahs') }}</h3>
@@ -1207,6 +1261,27 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div v-if="bulkEmailOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="t('admin.bulk_email_title')">
+      <div class="admin-modal__backdrop" aria-hidden="true" @click="closeBulkEmailModal"></div>
+      <div class="admin-modal">
+        <header class="admin-modal__head">
+          <h2>{{ t('admin.bulk_email_title') }}</h2>
+        </header>
+        <p class="admin-muted">{{ t('admin.bulk_email_body', { count: bulkEmailEligible }) }}</p>
+        <label>
+          <span>{{ t('admin.bulk_email_confirm_input') }}</span>
+          <input v-model="bulkEmailConfirmInput" type="number" min="0" inputmode="numeric">
+        </label>
+        <p v-if="bulkEmailError" class="admin-form__error" role="alert">{{ bulkEmailError }}</p>
+        <div class="admin-form__actions">
+          <button type="button" class="admin-btn admin-btn--ghost" @click="closeBulkEmailModal">{{ t('admin.cancel') }}</button>
+          <button type="button" class="admin-btn admin-btn--primary" :disabled="bulkEmailBusy" @click="confirmBulkEmail">
+            {{ bulkEmailBusy ? t('admin.registered_users.broadcast_sending') : t('admin.bulk_email_send') }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1722,6 +1797,7 @@
 import { adminApi } from '../scripts/api/admin'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import WaitingListAnalytics from '../components/WaitingListAnalytics.vue'
+import RegisteredUserBroadcastEmail from '../components/RegisteredUserBroadcastEmail.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { formatAppDate, unwrapLocale } from '../utils/i18nFormat'
 import './AdminDashboard.css'
@@ -1741,7 +1817,7 @@ const emptyCreate = () => ({
 
 export default {
   name: 'AdminDashboard',
-  components: { NetworkFallback, WaitingListAnalytics },
+  components: { NetworkFallback, WaitingListAnalytics, RegisteredUserBroadcastEmail },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -1829,6 +1905,15 @@ export default {
       createSaving: false,
       createError: '',
       deleteOpen: false,
+      bulkEmailTargetIds: [],
+      bulkEmailOpen: false,
+      bulkEmailConfirmInput: '',
+      bulkEmailEligible: 0,
+      bulkEmailBusy: false,
+      bulkEmailError: '',
+      aiReciteLimitDraft: '',
+      aiReciteLimitSaving: false,
+      aiReciteLimitError: '',
       deleteMode: 'soft',
       deleteConfirmName: '',
       confirmOpen: false,
@@ -1857,6 +1942,12 @@ export default {
     },
     canManageWaitlistLaunchEmail() {
       return this.data?.meta?.capabilities?.waitlist_launch_email === true
+    },
+    canManageRegisteredUserBroadcastEmail() {
+      return this.data?.meta?.capabilities?.registered_user_broadcast_email === true
+    },
+    canViewUserAiReciteUsage() {
+      return this.data?.meta?.capabilities?.user_ai_recite_usage === true
     },
     snapshotCards() {
       const snapshot = this.data?.snapshot || {}
@@ -3091,11 +3182,62 @@ export default {
       return this.users.filter((row) => ids.has(Number(row.id)))
     },
     bulkSendEmail() {
-      const emails = this.selectedUsers()
-        .map((row) => String(row.email || '').trim())
-        .filter(Boolean)
-      if (!emails.length) return
-      window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(','))}`
+      if (!this.canManageRegisteredUserBroadcastEmail) {
+        const emails = this.selectedUsers()
+          .map((row) => String(row.email || '').trim())
+          .filter(Boolean)
+        if (!emails.length) return
+        window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(','))}`
+        return
+      }
+      const ids = this.selectedIds.map((id) => Number(id)).filter((id) => id > 0)
+      if (!ids.length) return
+      this.openBulkEmailModal(ids)
+    },
+    async openBulkEmailModal(ids) {
+      this.bulkEmailError = ''
+      this.bulkEmailConfirmInput = ''
+      this.bulkEmailBusy = true
+      try {
+        const preview = await adminApi.getRegisteredUserBroadcastPreview(ids)
+        this.bulkEmailEligible = Number(preview?.eligible || 0)
+        this.bulkEmailTargetIds = ids
+        if (this.bulkEmailEligible < 1) {
+          this.showToast(this.t('admin.bulk_email_none_eligible'))
+          return
+        }
+        this.bulkEmailOpen = true
+      } catch {
+        this.showToast(this.t('admin.registered_users.broadcast_send_error'))
+      } finally {
+        this.bulkEmailBusy = false
+      }
+    },
+    closeBulkEmailModal() {
+      if (this.bulkEmailBusy) return
+      this.bulkEmailOpen = false
+    },
+    async confirmBulkEmail() {
+      if (Number(this.bulkEmailConfirmInput) !== Number(this.bulkEmailEligible)) {
+        this.bulkEmailError = this.t('admin.registered_users.broadcast_confirm_mismatch')
+        return
+      }
+      this.bulkEmailBusy = true
+      this.bulkEmailError = ''
+      try {
+        await adminApi.sendRegisteredUserBroadcastEmail({
+          confirm_send: true,
+          confirm_count: this.bulkEmailEligible,
+          user_ids: this.bulkEmailTargetIds,
+        })
+        this.bulkEmailOpen = false
+        this.selectedIds = []
+        this.showToast(this.t('admin.bulk_email_queued', { count: this.bulkEmailEligible }))
+      } catch {
+        this.bulkEmailError = this.t('admin.registered_users.broadcast_send_error')
+      } finally {
+        this.bulkEmailBusy = false
+      }
     },
     exportSelectedCsv() {
       const rows = this.selectedUsers()
@@ -3212,6 +3354,7 @@ export default {
         this.detail = detail
         this.detailCache[id] = detail
         this.hydrateEditForm(detail?.user)
+        this.syncAiReciteLimitDraft(detail)
         this.syncDetailStatsFromList()
       } catch (error) {
         if (requestId !== this.detailRequestId) return
@@ -3229,6 +3372,33 @@ export default {
       }
       this.editForm = { ...form }
       this.editFormBaseline = { ...form }
+    },
+    syncAiReciteLimitDraft(detail) {
+      const limit = detail?.user?.ai_recite_lifetime_limit
+      this.aiReciteLimitDraft = limit == null || limit === '' ? '' : String(limit)
+      this.aiReciteLimitError = ''
+    },
+    async saveAiReciteLimit() {
+      if (!this.selectedUserId || !this.canViewUserAiReciteUsage) return
+      this.aiReciteLimitSaving = true
+      this.aiReciteLimitError = ''
+      try {
+        const raw = String(this.aiReciteLimitDraft || '').trim()
+        const payload = {
+          ai_recite_lifetime_limit: raw === '' ? null : Number(raw),
+        }
+        const result = await adminApi.updateUser(this.selectedUserId, payload)
+        if (result?.detail) {
+          this.detail = result.detail
+          this.detailCache[this.selectedUserId] = result.detail
+          this.syncAiReciteLimitDraft(result.detail)
+        }
+        this.showToast(this.t('admin.toast_saved'))
+      } catch (error) {
+        this.aiReciteLimitError = this.formErrorFrom(error)
+      } finally {
+        this.aiReciteLimitSaving = false
+      }
     },
     formErrorFrom(error) {
       const errors = error?.response?.data?.errors

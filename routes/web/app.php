@@ -24,6 +24,8 @@ use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardPageCont
 use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
+use App\Services\UserAiReciteUsageService;
+use App\Models\User;
 use App\Support\ErrorReporting;
 use App\Support\Seo\SeoLaunchPages;
 use Illuminate\Http\Request;
@@ -261,10 +263,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('plan:pro')
         ->name('memorisation.audio-download');
 
-    Route::post('/memorisation/transcription-token', function (SpeechmaticsUsageCap $usageCap, SpeechmaticsRateLimit $rateLimit) {
-        $userId = optional(request()->user())->id;
+    Route::post('/memorisation/transcription-token', function (
+        SpeechmaticsUsageCap $usageCap,
+        SpeechmaticsRateLimit $rateLimit,
+        UserAiReciteUsageService $lifetimeUsage,
+    ) {
+        $user = request()->user();
+        $userId = $user instanceof User ? (int) $user->id : null;
 
-        return $rateLimit->runExclusiveMint($userId === null ? null : (int) $userId, function () use ($usageCap, $userId) {
+        if ($user instanceof User) {
+            $lifetime = $lifetimeUsage->inspect($user);
+            if (! $lifetime['allowed']) {
+                return response()->json([
+                    'available' => false,
+                    'reason' => UserAiReciteUsageService::REASON,
+                    'message' => UserAiReciteUsageService::LEARNER_MESSAGE,
+                    'speechmatics_status' => 429,
+                ], 429);
+            }
+        }
+
+        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId) {
             $cap = $usageCap->inspect($userId);
             if (! $cap['allowed']) {
                 return response()->json([

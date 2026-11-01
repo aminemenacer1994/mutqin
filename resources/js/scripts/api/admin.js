@@ -119,6 +119,21 @@ export const adminApi = {
     return data
   },
 
+  async getRegisteredUserBroadcastPreview(userIds = null) {
+    const { data } = await withRetry(() =>
+      http.get('/admin/users/broadcast-email/preview', {
+        params: userIds?.length ? { user_ids: userIds } : undefined,
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      })
+    )
+    return data
+  },
+
+  async sendRegisteredUserBroadcastEmail(payload) {
+    const { data } = await withRetry(() => http.post('/admin/users/broadcast-email/send', payload))
+    return data
+  },
+
   async getWaitingListEntry(id) {
     const { data } = await withRetry(() => http.get(`/admin/waiting-list/${id}`))
     return data?.entry || null

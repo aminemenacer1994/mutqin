@@ -15,6 +15,7 @@ use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Models\WaitingListEntry;
 use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Services\UserAiReciteUsageService;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -74,6 +75,8 @@ class AdminDashboardService
                 'role' => 'super_admin',
                 'capabilities' => [
                     'waitlist_launch_email' => $admin->can('manage-waitlist-launch-email'),
+                    'registered_user_broadcast_email' => $admin->can('manage-registered-user-broadcast-email'),
+                    'user_ai_recite_usage' => $admin->isSuperAdmin(),
                 ],
             ],
             'welcome' => [
@@ -472,6 +475,10 @@ class AdminDashboardService
             $payload['password'] = $data['password'];
             $payload['password_set_at'] = now();
         }
+        if (array_key_exists('ai_recite_lifetime_limit', $data)) {
+            $raw = $data['ai_recite_lifetime_limit'];
+            $payload['ai_recite_lifetime_limit'] = $raw === null || $raw === '' ? null : (int) $raw;
+        }
 
         if ($payload !== []) {
             $user->fill($payload)->save();
@@ -522,7 +529,7 @@ class AdminDashboardService
      *
      * @return array<string, mixed>
      */
-    public function userDetail(User $user): array
+    public function userDetail(User $user, ?User $viewer = null): array
     {
         $profile = $this->enrichUsersWithProgress(collect([$user]))->first();
         if (! is_array($profile)) {
@@ -669,6 +676,21 @@ class AdminDashboardService
         $notesCount = AyahNote::query()->where('user_id', $user->id)->count();
         $assessmentsCount = MemorisationAssessment::query()->where('user_id', $user->id)->count();
 
+        $aiReciteUsage = null;
+        if ($viewer && $viewer->isSuperAdmin()) {
+            $usage = app(UserAiReciteUsageService::class)->inspect($user);
+            if (is_array($profile)) {
+                $profile['ai_recite_lifetime_limit'] = $user->ai_recite_lifetime_limit;
+            }
+            $aiReciteUsage = [
+                'voice_checks_used' => $usage['used'],
+                'voice_checks_limit' => $usage['limit'],
+                'voice_checks_remaining' => $usage['remaining'],
+                'at_limit' => ! $usage['allowed'],
+                'scored_checks' => (int) ($profile['ai_checks'] ?? 0),
+            ];
+        }
+
         return [
             'user' => $profile,
             'stats' => [
@@ -684,6 +706,7 @@ class AdminDashboardService
             'recent_sessions' => $recentSessions,
             'recent_ai_checks' => $recentAi,
             'recent_notes' => $recentNotes,
+            'ai_recite_usage' => $aiReciteUsage,
         ];
     }
 

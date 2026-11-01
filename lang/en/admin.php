@@ -21,6 +21,11 @@ return [
         'launch_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
         'launch_no_recipients' => 'No eligible waiting-list recipients to email.',
     ],
+    'registered_users' => [
+        'broadcast_storage_unavailable' => 'Registered-user email delivery storage is not ready. Run database migrations.',
+        'broadcast_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
+        'broadcast_no_recipients' => 'No eligible registered users to email.',
+    ],
     'contact_messages' => [
         'title' => 'Contact Messages',
         'description' => 'Review inbound questions, resolve them when handled, or delete spam and duplicates.',
