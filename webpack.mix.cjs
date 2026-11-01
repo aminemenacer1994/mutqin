@@ -295,22 +295,9 @@ mix.js('resources/js/app.js', 'public/js')
            // Default Mix devtool uses eval-* wrappers; that breaks our CSP in local dev.
            webpackConfig.devtool = 'cheap-module-source-map';
        }
-       webpackConfig.optimization = {
-           ...(webpackConfig.optimization || {}),
-           splitChunks: {
-               ...(webpackConfig.optimization?.splitChunks || {}),
-               cacheGroups: {
-                   ...(webpackConfig.optimization?.splitChunks?.cacheGroups || {}),
-                   mutqinVendor: {
-                       test: /[\\/]node_modules[\\/](vue|@vue|vue-i18n|axios|chart\.js|vue-chartjs)[\\/]/,
-                       name: 'vendor-core',
-                       chunks: 'all',
-                       priority: 20,
-                       reuseExistingChunk: true,
-                   },
-               },
-           },
-       };
+       // Keep Vue/axios in the app entry runtime map. A named vendor split (vendor-core)
+       // was emitted at public/vendor-core.js while app.js looked up chunk id 324 as
+       // js/undefined.undefined.js, so defer app.js never finished booting (blank workspace).
        webpackConfig.stats = {
            ...(webpackConfig.stats || {}),
            errors: true,

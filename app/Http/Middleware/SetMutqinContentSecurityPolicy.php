@@ -22,13 +22,36 @@ class SetMutqinContentSecurityPolicy
         }
 
         $existing = strtolower((string) $response->headers->get('Content-Security-Policy', ''));
-        if ($existing !== '' && ! str_contains($existing, "script-src 'none'")) {
+
+        // Always ship the Mutqin shell policy on HTML. Embedded previews and some
+        // proxies inject script-src 'none'; leaving that header in place (or
+        // combining policies) blocks app.js and every inline boot script.
+        if ($existing !== '' && ! $this->shouldReplacePolicy($existing)) {
             return $response;
         }
 
+        $response->headers->remove('Content-Security-Policy-Report-Only');
         $response->headers->set('Content-Security-Policy', self::buildPolicy());
 
         return $response;
+    }
+
+    private function shouldReplacePolicy(string $existing): bool
+    {
+        if ($existing === '') {
+            return true;
+        }
+
+        if (str_contains($existing, "script-src 'none'")) {
+            return true;
+        }
+
+        // Broken or foreign policies that omit same-origin scripts.
+        if (! str_contains($existing, "'self'")) {
+            return true;
+        }
+
+        return false;
     }
 
     public static function buildPolicy(): string

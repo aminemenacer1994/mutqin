@@ -132,7 +132,7 @@ These limits are enforced in CI via `tests/Feature/PerformanceBaselineTest.php` 
 | AI Recite dashboard stats | Separate “latest attempt” query | Reuse limited list head | `SessionAnalysisQueryService::dashboardStats` |
 | Recommendations weak-spot EXISTS | Extra query when snapshot already loaded | In-memory check + EXISTS only if snapshot may be truncated (16 spots) | `NextSessionRecommendationService` |
 | User dashboard chunk | Eager Chart.js + session analysis modal | Async `dashboard-weekly-chart` + modal chunks | `Dashboard.vue`, `DashboardWeeklyChart.vue` |
-| Webpack lazy routes | Vue/chart duplicated per chunk | Shared `vendor-core` splitChunk | `webpack.mix.cjs` |
+| Webpack lazy routes | Vue/chart duplicated per lazy chunk | Accept per-route vendor duplication; avoid extra initial vendor splits that break chunk id maps | `webpack.mix.cjs` |
 | Static transfer | Uncompressed JS/CSS on Apache | `mod_deflate` for text assets | `public/.htaccess` |
 
 Re-run `php artisan mutqin:perf-benchmark --seed --json` after changes and commit updated `scripts/perf/results/baseline.json` when thresholds shift intentionally.

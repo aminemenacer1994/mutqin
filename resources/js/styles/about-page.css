@@ -1,6 +1,7 @@
 /* About — calm editorial page with loaded display type */
 
-@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;600;700&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap");
+/* Source Serif 4 is loaded globally in resources/sass/app.scss */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap");
 
 .about-page {
   --about-display: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;

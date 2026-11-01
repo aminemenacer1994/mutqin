@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Http\Middleware\SetMutqinContentSecurityPolicy;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ContentSecurityPolicyTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_homepage_includes_quran_foundation_and_bunny_font_sources(): void
     {
         $policy = $this->get('/')
@@ -16,6 +19,24 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertNotNull($policy);
         $this->assertStringContainsString('https://verses.quran.foundation', (string) $policy);
         $this->assertStringContainsString('https://fonts.bunny.net', (string) $policy);
+        $this->assertStringNotContainsString("script-src 'none'", (string) $policy);
+        $this->assertStringContainsString("script-src 'self'", (string) $policy);
+    }
+
+    public function test_memorisation_shell_allows_same_origin_scripts(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $policy = $this->actingAs($user)
+            ->get('/memorisation')
+            ->assertOk()
+            ->headers->get('Content-Security-Policy');
+
+        $this->assertNotNull($policy);
+        $this->assertStringContainsString("script-src 'self'", (string) $policy);
+        $this->assertStringNotContainsString("script-src 'none'", (string) $policy);
     }
 
     public function test_build_policy_omits_unsafe_eval_in_production(): void
@@ -41,5 +62,22 @@ class ContentSecurityPolicyTest extends TestCase
             $policy
         );
         $this->assertStringContainsString("media-src 'self' blob: data: https:", $policy);
+    }
+
+    public function test_middleware_replaces_script_src_none_policy(): void
+    {
+        $middleware = new SetMutqinContentSecurityPolicy;
+
+        $request = \Illuminate\Http\Request::create('/memorisation', 'GET');
+        $response = response('<html><body>ok</body></html>', 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Security-Policy' => "default-src 'self'; script-src 'none'",
+        ]);
+
+        $result = $middleware->handle($request, fn () => $response);
+        $policy = (string) $result->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("script-src 'self'", $policy);
+        $this->assertStringNotContainsString("script-src 'none'", $policy);
     }
 }
