@@ -61,9 +61,11 @@ return [
 
     // MVP admin allowlist (MUTQIN_ADMIN_EMAILS). Used with users.is_admin + verified email.
     // Also blocks these mailboxes on register/profile for non-admins.
+    // Default primary operator when env is unset (Laravel Cloud). Override with
+    // MUTQIN_ADMIN_EMAILS= or a comma-separated list for multiple super admins.
     'admin_emails' => array_values(array_filter(array_map(
         static fn (string $email): string => strtolower(trim($email)),
-        explode(',', (string) env('MUTQIN_ADMIN_EMAILS', ''))
+        explode(',', (string) env('MUTQIN_ADMIN_EMAILS', 'menacer72@gmail.com'))
     ))),
 
     // Who sees the admin nav item. Narrower than the admin role allowlist.
