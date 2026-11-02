@@ -8,6 +8,7 @@ use App\Rules\WaitingListEmail;
 use App\Services\AdminDashboardService;
 use App\Services\WaitingListAnalyticsService;
 use App\Services\WaitingListLaunchCampaignService;
+use App\Support\BulkMailQueue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -63,6 +64,18 @@ class WaitingListController extends Controller
         $result = $campaign->dispatchSend((int) $admin->id, $confirmCount, $testEmail);
 
         return response()->json($result);
+    }
+
+    public function launchEmailPump(Request $request): JsonResponse
+    {
+        $this->superAdmin($request);
+
+        $result = BulkMailQueue::deliverPending(20, 12, 'waiting_list');
+
+        return response()->json([
+            'processed' => $result['processed'],
+            'deliveries' => $result['waiting_list'],
+        ])->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
     public function index(Request $request): JsonResponse

@@ -119,6 +119,11 @@ export const adminApi = {
     return data
   },
 
+  async pumpWaitingListLaunchEmail() {
+    const { data } = await http.post('/admin/waiting-list/launch-email/pump')
+    return data
+  },
+
   async getRegisteredUserBroadcastPreview(userIds = null) {
     const { data } = await withRetry(() =>
       http.get('/admin/users/broadcast-email/preview', {
@@ -131,6 +136,11 @@ export const adminApi = {
 
   async sendRegisteredUserBroadcastEmail(payload) {
     const { data } = await withRetry(() => http.post('/admin/users/broadcast-email/send', payload))
+    return data
+  },
+
+  async pumpRegisteredUserBroadcast() {
+    const { data } = await http.post('/admin/users/broadcast-email/pump')
     return data
   },
 

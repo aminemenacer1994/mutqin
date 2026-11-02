@@ -43,4 +43,14 @@ return [
     'waitlist_launch_action' => 'Abrir Mutqin',
     'waitlist_launch_fallback' => 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
     'waitlist_launch_signoff' => 'El equipo de Mutqin',
+
+    'registered_user_broadcast_subject' => 'Novedades de Mutqin',
+    'registered_user_broadcast_preheader' => 'Inicia sesión para seguir memorizando con práctica guiada.',
+    'registered_user_broadcast_heading' => 'Novedades de Mutqin',
+    'registered_user_broadcast_greeting' => 'Assalamu alaikum,',
+    'registered_user_broadcast_greeting_named' => 'Assalamu alaikum, :name,',
+    'registered_user_broadcast_body' => 'Queríamos compartir una breve novedad. Inicia sesión en Mutqin para la memorización guiada, las revisiones de recitación con IA y el seguimiento del progreso.',
+    'registered_user_broadcast_action' => 'Abrir Mutqin',
+    'registered_user_broadcast_fallback' => 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
+    'registered_user_broadcast_signoff' => 'El equipo de Mutqin',
 ];

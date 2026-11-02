@@ -86,6 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('api.admin.waiting-list.launch-email.status');
             Route::post('/admin/waiting-list/launch-email/send', [AdminWaitingListController::class, 'launchEmailSend'])
                 ->name('api.admin.waiting-list.launch-email.send');
+            Route::post('/admin/waiting-list/launch-email/pump', [AdminWaitingListController::class, 'launchEmailPump'])
+                ->name('api.admin.waiting-list.launch-email.pump');
         });
         Route::middleware('can:manage-registered-user-broadcast-email')->group(function () {
             Route::get('/admin/users/broadcast-email/preview', [AdminRegisteredUserBroadcastController::class, 'preview'])
@@ -94,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('api.admin.users.broadcast-email.status');
             Route::post('/admin/users/broadcast-email/send', [AdminRegisteredUserBroadcastController::class, 'send'])
                 ->name('api.admin.users.broadcast-email.send');
+            Route::post('/admin/users/broadcast-email/pump', [AdminRegisteredUserBroadcastController::class, 'pump'])
+                ->name('api.admin.users.broadcast-email.pump');
         });
         Route::get('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'show'])
             ->whereNumber('entry')
@@ -287,6 +291,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])
             ->name('api.memorisation.practice-plans.complete');
         Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
+            ->middleware(['plan:pro', 'throttle:20,1'])
             ->name('api.memorisation.practice-plans.retest');
 
         // Full-fidelity state blob used as the live persistence boundary.

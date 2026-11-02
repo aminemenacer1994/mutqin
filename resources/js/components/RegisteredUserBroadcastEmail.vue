@@ -24,6 +24,10 @@
           <strong>{{ preview.eligible }}</strong>
         </div>
         <div class="waiting-analytics__card">
+          <span>{{ t('admin.registered_users.broadcast_pending') }}</span>
+          <strong>{{ preview.deliveries.pending }}</strong>
+        </div>
+        <div class="waiting-analytics__card">
           <span>{{ t('admin.registered_users.broadcast_sent') }}</span>
           <strong>{{ preview.deliveries.sent }}</strong>
         </div>
@@ -53,7 +57,7 @@
         <button
           type="button"
           class="admin-btn admin-btn--primary"
-          :disabled="sending || !preview.storage_ready || preview.eligible < 1"
+          :disabled="sending || draining || !preview.storage_ready || preview.eligible < 1"
           @click="openProductionConfirm"
         >
           {{ t('admin.registered_users.broadcast_send_production') }}
@@ -107,12 +111,18 @@ export default {
     testEmail: '',
     confirmOpen: false,
     confirmInput: '',
+    draining: false,
   }),
   computed: {
     skippedTotal() {
-      if (!this.preview?.skipped) return 0
-      return Object.values(this.preview.skipped).reduce((sum, n) => sum + Number(n || 0), 0)
+      const skipped = this.preview?.skipped || {}
+      return Object.entries(skipped).reduce((sum, [key, n]) => {
+        return key === 'queued' ? sum : sum + Number(n || 0)
+      }, 0)
     },
+  },
+  beforeUnmount() {
+    this.draining = false
   },
   mounted() {
     this.loadPreview()
@@ -123,10 +133,44 @@ export default {
       this.error = false
       try {
         this.preview = await adminApi.getRegisteredUserBroadcastPreview()
+        if (Number(this.preview?.deliveries?.pending || 0) > 0) {
+          this.drain()
+        }
       } catch {
         this.error = true
       } finally {
         this.loading = false
+      }
+    },
+    apiError(error) {
+      const errors = error?.response?.data?.errors
+      if (errors && typeof errors === 'object') {
+        const first = Object.values(errors).flat()[0]
+        if (first) return String(first)
+      }
+      return ''
+    },
+    async drain() {
+      if (this.draining) return
+      this.draining = true
+      try {
+        for (let i = 0; i < 500 && this.draining; i += 1) {
+          const status = await adminApi.pumpRegisteredUserBroadcast()
+          if (this.preview && status?.deliveries) {
+            this.preview = { ...this.preview, deliveries: status.deliveries }
+          }
+          const pending = Number(status?.deliveries?.pending || 0)
+          this.sendError = false
+          this.sendMessage = pending > 0
+            ? this.t('admin.registered_users.broadcast_sending_progress', { pending })
+            : this.sendMessage
+          if (!status?.processed || pending === 0) break
+        }
+      } catch (error) {
+        this.sendError = true
+        this.sendMessage = this.apiError(error) || this.t('admin.registered_users.broadcast_send_error')
+      } finally {
+        this.draining = false
       }
     },
     openProductionConfirm() {
@@ -155,9 +199,9 @@ export default {
         })
         this.sendMessage = this.t('admin.registered_users.broadcast_test_queued', { email })
         this.preview = { ...this.preview, deliveries: result.deliveries }
-      } catch {
+      } catch (error) {
         this.sendError = true
-        this.sendMessage = this.t('admin.registered_users.broadcast_send_error')
+        this.sendMessage = this.apiError(error) || this.t('admin.registered_users.broadcast_send_error')
       } finally {
         this.sending = false
         this.sendMode = ''
@@ -182,9 +226,10 @@ export default {
         this.sendMessage = this.t('admin.registered_users.broadcast_production_queued', { count: result.queued })
         this.confirmOpen = false
         await this.loadPreview()
-      } catch {
+        this.drain()
+      } catch (error) {
         this.sendError = true
-        this.sendMessage = this.t('admin.registered_users.broadcast_send_error')
+        this.sendMessage = this.apiError(error) || this.t('admin.registered_users.broadcast_send_error')
       } finally {
         this.sending = false
         this.sendMode = ''

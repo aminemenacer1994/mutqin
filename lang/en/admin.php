@@ -20,11 +20,16 @@ return [
         'launch_storage_unavailable' => 'Waiting-list email storage is not ready. Run database migrations.',
         'launch_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
         'launch_no_recipients' => 'No eligible waiting-list recipients to email.',
+        'launch_test_failed' => 'The test email was not accepted. :reason',
+    ],
+    'mail' => [
+        'not_configured' => 'Production email is not configured to deliver. Set MAIL_MAILER=resend, RESEND_KEY, and a verified MAIL_FROM_ADDRESS, then redeploy.',
     ],
     'registered_users' => [
         'broadcast_storage_unavailable' => 'Registered-user email delivery storage is not ready. Run database migrations.',
         'broadcast_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
         'broadcast_no_recipients' => 'No eligible registered users to email.',
+        'broadcast_test_failed' => 'The test email was not accepted. :reason',
     ],
     'contact_messages' => [
         'title' => 'Contact Messages',

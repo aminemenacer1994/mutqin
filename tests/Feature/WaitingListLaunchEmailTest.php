@@ -107,11 +107,84 @@ class WaitingListLaunchEmailTest extends TestCase
             ->assertJsonPath('mode', 'test')
             ->assertJsonPath('queued', 1);
 
-        Queue::assertPushed(DispatchWaitingListLaunchBatchJob::class, function (DispatchWaitingListLaunchBatchJob $job): bool {
-            return $job->isTest && $job->testEmail === 'sandbox@example.com';
+        Queue::assertNotPushed(DispatchWaitingListLaunchBatchJob::class);
+        Mail::assertSent(WaitingListLaunchMail::class, function (WaitingListLaunchMail $mail): bool {
+            return $mail->hasTo('sandbox@example.com');
         });
 
         $this->assertSame(0, WaitingListEmailDelivery::query()->count());
+    }
+
+    public function test_pump_sends_pending_delivery_once(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        $entry = WaitingListEntry::query()->create(['name' => 'Amina', 'email' => 'amina@example.com']);
+        WaitingListEmailDelivery::query()->create([
+            'campaign_key' => 'waitlist_launch_2026',
+            'email_hash' => WaitingListEmailHash::digest('amina@example.com'),
+            'waiting_list_entry_id' => $entry->id,
+            'status' => WaitingListEmailDelivery::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('api.admin.waiting-list.launch-email.pump'))
+            ->assertOk()
+            ->assertJsonPath('processed', 1)
+            ->assertJsonPath('deliveries.sent', 1)
+            ->assertJsonPath('deliveries.pending', 0);
+
+        Mail::assertSent(WaitingListLaunchMail::class, 1);
+
+        $this->actingAs($admin)
+            ->postJson(route('api.admin.waiting-list.launch-email.pump'))
+            ->assertOk()
+            ->assertJsonPath('processed', 0);
+
+        Mail::assertSent(WaitingListLaunchMail::class, 1);
+    }
+
+    public function test_repeat_send_job_does_not_duplicate(): void
+    {
+        Mail::fake();
+
+        $entry = WaitingListEntry::query()->create(['name' => 'Amina', 'email' => 'amina@example.com']);
+        WaitingListEmailDelivery::query()->create([
+            'campaign_key' => 'waitlist_launch_2026',
+            'email_hash' => WaitingListEmailHash::digest('amina@example.com'),
+            'waiting_list_entry_id' => $entry->id,
+            'status' => WaitingListEmailDelivery::STATUS_PENDING,
+        ]);
+
+        $job = new SendWaitingListLaunchEmailJob(
+            'waitlist_launch_2026',
+            $entry->id,
+            'amina@example.com',
+            'Amina',
+            false,
+        );
+        $job->handle();
+        $job->handle();
+
+        Mail::assertSent(WaitingListLaunchMail::class, 1);
+    }
+
+    public function test_production_environment_rejects_undeliverable_mailer(): void
+    {
+        $this->app['env'] = 'production';
+        config()->set('mail.default', 'log');
+
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        WaitingListEntry::query()->create(['name' => 'Amina', 'email' => 'amina@example.com']);
+
+        $this->actingAs($admin)
+            ->postJson(route('api.admin.waiting-list.launch-email.send'), [
+                'confirm_send' => true,
+                'confirm_count' => 1,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['campaign']);
     }
 
     public function test_send_job_marks_delivery_sent_and_logs_hash_not_email(): void

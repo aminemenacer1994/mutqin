@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\RegisteredUserBroadcastCampaignService;
+use App\Support\BulkMailQueue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -65,6 +66,18 @@ class RegisteredUserBroadcastController extends Controller
         );
 
         return response()->json($result);
+    }
+
+    public function pump(Request $request): JsonResponse
+    {
+        $this->superAdmin($request);
+
+        $result = BulkMailQueue::deliverPending(20, 12, 'registered');
+
+        return response()->json([
+            'processed' => $result['processed'],
+            'deliveries' => $result['registered'],
+        ])->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
     private function superAdmin(Request $request)

@@ -3,15 +3,19 @@
 namespace App\Services;
 
 use App\Jobs\DispatchWaitingListLaunchBatchJob;
+use App\Mail\WaitingListLaunchMail;
 use App\Models\WaitingListEmailDelivery;
 use App\Models\WaitingListEntry;
 use App\Rules\WaitingListEmail;
+use App\Support\BulkMailQueue;
+use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class WaitingListLaunchCampaignService
 {
@@ -24,7 +28,7 @@ class WaitingListLaunchCampaignService
      * @return array{
      *     campaign_key: string,
      *     eligible: int,
-     *     skipped: array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int},
+     *     skipped: array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int, queued: int},
      *     deliveries: array{pending: int, sent: int, failed: int, skipped: int},
      *     storage_ready: bool
      * }
@@ -63,6 +67,8 @@ class WaitingListLaunchCampaignService
      */
     public function dispatchSend(int $adminUserId, int $confirmCount, ?string $testEmail = null): array
     {
+        BulkMailQueue::assertDeliverable();
+
         if (! $this->storageReady()) {
             throw ValidationException::withMessages([
                 'campaign' => [__('admin.waiting_list.launch_storage_unavailable')],
@@ -95,13 +101,17 @@ class WaitingListLaunchCampaignService
 
             $chunks = $rows->chunk($batchSize)->values();
             foreach ($chunks as $batchIndex => $chunk) {
-                DispatchWaitingListLaunchBatchJob::dispatch(
-                    $this->campaignKey(),
-                    $chunk->pluck('id')->all(),
-                )
-                    ->onQueue($queue)
-                    ->delay(now()->addSeconds($batchIndex * $delaySeconds));
+                BulkMailQueue::route(
+                    DispatchWaitingListLaunchBatchJob::dispatch(
+                        $this->campaignKey(),
+                        $chunk->pluck('id')->all(),
+                    )
+                        ->onQueue($queue)
+                        ->delay(now()->addSeconds($batchIndex * $delaySeconds))
+                );
             }
+
+            BulkMailQueue::kickAfterResponse();
 
             return [
                 'campaign_key' => $this->campaignKey(),
@@ -122,17 +132,35 @@ class WaitingListLaunchCampaignService
             ]);
         }
 
-        DispatchWaitingListLaunchBatchJob::dispatch(
-            $this->campaignKey(),
-            [],
-            $normalizedTest,
-            true,
-        )->onQueue((string) config('mutqin.waiting_list.launch_email.queue', 'default'));
+        return $this->sendTestNow($normalizedTest);
+    }
+
+    /**
+     * @return array{campaign_key: string, queued: int, mode: string, delivered: bool, deliveries: array{pending: int, sent: int, failed: int, skipped: int}}
+     */
+    private function sendTestNow(string $email): array
+    {
+        $platformUrl = TransactionalMail::homeUrl();
+
+        try {
+            Mail::to($email)->send(new WaitingListLaunchMail(
+                recipientName: 'Waiting list preview',
+                platformUrl: $platformUrl,
+                unsubscribeUrl: $platformUrl.'/waiting-list/unsubscribe/preview',
+            ));
+        } catch (Throwable $exception) {
+            throw ValidationException::withMessages([
+                'test_email' => [__('admin.waiting_list.launch_test_failed', [
+                    'reason' => BulkMailQueue::safeError($exception),
+                ])],
+            ]);
+        }
 
         return [
             'campaign_key' => $this->campaignKey(),
             'queued' => 1,
             'mode' => 'test',
+            'delivered' => true,
             'deliveries' => $this->deliveryCounts(),
         ];
     }
@@ -154,7 +182,8 @@ class WaitingListLaunchCampaignService
             ->pluck('aggregate', 'status');
 
         return [
-            'pending' => (int) ($rows[WaitingListEmailDelivery::STATUS_PENDING] ?? 0),
+            'pending' => (int) ($rows[WaitingListEmailDelivery::STATUS_PENDING] ?? 0)
+                + (int) ($rows[WaitingListEmailDelivery::STATUS_SENDING] ?? 0),
             'sent' => (int) ($rows[WaitingListEmailDelivery::STATUS_SENT] ?? 0),
             'failed' => (int) ($rows[WaitingListEmailDelivery::STATUS_FAILED] ?? 0),
             'skipped' => (int) ($rows[WaitingListEmailDelivery::STATUS_SKIPPED] ?? 0),
@@ -170,30 +199,21 @@ class WaitingListLaunchCampaignService
     }
 
     /**
-     * @param  array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int}  $skipped
+     * @param  array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
      * @return Collection<int, WaitingListEntry>
      */
     private function collectEligibleRows(array &$skipped): Collection
     {
         $campaignKey = $this->campaignKey();
-        $sentHashes = WaitingListEmailDelivery::query()
-            ->where('campaign_key', $campaignKey)
-            ->whereIn('status', [
-                WaitingListEmailDelivery::STATUS_PENDING,
-                WaitingListEmailDelivery::STATUS_SENT,
-            ])
-            ->pluck('email_hash')
-            ->all();
-
-        $sentHashSet = array_fill_keys($sentHashes, true);
+        [$sentHashSet, $activeHashSet] = $this->blockingHashes($campaignKey);
         $seenEmails = [];
         $eligible = collect();
 
         WaitingListEntry::query()
             ->orderBy('id')
-            ->chunkById(500, function ($entries) use (&$skipped, &$seenEmails, &$eligible, $sentHashSet): void {
+            ->chunkById(500, function ($entries) use (&$skipped, &$seenEmails, &$eligible, $sentHashSet, $activeHashSet): void {
                 foreach ($entries as $entry) {
-                    $this->classifyEntry($entry, $skipped, $seenEmails, $sentHashSet, $eligible);
+                    $this->classifyEntry($entry, $skipped, $seenEmails, $sentHashSet, $activeHashSet, $eligible);
                 }
             });
 
@@ -201,9 +221,10 @@ class WaitingListLaunchCampaignService
     }
 
     /**
-     * @param  array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int}  $skipped
+     * @param  array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
      * @param  array<string, true>  $seenEmails
      * @param  array<string, true>  $sentHashSet
+     * @param  array<string, true>  $activeHashSet
      * @param  Collection<int, WaitingListEntry>  $eligible
      */
     private function classifyEntry(
@@ -211,6 +232,7 @@ class WaitingListLaunchCampaignService
         array &$skipped,
         array &$seenEmails,
         array $sentHashSet,
+        array $activeHashSet,
         Collection $eligible,
     ): void {
         if ($entry->unsubscribed_at !== null) {
@@ -259,6 +281,12 @@ class WaitingListLaunchCampaignService
             return;
         }
 
+        if (isset($activeHashSet[$hash])) {
+            $skipped['queued']++;
+
+            return;
+        }
+
         $eligible->push($entry);
     }
 
@@ -268,45 +296,86 @@ class WaitingListLaunchCampaignService
     private function reserveDeliveries(Collection $rows): void
     {
         $campaignKey = $this->campaignKey();
-        $connection = (new WaitingListEmailDelivery)->getConnectionName();
+        $now = now()->toDateTimeString();
 
-        DB::connection($connection)->transaction(function () use ($rows, $campaignKey): void {
-            foreach ($rows as $entry) {
+        foreach ($rows->chunk(200) as $chunk) {
+            $payload = [];
+            $hashes = [];
+
+            foreach ($chunk as $entry) {
                 $email = WaitingListEmailHash::normalize((string) $entry->email);
                 $hash = WaitingListEmailHash::digest($email);
-
-                $existing = WaitingListEmailDelivery::query()
-                    ->where('campaign_key', $campaignKey)
-                    ->where('email_hash', $hash)
-                    ->first();
-
-                if ($existing?->status === WaitingListEmailDelivery::STATUS_SENT) {
-                    continue;
-                }
-
-                if ($existing) {
-                    $existing->update([
-                        'waiting_list_entry_id' => $entry->id,
-                        'status' => WaitingListEmailDelivery::STATUS_PENDING,
-                        'skip_reason' => null,
-                        'last_error' => null,
-                    ]);
-
-                    continue;
-                }
-
-                WaitingListEmailDelivery::query()->create([
+                $hashes[] = $hash;
+                $payload[] = [
                     'campaign_key' => $campaignKey,
                     'email_hash' => $hash,
                     'waiting_list_entry_id' => $entry->id,
                     'status' => WaitingListEmailDelivery::STATUS_PENDING,
-                ]);
+                    'skip_reason' => null,
+                    'attempts' => 0,
+                    'last_error' => null,
+                    'sent_at' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
-        });
+
+            if ($payload === []) {
+                continue;
+            }
+
+            WaitingListEmailDelivery::query()->insertOrIgnore($payload);
+            WaitingListEmailDelivery::query()
+                ->where('campaign_key', $campaignKey)
+                ->whereIn('email_hash', $hashes)
+                ->where('status', '!=', WaitingListEmailDelivery::STATUS_SENT)
+                ->where(function ($query): void {
+                    $query->where('status', '!=', WaitingListEmailDelivery::STATUS_SENDING)
+                        ->orWhere('updated_at', '<=', now()->subMinutes(2));
+                })
+                ->update([
+                    'status' => WaitingListEmailDelivery::STATUS_PENDING,
+                    'skip_reason' => null,
+                    'last_error' => null,
+                    'sent_at' => null,
+                    'updated_at' => $now,
+                ]);
+        }
     }
 
     /**
-     * @return array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int}
+     * @return array{0: array<string, true>, 1: array<string, true>}
+     */
+    private function blockingHashes(string $campaignKey): array
+    {
+        $rows = WaitingListEmailDelivery::query()
+            ->where('campaign_key', $campaignKey)
+            ->where(function ($query): void {
+                $query->where('status', WaitingListEmailDelivery::STATUS_SENT)
+                    ->orWhere(function ($query): void {
+                        $query->whereIn('status', [
+                            WaitingListEmailDelivery::STATUS_PENDING,
+                            WaitingListEmailDelivery::STATUS_SENDING,
+                        ])->where('updated_at', '>=', now()->subHours(2));
+                    });
+            })
+            ->get(['email_hash', 'status']);
+
+        $sent = [];
+        $active = [];
+        foreach ($rows as $row) {
+            if ($row->status === WaitingListEmailDelivery::STATUS_SENT) {
+                $sent[(string) $row->email_hash] = true;
+            } else {
+                $active[(string) $row->email_hash] = true;
+            }
+        }
+
+        return [$sent, $active];
+    }
+
+    /**
+     * @return array{unsubscribed: int, bounced: int, invalid: int, duplicate: int, already_sent: int, queued: int}
      */
     private function emptySkipped(): array
     {
@@ -316,6 +385,7 @@ class WaitingListLaunchCampaignService
             'invalid' => 0,
             'duplicate' => 0,
             'already_sent' => 0,
+            'queued' => 0,
         ];
     }
 

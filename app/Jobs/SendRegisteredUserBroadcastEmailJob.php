@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\RegisteredUserBroadcastMail;
 use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
+use App\Support\BulkMailQueue;
 use App\Support\MutqinLog;
 use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
@@ -18,6 +19,8 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 5;
+
+    public int $timeout = 45;
 
     /** @var list<int> */
     public array $backoff = [30, 120, 300, 900];
@@ -62,6 +65,10 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
 
                 return;
             }
+
+            if (! BulkMailQueue::claim($delivery)) {
+                return;
+            }
         }
 
         try {
@@ -74,7 +81,6 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
                 $delivery->update([
                     'status' => RegisteredUserEmailDelivery::STATUS_SENT,
                     'sent_at' => now(),
-                    'attempts' => $delivery->attempts + 1,
                     'last_error' => null,
                 ]);
             }
@@ -89,8 +95,7 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
             if ($delivery) {
                 $delivery->update([
                     'status' => RegisteredUserEmailDelivery::STATUS_FAILED,
-                    'attempts' => $delivery->attempts + 1,
-                    'last_error' => mb_substr($exception->getMessage(), 0, 255),
+                    'last_error' => BulkMailQueue::safeError($exception),
                 ]);
             }
 

@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Jobs\DispatchRegisteredUserBroadcastBatchJob;
-use App\Models\MemorisationAssessment;
+use App\Jobs\SendRegisteredUserBroadcastEmailJob;
+use App\Mail\RegisteredUserBroadcastMail;
 use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
-use App\Services\UserAiReciteUsageService;
+use App\Support\WaitingListEmailHash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -66,5 +68,64 @@ class RegisteredUserBroadcastEmailTest extends TestCase
 
         Queue::assertPushed(DispatchRegisteredUserBroadcastBatchJob::class);
         $this->assertSame(1, RegisteredUserEmailDelivery::query()->where('status', 'pending')->count());
+    }
+
+    public function test_test_send_delivers_immediately_without_a_queue_worker(): void
+    {
+        Mail::fake();
+        Queue::fake();
+
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+
+        $this->actingAs($admin)
+            ->postJson(route('api.admin.users.broadcast-email.send'), [
+                'confirm_send' => true,
+                'test_email' => 'sandbox@example.com',
+            ])
+            ->assertOk()
+            ->assertJsonPath('mode', 'test')
+            ->assertJsonPath('delivered', true);
+
+        Queue::assertNothingPushed();
+        Mail::assertSent(RegisteredUserBroadcastMail::class, function (RegisteredUserBroadcastMail $mail): bool {
+            return $mail->hasTo('sandbox@example.com');
+        });
+        $this->assertSame(0, RegisteredUserEmailDelivery::query()->count());
+    }
+
+    public function test_pump_sends_one_pending_registered_user(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        $user = User::factory()->create([
+            'email' => 'learner@example.com',
+            'email_verified_at' => now(),
+        ]);
+        RegisteredUserEmailDelivery::query()->create([
+            'campaign_key' => 'registered_broadcast_2026',
+            'email_hash' => WaitingListEmailHash::digest('learner@example.com'),
+            'user_id' => $user->id,
+            'status' => RegisteredUserEmailDelivery::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('api.admin.users.broadcast-email.pump'))
+            ->assertOk()
+            ->assertJsonPath('processed', 1)
+            ->assertJsonPath('deliveries.sent', 1);
+
+        Mail::assertSent(RegisteredUserBroadcastMail::class, 1);
+
+        $job = new SendRegisteredUserBroadcastEmailJob(
+            'registered_broadcast_2026',
+            $user->id,
+            'learner@example.com',
+            'Learner',
+            false,
+        );
+        $job->handle();
+
+        Mail::assertSent(RegisteredUserBroadcastMail::class, 1);
     }
 }

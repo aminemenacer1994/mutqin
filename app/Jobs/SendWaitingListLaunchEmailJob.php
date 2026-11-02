@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\WaitingListLaunchMail;
 use App\Models\WaitingListEmailDelivery;
 use App\Models\WaitingListEntry;
+use App\Support\BulkMailQueue;
 use App\Support\MutqinLog;
 use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
@@ -19,6 +20,8 @@ class SendWaitingListLaunchEmailJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 5;
+
+    public int $timeout = 45;
 
     /** @var list<int> */
     public array $backoff = [30, 120, 300, 900];
@@ -67,6 +70,10 @@ class SendWaitingListLaunchEmailJob implements ShouldQueue
 
                 return;
             }
+
+            if (! BulkMailQueue::claim($delivery)) {
+                return;
+            }
         }
 
         $platformUrl = TransactionalMail::homeUrl();
@@ -89,7 +96,6 @@ class SendWaitingListLaunchEmailJob implements ShouldQueue
                 $delivery->update([
                     'status' => WaitingListEmailDelivery::STATUS_SENT,
                     'sent_at' => now(),
-                    'attempts' => $delivery->attempts + 1,
                     'last_error' => null,
                 ]);
             }
@@ -104,8 +110,7 @@ class SendWaitingListLaunchEmailJob implements ShouldQueue
             if ($delivery) {
                 $delivery->update([
                     'status' => WaitingListEmailDelivery::STATUS_FAILED,
-                    'attempts' => $delivery->attempts + 1,
-                    'last_error' => mb_substr($exception->getMessage(), 0, 255),
+                    'last_error' => BulkMailQueue::safeError($exception),
                 ]);
             }
 

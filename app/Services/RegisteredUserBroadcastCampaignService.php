@@ -3,14 +3,18 @@
 namespace App\Services;
 
 use App\Jobs\DispatchRegisteredUserBroadcastBatchJob;
+use App\Mail\RegisteredUserBroadcastMail;
 use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
+use App\Support\BulkMailQueue;
+use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class RegisteredUserBroadcastCampaignService
 {
@@ -24,7 +28,7 @@ class RegisteredUserBroadcastCampaignService
      * @return array{
      *     campaign_key: string,
      *     eligible: int,
-     *     skipped: array{unverified: int, invalid: int, duplicate: int, already_sent: int},
+     *     skipped: array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int},
      *     deliveries: array{pending: int, sent: int, failed: int, skipped: int},
      *     storage_ready: bool,
      *     scope: string
@@ -69,6 +73,8 @@ class RegisteredUserBroadcastCampaignService
      */
     public function dispatchSend(int $adminUserId, int $confirmCount, ?string $testEmail = null, ?array $userIds = null): array
     {
+        BulkMailQueue::assertDeliverable();
+
         if (! $this->storageReady()) {
             throw ValidationException::withMessages([
                 'campaign' => [__('admin.registered_users.broadcast_storage_unavailable')],
@@ -101,13 +107,17 @@ class RegisteredUserBroadcastCampaignService
 
             $chunks = $rows->chunk($batchSize)->values();
             foreach ($chunks as $batchIndex => $chunk) {
-                DispatchRegisteredUserBroadcastBatchJob::dispatch(
-                    $this->campaignKey(),
-                    $chunk->pluck('id')->all(),
-                )
-                    ->onQueue($queue)
-                    ->delay(now()->addSeconds($batchIndex * $delaySeconds));
+                BulkMailQueue::route(
+                    DispatchRegisteredUserBroadcastBatchJob::dispatch(
+                        $this->campaignKey(),
+                        $chunk->pluck('id')->all(),
+                    )
+                        ->onQueue($queue)
+                        ->delay(now()->addSeconds($batchIndex * $delaySeconds))
+                );
             }
+
+            BulkMailQueue::kickAfterResponse();
 
             return [
                 'campaign_key' => $this->campaignKey(),
@@ -128,17 +138,32 @@ class RegisteredUserBroadcastCampaignService
             ]);
         }
 
-        DispatchRegisteredUserBroadcastBatchJob::dispatch(
-            $this->campaignKey(),
-            [],
-            $normalizedTest,
-            true,
-        )->onQueue((string) config('mutqin.registered_users.broadcast_email.queue', 'default'));
+        return $this->sendTestNow($normalizedTest);
+    }
+
+    /**
+     * @return array{campaign_key: string, queued: int, mode: string, delivered: bool, deliveries: array{pending: int, sent: int, failed: int, skipped: int}}
+     */
+    private function sendTestNow(string $email): array
+    {
+        try {
+            Mail::to($email)->send(new RegisteredUserBroadcastMail(
+                recipientName: 'Preview recipient',
+                platformUrl: TransactionalMail::homeUrl(),
+            ));
+        } catch (Throwable $exception) {
+            throw ValidationException::withMessages([
+                'test_email' => [__('admin.registered_users.broadcast_test_failed', [
+                    'reason' => BulkMailQueue::safeError($exception),
+                ])],
+            ]);
+        }
 
         return [
             'campaign_key' => $this->campaignKey(),
             'queued' => 1,
             'mode' => 'test',
+            'delivered' => true,
             'deliveries' => $this->deliveryCounts(),
         ];
     }
@@ -160,7 +185,8 @@ class RegisteredUserBroadcastCampaignService
             ->pluck('aggregate', 'status');
 
         return [
-            'pending' => (int) ($rows[RegisteredUserEmailDelivery::STATUS_PENDING] ?? 0),
+            'pending' => (int) ($rows[RegisteredUserEmailDelivery::STATUS_PENDING] ?? 0)
+                + (int) ($rows[RegisteredUserEmailDelivery::STATUS_SENDING] ?? 0),
             'sent' => (int) ($rows[RegisteredUserEmailDelivery::STATUS_SENT] ?? 0),
             'failed' => (int) ($rows[RegisteredUserEmailDelivery::STATUS_FAILED] ?? 0),
             'skipped' => (int) ($rows[RegisteredUserEmailDelivery::STATUS_SKIPPED] ?? 0),
@@ -173,23 +199,14 @@ class RegisteredUserBroadcastCampaignService
     }
 
     /**
-     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int}  $skipped
+     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
      * @param  list<int>|null  $userIds
      * @return Collection<int, User>
      */
     private function collectEligibleRows(array &$skipped, ?array $userIds): Collection
     {
         $campaignKey = $this->campaignKey();
-        $sentHashes = RegisteredUserEmailDelivery::query()
-            ->where('campaign_key', $campaignKey)
-            ->whereIn('status', [
-                RegisteredUserEmailDelivery::STATUS_PENDING,
-                RegisteredUserEmailDelivery::STATUS_SENT,
-            ])
-            ->pluck('email_hash')
-            ->all();
-
-        $sentHashSet = array_fill_keys($sentHashes, true);
+        [$sentHashSet, $activeHashSet] = $this->blockingHashes($campaignKey);
         $seenEmails = [];
         $eligible = collect();
 
@@ -200,9 +217,9 @@ class RegisteredUserBroadcastCampaignService
             $query->whereIn('id', $ids);
         }
 
-        $query->chunkById(500, function ($users) use (&$skipped, &$seenEmails, &$eligible, $sentHashSet): void {
+        $query->chunkById(500, function ($users) use (&$skipped, &$seenEmails, &$eligible, $sentHashSet, $activeHashSet): void {
             foreach ($users as $user) {
-                $this->classifyUser($user, $skipped, $seenEmails, $sentHashSet, $eligible);
+                $this->classifyUser($user, $skipped, $seenEmails, $sentHashSet, $activeHashSet, $eligible);
             }
         });
 
@@ -210,9 +227,10 @@ class RegisteredUserBroadcastCampaignService
     }
 
     /**
-     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int}  $skipped
+     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
      * @param  array<string, true>  $seenEmails
      * @param  array<string, true>  $sentHashSet
+     * @param  array<string, true>  $activeHashSet
      * @param  Collection<int, User>  $eligible
      */
     private function classifyUser(
@@ -220,6 +238,7 @@ class RegisteredUserBroadcastCampaignService
         array &$skipped,
         array &$seenEmails,
         array $sentHashSet,
+        array $activeHashSet,
         Collection $eligible,
     ): void {
         if ($user->email_verified_at === null) {
@@ -249,6 +268,12 @@ class RegisteredUserBroadcastCampaignService
             return;
         }
 
+        if (isset($activeHashSet[$hash])) {
+            $skipped['queued']++;
+
+            return;
+        }
+
         $eligible->push($user);
     }
 
@@ -258,44 +283,86 @@ class RegisteredUserBroadcastCampaignService
     private function reserveDeliveries(Collection $rows): void
     {
         $campaignKey = $this->campaignKey();
+        $now = now()->toDateTimeString();
 
-        DB::transaction(function () use ($rows, $campaignKey): void {
-            foreach ($rows as $user) {
+        foreach ($rows->chunk(200) as $chunk) {
+            $payload = [];
+            $hashes = [];
+
+            foreach ($chunk as $user) {
                 $email = WaitingListEmailHash::normalize((string) $user->email);
                 $hash = WaitingListEmailHash::digest($email);
-
-                $existing = RegisteredUserEmailDelivery::query()
-                    ->where('campaign_key', $campaignKey)
-                    ->where('email_hash', $hash)
-                    ->first();
-
-                if ($existing?->status === RegisteredUserEmailDelivery::STATUS_SENT) {
-                    continue;
-                }
-
-                if ($existing) {
-                    $existing->update([
-                        'user_id' => $user->id,
-                        'status' => RegisteredUserEmailDelivery::STATUS_PENDING,
-                        'skip_reason' => null,
-                        'last_error' => null,
-                    ]);
-
-                    continue;
-                }
-
-                RegisteredUserEmailDelivery::query()->create([
+                $hashes[] = $hash;
+                $payload[] = [
                     'campaign_key' => $campaignKey,
                     'email_hash' => $hash,
                     'user_id' => $user->id,
                     'status' => RegisteredUserEmailDelivery::STATUS_PENDING,
-                ]);
+                    'skip_reason' => null,
+                    'attempts' => 0,
+                    'last_error' => null,
+                    'sent_at' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
-        });
+
+            if ($payload === []) {
+                continue;
+            }
+
+            RegisteredUserEmailDelivery::query()->insertOrIgnore($payload);
+            RegisteredUserEmailDelivery::query()
+                ->where('campaign_key', $campaignKey)
+                ->whereIn('email_hash', $hashes)
+                ->where('status', '!=', RegisteredUserEmailDelivery::STATUS_SENT)
+                ->where(function ($query): void {
+                    $query->where('status', '!=', RegisteredUserEmailDelivery::STATUS_SENDING)
+                        ->orWhere('updated_at', '<=', now()->subMinutes(2));
+                })
+                ->update([
+                    'status' => RegisteredUserEmailDelivery::STATUS_PENDING,
+                    'skip_reason' => null,
+                    'last_error' => null,
+                    'sent_at' => null,
+                    'updated_at' => $now,
+                ]);
+        }
     }
 
     /**
-     * @return array{unverified: int, invalid: int, duplicate: int, already_sent: int}
+     * @return array{0: array<string, true>, 1: array<string, true>}
+     */
+    private function blockingHashes(string $campaignKey): array
+    {
+        $rows = RegisteredUserEmailDelivery::query()
+            ->where('campaign_key', $campaignKey)
+            ->where(function ($query): void {
+                $query->where('status', RegisteredUserEmailDelivery::STATUS_SENT)
+                    ->orWhere(function ($query): void {
+                        $query->whereIn('status', [
+                            RegisteredUserEmailDelivery::STATUS_PENDING,
+                            RegisteredUserEmailDelivery::STATUS_SENDING,
+                        ])->where('updated_at', '>=', now()->subHours(2));
+                    });
+            })
+            ->get(['email_hash', 'status']);
+
+        $sent = [];
+        $active = [];
+        foreach ($rows as $row) {
+            if ($row->status === RegisteredUserEmailDelivery::STATUS_SENT) {
+                $sent[(string) $row->email_hash] = true;
+            } else {
+                $active[(string) $row->email_hash] = true;
+            }
+        }
+
+        return [$sent, $active];
+    }
+
+    /**
+     * @return array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}
      */
     private function emptySkipped(): array
     {
@@ -304,6 +371,7 @@ class RegisteredUserBroadcastCampaignService
             'invalid' => 0,
             'duplicate' => 0,
             'already_sent' => 0,
+            'queued' => 0,
         ];
     }
 

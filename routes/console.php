@@ -12,6 +12,15 @@ Artisan::command('inspire', function () {
 // Scheduler + queue-worker freshness heartbeats (see docs/monitoring.md).
 Schedule::command('mutqin:health-heartbeat')->everyMinute();
 
+// Drain campaign deliveries even when no long-running queue worker is attached.
+// Each run is capped; pending rows stay claimed so a worker and this command cannot double-send.
+Schedule::command('mutqin:deliver-campaign-email')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->onFailure(static function (): void {
+        MutqinLog::error('mail.campaign_deliver_schedule_failed');
+    });
+
 Schedule::command('mutqin:health-evaluate')
     ->everyFiveMinutes()
     ->when(fn () => filter_var(config('monitoring.evaluate_enabled', true), FILTER_VALIDATE_BOOL));
