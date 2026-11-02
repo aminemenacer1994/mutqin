@@ -18,6 +18,7 @@ import {
   madaniQpcWordTechniqueClass,
   qpcWordLocationKey,
   resolveAnchorWordState,
+  resolveUserHighlightWordState,
   resolveCheckerHiddenWordState,
   resolveHiddenRevealWordState,
   resolveMadaniAmdPeekAyahKey,
@@ -139,6 +140,25 @@ const anchorTechnique = resolveQpcMadaniWordTechniqueState(
 )
 assert.equal(anchorTechnique.isAnchor, true)
 assert.equal(madaniQpcWordTechniqueClass(anchorTechnique)['anchor-highlight'], true)
+assert.equal(madaniQpcWordTechniqueClass(anchorTechnique)['user-word-highlight'], false)
+
+const userMarked = resolveQpcMadaniWordTechniqueState(
+  { location: '2:30:2', surah: '2', ayah: '30', word: '2', text: 'y' },
+  {
+    wordHighlightEnabled: true,
+    userHighlightIndexesByAyah: { '2:30': [1] },
+    anchorModeEnabled: true,
+    anchorIndexesByAyah: { '2:30': [0] },
+  },
+)
+assert.equal(userMarked.isUserHighlight, true)
+assert.equal(userMarked.isAnchor, false)
+assert.equal(madaniQpcWordTechniqueClass(userMarked)['user-word-highlight'], true)
+assert.equal(madaniQpcWordTechniqueClass(userMarked)['anchor-highlight'], false)
+assert.equal(resolveUserHighlightWordState(1, '2:30', {
+  wordHighlightEnabled: false,
+  userHighlightIndexesByAyah: { '2:30': [1] },
+}), false)
 
 const chainSnap = {
   chainingEnabled: true,

@@ -64,6 +64,17 @@ export function resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   return Number.isFinite(index) && indexes.includes(index)
 }
 
+/** Words the learner tapped to highlight. Separate from automatic anchors. */
+export function resolveUserHighlightWordState(wordAudioIndex, ayahKey, snapshot = {}) {
+  if (!snapshot.wordHighlightEnabled) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
+  const key = String(ayahKey || '')
+  const indexes = snapshot.userHighlightIndexesByAyah?.[key]
+  if (!Array.isArray(indexes) || !indexes.length) return false
+  const index = Number(wordAudioIndex)
+  return Number.isInteger(index) && index >= 0 && indexes.includes(index)
+}
+
 function ayahMatchesSnapshotKey(ayahKey, snapshotKey) {
   const key = String(ayahKey || '')
   return !!key && key === String(snapshotKey || '')
@@ -234,6 +245,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     ? null
     : resolveQpcWordAudioIndex(wordPosition, ayahKey, audioIndexMap)
   const isAnchor = resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot)
+  const isUserHighlight = !word?.isEnd && resolveUserHighlightWordState(wordAudioIndex, ayahKey, snapshot)
   const blur = isAyahBlurred(ayahKey, snapshot)
   const peek = blur && isAyahPeekRevealed(ayahKey, snapshot)
   const hiddenReveal = resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot)
@@ -256,6 +268,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     wordAudioIndex,
     locationKey: qpcWordLocationKey(word),
     isAnchor,
+    isUserHighlight,
     blurUpcoming: blur,
     peekRevealed: peek,
     focusDimmed: isAyahFocusDimmed(ayahKey, snapshot) && !peek,
@@ -283,6 +296,7 @@ export function madaniQpcWordTechniqueClass(state = {}) {
     'memory-word-hidden': !!state.checkerMasked,
     'anchor-highlight': !!state.isAnchor,
     'anchor-pulse': !!state.isAnchor,
+    'user-word-highlight': !!state.isUserHighlight,
     'is-chain-member': !!state.isChainMember,
     'is-chain-dim': !!state.isChainDimmed,
     'is-talqin-listen': !!state.isTalqinListen,

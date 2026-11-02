@@ -90,6 +90,8 @@ const joined = buildChainingJoinedFlowHtml(
 assert.match(joined, /chaining-ayah-run is-active" data-ayah-key="2:2"/)
 assert.match(joined, /أَ<span>ّ<\/span>/)
 assert.equal((joined.match(/data-ayah-key="/g) || []).length, 2)
+assert.match(joined, /chaining-ayah-run__marker" aria-hidden="true">1</)
+assert.match(joined, /chaining-ayah-run__marker" aria-hidden="true">2</)
 
 const memorisationJs = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
 const memorisationVue = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.vue'), 'utf8')

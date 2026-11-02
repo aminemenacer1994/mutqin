@@ -1609,7 +1609,7 @@
                   dir="rtl"
                   lang="ar"
                   v-if="isDataReady || hasVerses"
-                  :key="`chain-join-${chainingVisualAyahKeys.join('-')}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
+                  :key="`chain-join-${chainingVisualAyahKeys.join('-')}-${practiceFocusSignature}-${wordHighlightRenderKey('')}-${anchorModeEnabled ? anchorCount : 'off'}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
                   v-html="buildChainingJoinedFlowHtml()"
                   :class="{
                     'tajweed-enabled': tajweedEnabled && !useStackedQpcMadaniGlyphs,
@@ -1679,7 +1679,7 @@
 
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && (isDataReady || hasVerses)"
                   @click.stop
-                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
+                  :key="`ar-${verse.key}-${practiceFocusSignature}-${wordHighlightRenderKey(verse.key)}-${anchorModeEnabled ? anchorCount : 'off'}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled && !useStackedQpcMadaniGlyphs,
                     'verse-arabic--qpc-madani': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse),
@@ -2492,7 +2492,9 @@
                       ? (chainingMethod === 'linking'
                         ? t('memorisation.techniques.chainingLinkingHint')
                         : t('memorisation.techniques.chainingCumulativeHint'))
-                      : 'Choose linking or cumulative before starting.' }}</small>
+                      : t('memorisation.techniques.chooseLinkingBeforeStart') }}</small>
+                    <small v-if="chainingEnabled && chainingLiveLinkLabel" class="field-hint">{{ chainingLiveLinkLabel }}</small>
+                    <small v-if="chainingEnabled" class="field-hint">{{ t('memorisation.techniques.chainingBoundaryHint') }}</small>
                   </div>
                   <div v-if="chainingEnabled" class="field">
                     <label>{{ t('memorisation.repeats_per_step') }}</label>
@@ -2578,10 +2580,17 @@
                   <div v-if="anchorModeEnabled" class="field">
                     <label>{{ t('memorisation.anchor_points_per_ayah') }}</label>
                     <select v-model.number="anchorCount" @change="onAnchorCountChange" class="select">
-                      <option :value="1">1 anchor (center word)</option>
-                      <option :value="2">2 anchors (first + last)</option>
+                      <option :value="1">{{ t('memorisation.techniques.anchorOptionCenter') }}</option>
+                      <option :value="2">{{ t('memorisation.techniques.anchorOptionEnds') }}</option>
                     </select>
                     <small class="field-hint">{{ anchorModeDescription }}</small>
+                    <small class="field-hint">{{ t('memorisation.techniques.wordHighlightHint') }}</small>
+                    <button
+                      v-if="hasUserWordHighlights"
+                      type="button"
+                      class="word-highlight-clear"
+                      @click="clearUserWordHighlights"
+                    >{{ t('memorisation.techniques.clearWordHighlights') }}</button>
                   </div>
                 </div>
               </div>

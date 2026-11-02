@@ -350,6 +350,14 @@ import {
   resolveTechniqueDisplay,
 } from '../scripts/techniques/techniqueDisplay'
 import { resolveAnchorIndices } from '../scripts/techniques/anchorWords'
+import {
+  hasUserWordHighlights as mapHasUserWordHighlights,
+  isUserHighlightedWord,
+  normaliseWordHighlightMap,
+  toggleWordHighlight,
+  userHighlightIndexesByAyah,
+  wordHighlightSignature,
+} from '../scripts/techniques/wordHighlights.js'
 import { buildChainingGroups } from '../scripts/techniques/chainingQueue.js'
 import {
   buildChainingJoinedFlowHtml,
@@ -1023,6 +1031,7 @@ export default {
       customGapSeconds: 2,
       anchorModeEnabled: false,
       anchorCount: 2,
+      userWordHighlights: {},
       anchorHighlightObserver: null,
       anchorHighlightFrame: null,
       showCountdownOverlay: false,
@@ -1158,6 +1167,7 @@ export default {
       pendingWordHighlightState: null,
       wordHighlightNodeRegistry: markRaw(new Map()),
       wordClickHandler: null,
+      wordHighlightToggleHandler: null,
       statsTickFrame: null,
       statsTickLastFrameAt: 0,
       liveWordDomPatchFrame: null,
@@ -2761,11 +2771,13 @@ export default {
     anchorModeDescription() {
       if (!this.anchorModeEnabled) return this.t('memorisation.techniques.anchorOffDescription')
       const anchors = {
-        1: this.t('memorisation.techniques.anchorFirstLast'),
-        2: this.t('memorisation.techniques.anchorKeyPairs'),
-        3: this.t('memorisation.techniques.anchorComplete')
+        1: this.t('memorisation.techniques.anchorCenterWord'),
+        2: this.t('memorisation.techniques.anchorFirstLast'),
       }
-      return this.t('memorisation.techniques.anchorUsingDescription', { anchors: anchors[this.anchorCount] || anchors[2] })
+      return this.t('memorisation.techniques.anchorUsingDescription', { anchors: anchors[Number(this.anchorCount)] || anchors[2] })
+    },
+    hasUserWordHighlights() {
+      return mapHasUserWordHighlights(this.userWordHighlights)
     },
     getChainingMethodLabel() {
       return this.chainingMethodLabel
@@ -9126,6 +9138,16 @@ export default {
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingNextCumulative')
       return this.t('memorisation.techniques.chainingNextLinking')
     },
+    chainingLiveLinkLabel() {
+      if (!this.chainingEnabled) return ''
+      const numbers = (this.chainingVisualAyahKeys || [])
+        .map((key) => String(key || '').split(':')[1])
+        .filter(Boolean)
+      if (!numbers.length) return ''
+      return this.t('memorisation.techniques.chainingNowLinking', {
+        ayahs: numbers.join(' → '),
+      })
+    },
     chainingWhyHint() {
       if (!this.chainingEnabled) return ''
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingWhyCumulative')
@@ -10288,6 +10310,8 @@ export default {
           anchorCount: this.anchorCount,
           wordCountForAyah: (verseKey) => this.getVerseAudioWordCount(verseKey),
         }),
+        wordHighlightEnabled: !!this.anchorModeEnabled,
+        userHighlightIndexesByAyah: userHighlightIndexesByAyah(this.userWordHighlights, this.verses || []),
         talqinModeEnabled: !!this.talqinModeEnabled,
         talqinRepeatPhase: !!this.talqinRecitationTurnActive,
         chainingEnabled: !!this.chainingEnabled,
@@ -11609,6 +11633,10 @@ export default {
     if (this.wordClickHandler) {
       document.removeEventListener('click', this.wordClickHandler)
       this.wordClickHandler = null
+    }
+    if (this.wordHighlightToggleHandler) {
+      document.removeEventListener('click', this.wordHighlightToggleHandler, true)
+      this.wordHighlightToggleHandler = null
     }
     if (typeof globalThis !== 'undefined' && globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__ === this) {
       delete globalThis.__MUTQIN_STORAGE_BRIDGE__
@@ -16158,6 +16186,7 @@ export default {
       if (!this.anchorModeEnabled && !this.requirePremiumTechniqueAccess()) return
       this.anchorModeEnabled = !this.anchorModeEnabled
 
+      this.clearDisplayArabicCache()
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
         this.showBanner(this.t('toasts.anchorModeKeyWordsWillBe'), 'info', 3000)
@@ -16179,10 +16208,10 @@ export default {
 
     // Handle anchor count change dynamically
     onAnchorCountChange() {
+      this.clearDisplayArabicCache()
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
-        const anchorText = { 1: '1 anchor (center)', 2: '2 anchors (start+end)', 3: '3 anchors (strategic)' }
-        this.showBanner(this.t('toasts.anchorModeUsing', { anchorCount: anchorText[this.anchorCount] }), 'info', 2000)
+        this.showBanner(this.t('toasts.anchorModeUsing', { anchorCount: this.anchorModeDescription }), 'info', 2000)
       }
       this.persistUiState()
       this.persistCentralSessionState()
@@ -16252,8 +16281,8 @@ export default {
       const arabicDiv = card.querySelector('.verse-arabic, .mushaf-ayah-text')
       if (!arabicDiv) return
 
-      // Get words - handles both tajweed and non-tajweed modes
-      let words = arabicDiv.querySelectorAll('.wbw-word, word')
+      // Spoken tokens only. QPC/IndoPak spans and legacy mushaf words share data-word-index.
+      let words = arabicDiv.querySelectorAll('.wbw-word, word.wbw-word, .qpc-madani-word[data-word-index], .madani-word[data-word-index]')
 
       // If no word elements, try to get from word-by-word section
       if (!words.length) {
@@ -16265,25 +16294,36 @@ export default {
 
       if (!words.length) return
 
-      // Calculate which indices to highlight
-      const totalWords = words.length
-      const anchorIndices = this.getAnchorIndices(totalWords)
+      let totalWords = 0
+      words.forEach((word) => {
+        const index = Number(word.getAttribute('data-word-index'))
+        if (Number.isInteger(index)) totalWords = Math.max(totalWords, index + 1)
+      })
+      if (!totalWords) totalWords = words.length
+      const anchorIndices = new Set(this.getAnchorIndices(totalWords))
 
-      // Remove existing highlights
-      words.forEach(word => {
+      words.forEach((word, position) => {
         word.classList.remove('anchor-highlight')
         word.classList.remove('anchor-pulse')
-      })
-
-      // Apply new highlights with animation
-      anchorIndices.forEach((index, i) => {
-        if (words[index]) {
-          words[index].classList.add('anchor-highlight')
-          // Add sequential animation delay
-          setTimeout(() => {
-            if (words[index]) words[index].classList.add('anchor-pulse')
-          }, i * 100)
+        word.classList.remove('user-word-highlight')
+        const attr = Number(word.getAttribute('data-word-index'))
+        const index = Number.isInteger(attr) ? attr : position
+        const verseKey = word.getAttribute('data-verse-key') || card.getAttribute('data-verse-key') || ''
+        if (anchorIndices.has(index)) {
+          word.classList.add('anchor-highlight')
         }
+        if (verseKey && isUserHighlightedWord(this.userWordHighlights, verseKey, index)) {
+          word.classList.add('user-word-highlight')
+        }
+      })
+      let pulseDelay = 0
+      words.forEach((word) => {
+        if (!word.classList.contains('anchor-highlight')) return
+        const delay = pulseDelay
+        pulseDelay += 100
+        setTimeout(() => {
+          if (word.isConnected) word.classList.add('anchor-pulse')
+        }, delay)
       })
     },
 
@@ -16291,12 +16331,59 @@ export default {
       return resolveAnchorIndices(totalWords, this.anchorCount)
     },
 
+    wordHighlightRenderKey(verseKey = '') {
+      if (!this.anchorModeEnabled) return ''
+      return wordHighlightSignature(this.userWordHighlights, verseKey)
+    },
+
+    memoryWordClass(verseKey, wordIndex, wordCount) {
+      if (!this.anchorModeEnabled) return ''
+      const index = Number(wordIndex)
+      if (!Number.isInteger(index) || index < 0) return ''
+      const classes = []
+      const total = Number(wordCount)
+      if (Number.isInteger(total) && total > 0 && this.getAnchorIndices(total).includes(index)) {
+        classes.push('anchor-highlight')
+      }
+      if (isUserHighlightedWord(this.userWordHighlights, verseKey, index)) {
+        classes.push('user-word-highlight')
+      }
+      return classes.length ? ` ${classes.join(' ')}` : ''
+    },
+
+    tryToggleMemoryWord(verseKey, wordIndex) {
+      if (!this.anchorModeEnabled) return false
+      const index = Number(wordIndex)
+      const key = String(verseKey || '').trim()
+      if (!key || !Number.isInteger(index) || index < 0) return false
+      if (typeof this.isVerseInSessionScope === 'function' && !this.isVerseInSessionScope(key)) return false
+      const now = Date.now()
+      if (this._memoryWordToggleKey === `${key}:${index}` && now - Number(this._memoryWordToggleAt || 0) < 40) {
+        return true
+      }
+      this._memoryWordToggleKey = `${key}:${index}`
+      this._memoryWordToggleAt = now
+      this.userWordHighlights = toggleWordHighlight(this.userWordHighlights, key, index)
+      this.clearDisplayArabicCache()
+      this.scheduleAnchorHighlights()
+      this.persistUiState()
+      return true
+    },
+
+    clearUserWordHighlights() {
+      this.userWordHighlights = {}
+      this.clearDisplayArabicCache()
+      this.scheduleAnchorHighlights()
+      this.persistUiState()
+    },
+
     // Clear all anchor highlights
     clearAnchorHighlights() {
-      const allWords = document.querySelectorAll('.wbw-word, word, .word-item, .mushaf-ayah-text .wbw-word, .qpc-madani-word')
+      const allWords = document.querySelectorAll('.wbw-word, word, .word-item, .mushaf-ayah-text .wbw-word, .qpc-madani-word, .madani-word')
       allWords.forEach(word => {
         word.classList.remove('anchor-highlight')
         word.classList.remove('anchor-pulse')
+        word.classList.remove('user-word-highlight')
       })
     },
 
@@ -37936,6 +38023,11 @@ export default {
       const tajweedByLocation = tajweedEnabled ? (this.qpcIndopakTajweedHtmlByLocation || {}) : {}
       const parts = []
       let audioWordIndex = -1
+      const spokenCount = (verse.words || []).filter((rawWord) => {
+        const isEnd = rawWord?.isEnd === true
+          || String(rawWord?.char_type_name || '').toLowerCase() === 'end'
+        return !!String(rawWord?.text || '').trim() && !isEnd
+      }).length
 
       for (const rawWord of verse.words || []) {
         const isEnd = rawWord?.isEnd === true
@@ -37961,13 +38053,14 @@ export default {
           : ''
         const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
         const activeClass = isActive ? ' highlighted phrase-highlighted is-ayah-active' : ''
+        const memoryClass = this.memoryWordClass(verseKey, audioWordIndex, spokenCount)
         const token = location ? String(tajweedByLocation[location] || '').trim() : ''
         const inner = tajweedEnabled && token
           ? paintUnicodeTextWithTajweedToken(displayText, token)
           : this.escapeHtml(displayText)
 
         parts.push(
-          `<span class="qpc-madani-word qpc-madani-word--indopak${activeClass}${weakClass}${recitationClass}"`
+          `<span class="qpc-madani-word qpc-madani-word--indopak${activeClass}${memoryClass}${weakClass}${recitationClass}"`
           + ` data-verse-key="${this.escapeHtml(verseKey)}" data-word-index="${audioWordIndex}"`
           + ` data-location="${this.escapeHtml(location)}" data-page="${page || ''}">${inner}</span>`,
         )
@@ -38001,6 +38094,14 @@ export default {
       const tajweedEnabled = !!this.qpcMadaniTajweedPresentation?.effectiveEnabled
       const parts = []
       let audioWordIndex = -1
+      let spokenCount = 0
+      for (const rawWord of verse.words || []) {
+        const isEnd = String(rawWord?.char_type_name || '').toLowerCase() === 'end'
+          || Number(rawWord?.word) === 0
+        if (isEnd) continue
+        const ink = resolveStackedQpcWordInk(rawWord, { tajweedEnabled, codeV2ByLocation })
+        if (String(ink.text || '').trim()) spokenCount += 1
+      }
 
       for (const rawWord of verse.words || []) {
         const page = Number(rawWord?.page || rawWord?.page_number || 0)
@@ -38051,10 +38152,11 @@ export default {
         const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
         const glyphClass = ink.tajweedGlyph ? ' qpc-madani-word--tajweed-glyph' : ''
         const activeClass = isActive ? ' highlighted phrase-highlighted is-ayah-active' : ''
+        const memoryClass = this.memoryWordClass(verseKey, audioWordIndex, spokenCount)
         const style = fontFamily ? ` style="font-family:'${this.escapeHtml(fontFamily)}'"` : ''
 
         parts.push(
-          `<span class="qpc-madani-word${glyphClass}${activeClass}${weakClass}${recitationClass}"${style}`
+          `<span class="qpc-madani-word${glyphClass}${activeClass}${memoryClass}${weakClass}${recitationClass}"${style}`
           + ` data-verse-key="${this.escapeHtml(verseKey)}" data-word-index="${audioWordIndex}"`
           + ` data-location="${this.escapeHtml(location)}" data-page="${page || ''}">${this.escapeHtml(displayText)}</span>`,
         )
@@ -38624,6 +38726,9 @@ export default {
           }
         }
       }
+      if (Number.isFinite(wordIndex) && wordIndex >= 0 && this.tryToggleMemoryWord(verse.key, wordIndex)) {
+        return
+      }
       if (
         !this.shouldPlayFullAyahOnWordClick()
         && this.wordByWordAudioEnabled
@@ -39098,6 +39203,7 @@ export default {
         'phrase-highlighted': !!word.isHighlighted,
         'anchor-highlight': !!word.isAnchor,
         'anchor-pulse': !!word.isAnchor,
+        'user-word-highlight': !!word.isUserHighlight,
         'is-focus-dim': !!word.isFocusDimmed,
         'practice-focus-word': !!word.isPracticeFocus,
         'practice-focus-word--emphasis': !!word.isPracticeFocusEmphasis,
@@ -39216,6 +39322,8 @@ export default {
             isPlayingAyah,
             isHighlighted,
             isAnchor,
+            isUserHighlight: anchorOn && inSession && !word.isEnd && wordIndex != null
+              && isUserHighlightedWord(this.userWordHighlights, verseKey, wordIndex),
             isPracticeFocus,
             isPracticeFocusEmphasis: !!emphasizeWeak,
             isPracticeFocusActive: isPracticeFocus && isHighlighted,
@@ -39254,6 +39362,7 @@ export default {
     },
     onMadaniWordClick(word) {
       if (!word?.verseKey || word.inSession === false) return
+      if (word.wordIndex != null && this.tryToggleMemoryWord(word.verseKey, word.wordIndex)) return
       const verse = this.resolveVerseFromMadaniKey(word.verseKey)
       if (!verse) return
       this.onMushafAyahClick(verse)
@@ -42472,10 +42581,26 @@ export default {
       if (this.wordClickHandler) {
         document.removeEventListener('click', this.wordClickHandler)
       }
+      if (this.wordHighlightToggleHandler) {
+        document.removeEventListener('click', this.wordHighlightToggleHandler, true)
+      }
+      this.wordHighlightToggleHandler = (e) => {
+        if (e.target?.closest?.('button, a, input, select, textarea, label')) return
+        const wordElement = e.target?.closest?.('.wbw-word, .qpc-madani-word[data-word-index], .madani-word[data-word-index]')
+        if (!wordElement) return
+        if (wordElement.closest('.memorisation-checker-modal, .self-check-modal, .mutashabihat-compare')) return
+        const verseKey = wordElement.dataset.verseKey || wordElement.getAttribute('data-verse-key') || ''
+        const wordIndex = Number.parseInt(wordElement.dataset.wordIndex || wordElement.getAttribute('data-word-index') || '', 10)
+        if (!this.tryToggleMemoryWord(verseKey, wordIndex)) return
+        e.preventDefault()
+        e.stopPropagation()
+      }
+      document.addEventListener('click', this.wordHighlightToggleHandler, true)
       this.wordClickHandler = (e) => {
         const wordElement = e.target.closest('.wbw-word')
         if (wordElement?.closest('.mushaf-ayah')) return
         if (wordElement) {
+          if (this.anchorModeEnabled) return
           const verseKey = wordElement.dataset.verseKey
           const wordIndex = parseInt(wordElement.dataset.wordIndex, 10)
           const verse = this.verses.find(item => item.key === verseKey)
@@ -43370,6 +43495,8 @@ export default {
         this.tajweedEnabled ? 't1' : 't0',
         this.showWordByWord ? 'w1' : 'w0',
         this.anchorModeEnabled ? 'a1' : 'a0',
+        `ac${Number(this.anchorCount) || 1}`,
+        this.wordHighlightRenderKey(verse.key),
         this.liveSessionTechniqueId === 'anchor' ? 'la1' : 'la0',
         this.wordByWordAudioEnabled ? 'wa1' : 'wa0',
         review,
@@ -43504,6 +43631,7 @@ export default {
       const wordData = typeof word === 'string' ? { ar: word, en: '', audio: null } : (word || {})
       const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
       const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
+      const memoryClass = this.memoryWordClass(verse.key, idx, options.wordCount)
       const plainText = String(wordData.ar || wordData.text || wordData.word || '').trim()
         || String(innerHtml || '').replace(/<[^>]+>/g, '')
       const focusWeak = this.isPracticeFocusWeakWord(verse.key, idx, plainText)
@@ -43541,7 +43669,7 @@ export default {
         ? `<span class="word-meaning" dir="ltr" lang="en">${this.escapeHtml(gloss)}</span>`
         : ''
 
-      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}${recitationClass}${tajweedClass}" data-word-index="${idx}" data-verse-key="${verse.key}"${sessionTargetAttr}${tajweedAttr}${focusAttr} data-word-audio="${this.escapeHtml(wordData.audio || '')}"><span class="word-arabic-text">${innerHtml}</span>${meaningHtml}${wordAudio}</word>`
+      return `<word class="wbw-word${activeClass}${memoryClass}${weakClass}${masteredClass}${recitationClass}${tajweedClass}" data-word-index="${idx}" data-verse-key="${verse.key}"${sessionTargetAttr}${tajweedAttr}${focusAttr} data-word-audio="${this.escapeHtml(wordData.audio || '')}"><span class="word-arabic-text">${innerHtml}</span>${meaningHtml}${wordAudio}</word>`
     },
 
     isArabicBaseLetterForTajweed(char) {
@@ -43709,7 +43837,8 @@ export default {
       }
       const tokenOptions = {
         includeMeanings: options.includeMeanings,
-        suppressMeanings: options.suppressMeanings
+        suppressMeanings: options.suppressMeanings,
+        wordCount: tokens.length,
       }
       return tokens.map((token, idx) => {
         const wordText = this.cleanRecitationDisplayText(this.stripTajweedMarkup(token))
@@ -43790,7 +43919,7 @@ export default {
         const cleanedWord = typeof word === 'string'
           ? wordText
           : { ...word, ar: wordText }
-        html += `${this.buildWordTokenHtml(verse, cleanedWord, idx, this.escapeHtml(wordText), options)} `
+        html += `${this.buildWordTokenHtml(verse, cleanedWord, idx, this.escapeHtml(wordText), { ...options, wordCount: words.length })} `
       })
 
       return html
@@ -43821,7 +43950,7 @@ export default {
           { ar: word, en: verse?.words?.[idx]?.en || '', audio: null },
           idx,
           this.escapeHtml(word),
-          options
+          { ...options, wordCount: words.length }
         ))
         .join(' ')
       if (cacheKey) {
@@ -46761,6 +46890,7 @@ export default {
             : this.quizLength
           this.anchorModeEnabled = state.anchorModeEnabled ?? false
           this.anchorCount = state.anchorCount ?? 2
+          this.userWordHighlights = normaliseWordHighlightMap(state.userWordHighlights)
           this.settingsDraft = {
             tajweedEnabled: resolveStoredTajweedEnabled(state.tajweedEnabled, state.tajweedDefaultRevision),
             showTranslation: state.showTranslation ?? this.showTranslation,
@@ -46845,6 +46975,7 @@ export default {
         const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
           anchorCount: this.anchorCount,
+          userWordHighlights: normaliseWordHighlightMap(this.userWordHighlights),
           showTools: this.showTools,
           tab: this.tab,
           currentMode: this.currentMode,

@@ -122,9 +122,13 @@ export function buildChainingJoinedFlowHtml(
     const inner = String(renderAyahHtml(key) || '').trim()
     if (!inner) continue
     const active = !!isActiveAyah(key)
+    const ayahNumber = String(key).split(':')[1] || ''
+    const marker = ayahNumber
+      ? `<span class="chaining-ayah-run__marker" aria-hidden="true">${escapeAttr(ayahNumber)}</span>`
+      : ''
     runs.push(
       `<span class="chaining-ayah-run${active ? ' is-active' : ''}" data-ayah-key="${escapeAttr(key)}">`
-      + `<span class="chaining-ayah-run__text">${inner}</span>`
+      + `${marker}<span class="chaining-ayah-run__text">${inner}</span>`
       + `</span>`,
     )
   }

@@ -457,6 +457,12 @@ export default {
   border-radius: 0.08em;
 }
 
+.qpc-madani-word.user-word-highlight {
+  background: color-mix(in srgb, var(--accent, #1f6f62) 26%, transparent);
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, var(--accent, #1f6f62) 82%, transparent);
+  border-radius: 0.14em;
+}
+
 .qpc-madani-word.anchor-highlight::after {
   content: none;
 }
