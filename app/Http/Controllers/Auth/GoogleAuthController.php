@@ -8,6 +8,7 @@ use App\Services\AdminDashboardService;
 use App\Services\Auth\GoogleSignInService;
 use App\Support\AuthRedirect;
 use App\Support\GoogleOAuthRedirect;
+use App\Support\ProductionDatabaseEnv;
 use App\Support\Registration\RegistrationIntent;
 use App\Support\Registration\RegistrationProfile;
 use App\Support\Theme;
@@ -235,13 +236,23 @@ class GoogleAuthController extends Controller
             return null;
         }
 
-        $driver = strtolower(trim((string) config('database.default', '')));
-        if (app()->environment('production') && $driver === 'sqlite') {
+        $driver = ProductionDatabaseEnv::driver();
+        if (app()->environment('production') && ProductionDatabaseEnv::isSqlite()) {
             Log::error('auth.google.database_misconfigured', [
                 'driver' => $driver,
             ]);
 
             return 'Google sign-in is unavailable because the server database is not configured. Set DB_CONNECTION=mysql on Laravel Cloud, link MySQL, then run php artisan migrate --force.';
+        }
+
+        if (app()->environment('production') && ProductionDatabaseEnv::usesDefaultLocalMysqlCredentials()) {
+            Log::error('auth.google.database_misconfigured', [
+                'driver' => $driver,
+                'host' => config('database.connections.mysql.host'),
+                'database' => config('database.connections.mysql.database'),
+            ]);
+
+            return 'Google sign-in is unavailable because MySQL is not linked on Laravel Cloud. '.ProductionDatabaseEnv::cloudMysqlLinkMessage();
         }
 
         try {

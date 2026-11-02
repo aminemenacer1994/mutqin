@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Support\DatabaseDeploySafety;
+use App\Support\ProductionDatabaseEnv;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
@@ -30,19 +31,6 @@ class DeployPreflightCommand extends Command
                 : 'Non-production: migrate:fresh and seeders are allowed for local/test resets.'
         );
 
-        $pending = $this->pendingMigrationFiles();
-        $pendingCount = count($pending);
-        $checks[] = $this->check(
-            'pending_migrations',
-            true,
-            $pendingCount === 0
-                ? 'No pending migrations.'
-                : "{$pendingCount} pending migration(s): ".implode(', ', $pending),
-            $pendingCount > 0
-                ? 'Review each migration for locks, backfills, and rollback limits before release.'
-                : null
-        );
-
         $protected = DatabaseDeploySafety::isProtectedEnvironment($env);
 
         $dbDriver = strtolower(trim((string) env('DB_CONNECTION', config('database.default', 'sqlite'))));
@@ -58,6 +46,45 @@ class DeployPreflightCommand extends Command
         if (! $dbOk) {
             $failed = true;
         }
+
+        $dbHost = trim((string) config('database.connections.mysql.host', ''));
+        $dbName = trim((string) config('database.connections.mysql.database', ''));
+        $mysqlLinked = ! $protected || ! ProductionDatabaseEnv::usesDefaultLocalMysqlCredentials();
+        $checks[] = $this->check(
+            'database_mysql_secrets',
+            $mysqlLinked,
+            $dbDriver === 'mysql'
+                ? ('DB_HOST='.$dbHost.'; DB_DATABASE='.$dbName)
+                : 'Skipped (not mysql).',
+            $mysqlLinked
+                ? null
+                : 'Refusing deploy: '.ProductionDatabaseEnv::cloudMysqlLinkMessage()
+        );
+        if (! $mysqlLinked) {
+            $failed = true;
+        }
+
+        $databaseOperational = ! $protected || ($dbOk && $mysqlLinked);
+
+        if ($databaseOperational) {
+            $pending = $this->pendingMigrationFiles();
+            $pendingCount = count($pending);
+        } else {
+            $pending = [];
+            $pendingCount = 0;
+        }
+        $checks[] = $this->check(
+            'pending_migrations',
+            true,
+            ! $databaseOperational
+                ? 'Skipped (database not configured).'
+                : ($pendingCount === 0
+                    ? 'No pending migrations.'
+                    : "{$pendingCount} pending migration(s): ".implode(', ', $pending)),
+            $databaseOperational && $pendingCount > 0
+                ? 'Review each migration for locks, backfills, and rollback limits before release.'
+                : null
+        );
 
         $demoEnabled = (bool) config('app.show_demo_accounts');
         $checks[] = $this->check(
@@ -204,14 +231,16 @@ class DeployPreflightCommand extends Command
             'After migrate --force, run php artisan queue:restart so workers pick up schema-compatible code.'
         );
 
-        $usersReady = Schema::hasTable('users');
+        $usersReady = $databaseOperational && Schema::hasTable('users');
         $checks[] = $this->check(
             'users_table',
-            $usersReady,
-            $usersReady ? 'users table is present.' : 'users table is missing — run migrations on a fresh environment first.',
+            ! $databaseOperational || $usersReady,
+            ! $databaseOperational
+                ? 'Skipped (database not configured).'
+                : ($usersReady ? 'users table is present.' : 'users table is missing — run migrations on a fresh environment first.'),
             null
         );
-        if (! $usersReady) {
+        if ($databaseOperational && ! $usersReady) {
             $failed = true;
         }
 
@@ -219,9 +248,11 @@ class DeployPreflightCommand extends Command
         $checks[] = $this->check(
             'last_login_at',
             true,
-            $lastLogin
-                ? 'users.last_login_at exists (nullable expand column).'
-                : 'users.last_login_at not yet applied — expected from pending/recent migrations.',
+            ! $databaseOperational
+                ? 'Skipped (database not configured).'
+                : ($lastLogin
+                    ? 'users.last_login_at exists (nullable expand column).'
+                    : 'users.last_login_at not yet applied — expected from pending/recent migrations.'),
             null
         );
 

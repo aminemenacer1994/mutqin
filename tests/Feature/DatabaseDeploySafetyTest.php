@@ -227,6 +227,37 @@ class DatabaseDeploySafetyTest extends TestCase
         });
     }
 
+    public function test_deploy_preflight_fails_when_mysql_secrets_not_linked_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        $this->runWithDbConnectionEnv('mysql', function (): void {
+            config([
+                'database.default' => 'mysql',
+                'database.connections.mysql.host' => '127.0.0.1',
+                'database.connections.mysql.database' => 'laravel',
+                'app.debug' => false,
+                'app.show_demo_accounts' => false,
+                'services.google.client_id' => '',
+                'services.stripe.secret_key' => 'sk_test',
+                'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+                'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+                'mail.default' => 'resend',
+                'services.resend.key' => 're_test',
+                'mail.from.address' => 'noreply@mutqin.ai',
+            ]);
+
+            $this->artisan('mutqin:deploy-preflight')
+                ->expectsOutputToContain('DB_HOST=127.0.0.1')
+                ->expectsOutputToContain('Link secrets')
+                ->assertFailed();
+
+            config([
+                'database.default' => 'sqlite',
+                'database.connections.sqlite.database' => ':memory:',
+            ]);
+        });
+    }
+
     public function test_deploy_preflight_fails_when_stripe_is_missing_in_production(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
