@@ -183,24 +183,48 @@ class DatabaseDeploySafetyTest extends TestCase
     public function test_deploy_preflight_allows_explicit_demo_login_in_production(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
-        config([
-            'app.debug' => false,
-            'app.show_demo_accounts' => true,
-            'services.speechmatics.usage_cap.enabled' => true,
-            'services.speechmatics.usage_cap.daily_user_token_mints' => 30,
-            'services.speechmatics.usage_cap.daily_global_token_mints' => 200,
-            'services.google.client_id' => '',
-            'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
-            'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
-            'mail.default' => 'resend',
-            'services.resend.key' => 're_test',
-            'mail.from.address' => 'noreply@mutqin.ai',
-        ]);
+        $this->runWithDbConnectionEnv('mysql', function (): void {
+            config([
+                'app.debug' => false,
+                'app.show_demo_accounts' => true,
+                'services.speechmatics.usage_cap.enabled' => true,
+                'services.speechmatics.usage_cap.daily_user_token_mints' => 30,
+                'services.speechmatics.usage_cap.daily_global_token_mints' => 200,
+                'services.google.client_id' => '',
+                'services.stripe.secret_key' => 'sk_test',
+                'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+                'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+                'mail.default' => 'resend',
+                'services.resend.key' => 're_test',
+                'mail.from.address' => 'noreply@mutqin.ai',
+            ]);
 
-        $this->artisan('mutqin:deploy-preflight')
-            ->expectsOutputToContain('SHOW_DEMO_ACCOUNTS is enabled.')
-            ->assertSuccessful();
+            $this->artisan('mutqin:deploy-preflight')
+                ->expectsOutputToContain('SHOW_DEMO_ACCOUNTS is enabled.')
+                ->assertSuccessful();
+        });
+    }
+
+    public function test_deploy_preflight_fails_when_sqlite_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        $this->runWithDbConnectionEnv('sqlite', function (): void {
+            config([
+                'app.debug' => false,
+                'app.show_demo_accounts' => false,
+                'services.google.client_id' => '',
+                'services.stripe.secret_key' => 'sk_test',
+                'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+                'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+                'mail.default' => 'resend',
+                'services.resend.key' => 're_test',
+                'mail.from.address' => 'noreply@mutqin.ai',
+            ]);
+
+            $this->artisan('mutqin:deploy-preflight')
+                ->expectsOutputToContain('DB_CONNECTION=sqlite')
+                ->assertFailed();
+        });
     }
 
     public function test_deploy_preflight_fails_when_stripe_is_missing_in_production(): void
@@ -260,5 +284,41 @@ class DatabaseDeploySafetyTest extends TestCase
         $this->artisan('mutqin:deploy-preflight')
             ->expectsOutputToContain('RESEND_KEY / RESEND_API_KEY missing')
             ->assertFailed();
+    }
+
+    /**
+     * @param  callable(): void  $callback
+     */
+    private function runWithDbConnectionEnv(string $connection, callable $callback): void
+    {
+        $previousEnv = $_ENV['DB_CONNECTION'] ?? null;
+        $previousServer = $_SERVER['DB_CONNECTION'] ?? null;
+        $previousGetenv = getenv('DB_CONNECTION');
+
+        $_ENV['DB_CONNECTION'] = $connection;
+        $_SERVER['DB_CONNECTION'] = $connection;
+        putenv('DB_CONNECTION='.$connection);
+
+        try {
+            $callback();
+        } finally {
+            if ($previousEnv === null) {
+                unset($_ENV['DB_CONNECTION']);
+            } else {
+                $_ENV['DB_CONNECTION'] = $previousEnv;
+            }
+
+            if ($previousServer === null) {
+                unset($_SERVER['DB_CONNECTION']);
+            } else {
+                $_SERVER['DB_CONNECTION'] = $previousServer;
+            }
+
+            if ($previousGetenv === false) {
+                putenv('DB_CONNECTION');
+            } else {
+                putenv('DB_CONNECTION='.$previousGetenv);
+            }
+        }
     }
 }

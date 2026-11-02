@@ -45,6 +45,20 @@ class DeployPreflightCommand extends Command
 
         $protected = DatabaseDeploySafety::isProtectedEnvironment($env);
 
+        $dbDriver = strtolower(trim((string) env('DB_CONNECTION', config('database.default', 'sqlite'))));
+        $dbOk = ! $protected || $dbDriver !== 'sqlite';
+        $checks[] = $this->check(
+            'database_driver',
+            $dbOk,
+            $dbDriver !== '' ? "DB_CONNECTION={$dbDriver}" : 'DB_CONNECTION is empty.',
+            $dbOk
+                ? null
+                : 'Refusing deploy: production must use Laravel Cloud MySQL (DB_CONNECTION=mysql), not sqlite.'
+        );
+        if (! $dbOk) {
+            $failed = true;
+        }
+
         $demoEnabled = (bool) config('app.show_demo_accounts');
         $checks[] = $this->check(
             'demo_accounts',
