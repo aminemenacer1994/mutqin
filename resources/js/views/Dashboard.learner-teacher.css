@@ -4433,7 +4433,7 @@ body.teacher-recite-modal-open { overflow: hidden; }
   --dash-surface: var(--surface-strong, var(--surface, #fffaf3));
   --dash-ink: var(--text, #1f1a17);
   --dash-muted: color-mix(in srgb, var(--text-muted, #6b5c4f) 92%, var(--text, #1f1a17));
-  --dash-accent: var(--accent, #9a6738);
+  --dash-accent: var(--accent);
   --dash-accent-strong: var(--accent-strong, #7a5228);
   --dash-accent-light: var(--accent-light, #f3e4d4);
   --dash-border: rgba(78, 58, 38, 0.14);
