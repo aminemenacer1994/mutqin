@@ -818,6 +818,7 @@ import {
   restoreReturnFocus,
 } from '../utils/modalFocus'
 import './Dashboard.css'
+import './Dashboard.learner-teacher.css'
 
 const DashboardWeeklyChart = defineAsyncComponent(() => import(
   /* webpackChunkName: "dashboard-weekly-chart" */

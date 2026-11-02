@@ -37,6 +37,11 @@ use Illuminate\Support\Facades\Route;
 // Authentication routes (from laravel/ui)
 Auth::routes(['verify' => true]);
 
+// GET /logout must never render. Sign out when a session exists, then leave for memorisation.
+Route::get('/logout', function (Request $request) {
+    return app(\App\Http\Controllers\Auth\LoginController::class)->logout($request);
+});
+
 Route::post('/login/demo', DemoLoginController::class)
     ->middleware('guest')
     ->name('login.demo');
@@ -102,6 +107,13 @@ Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout
 Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
 
 Route::get('/memorisation', function (Request $request) {
+    $user = $request->user();
+    // Guests stay on this URL (logout lands here). Signed-in accounts still
+    // have to verify before the workspace opens.
+    if ($user instanceof User && ! $user->hasVerifiedEmail()) {
+        return redirect()->route('verification.notice');
+    }
+
     $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
     // Consumed here (not on /dashboard) so Welcome Back survives post-login overview.
     $justLoggedIn = (bool) $request->session()->pull('mutqin_just_logged_in', false);
@@ -110,7 +122,7 @@ Route::get('/memorisation', function (Request $request) {
         'justRegistered' => $justRegistered,
         'justLoggedIn' => $justLoggedIn,
     ]);
-})->middleware(['auth', 'verified'])->name('memorisation');
+})->name('memorisation');
 
 Route::get('/memorisation/demo', function () {
     return view('memorisation', ['demoMode' => true]);
@@ -148,6 +160,13 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
 Route::get('/waiting-list/unsubscribe/{entry}', \App\Http\Controllers\WaitingListUnsubscribeController::class)
     ->middleware('signed')
     ->name('waiting-list.unsubscribe');
+
+Route::view('/email/unsubscribe/preview', 'content.waiting-list-unsubscribed')
+    ->name('registered-user.unsubscribe.preview');
+
+Route::get('/email/unsubscribe/{user}', \App\Http\Controllers\RegisteredUserUnsubscribeController::class)
+    ->middleware('signed')
+    ->name('registered-user.unsubscribe');
 
 Route::get('/guides', [SeoGuidesController::class, 'index'])->name('seo.guides');
 
@@ -422,3 +441,17 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
 });
 
 Route::permanentRedirect('/home', '/')->name('home.legacy');
+
+Route::fallback(function (Request $request) {
+    $path = ltrim($request->path(), '/');
+    if ($path !== '' && ! str_contains($path, '..')) {
+        $candidate = public_path($path);
+        $publicRoot = realpath(public_path()) ?: public_path();
+        $resolved = realpath($candidate);
+        if ($resolved !== false && str_starts_with($resolved, $publicRoot) && is_file($resolved)) {
+            return response()->file($resolved);
+        }
+    }
+
+    abort(404);
+});

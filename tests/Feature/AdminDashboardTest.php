@@ -535,14 +535,25 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_nav_shows_admin_dashboard_without_progress_link(): void
     {
-        $admin = User::factory()->admin()->create([
+        config()->set('mutqin.admin_emails', ['admin@example.com', 'menacer72@gmail.com']);
+
+        $otherAdmin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
         ]);
+        $owner = User::factory()->admin()->create([
+            'email' => 'menacer72@gmail.com',
+        ]);
 
-        $this->actingAs($admin)
-            ->get(route('admin.dashboard'))
+        $this->actingAs($otherAdmin)
+            ->get(route('home'))
             ->assertOk()
-            ->assertSee(route('admin.dashboard'), false)
+            ->assertDontSee('href="'.route('admin.dashboard').'"', false)
+            ->assertSee('href="'.route('dashboard').'"', false);
+
+        $this->actingAs($owner)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('href="'.route('admin.dashboard').'"', false)
             ->assertDontSee('href="'.route('dashboard').'"', false);
     }
 

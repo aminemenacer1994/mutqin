@@ -22,7 +22,6 @@
           <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
           <a href="/our-mission">{{ t('homepage.footer.ourMission') }}</a>
           <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
-          <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
         </div>
       </div>
       <div class="footer__bottom">

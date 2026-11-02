@@ -8214,7 +8214,7 @@
                             </a>
                             @auth
                             @unless ($authAwaitingVerification)
-                            @if (Auth::user()->isAdmin())
+                            @if (Auth::user()->showsAdminNavigation())
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
                                 <i class="bi bi-shield-check nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong>{{ __('ui.admin_dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
@@ -8359,7 +8359,7 @@
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
-                            @if (Auth::user()->isAdmin())
+                            @if (Auth::user()->showsAdminNavigation())
                             <li>
                                 <a
                                     class="dropdown-item"

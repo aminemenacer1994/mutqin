@@ -5,7 +5,7 @@ namespace App\Support;
 use Illuminate\Http\Request;
 
 /**
- * Production host split: mutqin.ai (marketing) vs app.mutqin.ai (application).
+ * mutqin.ai is the public application. app.mutqin.ai redirects here.
  * Local and automated tests keep a single host unless explicitly enabled.
  */
 final class MutqinDomains
@@ -36,39 +36,60 @@ final class MutqinDomains
     }
 
     /**
-     * Early-access shell: Home and Waiting list only (English, no language switcher).
-     * Marketing host keeps that reduced nav. The application host homepage uses
-     * the full product navigation.
+     * The public site always uses the full product navigation.
+     * The waiting-list shell is retired on every host.
      */
     public static function usesEarlyAccessNav(Request $request): bool
     {
-        $isWaitingList = $request->routeIs('waiting-list', 'marketing.waiting-list')
-            || $request->is('waiting-list');
-
-        if ($isWaitingList) {
-            return true;
-        }
-
-        $isHome = $request->routeIs('home', 'marketing.home') || $request->is('/');
-
-        return $isHome && self::restrictMarketingHost($request);
+        return false;
     }
 
+    /**
+     * mutqin.ai is the application. Never swap in the early-access marketing shell.
+     */
     public static function restrictMarketingHost(Request $request): bool
+    {
+        return false;
+    }
+
+    /**
+     * Production requests on app.mutqin.ai are sent to mutqin.ai.
+     * Local and default test runs stay on the current host.
+     */
+    public static function canonicalizePublicHost(): bool
     {
         if (filter_var(config('mutqin.domains.force_disabled'), FILTER_VALIDATE_BOOL)) {
             return false;
         }
 
-        if (app()->runningUnitTests() && ! filter_var(config('mutqin.domains.enable_in_tests'), FILTER_VALIDATE_BOOL)) {
+        if (app()->runningUnitTests() && ! filter_var(config('mutqin.domains.enable_in_tests'), FILTER_VALIDATE_BOOL)
+            && ! filter_var(config('mutqin.domains.force_enabled'), FILTER_VALIDATE_BOOL)) {
             return false;
         }
 
-        if (app()->environment('local') && ! filter_var(config('mutqin.domains.enable_in_local'), FILTER_VALIDATE_BOOL)) {
+        if (app()->environment('local') && ! filter_var(config('mutqin.domains.enable_in_local'), FILTER_VALIDATE_BOOL)
+            && ! filter_var(config('mutqin.domains.force_enabled'), FILTER_VALIDATE_BOOL)) {
             return false;
         }
 
-        return self::isMarketingHost($request->getHost());
+        return self::hostsDiffer();
+    }
+
+    /**
+     * Public URL on mutqin.ai when host canonicalization is on, otherwise the current app URL.
+     */
+    public static function canonicalUrl(string $path = '/'): string
+    {
+        $path = '/'.ltrim($path, '/');
+        if ($path === '//') {
+            $path = '/';
+        }
+
+        if (self::canonicalizePublicHost()) {
+            return self::marketingOrigin().$path;
+        }
+
+        return url($path);
     }
 
     public static function hostRoutingEnabled(): bool

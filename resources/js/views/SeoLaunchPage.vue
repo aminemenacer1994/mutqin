@@ -228,7 +228,7 @@ export default {
         related_feature: null,
         faqs: [],
         guide_index: null,
-        cta_primary: { href: '/waiting-list', label: 'Join the waiting list' },
+        cta_primary: { href: '/', label: 'Mutqin' },
         cta_secondary: { href: '/memorisation', label: 'Open memorisation' },
       },
     };

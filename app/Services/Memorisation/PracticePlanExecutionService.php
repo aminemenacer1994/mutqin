@@ -89,6 +89,10 @@ class PracticePlanExecutionService
             $priority = array_values(array_filter(array_map('intval', $adjustments['priority_ayahs']), fn ($n) => $n >= $start && $n <= $end));
         }
 
+        $preserved = [
+            MemorisationPracticePlan::STATUS_ACTIVE,
+            MemorisationPracticePlan::STATUS_COMPLETED,
+        ];
         $plan->fill([
             'start_ayah' => $start,
             'end_ayah' => $end,
@@ -96,7 +100,9 @@ class PracticePlanExecutionService
             'repetitions' => $repetitions,
             'config' => $config,
             'user_adjustments' => $adjustments,
-            'status' => MemorisationPracticePlan::STATUS_DRAFT,
+            'status' => in_array($plan->status, $preserved, true)
+                ? $plan->status
+                : MemorisationPracticePlan::STATUS_DRAFT,
         ]);
         $plan->save();
 
@@ -204,6 +210,7 @@ class PracticePlanExecutionService
         $plan->update([
             'status' => MemorisationPracticePlan::STATUS_COMPLETED,
             'completed_at' => now(),
+            'dismissed_at' => null,
             'completion_outcome' => mb_substr($outcome, 0, 32),
             'completion_data' => $completion,
         ]);

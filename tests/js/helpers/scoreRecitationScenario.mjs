@@ -9,7 +9,7 @@ import {
   stabilizeRecognitionEvent,
 } from '../../../resources/js/scripts/engine/recitation_analysis.js'
 
-const PARTIAL_CONFIDENCE = 0.68
+const PARTIAL_CONFIDENCE = 0.4
 
 /** Mirrors extractSpeechmaticsTranscriptWords without importing Vue runtime. */
 export function extractCapturedTranscriptWords(message = {}, { isPartial = false } = {}) {
@@ -31,7 +31,10 @@ export function extractCapturedTranscriptWords(message = {}, { isPartial = false
       const confidence = Number(alternative?.confidence)
       return {
         word,
-        confidence: Number.isFinite(confidence) ? confidence : (isPartial ? PARTIAL_CONFIDENCE : 1),
+        confidence: isPartial
+          ? PARTIAL_CONFIDENCE
+          : (Number.isFinite(confidence) ? confidence : 1),
+        ...(isPartial ? { provisional: true } : {}),
         start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
         end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null,
         speaker: String(alternative?.speaker || item?.speaker || '').trim() || null,

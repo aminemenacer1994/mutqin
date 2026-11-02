@@ -11,14 +11,13 @@ class WaitingListFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_waiting_list_page_is_available(): void
+    public function test_public_waiting_list_page_is_closed(): void
     {
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('<waiting-list-page', false);
+            ->assertRedirect('/');
     }
 
-    public function test_public_waiting_list_page_exposes_real_signup_count(): void
+    public function test_public_waiting_list_page_never_renders_signup_count(): void
     {
         WaitingListEntry::query()->create([
             'name' => 'Amina',
@@ -26,8 +25,8 @@ class WaitingListFlowTest extends TestCase
         ]);
 
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('count="1"', false);
+            ->assertRedirect('/')
+            ->assertDontSee('waiting-list-page', false);
     }
 
     public function test_public_waiting_list_requires_name_and_email(): void
@@ -53,13 +52,10 @@ class WaitingListFlowTest extends TestCase
 
     public function test_public_waiting_list_web_route_accepts_submissions(): void
     {
-        $response = $this->postJson(route('waiting-list.store'), [
+        $this->post(route('waiting-list.store'), [
             'name' => '  Yusuf  ',
             'email' => '  yusuf.web@Example.COM ',
-        ]);
-
-        $response->assertCreated()
-            ->assertJsonPath('data.email', 'yusuf.web@example.com');
+        ])->assertRedirect('/');
     }
 
     public function test_marketing_host_waiting_list_post_accepts_real_email(): void
@@ -91,11 +87,11 @@ class WaitingListFlowTest extends TestCase
             ->assertJsonPath('data.email', 'menacer72@gmail.com');
     }
 
-    public function test_waiting_list_page_exposes_csrf_free_join_endpoint(): void
+    public function test_waiting_list_page_never_exposes_the_join_form(): void
     {
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('join-waiting-list', false);
+            ->assertRedirect('/')
+            ->assertDontSee('join-waiting-list', false);
     }
 
     public function test_local_waiting_list_store_url_stays_on_the_current_host(): void

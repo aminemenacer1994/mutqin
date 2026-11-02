@@ -64,7 +64,7 @@ class MutqinDomainsTest extends TestCase
         $this->assertFalse(MutqinDomains::usesEarlyAccessNav($request));
     }
 
-    public function test_marketing_host_homepage_uses_early_access_nav(): void
+    public function test_marketing_host_homepage_uses_the_full_product_nav(): void
     {
         $this->enableSplitHosts();
 
@@ -73,10 +73,11 @@ class MutqinDomainsTest extends TestCase
             'HTTPS' => 'on',
         ]);
 
-        $this->assertTrue(MutqinDomains::usesEarlyAccessNav($request));
+        $this->assertFalse(MutqinDomains::usesEarlyAccessNav($request));
+        $this->assertFalse(MutqinDomains::restrictMarketingHost($request));
     }
 
-    public function test_waiting_list_uses_early_access_nav_on_both_hosts(): void
+    public function test_waiting_list_never_uses_early_access_nav(): void
     {
         $this->enableSplitHosts();
 
@@ -89,8 +90,8 @@ class MutqinDomainsTest extends TestCase
             'HTTPS' => 'on',
         ]);
 
-        $this->assertTrue(MutqinDomains::usesEarlyAccessNav($appRequest));
-        $this->assertTrue(MutqinDomains::usesEarlyAccessNav($marketingRequest));
+        $this->assertFalse(MutqinDomains::usesEarlyAccessNav($appRequest));
+        $this->assertFalse(MutqinDomains::usesEarlyAccessNav($marketingRequest));
     }
 
     private function enableSplitHosts(): void

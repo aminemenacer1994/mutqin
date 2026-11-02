@@ -28,7 +28,14 @@ class RecommendationController extends Controller
                 ->first();
         }
 
-        if ($sourceSession) {
+        if ($sourceSessionId) {
+            // A missing or foreign session must not fall through to recommend(),
+            // which would persist a plan for a different session.
+            if (! $sourceSession) {
+                return response()->json([
+                    'recommendation' => null,
+                ]);
+            }
             // Unfinished sessions must not fall through to recommend(), which persists
             // a completion-style recommendation against an active/paused row.
             $recommendation = $service->recommendForCompletedSession($request->user(), $sourceSession);
@@ -64,10 +71,15 @@ class RecommendationController extends Controller
         $recommendation = $this->findOwnedRecommendation($request, (int) $request->validated('recommendation_id'));
         $choseOther = (bool) ($request->validated('chose_other') ?? true);
 
+        $status = $recommendation->status instanceof \App\Enums\RecommendationStatus
+            ? $recommendation->status
+            : \App\Enums\RecommendationStatus::tryFrom((string) $recommendation->status);
+        $alreadyClosed = $recommendation->accepted === true
+            || $status === \App\Enums\RecommendationStatus::Started;
         $updated = $service->reject($request->user(), $recommendation, $choseOther);
 
         return response()->json([
-            'rejected' => true,
+            'rejected' => ! $alreadyClosed,
             'recommendation' => [
                 'id' => $updated->id,
                 'accepted' => $updated->accepted,

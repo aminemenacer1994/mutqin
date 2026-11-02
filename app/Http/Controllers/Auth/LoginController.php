@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\BillingIntent;
 use App\Support\EmailVerification;
+use App\Support\MutqinDomains;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\RedirectResponse;
@@ -33,21 +34,8 @@ class LoginController extends Controller
     {
         BillingIntent::rememberFromRequest(request());
 
+        // Demo emails, passwords, and sample results are never shown on the login form.
         $demoLogin = null;
-        if (config('app.demo_login_enabled')) {
-            $student = config('app.demo_accounts.student_email');
-            $teacher = config('app.demo_accounts.teacher_email');
-            $password = config('app.demo_accounts.password');
-            if (is_string($student) && $student !== ''
-                && is_string($teacher) && $teacher !== ''
-                && is_string($password) && $password !== '') {
-                $demoLogin = [
-                    'studentEmail' => $student,
-                    'teacherEmail' => $teacher,
-                    'password' => $password,
-                ];
-            }
-        }
 
         return view('auth.login', compact('demoLogin'));
     }
@@ -111,7 +99,7 @@ class LoginController extends Controller
         $request->session()->forget('mutqin_theme_set');
 
         return redirect()
-            ->route('memorisation')
+            ->to(MutqinDomains::canonicalUrl('/memorisation'))
             ->withCookie(cookie(Theme::COOKIE, Theme::DEFAULT_PREFERENCE, 60 * 24 * 365, null, null, false, false, false, 'lax'))
             ->withCookie(cookie(Theme::CHOSEN_COOKIE, '', -2628000, null, null, false, false, false, 'lax'));
     }

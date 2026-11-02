@@ -18,10 +18,11 @@ class AuthPageRenderTest extends TestCase
             ->assertSee('<memorisation', false);
     }
 
-    public function test_guest_memorisation_workspace_still_requires_login(): void
+    public function test_guest_memorisation_workspace_stays_on_memorisation(): void
     {
         $this->get(route('memorisation'))
-            ->assertRedirect(route('login'));
+            ->assertOk()
+            ->assertSee('<memorisation', false);
     }
 
     public function test_login_page_hides_demo_try_card_when_disabled(): void
@@ -46,9 +47,9 @@ class AuthPageRenderTest extends TestCase
 
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('auth-demo-card', false)
-            ->assertSee('student@mutqin.test', false)
-            ->assertSee('teacher@mutqin.test', false);
+            ->assertDontSee('auth-demo-card', false)
+            ->assertDontSee('student@mutqin.test', false)
+            ->assertDontSee('teacher@mutqin.test', false);
     }
 
     public function test_login_page_renders_the_dedicated_login_form(): void

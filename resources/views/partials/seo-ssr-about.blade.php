@@ -8,7 +8,7 @@
     <p>
         <a href="/memorisation">Explore Mutqin</a>
         ·
-        <a href="/waiting-list">Join the waiting list</a>
+        <a href="/">Home</a>
     </p>
 
     <section>

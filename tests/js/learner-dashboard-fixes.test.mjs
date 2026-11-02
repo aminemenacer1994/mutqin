@@ -17,6 +17,12 @@ assert.match(section, /learner_teacher_fallback/, 'teacher name fallback while l
 assert.match(section, /support-thread-update/, 'thread updates emit to parent store')
 assert.doesNotMatch(section, /this\.support\s*=\s*\{/, 'must not mutate support prop locally')
 
+assert.match(dashboard, /Dashboard\.learner-teacher\.css/, 'learner teacher styles imported')
+assert.match(
+  fs.readFileSync(path.join(root, 'resources/js/views/Dashboard.learner-teacher.css'), 'utf8'),
+  /learner-teacher__shell/,
+  'learner teacher layout styles present',
+)
 assert.match(dashboard, /applyAssignmentThreadUpdate/, 'parent patches support on send')
 assert.match(dashboard, /patchLearnerSupportThread/, 'parent handles thread refetch')
 

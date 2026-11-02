@@ -23,7 +23,7 @@ class WaitingListLaunchMail extends Mailable
     public function envelope(): Envelope
     {
         $envelope = new Envelope(
-            subject: __('mail.waitlist_launch_subject'),
+            subject: __('mail.launch_subject'),
             using: $this->unsubscribeUrl === '' ? [] : [
                 function (Email $message): void {
                     $message->getHeaders()->addTextHeader(

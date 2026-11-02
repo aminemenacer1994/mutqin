@@ -282,15 +282,30 @@ class MemorisationHistoryService
             return;
         }
 
+        $recalled = [
+            'last_recalled_at' => now(),
+            'last_assessment_id' => $assessment->id,
+            'trend' => 'improving',
+            'updated_at' => now(),
+        ];
+
+        // A second correct pass resolves a spot that was already improving.
+        // Do this before promoting active spots, or the new improving rows
+        // would be resolved in the same request.
         MemorisationWeakSpot::query()
             ->where('user_id', $user->id)
             ->whereIn('spot_key', $spotKeys)
-            ->update([
-                'last_recalled_at' => now(),
-                'last_assessment_id' => $assessment->id,
+            ->where('status', MemorisationWeakSpot::STATUS_IMPROVING)
+            ->update($recalled + [
+                'status' => MemorisationWeakSpot::STATUS_RESOLVED,
+            ]);
+
+        MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->whereIn('spot_key', $spotKeys)
+            ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+            ->update($recalled + [
                 'status' => MemorisationWeakSpot::STATUS_IMPROVING,
-                'trend' => 'improving',
-                'updated_at' => now(),
             ]);
     }
 

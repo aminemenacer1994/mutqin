@@ -8,42 +8,48 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * mutqin.ai serves home, waiting list, and articles. Enforced from the request Host so it still
- * applies when APP_URL points at the marketing domain and Route::domain groups
- * are not registered.
+ * mutqin.ai is the only public host. The waiting-list page is closed.
+ * app.mutqin.ai GET/HEAD requests move to the same path on mutqin.ai.
  */
 class EnforceMarketingHostPolicy
 {
-    private const WAITING_LIST = '/waiting-list';
-
     public function handle(Request $request, Closure $next): Response
     {
-        if (! MutqinDomains::restrictMarketingHost($request)) {
-            return $next($request);
-        }
-
-        if ($request->is('api/*')) {
-            return $next($request);
-        }
-
         $path = '/'.ltrim($request->path(), '/');
-        $allowed = $path === '/'
-            || $path === '//'
-            || strtolower($path) === self::WAITING_LIST
-            || strtolower($path) === '/articles'
-            || str_starts_with(strtolower($path), '/articles/')
-            || strtolower($path) === '/robots.txt'
-            || strtolower($path) === '/sitemap.xml';
-        if ($allowed) {
-            return $next($request);
+        if ($path === '//') {
+            $path = '/';
         }
 
-        $target = MutqinDomains::appUrl($path);
-        $query = $request->getQueryString();
-        if (is_string($query) && $query !== '') {
-            $target .= '?'.$query;
+        $lower = strtolower($path);
+        $isWaitingList = $lower === '/waiting-list' || str_starts_with($lower, '/waiting-list/');
+        $isUnsubscribe = str_starts_with($lower, '/waiting-list/unsubscribe');
+        if ($isWaitingList && ! $isUnsubscribe) {
+            return redirect()->to(MutqinDomains::canonicalUrl('/'));
         }
 
-        return redirect()->away($target);
+        if ($this->shouldRedirectAppHost($request)) {
+            $target = MutqinDomains::canonicalUrl($path);
+            $query = $request->getQueryString();
+            if (is_string($query) && $query !== '') {
+                $target .= '?'.$query;
+            }
+
+            return redirect()->away($target, 301);
+        }
+
+        return $next($request);
+    }
+
+    private function shouldRedirectAppHost(Request $request): bool
+    {
+        if (! in_array($request->method(), ['GET', 'HEAD'], true)) {
+            return false;
+        }
+
+        if (! MutqinDomains::canonicalizePublicHost()) {
+            return false;
+        }
+
+        return MutqinDomains::isAppHost($request->getHost());
     }
 }

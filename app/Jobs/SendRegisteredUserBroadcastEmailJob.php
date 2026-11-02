@@ -7,6 +7,7 @@ use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
 use App\Support\BulkMailQueue;
 use App\Support\MutqinLog;
+use App\Support\RegisteredUserUnsubscribe;
 use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,6 +38,7 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
     {
         $email = WaitingListEmailHash::normalize($this->email);
         $delivery = null;
+        $user = null;
 
         if (! $this->isTest) {
             $delivery = RegisteredUserEmailDelivery::query()
@@ -66,15 +68,30 @@ class SendRegisteredUserBroadcastEmailJob implements ShouldQueue
                 return;
             }
 
+            if ($user instanceof User && $user->marketing_unsubscribed_at !== null) {
+                $delivery->update([
+                    'status' => RegisteredUserEmailDelivery::STATUS_SKIPPED,
+                    'skip_reason' => 'unsubscribed',
+                ]);
+
+                return;
+            }
+
             if (! BulkMailQueue::claim($delivery)) {
                 return;
             }
         }
 
+        $platformUrl = TransactionalMail::homeUrl();
+        $unsubscribeUrl = $this->isTest
+            ? RegisteredUserUnsubscribe::previewUrl()
+            : ($user instanceof User ? RegisteredUserUnsubscribe::signedUrl($user) : '');
+
         try {
             Mail::to($email)->send(new RegisteredUserBroadcastMail(
                 recipientName: trim($this->name) !== '' ? trim($this->name) : 'there',
-                platformUrl: TransactionalMail::homeUrl(),
+                platformUrl: $platformUrl,
+                unsubscribeUrl: $unsubscribeUrl,
             ));
 
             if ($delivery) {

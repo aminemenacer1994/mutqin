@@ -76,6 +76,13 @@ class MemorisationRoutingTest extends TestCase
             ->assertRedirect(route('memorisation'));
 
         $this->assertGuest();
+
+        $this->get(route('memorisation'))
+            ->assertOk()
+            ->assertSee('<memorisation', false);
+
+        $this->get('/logout')
+            ->assertRedirect(route('memorisation'));
     }
 
     public function test_failed_login_from_login_page_returns_back_to_login(): void

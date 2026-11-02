@@ -152,7 +152,7 @@ class AdminDashboardService
             $sort = 'created';
         }
 
-        $query = User::query()->withTrashed()->select([
+        $query = User::query()->withTrashed()->withoutSeededDemoAccounts()->select([
             'id',
             'name',
             'email',
@@ -759,6 +759,7 @@ class AdminDashboardService
                     'occurred_at' => optional($session->ended_at ?? $session->last_activity_at)->toIso8601String(),
                 ];
             })
+            ->filter(fn (array $row) => ! $this->isSeededDemoEmail($row['user_email'] ?? null))
             ->values()
             ->all();
     }
@@ -796,6 +797,7 @@ class AdminDashboardService
                     'occurred_at' => optional($attempt->created_at)->toIso8601String(),
                 ];
             })
+            ->filter(fn (array $row) => ! $this->isSeededDemoEmail($row['user_email'] ?? null))
             ->values()
             ->all();
     }
@@ -831,6 +833,7 @@ class AdminDashboardService
                     'updated_at' => optional($note->updated_at ?? $note->created_at)->toIso8601String(),
                 ];
             })
+            ->filter(fn (array $row) => ! $this->isSeededDemoEmail($row['user_email'] ?? null))
             ->values()
             ->all();
     }
@@ -1084,6 +1087,7 @@ class AdminDashboardService
 
         $ids = $sessionCounts->keys()->all();
         $users = User::query()
+            ->withoutSeededDemoAccounts()
             ->whereIn('id', $ids)
             ->get(['id', 'name', 'email'])
             ->keyBy('id');
@@ -1106,6 +1110,9 @@ class AdminDashboardService
         return collect($ids)
             ->map(function ($id) use ($sessionCounts, $users, $memorised, $accuracy) {
                 $user = $users->get($id);
+                if ($user === null) {
+                    return null;
+                }
 
                 return [
                     'id' => (int) $id,
@@ -1118,6 +1125,7 @@ class AdminDashboardService
                         : null,
                 ];
             })
+            ->filter()
             ->values()
             ->all();
     }
@@ -1537,6 +1545,7 @@ class AdminDashboardService
         $events = collect();
 
         User::query()
+            ->withoutSeededDemoAccounts()
             ->latest('created_at')
             ->limit(min(40, $limit))
             ->get(['id', 'name', 'email', 'created_at'])
@@ -1564,6 +1573,9 @@ class AdminDashboardService
             ->limit(min(40, $limit))
             ->get()
             ->each(function (UserSession $session) use ($events) {
+                if ($this->isSeededDemoEmail($session->user?->email)) {
+                    return;
+                }
                 $meta = is_array($session->metadata) ? $session->metadata : [];
                 $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
                 $surah = (int) ($session->surah_number ?: ($config['chapterId'] ?? 0));
@@ -1595,6 +1607,9 @@ class AdminDashboardService
             ->limit(min(40, $limit))
             ->get()
             ->each(function (AiReciteAttempt $attempt) use ($events) {
+                if ($this->isSeededDemoEmail($attempt->user?->email)) {
+                    return;
+                }
                 $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
                 $surah = (int) ($range['surah'] ?? $range['surahId'] ?? 0);
                 $from = (int) ($range['from'] ?? $range['start'] ?? 0);
@@ -1666,6 +1681,18 @@ class AdminDashboardService
             'created_at' => optional($row->created_at)->toIso8601String(),
             'updated_at' => optional($row->updated_at)->toIso8601String(),
         ];
+    }
+
+    private function isSeededDemoEmail(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+        if ($email === '') {
+            return false;
+        }
+
+        return str_ends_with($email, '@mutqin.test')
+            || $email === 'test@example.com'
+            || preg_match('/^practice\d+@example\.com$/', $email) === 1;
     }
 
     private function firstName(User $user): string

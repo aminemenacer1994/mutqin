@@ -77,5 +77,15 @@ class MarkRecalledWordsBatchTest extends TestCase
                 ->where('status', MemorisationWeakSpot::STATUS_IMPROVING)
                 ->count()
         );
+
+        app(MemorisationHistoryService::class)->markRecalledWords($user, $assessment, $wordResults);
+
+        $this->assertSame(
+            5,
+            MemorisationWeakSpot::query()
+                ->where('user_id', $user->id)
+                ->where('status', MemorisationWeakSpot::STATUS_RESOLVED)
+                ->count()
+        );
     }
 }

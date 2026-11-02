@@ -34,7 +34,7 @@ return [
         'label' => 'Continue in Mutqin',
     ],
     'cta_secondary' => [
-        'href' => '/waiting-list',
+        'href' => '/',
         'label' => 'Join the waiting list',
     ],
     // Other article slugs and/or launch guide path slugs (e.g. hifz-revision).

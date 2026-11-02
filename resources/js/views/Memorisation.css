@@ -69317,11 +69317,21 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
   font-weight: 600 !important;
 }
 
-html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 [lang="ar"],
-html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .workspace-shell-surah-ar,
-html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .workspace-shell-surah-ar {
+  font-family: Amiri, "Noto Naskh Arabic", serif !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text,
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
   font-family: Amiri, "Noto Naskh Arabic", serif !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text[data-madani-glyph="true"] {
+  font-family: var(--madani-glyph-font) !important;
+  font-weight: 400 !important;
+  font-size: 1.72rem !important;
+  line-height: 1.85 !important;
+  letter-spacing: 0 !important;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
@@ -70115,8 +70125,8 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
-  font-size: clamp(1.45rem, 3.8vw, 2.15rem) !important;
-  line-height: 1.5 !important;
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem) !important;
+  line-height: 1.7 !important;
 }
 
 /* Finishing pass: a quiet, dependable result surface with clear exits and

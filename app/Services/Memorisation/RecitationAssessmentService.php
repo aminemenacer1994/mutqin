@@ -9,6 +9,7 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Services\NextSessionRecommendationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class RecitationAssessmentService
 {
@@ -1038,7 +1039,8 @@ class RecitationAssessmentService
         }
 
         $outcome = RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']);
-        $this->recommendations->applyAiAssessment($user, $recommendation, [
+        try {
+            $this->recommendations->applyAiAssessment($user, $recommendation, [
             'result' => $outcome,
             'summary' => $assessment->friendly_summary,
             'weak_ayahs' => $analysis['weak_ayahs'] ?? [],
@@ -1073,6 +1075,10 @@ class RecitationAssessmentService
             'average_accuracy' => $aligned['accuracy'],
             'accuracy_percent' => $aligned['accuracy'],
             'weak_words' => $analysis['weak_words'] ?? [],
-        ]);
+            ]);
+        } catch (ValidationException) {
+            // The linked recommendation was already started, dismissed, or superseded.
+            // Keep the assessment, plan, and comparison.
+        }
     }
 }

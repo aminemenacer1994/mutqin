@@ -50,7 +50,7 @@ class SeoPagesTest extends TestCase
 
         $this->assertStringContainsString('<urlset', $xml);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/', 'marketing'), $xml);
-        $this->assertStringContainsString(SeoCatalog::absoluteUrl('/waiting-list', 'marketing'), $xml);
+        $this->assertStringNotContainsString('/waiting-list', $xml);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/about', 'app'), $xml);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/features/ai-recite', 'app'), $xml);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/guides/quran-memorization-for-beginners', 'app'), $xml);
@@ -83,7 +83,8 @@ class SeoPagesTest extends TestCase
             ->assertSee('Quran revision', false)
             ->assertSee('memorisation progress', false)
             ->assertSee('Your first 10 minutes with Mutqin', false)
-            ->assertSee('href="/waiting-list"', false)
+            ->assertDontSee('href="/waiting-list"', false)
+            ->assertSee('href="/memorisation"', false)
             ->assertSee('href="/tools"', false)
             ->assertSee('href="/tools/quran-memorization-planner"', false)
             ->assertSee('href="/guides/quran-memorization-techniques"', false)
@@ -107,13 +108,8 @@ class SeoPagesTest extends TestCase
 
     public function test_public_content_pages_are_indexable_and_have_distinct_titles(): void
     {
-        $homeTitle = 'Quran Memorization App with AI | Mutqin';
-
         $this->get('/waiting-list')
-            ->assertOk()
-            ->assertSee('Join the Mutqin Waiting List', false)
-            ->assertSee('content="index, follow"', false)
-            ->assertDontSee($homeTitle, false);
+            ->assertRedirect('/');
 
         $this->get('/about')
             ->assertOk()

@@ -339,7 +339,7 @@ final class SeoArticles
             'related_features' => $relatedFeatures,
             'cta_primary' => ['href' => $ctaHref, 'label' => $ctaLabel],
             'cta_secondary' => [
-                'href' => (string) (($raw['cta_secondary']['href'] ?? null) ?: '/waiting-list'),
+                'href' => (string) (($raw['cta_secondary']['href'] ?? null) ?: '/'),
                 'label' => (string) (($raw['cta_secondary']['label'] ?? null) ?: 'Join the waiting list'),
             ],
             'links' => $links,

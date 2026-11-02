@@ -59,7 +59,15 @@ export const RECITATION_SILENCE_THROTTLE_MS = 3200
 export const RECITATION_CHUNK_TIMESLICE_MS = 50
 export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 2200
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 400
-export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.68
+/**
+ * Confidence stamped on Speechmatics partials. The provider's own partial
+ * confidence has no meaning, so it is never used. This stays below the
+ * uncertain floor (0.42) — a partial mismatch is not a red mistake — and at
+ * or above the final keep threshold (0.35). Callers must keep `provisional`
+ * so the higher AMD interim gate (0.48) does not drop the word. Exact matches
+ * stay green.
+ */
+export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.4
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 1024
 /** ~1s of 16-bit PCM at 48kHz / 1024-sample frames. Drop older frames instead of dumping. */
 const SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS = 48
@@ -508,7 +516,10 @@ export function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = f
         ?? item?.id
       return {
         word,
-        confidence: Number.isFinite(confidence) ? confidence : (isPartial ? SPEECHMATICS_PARTIAL_CONFIDENCE : 1),
+        confidence: isPartial
+          ? SPEECHMATICS_PARTIAL_CONFIDENCE
+          : (Number.isFinite(confidence) ? confidence : 1),
+        ...(isPartial ? { provisional: true } : {}),
         ...(token !== undefined && token !== null ? { token, speechmaticsToken: token } : {}),
         start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
         end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null,

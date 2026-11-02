@@ -538,7 +538,7 @@ final class SeoLaunchPages
                 ['href' => '/privacy', 'label' => 'Microphone and privacy'],
                 ['href' => '/features/ai-recite', 'label' => 'AI Recite'],
                 ['href' => '/features/mushaf', 'label' => 'Open it on a Mushaf page'],
-                ['href' => '/waiting-list', 'label' => 'Waiting list'],
+                ['href' => '/', 'label' => 'Home'],
                 ['href' => '/tools/find-an-ayah', 'label' => 'Type to find an ayah'],
             ],
             breadcrumbs: [
@@ -1182,8 +1182,8 @@ final class SeoLaunchPages
             tool: 'planner',
             relatedFeature: ['href' => '/features/hifz-plan', 'label' => 'Continue with a saved Hifz plan in Mutqin'],
             ctaPrimary: [
-                'href' => '/waiting-list?utm_source=seo_tool&utm_medium=cta&utm_campaign=planner',
-                'label' => 'Join the waiting list',
+                'href' => '/?utm_source=seo_tool&utm_medium=cta&utm_campaign=planner',
+                'label' => 'Continue in Mutqin',
             ],
             ctaSecondary: ['href' => '/features/hifz-plan', 'label' => 'See the Hifz plan feature'],
             faqs: [
@@ -1275,8 +1275,8 @@ final class SeoLaunchPages
             tool: 'progress',
             relatedFeature: ['href' => '/features/hifz-progress', 'label' => 'Continue with progress tracking in Mutqin'],
             ctaPrimary: [
-                'href' => '/waiting-list?utm_source=seo_tool&utm_medium=cta&utm_campaign=progress',
-                'label' => 'Join the waiting list',
+                'href' => '/?utm_source=seo_tool&utm_medium=cta&utm_campaign=progress',
+                'label' => 'Continue in Mutqin',
             ],
             ctaSecondary: ['href' => '/features/hifz-progress', 'label' => 'See Hifz progress in Mutqin'],
             faqs: [
@@ -1357,8 +1357,8 @@ final class SeoLaunchPages
             tool: 'quiz',
             relatedFeature: ['href' => '/features/ai-recite', 'label' => 'Continue with AI Recite and Check what you kept'],
             ctaPrimary: [
-                'href' => '/waiting-list?utm_source=seo_tool&utm_medium=cta&utm_campaign=quiz',
-                'label' => 'Join the waiting list',
+                'href' => '/?utm_source=seo_tool&utm_medium=cta&utm_campaign=quiz',
+                'label' => 'Continue in Mutqin',
             ],
             ctaSecondary: ['href' => '/features/ai-recite', 'label' => 'See AI Recite in Mutqin'],
             faqs: [
@@ -1446,8 +1446,8 @@ final class SeoLaunchPages
             tool: 'find-ayah',
             relatedFeature: ['href' => '/features/find-an-ayah', 'label' => 'Continue with voice Find an ayah in Mutqin'],
             ctaPrimary: [
-                'href' => '/waiting-list?utm_source=seo_tool&utm_medium=cta&utm_campaign=find-ayah',
-                'label' => 'Join the waiting list',
+                'href' => '/?utm_source=seo_tool&utm_medium=cta&utm_campaign=find-ayah',
+                'label' => 'Continue in Mutqin',
             ],
             ctaSecondary: ['href' => '/features/find-an-ayah', 'label' => 'See Find an ayah in Mutqin'],
             faqs: [
@@ -1535,7 +1535,7 @@ final class SeoLaunchPages
             'author' => $author,
             'published_at' => $publishedAt,
             'updated_at' => $updatedAt,
-            'cta_primary' => $ctaPrimary ?? ['href' => '/waiting-list', 'label' => 'Join the waiting list'],
+            'cta_primary' => $ctaPrimary ?? ['href' => '/', 'label' => 'Mutqin'],
             'cta_secondary' => $ctaSecondary ?? ['href' => '/memorisation', 'label' => 'Open memorisation'],
         ];
     }

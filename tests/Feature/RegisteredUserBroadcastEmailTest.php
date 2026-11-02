@@ -7,6 +7,7 @@ use App\Jobs\SendRegisteredUserBroadcastEmailJob;
 use App\Mail\RegisteredUserBroadcastMail;
 use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
+use App\Support\RegisteredUserUnsubscribe;
 use App\Support\WaitingListEmailHash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -127,5 +128,48 @@ class RegisteredUserBroadcastEmailTest extends TestCase
         $job->handle();
 
         Mail::assertSent(RegisteredUserBroadcastMail::class, 1);
+    }
+
+    public function test_preview_skips_users_who_unsubscribed(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        User::factory()->create([
+            'email' => 'optout@example.com',
+            'email_verified_at' => now(),
+            'marketing_unsubscribed_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('api.admin.users.broadcast-email.preview'))
+            ->assertOk()
+            ->assertJsonPath('eligible', 1)
+            ->assertJsonPath('skipped.unsubscribed', 1);
+    }
+
+    public function test_signed_unsubscribe_marks_user_and_mail_includes_the_link(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Amina',
+            'email' => 'amina@example.com',
+        ]);
+        $url = RegisteredUserUnsubscribe::signedUrl($user);
+
+        $this->get($url)->assertOk();
+        $this->assertNotNull($user->fresh()->marketing_unsubscribed_at);
+
+        $mail = new RegisteredUserBroadcastMail(
+            recipientName: 'Amina',
+            platformUrl: 'https://mutqin.ai',
+            unsubscribeUrl: $url,
+        );
+        $html = $mail->render();
+
+        $this->assertSame(__('mail.launch_subject'), $mail->envelope()->subject);
+        $this->assertStringContainsString(e(__('mail.launch_heading')), $html);
+        $this->assertStringContainsString(e(__('mail.launch_action')), $html);
+        $this->assertStringContainsString('https://mutqin.ai', $html);
+        $this->assertStringContainsString('Amina', $html);
+        $this->assertStringContainsString(e($url), $html);
+        $this->assertStringNotContainsString('News from Mutqin', $html);
     }
 }

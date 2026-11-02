@@ -2517,6 +2517,7 @@ function normalizeRecognitionWords(words = [], options = {}) {
           display: rawWord,
           rawWord: String(rawWord || '').trim() || word,
           confidence,
+          ...(entry?.provisional ? { provisional: true } : {}),
           provider: entry?.provider || provider,
           start: finiteOrNull(entry?.start ?? entry?.startTime ?? entry?.start_time),
           end: finiteOrNull(entry?.end ?? entry?.endTime ?? entry?.end_time),
@@ -2533,7 +2534,7 @@ function normalizeRecognitionWords(words = [], options = {}) {
         }
       })
     })
-    .filter(word => word.word && Number(word.confidence ?? 0) >= threshold)
+    .filter(word => word.word && (word.provisional || Number(word.confidence ?? 0) >= threshold))
 }
 
 function collectRejectedRecognitionWords(words = [], threshold, provider, segmentId) {
@@ -2544,7 +2545,7 @@ function collectRejectedRecognitionWords(words = [], threshold, provider, segmen
         : (entry?.word || entry?.text || entry?.transcript || entry?.punctuated_word || '')
       const tokens = tokenizeRecitationWords(rawWord)
       const confidence = Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1
-      if (!tokens.length || confidence >= threshold) return []
+      if (entry?.provisional || !tokens.length || confidence >= threshold) return []
       return tokens.map((word, tokenIndex) => ({
         word,
         display: typeof entry === 'string' ? word : rawWord,

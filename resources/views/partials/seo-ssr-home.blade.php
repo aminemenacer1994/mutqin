@@ -1,13 +1,8 @@
 <article class="seo-ssr">
-    @php($earlyAccess = \App\Support\MutqinDomains::restrictMarketingHost(request()))
     <h1>Forgetting ayahs or unsure what to revise next?</h1>
     <p>A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.</p>
     <p>Recite aloud. AI Recite can highlight possible mistakes to practise again. Mutqin is for beginners, children with guidance, returning adults and experienced Hifz students.</p>
-    @if($earlyAccess)
-        <p>Early access: access is opening in stages. <a href="/waiting-list">Join the waiting list</a> for an invitation.</p>
-    @else
-        <p>Available now: free to start. <a href="/memorisation">Start your first session</a>.</p>
-    @endif
+    <p>Available now: free to start. <a href="/memorisation">Start your first session</a>.</p>
 
     <h2>Your first 10 minutes with Mutqin</h2>
     <p>Choose 1 to 3 ayahs. Listen, repeat and recite from memory. Mutqin saves your next step.</p>
@@ -37,7 +32,6 @@
         <a href="/about">About us</a>
         <a href="/our-mission">Our mission</a>
         <a href="/privacy">Privacy</a>
-        <a href="/waiting-list">Waiting list</a>
         <a href="/pricing">Pricing</a>
         <a href="/features/ai-recite">AI Recite</a>
         <a href="/features/mutashabihat">Mutashābihāt</a>

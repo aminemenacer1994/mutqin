@@ -1855,7 +1855,6 @@
         <div class="tools-top">
         <div class="tools-topbar">
           <div id="memorisationToolsTitle" class="tools-title">
-            <p class="tools-title__eyebrow">{{ t('memorisation.controls_panel_eyebrow') }}</p>
             <h3 class="tools-title__heading">{{ controlsPanelTitle }}</h3>
           </div>
             <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
@@ -4252,7 +4251,11 @@
                               }"
                               :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
                             >
-                              <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                              <span
+                                class="post-session-simple__quran-token-text"
+                                :data-madani-glyph="part.madaniGlyph ? 'true' : null"
+                                :style="part.fontFamily ? { '--madani-glyph-font': `'${part.fontFamily}', serif` } : null"
+                              >{{ part.text }}</span>
                             </span>
                           </span>
                         </span>
@@ -4301,7 +4304,11 @@
                             'is-omitted': entry.tone === 'omitted',
                             'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
                           }"
-                        >{{ entry.text }}<template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
+                        ><span
+                          class="post-session-simple__quran-token-text"
+                          :data-madani-glyph="entry.madaniGlyph ? 'true' : null"
+                          :style="entry.fontFamily ? { '--madani-glyph-font': `'${entry.fontFamily}', serif` } : null"
+                        >{{ entry.text }}</span><template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
                       </span>
                       <span
                         v-else-if="row.wordsLabel"
@@ -4848,7 +4855,7 @@
           <footer class="post-session-simple__footer">
             <div
               class="post-session-simple__actions"
-              :class="onboardingSampleSessionActive ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
+              :class="(onboardingSampleSessionActive || postSessionCtaButtons.length > 2) ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
               data-testid="post-session-actions"
               data-tour="rec-cta"
               :data-cta-state="postSessionCtaState || undefined"
@@ -4867,7 +4874,7 @@
 
               <template v-else>
                 <button
-                  v-for="btn in postSessionCtaButtons.slice(0, 2)"
+                  v-for="btn in postSessionCtaButtons.slice(0, 3)"
                   :key="btn.id"
                   type="button"
                   class="post-session-simple__btn"

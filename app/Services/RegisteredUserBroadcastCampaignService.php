@@ -7,6 +7,7 @@ use App\Mail\RegisteredUserBroadcastMail;
 use App\Models\RegisteredUserEmailDelivery;
 use App\Models\User;
 use App\Support\BulkMailQueue;
+use App\Support\RegisteredUserUnsubscribe;
 use App\Support\TransactionalMail;
 use App\Support\WaitingListEmailHash;
 use Illuminate\Support\Collection;
@@ -28,7 +29,7 @@ class RegisteredUserBroadcastCampaignService
      * @return array{
      *     campaign_key: string,
      *     eligible: int,
-     *     skipped: array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int},
+     *     skipped: array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int, unsubscribed: int},
      *     deliveries: array{pending: int, sent: int, failed: int, skipped: int},
      *     storage_ready: bool,
      *     scope: string
@@ -150,6 +151,7 @@ class RegisteredUserBroadcastCampaignService
             Mail::to($email)->send(new RegisteredUserBroadcastMail(
                 recipientName: 'Preview recipient',
                 platformUrl: TransactionalMail::homeUrl(),
+                unsubscribeUrl: RegisteredUserUnsubscribe::previewUrl(),
             ));
         } catch (Throwable $exception) {
             throw ValidationException::withMessages([
@@ -199,7 +201,7 @@ class RegisteredUserBroadcastCampaignService
     }
 
     /**
-     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
+     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int, unsubscribed: int}  $skipped
      * @param  list<int>|null  $userIds
      * @return Collection<int, User>
      */
@@ -227,7 +229,7 @@ class RegisteredUserBroadcastCampaignService
     }
 
     /**
-     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}  $skipped
+     * @param  array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int, unsubscribed: int}  $skipped
      * @param  array<string, true>  $seenEmails
      * @param  array<string, true>  $sentHashSet
      * @param  array<string, true>  $activeHashSet
@@ -243,6 +245,12 @@ class RegisteredUserBroadcastCampaignService
     ): void {
         if ($user->email_verified_at === null) {
             $skipped['unverified']++;
+
+            return;
+        }
+
+        if ($user->marketing_unsubscribed_at !== null) {
+            $skipped['unsubscribed']++;
 
             return;
         }
@@ -362,7 +370,7 @@ class RegisteredUserBroadcastCampaignService
     }
 
     /**
-     * @return array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int}
+     * @return array{unverified: int, invalid: int, duplicate: int, already_sent: int, queued: int, unsubscribed: int}
      */
     private function emptySkipped(): array
     {
@@ -372,6 +380,7 @@ class RegisteredUserBroadcastCampaignService
             'duplicate' => 0,
             'already_sent' => 0,
             'queued' => 0,
+            'unsubscribed' => 0,
         ];
     }
 

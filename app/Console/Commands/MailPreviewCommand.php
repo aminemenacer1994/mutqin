@@ -156,7 +156,7 @@ class MailPreviewCommand extends Command
 
             return [
                 'name' => $name,
-                'subject' => '['.$locale.' preview] '.__('mail.waitlist_launch_subject'),
+                'subject' => '['.$locale.' preview] '.__('mail.launch_subject'),
                 'html' => view('mail.waitlist-launch', $data)->render(),
                 'text' => view('mail.text.waitlist-launch', $data)->render(),
                 'data' => $data,

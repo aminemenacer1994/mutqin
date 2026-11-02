@@ -9,7 +9,7 @@
             'id' => Auth::id(),
             'email' => $memorisationUser?->email,
             'name' => $memorisationUser?->name,
-            'is_admin' => $memorisationUser?->isAdmin() ?? false,
+            'is_admin' => $memorisationUser?->showsAdminNavigation() ?? false,
             'admin_dashboard_url' => route('admin.dashboard'),
             'subscription_tier' => Auth::user()?->effectiveSubscriptionTier() ?? 'free',
             'subscription_status' => Auth::user()?->subscription_status ?? 'free',

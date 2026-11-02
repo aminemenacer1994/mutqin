@@ -179,6 +179,9 @@ class MemorisationDetectionController extends Controller
         RecitationAssessmentService $service,
     ): JsonResponse {
         $this->authorize('update', $practicePlan);
+        if ($blocked = $this->assertAiVoiceCheckAllowed($request)) {
+            return $blocked;
+        }
 
         $payload = $request->validated();
         $payload['previous_assessment_id'] = $practicePlan->assessment_id;

@@ -190,17 +190,13 @@ class TeacherDashboardController extends Controller
         abort_unless($practicePlan->status === MemorisationPracticePlan::STATUS_ACTIVE, 409);
 
         MemorisationPracticePlan::query()
+            ->whereKey($practicePlan->id)
             ->where('user_id', $student->id)
             ->where('status', MemorisationPracticePlan::STATUS_ACTIVE)
-            ->where('surah_number', $practicePlan->surah_number)
-            ->where('start_ayah', $practicePlan->start_ayah)
-            ->where('end_ayah', $practicePlan->end_ayah)
-            ->where('practice_scope', $practicePlan->practice_scope)
-            ->where('recommended_review_at', $practicePlan->recommended_review_at)
             ->update([
-            'status' => MemorisationPracticePlan::STATUS_COMPLETED,
-            'completed_at' => now(),
-            'completion_outcome' => 'teacher_reviewed',
+                'status' => MemorisationPracticePlan::STATUS_COMPLETED,
+                'completed_at' => now(),
+                'completion_outcome' => 'teacher_reviewed',
             ]);
 
         return $this->json(['id' => (int) $practicePlan->id, 'status' => MemorisationPracticePlan::STATUS_COMPLETED]);

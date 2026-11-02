@@ -123,6 +123,10 @@ import {
 } from '../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../scripts/mushaf/qpcMadaniFontLoader'
 import {
+  applyMadaniGlyphsToParts,
+  loadMadaniAyahGlyphs,
+} from '../scripts/mushaf/madaniSnippetGlyphs'
+import {
   clearQpcMadaniRecitationDom,
   patchQpcMadaniRecitationDom,
   resolveAyahKeyForMadaniRecitationIndex,
@@ -1282,6 +1286,7 @@ export default {
       showPostSessionConfetti: false,
       postSessionConfettiTimer: null,
       postSessionSnapshot: null,
+      postSessionMadaniGlyphByAyah: {},
       postSessionReturnFocusEl: null,
       postSessionOffcanvasOpen: false,
       postSessionStatsExpanded: false,
@@ -5216,7 +5221,12 @@ export default {
                 ? 'partial'
                 : 'incorrect'
             )
-          row.words.push({ text, tone })
+          const ayahWordIndex = Number(word?.ayahWordIndex ?? word?.wordIndex)
+          row.words.push({
+            text,
+            tone,
+            ...(Number.isFinite(ayahWordIndex) && ayahWordIndex >= 0 ? { ayahWordIndex } : {}),
+          })
         }
         if (!row.note && word?.reason) {
           row.note = weakWordReasonLabel(word.reason, this.t?.bind?.(this)) || ''
@@ -5357,7 +5367,7 @@ export default {
         || plan?.techniques?.find?.((tech) => tech?.role === 'complementary')?.label
         || '',
       ).replace(/^Also:\s*/i, '').trim()
-      return buildPostSessionInfoArchitecture({
+      const architecture = buildPostSessionInfoArchitecture({
         t: translate,
         outcome: this.postSessionAiReviewDetails?.outcome
           || this.postSessionOutcomeTone
@@ -5384,6 +5394,7 @@ export default {
         ctaState: this.postSessionCtaState,
         isRevision: !!this.postSessionIsRepeatRecommendation,
       })
+      return this.withMadaniGlyphsOnArchitecture(architecture)
     },
     postSessionPersonalPlanVisible() {
       return !!(
@@ -5746,6 +5757,20 @@ export default {
     /**
      * One focus phrase row per weak ayah so Main focus mirrors Weak areas.
      */
+    postSessionMadaniGlyphSourceKey() {
+      if (!this.showPostSessionModal) return ''
+      const chapter = Number(this.postSessionSnapshot?.chapterId || this.chapterId || 0)
+      if (!chapter) return ''
+      const ayahs = new Set(
+        (Array.isArray(this.postSessionRevisionWeakAyahs) ? this.postSessionRevisionWeakAyahs : [])
+          .map(Number)
+          .filter((n) => Number.isFinite(n) && n > 0),
+      )
+      const focusAyah = Number(this.resolvePostSessionFocusPhrase?.()?.ayahNumber || 0)
+      if (focusAyah > 0) ayahs.add(focusAyah)
+      if (!ayahs.size) return ''
+      return `${chapter}|${[...ayahs].sort((a, b) => a - b).join(',')}`
+    },
     postSessionFocusAyahRows() {
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
       const ayahs = (Array.isArray(this.postSessionRevisionWeakAyahs)
@@ -5762,13 +5787,15 @@ export default {
         return [{
           ayah: Number(focus.ayahNumber || 0) || null,
           ayahLabel: this.postSessionFocusHighlightMeta || '',
-          parts,
+          phraseStart: Number(focus.phraseStart || 0),
+          parts: this.withMadaniGlyphs(parts, focus.ayahNumber, focus.phraseStart),
           activatePayload: this.postSessionFocusActivatePayload,
         }]
       }
       return unique.slice(0, 6).map((ayah) => {
         const focus = this.resolvePostSessionFocusPhraseForAyah?.(ayah) || null
-        const parts = this.buildPostSessionFocusPartsForAyah(ayah, focus)
+        const rawParts = this.buildPostSessionFocusPartsForAyah(ayah, focus)
+        const parts = this.withMadaniGlyphs(rawParts, ayah, focus?.phraseStart)
         const ayahLabel = formatRecommendationAyahLabel(ayah, this.t?.bind?.(this))
           || this.t('memorisation.postSession.recommendation.singleAyah', { ayah })
           || `Ayah ${ayah}`
@@ -5777,7 +5804,7 @@ export default {
           ayahLabel,
           parts,
           activatePayload: {
-            phrase: focus?.phrase || parts.map((p) => p.text).join(' '),
+            phrase: focus?.phrase || rawParts.map((p) => p.text).join(' '),
             wordIndex: focus?.wordIndex ?? null,
             ayahNumber: ayah,
             verseKey: focus?.verseKey || '',
@@ -11645,6 +11672,15 @@ export default {
   },
 
   watch: {
+    postSessionMadaniGlyphSourceKey(key) {
+      if (!key) {
+        if (Object.keys(this.postSessionMadaniGlyphByAyah || {}).length) {
+          this.postSessionMadaniGlyphByAyah = {}
+        }
+        return
+      }
+      void this.hydratePostSessionMadaniGlyphs()
+    },
     isDataReady(ready) {
       if (!ready) return
       if (this.mutashabihatPanelReady) return
@@ -12438,6 +12474,7 @@ export default {
         return
       }
       this.workspaceReciteAnalysisView = view
+      void this.hydrateWorkspaceReciteMadaniGlyphs(view)
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
@@ -18012,27 +18049,7 @@ export default {
     },
 
     ensureSeededSavedSessions() {
-      if (!this.auth?.check) return
-      const seededFlagKey = this.userStorageKey('savedSessionsSeeded')
-      const storageKey = this.savedSessionsStorageKey()
-
-      try {
-        if (localStorage.getItem(seededFlagKey) === '1') return
-
-        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]')
-        if (Array.isArray(existing) && existing.length > 0) {
-          localStorage.setItem(seededFlagKey, '1')
-          return
-        }
-
-        const seededSessions = this.getSeededSessionsForCurrentUser()
-        if (!seededSessions.length) return
-
-        localStorage.setItem(storageKey, JSON.stringify(seededSessions))
-        localStorage.setItem(seededFlagKey, '1')
-      } catch (error) {
-        console.error('Failed to seed demo saved sessions:', error)
-      }
+      // Seeded practice sessions (demo emails and sample results) are never created.
     },
 
     persistSavedSessions() {
@@ -21686,6 +21703,102 @@ export default {
         surahId: chapterId,
       }
     },
+    withMadaniGlyphs(parts, ayah, phraseStart = 0) {
+      const glyphs = this.postSessionMadaniGlyphByAyah?.[Number(ayah)] || []
+      if (!glyphs.length) return parts
+      return applyMadaniGlyphsToParts(parts, glyphs, {
+        phraseStart: Number(phraseStart) || 0,
+        contiguous: true,
+      })
+    },
+    withMadaniGlyphsOnArchitecture(architecture) {
+      const items = architecture?.weakAreas?.items
+      const map = this.postSessionMadaniGlyphByAyah || {}
+      if (!Array.isArray(items) || !items.length || !Object.keys(map).length) return architecture
+      return {
+        ...architecture,
+        weakAreas: {
+          ...architecture.weakAreas,
+          items: items.map((row) => {
+            const glyphs = map[Number(row.ayah)] || []
+            if (!glyphs.length || !row.wordEntries?.length) return row
+            const wordEntries = applyMadaniGlyphsToParts(row.wordEntries, glyphs)
+            return {
+              ...row,
+              wordEntries,
+              wordsLabel: wordEntries.map((entry) => entry.text).join(' · '),
+            }
+          }),
+        },
+      }
+    },
+    async hydratePostSessionMadaniGlyphs() {
+      const sourceKey = this.postSessionMadaniGlyphSourceKey
+      if (!sourceKey) return
+      const token = (this._postSessionMadaniGlyphToken = (this._postSessionMadaniGlyphToken || 0) + 1)
+      const [chapterRaw, ayahRaw] = String(sourceKey).split('|')
+      const chapter = Number(chapterRaw)
+      const ayahs = String(ayahRaw || '').split(',').map(Number).filter((n) => n > 0)
+      const next = {}
+      await Promise.all(ayahs.map(async (ayah) => {
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          if (glyphs?.length) next[ayah] = glyphs
+        } catch {
+          // Keep the Unicode snippet if the Madani page cannot be loaded.
+        }
+      }))
+      if (token !== this._postSessionMadaniGlyphToken) return
+      if (this.postSessionMadaniGlyphSourceKey !== sourceKey) return
+      this.postSessionMadaniGlyphByAyah = next
+    },
+    async hydrateWorkspaceReciteMadaniGlyphs(view) {
+      const rows = Array.isArray(view?.focusAyahRows) ? view.focusAyahRows : []
+      const weakItems = Array.isArray(view?.infoArchitecture?.weakAreas?.items)
+        ? view.infoArchitecture.weakAreas.items
+        : []
+      const chapter = Number(this.chapterId || view?.surahNumber || 0)
+      const ayahs = [...new Set(
+        [...rows, ...weakItems].map((row) => Number(row?.ayah)).filter((n) => n > 0),
+      )]
+      if (!chapter || !ayahs.length) return
+      const token = (this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1)
+      const byAyah = {}
+      await Promise.all(ayahs.map(async (ayah) => {
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          if (glyphs?.length) byAyah[ayah] = glyphs
+        } catch {
+          // Leave the existing snippet in place.
+        }
+      }))
+      if (token !== this._workspaceMadaniGlyphToken) return
+      if (this.workspaceReciteAnalysisView !== view) return
+      if (!Object.keys(byAyah).length) return
+      const focusAyahRows = rows.map((row) => ({
+        ...row,
+        parts: applyMadaniGlyphsToParts(row.parts || [], byAyah[Number(row.ayah)] || [], { contiguous: true }),
+      }))
+      const items = weakItems.map((row) => {
+        const wordEntries = applyMadaniGlyphsToParts(row.wordEntries || [], byAyah[Number(row.ayah)] || [])
+        return {
+          ...row,
+          wordEntries,
+          wordsLabel: wordEntries.map((entry) => entry.text).join(' · '),
+        }
+      })
+      this.workspaceReciteAnalysisView = {
+        ...view,
+        focusAyahRows,
+        infoArchitecture: {
+          ...(view.infoArchitecture || {}),
+          weakAreas: {
+            ...(view.infoArchitecture?.weakAreas || {}),
+            items,
+          },
+        },
+      }
+    },
     buildPostSessionFocusPartsForAyah(ayahNumber, focusInput = null) {
       const focus = focusInput || this.resolvePostSessionFocusPhraseForAyah?.(ayahNumber) || null
       const phrase = String(focus?.phrase || '').trim()
@@ -21793,6 +21906,7 @@ export default {
           weak: !!tone,
           tone: tone || 'ok',
           tokenIndex: index,
+          ayahWordIndex: Number(focus?.phraseStart || 0) + index,
           wordIndex: this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1,
         }
       })
@@ -28434,7 +28548,8 @@ export default {
         speechmatics_config: provider === 'speechmatics' ? {
           language: 'ar',
           model: 'enhanced',
-          diarization: 'speaker',
+          // Recitation sessions start with amdLive, which does not enable diarization.
+          diarization: null,
           vocabulary_version: 'quran-vocab-v2-empty',
         } : undefined,
         speechmatics_model: provider === 'speechmatics' ? 'enhanced' : undefined,
@@ -31632,11 +31747,15 @@ export default {
         ? payload.words
         : this.tokenizeRecitationWords(payload?.transcript || '').map(word => ({
           word,
-          confidence: payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE
+          confidence: payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE,
+          ...(!payload?.isFinal ? { provisional: true } : {}),
         }))
       const entries = rawWords.map(item => ({
         word: item.word || item.content || item.text || item.punctuated_word || '',
-        confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : (payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE),
+        confidence: payload?.isFinal
+          ? (Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : 1)
+          : SPEECHMATICS_PARTIAL_CONFIDENCE,
+        ...(!payload?.isFinal ? { provisional: true } : {}),
         start: item.start ?? item.startTime ?? item.start_time,
         end: item.end ?? item.endTime ?? item.end_time,
         ...(item.token !== undefined || item.speechmaticsToken !== undefined || item.speechmatics_token !== undefined || item.id !== undefined

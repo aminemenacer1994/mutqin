@@ -14,9 +14,6 @@
             >
               {{ t('aboutUs.ctaExplore') }}
             </a>
-            <a class="about-btn about-btn--secondary" href="/waiting-list">
-              {{ t('aboutUs.ctaWaitlist') }}
-            </a>
           </div>
         </div>
         <figure class="about-hero__media">

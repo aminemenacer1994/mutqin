@@ -18,7 +18,6 @@ use App\Http\Middleware\SetMutqinContentSecurityPolicy;
 use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\ErrorReporting;
-use App\Support\MutqinDomains;
 use App\Support\Theme;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -51,15 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware('web')->group(function (): void {
                 require base_path('routes/web/seo.php');
-
-                if (MutqinDomains::hostRoutingEnabled()) {
-                    Route::domain(MutqinDomains::marketingHost())
-                        ->group(base_path('routes/web/marketing.php'));
-                    Route::domain(MutqinDomains::appHost())
-                        ->group(base_path('routes/web/app.php'));
-                } else {
-                    require base_path('routes/web/app.php');
-                }
+                // mutqin.ai serves the full application. app.mutqin.ai redirects to it.
+                require base_path('routes/web/app.php');
             });
         },
     )

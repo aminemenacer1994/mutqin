@@ -54,8 +54,13 @@ function buildWeakSpotRows(wordStatuses, weakAyahs, t) {
     const text = wordText(word)
     if (!text) continue
     const row = byAyah.get(ayah)
+    const ayahWordIndex = Number(word?.ayahWordIndex ?? word?.wordIndex)
     if (!row.words.some((entry) => entry.text === text && entry.tone === tone)) {
-      row.words.push({ text, tone })
+      row.words.push({
+        text,
+        tone,
+        ...(Number.isFinite(ayahWordIndex) && ayahWordIndex >= 0 ? { ayahWordIndex } : {}),
+      })
     }
   }
 

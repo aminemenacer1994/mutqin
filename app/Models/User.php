@@ -84,6 +84,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'ai_audio_consent_at',
         'ai_session_settings',
         'ai_recite_lifetime_limit',
+        'marketing_unsubscribed_at',
     ];
 
     /**
@@ -94,6 +95,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     protected $hidden = [
         'password',
         'remember_token',
+        'marketing_unsubscribed_at',
     ];
 
     /**
@@ -114,6 +116,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
+            'marketing_unsubscribed_at' => 'datetime',
             'account_role' => AccountRole::class,
         ];
     }
@@ -331,6 +334,23 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function isAdmin(): bool
     {
         return $this->isSuperAdmin();
+    }
+
+    /**
+     * The admin navigation item is visible only for this mailbox.
+     */
+    public function showsAdminNavigation(): bool
+    {
+        return strtolower(trim((string) $this->email)) === 'menacer72@gmail.com'
+            && $this->isAdmin();
+    }
+
+    public function scopeWithoutSeededDemoAccounts($query)
+    {
+        return $query
+            ->where('email', 'not like', '%@mutqin.test')
+            ->where('email', 'not like', 'practice%@example.com')
+            ->where('email', '<>', 'test@example.com');
     }
 
     /**

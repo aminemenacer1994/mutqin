@@ -951,4 +951,31 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   )))
 }
 
+// Speechmatics partial confidence is not evidence. A partial mismatch must
+// stay visible through the AMD interim gate and must not be saved as a red mistake.
+{
+  const partialWords = [
+    { word: 'الحمد', confidence: 0.4, provisional: true },
+    { word: 'كتاب', confidence: 0.4, provisional: true },
+  ]
+  const state = stabilizeRecognitionEvent(createRecognitionState(), {
+    provider: 'speechmatics',
+    isFinal: false,
+    words: partialWords,
+    segmentId: 'partial-gate',
+  }, { confidenceThreshold: 0.48 })
+  assert.equal(state.interimWords.length, 2)
+  assert.equal(state.rejectedWords.length, 0)
+  const live = buildQuranAlignment('الحمد لله رب العالمين', state.interimWords, {
+    strictProgression: false,
+    lifecycle: 'live',
+  })
+  assert.equal(live.wordStatuses[0].status, 'correct')
+  assert.equal(live.wordStatuses[0].text, 'الحمد')
+  const mistaken = live.wordStatuses.find((word) => word.actual === 'كتاب')
+  assert.ok(mistaken)
+  assert.equal(mistaken.status, 'uncertain')
+  assert.notEqual(mistaken.visualStatus, 'red')
+}
+
 console.log('speechmatics-edge-scenarios.test.mjs: ok')

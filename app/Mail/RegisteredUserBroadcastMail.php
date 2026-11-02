@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Symfony\Component\Mime\Email;
 
 class RegisteredUserBroadcastMail extends Mailable
 {
@@ -16,12 +17,21 @@ class RegisteredUserBroadcastMail extends Mailable
     public function __construct(
         public string $recipientName,
         public string $platformUrl,
+        public string $unsubscribeUrl = '',
     ) {}
 
     public function envelope(): Envelope
     {
         $envelope = new Envelope(
-            subject: __('mail.registered_user_broadcast_subject'),
+            subject: __('mail.launch_subject'),
+            using: $this->unsubscribeUrl === '' ? [] : [
+                function (Email $message): void {
+                    $message->getHeaders()->addTextHeader(
+                        'List-Unsubscribe',
+                        '<'.$this->unsubscribeUrl.'>',
+                    );
+                },
+            ],
         );
 
         $replyTo = TransactionalMail::replyTo();
@@ -40,6 +50,7 @@ class RegisteredUserBroadcastMail extends Mailable
             with: [
                 'recipientName' => $this->recipientName,
                 'platformUrl' => $this->platformUrl,
+                'unsubscribeUrl' => $this->unsubscribeUrl,
             ],
         );
     }

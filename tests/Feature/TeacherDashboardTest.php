@@ -236,9 +236,22 @@ class TeacherDashboardTest extends TestCase
         ]);
 
         $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$hidden, $plan]))->assertNotFound();
+        $sibling = MemorisationPracticePlan::query()->create([
+            'user_id' => $student->id,
+            'assessment_id' => $assessment->id,
+            'title' => 'Same window, different plan',
+            'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 7,
+            'practice_scope' => $plan->practice_scope,
+            'recommended_review_at' => $plan->recommended_review_at,
+        ]);
+
         $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $plan]))
             ->assertOk()->assertJsonPath('status', MemorisationPracticePlan::STATUS_COMPLETED);
         $this->assertSame('teacher_reviewed', $plan->fresh()->completion_outcome);
+        $this->assertSame(MemorisationPracticePlan::STATUS_ACTIVE, $sibling->fresh()->status);
         $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $plan]))->assertStatus(409);
     }
 

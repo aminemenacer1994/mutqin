@@ -411,12 +411,18 @@ export function buildPostSessionInfoArchitecture(input = {}) {
           'These ayahs need more practice based on this session.',
         )
         : '',
-      items: weakRows.map((row) => ({
-        ayah: Number(row.ayah),
-        ayahLabel: row.ayahLabel || formatRecommendationAyahLabel(row.ayah, t),
-        wordsLabel: row.wordsLabel || '',
-        wordCount: Array.isArray(row.words) ? row.words.length : 0,
-      })),
+      items: weakRows.map((row) => {
+        const wordEntries = Array.isArray(row.wordEntries)
+          ? row.wordEntries
+          : (Array.isArray(row.words) ? row.words : [])
+        return {
+          ayah: Number(row.ayah),
+          ayahLabel: row.ayahLabel || formatRecommendationAyahLabel(row.ayah, t),
+          wordsLabel: row.wordsLabel || '',
+          wordEntries,
+          wordCount: wordEntries.length || (Array.isArray(row.words) ? row.words.length : 0),
+        }
+      }),
     },
     revisionOptions: {
       title: translate(t, 'revisionOptions', 'Revision options'),

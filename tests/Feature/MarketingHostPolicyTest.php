@@ -39,50 +39,36 @@ class MarketingHostPolicyTest extends TestCase
         return $this->createTestResponse($response, $request);
     }
 
-    public function test_marketing_root_is_the_homepage_when_app_url_is_marketing(): void
+    public function test_marketing_root_is_the_full_application_homepage(): void
     {
         $this->getOnMarketingHost('/')
             ->assertOk()
-            ->assertSee('window.mutqinRestrictMarketingHost = true', false)
+            ->assertSee('window.mutqinRestrictMarketingHost = false', false)
             ->assertSee('<homepage', false)
-            ->assertSee('Early access:', false)
-            ->assertSee('Join the waiting list', false)
-            ->assertDontSee('Available now:', false)
-            ->assertSee('class="mutqin-early-access-nav"', false)
-            ->assertSee('id="earlyAccessNavbar"', false)
-            ->assertDontSee('id="primaryNavbar"', false)
-            ->assertDontSee('class="nav-link nav-link-memorisation', false);
+            ->assertSee('Available now:', false)
+            ->assertSee('Start your first session', false)
+            ->assertDontSee('Early access:', false)
+            ->assertDontSee('Join the waiting list', false)
+            ->assertSee('id="primaryNavbar"', false)
+            ->assertSee('class="nav-link nav-link-memorisation', false)
+            ->assertDontSee('class="mutqin-early-access-nav"', false)
+            ->assertDontSee('id="earlyAccessNavbar"', false);
     }
 
-    public function test_marketing_host_blocks_homepage_and_public_pages(): void
+    public function test_marketing_host_serves_public_pages_and_blocks_waiting_list(): void
     {
         $this->getOnMarketingHost('/pricing')
-            ->assertRedirect('https://app.mutqin.ai/pricing');
+            ->assertOk();
 
         $this->getOnMarketingHost('/articles')
             ->assertOk()
-            ->assertSee('<articles-page', false)
-            ->assertSee('Qur&#039;an Memorisation Articles &amp; Guides | Mutqin', false);
+            ->assertSee('<articles-page', false);
 
-        $this->getOnMarketingHost('/articles/how-to-memorise-the-quran-beginners-guide')
-            ->assertOk()
-            ->assertSee('<article-detail-page', false);
-
-        $response = $this->getOnMarketingHost('/waiting-list');
-        $response->assertOk()
-            ->assertSee('waiting-list-page', false)
-            ->assertSee('mutqinMinimalPublicPage', false)
-            ->assertSee('app.mutqin.ai\\/join-waiting-list', false)
-            ->assertSee('mutqin-early-access-nav', false)
-            ->assertSee('id="earlyAccessNavbar"', false)
-            ->assertDontSee('id="primaryNavbar"', false)
-            ->assertDontSee('href="'.route('memorisation').'"', false)
-            ->assertDontSee('href="'.route('login').'"', false)
-            ->assertDontSee('href="'.route('register').'"', false)
-            ->assertDontSee('admin/waiting-list', false);
+        $this->getOnMarketingHost('/waiting-list')
+            ->assertRedirect('https://mutqin.ai/');
     }
 
-    public function test_marketing_host_admin_waiting_list_redirects_to_app(): void
+    public function test_marketing_host_admin_waiting_list_stays_on_mutqin_ai(): void
     {
         $kernel = $this->app->make(HttpKernel::class);
         $request = Request::create('/admin/waiting-list', 'GET', [], [], [], [
@@ -94,10 +80,9 @@ class MarketingHostPolicyTest extends TestCase
         $kernel->terminate($request, $response);
 
         $this->assertTrue($response->isRedirection());
-        $this->assertSame(
-            'https://app.mutqin.ai/admin/waiting-list',
-            (string) $response->headers->get('Location')
-        );
+        $location = (string) $response->headers->get('Location');
+        $this->assertStringContainsString('/login', $location);
+        $this->assertStringNotContainsString('app.mutqin.ai', $location);
     }
 
 }

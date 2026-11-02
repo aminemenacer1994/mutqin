@@ -31,7 +31,7 @@ return [
         'label' => 'Open the Hifz plan feature',
     ],
     'cta_secondary' => [
-        'href' => '/waiting-list',
+        'href' => '/',
         'label' => 'Join the waiting list',
     ],
     'related_slugs' => [

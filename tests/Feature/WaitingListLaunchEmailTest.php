@@ -252,6 +252,30 @@ class WaitingListLaunchEmailTest extends TestCase
         $this->assertNotNull($entry->unsubscribed_at);
     }
 
+    public function test_signed_unsubscribe_stays_available_when_the_waiting_list_page_is_closed(): void
+    {
+        config([
+            'app.url' => 'https://mutqin.ai',
+            'mutqin.domains.enable_in_tests' => true,
+            'mutqin.domains.force_disabled' => false,
+        ]);
+
+        $entry = WaitingListEntry::query()->create(['name' => 'Amina', 'email' => 'amina-public@example.com']);
+        $url = WaitingListUnsubscribe::signedUrl($entry);
+
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $request = \Illuminate\Http\Request::create($url, 'GET', [], [], [], [
+            'HTTP_HOST' => 'mutqin.ai',
+            'HTTPS' => 'on',
+            'SERVER_NAME' => 'mutqin.ai',
+        ]);
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        $this->assertSame(200, $response->getStatusCode(), (string) $response->headers->get('Location').' '.$url);
+        $this->assertNotNull($entry->fresh()->unsubscribed_at);
+    }
+
     public function test_launch_mail_template_contains_platform_link_and_unsubscribe(): void
     {
         $mail = new WaitingListLaunchMail(
@@ -261,12 +285,33 @@ class WaitingListLaunchEmailTest extends TestCase
         );
 
         $html = $mail->render();
+        $text = view('mail.text.waitlist-launch', [
+            'recipientName' => 'Amina',
+            'platformUrl' => 'https://mutqin.ai',
+            'unsubscribeUrl' => 'https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test',
+        ])->render();
 
+        $this->assertSame(__('mail.launch_subject'), $mail->envelope()->subject);
         $this->assertStringContainsString('https://mutqin.ai', $html);
-        $this->assertStringContainsString(__('mail.waitlist_launch_subject'), $html);
+        $this->assertStringContainsString(e(__('mail.launch_subject')), $html);
+        $this->assertStringContainsString(e(__('mail.launch_heading')), $html);
+        $this->assertStringContainsString(e(__('mail.launch_action')), $html);
+        $this->assertStringContainsString(e(__('mail.launch_tagline')), $html);
+        $this->assertStringContainsString(e(__('mail.launch_closing')), $html);
         $this->assertStringContainsString('Amina', $html);
+        $this->assertStringContainsString('https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test', $html);
+        $this->assertStringContainsString(__('mail.launch_unsubscribe'), $html);
+        $this->assertStringContainsString('role="presentation"', $html);
+        $this->assertStringContainsString('v:roundrect', $html);
+        $this->assertStringContainsString(__('mail.logo_alt'), $html);
+        $this->assertStringNotContainsString('display:flex', $html);
+        $this->assertStringNotContainsString('display:grid', $html);
         $this->assertStringNotContainsString('waiting list', strtolower($html));
-        $this->assertStringNotContainsString('Unsubscribe', $html);
+        $this->assertStringNotContainsString('News from Mutqin', $html);
         $this->assertStringNotContainsString('signed up at mutqin.ai', strtolower($html));
+        $this->assertStringContainsString('Start Memorising: https://mutqin.ai', $text);
+        $this->assertStringContainsString('Amina', $text);
+        $this->assertStringContainsString('https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test', $text);
+        $this->assertStringNotContainsString('&#039;', $text);
     }
 }

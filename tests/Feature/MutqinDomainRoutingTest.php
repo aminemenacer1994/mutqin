@@ -76,45 +76,56 @@ class MutqinDomainRoutingTest extends TestCase
         return $this->getOnHost('app.mutqin.ai', $uri);
     }
 
-    public function test_marketing_host_root_and_waiting_list_are_the_only_public_pages(): void
+    public function test_marketing_host_serves_the_application_and_blocks_waiting_list(): void
     {
         $this->onMarketingHost('/')
             ->assertOk()
-            ->assertSee('<homepage', false);
+            ->assertSee('<homepage', false)
+            ->assertSee('id="primaryNavbar"', false)
+            ->assertDontSee('nav-link-waiting-list', false)
+            ->assertDontSee('class="mutqin-early-access-nav"', false);
 
         $this->onMarketingHost('/waiting-list')
-            ->assertOk()
-            ->assertSee('waiting-list-page', false);
+            ->assertRedirect('https://mutqin.ai/');
     }
 
-    public function test_marketing_host_redirects_other_public_pages_to_app_host(): void
+    public function test_marketing_host_keeps_public_pages_on_mutqin_ai(): void
     {
         $this->onMarketingHost('/pricing')
-            ->assertRedirect('https://app.mutqin.ai/pricing');
+            ->assertOk();
 
         $this->onMarketingHost('/about')
-            ->assertRedirect('https://app.mutqin.ai/about');
+            ->assertOk();
     }
 
-    public function test_marketing_host_redirects_application_paths_to_app_host(): void
+    public function test_marketing_host_keeps_application_paths_on_mutqin_ai(): void
     {
         $this->onMarketingHost('/login')
-            ->assertRedirect('https://app.mutqin.ai/login');
+            ->assertOk();
 
         $this->onMarketingHost('/memorisation')
-            ->assertRedirect('https://app.mutqin.ai/memorisation');
+            ->assertOk();
 
-        $this->onMarketingHost('/admin/waiting-list')
-            ->assertRedirect('https://app.mutqin.ai/admin/waiting-list');
+        $admin = $this->onMarketingHost('/admin/waiting-list');
+        $admin->assertRedirect();
+        $location = (string) $admin->headers->get('Location');
+        $this->assertStringContainsString('/login', $location);
+        $this->assertStringNotContainsString('app.mutqin.ai', $location);
     }
 
-    public function test_app_host_keeps_login_and_memorisation_routes(): void
+    public function test_app_host_redirects_to_the_apex_host(): void
     {
         $this->onAppHost('/login')
-            ->assertOk();
+            ->assertStatus(301)
+            ->assertRedirect('https://mutqin.ai/login');
 
-        $this->onAppHost('/memorisation/demo')
-            ->assertOk();
+        $this->onAppHost('/memorisation')
+            ->assertStatus(301)
+            ->assertRedirect('https://mutqin.ai/memorisation');
+
+        $this->onAppHost('/')
+            ->assertStatus(301)
+            ->assertRedirect('https://mutqin.ai/');
     }
 
     public function test_marketing_host_serves_robots_and_sitemap(): void
@@ -127,8 +138,9 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertOk()
             ->assertSee('<urlset', false)
             ->assertSee('https://mutqin.ai/', false)
-            ->assertSee('https://app.mutqin.ai/about', false)
-            ->assertSee('https://mutqin.ai/waiting-list', false);
+            ->assertSee('https://mutqin.ai/about', false)
+            ->assertDontSee('https://mutqin.ai/waiting-list', false)
+            ->assertDontSee('https://app.mutqin.ai/about', false);
     }
 
     public function test_www_marketing_host_redirects_to_apex(): void
@@ -138,9 +150,9 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertRedirect('https://mutqin.ai/');
     }
 
-    public function test_app_host_homepage_shows_full_navigation(): void
+    public function test_marketing_host_homepage_shows_full_navigation(): void
     {
-        $this->onAppHost('/')
+        $this->onMarketingHost('/')
             ->assertOk()
             ->assertSee('<homepage', false)
             ->assertSee('rel="canonical" href="https://mutqin.ai/"', false)
@@ -152,14 +164,15 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertSee('class="nav-link nav-link-about', false)
             ->assertSee('class="nav-link nav-link-home', false)
             ->assertDontSee('class="mutqin-early-access-nav"', false)
-            ->assertDontSee('id="earlyAccessNavbar"', false);
+            ->assertDontSee('id="earlyAccessNavbar"', false)
+            ->assertDontSee('nav-link-waiting-list', false);
     }
 
     public function test_marketing_and_app_hosts_serve_the_same_fixed_service_worker(): void
     {
         $expected = file_get_contents(public_path('sw.js'));
         $this->assertNotFalse($expected);
-        $this->assertStringContainsString('mutqin-shell-v97', $expected);
+        $this->assertStringContainsString('mutqin-shell-v98', $expected);
         $this->assertStringNotContainsString('isSameOrigin || isQuranApi', $expected);
 
         $marketing = $this->onMarketingHost('/sw.js');
@@ -167,11 +180,11 @@ class MutqinDomainRoutingTest extends TestCase
         $marketingBody = method_exists($marketing, 'streamedContent')
             ? (string) $marketing->streamedContent()
             : (string) $marketing->getContent();
-        $this->assertStringContainsString('mutqin-shell-v97', $marketingBody);
+        $this->assertStringContainsString('mutqin-shell-v98', $marketingBody);
 
         // app.mutqin.ai serves public/sw.js from the web root in production; assert the
         // on-disk worker both hosts deploy (same release artifact).
-        $this->assertStringContainsString('mutqin-shell-v97', $expected);
+        $this->assertStringContainsString('mutqin-shell-v98', $expected);
     }
 
     public function test_marketing_host_serves_public_mix_assets_same_origin(): void
@@ -186,10 +199,12 @@ class MutqinDomainRoutingTest extends TestCase
 
     public function test_vue_shell_on_both_hosts_loads_app_bundle(): void
     {
-        foreach (['mutqin.ai', 'app.mutqin.ai'] as $host) {
-            $html = (string) $this->getOnHost($host, '/')->getContent();
-            $this->assertStringContainsString('/js/app.js', $html, "Expected app.js on {$host}");
-            $this->assertStringContainsString('<homepage', $html, "Expected Vue homepage on {$host}");
-        }
+        $html = (string) $this->onMarketingHost('/')->getContent();
+        $this->assertStringContainsString('/js/app.js', $html);
+        $this->assertStringContainsString('<homepage', $html);
+
+        $this->onAppHost('/')
+            ->assertStatus(301)
+            ->assertRedirect('https://mutqin.ai/');
     }
 }

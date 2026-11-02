@@ -151,7 +151,6 @@ class SeoVerifyCommand extends Command
 
         $requiredSnippets = [
             '/',
-            '/waiting-list',
             '/about',
             '/features',
             '/guides',
@@ -235,7 +234,6 @@ class SeoVerifyCommand extends Command
     {
         $samples = [
             ['/', true, 'Quran Memorization'],
-            ['/waiting-list', true, null],
             ['/about', true, null],
             ['/features/ai-recite', true, 'AI'],
             ['/guides/quran-memorization-techniques', true, 'memorize'],
@@ -305,6 +303,21 @@ class SeoVerifyCommand extends Command
             }
         }
 
+        $waitingList = $this->getLocal('/waiting-list');
+        $waitingLocation = (string) ($waitingList?->headers->get('Location') ?? '');
+        $waitingPath = parse_url($waitingLocation, PHP_URL_PATH);
+        $waitingPath = is_string($waitingPath) && $waitingPath !== '' ? rtrim($waitingPath, '/') : '/';
+        if ($waitingPath === '') {
+            $waitingPath = '/';
+        }
+        if ($waitingList === null
+            || ! $waitingList->isRedirection()
+            || $waitingPath !== '/'
+            || str_contains($waitingLocation, 'waiting-list')
+        ) {
+            $failures[] = '/waiting-list must redirect to /';
+        }
+
         $this->record(
             'local_http_documents',
             $failures === [],
@@ -322,9 +335,9 @@ class SeoVerifyCommand extends Command
 
         $checks = [
             [$marketing.'/robots.txt', 200, ['Allow: /', 'Sitemap:', 'Disallow: /login'], false],
-            [$marketing.'/sitemap.xml', 200, ['<urlset', '/waiting-list', '/tools/'], false],
+            [$marketing.'/sitemap.xml', 200, ['<urlset', '/about', '/tools/'], false],
             [$marketing.'/', 200, ['<title>', 'rel="canonical"', 'name="description"'], true],
-            [$marketing.'/waiting-list', 200, ['<title>', 'canonical'], true],
+            [$marketing.'/waiting-list', 302, [], false],
             [$app.'/about', 200, ['<title>', 'canonical', 'index, follow'], true],
             [$app.'/features/ai-recite', 200, ['<title>', 'application/ld+json'], true],
             [$app.'/guides/quran-memorization-techniques', 200, ['<title>', 'seo-ssr'], true],

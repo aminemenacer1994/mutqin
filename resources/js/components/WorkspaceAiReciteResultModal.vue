@@ -202,7 +202,11 @@
                             }"
                             :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
                           >
-                            <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                            <span
+                              class="post-session-simple__quran-token-text"
+                              :data-madani-glyph="part.madaniGlyph ? 'true' : null"
+                              :style="part.fontFamily ? { '--madani-glyph-font': `'${part.fontFamily}', serif` } : null"
+                            >{{ part.text }}</span>
                           </span>
                         </span>
                       </div>
@@ -245,7 +249,11 @@
                             'is-omitted': entry.tone === 'omitted',
                             'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
                           }"
-                        >{{ entry.text }}<template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
+                        ><span
+                          class="post-session-simple__quran-token-text"
+                          :data-madani-glyph="entry.madaniGlyph ? 'true' : null"
+                          :style="entry.fontFamily ? { '--madani-glyph-font': `'${entry.fontFamily}', serif` } : null"
+                        >{{ entry.text }}</span><template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
                       </span>
                       <span
                         v-else-if="row.wordsLabel"

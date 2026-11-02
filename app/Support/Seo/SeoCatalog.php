@@ -144,7 +144,7 @@ final class SeoCatalog
         $lines = [
             'User-agent: *',
             'Allow: /',
-            'Allow: /waiting-list',
+            'Disallow: /waiting-list',
             'Allow: /about',
             'Allow: /pricing',
             'Allow: /privacy',
@@ -216,11 +216,12 @@ final class SeoCatalog
             return rtrim((string) config('app.url'), '/').($path === '/' ? '/' : $path);
         }
 
-        if ($hostRole === 'marketing') {
+        // Public URLs live on mutqin.ai, including pages that used to be app-host only.
+        if ($hostRole === 'marketing' || $hostRole === 'app') {
             return MutqinDomains::marketingUrl($path);
         }
 
-        return MutqinDomains::appUrl($path);
+        return MutqinDomains::marketingUrl($path);
     }
 
     /**
@@ -308,7 +309,7 @@ final class SeoCatalog
                 'paths' => ['/waiting-list'],
                 'canonical_path' => '/waiting-list',
                 'canonical_host' => 'marketing',
-                'indexable' => true,
+                'indexable' => false,
                 'priority' => '0.8',
                 'changefreq' => 'weekly',
                 'title' => 'Join the Mutqin Waiting List | Quran Memorization App',

@@ -226,6 +226,24 @@ class MemorisationLearningHistoryTest extends TestCase
         ]);
     }
 
+    public function test_adjusting_an_active_plan_does_not_reset_its_status(): void
+    {
+        $user = User::factory()->pro()->create();
+        $create = $this->actingAs($user)->postJson('/api/memorisation/assessments', $this->assessmentPayload())
+            ->assertCreated();
+        $planId = (int) $create->json('practice_plan.id');
+
+        $this->actingAs($user)->postJson("/api/memorisation/practice-plans/{$planId}/start")
+            ->assertOk()
+            ->assertJsonPath('practice_plan.status', MemorisationPracticePlan::STATUS_ACTIVE);
+
+        $this->actingAs($user)->patchJson("/api/memorisation/practice-plans/{$planId}", [
+            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+        ])->assertOk()
+            ->assertJsonPath('practice_plan.status', MemorisationPracticePlan::STATUS_ACTIVE)
+            ->assertJsonPath('practice_plan.practice_scope', MemorisationPracticePlan::SCOPE_FULL_RANGE);
+    }
+
     public function test_ownership_hides_other_users_attempt_detail(): void
     {
         $owner = User::factory()->pro()->create();

@@ -31,12 +31,11 @@
               </a>
               <a
                 v-else
-                href="/waiting-list"
+                href="/"
                 class="btn btn--primary"
-                @click="onSeoCta('waiting_list', '/waiting-list', t('homepage.waitlist.cta'))"
               >
-                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                {{ t('homepage.waitlist.cta') }}
+                <i class="bi bi-house-door" aria-hidden="true"></i>
+                {{ t('ui.home') }}
               </a>
               <a
                 v-if="showStartMemorisationCta"
@@ -458,7 +457,6 @@
             <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
             <a href="/our-mission">{{ t('homepage.footer.ourMission') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
-            <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
         </div>
         <div class="footer__bottom">
