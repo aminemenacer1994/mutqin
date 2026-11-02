@@ -18,11 +18,10 @@ class AuthPageRenderTest extends TestCase
             ->assertSee('<memorisation', false);
     }
 
-    public function test_guest_memorisation_workspace_stays_on_memorisation(): void
+    public function test_guest_memorisation_workspace_redirects_to_login(): void
     {
         $this->get(route('memorisation'))
-            ->assertOk()
-            ->assertSee('<memorisation', false);
+            ->assertRedirect(route('login'));
     }
 
     public function test_login_page_hides_demo_try_card_when_disabled(): void

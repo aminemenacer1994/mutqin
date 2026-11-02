@@ -99,7 +99,7 @@ class LoginController extends Controller
         $request->session()->forget('mutqin_theme_set');
 
         return redirect()
-            ->to(MutqinDomains::canonicalUrl('/memorisation'))
+            ->to(MutqinDomains::canonicalUrl('/login'))
             ->withCookie(cookie(Theme::COOKIE, Theme::DEFAULT_PREFERENCE, 60 * 24 * 365, null, null, false, false, false, 'lax'))
             ->withCookie(cookie(Theme::CHOSEN_COOKIE, '', -2628000, null, null, false, false, false, 'lax'));
     }

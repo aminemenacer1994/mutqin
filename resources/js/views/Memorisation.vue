@@ -411,26 +411,7 @@
     </div>
 
     <!-- Main Content -->
-    <div
-      v-if="appReady && !isLoggedIn"
-      class="main container guest-auth-shell"
-      role="main"
-    >
-      <AppStatus
-        variant="auth"
-        size="lg"
-        fill
-        icon="bi-person-lock"
-        :title="t('common.status.authTitle')"
-        :description="t('home.guestNote')"
-        :action-label="t('common.status.logIn')"
-        :action-href="loginUrl"
-        :secondary-action-label="t('common.register')"
-        @secondary-action="goToRegister"
-      />
-    </div>
-
-    <div v-else-if="appReady && isLoggedIn" class="main container-fluid" :class="{
+    <div v-if="appReady && (isLoggedIn || isDemoMode)" class="main container-fluid" :class="{
       'tools-open': showTools,
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,

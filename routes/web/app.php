@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 // Authentication routes (from laravel/ui)
 Auth::routes(['verify' => true]);
 
-// GET /logout must never render. Sign out when a session exists, then leave for memorisation.
+// GET /logout must never render. Sign out when a session exists, then leave for login.
 Route::get('/logout', function (Request $request) {
     return app(\App\Http\Controllers\Auth\LoginController::class)->logout($request);
 });
@@ -107,13 +107,6 @@ Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout
 Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
 
 Route::get('/memorisation', function (Request $request) {
-    $user = $request->user();
-    // Guests stay on this URL (logout lands here). Signed-in accounts still
-    // have to verify before the workspace opens.
-    if ($user instanceof User && ! $user->hasVerifiedEmail()) {
-        return redirect()->route('verification.notice');
-    }
-
     $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
     // Consumed here (not on /dashboard) so Welcome Back survives post-login overview.
     $justLoggedIn = (bool) $request->session()->pull('mutqin_just_logged_in', false);
@@ -122,7 +115,7 @@ Route::get('/memorisation', function (Request $request) {
         'justRegistered' => $justRegistered,
         'justLoggedIn' => $justLoggedIn,
     ]);
-})->name('memorisation');
+})->middleware(['auth', 'verified'])->name('memorisation');
 
 Route::get('/memorisation/demo', function () {
     return view('memorisation', ['demoMode' => true]);

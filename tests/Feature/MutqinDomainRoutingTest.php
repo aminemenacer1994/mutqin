@@ -104,7 +104,7 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertOk();
 
         $this->onMarketingHost('/memorisation')
-            ->assertOk();
+            ->assertRedirect(route('login'));
 
         $admin = $this->onMarketingHost('/admin/waiting-list');
         $admin->assertRedirect();

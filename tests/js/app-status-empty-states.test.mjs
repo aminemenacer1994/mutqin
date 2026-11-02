@@ -36,7 +36,7 @@ test('memorisation wires intentional empty and error states', () => {
   assert.match(js, /analyticsModalError/)
   assert.match(vue, /madaniPagesError/)
   assert.match(vue, /memorisation\.mushafLoad\.errorTitle/)
-  assert.match(vue, /common\.status\.authTitle/)
+  assert.doesNotMatch(vue, /guest-auth-shell/)
   assert.match(vue, /verse-arabic-missing/)
   assert.match(vue, /analyticsModalError/)
 })

@@ -258,7 +258,7 @@ class ThemePreferenceTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('logout'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('login'));
 
         $this->assertSame('light-mode', $user->fresh()->theme);
 
@@ -285,7 +285,7 @@ class ThemePreferenceTest extends TestCase
         $this->actingAs($user)
             ->withCookie('mutqin_theme', 'dark-mode')
             ->post(route('logout'))
-            ->assertRedirect(route('memorisation'))
+            ->assertRedirect(route('login'))
             ->assertCookie('mutqin_theme', 'sepia-mode', false);
     }
 }
