@@ -14,6 +14,7 @@ use App\Support\Theme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -50,7 +51,7 @@ class GoogleAuthController extends Controller
 
     public function redirect(): RedirectResponse
     {
-        if ($error = $this->googleConfigError()) {
+        if ($error = $this->googleConfigError() ?? $this->googleDatabaseError()) {
             return redirect()
                 ->route('login')
                 ->withErrors(['google' => $error]);
@@ -74,7 +75,7 @@ class GoogleAuthController extends Controller
 
     public function callback(): RedirectResponse
     {
-        if ($error = $this->googleConfigError()) {
+        if ($error = $this->googleConfigError() ?? $this->googleDatabaseError()) {
             return redirect()
                 ->route('login')
                 ->withErrors(['google' => $error]);
@@ -107,6 +108,8 @@ class GoogleAuthController extends Controller
                 ->route('register')
                 ->withErrors($exception->errors())
                 ->withInput($exception->validator->getData());
+        } catch (Throwable $exception) {
+            return $this->failCallback($exception, 'resolve');
         }
 
         RegistrationIntent::forget();
@@ -120,8 +123,15 @@ class GoogleAuthController extends Controller
                 ->withErrors(['google' => $result['error'] ?? GoogleSignInService::GENERIC_FAILURE]);
         }
 
-        $user = $result['user'];
-        $created = $result['created'];
+        try {
+            return $this->completeGoogleLogin($result['user'], $result['created']);
+        } catch (Throwable $exception) {
+            return $this->failCallback($exception, 'complete');
+        }
+    }
+
+    private function completeGoogleLogin(User $user, bool $created): RedirectResponse
+    {
         $linkingFromProfile = (bool) request()->session()->pull('google_link_intent');
 
         $user->touchLastLogin();
@@ -165,6 +175,19 @@ class GoogleAuthController extends Controller
         return redirect()->to(AuthRedirect::to($user, justRegistered: $created));
     }
 
+    private function failCallback(Throwable $exception, string $phase): RedirectResponse
+    {
+        Log::error('Google OAuth callback crashed', [
+            'phase' => $phase,
+            'message' => $exception->getMessage(),
+            'exception' => $exception::class,
+        ]);
+
+        return redirect()
+            ->route('login')
+            ->withErrors(['google' => GoogleSignInService::GENERIC_FAILURE]);
+    }
+
     private function googleProvider()
     {
         $provider = Socialite::driver('google')
@@ -201,6 +224,36 @@ class GoogleAuthController extends Controller
 
         if (! str_ends_with($clientId, '.apps.googleusercontent.com')) {
             return 'GOOGLE_CLIENT_ID looks invalid. Paste the full Client ID from Google Cloud Console (ends with .apps.googleusercontent.com).';
+        }
+
+        return null;
+    }
+
+    private function googleDatabaseError(): ?string
+    {
+        if (app()->environment('testing')) {
+            return null;
+        }
+
+        $driver = strtolower(trim((string) config('database.default', '')));
+        if (app()->environment('production') && $driver === 'sqlite') {
+            Log::error('auth.google.database_misconfigured', [
+                'driver' => $driver,
+            ]);
+
+            return 'Google sign-in is unavailable because the server database is not configured. Set DB_CONNECTION=mysql on Laravel Cloud, link MySQL, then run php artisan migrate --force.';
+        }
+
+        try {
+            DB::connection()->getPdo();
+            DB::select('select 1 as ok');
+        } catch (Throwable $exception) {
+            Log::error('auth.google.database_unavailable', [
+                'driver' => $driver,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return 'Google sign-in is temporarily unavailable. The application database is not reachable. Try again shortly.';
         }
 
         return null;
