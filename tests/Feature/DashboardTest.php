@@ -163,9 +163,16 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.snapshot.notes.value', 1)
             ->assertJsonPath('data.chart.days', 7);
 
-        $this->assertNotEmpty($response->json('data.weaknesses.items'));
-        $this->assertSame('Al-Fatihah', $response->json('data.weaknesses.items.0.surah_name'));
-        $this->assertSame(4, $response->json('data.weaknesses.items.0.ayah_number'));
+        $items = $response->json('data.weaknesses.items');
+        $this->assertNotEmpty($items);
+        // The AI recite weakness has a strength label, so it ranks ahead of the
+        // assessment ayah, which has no strength yet.
+        $this->assertSame('Al-Ikhlas', $items[0]['surah_name']);
+        $this->assertSame(2, $items[0]['ayah_number']);
+        $all = $response->json('data.weaknesses.all_items');
+        $this->assertTrue(collect($all)->contains(
+            fn ($item) => ($item['surah_name'] ?? '') === 'Al-Fatihah' && (int) ($item['ayah_number'] ?? 0) === 4
+        ));
     }
 
     public function test_continue_card_prioritises_unfinished_session(): void

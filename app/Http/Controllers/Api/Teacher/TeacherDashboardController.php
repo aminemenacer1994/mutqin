@@ -189,15 +189,32 @@ class TeacherDashboardController extends Controller
         abort_unless($access->allows($teacher, $student) && (int) $practicePlan->user_id === (int) $student->id, 404);
         abort_unless($practicePlan->status === MemorisationPracticePlan::STATUS_ACTIVE, 409);
 
-        MemorisationPracticePlan::query()
-            ->whereKey($practicePlan->id)
+        // The roster shows one row for an exact retry duplicate. Completing
+        // that row closes every matching active copy, not only the id clicked.
+        $duplicates = MemorisationPracticePlan::query()
             ->where('user_id', $student->id)
             ->where('status', MemorisationPracticePlan::STATUS_ACTIVE)
-            ->update([
-                'status' => MemorisationPracticePlan::STATUS_COMPLETED,
-                'completed_at' => now(),
-                'completion_outcome' => 'teacher_reviewed',
-            ]);
+            ->where('surah_number', $practicePlan->surah_number)
+            ->where('start_ayah', $practicePlan->start_ayah)
+            ->where('end_ayah', $practicePlan->end_ayah);
+        if ($practicePlan->recommended_review_at === null) {
+            $duplicates->whereNull('recommended_review_at');
+        } else {
+            $duplicates->where('recommended_review_at', $practicePlan->recommended_review_at);
+        }
+        $scope = $practicePlan->practice_scope;
+        if ($scope === null || $scope === '') {
+            $duplicates->where(function ($query) {
+                $query->whereNull('practice_scope')->orWhere('practice_scope', '');
+            });
+        } else {
+            $duplicates->where('practice_scope', $scope);
+        }
+        $duplicates->update([
+            'status' => MemorisationPracticePlan::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'completion_outcome' => 'teacher_reviewed',
+        ]);
 
         return $this->json(['id' => (int) $practicePlan->id, 'status' => MemorisationPracticePlan::STATUS_COMPLETED]);
     }

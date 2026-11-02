@@ -17,7 +17,7 @@ class MushafLayoutRegistryTest extends TestCase
         $indopak = MushafLayoutRegistry::get('indopak-15-qudratullah');
 
         $this->assertSame('madani-v2', $madani->id);
-        $this->assertSame('Madani', $madani->name);
+        $this->assertSame('KFGQPC V2 (1421H)', $madani->name);
         $this->assertSame('V2', $madani->variant);
         $this->assertSame(604, $madani->pageCount);
         $this->assertSame(15, $madani->defaultLinesPerPage);
@@ -25,7 +25,7 @@ class MushafLayoutRegistryTest extends TestCase
         $this->assertSame('QCF2', $madani->fontFamily);
 
         $this->assertSame('indopak-15-qudratullah', $indopak->id);
-        $this->assertSame('IndoPak 15 Lines', $indopak->name);
+        $this->assertSame('Indopak 15 lines (Qudratullah)', $indopak->name);
         $this->assertSame('Qudratullah', $indopak->variant);
         $this->assertSame(610, $indopak->pageCount);
         $this->assertSame(15, $indopak->defaultLinesPerPage);

@@ -337,12 +337,28 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     }
 
     /**
-     * The admin navigation item is visible only for this mailbox.
+     * Admin navigation is limited to the configured owner mailboxes.
+     * The address lives in config, not in this class.
      */
     public function showsAdminNavigation(): bool
     {
-        return strtolower(trim((string) $this->email)) === 'menacer72@gmail.com'
-            && $this->isAdmin();
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        $owners = config('mutqin.admin_navigation_emails', []);
+        if (! is_array($owners) || $owners === []) {
+            return true;
+        }
+
+        $email = strtolower(trim((string) $this->email));
+        foreach ($owners as $owner) {
+            if ($email === strtolower(trim((string) $owner))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function scopeWithoutSeededDemoAccounts($query)

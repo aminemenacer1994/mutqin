@@ -207,24 +207,24 @@ class TeacherFeaturesTest extends TestCase
         ]);
 
         $kernel = $this->app->make(HttpKernel::class);
-        $marketing = Request::create('/teacher', 'GET', [], [], [], [
-            'HTTP_HOST' => 'mutqin.ai',
+        $legacyAppHost = Request::create('/teacher', 'GET', [], [], [], [
+            'HTTP_HOST' => 'app.mutqin.ai',
             'HTTPS' => 'on',
-            'SERVER_NAME' => 'mutqin.ai',
+            'SERVER_NAME' => 'app.mutqin.ai',
         ]);
-        $marketing->setUserResolver(fn () => $teacher);
-        $marketingResponse = $kernel->handle($marketing);
-        $kernel->terminate($marketing, $marketingResponse);
+        $legacyAppHost->setUserResolver(fn () => $teacher);
+        $legacyResponse = $kernel->handle($legacyAppHost);
+        $kernel->terminate($legacyAppHost, $legacyResponse);
 
-        $this->assertTrue($marketingResponse->isRedirection());
-        $this->assertSame('https://app.mutqin.ai/teacher', (string) $marketingResponse->headers->get('Location'));
-        $this->assertStringNotContainsString('teacher-dashboard', (string) $marketingResponse->getContent());
+        $this->assertTrue($legacyResponse->isRedirection());
+        $this->assertSame('https://mutqin.ai/teacher', (string) $legacyResponse->headers->get('Location'));
+        $this->assertStringNotContainsString('teacher-dashboard', (string) $legacyResponse->getContent());
 
         $this->actingAs($teacher)
-            ->call('GET', 'https://app.mutqin.ai/teacher', [], [], [], [
-                'HTTP_HOST' => 'app.mutqin.ai',
+            ->call('GET', 'https://mutqin.ai/teacher', [], [], [], [
+                'HTTP_HOST' => 'mutqin.ai',
                 'HTTPS' => 'on',
-                'SERVER_NAME' => 'app.mutqin.ai',
+                'SERVER_NAME' => 'mutqin.ai',
             ])
             ->assertNotFound()
             ->assertDontSee('teacher-dashboard', false);

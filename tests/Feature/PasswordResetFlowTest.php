@@ -455,11 +455,10 @@ class PasswordResetFlowTest extends TestCase
             'password_confirmation' => 'new-secure-password',
         ])->assertRedirect('/memorisation');
 
-        $log = file_exists(storage_path('logs/laravel.log'))
-            ? file_get_contents(storage_path('logs/laravel.log'))
-            : '';
-
-        $this->assertStringNotContainsString($token, (string) $log);
+        $this->assertFalse(
+            $this->logFileContains(storage_path('logs/laravel.log'), $token),
+            'Password reset tokens must not be written to the application log.'
+        );
         $this->assertDatabaseMissing('password_reset_tokens', [
             'email' => $user->email,
         ]);
@@ -512,5 +511,39 @@ class PasswordResetFlowTest extends TestCase
         $this->get('/password/reset/'.rawurlencode('%%%broken%%%'))
             ->assertOk()
             ->assertSee(__('ui.new_password_title'));
+    }
+
+    /**
+     * Scan a log in chunks so a large local laravel.log cannot exhaust memory.
+     */
+    private function logFileContains(string $path, string $needle): bool
+    {
+        if ($needle === '' || ! is_file($path)) {
+            return false;
+        }
+
+        $handle = fopen($path, 'rb');
+        if ($handle === false) {
+            return false;
+        }
+
+        $overlap = '';
+        $tail = max(0, strlen($needle) - 1);
+        try {
+            while (! feof($handle)) {
+                $chunk = fread($handle, 1024 * 1024);
+                if (! is_string($chunk) || $chunk === '') {
+                    continue;
+                }
+                if (str_contains($overlap.$chunk, $needle)) {
+                    return true;
+                }
+                $overlap = $tail > 0 ? substr($chunk, -$tail) : '';
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return false;
     }
 }

@@ -203,7 +203,7 @@ const startedCtx = {
   assert.match(memorisationSource, /flushSavedSessionAutosave\s*\(/)
   assert.match(memorisationSource, /this\.scheduleLearningSync\(\)\s*\n\s*this\.scheduleSessionCheckpoint\(\)\s*\n\s*this\.scheduleSavedSessionAutosave\(\)/)
   assert.match(memorisationSource, /this\.sessionBroadcast\?\.publish\('session-started'[\s\S]{0,280}scheduleSavedSessionAutosave/)
-  assert.match(memorisationSource, /applyBackendStartResult\([\s\S]{0,500}scheduleSavedSessionAutosave/)
+  assert.match(memorisationSource, /applyBackendStartResult\(result\) \{[\s\S]{0,1200}?this\.scheduleSavedSessionAutosave\(\{ immediate: true \}\)/)
   assert.match(memorisationSource, /this\.sessionBroadcast\?\.publish\('session-paused'[\s\S]{0,220}upsertAutosavedSession\(\{\s*immediate:\s*true/)
   assert.match(memorisationSource, /saveSessionForLaterFromExitModal\([\s\S]*?upsertAutosavedSession\(\{\s*immediate:\s*true/)
   assert.match(memorisationSource, /upsertAutosavedSession\(\{\s*completed:\s*(?:true|rangeComplete),\s*immediate:\s*true\s*\}\)/)

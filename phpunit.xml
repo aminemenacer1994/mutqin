@@ -28,8 +28,14 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="AUTH_REQUIRE_EMAIL_VERIFICATION" value="false"/>
-        <env name="MAIL_PREVIEW_ENABLED" value="false"/>
-        <env name="MAIL_PREVIEW_RECIPIENTS" value=""/>
+        <env name="MAIL_PREVIEW_ENABLED" value="false" force="true"/>
+        <env name="MAIL_PREVIEW_RECIPIENTS" value="" force="true"/>
+        <env name="ACKEE_ENABLED" value="false" force="true"/>
+        <env name="ACKEE_ALLOW_LOCALHOST" value="false" force="true"/>
+        <env name="ACKEE_SERVER" value="" force="true"/>
+        <env name="ACKEE_DOMAIN_ID_WEBSITE" value="" force="true"/>
+        <env name="ACKEE_DOMAIN_ID_APP" value="" force="true"/>
+        <env name="ACKEE_EVENT_ID" value="" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

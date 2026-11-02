@@ -1,0 +1,1331 @@
+{
+  "source": {
+    "provider": "alquran.cloud",
+    "arabic_edition": "quran-uthmani",
+    "translation_edition": "en.asad",
+    "transliteration_edition": "en.transliteration",
+    "mushaf": "Madani (page numbers from Al Quran Cloud Uthmani metadata)",
+    "authority_note": "Pinned verbatim from Al Quran Cloud API. Do not edit Arabic text by hand or via AI."
+  },
+  "totals": {
+    "surahs": 114,
+    "ayahs": 6236,
+    "pages": 604,
+    "juz": 30,
+    "hizb": 60,
+    "hizb_quarters": 240
+  },
+  "ayah_counts": [
+    7,
+    286,
+    200,
+    176,
+    120,
+    165,
+    206,
+    75,
+    129,
+    109,
+    123,
+    111,
+    43,
+    52,
+    99,
+    128,
+    111,
+    110,
+    98,
+    135,
+    112,
+    78,
+    118,
+    64,
+    77,
+    227,
+    93,
+    88,
+    69,
+    60,
+    34,
+    30,
+    73,
+    54,
+    45,
+    83,
+    182,
+    88,
+    75,
+    85,
+    54,
+    53,
+    89,
+    59,
+    37,
+    35,
+    38,
+    29,
+    18,
+    45,
+    60,
+    49,
+    62,
+    55,
+    78,
+    96,
+    29,
+    22,
+    24,
+    13,
+    14,
+    11,
+    11,
+    18,
+    12,
+    12,
+    30,
+    52,
+    52,
+    44,
+    28,
+    28,
+    20,
+    56,
+    40,
+    31,
+    50,
+    40,
+    46,
+    42,
+    29,
+    19,
+    36,
+    25,
+    22,
+    17,
+    19,
+    26,
+    30,
+    20,
+    15,
+    21,
+    11,
+    8,
+    8,
+    19,
+    5,
+    8,
+    8,
+    11,
+    11,
+    8,
+    3,
+    9,
+    5,
+    4,
+    7,
+    3,
+    6,
+    3,
+    5,
+    4,
+    5,
+    6
+  ],
+  "selected_ayahs": [
+    {
+      "key": "1:1",
+      "surah": 1,
+      "ayah": 1,
+      "global_number": 1,
+      "page": 1,
+      "juz": 1,
+      "hizb_quarter": 1,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+      "translation_en_asad": "In the name of God, The Most Gracious, The Dispenser of Grace:",
+      "transliteration": "Bismillaahir Rahmaanir Raheem"
+    },
+    {
+      "key": "1:2",
+      "surah": 1,
+      "ayah": 2,
+      "global_number": 2,
+      "page": 1,
+      "juz": 1,
+      "hizb_quarter": 1,
+      "uthmani": "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+      "translation_en_asad": "All praise is due to God alone, the Sustainer of all the worlds,",
+      "transliteration": "Alhamdu lillaahi Rabbil 'aalameen"
+    },
+    {
+      "key": "1:7",
+      "surah": 1,
+      "ayah": 7,
+      "global_number": 7,
+      "page": 1,
+      "juz": 1,
+      "hizb_quarter": 1,
+      "uthmani": "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ",
+      "translation_en_asad": "The way of those upon whom Thou hast bestowed Thy blessings, not of those who have been condemned [by Thee], nor of those who go astray!",
+      "transliteration": "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen"
+    },
+    {
+      "key": "2:1",
+      "surah": 2,
+      "ayah": 1,
+      "global_number": 8,
+      "page": 2,
+      "juz": 1,
+      "hizb_quarter": 1,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ الٓمٓ",
+      "translation_en_asad": "Alif. Lam. Mim.",
+      "transliteration": "Alif-Laaam-Meeem"
+    },
+    {
+      "key": "2:2",
+      "surah": 2,
+      "ayah": 2,
+      "global_number": 9,
+      "page": 2,
+      "juz": 1,
+      "hizb_quarter": 1,
+      "uthmani": "ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًۭى لِّلْمُتَّقِينَ",
+      "translation_en_asad": "THIS DIVINE WRIT - let there be no doubt about it is [meant to be] a guidance for all the God-conscious.",
+      "transliteration": "Zaalikal Kitaabu laa raiba feeh; udal lilmuttaqeen"
+    },
+    {
+      "key": "2:255",
+      "surah": 2,
+      "ayah": 255,
+      "global_number": 262,
+      "page": 42,
+      "juz": 3,
+      "hizb_quarter": 17,
+      "uthmani": "ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌۭ وَلَا نَوْمٌۭ ۚ لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ وَمَا فِى ٱلْأَرْضِ ۗ مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَىْءٍۢ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ ۖ وَلَا يَـُٔودُهُۥ حِفْظُهُمَا ۚ وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ",
+      "translation_en_asad": "GOD - there is no deity save Him, the Ever-Living, the Self-Subsistent Fount of All Being. Neither slumber overtakes Him, nor sleep. His is all that is in the heavens and all that is on earth. Who is there that could intercede with Him, unless it be by His leave? He knows all that lies open before men and all that is hidden from them, whereas they cannot attain to aught of His knowledge save that which He wills [them to attain]. His eternal power overspreads the heavens and the earth, and their upholding wearies Him not. And he alone is truly exalted, tremendous.",
+      "transliteration": "Allahu laaa ilaaha illaa Huwal Haiyul Qaiyoom; laa taakhuzuhoo sinatunw wa laa nawm; lahoo maa fissamaawaati wa maa fil ard; man zal lazee yashfa'u indahooo illaa bi-iznih; ya'lamu maa baina aydeehim wa mww khalfahum wa laa yuheetoona bishai'im min 'ilmihee illaa bimaa shaaa'; wasi'a Kursiyyuhus samaawaati wal arda wa laa ya'ooduho hifzuhumaa; wa Huwal Aliyyul 'Azeem"
+    },
+    {
+      "key": "9:1",
+      "surah": 9,
+      "ayah": 1,
+      "global_number": 1236,
+      "page": 187,
+      "juz": 10,
+      "hizb_quarter": 75,
+      "uthmani": "بَرَآءَةٌۭ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلْمُشْرِكِينَ",
+      "translation_en_asad": "DISAVOWAL by God and His Apostle [is herewith announced] unto those who ascribe divinity to aught beside God, [and] with whom you [O: believers] have made a covenant.",
+      "transliteration": "Baraaa'atum minal laahi wa Rasooliheee ilal lazeena 'anhattum minal mushrikeen"
+    },
+    {
+      "key": "9:128",
+      "surah": 9,
+      "ayah": 128,
+      "global_number": 1363,
+      "page": 207,
+      "juz": 11,
+      "hizb_quarter": 83,
+      "uthmani": "لَقَدْ جَآءَكُمْ رَسُولٌۭ مِّنْ أَنفُسِكُمْ عَزِيزٌ عَلَيْهِ مَا عَنِتُّمْ حَرِيصٌ عَلَيْكُم بِٱلْمُؤْمِنِينَ رَءُوفٌۭ رَّحِيمٌۭ",
+      "translation_en_asad": "INDEED, there has come unto you [O mankind] an Apostle from among yourselves: heavily weighs -upon him [the thought] that you might suffer [in the life to come]; full of concern for you [is he, and] full of compassion and mercy towards the believers.",
+      "transliteration": "Laqad jaaa'akum Rasoolum min anfusikum 'azeezun 'alaihi maa 'anittum hareesun 'alaikum bilmu'mineena ra'oofur raheem"
+    },
+    {
+      "key": "9:129",
+      "surah": 9,
+      "ayah": 129,
+      "global_number": 1364,
+      "page": 207,
+      "juz": 11,
+      "hizb_quarter": 83,
+      "uthmani": "فَإِن تَوَلَّوْا۟ فَقُلْ حَسْبِىَ ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ۖ عَلَيْهِ تَوَكَّلْتُ ۖ وَهُوَ رَبُّ ٱلْعَرْشِ ٱلْعَظِيمِ",
+      "translation_en_asad": "But if those [who are bent on denying the truth] turn away, say: \"God is enough for me! There is no- deity save Him. In Him have I placed my trust, for He is the Sustainer, in awesome almightiness enthroned.\"",
+      "transliteration": "Fa in tawallaw faqul lhasbiyal laahu laaa ilaaha illaa Huwa 'alaihi tawakkkaltu wa Huwa Rabbul 'Arshil 'Azeem"
+    },
+    {
+      "key": "36:1",
+      "surah": 36,
+      "ayah": 1,
+      "global_number": 3706,
+      "page": 440,
+      "juz": 22,
+      "hizb_quarter": 176,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ يسٓ",
+      "translation_en_asad": "O THOU human being!",
+      "transliteration": "Yaa-Seeen"
+    },
+    {
+      "key": "55:1",
+      "surah": 55,
+      "ayah": 1,
+      "global_number": 4902,
+      "page": 531,
+      "juz": 27,
+      "hizb_quarter": 213,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ٱلرَّحْمَٰنُ",
+      "translation_en_asad": "THE MOST GRACIOUS",
+      "transliteration": "Ar Rahmaan"
+    },
+    {
+      "key": "67:1",
+      "surah": 67,
+      "ayah": 1,
+      "global_number": 5242,
+      "page": 562,
+      "juz": 29,
+      "hizb_quarter": 225,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ تَبَٰرَكَ ٱلَّذِى بِيَدِهِ ٱلْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَىْءٍۢ قَدِيرٌ",
+      "translation_en_asad": "HALLOWED be He in whose hand all dominion rests, since He has the power to will anything:",
+      "transliteration": "Tabaarakal lazee biyadihil mulku wa huwa 'alaa kulli shai-in qadeer"
+    },
+    {
+      "key": "78:1",
+      "surah": 78,
+      "ayah": 1,
+      "global_number": 5673,
+      "page": 582,
+      "juz": 30,
+      "hizb_quarter": 233,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ عَمَّ يَتَسَآءَلُونَ",
+      "translation_en_asad": "ABOUT WHAT do they [most often] ask one another?",
+      "transliteration": "'Amma Yatasaa-aloon"
+    },
+    {
+      "key": "112:1",
+      "surah": 112,
+      "ayah": 1,
+      "global_number": 6222,
+      "page": 604,
+      "juz": 30,
+      "hizb_quarter": 240,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ قُلْ هُوَ ٱللَّهُ أَحَدٌ",
+      "translation_en_asad": "SAY: \"He is the One God:",
+      "transliteration": "Qul huwal laahu ahad"
+    },
+    {
+      "key": "112:4",
+      "surah": 112,
+      "ayah": 4,
+      "global_number": 6225,
+      "page": 604,
+      "juz": 30,
+      "hizb_quarter": 240,
+      "uthmani": "وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ",
+      "translation_en_asad": "\"and there is nothing that could be compared with Him.",
+      "transliteration": "Wa lam yakul-lahu kufuwan ahad"
+    },
+    {
+      "key": "113:1",
+      "surah": 113,
+      "ayah": 1,
+      "global_number": 6226,
+      "page": 604,
+      "juz": 30,
+      "hizb_quarter": 240,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ",
+      "translation_en_asad": "SAY: \"I seek refuge with the Sustainer of the rising dawn,",
+      "transliteration": "Qul a'uzoo bi rabbil-falaq"
+    },
+    {
+      "key": "114:1",
+      "surah": 114,
+      "ayah": 1,
+      "global_number": 6231,
+      "page": 604,
+      "juz": 30,
+      "hizb_quarter": 240,
+      "uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ",
+      "translation_en_asad": "SAY: \"I seek refuge with the Sustainer of men,",
+      "transliteration": "Qul a'uzu birabbin naas"
+    },
+    {
+      "key": "114:6",
+      "surah": 114,
+      "ayah": 6,
+      "global_number": 6236,
+      "page": 604,
+      "juz": 30,
+      "hizb_quarter": 240,
+      "uthmani": "مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ",
+      "translation_en_asad": "\"from all [temptation to evil by] invisible forces as well as men,\"",
+      "transliteration": "Minal jinnati wan naas"
+    }
+  ],
+  "page_pins": [
+    {
+      "page": 1,
+      "ayah_count": 7,
+      "first_key": "1:1",
+      "last_key": "1:7",
+      "first_global": 1,
+      "last_global": 7,
+      "juz": 1
+    },
+    {
+      "page": 2,
+      "ayah_count": 5,
+      "first_key": "2:1",
+      "last_key": "2:5",
+      "first_global": 8,
+      "last_global": 12,
+      "juz": 1
+    },
+    {
+      "page": 3,
+      "ayah_count": 11,
+      "first_key": "2:6",
+      "last_key": "2:16",
+      "first_global": 13,
+      "last_global": 23,
+      "juz": 1
+    },
+    {
+      "page": 49,
+      "ayah_count": 4,
+      "first_key": "2:283",
+      "last_key": "2:286",
+      "first_global": 290,
+      "last_global": 293,
+      "juz": 3
+    },
+    {
+      "page": 187,
+      "ayah_count": 6,
+      "first_key": "9:1",
+      "last_key": "9:6",
+      "first_global": 1236,
+      "last_global": 1241,
+      "juz": 10
+    },
+    {
+      "page": 603,
+      "ayah_count": 14,
+      "first_key": "109:1",
+      "last_key": "111:5",
+      "first_global": 6208,
+      "last_global": 6221,
+      "juz": 30
+    },
+    {
+      "page": 604,
+      "ayah_count": 15,
+      "first_key": "112:1",
+      "last_key": "114:6",
+      "first_global": 6222,
+      "last_global": 6236,
+      "juz": 30
+    }
+  ],
+  "surah_boundaries": [
+    {
+      "surah": 1,
+      "ayah_count": 7,
+      "first_global": 1,
+      "last_global": 7,
+      "first_key": "1:1",
+      "last_key": "1:7"
+    },
+    {
+      "surah": 2,
+      "ayah_count": 286,
+      "first_global": 8,
+      "last_global": 293,
+      "first_key": "2:1",
+      "last_key": "2:286"
+    },
+    {
+      "surah": 3,
+      "ayah_count": 200,
+      "first_global": 294,
+      "last_global": 493,
+      "first_key": "3:1",
+      "last_key": "3:200"
+    },
+    {
+      "surah": 4,
+      "ayah_count": 176,
+      "first_global": 494,
+      "last_global": 669,
+      "first_key": "4:1",
+      "last_key": "4:176"
+    },
+    {
+      "surah": 5,
+      "ayah_count": 120,
+      "first_global": 670,
+      "last_global": 789,
+      "first_key": "5:1",
+      "last_key": "5:120"
+    },
+    {
+      "surah": 6,
+      "ayah_count": 165,
+      "first_global": 790,
+      "last_global": 954,
+      "first_key": "6:1",
+      "last_key": "6:165"
+    },
+    {
+      "surah": 7,
+      "ayah_count": 206,
+      "first_global": 955,
+      "last_global": 1160,
+      "first_key": "7:1",
+      "last_key": "7:206"
+    },
+    {
+      "surah": 8,
+      "ayah_count": 75,
+      "first_global": 1161,
+      "last_global": 1235,
+      "first_key": "8:1",
+      "last_key": "8:75"
+    },
+    {
+      "surah": 9,
+      "ayah_count": 129,
+      "first_global": 1236,
+      "last_global": 1364,
+      "first_key": "9:1",
+      "last_key": "9:129"
+    },
+    {
+      "surah": 10,
+      "ayah_count": 109,
+      "first_global": 1365,
+      "last_global": 1473,
+      "first_key": "10:1",
+      "last_key": "10:109"
+    },
+    {
+      "surah": 11,
+      "ayah_count": 123,
+      "first_global": 1474,
+      "last_global": 1596,
+      "first_key": "11:1",
+      "last_key": "11:123"
+    },
+    {
+      "surah": 12,
+      "ayah_count": 111,
+      "first_global": 1597,
+      "last_global": 1707,
+      "first_key": "12:1",
+      "last_key": "12:111"
+    },
+    {
+      "surah": 13,
+      "ayah_count": 43,
+      "first_global": 1708,
+      "last_global": 1750,
+      "first_key": "13:1",
+      "last_key": "13:43"
+    },
+    {
+      "surah": 14,
+      "ayah_count": 52,
+      "first_global": 1751,
+      "last_global": 1802,
+      "first_key": "14:1",
+      "last_key": "14:52"
+    },
+    {
+      "surah": 15,
+      "ayah_count": 99,
+      "first_global": 1803,
+      "last_global": 1901,
+      "first_key": "15:1",
+      "last_key": "15:99"
+    },
+    {
+      "surah": 16,
+      "ayah_count": 128,
+      "first_global": 1902,
+      "last_global": 2029,
+      "first_key": "16:1",
+      "last_key": "16:128"
+    },
+    {
+      "surah": 17,
+      "ayah_count": 111,
+      "first_global": 2030,
+      "last_global": 2140,
+      "first_key": "17:1",
+      "last_key": "17:111"
+    },
+    {
+      "surah": 18,
+      "ayah_count": 110,
+      "first_global": 2141,
+      "last_global": 2250,
+      "first_key": "18:1",
+      "last_key": "18:110"
+    },
+    {
+      "surah": 19,
+      "ayah_count": 98,
+      "first_global": 2251,
+      "last_global": 2348,
+      "first_key": "19:1",
+      "last_key": "19:98"
+    },
+    {
+      "surah": 20,
+      "ayah_count": 135,
+      "first_global": 2349,
+      "last_global": 2483,
+      "first_key": "20:1",
+      "last_key": "20:135"
+    },
+    {
+      "surah": 21,
+      "ayah_count": 112,
+      "first_global": 2484,
+      "last_global": 2595,
+      "first_key": "21:1",
+      "last_key": "21:112"
+    },
+    {
+      "surah": 22,
+      "ayah_count": 78,
+      "first_global": 2596,
+      "last_global": 2673,
+      "first_key": "22:1",
+      "last_key": "22:78"
+    },
+    {
+      "surah": 23,
+      "ayah_count": 118,
+      "first_global": 2674,
+      "last_global": 2791,
+      "first_key": "23:1",
+      "last_key": "23:118"
+    },
+    {
+      "surah": 24,
+      "ayah_count": 64,
+      "first_global": 2792,
+      "last_global": 2855,
+      "first_key": "24:1",
+      "last_key": "24:64"
+    },
+    {
+      "surah": 25,
+      "ayah_count": 77,
+      "first_global": 2856,
+      "last_global": 2932,
+      "first_key": "25:1",
+      "last_key": "25:77"
+    },
+    {
+      "surah": 26,
+      "ayah_count": 227,
+      "first_global": 2933,
+      "last_global": 3159,
+      "first_key": "26:1",
+      "last_key": "26:227"
+    },
+    {
+      "surah": 27,
+      "ayah_count": 93,
+      "first_global": 3160,
+      "last_global": 3252,
+      "first_key": "27:1",
+      "last_key": "27:93"
+    },
+    {
+      "surah": 28,
+      "ayah_count": 88,
+      "first_global": 3253,
+      "last_global": 3340,
+      "first_key": "28:1",
+      "last_key": "28:88"
+    },
+    {
+      "surah": 29,
+      "ayah_count": 69,
+      "first_global": 3341,
+      "last_global": 3409,
+      "first_key": "29:1",
+      "last_key": "29:69"
+    },
+    {
+      "surah": 30,
+      "ayah_count": 60,
+      "first_global": 3410,
+      "last_global": 3469,
+      "first_key": "30:1",
+      "last_key": "30:60"
+    },
+    {
+      "surah": 31,
+      "ayah_count": 34,
+      "first_global": 3470,
+      "last_global": 3503,
+      "first_key": "31:1",
+      "last_key": "31:34"
+    },
+    {
+      "surah": 32,
+      "ayah_count": 30,
+      "first_global": 3504,
+      "last_global": 3533,
+      "first_key": "32:1",
+      "last_key": "32:30"
+    },
+    {
+      "surah": 33,
+      "ayah_count": 73,
+      "first_global": 3534,
+      "last_global": 3606,
+      "first_key": "33:1",
+      "last_key": "33:73"
+    },
+    {
+      "surah": 34,
+      "ayah_count": 54,
+      "first_global": 3607,
+      "last_global": 3660,
+      "first_key": "34:1",
+      "last_key": "34:54"
+    },
+    {
+      "surah": 35,
+      "ayah_count": 45,
+      "first_global": 3661,
+      "last_global": 3705,
+      "first_key": "35:1",
+      "last_key": "35:45"
+    },
+    {
+      "surah": 36,
+      "ayah_count": 83,
+      "first_global": 3706,
+      "last_global": 3788,
+      "first_key": "36:1",
+      "last_key": "36:83"
+    },
+    {
+      "surah": 37,
+      "ayah_count": 182,
+      "first_global": 3789,
+      "last_global": 3970,
+      "first_key": "37:1",
+      "last_key": "37:182"
+    },
+    {
+      "surah": 38,
+      "ayah_count": 88,
+      "first_global": 3971,
+      "last_global": 4058,
+      "first_key": "38:1",
+      "last_key": "38:88"
+    },
+    {
+      "surah": 39,
+      "ayah_count": 75,
+      "first_global": 4059,
+      "last_global": 4133,
+      "first_key": "39:1",
+      "last_key": "39:75"
+    },
+    {
+      "surah": 40,
+      "ayah_count": 85,
+      "first_global": 4134,
+      "last_global": 4218,
+      "first_key": "40:1",
+      "last_key": "40:85"
+    },
+    {
+      "surah": 41,
+      "ayah_count": 54,
+      "first_global": 4219,
+      "last_global": 4272,
+      "first_key": "41:1",
+      "last_key": "41:54"
+    },
+    {
+      "surah": 42,
+      "ayah_count": 53,
+      "first_global": 4273,
+      "last_global": 4325,
+      "first_key": "42:1",
+      "last_key": "42:53"
+    },
+    {
+      "surah": 43,
+      "ayah_count": 89,
+      "first_global": 4326,
+      "last_global": 4414,
+      "first_key": "43:1",
+      "last_key": "43:89"
+    },
+    {
+      "surah": 44,
+      "ayah_count": 59,
+      "first_global": 4415,
+      "last_global": 4473,
+      "first_key": "44:1",
+      "last_key": "44:59"
+    },
+    {
+      "surah": 45,
+      "ayah_count": 37,
+      "first_global": 4474,
+      "last_global": 4510,
+      "first_key": "45:1",
+      "last_key": "45:37"
+    },
+    {
+      "surah": 46,
+      "ayah_count": 35,
+      "first_global": 4511,
+      "last_global": 4545,
+      "first_key": "46:1",
+      "last_key": "46:35"
+    },
+    {
+      "surah": 47,
+      "ayah_count": 38,
+      "first_global": 4546,
+      "last_global": 4583,
+      "first_key": "47:1",
+      "last_key": "47:38"
+    },
+    {
+      "surah": 48,
+      "ayah_count": 29,
+      "first_global": 4584,
+      "last_global": 4612,
+      "first_key": "48:1",
+      "last_key": "48:29"
+    },
+    {
+      "surah": 49,
+      "ayah_count": 18,
+      "first_global": 4613,
+      "last_global": 4630,
+      "first_key": "49:1",
+      "last_key": "49:18"
+    },
+    {
+      "surah": 50,
+      "ayah_count": 45,
+      "first_global": 4631,
+      "last_global": 4675,
+      "first_key": "50:1",
+      "last_key": "50:45"
+    },
+    {
+      "surah": 51,
+      "ayah_count": 60,
+      "first_global": 4676,
+      "last_global": 4735,
+      "first_key": "51:1",
+      "last_key": "51:60"
+    },
+    {
+      "surah": 52,
+      "ayah_count": 49,
+      "first_global": 4736,
+      "last_global": 4784,
+      "first_key": "52:1",
+      "last_key": "52:49"
+    },
+    {
+      "surah": 53,
+      "ayah_count": 62,
+      "first_global": 4785,
+      "last_global": 4846,
+      "first_key": "53:1",
+      "last_key": "53:62"
+    },
+    {
+      "surah": 54,
+      "ayah_count": 55,
+      "first_global": 4847,
+      "last_global": 4901,
+      "first_key": "54:1",
+      "last_key": "54:55"
+    },
+    {
+      "surah": 55,
+      "ayah_count": 78,
+      "first_global": 4902,
+      "last_global": 4979,
+      "first_key": "55:1",
+      "last_key": "55:78"
+    },
+    {
+      "surah": 56,
+      "ayah_count": 96,
+      "first_global": 4980,
+      "last_global": 5075,
+      "first_key": "56:1",
+      "last_key": "56:96"
+    },
+    {
+      "surah": 57,
+      "ayah_count": 29,
+      "first_global": 5076,
+      "last_global": 5104,
+      "first_key": "57:1",
+      "last_key": "57:29"
+    },
+    {
+      "surah": 58,
+      "ayah_count": 22,
+      "first_global": 5105,
+      "last_global": 5126,
+      "first_key": "58:1",
+      "last_key": "58:22"
+    },
+    {
+      "surah": 59,
+      "ayah_count": 24,
+      "first_global": 5127,
+      "last_global": 5150,
+      "first_key": "59:1",
+      "last_key": "59:24"
+    },
+    {
+      "surah": 60,
+      "ayah_count": 13,
+      "first_global": 5151,
+      "last_global": 5163,
+      "first_key": "60:1",
+      "last_key": "60:13"
+    },
+    {
+      "surah": 61,
+      "ayah_count": 14,
+      "first_global": 5164,
+      "last_global": 5177,
+      "first_key": "61:1",
+      "last_key": "61:14"
+    },
+    {
+      "surah": 62,
+      "ayah_count": 11,
+      "first_global": 5178,
+      "last_global": 5188,
+      "first_key": "62:1",
+      "last_key": "62:11"
+    },
+    {
+      "surah": 63,
+      "ayah_count": 11,
+      "first_global": 5189,
+      "last_global": 5199,
+      "first_key": "63:1",
+      "last_key": "63:11"
+    },
+    {
+      "surah": 64,
+      "ayah_count": 18,
+      "first_global": 5200,
+      "last_global": 5217,
+      "first_key": "64:1",
+      "last_key": "64:18"
+    },
+    {
+      "surah": 65,
+      "ayah_count": 12,
+      "first_global": 5218,
+      "last_global": 5229,
+      "first_key": "65:1",
+      "last_key": "65:12"
+    },
+    {
+      "surah": 66,
+      "ayah_count": 12,
+      "first_global": 5230,
+      "last_global": 5241,
+      "first_key": "66:1",
+      "last_key": "66:12"
+    },
+    {
+      "surah": 67,
+      "ayah_count": 30,
+      "first_global": 5242,
+      "last_global": 5271,
+      "first_key": "67:1",
+      "last_key": "67:30"
+    },
+    {
+      "surah": 68,
+      "ayah_count": 52,
+      "first_global": 5272,
+      "last_global": 5323,
+      "first_key": "68:1",
+      "last_key": "68:52"
+    },
+    {
+      "surah": 69,
+      "ayah_count": 52,
+      "first_global": 5324,
+      "last_global": 5375,
+      "first_key": "69:1",
+      "last_key": "69:52"
+    },
+    {
+      "surah": 70,
+      "ayah_count": 44,
+      "first_global": 5376,
+      "last_global": 5419,
+      "first_key": "70:1",
+      "last_key": "70:44"
+    },
+    {
+      "surah": 71,
+      "ayah_count": 28,
+      "first_global": 5420,
+      "last_global": 5447,
+      "first_key": "71:1",
+      "last_key": "71:28"
+    },
+    {
+      "surah": 72,
+      "ayah_count": 28,
+      "first_global": 5448,
+      "last_global": 5475,
+      "first_key": "72:1",
+      "last_key": "72:28"
+    },
+    {
+      "surah": 73,
+      "ayah_count": 20,
+      "first_global": 5476,
+      "last_global": 5495,
+      "first_key": "73:1",
+      "last_key": "73:20"
+    },
+    {
+      "surah": 74,
+      "ayah_count": 56,
+      "first_global": 5496,
+      "last_global": 5551,
+      "first_key": "74:1",
+      "last_key": "74:56"
+    },
+    {
+      "surah": 75,
+      "ayah_count": 40,
+      "first_global": 5552,
+      "last_global": 5591,
+      "first_key": "75:1",
+      "last_key": "75:40"
+    },
+    {
+      "surah": 76,
+      "ayah_count": 31,
+      "first_global": 5592,
+      "last_global": 5622,
+      "first_key": "76:1",
+      "last_key": "76:31"
+    },
+    {
+      "surah": 77,
+      "ayah_count": 50,
+      "first_global": 5623,
+      "last_global": 5672,
+      "first_key": "77:1",
+      "last_key": "77:50"
+    },
+    {
+      "surah": 78,
+      "ayah_count": 40,
+      "first_global": 5673,
+      "last_global": 5712,
+      "first_key": "78:1",
+      "last_key": "78:40"
+    },
+    {
+      "surah": 79,
+      "ayah_count": 46,
+      "first_global": 5713,
+      "last_global": 5758,
+      "first_key": "79:1",
+      "last_key": "79:46"
+    },
+    {
+      "surah": 80,
+      "ayah_count": 42,
+      "first_global": 5759,
+      "last_global": 5800,
+      "first_key": "80:1",
+      "last_key": "80:42"
+    },
+    {
+      "surah": 81,
+      "ayah_count": 29,
+      "first_global": 5801,
+      "last_global": 5829,
+      "first_key": "81:1",
+      "last_key": "81:29"
+    },
+    {
+      "surah": 82,
+      "ayah_count": 19,
+      "first_global": 5830,
+      "last_global": 5848,
+      "first_key": "82:1",
+      "last_key": "82:19"
+    },
+    {
+      "surah": 83,
+      "ayah_count": 36,
+      "first_global": 5849,
+      "last_global": 5884,
+      "first_key": "83:1",
+      "last_key": "83:36"
+    },
+    {
+      "surah": 84,
+      "ayah_count": 25,
+      "first_global": 5885,
+      "last_global": 5909,
+      "first_key": "84:1",
+      "last_key": "84:25"
+    },
+    {
+      "surah": 85,
+      "ayah_count": 22,
+      "first_global": 5910,
+      "last_global": 5931,
+      "first_key": "85:1",
+      "last_key": "85:22"
+    },
+    {
+      "surah": 86,
+      "ayah_count": 17,
+      "first_global": 5932,
+      "last_global": 5948,
+      "first_key": "86:1",
+      "last_key": "86:17"
+    },
+    {
+      "surah": 87,
+      "ayah_count": 19,
+      "first_global": 5949,
+      "last_global": 5967,
+      "first_key": "87:1",
+      "last_key": "87:19"
+    },
+    {
+      "surah": 88,
+      "ayah_count": 26,
+      "first_global": 5968,
+      "last_global": 5993,
+      "first_key": "88:1",
+      "last_key": "88:26"
+    },
+    {
+      "surah": 89,
+      "ayah_count": 30,
+      "first_global": 5994,
+      "last_global": 6023,
+      "first_key": "89:1",
+      "last_key": "89:30"
+    },
+    {
+      "surah": 90,
+      "ayah_count": 20,
+      "first_global": 6024,
+      "last_global": 6043,
+      "first_key": "90:1",
+      "last_key": "90:20"
+    },
+    {
+      "surah": 91,
+      "ayah_count": 15,
+      "first_global": 6044,
+      "last_global": 6058,
+      "first_key": "91:1",
+      "last_key": "91:15"
+    },
+    {
+      "surah": 92,
+      "ayah_count": 21,
+      "first_global": 6059,
+      "last_global": 6079,
+      "first_key": "92:1",
+      "last_key": "92:21"
+    },
+    {
+      "surah": 93,
+      "ayah_count": 11,
+      "first_global": 6080,
+      "last_global": 6090,
+      "first_key": "93:1",
+      "last_key": "93:11"
+    },
+    {
+      "surah": 94,
+      "ayah_count": 8,
+      "first_global": 6091,
+      "last_global": 6098,
+      "first_key": "94:1",
+      "last_key": "94:8"
+    },
+    {
+      "surah": 95,
+      "ayah_count": 8,
+      "first_global": 6099,
+      "last_global": 6106,
+      "first_key": "95:1",
+      "last_key": "95:8"
+    },
+    {
+      "surah": 96,
+      "ayah_count": 19,
+      "first_global": 6107,
+      "last_global": 6125,
+      "first_key": "96:1",
+      "last_key": "96:19"
+    },
+    {
+      "surah": 97,
+      "ayah_count": 5,
+      "first_global": 6126,
+      "last_global": 6130,
+      "first_key": "97:1",
+      "last_key": "97:5"
+    },
+    {
+      "surah": 98,
+      "ayah_count": 8,
+      "first_global": 6131,
+      "last_global": 6138,
+      "first_key": "98:1",
+      "last_key": "98:8"
+    },
+    {
+      "surah": 99,
+      "ayah_count": 8,
+      "first_global": 6139,
+      "last_global": 6146,
+      "first_key": "99:1",
+      "last_key": "99:8"
+    },
+    {
+      "surah": 100,
+      "ayah_count": 11,
+      "first_global": 6147,
+      "last_global": 6157,
+      "first_key": "100:1",
+      "last_key": "100:11"
+    },
+    {
+      "surah": 101,
+      "ayah_count": 11,
+      "first_global": 6158,
+      "last_global": 6168,
+      "first_key": "101:1",
+      "last_key": "101:11"
+    },
+    {
+      "surah": 102,
+      "ayah_count": 8,
+      "first_global": 6169,
+      "last_global": 6176,
+      "first_key": "102:1",
+      "last_key": "102:8"
+    },
+    {
+      "surah": 103,
+      "ayah_count": 3,
+      "first_global": 6177,
+      "last_global": 6179,
+      "first_key": "103:1",
+      "last_key": "103:3"
+    },
+    {
+      "surah": 104,
+      "ayah_count": 9,
+      "first_global": 6180,
+      "last_global": 6188,
+      "first_key": "104:1",
+      "last_key": "104:9"
+    },
+    {
+      "surah": 105,
+      "ayah_count": 5,
+      "first_global": 6189,
+      "last_global": 6193,
+      "first_key": "105:1",
+      "last_key": "105:5"
+    },
+    {
+      "surah": 106,
+      "ayah_count": 4,
+      "first_global": 6194,
+      "last_global": 6197,
+      "first_key": "106:1",
+      "last_key": "106:4"
+    },
+    {
+      "surah": 107,
+      "ayah_count": 7,
+      "first_global": 6198,
+      "last_global": 6204,
+      "first_key": "107:1",
+      "last_key": "107:7"
+    },
+    {
+      "surah": 108,
+      "ayah_count": 3,
+      "first_global": 6205,
+      "last_global": 6207,
+      "first_key": "108:1",
+      "last_key": "108:3"
+    },
+    {
+      "surah": 109,
+      "ayah_count": 6,
+      "first_global": 6208,
+      "last_global": 6213,
+      "first_key": "109:1",
+      "last_key": "109:6"
+    },
+    {
+      "surah": 110,
+      "ayah_count": 3,
+      "first_global": 6214,
+      "last_global": 6216,
+      "first_key": "110:1",
+      "last_key": "110:3"
+    },
+    {
+      "surah": 111,
+      "ayah_count": 5,
+      "first_global": 6217,
+      "last_global": 6221,
+      "first_key": "111:1",
+      "last_key": "111:5"
+    },
+    {
+      "surah": 112,
+      "ayah_count": 4,
+      "first_global": 6222,
+      "last_global": 6225,
+      "first_key": "112:1",
+      "last_key": "112:4"
+    },
+    {
+      "surah": 113,
+      "ayah_count": 5,
+      "first_global": 6226,
+      "last_global": 6230,
+      "first_key": "113:1",
+      "last_key": "113:5"
+    },
+    {
+      "surah": 114,
+      "ayah_count": 6,
+      "first_global": 6231,
+      "last_global": 6236,
+      "first_key": "114:1",
+      "last_key": "114:6"
+    }
+  ]
+}

@@ -89,9 +89,11 @@ describe('audio playback guards', () => {
     assert.match(swSource, /url\.pathname === '\/css\/vue-styles\.css'/)
   })
 
-  it('networkFirst falls back to Response.error instead of throwing', () => {
+  it('networkFirst returns a response instead of rejecting the fetch event', () => {
     assert.match(swSource, /async function networkFirst/)
-    assert.match(swSource, /Response\.error\(\)/)
+    assert.match(swSource, /catch \(error\) \{[\s\S]*if \(cached\) return cached/)
+    assert.match(swSource, /status:\s*504,\s*statusText:\s*'Offline'/)
+    assert.doesNotMatch(swSource, /async function networkFirst[\s\S]*?throw error/)
   })
 
   it('unlocks advanceLocked when cancelling the gap timer (prevents frozen transport)', () => {

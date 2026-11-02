@@ -1,0 +1,21 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "canonical-corpus.json": "54216268d776f6604dc0d50a250d4552e90bdfd2818cc6bfe83731c4d01ea265",
+    "surah-metadata.json": "59f75f4e117d3a788b36a6f27ac05ded190849088935bd996c8a4246ad1bb48a"
+  },
+  "protected_fields": [
+    "selected_ayahs[].uthmani",
+    "selected_ayahs[].global_number",
+    "selected_ayahs[].page",
+    "selected_ayahs[].juz",
+    "selected_ayahs[].hizb_quarter",
+    "selected_ayahs[].translation_en_asad",
+    "selected_ayahs[].transliteration",
+    "ayah_counts",
+    "page_pins",
+    "surah_boundaries",
+    "totals"
+  ],
+  "note": "Intentional corpus updates must follow UPDATE.md and refresh these checksums via scripts/quran-integrity-refresh.mjs --confirm."
+}

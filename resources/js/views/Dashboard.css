@@ -4302,6 +4302,12 @@ a.dash-ai-results__attempt {
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
+.user-dashboard--progress .user-dashboard__shell.container-fluid {
+  width: 100%;
+  max-width: min(78rem, 100%) !important;
+  margin-inline: auto !important;
+}
+
 /* Small labels used to fall as low as 10–11px. Keep supporting copy useful
    at normal zoom without making the hierarchy shout. */
 .user-dashboard .dash-kicker,

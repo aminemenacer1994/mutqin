@@ -64,25 +64,35 @@ npm run watch
 
 ## Testing
 
+PHPUnit and the Node test runner are the project test frameworks. Both run offline: PHPUnit uses an in-memory SQLite database (`phpunit.xml`), and Speechmatics, Stripe, mail, and analytics are not called. Do not point `DB_DATABASE` at a production database before running tests.
+
 ```bash
-# PHP (203+ tests, in-memory SQLite)
+# Backend (PHPUnit: unit + feature). Safe to run without production credentials.
 composer test
+
+# One backend file or method
+php artisan test tests/Unit/QuranTextNormalizerTest.php
+php artisan test --filter=PracticePlanIsolationTest
 
 # Qur'an content integrity (pinned Uthmani/metadata checksums — offline)
 composer test:quran-integrity
 npm run test:quran-integrity
 
-# JavaScript unit tests (all tests/js/*.test.mjs except Playwright integration suites)
+# Frontend unit tests (tests/js/*.test.mjs, excluding Playwright suites)
 npm run test:mutqin
-node tests/js/billing.test.mjs
 
-# Recitation JS/PHP scenario parity (needs PHP + Node)
+# One frontend file
+node --experimental-vm-modules tests/js/technique-isolation.test.mjs
+
+# Recitation JS/PHP scenario parity (needs PHP + Node; still mocked, no Speechmatics)
 npm run audit:recitation-scenarios
 
-# Optional Playwright smoke / mobile checks (requires running app)
+# Optional Playwright smoke / mobile checks (requires a running app)
 npm run test:mutqin:browser
 npm run test:mutqin:mobile
 ```
+
+CI (`.github/workflows/test.yml`) runs the PHP suite, the JS unit suite, recitation parity, Qur'an integrity, and the production asset build on every push and pull request. A failing job blocks the workflow. See [docs/testing.md](docs/testing.md) for what each suite covers and how isolation works.
 
 Protected Qur'an fixtures live under `resources/quran/integrity/`. Intentional corpus updates must follow [`resources/quran/integrity/UPDATE.md`](resources/quran/integrity/UPDATE.md) — never edit Uthmani text by hand or regenerate silently in CI.
 

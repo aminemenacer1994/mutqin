@@ -245,7 +245,7 @@ class TeacherDashboardTest extends TestCase
             'start_ayah' => 1,
             'end_ayah' => 7,
             'practice_scope' => $plan->practice_scope,
-            'recommended_review_at' => $plan->recommended_review_at,
+            'recommended_review_at' => now()->addDays(3),
         ]);
 
         $this->actingAs($teacher)->postJson(route('api.teacher.students.reviews.complete', [$student, $plan]))

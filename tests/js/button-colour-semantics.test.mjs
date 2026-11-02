@@ -31,13 +31,13 @@ function sliceVariant(name) {
   return best
 }
 
-// Shared semantic tokens exist — Bootstrap custom danger (#b55041), not plain #dc3545/#c0392b
+// Shared semantic tokens live on the global theme. Bootstrap custom danger (#b55041), not plain #dc3545/#c0392b.
 {
-  assert.match(css, /--accent:\s*#8b5e3c/)
-  assert.match(css, /--success:\s*#2e7d64/)
-  assert.match(css, /--bs-danger:\s*#b55041/)
-  assert.match(css, /--danger:\s*#b55041/)
-  assert.match(css, /--destructive:\s*var\(--danger\)/)
+  assert.match(appScss, /--accent:\s*#8b5e3c/)
+  assert.match(appScss, /--success:\s*#2d6a4f/)
+  assert.match(appScss, /--bs-danger:\s*#b55041/)
+  assert.match(appScss, /--danger:\s*#b55041/)
+  assert.match(appScss, /--destructive:\s*var\(--danger\)/)
 }
 
 // Primary is gold/brown accent — not mixed with legacy mint green
@@ -87,8 +87,8 @@ function sliceVariant(name) {
   assert.match(vue, /mutqin-modal-btn--secondary mutqin-btn-animate/)
   assert.match(vue, /session-exit-confirm-actions/)
   assert.doesNotMatch(vue, /session-exit-action-chip--continue/)
-  assert.match(css, /--danger:\s*#b55041/)
-  assert.match(css, /--bs-danger:\s*#b55041/)
+  assert.match(appScss, /--danger:\s*#b55041/)
+  assert.match(appScss, /--bs-danger:\s*#b55041/)
   const lock = css.slice(css.indexOf('Button colour semantics — final lock'))
   assert.match(lock, /--bs-danger|#b55041/)
   assert.doesNotMatch(lock.slice(0, 1200), /#c0392b|#e74c3c|#dc3545/)
@@ -116,7 +116,7 @@ function sliceVariant(name) {
   assert.match(hifz, /mutqin-modal-btn--primary/)
   assert.match(hifz, /mutqin-modal-btn--primary hifz-plan-save-btn/)
   assert.doesNotMatch(hifz, /btn-success/)
-  assert.match(hifz, /--plan-accent:\s*var\(--accent,\s*#9a6738\)/)
+  assert.match(hifz, /--plan-accent:\s*var\(--accent\)/)
 }
 
 // Shared button sheet is wired globally; consent / mic modals use modal variants

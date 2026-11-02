@@ -66,6 +66,12 @@ return [
         explode(',', (string) env('MUTQIN_ADMIN_EMAILS', ''))
     ))),
 
+    // Who sees the admin nav item. Narrower than the admin role allowlist.
+    'admin_navigation_emails' => array_values(array_filter(array_map(
+        static fn (string $email): string => strtolower(trim($email)),
+        explode(',', (string) env('MUTQIN_ADMIN_NAVIGATION_EMAILS', 'menacer72@gmail.com'))
+    ))),
+
     'learning_history' => [
         // Explainable historical results.
         'algorithm_version' => env('MUTQIN_ALGORITHM_VERSION', 'mutqin-recitation-v1'),
