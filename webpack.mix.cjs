@@ -152,9 +152,34 @@ function isProductionChunkRuntime(appJs) {
 function listMissingDevStableChunks(appJsPath) {
     const abs = appJsPath || path.join(jsDir, 'app.js');
     try {
-        const content = fs.readFileSync(abs, 'utf8');
-        if (isProductionChunkRuntime(content)) return [];
-        const referenced = collectReferencedChunkFiles(content);
+        const entry = fs.readFileSync(abs, 'utf8');
+        if (isProductionChunkRuntime(entry)) return [];
+
+        // Child chunks (ayah-notes-modal, etc.) are referenced from memorisation.js,
+        // not from app.js. Walk every stable chunk that is already on disk.
+        const referenced = new Set();
+        const queue = [abs];
+        const seen = new Set();
+        while (queue.length > 0) {
+            const file = queue.shift();
+            if (!file || seen.has(file)) continue;
+            seen.add(file);
+
+            let content = '';
+            try {
+                content = file === abs ? entry : fs.readFileSync(file, 'utf8');
+            } catch {
+                continue;
+            }
+
+            for (const name of collectReferencedChunkFiles(content)) {
+                referenced.add(name);
+                if (!isStableNamedChunkFile(name)) continue;
+                const child = path.join(jsDir, name);
+                if (fs.existsSync(child)) queue.push(child);
+            }
+        }
+
         return [...referenced].filter(
             (name) => isStableNamedChunkFile(name) && !fs.existsSync(path.join(jsDir, name))
         );
@@ -167,11 +192,63 @@ function warnMissingDevStableChunks(contextLabel) {
     const missing = listMissingDevStableChunks();
     if (missing.length === 0) return;
     console.warn(
-        `[mix] ${contextLabel}: watch/dev app.js references lazy chunks that are not on disk:\n`,
+        `[mix] ${contextLabel}: watch/dev runtime references lazy chunks that are not on disk:\n`,
         missing.map((name) => `  - ${name}`).join('\n'),
-        '\n[mix] This often happens after `npm run prod` while `npm run watch` is still running.',
-        '\n[mix] Fix: stop watch, run `npm run dev` once (full compile), then start watch again.'
+        '\n[mix] RewriteMissingWatchChunksPlugin should have restored these during emit.',
+        '\n[mix] If they are still missing, stop `npm run watch` and start it again.'
     );
+}
+
+/**
+ * Watch keeps a memory of files it already wrote and will not write them again.
+ * `npm run prod` (and the production prune) deletes the stable dev names
+ * (`madani-page.js`, `ayah-notes-modal.js`, …) while that memory still says
+ * they exist, so the next rebuild 404s every chunk that did not itself change.
+ *
+ * Before emit, write any missing chunk whose source is still available, and
+ * drop webpack's "already emitted" set so a missing file is stat'd and rewritten
+ * instead of skipped. Existing files are left untouched.
+ */
+class RewriteMissingWatchChunksPlugin {
+    apply(compiler) {
+        compiler.hooks.emit.tap('RewriteMissingWatchChunksPlugin', (compilation) => {
+            const outputPath = compilation.outputOptions.path || compiler.outputPath;
+            if (outputPath) {
+                for (const asset of compilation.getAssets()) {
+                    const name = String(asset.name || '').split('?')[0];
+                    if (!/^js\/.+\.js$/i.test(name)) continue;
+                    const abs = path.join(outputPath, name);
+                    if (fs.existsSync(abs)) continue;
+
+                    let raw;
+                    try {
+                        raw = asset.source && typeof asset.source.source === 'function'
+                            ? asset.source.source()
+                            : null;
+                    } catch {
+                        raw = null;
+                    }
+                    if (raw == null || raw === '') continue;
+
+                    try {
+                        fs.mkdirSync(path.dirname(abs), { recursive: true });
+                        fs.writeFileSync(abs, raw);
+                        console.warn(`[mix] Restored missing watch chunk ${name}`);
+                    } catch (error) {
+                        console.warn(
+                            `[mix] Could not restore ${name}:`,
+                            error && error.message ? error.message : error
+                        );
+                    }
+                }
+            }
+
+            const previous = compiler._assetEmittingPreviousFiles;
+            if (previous && typeof previous.clear === 'function') {
+                previous.clear();
+            }
+        });
+    }
 }
 
 function addVueStylesManifestEntry(manifest) {
@@ -281,7 +358,10 @@ mix.js('resources/js/app.js', 'public/js')
                ? 'js/[name].[contenthash:8].js'
                : 'js/[name].js'
        },
-       plugins: [new PruneMissingManifestEntriesPlugin()]
+       plugins: [
+           new PruneMissingManifestEntriesPlugin(),
+           new RewriteMissingWatchChunksPlugin(),
+       ]
    })
    .override((webpackConfig) => {
        webpackConfig.resolve = webpackConfig.resolve || {};

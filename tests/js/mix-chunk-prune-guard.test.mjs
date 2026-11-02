@@ -38,6 +38,16 @@ assert.match(
   /catch \(error\)[\s\S]*error\.code === 'ENOENT'/,
   'the manifest hash guard must tolerate deletion between the existence check and hashing',
 )
+assert.match(
+  mixSource,
+  /class RewriteMissingWatchChunksPlugin/,
+  'watch must restore lazy chunks webpack refused to rewrite',
+)
+assert.match(
+  mixSource,
+  /_assetEmittingPreviousFiles/,
+  'watch must forget webpack\'s already-emitted set so missing chunks are rewritten',
+)
 
 // Mirror the Mix helper: stable + hashed references must both be collected.
 function collectReferencedChunkFiles(source) {
@@ -81,16 +91,28 @@ function collectReferencedChunkFiles(source) {
 const keep = collectReferencedChunkFiles(appJs)
 const manifest = JSON.parse(readFileSync(join(root, 'public/mix-manifest.json'), 'utf8'))
 
-// Development runtimes intentionally request stable names. Their complete
-// chunk set must survive the post-build production cleanup hook.
-if (existsSync(join(root, 'public/js/memorisation.js'))) {
-  for (const family of ['ayah-notes-modal', 'ai-audio-consent', 'mic-permission-help', 'madani-page']) {
-    assert.equal(
-      existsSync(join(root, 'public/js', `${family}.js`)),
-      true,
-      `development runtime chunk ${family}.js must exist on disk`,
-    )
+// Development runtimes request stable names. Every name the runtime actually
+// loads — including chunks referenced only from memorisation.js — must be on disk.
+if (existsSync(join(root, 'public/js/memorisation.js')) && !appJs.includes('}[e]+".js"')) {
+  const referenced = new Set(collectReferencedChunkFiles(appJs))
+  const queue = ['memorisation.js']
+  const seen = new Set()
+  while (queue.length > 0) {
+    const name = queue.shift()
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    const abs = join(root, 'public/js', name)
+    if (!existsSync(abs)) continue
+    for (const child of collectReferencedChunkFiles(readFileSync(abs, 'utf8'))) {
+      referenced.add(child)
+      if (/^[a-z][a-z0-9_-]+\.js$/i.test(child) && child !== 'app.js') queue.push(child)
+    }
   }
+
+  const missing = [...referenced].filter(
+    (name) => /^[a-z][a-z0-9_-]+\.js$/i.test(name) && name !== 'app.js' && !existsSync(join(root, 'public/js', name)),
+  )
+  assert.deepEqual(missing, [], `development runtime chunks missing on disk: ${missing.join(', ')}`)
   assert.match(manifest['/js/app.js'], /^\/js\/app\.js\?id=/)
   console.log('mix-chunk-prune-guard: ok (development)')
   process.exit(0)
