@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
  * Canonical Google OAuth redirect URI.
  *
  * Production / Laravel Cloud must send Google the same HTTPS callback that is
- * registered in Google Cloud Console (APP_URL / GOOGLE_REDIRECT_URI). Rewriting
- * that URI from the inbound Host / X-Forwarded-Host (e.g. *.laravel.cloud)
- * causes redirect_uri_mismatch and session cookies on the wrong host.
+ * registered in Google Cloud Console. That registered callback is
+ * https://app.mutqin.ai/auth/google/callback. The public site is mutqin.ai, so
+ * a URI copied from APP_URL is rejected with redirect_uri_mismatch. Rewriting
+ * the registered URI from the inbound Host / X-Forwarded-Host
+ * (e.g. *.laravel.cloud) causes the same error and session cookies on the
+ * wrong host.
  *
  * Locally, localhost and 127.0.0.1 may swap because Google treats them as
  * distinct redirect URIs and developers use both.
@@ -68,7 +71,32 @@ final class GoogleOAuthRedirect
             $redirectUri = $appUrl !== '' ? $appUrl.self::PATH : '';
         }
 
-        return self::normalise($redirectUri, $appUrl);
+        return self::useRegisteredProductionHost(self::normalise($redirectUri, $appUrl));
+    }
+
+    /**
+     * Google Cloud still authorizes https://app.mutqin.ai/auth/google/callback.
+     * The public site is https://mutqin.ai, so a callback built from APP_URL is
+     * rejected with redirect_uri_mismatch. The app host 301s that callback back
+     * here with the OAuth query string, and the token exchange repeats this URI.
+     */
+    private static function useRegisteredProductionHost(string $uri): string
+    {
+        $host = parse_url($uri, PHP_URL_HOST);
+        if (! is_string($host) || strtolower($host) !== 'mutqin.ai') {
+            return $uri;
+        }
+
+        $scheme = parse_url($uri, PHP_URL_SCHEME);
+        $path = parse_url($uri, PHP_URL_PATH);
+        if (! is_string($scheme) || $scheme === '') {
+            $scheme = 'https';
+        }
+        if (! is_string($path) || $path === '' || $path === '/') {
+            $path = self::PATH;
+        }
+
+        return $scheme.'://app.mutqin.ai'.rtrim($path, '/');
     }
 
     public static function isLoopbackHost(?string $host): bool

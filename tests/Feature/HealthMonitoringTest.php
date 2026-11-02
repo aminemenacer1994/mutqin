@@ -44,6 +44,21 @@ class HealthMonitoringTest extends TestCase
         $response->assertOk()->assertExactJson(['status' => 'degraded']);
     }
 
+    public function test_public_health_stays_json_when_a_check_throws(): void
+    {
+        $this->app->instance(HealthHeartbeat::class, new class extends HealthHeartbeat
+        {
+            public function status(string $kind, int $maxAgeSeconds): array
+            {
+                throw new \RuntimeException('heartbeat store unavailable');
+            }
+        });
+
+        $this->getJson('/health')
+            ->assertOk()
+            ->assertExactJson(['status' => 'degraded']);
+    }
+
     public function test_missing_scheduler_heartbeat_is_degraded_not_unavailable(): void
     {
         config(['queue.default' => 'sync']);

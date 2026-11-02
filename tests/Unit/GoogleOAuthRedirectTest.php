@@ -49,6 +49,43 @@ class GoogleOAuthRedirectTest extends TestCase
         );
     }
 
+    public function test_public_host_callback_uses_the_registered_app_host(): void
+    {
+        $this->assertSame(
+            'https://app.mutqin.ai/auth/google/callback',
+            GoogleOAuthRedirect::fromEnvironment(
+                'https://mutqin.ai/auth/google/callback',
+                'https://mutqin.ai'
+            )
+        );
+    }
+
+    public function test_public_host_placeholder_uses_the_registered_app_host(): void
+    {
+        $this->assertSame(
+            'https://app.mutqin.ai/auth/google/callback',
+            GoogleOAuthRedirect::fromEnvironment(
+                '${APP_URL}/auth/google/callback',
+                'https://mutqin.ai'
+            )
+        );
+    }
+
+    public function test_request_on_public_host_still_sends_the_registered_callback(): void
+    {
+        config([
+            'app.url' => 'https://mutqin.ai',
+            'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
+        ]);
+
+        $request = Request::create('https://mutqin.ai/auth/google', 'GET');
+
+        $this->assertSame(
+            'https://app.mutqin.ai/auth/google/callback',
+            GoogleOAuthRedirect::uri($request)
+        );
+    }
+
     public function test_local_http_redirect_is_not_upgraded(): void
     {
         $this->assertSame(

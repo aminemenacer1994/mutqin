@@ -38,7 +38,15 @@ class HealthHeartbeat
             ];
         }
 
-        $payload = $this->store()->get($key);
+        try {
+            $payload = $this->store()->get($key);
+        } catch (\Throwable) {
+            return [
+                'status' => 'fail',
+                'age_seconds' => null,
+                'at' => null,
+            ];
+        }
         if (! is_array($payload) || empty($payload['at']) || ! is_string($payload['at'])) {
             return [
                 'status' => 'fail',

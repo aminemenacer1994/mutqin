@@ -26,13 +26,13 @@ class HealthCheckService
     public function run(bool $detailed = false): array
     {
         $checks = [
-            'database' => $this->checkDatabase(),
-            'cache' => $this->checkCache(),
-            'redis' => $this->checkRedis(),
-            'scheduler' => $this->checkScheduler(),
-            'queue_worker' => $this->checkQueueWorker(),
-            'storage' => $this->checkStorage(),
-            'speechmatics' => $this->checkSpeechmatics(),
+            'database' => $this->guardCheck(fn () => $this->checkDatabase()),
+            'cache' => $this->guardCheck(fn () => $this->checkCache()),
+            'redis' => $this->guardCheck(fn () => $this->checkRedis()),
+            'scheduler' => $this->guardCheck(fn () => $this->checkScheduler()),
+            'queue_worker' => $this->guardCheck(fn () => $this->checkQueueWorker()),
+            'storage' => $this->guardCheck(fn () => $this->checkStorage()),
+            'speechmatics' => $this->guardCheck(fn () => $this->checkSpeechmatics()),
         ];
 
         $status = $this->aggregate($checks);
@@ -111,6 +111,24 @@ class HealthCheckService
         ], $cooldown);
 
         return $result;
+    }
+
+    /**
+     * A probe must stay JSON. Cache, Redis, or storage failures inside one
+     * check used to escape and turn GET /health into an HTML 500.
+     *
+     * @param  callable(): array<string, mixed>  $check
+     * @return array<string, mixed>
+     */
+    private function guardCheck(callable $check): array
+    {
+        try {
+            $result = $check();
+
+            return is_array($result) ? $result : ['status' => 'fail', 'code' => 'invalid'];
+        } catch (Throwable) {
+            return ['status' => 'fail', 'code' => 'exception'];
+        }
     }
 
     /**

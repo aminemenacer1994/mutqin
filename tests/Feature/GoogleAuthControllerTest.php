@@ -41,6 +41,19 @@ class GoogleAuthControllerTest extends TestCase
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
+    public function test_google_redirect_on_the_public_host_uses_the_registered_app_callback(): void
+    {
+        config([
+            'app.url' => 'https://mutqin.ai',
+            'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
+        ]);
+
+        $this->mockGoogleRedirect('https://app.mutqin.ai/auth/google/callback');
+
+        $this->get('https://mutqin.ai/auth/google')
+            ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+    }
+
     public function test_google_redirect_keeps_canonical_uri_when_request_host_is_cloud_hostname(): void
     {
         config([
