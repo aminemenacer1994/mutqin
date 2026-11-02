@@ -41,14 +41,14 @@ class GoogleAuthControllerTest extends TestCase
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
-    public function test_google_redirect_on_the_public_host_uses_the_registered_app_callback(): void
+    public function test_google_redirect_on_the_public_host_uses_the_public_callback(): void
     {
         config([
             'app.url' => 'https://mutqin.ai',
             'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
         ]);
 
-        $this->mockGoogleRedirect('https://app.mutqin.ai/auth/google/callback');
+        $this->mockGoogleRedirect('https://mutqin.ai/auth/google/callback');
 
         $this->get('https://mutqin.ai/auth/google')
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
@@ -57,10 +57,10 @@ class GoogleAuthControllerTest extends TestCase
     public function test_google_redirect_keeps_canonical_uri_when_request_host_is_cloud_hostname(): void
     {
         config([
-            'services.google.redirect' => 'https://app.mutqin.ai/auth/google/callback',
+            'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
         ]);
 
-        $this->mockGoogleRedirect('https://app.mutqin.ai/auth/google/callback');
+        $this->mockGoogleRedirect('https://mutqin.ai/auth/google/callback');
 
         $this->get('https://mutqin-abc.laravel.cloud/auth/google/redirect')
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
@@ -69,7 +69,7 @@ class GoogleAuthControllerTest extends TestCase
     public function test_google_callback_keeps_canonical_uri_when_request_host_is_cloud_hostname(): void
     {
         config([
-            'services.google.redirect' => 'https://app.mutqin.ai/auth/google/callback',
+            'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
         ]);
 
         $this->mockGoogleUser([
@@ -78,7 +78,7 @@ class GoogleAuthControllerTest extends TestCase
             'email' => 'cloud@example.com',
             'avatar' => 'https://example.com/cloud.png',
             'email_verified' => true,
-        ], expectedRedirectUrl: 'https://app.mutqin.ai/auth/google/callback');
+        ], expectedRedirectUrl: 'https://mutqin.ai/auth/google/callback');
 
         $this->get('https://mutqin-abc.laravel.cloud/auth/google/callback')
             ->assertRedirect(route('memorisation'));

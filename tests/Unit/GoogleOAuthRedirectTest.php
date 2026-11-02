@@ -49,10 +49,10 @@ class GoogleOAuthRedirectTest extends TestCase
         );
     }
 
-    public function test_public_host_callback_uses_the_registered_app_host(): void
+    public function test_public_host_callback_is_not_rewritten(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::fromEnvironment(
                 'https://mutqin.ai/auth/google/callback',
                 'https://mutqin.ai'
@@ -60,10 +60,10 @@ class GoogleOAuthRedirectTest extends TestCase
         );
     }
 
-    public function test_public_host_placeholder_uses_the_registered_app_host(): void
+    public function test_public_host_placeholder_uses_app_url(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::fromEnvironment(
                 '${APP_URL}/auth/google/callback',
                 'https://mutqin.ai'
@@ -71,7 +71,7 @@ class GoogleOAuthRedirectTest extends TestCase
         );
     }
 
-    public function test_request_on_public_host_still_sends_the_registered_callback(): void
+    public function test_request_on_public_host_uses_configured_callback(): void
     {
         config([
             'app.url' => 'https://mutqin.ai',
@@ -81,7 +81,7 @@ class GoogleOAuthRedirectTest extends TestCase
         $request = Request::create('https://mutqin.ai/auth/google', 'GET');
 
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::uri($request)
         );
     }
@@ -100,14 +100,14 @@ class GoogleOAuthRedirectTest extends TestCase
     public function test_cloud_hostname_does_not_replace_canonical_redirect_uri(): void
     {
         config([
-            'app.url' => 'https://app.mutqin.ai',
-            'services.google.redirect' => 'https://app.mutqin.ai/auth/google/callback',
+            'app.url' => 'https://mutqin.ai',
+            'services.google.redirect' => 'https://mutqin.ai/auth/google/callback',
         ]);
 
         $request = Request::create('https://mutqin-abc.laravel.cloud/auth/google', 'GET');
 
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::uri($request)
         );
     }
