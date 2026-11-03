@@ -28,6 +28,7 @@ function tokenTone(wordOrStatus) {
     : classifyRecitationWordColor(wordOrStatus?.status ?? wordOrStatus?.visualStatus ?? wordOrStatus)
   if (color === RECITATION_COLOR.GREEN) return 'ok'
   if (color === RECITATION_COLOR.AMBER) return 'partial'
+  if (color === RECITATION_COLOR.UNCERTAIN) return 'uncertain'
   if (color === RECITATION_COLOR.BLACK) return 'omitted'
   if (color === RECITATION_COLOR.RED) return 'incorrect'
   return 'ok'

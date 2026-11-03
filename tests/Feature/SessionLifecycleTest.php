@@ -323,6 +323,7 @@ class SessionLifecycleTest extends TestCase
 
     public function test_end_accepts_completed_session_missing_ended_at(): void
     {
+        config()->set('mutqin.show_recommendation_plan', true);
         $user = User::factory()->create();
         $session = UserSession::create([
             'user_id' => $user->id,
@@ -349,6 +350,37 @@ class SessionLifecycleTest extends TestCase
         $this->assertNotNull($session->fresh()->ended_at);
         $this->assertNotNull($response->json('recommendation'));
         $this->assertSame(112, (int) data_get($response->json('recommendation'), 'surah.id'));
+    }
+
+    public function test_end_skips_recommendation_generation_while_plan_feature_is_hidden(): void
+    {
+        config()->set('mutqin.show_recommendation_plan', false);
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinutes(2),
+            'metadata' => [
+                'active' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 3],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'range_complete' => true,
+                'idempotency_key' => 'end-without-plan',
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('recommendation', null)
+            ->assertJsonPath('recommendation_error', false);
+
+        $this->assertDatabaseCount('session_recommendations', 0);
     }
 
     public function test_onboarding_example_is_never_resumable(): void

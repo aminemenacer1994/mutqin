@@ -196,7 +196,7 @@
                             :class="{
                               'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
                               'is-incorrect': part.tone === 'incorrect',
-                              'is-partial': part.tone === 'partial',
+                              'is-partial': part.tone === 'partial' || part.tone === 'uncertain',
                               'is-omitted': part.tone === 'omitted',
                               'is-corrected': part.tone === 'ok' && !part.weak,
                             }"

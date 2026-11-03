@@ -82,7 +82,7 @@ export const aiReciteQaMatrix = Object.freeze([
     id: 'AIR-005',
     scenario: 'Repetition / stutter',
     category: 'accuracy',
-    expected: 'Accuracy 100; stutter not counted as unresolved mistake',
+    expected: 'Distinct repeated word is recorded as a repetition; target words remain correct',
     automation: 'automated',
     suite: 'recitation-edge-scenarios.test.mjs',
     edgeId: 'repetition_stutter',

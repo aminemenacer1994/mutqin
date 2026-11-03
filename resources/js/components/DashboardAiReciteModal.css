@@ -251,6 +251,7 @@ body.dash-ai-recite-open {
 
 .dash-ai-recite-modal .session-analysis-word.is-correct { color: #2d6a4f; }
 .dash-ai-recite-modal .session-analysis-word.is-weak { color: #9a6b14; background: rgba(201, 162, 39, 0.14); }
+.dash-ai-recite-modal .session-analysis-word.is-uncertain { color: #9a6b14; background: rgba(201, 162, 39, 0.14); }
 .dash-ai-recite-modal .session-analysis-word.is-incorrect { color: #9b2c2c; background: rgba(180, 60, 60, 0.12); }
 .dash-ai-recite-modal .session-analysis-word.is-omitted { color: #5c534b; text-decoration: underline dotted; }
 

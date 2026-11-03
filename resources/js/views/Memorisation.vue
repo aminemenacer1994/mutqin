@@ -3668,7 +3668,7 @@
       :empty-desc="translateOrFallback('memorisation.analyticsEmpty.modalEmptyDesc', 'Complete a recitation check to see your results here.')"
       :attempt-saved="workspaceReciteAttemptSaved"
       :saved-label="translateOrFallback('dashboard.ai_recite.attempt_saved', 'This attempt is saved.')"
-      :results-href="aiReciteResultsHref"
+      :results-href="postSessionDashboardAfterRecite ? '' : aiReciteResultsHref"
       :results-label="translateOrFallback('dashboard.ai_recite.see_all_results', 'See all results')"
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"

@@ -73,7 +73,7 @@ export const recitationLiveValidationFixtures = [
       }
     ],
     expected: {
-      accuracyScore: 100,
+      accuracyScore: 97,
       completionPercentage: 100,
       missing: 0,
       extra: 0,

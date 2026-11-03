@@ -284,10 +284,12 @@ class SessionController extends Controller
 
         $recommendation = null;
         $recommendationError = false;
-        try {
-            $recommendation = $recommendations->recommendForCompletedSession($request->user(), $session);
-        } catch (\Throwable) {
-            $recommendationError = true;
+        if (config('mutqin.show_recommendation_plan', false)) {
+            try {
+                $recommendation = $recommendations->recommendForCompletedSession($request->user(), $session);
+            } catch (\Throwable) {
+                $recommendationError = true;
+            }
         }
 
         DashboardService::forgetForUser($request->user());

@@ -21,6 +21,10 @@ class DashboardController extends Controller
             $days = 30;
         }
 
+        if ($request->boolean('fresh')) {
+            DashboardService::forgetForUser($user);
+        }
+
         try {
             $payload = $dashboard->build($user, $days);
         } catch (\Throwable $e) {

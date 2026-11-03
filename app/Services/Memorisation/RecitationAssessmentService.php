@@ -25,7 +25,7 @@ class RecitationAssessmentService
 
     /**
      * @param  array<string,mixed>  $payload
-     * @return array{assessment:array<string,mixed>,analysis:array<string,mixed>,practice_plan:array<string,mixed>,improvement?:array<string,mixed>|null,idempotent?:bool}
+     * @return array{assessment:array<string,mixed>,analysis:array<string,mixed>,practice_plan:array<string,mixed>|null,improvement?:array<string,mixed>|null,idempotent?:bool}
      */
     public function create(User $user, array $payload): array
     {
@@ -145,13 +145,16 @@ class RecitationAssessmentService
             $persistentWeakWords
         );
 
-        $planData = $this->plans->recommend(
-            $analysis,
-            $range,
-            $aligned['accuracy'],
-            isset($payload['duration_ms']) ? (int) $payload['duration_ms'] : null,
-            count($aligned['word_results'] ?? [])
-        );
+        $recommendationPlanEnabled = (bool) config('mutqin.show_recommendation_plan', false);
+        $planData = $recommendationPlanEnabled
+            ? $this->plans->recommend(
+                $analysis,
+                $range,
+                $aligned['accuracy'],
+                isset($payload['duration_ms']) ? (int) $payload['duration_ms'] : null,
+                count($aligned['word_results'] ?? [])
+            )
+            : ['friendly_summary' => $this->plans->friendlySummary((int) $aligned['accuracy'])];
 
         $previousId = isset($payload['previous_assessment_id'])
             ? (int) $payload['previous_assessment_id']
@@ -161,7 +164,9 @@ class RecitationAssessmentService
             $aligned['accuracy'],
             isset($payload['match_result']) ? (string) $payload['match_result'] : null
         );
-        $practiceScope = $this->resolvePracticeScope($payload, $planData);
+        $practiceScope = $recommendationPlanEnabled
+            ? $this->resolvePracticeScope($payload, $planData)
+            : MemorisationPracticePlan::SCOPE_FULL_RANGE;
 
         return DB::transaction(function () use (
             $user,
@@ -178,6 +183,7 @@ class RecitationAssessmentService
             $matchResult,
             $practiceScope,
             $lifecycle,
+            $recommendationPlanEnabled,
         ) {
             $now = now();
 
@@ -267,7 +273,7 @@ class RecitationAssessmentService
             $standalone = $this->isStandaloneDashboardRecite($payload);
             $config = is_array($planData['config'] ?? null) ? $planData['config'] : [];
             $practicePlan = null;
-            if (! $standalone) {
+            if (! $standalone && $recommendationPlanEnabled) {
                 $practicePlan = MemorisationPracticePlan::query()->create([
                     'user_id' => $user->id,
                     'assessment_id' => $assessment->id,
@@ -314,7 +320,9 @@ class RecitationAssessmentService
                 $standaloneAttempt = $this->persistStandaloneAttempt($user, $assessment, $aligned, $analysis, $payload);
             } else {
                 $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
-                $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);
+                if ($practicePlan) {
+                    $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);
+                }
             }
 
             $improvement = null;
@@ -964,28 +972,36 @@ class RecitationAssessmentService
     private function mirrorLegacyAttempt(
         User $user,
         MemorisationAssessment $assessment,
-        MemorisationPracticePlan $plan,
+        ?MemorisationPracticePlan $plan,
         array $aligned,
         array $analysis
     ): void {
-        if (! $assessment->session_recommendation_id) {
-            return;
-        }
-
-        $attemptNumber = (int) AiReciteAttempt::query()
-            ->where('session_recommendation_id', $assessment->session_recommendation_id)
-            ->max('attempt_number') + 1;
+        $recommendationId = $assessment->session_recommendation_id
+            ? (int) $assessment->session_recommendation_id
+            : null;
+        $attemptNumber = $recommendationId
+            ? (int) AiReciteAttempt::query()
+                ->where('session_recommendation_id', $recommendationId)
+                ->max('attempt_number') + 1
+            : 1;
+        $identity = $recommendationId
+            ? [
+                'session_recommendation_id' => $recommendationId,
+                'attempt_number' => max(1, $attemptNumber),
+            ]
+            : ['memorisation_assessment_id' => $assessment->id];
 
         AiReciteAttempt::query()->updateOrCreate(
-            [
-                'session_recommendation_id' => $assessment->session_recommendation_id,
-                'attempt_number' => max(1, $attemptNumber),
-            ],
+            $identity,
             [
                 'user_id' => $user->id,
+                'session_recommendation_id' => $recommendationId,
                 'user_session_id' => $assessment->user_session_id,
+                'memorisation_assessment_id' => $assessment->id,
+                'source' => $assessment->assessment_type,
+                'attempt_number' => max(1, $attemptNumber),
                 'accuracy_percent' => $aligned['accuracy'],
-                'band' => $plan->band,
+                'band' => $plan?->band ?? RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']),
                 'ayah_range' => [
                     'from' => $assessment->start_ayah,
                     'to' => $assessment->end_ayah,
@@ -1001,11 +1017,11 @@ class RecitationAssessmentService
                 ],
                 'weak_words' => $analysis['weak_words'] ?? [],
                 'word_statuses' => $aligned['word_results'],
-                'plan_snapshot' => [
+                'plan_snapshot' => $plan ? [
                     'title' => $plan->title,
                     'techniques' => $plan->techniques,
                     'config' => $plan->config,
-                ],
+                ] : [],
             ]
         );
     }

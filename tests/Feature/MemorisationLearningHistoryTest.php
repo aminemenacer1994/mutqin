@@ -19,6 +19,12 @@ class MemorisationLearningHistoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config()->set('mutqin.show_recommendation_plan', true);
+    }
+
     /**
      * @return array<string, mixed>
      */

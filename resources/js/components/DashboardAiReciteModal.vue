@@ -157,6 +157,8 @@
                 <time v-if="stage === 'recording'">{{ elapsedLabel }}</time>
               </div>
 
+              <p v-if="stage === 'recording' && liveTranscript" class="dash-ai-recite-arabic" lang="ar" dir="rtl" aria-live="polite">{{ liveTranscript }}</p>
+
               <AppStatus
                 v-if="stage === 'error'"
                 variant="error"
@@ -355,6 +357,7 @@ export default {
       starting: false,
       stopping: false,
       elapsedLabel: '00:00',
+      liveTranscript: '',
       processingLabel: '',
       processingPhase: 'finishing',
       errorTitle: '',
@@ -533,6 +536,11 @@ export default {
       this.recorder = createDashboardAiReciteRecorder({
         onState: (state) => {
           this.elapsedLabel = state.elapsedLabel || '00:00'
+          if (typeof state.transcript === 'string') this.liveTranscript = state.transcript
+          if (state.error && this.stage === 'recording') {
+            this.recorder?.dispose()
+            this.showError(this.t('dashboard.ai_recite.error_title'), this.t('dashboard.ai_recite.network_error'))
+          }
         },
       })
     },
@@ -575,6 +583,7 @@ export default {
         return
       }
       this.starting = true
+      this.liveTranscript = ''
       this.stage = 'starting'
       this.peekRevealed = false
       this.analysisView = null
@@ -630,11 +639,7 @@ export default {
       this.processingLabel = this.t('memorisation.amd.hintProcessing')
       let capture = null
       try {
-        try {
-          capture = await this.recorder.stop()
-        } catch {
-          capture = null
-        }
+        capture = await this.recorder.stop()
         if (!this.isCurrentAnalysis(requestId)) return
         if (!capture?.transcript && !(capture?.words || []).length) {
           this.showError(this.t('dashboard.ai_recite.error_title'), this.t('dashboard.ai_recite.empty_recording'))

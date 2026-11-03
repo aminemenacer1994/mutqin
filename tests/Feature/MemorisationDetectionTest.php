@@ -11,10 +11,51 @@ class MemorisationDetectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config()->set('mutqin.show_recommendation_plan', true);
+    }
+
     public function test_guest_cannot_create_assessment(): void
     {
         $this->postJson('/api/memorisation/assessments', [])
             ->assertUnauthorized();
+    }
+
+    public function test_assessment_skips_hidden_recommendation_plan_but_keeps_feedback(): void
+    {
+        config()->set('mutqin.show_recommendation_plan', false);
+        $user = User::factory()->pro()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/memorisation/assessments', [
+            'surah_number' => 1,
+            'surah_name' => 'Al-Fatihah',
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'duration_ms' => 4500,
+            'provider' => 'test',
+            'ayahs' => [[
+                'ayah_number' => 1,
+                'surah_number' => 1,
+                'words' => ['بسم', 'الله'],
+            ]],
+            'recognition_words' => [
+                ['word' => 'بسم', 'confidence' => 0.95],
+                ['word' => 'الله', 'confidence' => 0.94],
+            ],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('practice_plan', null)
+            ->assertJsonPath('assessment.surah_number', 1);
+        $this->assertDatabaseCount('memorisation_assessments', 1);
+        $this->assertDatabaseCount('memorisation_practice_plans', 0);
+        $this->assertDatabaseHas('ai_recite_attempts', [
+            'user_id' => $user->id,
+            'session_recommendation_id' => null,
+            'accuracy_percent' => 100,
+        ]);
     }
 
     public function test_assessment_creates_plan_and_can_be_started(): void

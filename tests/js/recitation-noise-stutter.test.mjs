@@ -93,8 +93,8 @@ const { resolveAdaptiveSpeechmaticsDelays } = delays.namespace
       targets,
       1,
     ),
-    true,
-    'duplicate within 650ms gap',
+    false,
+    'separate non-overlapping words are not discarded based on timing alone',
   )
   assert.equal(
     shouldSkipLearnerStutterRepeat([{ word: 'بسم' }, { word: 'الله' }], 1, targets, 1),

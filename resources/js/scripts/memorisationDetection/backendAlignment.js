@@ -7,8 +7,12 @@ export function applyBackendAlignmentToResult(result = {}, assessment = {}) {
     const status = (() => {
       if (type === 'MATCH' || type === 'REALIGNMENT') return 'correct'
       if (type === 'DELETION') return 'omitted'
-      if (type === 'SUBSTITUTION' || type === 'DIVERGENCE') return 'incorrect'
-      if (type === 'UNASSESSED') return 'pending'
+      if (type === 'SUBSTITUTION' || type === 'DIVERGENCE') {
+        return ['minor_mistake', 'partial'].includes(String(word?.status || '').toLowerCase())
+          ? 'partial'
+          : 'incorrect'
+      }
+      if (type === 'UNASSESSED') return word?.status === 'uncertain' ? 'uncertain' : 'pending'
       return String(word?.status || 'pending')
     })()
     return {
@@ -19,7 +23,7 @@ export function applyBackendAlignmentToResult(result = {}, assessment = {}) {
       text: word?.displayText || word?.expected_word || word?.text || '',
       status,
       visualStatus: type === 'DELETION'
-        ? 'neutral'
+        ? 'black'
         : (word?.highlight || word?.visual_status || (status === 'correct' ? 'green' : 'neutral')),
       ayahNumber: word?.ayah_number ?? null,
       expectedIndex: word?.expected_index ?? word?.target_index ?? null,

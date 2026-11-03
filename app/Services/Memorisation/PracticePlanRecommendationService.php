@@ -642,7 +642,7 @@ class PracticePlanRecommendationService
         return $this->explainWhy($accuracy, $band, $weakWords, $weakPhrases, $primary, $pattern)['summary'];
     }
 
-    private function friendlySummary(int $accuracy): string
+    public function friendlySummary(int $accuracy): string
     {
         if ($accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
             return 'Mā shā’ Allāh. Strong recall. A light review will keep it firm.';

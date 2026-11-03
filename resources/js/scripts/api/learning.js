@@ -202,10 +202,10 @@ export const learningApi = {
   // Dashboard -------------------------------------------------------------
   async getDashboard(days = 30, options = {}) {
     const safeDays = days === 7 ? 7 : 30
-    const { signal } = options
+    const { signal, fresh = false } = options
     const { data } = await withRetry(() =>
       http.get('/dashboard', {
-        params: { days: safeDays },
+        params: { days: safeDays, ...(fresh ? { fresh: 1 } : {}) },
         signal,
         headers: {
           'Cache-Control': 'no-cache',

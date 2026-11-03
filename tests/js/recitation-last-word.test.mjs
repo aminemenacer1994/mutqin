@@ -30,9 +30,9 @@ const {
 } = analysis.namespace
 
 assert.equal(stripArabicDefiniteArticle('العالمين'), 'عالمين')
-assert.equal(getRecitationWordSimilarity('العالمين', 'عالمين'), 1)
-assert.equal(getRecitationWordSimilarity('والشمس', 'الشمس'), 1, 'wa- + al- ASR drop should still match')
-assert.equal(getRecitationWordSimilarity('والشمس', 'شمس'), 1, 'wa-/al- clitics should match bare stem')
+assert.ok(getRecitationWordSimilarity('العالمين', 'عالمين') < 1)
+assert.ok(getRecitationWordSimilarity('والشمس', 'الشمس') < 1, 'a missing conjunction must remain visible')
+assert.ok(getRecitationWordSimilarity('والشمس', 'شمس') < 1)
 assert.equal(getRecitationWordSimilarity('وضحها', 'وضحها'), 1)
 
 const fatihaRange = 'بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم'
@@ -44,7 +44,7 @@ const preview = buildRealtimePreviewAlignment(fatihaRange, heardThroughAyah2, {
 })
 const alamin = preview.statuses.find(word => word.targetWord === 'العالمين')
 assert.ok(alamin, 'expected العالمين target in statuses')
-assert.equal(alamin.status, 'correct', 'article-stripped last word should count as correct')
+assert.notEqual(alamin.status, 'correct', 'omitted article is not an exact recitation')
 assert.ok(
   preview.progression.currentIndex > alamin.targetIndex,
   'strict progression should advance past a correct ayah-final word'

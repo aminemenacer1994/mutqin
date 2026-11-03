@@ -12,6 +12,14 @@ if (! in_array($rawRecordingRetention, ['never', 'temporary', 'retain'], true)) 
 
 return [
     /*
+     | Post-session recommendation plan.
+     |
+     | Keep disabled while completed practice sessions return to the learner
+     | dashboard. Re-enable the intact plan flow with SHOW_RECOMMENDATION_PLAN=true.
+     */
+    'show_recommendation_plan' => filter_var(env('SHOW_RECOMMENDATION_PLAN', false), FILTER_VALIDATE_BOOL),
+
+    /*
      | Teacher and student management (registration roles, organisations,
      | teacher dashboard, assignments, notes, groups).
      |

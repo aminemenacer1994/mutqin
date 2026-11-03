@@ -793,6 +793,14 @@ import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
+import {
+  clearAiAssessmentRetry,
+  clearSessionCompletionRetry,
+  consumeDashboardRefreshAfterSession,
+  peekDashboardRefreshAfterSession,
+  readAiAssessmentRetry,
+  readSessionCompletionRetry,
+} from '../scripts/session/postSessionDashboardFlow'
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 import {
   captureReturnFocus,
@@ -872,7 +880,9 @@ export default {
     initialData: { type: Object, default: null },
   },
   data() {
-    const initial = this.sanitizePayload(this.initialData)
+    const postSessionMarker = peekDashboardRefreshAfterSession()
+    const forceFresh = !!postSessionMarker
+    const initial = forceFresh ? null : this.sanitizePayload(this.initialData)
     return {
       data: initial,
       loading: !initial,
@@ -886,6 +896,7 @@ export default {
       lastDashboardFetchedAt: initial ? Date.now() : 0,
       lastChartFingerprint: '',
       dashboardQuietTtlMs: 45000,
+      postSessionCompletedSessionId: Number(postSessionMarker?.completedSessionId || 0) || null,
       visibilityHandler: null,
       focusHandler: null,
       escapeHandler: null,
@@ -1739,7 +1750,8 @@ export default {
       })
     },
   },
-  mounted() {
+  async mounted() {
+    const postSessionArrival = consumeDashboardRefreshAfterSession()
     this.reduceMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
     this.syncTheme()
@@ -1757,7 +1769,16 @@ export default {
 
     this.refreshActiveSessionSnapshot()
     this.loadLearnerSupport()
-    if (!this.data) {
+    if (postSessionArrival) {
+      if (postSessionArrival.saveFailed) {
+        this.$nextTick(() => this.showToast(this.t('memorisation.sync.status.failed')))
+      }
+      await this.retryPendingPostSessionWrites()
+      await Promise.allSettled([
+        this.fetchDashboard(this.chartDays, { initial: true, force: true }),
+        this.loadAiReciteResults(),
+      ])
+    } else if (!this.data) {
       this.fetchDashboard(this.chartDays, { initial: true })
     }
     // When SSR/initial payload exists, skip an immediate quiet refetch —
@@ -1786,9 +1807,14 @@ export default {
     window.addEventListener('focus', this.focusHandler)
     document.addEventListener('keydown', this.escapeHandler)
     this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
-      if (online && this.error && !this.data) this.reload(true)
+      if (!online) return
+      if (readSessionCompletionRetry() || readAiAssessmentRetry()) {
+        void this.retryPendingPostSessionWrites().then(() => this.reload(true))
+        return
+      }
+      if (this.error && !this.data) this.reload(true)
     })
-    this.loadAiReciteResults()
+    if (!postSessionArrival) this.loadAiReciteResults()
     this.scrollToAiReciteResults()
     trackAckeeEvent(ACKEE_EVENTS.PROGRESS_DASHBOARD_VIEWED)
   },
@@ -1880,7 +1906,20 @@ export default {
       if (!payload || typeof payload !== 'object') return null
       const owner = Number(payload?.meta?.owner_id || 0)
       if (this.ownerId && owner && owner !== this.ownerId) return null
-      return payload
+      return this.withoutCompletedSavedSession(payload)
+    },
+    withoutCompletedSavedSession(payload) {
+      const completedId = Number(this.postSessionCompletedSessionId || 0)
+      if (completedId <= 0) return payload
+      const matches = (entry) => Number(entry?.session_id || entry?.id || 0) === completedId
+      if (!matches(payload?.continue) && !matches(payload?.journey?.continue)) return payload
+
+      const next = { ...payload }
+      if (matches(next.continue)) next.continue = null
+      if (next.journey && matches(next.journey.continue)) {
+        next.journey = { ...next.journey, continue: null }
+      }
+      return next
     },
     activityTitle(item) {
       if (!item) return ''
@@ -2459,6 +2498,28 @@ export default {
       this.loadAiReciteResults()
       this.loadLearnerSupport()
     },
+    async retryPendingPostSessionWrites() {
+      const sessionRetry = readSessionCompletionRetry()
+      const assessmentRetry = readAiAssessmentRetry()
+      const tasks = []
+
+      if (sessionRetry?.payload) {
+        tasks.push(
+          learningApi.endSession(sessionRetry.payload)
+            .then(() => clearSessionCompletionRetry())
+            .catch(() => null),
+        )
+      }
+      if (assessmentRetry?.payload) {
+        tasks.push(
+          learningApi.createMemorisationAssessment(assessmentRetry.payload)
+            .then(() => clearAiAssessmentRetry())
+            .catch(() => null),
+        )
+      }
+
+      if (tasks.length) await Promise.allSettled(tasks)
+    },
     async loadLearnerSupport() {
       if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportLoading = true
@@ -2577,6 +2638,7 @@ export default {
       try {
         const payload = await learningApi.getDashboard(safeDays, {
           signal: this._dashboardAbort?.signal,
+          fresh: force,
         })
         if (requestId !== this.dashboardRequestId) return
         const sanitized = this.sanitizePayload(payload)

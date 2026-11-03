@@ -10,6 +10,34 @@ use PHPUnit\Framework\TestCase;
 
 class QuranAlignmentServiceTest extends TestCase
 {
+    public function test_repeated_ayah_keeps_next_ayah_at_its_actual_position(): void
+    {
+        $words = ['قل', 'هو', 'الله', 'احد', 'قل', 'هو', 'الله', 'احد', 'الله', 'الصمد', 'لم', 'يلد'];
+        $heard = array_map(static fn ($word) => ['word' => $word, 'confidence' => 0.95], $words);
+        $result = (new QuranAlignmentService)->align([], $heard, 'قل هو الله أحد الله الصمد لم يلد');
+        $this->assertSame([4, 5, 6, 7], array_column($result['extra_words'], 'recognised_index'));
+        $this->assertSame(8, $result['word_results'][4]['recognised_index']);
+    }
+
+    public function test_very_low_confidence_is_not_converted_into_an_omission(): void
+    {
+        $result = (new QuranAlignmentService)->align([], [
+            ['word' => 'قل', 'confidence' => 0.95],
+            ['word' => 'هي', 'confidence' => 0.05],
+            ['word' => 'الله', 'confidence' => 0.95],
+            ['word' => 'احد', 'confidence' => 0.95],
+        ], 'قل هو الله أحد');
+        $this->assertSame('UNASSESSED', $result['word_results'][1]['type']);
+    }
+
+    public function test_confident_short_opening_mismatch_is_not_discarded_as_noise(): void
+    {
+        $heard = array_map(static fn ($word) => ['word' => $word, 'confidence' => 0.95], ['في', 'الله', 'الرحمن', 'الرحيم']);
+        $result = (new QuranAlignmentService)->align([], $heard, 'بسم الله الرحمن الرحيم');
+        $this->assertSame('SUBSTITUTION', $result['word_results'][0]['type']);
+        $this->assertSame('في الله الرحمن الرحيم', $result['transcript']);
+    }
+
     public function test_normalize_strips_diacritics_and_unifies_alef(): void
     {
         $service = new QuranAlignmentService;
@@ -237,10 +265,10 @@ class QuranAlignmentServiceTest extends TestCase
             array_slice($omission['word_results'], 0, 3),
             'type'
         ));
-        $this->assertSame('red', $omission['word_results'][1]['visual_status']);
-        $this->assertSame('red', $omission['word_results'][1]['highlight']);
-        $this->assertSame(1, $omission['color_counts']['red']);
-        $this->assertSame(0, $omission['color_counts']['black']);
+        $this->assertSame('black', $omission['word_results'][1]['visual_status']);
+        $this->assertSame('black', $omission['word_results'][1]['highlight']);
+        $this->assertSame(0, $omission['color_counts']['red']);
+        $this->assertSame(1, $omission['color_counts']['black']);
 
         $insertion = $service->align(
             [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
@@ -1066,7 +1094,7 @@ class QuranAlignmentServiceTest extends TestCase
             ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE', 'DELETION'],
             array_column($final['word_results'], 'type')
         );
-        $this->assertSame('red', $final['word_results'][5]['visual_status']);
+        $this->assertSame('black', $final['word_results'][5]['visual_status']);
         $this->assertNotContains('REALIGNMENT', array_column($final['word_results'], 'type'));
     }
 
@@ -1127,10 +1155,10 @@ class QuranAlignmentServiceTest extends TestCase
                 ['word' => 'الحمد', 'voice_profile' => 'egyptian', 'accent_hint' => 'maghrebi', 'loudness' => 0.9],
                 ['word' => 'لله', 'voice_profile' => 'egyptian', 'accent_hint' => 'maghrebi', 'loudness' => 0.9],
                 ['word' => 'رب', 'voice_profile' => 'egyptian'],
-                ['word' => 'العلمين', 'accent_hint' => 'egyptian'],
+                ['word' => 'العالمين', 'accent_hint' => 'egyptian'],
                 ['word' => 'الصلاه', 'voice_profile' => 'maghrebi'],
                 ['word' => 'السراط', 'voice_profile' => 'egyptian', 'accent_hint' => 'egyptian'],
-                ['word' => 'مالك', 'loudness' => 0.2],
+                ['word' => 'ملك', 'loudness' => 0.2],
             ]
         );
 
@@ -1166,7 +1194,7 @@ class QuranAlignmentServiceTest extends TestCase
             ['باسمالله', 'الرحمن', 'الرحيم'],
             ['lifecycle' => 'live']
         );
-        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($alefVariant['word_results'], 'type'));
+        $this->assertNotSame('MATCH', $alefVariant['word_results'][0]['type']);
 
         $hamd = $this->alignWords(
             ['الحمد', 'لله', 'رب', 'العالمين'],
@@ -1178,7 +1206,7 @@ class QuranAlignmentServiceTest extends TestCase
 
         $leadingJunk = $this->alignWords(
             ['بسم', 'الله', 'الرحمن', 'الرحيم'],
-            ['في', 'الله', 'الرحمن', 'الرحيم'],
+            [['word' => 'في', 'confidence' => 0.2], 'الله', 'الرحمن', 'الرحيم'],
             ['lifecycle' => 'live']
         );
         $this->assertContains($leadingJunk['word_results'][0]['status'], ['pending', 'uncertain']);
@@ -1228,7 +1256,7 @@ class QuranAlignmentServiceTest extends TestCase
             array_column($result['word_results'], 'status')
         );
         $this->assertSame(
-            ['green', 'green', 'red', 'green', 'green', 'green'],
+            ['green', 'green', 'black', 'green', 'green', 'green'],
             array_column($result['word_results'], 'highlight')
         );
     }

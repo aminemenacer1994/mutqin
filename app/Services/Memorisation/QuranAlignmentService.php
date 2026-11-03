@@ -34,6 +34,9 @@ class QuranAlignmentService
 
     public const TYPE_UNASSESSED = 'UNASSESSED';
 
+    /** Per-assessment cache; bounded independently of passage length. */
+    private array $similarityCache = [];
+
     private QuranTextNormalizer $normalizer;
 
     private RecitationConfidencePolicy $confidencePolicy;
@@ -58,12 +61,11 @@ class QuranAlignmentService
      */
     public function align(array $ayahs, array $recognitionWords, string $targetText = '', array $options = []): array
     {
+        $this->similarityCache = [];
         $units = $this->buildTargetUnits($ayahs, $targetText);
         $targetWords = array_map(fn ($u) => $u['word'], $units);
-        $prepared = $this->prepareHeardWordsForAlignment(
-            $targetWords,
-            $this->normaliseHeardWords($recognitionWords)
-        );
+        $originalHeard = $this->normaliseHeardWords($recognitionWords);
+        $prepared = $this->prepareHeardWordsForAlignment($targetWords, $originalHeard);
         $heard = $prepared['heard'];
         $leadingExtras = $prepared['leading_extras'];
         $absorbedEchoes = $prepared['absorbed_echoes'] ?? [];
@@ -74,85 +76,55 @@ class QuranAlignmentService
         $targetCount = count($targetWords);
         $heardCount = count($heardWords);
         $startingAnchor = $this->findStartingAnchor($targetWords, $heard);
+        $repeatedPhrase = $this->adjacentRepeatedPhraseIndices($targetWords, $heardWords);
 
-        $matrix = [];
-        $matrix[0][0] = ['cost' => 0.0, 'prev' => null, 'op' => 'start', 'similarity' => 0.0];
-
-        for ($t = 1; $t <= $targetCount; $t++) {
-            $matrix[$t][0] = [
-                'cost' => $matrix[$t - 1][0]['cost'] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
-                'prev' => [$t - 1, 0],
-                'op' => 'omission',
-                'similarity' => 0.0,
-            ];
-        }
+        // Retain byte-sized directions and two cost rows, not PHP arrays per cell.
+        $directions = [str_repeat("\3", $heardCount + 1)];
+        $previous = [0.0];
+        $extraCosts = [];
         for ($h = 1; $h <= $heardCount; $h++) {
-            $matrix[0][$h] = [
-                'cost' => $matrix[0][$h - 1]['cost'] + $this->extraCost($heard, $h - 1),
-                'prev' => [0, $h - 1],
-                'op' => 'extra',
-                'similarity' => 0.0,
-            ];
+            $extraCosts[$h - 1] = isset($repeatedPhrase[$h - 1]) ? 0.05 : $this->extraCost($heard, $h - 1);
+            $previous[$h] = $previous[$h - 1] + $extraCosts[$h - 1];
         }
-
         for ($t = 1; $t <= $targetCount; $t++) {
+            $current = [$previous[0] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST];
+            $row = str_repeat("\2", $heardCount + 1);
             for ($h = 1; $h <= $heardCount; $h++) {
                 $similarity = $this->similarity($targetWords[$t - 1], $heardWords[$h - 1]);
                 $confidence = max(0.35, min(1.0, (float) ($heard[$h - 1]['confidence'] ?? 1)));
-                // Equal-cost duplicate paths should keep the earliest valid
-                // recitation green and treat the later copy as the restart.
-                // This epsilon only breaks DP ties; it cannot change a real
-                // match/substitution decision.
                 $matchCost = $this->matchCost($targetWords[$t - 1], $heardWords[$h - 1], $similarity, $confidence)
                     + $this->startingAnchorAdjustment($startingAnchor, $t - 1, $h - 1)
-                    + (($t - 1) * 1e-6)
-                    + (($h - 1) * 1e-9);
-
-                $candidates = [
-                    [
-                        'cost' => $matrix[$t - 1][$h - 1]['cost'] + $matchCost,
-                        'prev' => [$t - 1, $h - 1],
-                        'op' => 'match',
-                        'similarity' => $similarity,
-                    ],
-                    [
-                        'cost' => $matrix[$t - 1][$h]['cost'] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
-                        'prev' => [$t - 1, $h],
-                        'op' => 'omission',
-                        'similarity' => 0.0,
-                    ],
-                    [
-                        'cost' => $matrix[$t][$h - 1]['cost'] + $this->extraCost($heard, $h - 1),
-                        'prev' => [$t, $h - 1],
-                        'op' => 'extra',
-                        'similarity' => 0.0,
-                    ],
-                ];
-                $best = $candidates[0];
-                for ($c = 1; $c < 3; $c++) {
-                    $candidate = $candidates[$c];
-                    if (
-                        $candidate['cost'] < $best['cost']
-                        || (
-                            $candidate['cost'] === $best['cost']
-                            && $this->opTie($candidate['op']) < $this->opTie($best['op'])
-                        )
-                    ) {
-                        $best = $candidate;
-                    }
+                    + (isset($repeatedPhrase[$h - 1]) ? 3 : 0)
+                    + (($t - 1) * 1e-6) + (($h - 1) * 1e-9);
+                $best = $previous[$h - 1] + $matchCost;
+                $direction = "\1";
+                $omission = $previous[$h] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST;
+                $extra = $current[$h - 1] + $extraCosts[$h - 1];
+                if ($omission < $best) {
+                    $best = $omission;
+                    $direction = "\2";
                 }
-                $matrix[$t][$h] = $best;
+                if ($extra < $best) {
+                    $best = $extra;
+                    $direction = "\3";
+                }
+                $current[$h] = $best;
+                $row[$h] = $direction;
             }
+            $directions[$t] = $row;
+            $previous = $current;
         }
 
         $operations = [];
         $t = $targetCount;
         $h = $heardCount;
         while ($t > 0 || $h > 0) {
-            $cell = $matrix[$t][$h] ?? null;
-            if (! $cell || $cell['prev'] === null && $t === 0 && $h === 0) {
-                break;
-            }
+            $direction = ord($directions[$t][$h]);
+            $cell = [
+                'op' => $direction === 1 ? 'match' : ($direction === 2 ? 'omission' : 'extra'),
+                'prev' => [$t - ($direction === 3 ? 0 : 1), $h - ($direction === 2 ? 0 : 1)],
+                'similarity' => $direction === 1 ? $this->similarity($targetWords[$t - 1], $heardWords[$h - 1]) : 0.0,
+            ];
             if (($cell['op'] ?? '') === 'match') {
                 $operations[] = [
                     'op' => 'match',
@@ -247,7 +219,7 @@ class QuranAlignmentService
             'word_results' => array_values($statuses),
             'extra_words' => $extraWords,
             'events' => $events,
-            'transcript' => implode(' ', $heardWords),
+            'transcript' => implode(' ', array_column($originalHeard, 'word')),
             'normalised_transcript' => implode(' ', $heardWords),
             'comparison_tokens' => $targetWords,
             'accuracy' => $accuracy,
@@ -273,6 +245,32 @@ class QuranAlignmentService
         return $this->normalizer->normalizeComparisonText($text);
     }
 
+    /** @param list<string> $target @param list<string> $heard @return array<int, true> */
+    private function adjacentRepeatedPhraseIndices(array $target, array $heard): array
+    {
+        $repeated = [];
+        $heardCount = count($heard);
+        $targetCount = count($target);
+        for ($start = 0; $start < $heardCount; $start++) {
+            $maxLength = min(24, intdiv($heardCount - $start, 2));
+            for ($length = $maxLength; $length >= 2; $length--) {
+                $phrase = array_slice($heard, $start, $length);
+                if ($phrase !== array_slice($heard, $start + $length, $length)) continue;
+                $occurrences = 0;
+                for ($index = 0; $index + $length <= $targetCount; $index++) {
+                    if ($phrase === array_slice($target, $index, $length)) $occurrences++;
+                    if ($occurrences > 1) break;
+                }
+                if ($occurrences !== 1) continue;
+                for ($index = $start + $length; $index < $start + 2 * $length; $index++) $repeated[$index] = true;
+                $start += 2 * $length - 1;
+                break;
+            }
+        }
+
+        return $repeated;
+    }
+
     private function stripAlefForCompare(string $word): string
     {
         return str_replace('ا', '', $word);
@@ -286,10 +284,12 @@ class QuranAlignmentService
         if ($left === $right) {
             return true;
         }
-        $a = $this->stripAlefForCompare($left);
-        $b = $this->stripAlefForCompare($right);
+        $spelling = static fn (string $word): string => strtr($word, [
+            'رحمان' => 'رحمن', 'هاذا' => 'هذا', 'هاذه' => 'هذه',
+            'ذالك' => 'ذلك', 'لاكن' => 'لكن', 'اللاه' => 'الله', 'الاه' => 'اله',
+        ]);
 
-        return $a !== '' && $a === $b;
+        return $spelling($left) === $spelling($right);
     }
 
     /**
@@ -400,9 +400,6 @@ class QuranAlignmentService
             // Dialect letter swaps (ص/س, ق/ك) stay substitutions.
             // Keep low-confidence tokens in alignment so classifyMatch can mark them
             // uncertain instead of turning dropped ASR into learner "missing" mistakes.
-            if (! $this->confidencePolicy->isRecognitionUsable($confidence)) {
-                continue;
-            }
             $heard = [
                 'word' => $word,
                 'raw_word' => $raw !== '' ? $raw : $word,
@@ -615,14 +612,6 @@ class QuranAlignmentService
         if ($this->alefOptionalEqual($concatenatedTarget, $heardNormalized)) {
             return true;
         }
-        if (mb_strlen($concatenatedTarget) >= 5 && mb_strlen($heardNormalized) >= 5) {
-            $left = $this->stripAlefForCompare($concatenatedTarget);
-            $right = $this->stripAlefForCompare($heardNormalized);
-            if ($left !== '' && $right !== '' && $this->levenshteinDistance($left, $right) <= 1) {
-                return true;
-            }
-        }
-
         return false;
     }
 
@@ -715,9 +704,6 @@ class QuranAlignmentService
                 return false;
             }
         }
-        if (mb_strlen($word) <= 3) {
-            return true;
-        }
         if ((float) ($heardWord['confidence'] ?? 1) < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
             return true;
         }
@@ -727,28 +713,13 @@ class QuranAlignmentService
 
     private function stripArticle(string $word): string
     {
-        if (str_starts_with($word, 'ال') && mb_strlen($word) > 3) {
-            return mb_substr($word, 2);
-        }
-        if (str_starts_with($word, 'لل') && mb_strlen($word) > 3) {
-            return 'ل'.mb_substr($word, 2);
-        }
-
+        // Articles and conjunctions are spoken lexical content, not formatting.
         return $word;
     }
 
     private function stripClitics(string $word): string
     {
-        $value = $word;
-        if ($value === '') {
-            return $value;
-        }
-        // Only و/ف + ال (والشمس). Bare و must not equate واحد with أحد.
-        if (preg_match('/^[وف]ال/u', $value) === 1 && mb_strlen($value) > 4) {
-            $value = mb_substr($value, 3);
-        }
-
-        return $this->stripArticle($value);
+        return $word;
     }
 
     private function softenAsrForms(string $text): string
@@ -791,6 +762,19 @@ class QuranAlignmentService
     }
 
     private function similarity(string $left, string $right): float
+    {
+        $key = $left."\0".$right;
+        if (isset($this->similarityCache[$key])) {
+            return $this->similarityCache[$key];
+        }
+        if (count($this->similarityCache) >= 8192) {
+            $this->similarityCache = [];
+        }
+
+        return $this->similarityCache[$key] = $this->computeSimilarity($left, $right);
+    }
+
+    private function computeSimilarity(string $left, string $right): float
     {
         if ($left === '' || $right === '') {
             return 0.0;
@@ -2035,11 +2019,8 @@ class QuranAlignmentService
             'ayah_number' => $unit['ayah_number'] ?? null,
             'ayah_key' => $unit['ayah_key'] ?? '',
             'ayah_word_index' => $unit['ayah_word_index'] ?? $index,
-            // A confirmed omission is a learner error on the expected word.
-            // Keep status=missing for API/analytics compatibility, but expose
-            // the visual error as red. Live omissions remain neutral.
-            'visual_status' => $isFinal ? 'red' : 'uncertain',
-            'highlight' => $isFinal ? 'red' : 'neutral',
+            'visual_status' => $isFinal ? 'black' : 'uncertain',
+            'highlight' => $isFinal ? 'black' : 'neutral',
         ];
     }
 
@@ -2555,7 +2536,14 @@ class QuranAlignmentService
         ));
         $extraPenalty = $penalisedExtras * RecitationScoringThresholds::EXTRA_PENALTY;
 
-        return (int) max(0, min(100, round((($correct - $wrongOrderPenalty - $extraPenalty) / $total) * 100)));
+        // Match the client score: a distinct repeated word is evidence, while
+        // self-corrections and full restarts remain recoverable practice events.
+        $repeatPenalty = 3 * count(array_filter(
+            $extraWords,
+            static fn (array $word): bool => ($word['type'] ?? '') === self::TYPE_REPETITION
+        ));
+
+        return (int) max(0, min(100, round((($correct - $wrongOrderPenalty - $extraPenalty) / $total) * 100) - $repeatPenalty));
     }
 
     /**
@@ -2615,7 +2603,7 @@ class QuranAlignmentService
         ];
         foreach ($statuses as $word) {
             if (($word['type'] ?? '') === self::TYPE_DELETION) {
-                $counts['red']++;
+                $counts['black']++;
                 continue;
             }
             match ((string) ($word['status'] ?? '')) {

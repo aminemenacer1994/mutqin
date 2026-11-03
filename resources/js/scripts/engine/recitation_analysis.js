@@ -89,9 +89,14 @@ export function arabicAlefOptionalEqual(left = '', right = '') {
   const b = String(right || '')
   if (!a || !b) return false
   if (a === b) return true
-  const sa = stripArabicAlefForCompare(a)
-  const sb = stripArabicAlefForCompare(b)
-  return sa.length > 0 && sa === sb
+  // Only conventional Arabic spelling variants, never arbitrary deletion of ا
+  // (قال/قل and عباد/عبد are different words). Display text is untouched.
+  const spelling = word => word
+    .replace(/رحمان/g, 'رحمن')
+    .replace(/^هاذا$/, 'هذا').replace(/^هاذه$/, 'هذه')
+    .replace(/^ذالك$/, 'ذلك').replace(/^لاكن$/, 'لكن')
+    .replace(/^اللاه$/, 'الله').replace(/^الاه$/, 'اله')
+  return spelling(a) === spelling(b)
 }
 
 /** ASR often drops or reattaches ال on ayah-final words — compare bare stems too. */
@@ -397,7 +402,7 @@ function findLiveTwoWordRecovery({
   targetWords = [],
   cursor = 0,
   matchThresholds = {},
-  allowArticleMatch = true,
+  allowArticleMatch = false,
   window = 8,
 } = {}) {
   const floor = Number.isFinite(Number(matchThresholds.correctSimilarity))
@@ -479,7 +484,7 @@ function tryLiveOpeningRestart({
   heardIndex = 0,
   cursor = 0,
   extraWords = [],
-  allowArticleMatch = true,
+  allowArticleMatch = false,
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
 } = {}) {
   if (cursor < 2 || targetWords.length < 2 || heardIndex + 1 >= heardWords.length) return false
@@ -613,7 +618,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const minConfidenceForSimilarityCorrect = Number.isFinite(Number(options.minConfidenceForSimilarityCorrect))
     ? Number(options.minConfidenceForSimilarityCorrect)
     : RECITATION_THRESHOLDS.minConfidenceForSimilarityCorrect
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const matchThresholds = {
     correctSimilarity,
     partialSimilarity,
@@ -1060,6 +1065,30 @@ export function selectPrimaryReciterWords(recognitionWords = [], targetText = ''
   }
 }
 
+// A repeated phrase must not borrow a word from the next ayah merely because
+// both start with the same token. Only mark an unambiguous adjacent duplicate.
+function adjacentRepeatedPhraseIndices(targetWords, heardWords) {
+  const repeated = new Set()
+  const heard = heardWords.map(item => item.word)
+  for (let start = 0; start < heard.length; start += 1) {
+    const maxLength = Math.min(24, Math.floor((heard.length - start) / 2))
+    for (let length = maxLength; length >= 2; length -= 1) {
+      if (!heard.slice(start, start + length).every((word, index) => word === heard[start + length + index])) continue
+      const phrase = heard.slice(start, start + length)
+      let occurrences = 0
+      for (let target = 0; target + length <= targetWords.length; target += 1) {
+        if (phrase.every((word, index) => word === targetWords[target + index])) occurrences += 1
+        if (occurrences > 1) break
+      }
+      if (occurrences !== 1) continue
+      for (let index = start + length; index < start + 2 * length; index += 1) repeated.add(index)
+      start += 2 * length - 1
+      break
+    }
+  }
+  return repeated
+}
+
 export function buildQuranAlignment(targetText = '', recognitionWords = [], options = {}) {
   const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
@@ -1079,42 +1108,41 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   const targetCount = targetWords.length
   const heardCount = transcriptWords.length
   const startingAnchor = findStartingAnchor(targetWords, heardWords)
-  const matrix = Array.from({ length: targetCount + 1 }, () => Array(heardCount + 1).fill(null))
-  matrix[0][0] = { cost: 0, prev: null, op: 'start', similarity: 0 }
-
-  for (let targetIndex = 1; targetIndex <= targetCount; targetIndex += 1) {
-    matrix[targetIndex][0] = { cost: matrix[targetIndex - 1][0].cost + RECITATION_THRESHOLDS.alignmentOmissionCost, prev: [targetIndex - 1, 0], op: 'omission', similarity: 0 }
+  // Two cost rows + one byte per backtracking cell, instead of three temporary
+  // objects and a retained object/coordinate array for every word pair.
+  const width = heardCount + 1
+  const directions = new Uint8Array((targetCount + 1) * width)
+  let previousCosts = new Float64Array(width)
+  let currentCosts = new Float64Array(width)
+  const repeatedPhrase = adjacentRepeatedPhraseIndices(targetWords, heardWords)
+  const extraCosts = heardWords.map((_, index) => repeatedPhrase.has(index) ? 0.05 : duplicateAdjustedExtraCost(heardWords, index))
+  for (let h = 1; h <= heardCount; h += 1) {
+    previousCosts[h] = previousCosts[h - 1] + extraCosts[h - 1]
+    directions[h] = 3
   }
-  for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
-    matrix[0][heardIndex] = {
-      cost: matrix[0][heardIndex - 1].cost + duplicateAdjustedExtraCost(heardWords, heardIndex - 1),
-      prev: [0, heardIndex - 1],
-      op: 'extra',
-      similarity: 0
-    }
-  }
-
-  for (let targetIndex = 1; targetIndex <= targetCount; targetIndex += 1) {
-    for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
-      const targetWord = targetWords[targetIndex - 1]
-      const heardWord = heardWords[heardIndex - 1]
-      const allowArticleMatch = options.allowArticleMatch !== false
+  for (let t = 1; t <= targetCount; t += 1) {
+    currentCosts[0] = previousCosts[0] + RECITATION_THRESHOLDS.alignmentOmissionCost
+    directions[t * width] = 2
+    for (let h = 1; h <= heardCount; h += 1) {
+      const targetWord = targetWords[t - 1]
+      const heardWord = heardWords[h - 1]
+      const allowArticleMatch = options.allowArticleMatch === true
       const similarity = getRecitationWordSimilarity(targetWord, heardWord.word, { allowArticleMatch })
-      const confidenceWeight = Math.max(0.35, Math.min(1, Number(heardWord.confidence ?? 1)))
-      const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidenceWeight, {
-        allowArticleMatch,
-      }) + startingAnchorAdjustment(startingAnchor, targetIndex - 1, heardIndex - 1)
-        // Prefer earlier target slots when costs otherwise tie — otherwise
-        // الرحمن latches onto a later identical ayah word and the live cursor jumps.
-        + (targetIndex - 1) * 1e-6
-        + (heardIndex - 1) * 1e-9
-      const candidates = [
-        { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
-        { cost: matrix[targetIndex - 1][heardIndex].cost + RECITATION_THRESHOLDS.alignmentOmissionCost, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
-        { cost: matrix[targetIndex][heardIndex - 1].cost + duplicateAdjustedExtraCost(heardWords, heardIndex - 1), prev: [targetIndex, heardIndex - 1], op: 'extra', similarity: 0 }
-      ]
-      matrix[targetIndex][heardIndex] = candidates.sort((left, right) => left.cost - right.cost || operationTieBreak(left.op) - operationTieBreak(right.op))[0]
+      const confidence = Math.max(0.35, Math.min(1, Number(heardWord.confidence ?? 1)))
+      const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidence, { allowArticleMatch })
+        + startingAnchorAdjustment(startingAnchor, t - 1, h - 1) + (repeatedPhrase.has(h - 1) ? 3 : 0)
+        + (t - 1) * 1e-6 + (h - 1) * 1e-9
+      let best = previousCosts[h - 1] + matchCost
+      let direction = 1
+      const omission = previousCosts[h] + RECITATION_THRESHOLDS.alignmentOmissionCost
+      const extra = currentCosts[h - 1] + extraCosts[h - 1]
+      // Strict comparison preserves the existing match > omission > extra tie order.
+      if (omission < best) { best = omission; direction = 2 }
+      if (extra < best) { best = extra; direction = 3 }
+      currentCosts[h] = best
+      directions[t * width + h] = direction
     }
+    ;[previousCosts, currentCosts] = [currentCosts, previousCosts]
   }
 
   const statuses = displayWords.map((text, index) => ({
@@ -1137,8 +1165,12 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   let targetIndex = targetCount
   let heardIndex = heardCount
   while (targetIndex > 0 || heardIndex > 0) {
-    const cell = matrix[targetIndex][heardIndex]
-    if (!cell) break
+    const direction = directions[targetIndex * width + heardIndex]
+    const cell = {
+      op: direction === 1 ? 'match' : direction === 2 ? 'omission' : 'extra',
+      similarity: direction === 1 ? getRecitationWordSimilarity(targetWords[targetIndex - 1], heardWords[heardIndex - 1].word, { allowArticleMatch: options.allowArticleMatch === true }) : 0,
+      prev: [targetIndex - (direction === 3 ? 0 : 1), heardIndex - (direction === 2 ? 0 : 1)],
+    }
     if (cell.op === 'match') {
       const targetWord = targetWords[targetIndex - 1] || ''
       const heardWord = heardWords[heardIndex - 1] || {}
@@ -1160,7 +1192,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         minConfidenceForCorrect: Number.isFinite(Number(options.minConfidenceForCorrect))
           ? Number(options.minConfidenceForCorrect)
           : 0,
-        allowArticleMatch: options.allowArticleMatch !== false,
+        allowArticleMatch: options.allowArticleMatch === true,
       })
       operations.unshift({ op: 'match', targetIndex: targetIndex - 1, expectedIndex: targetIndex - 1, heardIndex: heardIndex - 1, recognisedIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
@@ -1337,7 +1369,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   quranAware.scenarioCounts = buildQuranScenarioCounts(statuses, extraWords, quranAware.events)
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
   reconcileUncertainFromRejectedWords(statuses, options.rejectedWords || [], {
-    allowArticleMatch: options.allowArticleMatch !== false,
+    allowArticleMatch: options.allowArticleMatch === true,
     correctSimilarity: Number.isFinite(Number(options.correctSimilarity))
       ? Number(options.correctSimilarity)
       : RECITATION_CORRECT_SIMILARITY,
@@ -1383,7 +1415,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     targetWords,
     committedWords: heardWords,
     rawCommittedWords: rawHeardWords,
-    transcript: wordsToTranscript(heardWords),
+    // Keep the recognised sequence even when alignment separates noise.
+    transcript: wordsToTranscript(rawHeardWords),
     statuses,
     wordStatuses: statuses,
     extraWords,
@@ -1738,10 +1771,8 @@ function classifyQuranAwareOperations({
       status.visualStatus = 'neutral'
       status.highlight = 'neutral'
     } else if (operation.type === 'DELETION') {
-      // Keep omission semantics for analytics, but make a confirmed skipped
-      // expected word the only red target in the aligned sequence.
-      status.visualStatus = 'red'
-      status.highlight = 'red'
+      status.visualStatus = 'black'
+      status.highlight = 'black'
     } else if (operation.type === 'DIVERGENCE') {
       status.status = 'incorrect'
       status.visualStatus = 'red'
@@ -2270,21 +2301,15 @@ function buildTargetWordUnits(targetAyahs = [], targetText = '') {
 }
 
 function cloneRecognitionState(state) {
+  // Segments and words are immutable here. Copy containers only when changed;
+  // copying every historical token on each partial made long takes quadratic.
   return {
-    rawEvents: Array.isArray(state?.rawEvents) ? state.rawEvents.map(event => ({ ...event, words: (event.words || []).map(word => ({ ...word })) })) : [],
-    bufferedSegments: Object.entries(state?.bufferedSegments || {}).reduce((carry, [key, segment]) => {
-      carry[key] = { ...segment, words: (segment.words || []).map(word => ({ ...word })) }
-      return carry
-    }, {}),
-    committedWords: Array.isArray(state?.committedWords) ? state.committedWords.map(word => ({ ...word })) : [],
-    interimWords: Array.isArray(state?.interimWords) ? state.interimWords.map(word => ({ ...word })) : [],
-    interimSegment: state?.interimSegment
-      ? {
-          ...state.interimSegment,
-          words: (state.interimSegment.words || []).map(word => ({ ...word }))
-        }
-      : null,
-    rejectedWords: Array.isArray(state?.rejectedWords) ? state.rejectedWords.map(word => ({ ...word })) : [],
+    rawEvents: (state?.rawEvents || []).slice(-119),
+    bufferedSegments: { ...(state?.bufferedSegments || {}) },
+    committedWords: state?.committedWords || [],
+    interimWords: state?.interimWords || [],
+    interimSegment: state?.interimSegment || null,
+    rejectedWords: (state?.rejectedWords || []).slice(-119),
     sequence: Number(state?.sequence || 0)
   }
 }
@@ -2341,7 +2366,7 @@ function shouldApplyExactSkipAhead({
   targetWords = [],
   heardWords = [],
   heardIndex = 0,
-  allowArticleMatch = true,
+  allowArticleMatch = false,
 } = {}) {
   if (exactAheadIndex < 0) return false
   const skipGap = exactAheadIndex - Math.max(0, Number(cursor) || 0)
@@ -2368,7 +2393,7 @@ function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lo
   if (!word) return -1
   const windowSize = Number(lookahead)
   if (!Number.isFinite(windowSize) || windowSize <= 0) return -1
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const end = Math.min(words.length, Math.max(fromIndex, 0) + windowSize)
   for (let index = Math.max(0, fromIndex); index < end; index += 1) {
     const candidate = words[index] || ''
@@ -2397,7 +2422,7 @@ export function findFuzzyWordIndexWithinWindow(
   if (!word) return -1
   const windowSize = Number(lookahead)
   if (!Number.isFinite(windowSize) || windowSize <= 0) return -1
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
     ? Number(options.correctSimilarity)
     : RECITATION_CORRECT_SIMILARITY
@@ -2468,7 +2493,7 @@ export function tryLiveSelfCorrectionBacktrack({
   targetUnits = [],
   matchThresholds = {},
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
-  allowArticleMatch = true,
+  allowArticleMatch = false,
   lookback = LIVE_SELF_CORRECTION_LOOKBACK,
 } = {}) {
   const slotCursor = Number(cursor) || 0
@@ -2765,12 +2790,6 @@ function agglutinationFormsMatch(concatenatedTarget = '', heardNormalized = '') 
   if (!concatenatedTarget || !heardNormalized) return false
   if (concatenatedTarget === heardNormalized) return true
   if (arabicAlefOptionalEqual(concatenatedTarget, heardNormalized)) return true
-  // Near-agglutination (بسمالل ≈ بسمالله) — one edit after alef-optional compare.
-  if (concatenatedTarget.length >= 5 && heardNormalized.length >= 5) {
-    const left = stripArabicAlefForCompare(concatenatedTarget)
-    const right = stripArabicAlefForCompare(heardNormalized)
-    if (left && right && levenshteinDistance(left, right) <= 1) return true
-  }
   return false
 }
 
@@ -2937,7 +2956,8 @@ function isLikelyLeadingAsrJunk(heardWord = {}, targetWords = [], openingTarget 
     getRecitationWordSimilarity(target, word) >= RECITATION_CORRECT_SIMILARITY
   ))
   if (appearsInTarget) return false
-  if (word.length <= 3) return true
+  // Word length alone is not evidence of noise: genuine Quranic mistakes
+  // frequently consist of short, confidently recognised words.
   if (Number(heardWord?.confidence ?? 1) < RECITATION_UNCERTAIN_CONFIDENCE) return true
   return false
 }
@@ -3013,7 +3033,7 @@ function isNearbyWord(left = {}, right = {}) {
   if (leftEnd !== null && rightStart !== null) {
     const gapMs = (rightStart - leftEnd) * 1000
     // Overlap or a short ASR re-emit / stutter — not a deliberate pause-repeat.
-    return gapMs <= RECITATION_ASR_REEMIT_MAX_GAP_MS
+    return gapMs < 0
   }
   // Missing timestamps: only treat as nearby within the same segment.
   // Defaulting to true previously dropped legitimate last-word re-emits after EOU.
@@ -3134,16 +3154,18 @@ export function detectHesitationEvents({
 /** True when consecutive identical tokens look like a deliberate learner repeat. */
 function isDeliberateHeardRepetition(previous = {}, current = {}) {
   if (!previous?.word || previous.word !== current?.word) return false
+  const token = heardRecognitionToken(previous)
+  if (token !== null && token === heardRecognitionToken(current)) return false
   const gapMs = heardWordGapMs(previous, current)
   // Timed: only a clear pause counts as a learner repetition.
-  if (gapMs !== null) return gapMs > RECITATION_ASR_REEMIT_MAX_GAP_MS
+  if (gapMs !== null) return gapMs >= 0
   // No timestamps (transcript / recovered): keep consecutive duplicates as repeats.
   return true
 }
 
 function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, options = {}) {
   if (targetWord === heardWord) return 0
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   if (
     allowArticleMatch
     && stripArabicDefiniteArticle(targetWord) === stripArabicDefiniteArticle(heardWord)
@@ -3329,7 +3351,7 @@ export function isLikelyOffTargetTransientNoise(
   const targets = Array.isArray(targetWords) ? targetWords : []
   if (!targets.length) return false
 
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const partialFloor = Number.isFinite(Number(options.partialSimilarity))
     ? Number(options.partialSimilarity)
     : 0.35
@@ -3366,7 +3388,7 @@ function findSameSlotRecovery({
   targetWords = [],
   matchThresholds = {},
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
-  allowArticleMatch = true,
+  allowArticleMatch = false,
 } = {}) {
   const expected = String(targetWord || '')
   if (!expected) return null
@@ -3470,7 +3492,7 @@ export function differsOnlyBySoftAsrLetters(left, right, options = {}) {
   const a = String(left || '')
   const b = String(right || '')
   if (!a || !b || a === b) return false
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const strippedA = stripArabicDefiniteArticle(a)
   const strippedB = stripArabicDefiniteArticle(b)
   const cliticA = stripArabicClitics(a)
@@ -3492,14 +3514,24 @@ export function differsOnlyBySoftAsrLetters(left, right, options = {}) {
   return false
 }
 
+const wordSimilarityCache = new Map()
 export function getRecitationWordSimilarity(left, right, options = {}) {
+  const key = `${left}\0${right}\0${options.allowArticleMatch === true}\0${options.softSimilarityCap ?? ''}`
+  if (wordSimilarityCache.has(key)) return wordSimilarityCache.get(key)
+  const value = computeRecitationWordSimilarity(left, right, options)
+  if (wordSimilarityCache.size >= 8192) wordSimilarityCache.clear()
+  wordSimilarityCache.set(key, value)
+  return value
+}
+
+function computeRecitationWordSimilarity(left, right, options = {}) {
   // Always re-normalize so mushaf dagger-alef (ٰ) expands even if a caller
   // passed display orthography or a stale pre-normalized stem.
   const a = normalizeArabicForRecitation(left)
   const b = normalizeArabicForRecitation(right)
   if (!a || !b) return 0
   if (a === b) return 1
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const strippedA = stripArabicDefiniteArticle(a)
   const strippedB = stripArabicDefiniteArticle(b)
   const cliticA = stripArabicClitics(a)
@@ -3556,7 +3588,7 @@ export function isSingleEditMismatch(left, right, options = {}) {
   if (!a || !b || a === b) return false
   // Alef presence is orthographic (dagger↔plain / ملك↔مالك), not a learner error.
   if (arabicAlefOptionalEqual(a, b)) return false
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const candidates = [[a, b]]
   if (allowArticleMatch) {
     const strippedA = stripArabicDefiniteArticle(a)
@@ -3616,7 +3648,7 @@ function classifyWordMatch({
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
   partialSimilarity = RECITATION_THRESHOLDS.partialSimilarity,
   minConfidenceForCorrect = 0,
-  allowArticleMatch = true,
+  allowArticleMatch = false,
   uncertainConfidence = RECITATION_UNCERTAIN_CONFIDENCE,
   minConfidenceForSimilarityCorrect = RECITATION_THRESHOLDS.minConfidenceForSimilarityCorrect,
 }) {
@@ -3778,7 +3810,7 @@ function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], 
     })
     .filter(Boolean)
   if (!rejected.length) return statuses
-  const allowArticleMatch = options.allowArticleMatch !== false
+  const allowArticleMatch = options.allowArticleMatch === true
   const correctFloor = Number.isFinite(Number(options.correctSimilarity))
     ? Number(options.correctSimilarity)
     : RECITATION_CORRECT_SIMILARITY
@@ -4002,7 +4034,7 @@ export function getRecitationColorCounts(statuses = []) {
   }
   for (const word of list) {
     const color = String(word?.type || '').toUpperCase() === 'DELETION'
-      ? RECITATION_COLOR.RED
+      ? RECITATION_COLOR.BLACK
       : classifyRecitationWordColor(word?.status ?? word?.visualStatus ?? word)
     if (color === RECITATION_COLOR.UNCERTAIN) counts.uncertain += 1
     else counts[color] += 1

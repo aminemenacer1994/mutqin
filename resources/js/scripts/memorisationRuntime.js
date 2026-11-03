@@ -51,12 +51,12 @@ export const RECITATION_IDB_NAME = 'mutqin-recitation-sessions'
 export const RECITATION_IDB_VERSION = 2
 export const RECITATION_IDB_STORE = 'sessions'
 export const RECITATION_HISTORY_IDB_STORE = 'sessionHistory'
-export const RECITATION_ANALYSIS_VERSION = '2026-06-27-live-rtl-v2'
+export const RECITATION_ANALYSIS_VERSION = '2026-11-03-complete-stream-v3'
 export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.35)
 // Give learners room to breathe between āyahs — 1.4s was cutting mid-passage.
 export const RECITATION_SILENCE_THROTTLE_MS = 3200
 // Larger slices cut MediaRecorder/main-thread churn without hurting ASR latency.
-export const RECITATION_CHUNK_TIMESLICE_MS = 50
+export const RECITATION_CHUNK_TIMESLICE_MS = 250
 export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 2200
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 400
 /**
@@ -69,8 +69,8 @@ export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 400
  */
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.4
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 1024
-/** ~1s of 16-bit PCM at 48kHz / 1024-sample frames. Drop older frames instead of dumping. */
-const SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS = 48
+/** Bound startup/network buffering to 15 seconds; overflow invalidates the take. */
+const SPEECHMATICS_MAX_PENDING_AUDIO_SECONDS = 15
 /** Never send more than ~125ms of audio per pump tick after a main-thread stall. */
 export const SPEECHMATICS_MAX_DRAIN_BUFFERS = 8
 /** Back off when the browser WS buffer is this full (Speechmatics closes faster-than-realtime dumps). */
@@ -518,7 +518,7 @@ export function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = f
         word,
         confidence: isPartial
           ? SPEECHMATICS_PARTIAL_CONFIDENCE
-          : (Number.isFinite(confidence) ? confidence : 1),
+          : (alternative?.confidence != null && Number.isFinite(confidence) ? confidence : 0.4),
         ...(isPartial ? { provisional: true } : {}),
         ...(token !== undefined && token !== null ? { token, speechmaticsToken: token } : {}),
         start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
@@ -545,20 +545,16 @@ export function createTranscriptionAudioBridge(stream = null) {
   if (!stream || !AudioContextCtor) return null
 
   const audioContext = new AudioContextCtor()
-  const createProcessor = typeof audioContext.createScriptProcessor === 'function'
-    ? audioContext.createScriptProcessor.bind(audioContext)
-    : null
-  if (!createProcessor) {
-    try { audioContext.close() } catch { }
-    return null
-  }
-
   const source = audioContext.createMediaStreamSource(stream)
-  const processor = createProcessor(SPEECHMATICS_AUDIO_BUFFER_SIZE, 1, 1)
+  let processor = null
+  let worklet = false
+  let stopped = false
+  let captureFinished = null
   const sink = audioContext.createGain()
-  // A zero gain lets browsers drop the ScriptProcessor and send Speechmatics silence.
-  sink.gain.value = 0.00001
+  sink.gain.value = 0
   const pendingBuffers = []
+  let droppedSamples = 0
+  const maxPendingBuffers = Math.ceil(audioContext.sampleRate * SPEECHMATICS_MAX_PENDING_AUDIO_SECONDS / SPEECHMATICS_AUDIO_BUFFER_SIZE)
   let sampleCount = 0
   let sumSquares = 0
   let peak = 0
@@ -567,35 +563,63 @@ export function createTranscriptionAudioBridge(stream = null) {
   let activeFrames = 0
   const frameLevels = []
 
-  processor.onaudioprocess = event => {
-    const samples = event?.inputBuffer?.getChannelData?.(0)
-    if (!samples?.length) return
-    let frameSquares = 0
-    for (let index = 0; index < samples.length; index += 1) {
-      const magnitude = Math.abs(Number(samples[index] || 0))
-      frameSquares += magnitude * magnitude
-      peak = Math.max(peak, magnitude)
-      if (magnitude >= 0.995) clippedSamples += 1
-    }
-    sampleCount += samples.length
-    sumSquares += frameSquares
+  const acceptFrame = ({ buffer, count, squares, peak: framePeak, clipped }) => {
+    if (stopped || !buffer?.byteLength) return
+    sampleCount += count
+    sumSquares += squares
+    peak = Math.max(peak, framePeak)
+    clippedSamples += clipped
     frameCount += 1
-    const frameRms = Math.sqrt(frameSquares / samples.length)
+    const frameRms = Math.sqrt(squares / count)
     frameLevels.push(frameRms)
     if (frameRms >= 0.012) activeFrames += 1
     if (frameLevels.length > 2400) frameLevels.splice(0, frameLevels.length - 1200)
-    pendingBuffers.push(float32ToPcm16Buffer(samples))
-    if (pendingBuffers.length > SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS) {
-      pendingBuffers.splice(0, pendingBuffers.length - SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS)
+    pendingBuffers.push(buffer)
+    if (pendingBuffers.length > maxPendingBuffers) {
+      const dropped = pendingBuffers.splice(0, pendingBuffers.length - maxPendingBuffers)
+      droppedSamples += dropped.reduce((sum, item) => sum + item.byteLength / 2, 0)
     }
   }
-
-  source.connect(processor)
-  processor.connect(sink)
-  sink.connect(audioContext.destination)
+  const setup = (async () => {
+    if (audioContext.audioWorklet && typeof window.AudioWorkletNode === 'function') {
+      try {
+        await audioContext.audioWorklet.addModule(new URL('./audio/pcmCapture.worklet.js', import.meta.url))
+        if (stopped) return
+        processor = new window.AudioWorkletNode(audioContext, 'recitation-pcm-capture')
+        worklet = true
+        processor.port.onmessage = ({ data }) => {
+          if (data.stopped) captureFinished?.()
+          else acceptFrame(data)
+        }
+      } catch { /* Older browsers/CSP: keep the supported ScriptProcessor path. */ }
+    }
+    if (stopped) return
+    if (!processor) {
+      if (typeof audioContext.createScriptProcessor !== 'function') throw new Error('Audio capture is not supported.')
+      processor = audioContext.createScriptProcessor(SPEECHMATICS_AUDIO_BUFFER_SIZE, 1, 1)
+      processor.onaudioprocess = event => {
+        const samples = event?.inputBuffer?.getChannelData?.(0)
+        if (!samples?.length) return
+        let squares = 0, framePeak = 0, clipped = 0
+        for (const sample of samples) {
+          squares += sample * sample
+          framePeak = Math.max(framePeak, Math.abs(sample))
+          if (Math.abs(sample) >= 0.995) clipped++
+        }
+        acceptFrame({ buffer: float32ToPcm16Buffer(samples), count: samples.length, squares, peak: framePeak, clipped })
+      }
+    }
+    source.connect(processor)
+    processor.connect(sink)
+    sink.connect(audioContext.destination)
+  })()
+  // Prevent a rejected setup from becoming an unhandled rejection before ensureRunning.
+  setup.catch(() => {})
 
   let resumeInFlight = null
-  const ensureRunning = () => {
+  const ensureRunning = async () => {
+    try { await setup } catch { return false }
+    if (stopped) return false
     if (audioContext.state === 'closed') return Promise.resolve(false)
     if (audioContext.state === 'running') return Promise.resolve(true)
     if (!resumeInFlight) {
@@ -640,8 +664,9 @@ export function createTranscriptionAudioBridge(stream = null) {
         clipping_ratio: sampleCount ? Math.min(1, clippedSamples / sampleCount) : 0,
         speech_ratio: frameCount ? Math.min(1, activeFrames / frameCount) : 0,
         snr_db: Number.isFinite(snrDb) ? Math.max(-100, Math.min(100, snrDb)) : null,
-        complete: sampleCount > 0,
-        broken: sampleCount === 0,
+        complete: sampleCount > 0 && droppedSamples === 0,
+        broken: sampleCount === 0 || droppedSamples > 0,
+        dropped_samples: droppedSamples,
       }
     },
     /**
@@ -679,9 +704,23 @@ export function createTranscriptionAudioBridge(stream = null) {
       pendingBuffers.length = 0
       return merged
     },
+    async finishCapture() {
+      await setup
+      if (worklet && !stopped) {
+        await new Promise(resolve => {
+          const timer = window.setTimeout(() => { droppedSamples += 1; resolve() }, 1500)
+          captureFinished = () => { window.clearTimeout(timer); resolve() }
+          processor.port.postMessage('stop')
+        })
+      }
+      const metrics = this.getQualityMetrics()
+      const buffer = this.stop()
+      return { buffer, metrics }
+    },
     stop() {
+      stopped = true
       const remaining = this.flush()
-      try { processor.onaudioprocess = null } catch { }
+      try { if (processor.port) processor.port.onmessage = null; processor.onaudioprocess = null } catch { }
       try { source.disconnect() } catch { }
       try { processor.disconnect() } catch { }
       try { sink.disconnect() } catch { }
@@ -708,6 +747,16 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
   let recognitionId = ''
   let connectionGeneration = 0
   let terminalError = false
+  let recognitionStarted = false
+  let transcriptComplete = false
+  let completionError = null
+  const completionWaiters = new Set()
+  const settleCompletion = error => {
+    if (error) completionError = error
+    else transcriptComplete = true
+    for (const waiter of completionWaiters) error ? waiter.reject(error) : waiter.resolve(true)
+    completionWaiters.clear()
+  }
   let appliedMaxDelay = null
   let appliedEndOfUtterance = null
 
@@ -761,6 +810,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
   }
 
   const emitError = error => {
+    settleCompletion(error)
     try { errorHandler(error) } catch { }
   }
 
@@ -809,7 +859,9 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       return this
     },
     async connect() {
+      const generation = ++connectionGeneration
       const auth = await options.getAccessToken?.()
+      if (generation !== connectionGeneration) throw createProviderError('Transcription start was cancelled.', { category: 'connection' })
       const accessToken = String(auth?.accessToken || auth?.access_token || '').trim()
       const websocketHost = String(auth?.websocketHost || auth?.websocket_host || '').trim()
       const sampleRate = Number(options.getSampleRate?.() || 0)
@@ -827,7 +879,9 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       terminalError = false
       appliedMaxDelay = null
       appliedEndOfUtterance = null
-      const generation = ++connectionGeneration
+      recognitionStarted = false
+      transcriptComplete = false
+      completionError = null
 
       return await new Promise((resolve, reject) => {
         readyResolve = resolve
@@ -895,6 +949,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
           }
 
           if (message?.message === 'RecognitionStarted') {
+            recognitionStarted = true
             recognitionId = String(message?.id || '').trim()
             settleReady(readyResolve, true)
             return
@@ -912,11 +967,22 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
           }
 
           if (message?.message === 'EndOfTranscript') {
+            settleCompletion(null)
             transcriptHandler({
               type: 'end-of-transcript',
               provider: 'speechmatics',
               raw: message
             })
+            return
+          }
+
+          if (message?.message === 'Warning' && message?.type === 'duration_limit_exceeded') {
+            terminalError = true
+            emitError(createProviderError('The transcription session reached its duration limit. Please retry in a shorter range.', {
+              category: 'stream',
+              providerType: 'duration_limit_exceeded',
+            }))
+            try { socket?.close() } catch { }
             return
           }
 
@@ -939,7 +1005,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         socket.onclose = event => {
           if (generation !== connectionGeneration) return
           clearHandshakeTimer()
-          const wasIntentional = intentionallyClosing
+          const wasIntentional = intentionallyClosing || transcriptComplete
           const closeCode = Number(event?.code || 0)
           const category = closeCode === 4001 ? 'auth' : (readySettled ? 'stream' : 'connection')
           const message = category === 'auth'
@@ -964,7 +1030,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       })
     },
     streamAudioChunk(chunk) {
-      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      if (!recognitionStarted || !socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent || completionError) return false
       if (Number(socket.bufferedAmount || 0) > SPEECHMATICS_SOCKET_BACKPRESSURE_BYTES) return false
       const buffer = chunk instanceof ArrayBuffer ? chunk : mergeArrayBuffers([chunk])
       if (!buffer?.byteLength) return false
@@ -981,7 +1047,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       }
     },
     forceEndOfUtterance() {
-      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      if (!recognitionStarted || !socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent || completionError) return false
       try {
         socket.send(JSON.stringify({ message: 'ForceEndOfUtterance' }))
         return true
@@ -993,7 +1059,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       return Number(socket?.bufferedAmount || 0)
     },
     endStream() {
-      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      if (!recognitionStarted || !socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent || completionError) return false
       try {
         socket.send(JSON.stringify({
           message: 'EndOfStream',
@@ -1005,7 +1071,32 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         return false
       }
     },
+    async finishStream(trailingAudio = null, { timeoutMs = 10000 } = {}) {
+      const deadline = Date.now() + timeoutMs
+      if (completionError) throw completionError
+      if (trailingAudio?.byteLength) {
+        while (!this.streamAudioChunk(trailingAudio)) {
+          if (completionError) throw completionError
+          if (!this.isOpen() || Date.now() >= deadline) throw createProviderError('Audio transmission did not complete.', { category: 'stream' })
+          // Poll transport backpressure, not UI or transcript quietness.
+          await new Promise(resolve => window.setTimeout(resolve, 20))
+        }
+      }
+      if (transcriptComplete) return true
+      if (!this.endStream() && !endOfStreamSent) throw createProviderError('Transcription stream could not finish.', { category: 'stream' })
+      return new Promise((resolve, reject) => {
+        let timer
+        const waiter = {
+          resolve: value => { window.clearTimeout(timer); completionWaiters.delete(waiter); resolve(value) },
+          reject: error => { window.clearTimeout(timer); completionWaiters.delete(waiter); reject(error) },
+        }
+        timer = window.setTimeout(() => waiter.reject(createProviderError('Transcription did not finish. Please retry.', { category: 'stream' })), Math.max(1, deadline - Date.now()))
+        completionWaiters.add(waiter)
+      })
+    },
     disconnect(options = {}) {
+      if (!transcriptComplete) settleCompletion(createProviderError('Transcription was interrupted.', { category: 'stream' }))
+      settleReady(readyReject, createProviderError('Transcription start was cancelled.', { category: 'connection' }))
       intentionallyClosing = true
       connectionGeneration += 1
       clearHandshakeTimer()
@@ -1060,14 +1151,14 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       })
     },
     isOpen() {
-      return !!socket && socket.readyState === WebSocket.OPEN
+      return recognitionStarted && !completionError && !!socket && socket.readyState === WebSocket.OPEN
     },
     /**
      * Push a new pace tier into the open session. SetRecognitionConfig updates
      * max_delay and end_of_utterance in place — do not reconnect mid-ayah.
      */
     updateRecognitionDelays(delays = {}) {
-      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      if (!recognitionStarted || !socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent || completionError) return false
       const update = buildSpeechmaticsRecognitionUpdate(delays)
       const maxDelay = update.transcription_config.max_delay
       const endOfUtterance = update.transcription_config.conversation_config.end_of_utterance_silence_trigger

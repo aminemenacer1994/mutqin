@@ -44,6 +44,13 @@ import {
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisationSource = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+const memorisationStop = memorisationSource.slice(
+  memorisationSource.indexOf('this.aiMemorisationCheckerChunks = []', memorisationSource.indexOf('async startAiMemorisationChecker')),
+  memorisationSource.indexOf('async submitAiMemorisationChecker'),
+)
+assert.doesNotMatch(memorisationStop, /transcriptionFailure/, 'the memorisation recorder has its own finalization error handler')
+const recitationStop = memorisationSource.slice(memorisationSource.indexOf('let transcriptionFailure = null'))
+assert.match(recitationStop, /if \(transcriptionFailure\) throw transcriptionFailure/, 'incomplete recitation must not be submitted')
 const ikhlas = 'قُلْ هُوَ ٱللَّهُ أَحَدٌ'
 
 function statusMap(result) {

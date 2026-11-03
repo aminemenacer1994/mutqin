@@ -18,7 +18,7 @@ for (const [type, expectedStatus] of types) {
     alignment: { extra_words: [], events: [], scenario_counts: { [type]: 1 } },
   })
   assert.equal(result.wordStatuses[0].status, expectedStatus, type)
-  if (type === 'DELETION') assert.equal(result.wordStatuses[0].visualStatus, 'neutral')
+  if (type === 'DELETION') assert.equal(result.wordStatuses[0].visualStatus, 'black')
   assert.equal(result.backendFinalised, true)
 }
 
@@ -37,5 +37,13 @@ const mapped = applyBackendAlignmentToResult({}, {
 assert.deepEqual(mapped.alignmentEvents, events)
 assert.deepEqual(mapped.extraWords, extras)
 assert.equal(mapped.scenarioCounts.self_corrections, 1)
+
+const uncertain = applyBackendAlignmentToResult({}, {
+  word_results: [
+    { type: 'SUBSTITUTION', status: 'minor_mistake', highlight: 'amber' },
+    { type: 'UNASSESSED', status: 'uncertain', highlight: 'neutral' },
+  ],
+})
+assert.deepEqual(uncertain.wordStatuses.map(word => word.status), ['partial', 'uncertain'])
 
 console.log('backend-alignment-handoff.test.mjs: ok')

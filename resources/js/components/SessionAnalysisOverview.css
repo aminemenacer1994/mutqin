@@ -506,7 +506,8 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-correct { color: #2d6a4f; }
-#sa-session-overview.session-analysis-modal-root .sa-ov__word.is-weak {
+#sa-session-overview.session-analysis-modal-root .sa-ov__word.is-weak,
+#sa-session-overview.session-analysis-modal-root .sa-ov__word.is-uncertain {
   color: #8a6412;
   background: rgba(201, 162, 39, 0.18);
 }
@@ -1799,7 +1800,8 @@ html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root {
   color: #91d8b2;
 }
 
-[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-weak {
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-weak,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-uncertain {
   color: #f1cb77;
   background: rgba(241, 203, 119, 0.14);
 }

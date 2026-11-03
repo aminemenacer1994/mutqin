@@ -176,11 +176,11 @@ function assertStatuses(result, expected) {
   assert.equal(getRecitationWordSimilarity('ٱلْعَٰلَمِينَ', 'العالمين'), 1)
   assert.equal(getRecitationWordSimilarity('ٱلصِّرَٰطَ', 'الصراط'), 1)
   assert.equal(getRecitationWordSimilarity('مَلِكِ', 'ملك'), 1)
-  assert.equal(getRecitationWordSimilarity('مَٰلِكِ', 'ملك'), 1)
+  assert.ok(getRecitationWordSimilarity('مَٰلِكِ', 'ملك') < 1)
   assert.equal(getRecitationWordSimilarity('الرَّحْمَٰنِ', 'الرحمن'), 1)
-  // Even the historically broken stem (dagger deleted) must still match via optional alef.
-  assert.equal(getRecitationWordSimilarity('العلمين', 'العالمين'), 1)
-  assert.equal(getRecitationWordSimilarity('الصرط', 'الصراط'), 1)
+  // An absent spoken alif stays uncertain/partial; it is never silently deleted.
+  assert.ok(getRecitationWordSimilarity('العلمين', 'العالمين') < 1)
+  assert.ok(getRecitationWordSimilarity('الصرط', 'الصراط') < 1)
 
   const result = buildDeterministicRecitationResult(
     'الْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ مَلِكِ يَوْمِ ٱلدِّينِ ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ',
@@ -250,11 +250,11 @@ function assertStatuses(result, expected) {
   assert.equal(reemitResult.mistakes.repeated.length, 0)
   assert.ok(reemitResult.accuracyScore >= 95)
 
-  // Short-gap ASR re-emit (non-overlapping) must not count as a learner repetition.
+  // A repeated provider token is a re-emission even with a short gap.
   const shortGapReemit = [
     { word: 'قل', confidence: 0.95, start: 0.1, end: 0.3, segmentId: 'a' },
-    { word: 'هو', confidence: 0.9, start: 0.35, end: 0.5, segmentId: 'a' },
-    { word: 'هو', confidence: 0.95, start: 0.72, end: 0.9, segmentId: 'a' },
+    { word: 'هو', confidence: 0.9, start: 0.35, end: 0.5, segmentId: 'a', token: 'same' },
+    { word: 'هو', confidence: 0.95, start: 0.72, end: 0.9, segmentId: 'a', token: 'same' },
     { word: 'الله', confidence: 0.95, start: 0.95, end: 1.2, segmentId: 'a' },
     { word: 'أحد', confidence: 0.95, start: 1.25, end: 1.5, segmentId: 'a' },
   ]

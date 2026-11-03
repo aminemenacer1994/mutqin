@@ -1,6 +1,6 @@
 # AI Recite — Real Qur’an Passage QA
 
-Generated: 2026-11-02
+Generated: 2026-11-03
 
 Reference edition: **quran-uthmani** (Al Quran Cloud), with Mutqin assessment basmala stripping for surahs ≥ 2.
 Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat scoring.
@@ -21,7 +21,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 106 | perfect | mocked_recognition | PASS | 100 | ok |
 | 106 | partial | mocked_recognition | PASS | 41 | ok |
 | 106 | skipped_word | mocked_recognition | PASS | 94 | ok |
-| 106 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 106 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 106 | substituted_word | mocked_recognition | PASS | 94 | ok |
 | 106 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 106 | skipped_ayah | mocked_recognition | PASS | 76 | ok |
@@ -30,7 +30,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 1 | perfect | mocked_recognition | PASS | 100 | ok |
 | 1 | partial | mocked_recognition | PASS | 45 | ok |
 | 1 | skipped_word | mocked_recognition | PASS | 97 | ok |
-| 1 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 1 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 1 | substituted_word | mocked_recognition | PASS | 97 | ok |
 | 1 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 1 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -40,7 +40,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 112 | perfect | mocked_recognition | PASS | 100 | ok |
 | 112 | partial | mocked_recognition | PASS | 40 | ok |
 | 112 | skipped_word | mocked_recognition | PASS | 93 | ok |
-| 112 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 112 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 112 | substituted_word | mocked_recognition | PASS | 93 | ok |
 | 112 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 112 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -50,7 +50,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 113 | perfect | mocked_recognition | PASS | 100 | ok |
 | 113 | partial | mocked_recognition | PASS | 43 | ok |
 | 113 | skipped_word | mocked_recognition | PASS | 96 | ok |
-| 113 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 113 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 113 | substituted_word | mocked_recognition | PASS | 96 | ok |
 | 113 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 113 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -60,7 +60,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 114 | perfect | mocked_recognition | PASS | 100 | ok |
 | 114 | partial | mocked_recognition | PASS | 45 | ok |
 | 114 | skipped_word | mocked_recognition | PASS | 95 | ok |
-| 114 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 114 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 114 | substituted_word | mocked_recognition | PASS | 95 | ok |
 | 114 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 114 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -70,7 +70,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 108 | perfect | mocked_recognition | PASS | 100 | ok |
 | 108 | partial | mocked_recognition | PASS | 40 | ok |
 | 108 | skipped_word | mocked_recognition | PASS | 90 | ok |
-| 108 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 108 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 108 | substituted_word | mocked_recognition | PASS | 90 | ok |
 | 108 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 108 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -80,7 +80,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 103 | perfect | mocked_recognition | PASS | 100 | ok |
 | 103 | partial | mocked_recognition | PASS | 43 | ok |
 | 103 | skipped_word | mocked_recognition | PASS | 93 | ok |
-| 103 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 103 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 103 | substituted_word | mocked_recognition | PASS | 93 | ok |
 | 103 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 103 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -90,7 +90,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 107 | perfect | mocked_recognition | PASS | 100 | ok |
 | 107 | partial | mocked_recognition | PASS | 44 | ok |
 | 107 | skipped_word | mocked_recognition | PASS | 96 | ok |
-| 107 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 107 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 107 | substituted_word | mocked_recognition | PASS | 96 | ok |
 | 107 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 107 | pause_hesitation | mocked_recognition | PASS | 100 | ok |
@@ -100,7 +100,7 @@ Provider unchanged (Speechmatics). Word-accuracy only — no Tajweed/harakat sco
 | 109 | perfect | mocked_recognition | PASS | 100 | ok |
 | 109 | partial | mocked_recognition | PASS | 42 | ok |
 | 109 | skipped_word | mocked_recognition | PASS | 96 | ok |
-| 109 | repeated_word | mocked_recognition | PASS | 100 | ok |
+| 109 | repeated_word | mocked_recognition | PASS | 97 | extras: REPETITION |
 | 109 | substituted_word | mocked_recognition | PASS | 96 | ok |
 | 109 | self_correction | mocked_recognition | PASS | 100 | extras: SELF_CORRECTION |
 | 109 | pause_hesitation | mocked_recognition | PASS | 100 | ok |

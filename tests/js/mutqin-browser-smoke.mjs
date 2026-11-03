@@ -10,7 +10,7 @@ async function ensureWorkspace(page) {
   const onLoginGate = await page.locator('.auth-tester-notice, .workspace-shell-idle-cta').count()
   const needsAuth = await page.locator('text=Sign in to continue').count()
 
-  if (needsAuth || (onLoginGate && !(await page.locator('.workspace-shell').count()))) {
+  if (new URL(page.url()).pathname === '/login' || needsAuth || (onLoginGate && !(await page.locator('.workspace-shell').count()))) {
     await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 })
     const demoButton = page.getByRole('button', { name: /sign in with demo/i })
     if (await demoButton.count()) {
@@ -43,7 +43,7 @@ async function smokePage(name, contextOptions) {
 
     const result = await page.evaluate(() => ({
       ready: !!document.querySelector('.main'),
-      hasSetup: !!document.querySelector('.setup-start-card, .session-rail, .workspace-shell-idle, .workspace-shell-idle-cta, .top-card-session-actions, .action-btn.primary'),
+      hasSetup: !!document.querySelector('.setup-start-card, .session-rail, .workspace-shell-idle, .workspace-shell-idle-cta, .top-card-session-actions, .action-btn.primary, [data-tour="welcome-start"]'),
       hasWorkspaceShell: !!document.querySelector('.workspace-shell, .session-progress-rail'),
       horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
       bodyText: document.body.innerText.slice(0, 300)

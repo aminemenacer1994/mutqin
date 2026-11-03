@@ -18,6 +18,7 @@
             'has_pro_access' => Auth::user()?->hasProAccess() ?? false,
             'pricing_url' => route('pricing'),
             'dashboard_url' => route('dashboard'),
+            'show_recommendation_plan' => (bool) config('mutqin.show_recommendation_plan', false),
             'locale' => Auth::user()?->locale ?? 'en',
             'ai_session_settings' => Auth::check()
                 ? app(\App\Services\Auth\AiSessionSettingsService::class)->snapshot($memorisationUser)

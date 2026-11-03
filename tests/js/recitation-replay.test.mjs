@@ -126,11 +126,11 @@ const reorderedFinals = comparable(replayRecognitionSession([...finalEvents].rev
 }))
 
 assert.deepEqual(reorderedFinals, baseline)
-// Short-gap duplicate "هو" in finalEvents is an ASR re-emit, not a learner extra.
+// Distinct timed words are retained as repetition evidence.
 assert.equal(baseline.mistakeCounts.extra, 0)
 assert.equal(baseline.scores.completionPercentage, 100)
-assert.equal(baseline.scores.accuracyScore, 100)
-assert.equal(baseline.retentionSignals.needsReview, false)
+assert.equal(baseline.scores.accuracyScore, 97)
+assert.equal(baseline.retentionSignals.needsReview, true)
 
 const tutorRecognitionWords = createWordsFromTranscript('قل غلط الله أحد')
 const reviewProgression = buildDeterministicRecitationResult(targetText, tutorRecognitionWords, {
@@ -212,7 +212,7 @@ assert.ok(omissionResult.skippedWords.some(group => group.words.includes('هو')
 assert.ok(omissionResult.mistakes.wordSkips.some(group => group.words.includes('هو')))
 assert.equal(omissionResult.verseJumpDetected, false)
 assert.ok(omissionResult.wordStatuses.some(word => word.text === 'هو' && word.status === 'omitted'))
-assert.ok((omissionResult.colorCounts?.red || 0) >= 1)
+assert.ok((omissionResult.colorCounts?.black || 0) >= 1)
 assert.ok(omissionResult.weakAyahs.includes(1))
 
 const extraResult = buildDeterministicRecitationResult(

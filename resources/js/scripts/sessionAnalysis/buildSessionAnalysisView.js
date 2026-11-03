@@ -132,9 +132,10 @@ function toneForStatus(word) {
   const isDeletion = String(word?.type || '').toUpperCase() === 'DELETION'
   const color = isDeletion
     ? RECITATION_COLOR.BLACK
-    : classifyRecitationWordColor(word?.visualStatus || word?.status || word)
+    : classifyRecitationWordColor(word?.status || word?.visualStatus || word)
   if (color === RECITATION_COLOR.GREEN) return 'is-correct'
   if (color === RECITATION_COLOR.AMBER) return 'is-weak'
+  if (color === RECITATION_COLOR.UNCERTAIN) return 'is-uncertain'
   if (color === RECITATION_COLOR.RED) return 'is-incorrect'
   if (color === RECITATION_COLOR.BLACK) return 'is-omitted'
   return 'is-neutral'
