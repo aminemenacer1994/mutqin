@@ -119,6 +119,21 @@ return [
             'hesitation_seconds' => max(0.5, (float) env('MUTQIN_HESITATION_PAUSE_SECONDS', 1.35)),
             'self_correction_seconds' => max(0.0, (float) env('MUTQIN_SELF_CORRECTION_PAUSE_SECONDS', 0.55)),
         ],
+        /*
+         * Optional default lifetime cap on AI voice checks (MemorisationAssessment rows).
+         * Null / empty = no default cap; per-user override via users.ai_recite_lifetime_limit.
+         */
+        'default_lifetime_limit' => env('MUTQIN_AI_RECITE_DEFAULT_LIFETIME_LIMIT'),
+        // UTC-day cap on saved voice checks (MemorisationAssessment rows). 0 disables.
+        'default_daily_limit' => max(0, (int) env('MUTQIN_AI_RECITE_DEFAULT_DAILY_LIMIT', 10)),
+        'daily_limit_exempt_emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => strtolower(trim($email)),
+            explode(',', (string) env('MUTQIN_AI_RECITE_DAILY_LIMIT_EXEMPT_EMAILS', 'menacer72@gmail.com'))
+        ))),
+        'daily_limit_exempt_names' => array_values(array_filter(array_map(
+            static fn (string $name): string => strtolower(preg_replace('/\s+/', ' ', trim($name)) ?? ''),
+            explode('|', (string) env('MUTQIN_AI_RECITE_DAILY_LIMIT_EXEMPT_NAMES', 'amine menacer'))
+        ))),
     ],
 
     /*
@@ -145,14 +160,6 @@ return [
         'monitor_at' => env('BACKUP_MONITOR_AT', '02:00'),
         // Laravel Cloud MySQL automated snapshot retention (dashboard), documented for ops.
         'cloud_mysql_retention_days' => (int) env('MUTQIN_CLOUD_MYSQL_BACKUP_RETENTION_DAYS', 30),
-    ],
-
-    /*
-     * Optional default lifetime cap on AI voice checks (MemorisationAssessment rows).
-     * Null / empty = no default cap; per-user override via users.ai_recite_lifetime_limit.
-     */
-    'ai_recite' => [
-        'default_lifetime_limit' => env('MUTQIN_AI_RECITE_DEFAULT_LIFETIME_LIMIT'),
     ],
 
     'registered_users' => [

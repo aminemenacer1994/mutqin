@@ -452,9 +452,12 @@ export default {
 
 .qpc-madani-word.anchor-highlight {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.28), rgba(255, 152, 0, 0.34));
-  box-shadow: inset 0 -0.14em 0 #ff9800;
-  border-radius: 0.08em;
+  background: rgba(255, 193, 7, 0.55);
+  box-shadow:
+    inset 0 -0.18em 0 #e65100,
+    0 0 0 0.08em rgba(255, 152, 0, 0.45);
+  border-radius: 0.12em;
+  animation: qpcMadaniAnchorPulse 1.05s ease-in-out infinite;
 }
 
 .qpc-madani-word.user-word-highlight {
@@ -468,7 +471,7 @@ export default {
 }
 
 .qpc-madani-word.anchor-pulse {
-  animation: qpcMadaniAnchorPulse 0.6s ease-out;
+  animation: qpcMadaniAnchorPulse 1.05s ease-in-out infinite;
 }
 
 .qpc-madani-word.is-chain-member {
@@ -491,13 +494,17 @@ export default {
 @keyframes qpcMadaniAnchorPulse {
   0%,
   100% {
-    box-shadow: inset 0 -0.14em 0 #ff9800;
+    background: rgba(255, 193, 7, 0.34);
+    box-shadow:
+      inset 0 -0.16em 0 #ff9800,
+      0 0 0 0 rgba(255, 152, 0, 0);
   }
 
   50% {
+    background: rgba(255, 152, 0, 0.82);
     box-shadow:
-      inset 0 -0.14em 0 #ff9800,
-      0 0 0 0.18em rgba(255, 152, 0, 0);
+      inset 0 -0.22em 0 #e65100,
+      0 0 0 0.16em rgba(255, 152, 0, 0.62);
   }
 }
 

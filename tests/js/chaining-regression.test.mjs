@@ -48,9 +48,11 @@ function simulateCumulativeVisualKeys(verses, endIndexInclusive) {
 // —— Short range (2 ayahs) ——
 const short = makeVerses(1, 2)
 const shortLinking = buildChainingGroups(short, 'linking')
-assert.equal(shortLinking.length, 3, '2 ayahs linking → 2 singles + 1 pair')
-assert.equal(shortLinking[1].length, 2)
-assert.equal(shortLinking[1][0].chainKey, 'linking:1:1->1:2')
+assert.equal(shortLinking.length, 3, '2 ayahs linking → current, next, then the pair')
+assert.equal(shortLinking[0][0].verse.key, '1:1')
+assert.equal(shortLinking[1][0].verse.key, '1:2')
+assert.equal(shortLinking[2].length, 2)
+assert.equal(shortLinking[2][0].chainKey, 'linking:1:1->1:2')
 
 const shortCumulative = buildChainingGroups(short, 'cumulative')
 assert.equal(shortCumulative.length, 2)
@@ -62,7 +64,7 @@ assert.equal(shouldRenderChainingJoinedFlow(simulateCumulativeVisualKeys(short, 
 // —— Long range (30 ayahs) ——
 const long = makeVerses(2, 30)
 const longLinking = buildChainingGroups(long, 'linking')
-assert.equal(longLinking.length, 59, '30 ayahs linking → 30 singles + 29 pairs')
+assert.equal(longLinking.length, 87, '30 ayahs linking → 29 joins of current, next, then pair')
 
 const longCumulative = buildChainingGroups(long, 'cumulative')
 assert.equal(longCumulative.length, 30)
@@ -143,7 +145,7 @@ const linkingGroups = buildChainingGroups(makeVerses(110, 4), 'linking')
 const cumulativeGroups = buildChainingGroups(makeVerses(110, 4), 'cumulative')
 assert.notEqual(linkingGroups.length, cumulativeGroups.length)
 assert.equal(cumulativeGroups.length, 4)
-assert.equal(linkingGroups.length, 7)
+assert.equal(linkingGroups.length, 9)
 
 // —— Reload / persistence ——
 assert.match(

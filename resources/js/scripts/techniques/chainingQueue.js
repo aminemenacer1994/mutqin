@@ -39,44 +39,54 @@ export function buildCumulativeChainGroups(verses = []) {
   return groups
 }
 
+function linkingSingle(verse) {
+  return [{
+    verse,
+    phase: 'Linking',
+    chainKey: `linking:single:${verseKey(verse)}`,
+    sequencePosition: 1,
+    sequenceTotal: 1,
+  }]
+}
+
+function linkingPair(current, next) {
+  const pairKey = `linking:${verseKey(current)}->${verseKey(next)}`
+  return [
+    {
+      verse: current,
+      phase: 'Linking',
+      chainKey: pairKey,
+      sequencePosition: 1,
+      sequenceTotal: 2,
+    },
+    {
+      verse: next,
+      phase: 'Linking',
+      chainKey: pairKey,
+      sequencePosition: 2,
+      sequenceTotal: 2,
+    },
+  ]
+}
+
 /**
- * Linking method: each ayah alone, then each adjacent pair as one step.
+ * Linking method: for each neighbouring join, practise the current ayah,
+ * then the next ayah, then both together.
  * @returns {Array<Array<object>>}
  */
 export function buildLinkingChainGroups(verses = []) {
   const unique = uniqueVerses(verses)
+  if (unique.length <= 1) {
+    return unique.map((verse) => linkingSingle(verse))
+  }
+
   const groups = []
-
-  for (let index = 0; index < unique.length; index += 1) {
-    const verse = unique[index]
-    groups.push([{
-      verse,
-      phase: 'Linking',
-      chainKey: `linking:single:${verseKey(verse)}`,
-      sequencePosition: 1,
-      sequenceTotal: 1,
-    }])
-
-    const nextVerse = unique[index + 1]
-    if (nextVerse) {
-      const pairKey = `linking:${verseKey(verse)}->${verseKey(nextVerse)}`
-      groups.push([
-        {
-          verse,
-          phase: 'Linking',
-          chainKey: pairKey,
-          sequencePosition: 1,
-          sequenceTotal: 2,
-        },
-        {
-          verse: nextVerse,
-          phase: 'Linking',
-          chainKey: pairKey,
-          sequencePosition: 2,
-          sequenceTotal: 2,
-        },
-      ])
-    }
+  for (let index = 0; index < unique.length - 1; index += 1) {
+    const current = unique[index]
+    const next = unique[index + 1]
+    groups.push(linkingSingle(current))
+    groups.push(linkingSingle(next))
+    groups.push(linkingPair(current, next))
   }
 
   return groups
@@ -98,4 +108,16 @@ export function buildLinkingChainSteps(verses = []) {
 export function buildChainingGroups(verses = [], method = 'linking') {
   if (method === 'cumulative') return buildCumulativeChainGroups(verses)
   return buildLinkingChainGroups(verses)
+}
+
+/**
+ * True while the current queue entry is mid-block: the next entry is the rest
+ * of the same linking pair or cumulative run, so playback should continue
+ * straight into it instead of waiting the between-step gap.
+ */
+export function chainGroupContinues(entry = null) {
+  if (!entry?.chainKey) return false
+  const position = Number(entry.sequencePosition || 1)
+  const total = Number(entry.sequenceTotal || 1)
+  return total > 1 && position < total
 }

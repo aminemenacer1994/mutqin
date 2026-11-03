@@ -5235,9 +5235,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .tools-body .offcanvas-audio-panel .radio-group-compact .radio {
-    flex: 0 0 auto !important;
-    min-height: 2rem !important;
-    padding: 0.28rem 0.72rem !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    padding: 0.28rem 0.55rem !important;
+    align-items: center !important;
     white-space: nowrap !important;
   }
 
@@ -5251,9 +5252,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .tools-body .sheet--setup .session-range-preset__option {
-    min-height: 2.75rem !important;
+    min-height: 2.05rem !important;
     width: 100% !important;
     max-width: none !important;
+    align-items: center !important;
   }
 
   .tools-body .setup-field-row > .select,

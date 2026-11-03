@@ -60,4 +60,46 @@ class UserAiReciteLifetimeLimitTest extends TestCase
             ->assertJsonPath('ai_recite_usage.voice_checks_limit', 50)
             ->assertJsonPath('user.ai_recite_lifetime_limit', 50);
     }
+
+    public function test_daily_limit_blocks_transcription_token_after_ten_checks_today(): void
+    {
+        config()->set('mutqin.ai_recite.default_daily_limit', 10);
+
+        $user = User::factory()->create([
+            'email' => 'learner-daily@example.com',
+            'email_verified_at' => now(),
+            'subscription_status' => 'active',
+            'subscription_tier' => 'pro',
+        ]);
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->createAssessment($user);
+        }
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertStatus(429)
+            ->assertJsonPath('reason', UserAiReciteUsageService::REASON_DAILY);
+    }
+
+    public function test_daily_limit_does_not_apply_to_exempt_operator_account(): void
+    {
+        config()->set('mutqin.ai_recite.default_daily_limit', 10);
+
+        $user = User::factory()->create([
+            'name' => 'Amine Menacer',
+            'email' => 'menacer72@gmail.com',
+            'email_verified_at' => now(),
+            'subscription_status' => 'active',
+            'subscription_tier' => 'pro',
+        ]);
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->createAssessment($user);
+        }
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk();
+    }
 }

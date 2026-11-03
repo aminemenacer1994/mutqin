@@ -1,5 +1,5 @@
-/* Homepage — light / sepia / dark via shared tokens */
-@import url('https://fonts.bunny.net/css?family=source-serif-4:400,500,600,700');
+/* Homepage — light / sepia / dark via shared tokens.
+   Source Serif 4 is loaded from resources/views/partials/font-links.blade.php. */
 
 .homepage {
   --hp-display: "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
@@ -2008,4 +2008,16 @@ html[dir="rtl"] .hero__fan-item--right {
     font-weight: 550;
     line-height: 1.25;
   }
+}
+
+/* Skip layout and paint until these blocks approach the viewport.
+   The hero, first-session walkthrough, and features carousel stay eager. */
+.homepage > .practice-types,
+.homepage > .purpose,
+.homepage > .closing,
+.homepage > .faq,
+.homepage > .contact {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 42rem;
+  contain-intrinsic-size: auto 42rem;
 }

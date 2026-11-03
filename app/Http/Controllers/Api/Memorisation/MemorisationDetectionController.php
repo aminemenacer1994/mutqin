@@ -34,9 +34,11 @@ class MemorisationDetectionController extends Controller
             return null;
         }
 
+        $reason = $usage['reason'] ?? UserAiReciteUsageService::REASON;
+
         return response()->json([
-            'message' => UserAiReciteUsageService::LEARNER_MESSAGE,
-            'reason' => UserAiReciteUsageService::REASON,
+            'message' => app(UserAiReciteUsageService::class)->learnerMessageForReason($reason),
+            'reason' => $reason,
         ], 429);
     }
 

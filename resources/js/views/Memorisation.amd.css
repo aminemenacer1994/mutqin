@@ -8792,9 +8792,9 @@ html body .app .tools-body .sheet-toggle--practice .mode-radio {
 
 html body .app .tools-body .setup-field-row.field-repetitions-clean,
 html body .app .tools-body .setup-field-row.field-individual-ayah-unified {
-  padding: 0.5rem 0.58rem !important;
-  gap: 0.4rem !important;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--border) 18%, transparent) !important;
+  padding: 0.42rem 0.55rem !important;
+  gap: 0.28rem !important;
+  box-shadow: none !important;
 }
 
 html body .app .tools-body .offcanvas-audio-panel .radio-group-compact {
@@ -8807,10 +8807,13 @@ html body .app .tools-body .offcanvas-audio-panel .radio-group-compact {
 }
 
 html body .app .tools-body .offcanvas-audio-panel .radio-group-compact .radio {
-  flex: 0 0 auto !important;
+  flex: 1 1 0 !important;
   width: auto !important;
-  min-height: 2rem !important;
+  min-height: 0 !important;
+  padding: 0.28rem 0.55rem !important;
   white-space: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
 }
 
 html body .app .tools-body .sheet--setup .session-range-preset {
@@ -8827,9 +8830,11 @@ html body .app .tools-body .sheet--setup .session-range-preset {
 html body .app .tools-body .sheet--setup .session-range-preset__option {
   flex: 1 1 0 !important;
   width: auto !important;
-  min-height: 2.75rem !important;
+  min-height: 0 !important;
   max-width: none !important;
-  padding: 0.32rem 0.35rem !important;
+  padding: 0.32rem 0.45rem !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 html body .app .tools-body .sheet--setup .session-range-block {
@@ -8854,7 +8859,7 @@ html body .app .tools-body:has(.sheet--setup) {
 html body .app .tools-body .sheet--setup {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.65rem !important;
+  gap: 0.45rem !important;
   width: 100% !important;
 }
 
@@ -8864,21 +8869,22 @@ html body .app .tools-body .sheet--setup .sheet-section-compact .sheet-toggle {
 }
 
 html body .app .tools-body .sheet--setup .sheet-content {
-  padding: 0.7rem 0.8rem 0.9rem !important;
+  padding: 0.45rem 0.6rem 0.55rem !important;
 }
 
-html body .app .tools-body .sheet--setup .setup-field-list {
+html body .app .tools-body .sheet.sheet--setup .sheet-content .setup-field-list {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.9rem !important;
+  gap: 0.4rem !important;
 }
 
 html body .app .tools-body .sheet--setup .setup-field-row {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.52rem !important;
+  align-items: stretch !important;
+  gap: 0.32rem !important;
   margin: 0 !important;
-  padding: 0.72rem 0.92rem !important;
+  padding: 0.48rem 0.65rem !important;
   box-sizing: border-box !important;
 }
 
@@ -8894,10 +8900,34 @@ html body .app .tools-body .sheet--setup .individual-ayah-repeat-label {
 }
 
 html body .app .tools-body .sheet--setup .select,
-html body .app .tools-body .sheet--setup .input,
-html body .app .tools-body .sheet--setup .range.range-single .input {
-  min-height: 2.55rem !important;
-  padding: 0.58rem 0.9rem !important;
+html body .app .tools-body .sheet--setup .input:not([type="range"]),
+html body .app .tools-body .sheet--setup .range.range-single .input:not([type="range"]) {
+  min-height: 2.15rem !important;
+  padding: 0.38rem 0.7rem !important;
+}
+
+html body .app .tools-body .sheet.sheet--setup .range-control,
+html body .app .tools-body .sheet.sheet--setup .individual-ayah-range-control {
+  margin: 0 !important;
+  padding: 0.1rem 0 !important;
+}
+
+html body .app .tools-body .sheet.sheet--setup input.technique-range {
+  width: 100% !important;
+  height: 18px !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .app .tools-body .sheet.sheet--setup .slider-markers-aligned {
+  height: 0.95rem !important;
+  margin: 0 10px !important;
 }
 
 html body .app .tools-body .sheet--setup .range.range-single {
@@ -8905,22 +8935,97 @@ html body .app .tools-body .sheet--setup .range.range-single {
 }
 
 html body .app .tools-body .sheet--setup .field-hint {
-  margin: 0.2rem 0 0 !important;
-  padding-top: 0.12rem !important;
+  margin: 0 !important;
+  padding-top: 0 !important;
   font-size: 0.72rem !important;
-  line-height: 1.45 !important;
+  line-height: 1.35 !important;
 }
 
 html body .app .tools-body .sheet--setup .field-repetitions-clean,
 html body .app .tools-body .sheet--setup .field-individual-ayah-unified {
-  gap: 0.5rem !important;
-  padding: 0.65rem 0.72rem !important;
+  gap: 0.28rem !important;
+  padding: 0.42rem 0.58rem !important;
 }
 
 html body .app .tools-body .sheet--setup .range-control,
 html body .app .tools-body .sheet--setup .individual-ayah-range-control {
   margin: 0 !important;
-  padding: 0.28rem 0.45rem !important;
+  padding: 0.12rem 0.4rem !important;
+}
+
+html body .app .tools-body .sheet--setup .individual-ayah-header,
+html body .app .tools-body .sheet--setup .field-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+}
+
+html body .app .tools-body .sheet--setup .field-repetitions-clean .field-header {
+  justify-content: flex-start !important;
+}
+
+html body .app .tools-body .sheet--setup .individual-ayah-toggle {
+  width: 1.6rem !important;
+  min-width: 1.6rem !important;
+  max-width: 1.6rem !important;
+  height: 1.6rem !important;
+  min-height: 1.6rem !important;
+  max-height: 1.6rem !important;
+  flex: 0 0 1.6rem !important;
+  margin: 0 !important;
+  align-self: center !important;
+}
+
+html body .app .tools-body .sheet--setup .playback-mode-radios {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  width: 100% !important;
+  align-items: stretch !important;
+  gap: 0.25rem !important;
+  padding: 0.22rem !important;
+  border-radius: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+  background: color-mix(in srgb, var(--zone-elevated) 90%, var(--surface) 10%) !important;
+  box-sizing: border-box !important;
+}
+
+html body .app .tools-body .sheet--setup .playback-mode-radios .radio {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0.32rem 0.45rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  line-height: 1.2 !important;
+}
+
+html body .app .tools-body .sheet--setup .playback-mode-radios .radio:has(input:checked),
+html body .app .tools-body .sheet--setup .playback-mode-radios .radio:has(input:checked):hover {
+  border: 0 !important;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, var(--border)) !important;
+}
+
+html body .app .tools-body .sheet--setup .playback-mode-radios .radio input[type="radio"],
+html body .app .tools-body .sheet--setup .session-range-preset__option input[type="radio"] {
+  width: 1rem !important;
+  height: 1rem !important;
+  min-width: 1rem !important;
+  min-height: 1rem !important;
+  max-width: 1rem !important;
+  max-height: 1rem !important;
+  flex: 0 0 1rem !important;
+  margin: 0 !important;
+  align-self: center !important;
 }
 
 html body .app .tools-body .sheet--setup .slider-markers {
@@ -8951,7 +9056,7 @@ html[data-theme="dark"] body .app .tools-body .sheet--setup .sheet-content,
 
 html[data-theme="dark"] body .app .tools-body .sheet--setup .setup-field-row,
 [data-theme="dark"] html body .app .tools-body .sheet--setup .setup-field-row {
-  padding: 0.85rem 1.08rem !important;
+  padding: 0.5rem 0.7rem !important;
 }
 
 html[data-theme="dark"] body .app .tools-body .sheet--setup .setup-field-row > label,
@@ -8962,11 +9067,11 @@ html[data-theme="dark"] body .app .tools-body .sheet--setup .field-hint,
 }
 
 html[data-theme="dark"] body .app .tools-body .sheet--setup .select,
-html[data-theme="dark"] body .app .tools-body .sheet--setup .input,
-html[data-theme="dark"] body .app .tools-body .sheet--setup .range.range-single .input,
+html[data-theme="dark"] body .app .tools-body .sheet--setup .input:not([type="range"]),
+html[data-theme="dark"] body .app .tools-body .sheet--setup .range.range-single .input:not([type="range"]),
 [data-theme="dark"] html body .app .tools-body .sheet--setup .select,
-[data-theme="dark"] html body .app .tools-body .sheet--setup .input,
-[data-theme="dark"] html body .app .tools-body .sheet--setup .range.range-single .input {
+[data-theme="dark"] html body .app .tools-body .sheet--setup .input:not([type="range"]),
+[data-theme="dark"] html body .app .tools-body .sheet--setup .range.range-single .input:not([type="range"]) {
   padding-inline: 1rem !important;
 }
 
@@ -8974,7 +9079,7 @@ html[data-theme="dark"] body .app .tools-body .sheet--setup .field-repetitions-c
 html[data-theme="dark"] body .app .tools-body .sheet--setup .field-individual-ayah-unified,
 [data-theme="dark"] html body .app .tools-body .sheet--setup .field-repetitions-clean,
 [data-theme="dark"] html body .app .tools-body .sheet--setup .field-individual-ayah-unified {
-  padding: 0.78rem 1.05rem !important;
+  padding: 0.45rem 0.62rem !important;
 }
 
 /* QPC / IndoPak surah banners — centred on the page (ayah rows stay RTL). */

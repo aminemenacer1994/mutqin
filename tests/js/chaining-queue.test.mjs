@@ -8,6 +8,7 @@ import {
   buildLinkingChainGroups,
   buildLinkingChainSteps,
   buildChainingGroups,
+  chainGroupContinues,
 } from '../../resources/js/scripts/techniques/chainingQueue.js'
 import { TECHNIQUE_IDS } from '../../resources/js/scripts/techniques/techniqueDisplay.js'
 
@@ -36,25 +37,46 @@ assert.deepEqual(
   linkingFlat.map(item => `${item.phase}:${item.chainKey}:${item.sequencePosition}/${item.sequenceTotal}`),
   [
     'Linking:linking:single:110:1:1/1',
+    'Linking:linking:single:110:2:1/1',
     'Linking:linking:110:1->110:2:1/2',
     'Linking:linking:110:1->110:2:2/2',
-    'Linking:linking:single:110:2:1/1',
   ]
 )
 
 const linkingGroups = buildLinkingChainGroups(verses.slice(0, 3))
-assert.equal(linkingGroups.length, 5, '3 ayahs → 3 singles + 2 pairs')
-assert.equal(linkingGroups[1].length, 2)
-assert.equal(linkingGroups[1][0].chainKey, 'linking:110:1->110:2')
+assert.equal(linkingGroups.length, 6, '3 ayahs → two joins, each current, next, then pair')
+assert.equal(linkingGroups[2].length, 2)
+assert.equal(linkingGroups[2][0].chainKey, 'linking:110:1->110:2')
+assert.equal(linkingGroups[3][0].verse.key, '110:2')
+assert.equal(linkingGroups[4][0].verse.key, '110:3')
 
 assert.equal(buildChainingGroups(verses, 'cumulative').length, 4)
-assert.equal(buildChainingGroups(verses, 'linking').length, 7)
+assert.equal(buildChainingGroups(verses, 'linking').length, 9)
+assert.equal(buildChainingGroups(verses.slice(0, 1), 'linking').length, 1)
+
+const anam = [
+  { key: '6:1' },
+  { key: '6:2' },
+  { key: '6:3' },
+]
+const anamLink = buildLinkingChainSteps(anam)
+assert.deepEqual(anamLink.map((item) => item.verse.key), [
+  '6:1', '6:2', '6:1', '6:2',
+  '6:2', '6:3', '6:2', '6:3',
+])
+assert.equal(chainGroupContinues(anamLink[0]), false, 'a single ayah keeps the between-step gap')
+assert.equal(chainGroupContinues(anamLink[2]), true, 'first half of a pair continues straight into the next ayah')
+assert.equal(chainGroupContinues(anamLink[3]), false, 'the pair ends after the second ayah')
+assert.equal(chainGroupContinues(buildCumulativeChainSteps(anam)[3]), true)
+assert.equal(chainGroupContinues(null), false)
 
 const memorisationJs = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
 const memorisationVue = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 
-assert.match(memorisationJs, /import \{ buildChainingGroups \} from '\.\.\/scripts\/techniques\/chainingQueue\.js'/)
+assert.match(memorisationJs, /import \{ buildChainingGroups, chainGroupContinues \} from '\.\.\/scripts\/techniques\/chainingQueue\.js'/)
 assert.match(memorisationJs, /buildChainingGroups\(verses, method\)/)
+assert.match(memorisationJs, /chainGroupContinues\(this\.activeQueueEntry\)/)
+assert.match(memorisationJs, /spokenWordCountByAyah/)
 assert.doesNotMatch(memorisationJs, /createAyahSegments/, 'linking must stay ayah-level')
 
 const workspaceTechniques = [

@@ -31,12 +31,22 @@ export function spokenAudioWordPosition(word, fallbackPosition = 0) {
 
 export function isSpokenAudioWord(word) {
   if (word == null) return false
-  if (typeof word === 'string') return !!String(word).trim()
+  if (typeof word === 'string') {
+    const text = String(word).trim()
+    return !!text && !isMushafOrnamentWordText(text)
+  }
   if (word.isEnd === true) return false
   const charType = String(word.char_type_name || word.charType || '').toLowerCase()
-  if (charType === 'end') return false
+  if (charType === 'end' || charType === 'pause') return false
   if (Number(word.word) === 0) return false
-  return !!spokenAudioWordText(word)
+  const text = spokenAudioWordText(word)
+  if (!text) return false
+  // Whitespace tokens (pause marks, ayah digits) have no mushaf position.
+  // QPC glyphs do: their font text has no Arabic letters, but `word` is set.
+  const position = Number(word.position ?? word.word_position ?? word.wordPosition ?? word.word)
+  const hasExplicitPosition = Number.isFinite(position) && position > 0
+  if (!hasExplicitPosition && isMushafOrnamentWordText(text)) return false
+  return true
 }
 
 export function listSpokenAudioWords(verse = {}) {

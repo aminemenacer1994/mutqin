@@ -521,8 +521,6 @@ export default {
 </script>
 
 <style scoped>
-@import url('https://fonts.bunny.net/css?family=source-serif-4:400,500,600,700');
-
 .waiting-list-page {
   --wl-display: "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
   --wl-cta-fg: var(--text-on-accent, #fffaf5);

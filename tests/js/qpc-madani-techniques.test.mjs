@@ -155,6 +155,47 @@ assert.equal(userMarked.isUserHighlight, true)
 assert.equal(userMarked.isAnchor, false)
 assert.equal(madaniQpcWordTechniqueClass(userMarked)['user-word-highlight'], true)
 assert.equal(madaniQpcWordTechniqueClass(userMarked)['anchor-highlight'], false)
+
+const anamSpoken = {
+  anchorModeEnabled: true,
+  wordHighlightEnabled: true,
+  anchorIndexesByAyah: { '6:1': [0, 13] },
+  userHighlightIndexesByAyah: { '6:1': [14] },
+  spokenWordCountByAyah: { '6:1': 14 },
+  sessionAyahKeys: ['6:1'],
+  highlightedAyahKey: '6:1',
+  highlightedWordIndex: 13,
+}
+const anamMap = new Map([
+  ['6:1:1', 0],
+  ['6:1:14', 13],
+  ['6:1:15', 14],
+  ['6:1:__count', 15],
+])
+const anamEnd = resolveQpcMadaniWordTechniqueState(
+  { location: '6:1:15', surah: '6', ayah: '1', word: '15', text: 'marker' },
+  anamSpoken,
+  anamMap,
+)
+assert.equal(anamEnd.wordAudioIndex, null, 'ayah-end glyph is not a spoken target')
+assert.equal(anamEnd.isAnchor, false)
+assert.equal(anamEnd.isUserHighlight, false)
+assert.equal(anamEnd.isAudioHighlighted, false)
+const anamLast = resolveQpcMadaniWordTechniqueState(
+  { location: '6:1:14', surah: '6', ayah: '1', word: '14', text: 'يعدلون' },
+  anamSpoken,
+  anamMap,
+)
+assert.equal(anamLast.isAnchor, true, 'last spoken word keeps the end anchor')
+assert.equal(anamLast.wordAudioIndex, 13)
+assert.equal(anamLast.isAudioHighlighted, true)
+const anamFirst = resolveQpcMadaniWordTechniqueState(
+  { location: '6:1:1', surah: '6', ayah: '1', word: '1', text: 'الحمد' },
+  anamSpoken,
+  anamMap,
+)
+assert.equal(anamFirst.isAnchor, true)
+
 assert.equal(resolveUserHighlightWordState(1, '2:30', {
   wordHighlightEnabled: false,
   userHighlightIndexesByAyah: { '2:30': [1] },

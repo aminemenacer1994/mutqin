@@ -54,19 +54,56 @@ export function buildQpcMadaniAnchorIndexesByAyah({
   return map
 }
 
+/** Spoken-word totals keyed by ayah, used to keep ayah-end glyphs out of anchors. */
+export function buildSpokenWordCountByAyah({
+  verses = [],
+  wordCountForAyah,
+} = {}) {
+  const map = {}
+  for (const verse of Array.isArray(verses) ? verses : []) {
+    const key = String(verse?.key || '')
+    if (!key) continue
+    const total = typeof wordCountForAyah === 'function'
+      ? Number(wordCountForAyah(key, verse))
+      : 0
+    if (Number.isInteger(total) && total > 0) map[key] = total
+  }
+  return map
+}
+
+/**
+ * Page JSON numbers the ayah-end glyph as the next word (6:1 word 15 is the
+ * marker after 14 spoken words). It has no `isEnd` flag, so compare against
+ * the spoken count before treating that glyph as a memory target.
+ */
+export function isQpcAyahEndWord(word = {}, ayahKey = '', snapshot = {}) {
+  if (word?.isEnd === true) return true
+  const charType = String(word?.char_type_name || word?.charType || '').toLowerCase()
+  if (charType === 'end') return true
+  const position = Number(word?.wordPosition ?? word?.word_position ?? word?.word)
+  const spoken = Number(snapshot?.spokenWordCountByAyah?.[String(ayahKey || '')])
+  return Number.isInteger(position)
+    && position > 0
+    && Number.isInteger(spoken)
+    && spoken > 0
+    && position > spoken
+}
+
 export function resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   if (!snapshot.anchorModeEnabled) return false
+  if (wordAudioIndex == null || wordAudioIndex === '') return false
   if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   const key = String(ayahKey || '')
   const indexes = snapshot.anchorIndexesByAyah?.[key]
   if (!Array.isArray(indexes) || !indexes.length) return false
   const index = Number(wordAudioIndex)
-  return Number.isFinite(index) && indexes.includes(index)
+  return Number.isInteger(index) && index >= 0 && indexes.includes(index)
 }
 
 /** Words the learner tapped to highlight. Separate from automatic anchors. */
 export function resolveUserHighlightWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   if (!snapshot.wordHighlightEnabled) return false
+  if (wordAudioIndex == null || wordAudioIndex === '') return false
   if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   const key = String(ayahKey || '')
   const indexes = snapshot.userHighlightIndexesByAyah?.[key]
@@ -241,24 +278,25 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
   const ayahKey = ayahKeyFromWord(word)
   // Canonical spoken-word identity: verseKey + wordPosition (shared Madani/IndoPak).
   const wordPosition = Number(word?.wordPosition ?? word?.word_position ?? word?.word)
-  const wordAudioIndex = word?.isEnd
+  const isEndWord = isQpcAyahEndWord(word, ayahKey, snapshot)
+  const wordAudioIndex = isEndWord
     ? null
     : resolveQpcWordAudioIndex(wordPosition, ayahKey, audioIndexMap)
   const isAnchor = resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot)
-  const isUserHighlight = !word?.isEnd && resolveUserHighlightWordState(wordAudioIndex, ayahKey, snapshot)
+  const isUserHighlight = !isEndWord && resolveUserHighlightWordState(wordAudioIndex, ayahKey, snapshot)
   const blur = isAyahBlurred(ayahKey, snapshot)
   const peek = blur && isAyahPeekRevealed(ayahKey, snapshot)
   const hiddenReveal = resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot)
   const checker = resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot)
   const highlightIndex = Number(snapshot.highlightedWordIndex)
-  const isAudioHighlighted = !word?.isEnd
+  const isAudioHighlighted = !isEndWord
     && Number.isFinite(wordAudioIndex)
     && Number.isFinite(highlightIndex)
     && highlightIndex >= 0
     && wordAudioIndex === highlightIndex
     && ayahMatchesSnapshotKey(ayahKey, snapshot.highlightedAyahKey)
   // Ornaments keep layout space but are never Progressive-Hide targets.
-  const masked = !word?.isEnd && (
+  const masked = !isEndWord && (
     (hiddenReveal.masked && !hiddenReveal.revealedProgress)
     || (checker.masked && !checker.peeked)
   )
@@ -279,7 +317,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     masked,
     hiddenRevealCurrent: hiddenReveal.current,
     hiddenRevealRevealed: hiddenReveal.revealedProgress,
-    checkerMasked: !word?.isEnd && checker.masked && !checker.peeked,
+    checkerMasked: !isEndWord && checker.masked && !checker.peeked,
     isAudioHighlighted,
   }
 }

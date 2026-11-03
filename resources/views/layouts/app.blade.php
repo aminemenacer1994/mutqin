@@ -115,12 +115,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260730c">
     <link id="appThemeFaviconIco" rel="shortcut icon" href="/favicon.ico?v=20260730c">
     <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
     <link rel="preconnect" href="https://verses.quran.foundation" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preload" href="{{ $appScriptUrl }}" as="script">
+    {{-- Icon font starts with the stylesheet instead of waiting to be discovered inside it. --}}
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
+    @include('partials.font-links')
+    {{-- app.js stays deferred and low priority so CSS and the LCP image are not queued behind a multi-megabyte script. --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ $appStylesUrl }}">
     {{-- This stylesheet is emitted by webpack's Vue loader, not by a Mix entry.
@@ -9490,6 +9490,7 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
+@if(request()->routeIs('memorisation', 'memorisation.demo'))
 <style id="mutqin-ui-lock-v181">
   /* Desktop: Recite+FAB stack on container right. Mobile: original in-workspace sticky. */
   html body .app {
@@ -10287,6 +10288,7 @@ body.session-analysis-modal-open {
     pointer-events: none !important;
   }
 </style>
+@endif
 @if(request()->routeIs('memorisation', 'memorisation.demo'))
 <style id="mutqin-memorisation-hotfix-v169">
   /* Session flow + clip (network-first). Do not force min font-size — fitLines owns width. */

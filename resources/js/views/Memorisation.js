@@ -362,13 +362,13 @@ import {
   userHighlightIndexesByAyah,
   wordHighlightSignature,
 } from '../scripts/techniques/wordHighlights.js'
-import { buildChainingGroups } from '../scripts/techniques/chainingQueue.js'
+import { buildChainingGroups, chainGroupContinues } from '../scripts/techniques/chainingQueue.js'
 import {
   buildChainingJoinedFlowHtml,
   resolveChainingVisualAyahKeys,
   shouldRenderChainingJoinedFlow,
 } from '../scripts/techniques/chainingVisual.js'
-import { buildQpcMadaniAnchorIndexesByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
+import { buildQpcMadaniAnchorIndexesByAyah, buildSpokenWordCountByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
 import {
   REVIEW_AUDIO_STATES,
   bindAudioSource,
@@ -9335,7 +9335,9 @@ export default {
         items.push({
           key: 'chaining',
           icon: 'bi-link-45deg',
-          label: this.chainingProgressLabel || this.getTechniqueDisplayLabel('chaining'),
+          label: this.chainingLiveLinkLabel
+            || this.chainingProgressLabel
+            || this.getTechniqueDisplayLabel('chaining'),
         })
       }
       if (this.anchorModeEnabled) {
@@ -10335,6 +10337,10 @@ export default {
           verses: this.verses || [],
           anchorModeEnabled: !!this.anchorModeEnabled,
           anchorCount: this.anchorCount,
+          wordCountForAyah: (verseKey) => this.getVerseAudioWordCount(verseKey),
+        }),
+        spokenWordCountByAyah: buildSpokenWordCountByAyah({
+          verses: this.verses || [],
           wordCountForAyah: (verseKey) => this.getVerseAudioWordCount(verseKey),
         }),
         wordHighlightEnabled: !!this.anchorModeEnabled,
@@ -15198,6 +15204,9 @@ export default {
       return this.actualGapDelay;
     },
     getCurrentPlaybackGapSeconds() {
+      // A linking pair or cumulative block is one recitation. Don't insert the
+      // between-step pause until the last ayah of that block has finished.
+      if (this.chainingEnabled && chainGroupContinues(this.activeQueueEntry)) return 0
       const selectedDelay = Number(this.delay)
       if (Number.isFinite(selectedDelay)) return Math.max(0, selectedDelay)
       if (this.gapBetweenVerses === '1x') {
@@ -16381,6 +16390,7 @@ export default {
       const total = Number(wordCount)
       if (Number.isInteger(total) && total > 0 && this.getAnchorIndices(total).includes(index)) {
         classes.push('anchor-highlight')
+        classes.push('anchor-pulse')
       }
       if (isUserHighlightedWord(this.userWordHighlights, verseKey, index)) {
         classes.push('user-word-highlight')
@@ -45488,6 +45498,8 @@ export default {
     buildQueue(mode = this.currentMode) {
       const config = this.getModeStore(mode)
       const verses = config.verses
+      const restartAtStart = this._chainingQueueRestart === true
+      this._chainingQueueRestart = false
       const previousActiveKey = config.activeKey
       const previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null
       const previousEntryKey = previousEntry?.verse?.key || previousEntry?.key || null
@@ -45585,9 +45597,11 @@ export default {
         })
       }
 
-      // Restore previous position if possible
-      let previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
-      if (previousEntryKey) {
+      // Restore previous position if possible. A method change starts again at step 1.
+      let previousQueueIndex = restartAtStart
+        ? 0
+        : Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
+      if (!restartAtStart && previousEntryKey) {
         const exactIndex = q.findIndex(item =>
           (item?.verse?.key || item?.key) === previousEntryKey &&
           item.phase === previousEntry?.phase &&
@@ -45758,6 +45772,7 @@ export default {
         this.isPlaying = false
         this.currentTime = 0
         this.stopWordHighlighting()
+        this._chainingQueueRestart = true
         this.getModeStore(mode).queueIndex = 0
       }
       this.buildQueue(mode)

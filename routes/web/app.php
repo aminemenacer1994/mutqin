@@ -286,10 +286,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if ($user instanceof User) {
             $lifetime = $lifetimeUsage->inspect($user);
             if (! $lifetime['allowed']) {
+                $reason = $lifetime['reason'] ?? UserAiReciteUsageService::REASON;
+
                 return response()->json([
                     'available' => false,
-                    'reason' => UserAiReciteUsageService::REASON,
-                    'message' => UserAiReciteUsageService::LEARNER_MESSAGE,
+                    'reason' => $reason,
+                    'message' => $lifetimeUsage->learnerMessageForReason($reason),
                     'speechmatics_status' => 429,
                 ], 429);
             }

@@ -65,6 +65,24 @@ assert.equal(qpcMap.get('1:1:3'), 2)
 assert.equal(qpcMap.get('1:1:__count'), 3)
 assert.equal(getAudioWordCount(qpcVerse, qpcMap), 3)
 
+const pausedVerse = {
+  key: '6:1',
+  words: [
+    { ar: 'ٱلْحَمْدُ' },
+    { ar: 'لِلَّهِ' },
+    { ar: 'ۖ' },
+    { ar: 'ثُمَّ' },
+    { ar: 'يَعْدِلُونَ' },
+  ],
+}
+assert.equal(isSpokenAudioWord(pausedVerse.words[2]), false, 'pause mark is not a spoken word')
+const pausedMap = buildAudioIndexMap([pausedVerse])
+assert.equal(pausedMap.get('6:1:__count'), 4)
+assert.equal(pausedMap.get('6:1:1'), 0)
+assert.equal(pausedMap.get('6:1:3'), 2, 'ثم keeps the next spoken slot after the pause is dropped')
+assert.equal(pausedMap.get('6:1:4'), 3)
+assert.equal(pausedMap.has('6:1:5'), false)
+
 const glyphTimes = buildEstimatedWordTimings(['\uFC41', '\uFC42', '\uFC43'], 6)
 assert.equal(glyphTimes.length, 3)
 assert.equal(glyphTimes[0].index, 0)

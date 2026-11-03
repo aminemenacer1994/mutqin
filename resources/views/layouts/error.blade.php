@@ -21,6 +21,9 @@
     <meta name="description" content="@yield('title', __('ui.error_title'))">
     @include('partials.google-analytics')
     @include('partials.ackee-config', ['ackeeInlinePageview' => true])
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
+    @include('partials.font-links')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style>

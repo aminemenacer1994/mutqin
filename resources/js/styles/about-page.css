@@ -1,7 +1,5 @@
-/* About — calm editorial page with loaded display type */
-
-/* Source Serif 4 is loaded globally in resources/sass/app.scss */
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+/* About — calm editorial page with loaded display type.
+   Source Serif 4 and IBM Plex Sans load from font-links.blade.php (about routes only for Plex). */
 
 .about-page {
   --about-display: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
