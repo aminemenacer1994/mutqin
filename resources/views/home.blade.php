@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('head')
-    <link rel="preload" as="image" href="/images/landing/hero-center.jpg" fetchpriority="high">
+    <link rel="preload" as="image" href="/images/landing/2026-11-hero-mushaf.jpg" fetchpriority="high">
     <style>
         /* Keep the server-rendered homepage usable until the Vue page loads. */
         homepage > .seo-ssr {

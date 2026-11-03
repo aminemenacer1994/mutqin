@@ -164,6 +164,13 @@ import {
   paintUnicodeTextWithTajweedToken,
 } from '../scripts/mushaf/indopakTajweedMarkup'
 import { stripMushafHtmlBreaks } from '../scripts/mushaf/mobileMushafLineFit'
+import { selectCompleteSessionVerseRange } from '../scripts/session/sessionRecitationTargets'
+import {
+  activeAyahRepeatProgress,
+  appendRepeatedSessionEntries,
+  countCompletedSessionRepeats,
+  resolveSessionAyahRepeatCount,
+} from '../scripts/session/sessionRepeatQueue'
 import {
   buildQpcMadaniProgressSnapshot,
   preserveDashboardMadaniContext,
@@ -555,6 +562,7 @@ import {
 } from '../scripts/mutashabihat/workspaceBridge.js'
 import MutashabihatPairCard from '../components/MutashabihatPairCard.vue'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
+import { withStrictMadaniResultGlyphs } from '../scripts/workspaceAiRecite/strictMadaniResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
@@ -1326,6 +1334,8 @@ export default {
       showTajweedLegendModal: false,
       recommendedPracticePending: false,
       recommendedPracticeCompleted: false,
+      recommendedPlanPassed: false,
+      completedSessionWasRecommended: false,
       focusPhraseRevisionActive: false,
       focusPhraseMeaningfulInteraction: false,
       revisionBaselineAttempt: null,
@@ -1335,6 +1345,7 @@ export default {
       activeMemorisationPlan: null,
       memorisationPlanStatus: 'recommended', // recommended | applied | manual
       memorisationPlanManualOverride: false,
+      manualSessionDraftOrigin: null,
       // Mastery loop: keep re-testing the same range until AI Recite is strong.
       awaitingMasteryRetest: false,
       masteryTargetRange: null,
@@ -3169,10 +3180,7 @@ export default {
         1,
         Number(activeEntry?.totalRepeats || 0) || this.resolveRepetitionsForVerse(activeVerse),
       )
-      const repeatCurrent = Math.max(1, Number(activeEntry?.repeatCount || 1))
-      const repeatValue = repeatTotal > 1 && activeEntry
-        ? `${repeatCurrent}/${repeatTotal}`
-        : `${repeatTotal}x`
+      const repeatValue = `${repeatTotal}x`
       const delaySeconds = Number.isFinite(Number(this.delay)) ? Math.max(0, Number(this.delay)) : 0
       const rangeValue = formatAyahRangeLabel({ start, end }, this.t.bind(this))
       const delayValue = `${delaySeconds}s`
@@ -3601,15 +3609,17 @@ export default {
       return false
     },
     sessionExitRepetitionProgressLabel() {
-      const total = Math.max(1, Number(
-        this.sessionExitPreviewSnapshot?.repetitionsPerStep
-        || this.repetitionsPerStep
-        || 1
-      ))
-      const entry = this.activeQueueEntry || this.queue?.[this.queueIndex] || null
-      const fromEntry = Math.max(0, Number(entry?.repeatCount || 0))
-      const fromQueue = Math.max(0, Number(this.queueIndex || 0) % total)
-      const completed = Math.max(0, Math.min(total, fromEntry || fromQueue || Number(this.sessionExitPreviewSnapshot?.repetitionsCompleted || 0)))
+      const progress = activeAyahRepeatProgress({
+        queue: this.queue,
+        queueIndex: this.queueIndex,
+        queuePlaybackExhausted: this.queuePlaybackExhausted,
+      })
+      const total = this.queue?.length
+        ? progress.total
+        : Math.max(1, Number(this.sessionExitPreviewSnapshot?.repetitionsPerStep || this.repetitionsPerStep || 1))
+      const completed = this.queue?.length
+        ? progress.completed
+        : Math.max(0, Math.min(total, Number(this.sessionExitPreviewSnapshot?.repetitionsCompleted || 0)))
       return buildRepetitionProgressSummary({ completed, total }, (key, params) => this.t(key, params))
     },
     resolveSessionExitScope() {
@@ -4484,6 +4494,11 @@ export default {
         return this.t('memorisation.postSession.recommendation.planManual')
       }
       return this.t('memorisation.postSession.recommendation.planRecommended')
+    },
+    postSessionRecommendedPlanPassed() {
+      return !!this.recommendedPlanPassed
+        && !!this.currentSessionRecommendationMeta
+        && !this.memorisationPlanManualOverride
     },
     postSessionPlanSealIcon() {
       if (this.postSessionPlanKind === 'reinforce') return 'bi-arrow-repeat'
@@ -8214,10 +8229,7 @@ export default {
       const targets = this.getRecitationCheckTargetVerses()
       const numbers = targets.map((v) => Number(v?.number || String(v?.key || '').split(':')[1] || 0)).filter(Boolean)
       const start = numbers[0] || Number(this.rangeStart || 0)
-      const end = Math.max(
-        numbers[numbers.length - 1] || 0,
-        Number(this.rangeEnd || start),
-      )
+      const end = numbers[numbers.length - 1] || Number(this.rangeEnd || start)
       if (!start) return surah
       return start === end ? `${surah} · Ayah ${start}` : `${surah} · Ayahs ${start}–${end}`
     },
@@ -9318,26 +9330,36 @@ export default {
       return !!this.chainingEnabled && shouldRenderChainingJoinedFlow(this.chainingVisualAyahKeys)
     },
     practiceTechniqueStatusVisible() {
-      return !!(this.talqinModeEnabled || this.chainingEnabled || this.anchorModeEnabled)
+      return !!(this.focusModeEnabled || this.blurModeEnabled || this.talqinModeEnabled || this.chainingEnabled || this.anchorModeEnabled)
     },
     practiceTechniqueStatusItems() {
       const items = []
+      if (this.focusModeEnabled) {
+        items.push({
+          key: 'focus',
+          icon: 'bi-bullseye',
+          label: this.getTechniqueDisplayLabel('focus'),
+        })
+      }
+      if (this.blurModeEnabled) {
+        items.push({
+          key: 'blur',
+          icon: 'bi-cloud-haze2',
+          label: this.getTechniqueDisplayLabel('blur'),
+        })
+      }
       if (this.talqinModeEnabled) {
         items.push({
           key: 'talqin',
           icon: 'bi-soundwave',
-          label: this.talqinRecitationTurnActive
-            ? this.talqinRecitationPrompt
-            : this.getTechniqueDisplayLabel('talqin'),
+          label: this.getTechniqueDisplayLabel('talqin'),
         })
       }
       if (this.chainingEnabled) {
         items.push({
           key: 'chaining',
           icon: 'bi-link-45deg',
-          label: this.chainingLiveLinkLabel
-            || this.chainingProgressLabel
-            || this.getTechniqueDisplayLabel('chaining'),
+          label: this.getTechniqueDisplayLabel('chaining'),
         })
       }
       if (this.anchorModeEnabled) {
@@ -11347,9 +11369,16 @@ export default {
         // Demo testers who finished/skipped the tour also count as existing.
         this.markOnboardingCompleted()
       }
+      const dashboardEntryIntent = this.readDashboardEntryIntent()
+      const isTenMinuteHeroEntry = dashboardEntryIntent?.journey === 'ten_minute'
+        || dashboardEntryIntent?.journey === '10_minute'
+      // The explicit Start 10-minute session action takes the learner straight
+      // into practice, including on their first visit to the workspace.
+      if (isTenMinuteHeroEntry && this.requiresFirstTimeOnboarding) {
+        this.markOnboardingCompleted()
+      }
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
       const shouldAutoOpenOnboarding = authenticatedWorkspace && this.shouldAutoOpenOnboarding
-      const dashboardEntryIntent = this.readDashboardEntryIntent()
       // Fresh returning login: Welcome Back is the resume gate. Do not let
       // dashboard ?resume=1 / ?setup=1 deep-links skip it.
       const preferRegistrationResume = !!(
@@ -11368,6 +11397,7 @@ export default {
       const preferWelcomeBackOnLogin = !!(
         this.isLoggedIn
         && !needsFirstTimeOnboarding
+        && !isTenMinuteHeroEntry
         && !preferRegistrationResume
         && this.isExistingUserLogin
         && !this.shouldSuppressWelcomeBackModal()
@@ -11375,7 +11405,7 @@ export default {
         && !isMurajaahReviewEntry
       )
 
-      if (preferRegistrationResume) {
+      if (preferRegistrationResume && !isTenMinuteHeroEntry) {
         this.maybeShowRegistrationResumeModal()
       } else if (preferWelcomeBackOnLogin) {
         this.maybeShowWelcomeBackModal()
@@ -11409,7 +11439,7 @@ export default {
       if (
         dashboardEntryIntent
         && !needsFirstTimeOnboarding
-        && (!preferWelcomeBackOnLogin || isMurajaahReviewEntry)
+        && (!preferWelcomeBackOnLogin || isMurajaahReviewEntry || isTenMinuteHeroEntry)
       ) {
         if (isMurajaahReviewEntry) {
           this._suppressEmptyWorkspaceTools = true
@@ -11470,6 +11500,17 @@ export default {
       this.ensureEmptyWorkspaceEntrySurface()
       this.applyMemorisationPageLoadDefaults()
       this.resetPageScrollAfterReload({ immediate: true, delayed: true })
+      if (this._pendingTenMinuteHeroStart) {
+        this._pendingTenMinuteHeroStart = false
+        this.$nextTick(async () => {
+          if (!await this.commitManualSessionSelection()) return
+          this.prepareRangeRestart()
+          this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+          if (this.startSessionWithCountdown({ skipPrime: true })) {
+            this.skipCountdownToPlay()
+          }
+        })
+      }
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -12232,6 +12273,8 @@ export default {
         this.repetitionsPerStep = safeValue
         return
       }
+      // Choosing a finite count supersedes an older infinite loop setting.
+      this.selectedLoopCount = safeValue
       this.persistUiState()
       this.persistCentralSessionState()
       if (this.hasVerses) {
@@ -12419,6 +12462,7 @@ export default {
       this.openFeedbackModal({ type: 'suggestion' })
     },
     closeWorkspaceReciteAnalysis() {
+      this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1
       this.workspaceReciteAnalysisOpen = false
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAnalysisError = false
@@ -12480,11 +12524,25 @@ export default {
         return
       }
       this.workspaceReciteAnalysisView = view
-      void this.hydrateWorkspaceReciteMadaniGlyphs(view)
       this.workspaceReciteAnalysisError = false
-      this.workspaceReciteAnalysisLoading = false
+      this.workspaceReciteAnalysisLoading = true
       this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
       this.workspaceReciteAnalysisOpen = true
+      const hydration = this.hydrateWorkspaceReciteMadaniGlyphs(view)
+      const hydrationToken = this._workspaceMadaniGlyphToken
+      void hydration.then(
+        () => {
+          if (hydrationToken === this._workspaceMadaniGlyphToken && this.workspaceReciteAnalysisOpen) {
+            this.workspaceReciteAnalysisLoading = false
+          }
+        },
+        () => {
+          if (hydrationToken === this._workspaceMadaniGlyphToken && this.workspaceReciteAnalysisView === view) {
+            this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view)
+            this.workspaceReciteAnalysisLoading = false
+          }
+        },
+      )
     },
     async retryWorkspaceAiRecite() {
       this.closeWorkspaceReciteAnalysis()
@@ -13502,11 +13560,17 @@ export default {
 
       try {
         if (entry.journey === 'ten_minute' || entry.journey === '10_minute') {
+          this.prepareManualSessionSelection()
           this.applyTenMinuteHeroSessionPreset({ openSetup: false, silent: true })
           if (this.chapterId) {
             await this.loadChapter(this.currentMode)
           }
+          await this.$nextTick()
+          this.captureAppliedPracticeSetup()
           this.finishDashboardMadaniEntry(entry)
+          // Start once mounted() finishes hydration so the lifecycle can move
+          // directly from ready_to_start to starting.
+          this._pendingTenMinuteHeroStart = true
           this.markDashboardEntryIntentConsumed()
           return true
         }
@@ -13633,6 +13697,7 @@ export default {
 
         if (entry.setup) {
           this.startingFreshSessionSelection = true
+          this.prepareManualSessionSelection()
           this.resetRepetitionsForFreshSession()
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           this.markDashboardEntryIntentConsumed()
@@ -14292,6 +14357,7 @@ export default {
 
     applyTenMinuteHeroSessionPreset(options = {}) {
       const { openSetup = false, silent = true } = options
+      this.resetRepetitionsForFreshSession()
       this.sessionRangePreset = 'full_surah'
       this.applyDefaultWorkspaceSessionConfig({
         openSetup,
@@ -15473,12 +15539,14 @@ export default {
       if (activeVerseKey) completedVerseKeys.add(activeVerseKey)
       const versesRead = completedVerseKeys.size
       const elapsedSeconds = this.getSessionElapsedSeconds()
-      const repetitionsCompleted = Math.max(
-        Number(this.centralSession?.repetitionTimes || 0),
-        currentIndex
-      )
       const weakVerses = Math.max(0, Number(this.sessionErrorCount || 0))
       const versePlayCounts = { ...(this.mutqinState?.sessionState?.verse_play_counts || {}) }
+      const repetitionsCompleted = countCompletedSessionRepeats({
+        queue,
+        queueIndex: currentIndex,
+        queuePlaybackExhausted: this.queuePlaybackExhausted,
+        versePlayCounts,
+      })
       const totalVersePlays = Object.values(versePlayCounts).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0)
       return {
         verses_read: versesRead,
@@ -17114,12 +17182,6 @@ export default {
       this.toolsStartInFlight = true
       void options
       try {
-        if (
-          this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
-          || this.startingFreshSessionSelection
-        ) {
-          this.clearCurrentSessionRecommendationMeta()
-        }
         this.primeAudioPlaybackUnlock()
         this.talqinModeEnabled = this.getTalqinModeToggleValue()
         this.applySessionConfig(this.buildSessionConfig(this.currentMode))
@@ -17150,6 +17212,13 @@ export default {
           return
         }
 
+        if (this.manualSessionDraftOrigin || this.startingFreshSessionSelection
+          || this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM) {
+          if (!await this.commitManualSessionSelection()) {
+            this.clearToolsStartInFlight()
+            return
+          }
+        }
         this.closePostSessionChoice()
         await this.closeToolsPanel()
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
@@ -17455,32 +17524,20 @@ export default {
     },
 
     resolveRepetitionsForVerse(verse, chainingEnabled = this.chainingEnabled) {
-      if (chainingEnabled) {
-        return Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
-      }
-      // Apply any explicit overrides (Setup toggle or recommendation plans).
-      // The Setup toggle only gates the offcanvas editor — not playback.
-      const key = String(verse?.key || verse?.verse_key || verse?.verse?.key || '').trim()
-      const perAyah = key ? Number(this.individualAyahRepeatCounts?.[key]) : NaN
-      if (Number.isFinite(perAyah) && perAyah > 0) {
-        return Math.max(1, Math.min(50, perAyah))
-      }
-      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
-      const ayahNum = Number(verse?.number || verse?.verse_number || String(key).split(':')[1] || 0)
-      if (chapterId > 0 && ayahNum > 0) {
-        const composedKey = `${chapterId}:${ayahNum}`
-        const composed = Number(this.individualAyahRepeatCounts?.[composedKey])
-        if (Number.isFinite(composed) && composed > 0) {
-          return Math.max(1, Math.min(50, composed))
-        }
-      }
-      return Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1)))
+      return resolveSessionAyahRepeatCount({
+        verse,
+        chapterId: Number(this.chapterId || this.currentChapter?.id || 0),
+        repetitionsPerStep: this.repetitionsPerStep,
+        individualAyahRepeatCounts: this.individualAyahRepeatCounts,
+        chainingEnabled,
+        chainingRepetitions: this.chainingRepetitions,
+      })
     },
 
     setRepetitionsFromSliderIndex(index) {
       const steps = this.repetitionSliderSteps
       const safeIndex = Math.max(0, Math.min(steps.length - 1, Number(index) || 0))
-      this.repetitionsPerStep = steps[safeIndex]
+      this.setRepetitionsFromSlider(steps[safeIndex])
     },
 
     isLoadingSession(sessionId) {
@@ -19430,6 +19487,15 @@ export default {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
       if (shouldCaptureReturnFocus) {
+        // The next recommendation can replace activeMemorisationPlan while the
+        // learner is taking the AI check. Keep attribution to the ended set.
+        this.completedSessionWasRecommended = !!(
+          this.currentSessionRecommendationMeta?.recommendationId
+          || this.recommendedPracticePending
+          || this.awaitingMasteryRetest
+        ) && !this.memorisationPlanManualOverride
+      }
+      if (shouldCaptureReturnFocus) {
         this.postSessionReturnFocusEl = captureReturnFocus()
       }
       // Mastery re-test: keep the learner on the same range until AI Recite is strong.
@@ -19650,6 +19716,7 @@ export default {
       this.postSessionAiReciteActive = false
       this.recommendedPracticePending = false
       this.recommendedPracticeCompleted = false
+      this.recommendedPlanPassed = false
       this.focusPhraseRevisionActive = false
       this.focusPhraseMeaningfulInteraction = false
       this.postSessionAiFeedback = ''
@@ -20045,6 +20112,7 @@ export default {
       this.activeMemorisationPlan = withPlanStatus(plan || this.activeMemorisationPlan, PLAN_STATUS.APPLIED)
       this.memorisationPlanStatus = PLAN_STATUS.APPLIED
       this.memorisationPlanManualOverride = false
+      this.recommendedPlanPassed = false
     },
     markMemorisationPlanManual() {
       this.memorisationPlanManualOverride = true
@@ -20057,6 +20125,108 @@ export default {
       this.activeMemorisationPlan = null
       this.memorisationPlanStatus = PLAN_STATUS.RECOMMENDED
       this.memorisationPlanManualOverride = false
+      this.recommendedPlanPassed = false
+    },
+    prepareManualSessionSelection() {
+      // Keep the completed result intact until the learner actually starts a
+      // separate set. Closing setup can then return to the prior choice.
+      if (!this.manualSessionDraftOrigin) {
+        this.manualSessionDraftOrigin = {
+          config: this.buildSessionConfig(this.currentMode),
+          activePlan: this.activeMemorisationPlan,
+          planStatus: this.memorisationPlanStatus,
+          planManualOverride: this.memorisationPlanManualOverride,
+          recommendationMeta: this.currentSessionRecommendationMeta,
+          recommendedPlanPassed: this.recommendedPlanPassed,
+          backendSessionId: Number(this.backendSessionSnapshot?.id
+            || this.mutqinState?.sessionState?.backendSessionId
+            || this.continueSessionPayload?.backendSessionId || 0) || null,
+          backendUnfinished: !!(
+            this.backendUnfinishedSession
+            || this.isSessionLive
+            || this.sessionPaused
+            || this.hasValidatedResumableSession
+          ),
+        }
+      }
+      this.activeMemorisationPlan = null
+      this.memorisationPlanStatus = PLAN_STATUS.MANUAL
+      this.memorisationPlanManualOverride = true
+      this.clearCurrentSessionRecommendationMeta()
+      this.recommendedPlanPassed = false
+      this.completedSessionWasRecommended = false
+      // An unfinished session is still resumable if setup is cancelled.
+      if (this.manualSessionDraftOrigin.backendUnfinished || this.isSessionLive || this.sessionPaused) return
+      this.chapterId = 0
+      this.rangeStart = 1
+      this.rangeEnd = 1
+      this.currentChapter = null
+      this.sessionRangePreset = 'custom'
+      this.clearWorkspaceForConfigChange(this.currentMode)
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+    },
+    restoreManualSessionSelection() {
+      const origin = this.manualSessionDraftOrigin
+      if (!origin) return
+      this.manualSessionDraftOrigin = null
+      this.activeMemorisationPlan = origin.activePlan
+      this.memorisationPlanStatus = origin.planStatus
+      this.memorisationPlanManualOverride = origin.planManualOverride
+      this.currentSessionRecommendationMeta = origin.recommendationMeta
+      this.recommendedPlanPassed = origin.recommendedPlanPassed
+      this.applySessionConfig(origin.config)
+      this.currentChapter = this.chapters.find(
+        (chapter) => Number(chapter.id) === Number(origin.config.chapterId),
+      ) || null
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      if (origin.config.chapterId > 0 && !this.hasVerses) {
+        void this.loadChapter(this.currentMode)
+      }
+    },
+    async commitManualSessionSelection() {
+      const origin = this.manualSessionDraftOrigin
+      if (origin?.backendUnfinished && this.learningBackendEnabled()) {
+        // Backend start reuses an unfinished row. Finish the old set first so
+        // this manual choice creates a distinct session history record.
+        try {
+          await learningApi.endSession({
+            session_id: origin.backendSessionId || undefined,
+            range_complete: false,
+            idempotency_key: `manual-switch-${origin.backendSessionId || 'current'}`,
+            metadata: {
+              active: false,
+              paused: false,
+              completed: false,
+              ended_early: true,
+              config: origin.config,
+            },
+          })
+        } catch (error) {
+          console.warn('Failed to finish previous session before manual start:', error)
+          this.showBanner?.(this.t('toasts.sessionEndFailed'), 'warning', 3600)
+          return false
+        }
+      }
+      this.manualSessionDraftOrigin = null
+      this.resetPostSessionRecommendationState()
+      this.resetMemorisationPlanLifecycle()
+      this.memorisationPlanStatus = PLAN_STATUS.MANUAL
+      this.memorisationPlanManualOverride = true
+      this.clearCurrentSessionRecommendationMeta()
+      this.awaitingMasteryRetest = false
+      this.masteryTargetRange = null
+      this.aiReciteAdvanceToNextSession = false
+      this.amdPracticePlan = null
+      this.amdAssessment = null
+      this.amdRecommendationId = null
+      this.pendingPostSessionModalPayload = null
+      this.postSessionSnapshot = null
+      this.backendSessionSnapshot = null
+      this.backendUnfinishedSession = false
+      this.completedSessionWasRecommended = false
+      return true
     },
     personalPlanPersistPayload(recommendation = this.postSessionRecommendation) {
       const plan = recommendation?.plan_detail || this.postSessionPersonalPlan
@@ -20615,12 +20785,10 @@ export default {
       this.chapterId = id
       this.rangeStart = start
       this.rangeEnd = end
+      this.recitationCheckPendingTargets = []
       try {
         await this.loadChapter(this.currentMode)
-        const refreshed = this.buildSelectedSessionRangeCheckTargets?.() || []
-        if (refreshed.length) {
-          this.recitationCheckPendingTargets = refreshed
-        }
+        this.recitationCheckPendingTargets = this.buildSelectedSessionRangeCheckTargets?.() || []
       } catch (error) {
         console.warn('Failed to reload verses for post-session AI Recite:', error)
       }
@@ -21771,43 +21939,19 @@ export default {
       const ayahs = [...new Set(
         [...rows, ...weakItems].map((row) => Number(row?.ayah)).filter((n) => n > 0),
       )]
-      if (!chapter || !ayahs.length) return
       const token = (this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1)
       const byAyah = {}
-      await Promise.all(ayahs.map(async (ayah) => {
+      await Promise.all((chapter ? ayahs : []).map(async (ayah) => {
         try {
           const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
           if (glyphs?.length) byAyah[ayah] = glyphs
         } catch {
-          // Leave the existing snippet in place.
+          // The strict result view will hide Arabic for any unavailable ayah.
         }
       }))
       if (token !== this._workspaceMadaniGlyphToken) return
       if (this.workspaceReciteAnalysisView !== view) return
-      if (!Object.keys(byAyah).length) return
-      const focusAyahRows = rows.map((row) => ({
-        ...row,
-        parts: applyMadaniGlyphsToParts(row.parts || [], byAyah[Number(row.ayah)] || [], { contiguous: true }),
-      }))
-      const items = weakItems.map((row) => {
-        const wordEntries = applyMadaniGlyphsToParts(row.wordEntries || [], byAyah[Number(row.ayah)] || [])
-        return {
-          ...row,
-          wordEntries,
-          wordsLabel: wordEntries.map((entry) => entry.text).join(' · '),
-        }
-      })
-      this.workspaceReciteAnalysisView = {
-        ...view,
-        focusAyahRows,
-        infoArchitecture: {
-          ...(view.infoArchitecture || {}),
-          weakAreas: {
-            ...(view.infoArchitecture?.weakAreas || {}),
-            items,
-          },
-        },
-      }
+      this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view, byAyah)
     },
     buildPostSessionFocusPartsForAyah(ayahNumber, focusInput = null) {
       const focus = focusInput || this.resolvePostSessionFocusPhraseForAyah?.(ayahNumber) || null
@@ -23532,6 +23676,7 @@ export default {
         this.postSessionOffcanvasOpen = false
         this.closePostSessionChoice()
       }
+      this.prepareManualSessionSelection()
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
@@ -23733,11 +23878,7 @@ export default {
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.startingFreshSessionSelection = true
-      // Clear ended-session resume affordances without creating a session yet.
-      this.clearContinueSessionQuietly()
-      this.clearActiveSessionSnapshot()
-      this.sessionPaused = false
-      this.backendUnfinishedSession = false
+      this.prepareManualSessionSelection()
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
       if (!this.sectionOpen?.advanced_setup) {
@@ -32552,6 +32693,11 @@ export default {
         this.updateRevisionAttemptComparison(attempt.result)
       }
     },
+    recordRecommendedPlanAiOutcome(outcome) {
+      this.recommendedPlanPassed = String(outcome || '').toLowerCase() === 'strong'
+        && !!this.completedSessionWasRecommended
+        && !!this.currentSessionRecommendationMeta
+    },
     async buildAndPersistAiReciteFinalPlan() {
       // Prefer Laravel-authored AI Memorisation Detection plan when available.
       if (this.amdPracticePlan?.id) {
@@ -32587,6 +32733,7 @@ export default {
         this.persistPracticeFocusWeakWords()
         this.clearMushafAyahHtmlCache()
         this.postSessionAiFeedback = this.aiReciteFinalPlan.feedback
+        this.recordRecommendedPlanAiOutcome(this.aiReciteFinalPlan.outcome)
 
         // Keep Session Complete colour review + plan in sync with Laravel AMD plan.
         const latestAttempt = Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length
@@ -32650,6 +32797,7 @@ export default {
       this.persistPracticeFocusWeakWords()
       this.clearMushafAyahHtmlCache()
       this.postSessionAiFeedback = plan.feedback
+      this.recordRecommendedPlanAiOutcome(plan.outcome)
 
       const achieved = plan.outcome === 'strong'
       if (achieved) {
@@ -33900,30 +34048,21 @@ export default {
       const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
       const rangeStart = Number(this.rangeStart || 0)
       const rangeEnd = Number(this.rangeEnd || rangeStart || 0)
-      const resolveVerseNumber = (verse) => Number(
-        verse?.number
-        || verse?.ayah
-        || String(verse?.key || '').split(':')[1]
-        || 0
-      )
-      const source = (this.mushafDisplayVerses?.length ? this.mushafDisplayVerses : this.verses || [])
-        .filter(verse => {
-          const verseNumber = resolveVerseNumber(verse)
-          if (!verse?.key || !verseNumber) return false
-          if (chapterId && Number(verse?.chapterId || verse?.surah || chapterId) !== chapterId) return false
-          if (rangeStart && verseNumber < rangeStart) return false
-          if (rangeEnd && verseNumber > rangeEnd) return false
-          return true
-        })
-        .sort((left, right) => resolveVerseNumber(left) - resolveVerseNumber(right))
+      const source = selectCompleteSessionVerseRange({
+        chapterId,
+        rangeStart,
+        rangeEnd,
+        sources: [this.verses, this.mushafDisplayVerses],
+      })
 
       return source.map((verse, index) => {
         const canonical = this.getCanonicalVerseForCheck(verse) || verse
+        const number = Number(String(verse.key).split(':')[1])
         return {
           ...this.buildSelfCheckVerseRef(canonical || verse),
           ...canonical,
           key: canonical?.key || verse?.key || '',
-          number: resolveVerseNumber(canonical || verse),
+          number,
           sessionQueueIndex: index,
           sessionTargetKey: `${canonical?.key || verse?.key || `session-target-${index}`}::${index}`
         }
@@ -33970,18 +34109,20 @@ export default {
     getSessionCheckTargetVerses() {
       const selectedRangeTargets = this.buildSelectedSessionRangeCheckTargets()
       if (selectedRangeTargets.length) return selectedRangeTargets
-      const sourceQueue = this.getActiveSessionQueueForCheck()
-      const targets = []
-      for (let index = 0; index < sourceQueue.length; index += 1) {
-        const target = this.resolveSessionQueueTarget(sourceQueue[index], index)
-        if (target) targets.push(target)
-      }
-      return this.dedupeSessionCheckTargets(targets)
+      const queueVerses = selectCompleteSessionVerseRange({
+        chapterId: Number(this.chapterId || this.currentChapter?.id || 0),
+        rangeStart: Number(this.rangeStart || 0),
+        rangeEnd: Number(this.rangeEnd || this.rangeStart || 0),
+        sources: [this.getActiveSessionQueueForCheck()],
+      })
+      return queueVerses
+        .map((verse, index) => this.resolveSessionQueueTarget(verse, index))
+        .filter(Boolean)
     },
     getCanonicalVerseForCheck(verse) {
       if (!verse?.key) return verse || null
-      return (this.mushafDisplayVerses || []).find(candidate => candidate?.key === verse.key)
-        || (this.verses || []).find(candidate => candidate?.key === verse.key)
+      return (this.verses || []).find(candidate => candidate?.key === verse.key)
+        || (this.mushafDisplayVerses || []).find(candidate => candidate?.key === verse.key)
         || verse
     },
     getPlainVerseArabicForCheck(verse) {
@@ -35780,7 +35921,11 @@ export default {
 
     async closeToolsPanel() {
       if (!this.showTools) return
-      await this.commitOffcanvasSettings()
+      if (this.manualSessionDraftOrigin) {
+        this.restoreManualSessionSelection()
+      } else {
+        await this.commitOffcanvasSettings()
+      }
       this.showTools = false
       this.welcomeBackWorkspaceHidden = false
       if (this.showPostSessionModal) {
@@ -35938,6 +36083,7 @@ export default {
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = true
+      this.prepareManualSessionSelection()
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
       if (registrationMode) {
@@ -37313,8 +37459,9 @@ export default {
       this.openNewSessionSetup()
     },
     openNewSessionSetup() {
+      this.prepareManualSessionSelection()
       this.resetRepetitionsForFreshSession()
-      this.openToolsPanel({ tab: 'tools' })
+      this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
     async startJourneyFromBeginning() {
       this.pendingMainJourney = true
@@ -41300,6 +41447,7 @@ export default {
     openSessionExitNewSessionOffcanvas() {
       this.sessionExitOffcanvasOpen = true
       this.startingFreshSessionSelection = true
+      this.prepareManualSessionSelection()
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
@@ -45547,31 +45695,17 @@ export default {
       const chainingEnabled = this.chainingEnabled
       const chainingMethod = this.chainingMethod
 
-      const decorateQueueEntry = (entry, repeatIndex, totalRepeats) => ({
-        ...entry,
-        repeatCount: repeatIndex,
-        totalRepeats,
-        phase: entry.phase,
-        chainKey: entry.chainKey,
-        sequencePosition: entry.sequencePosition,
-        sequenceTotal: entry.sequenceTotal
-      })
-
       const pushQueueEntry = (entry) => {
         const verse = entry.verse || entry
         const repetitions = this.resolveRepetitionsForVerse(verse, chainingEnabled)
-        for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
-          q.push(decorateQueueEntry(entry, repeatIndex, repetitions))
-        }
+        appendRepeatedSessionEntries(q, [entry], repetitions)
       }
 
       const pushQueueGroup = (entries) => {
         const repetitions = chainingEnabled
           ? Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
           : Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1)))
-        for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
-          entries.forEach(entry => q.push(decorateQueueEntry(entry, repeatIndex, repetitions)))
-        }
+        appendRepeatedSessionEntries(q, entries, repetitions)
       }
 
       if (!chainingEnabled) {

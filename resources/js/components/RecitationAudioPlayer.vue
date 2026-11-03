@@ -43,6 +43,7 @@
           :aria-valuetext="progressLabel"
           @input="previewSeek"
           @change="commitSeek"
+          @blur="commitSeek"
         >
       </div>
       <div class="sa-ov__player-meta">
@@ -111,6 +112,7 @@ export default {
       error: false,
       playbackRate: 1,
       attachToken: 0,
+      seekPreview: null,
     }
   },
   computed: {
@@ -119,13 +121,19 @@ export default {
     },
     timelineDuration() {
       if (this.knownDuration > 0) return this.knownDuration
-      return Math.max(this.maxSeenTime, this.current)
+      const recordedDuration = Number(this.durationMs) / 1000
+      return Math.max(
+        Number.isFinite(recordedDuration) && recordedDuration > 0 ? recordedDuration : 0,
+        this.maxSeenTime,
+        this.current,
+      )
     },
     seekReady() {
       return !!this.src && !this.error && !this.loading && this.timelineDuration > 0
     },
     seekValue() {
       if (this.timelineDuration <= 0) return 0
+      if (this.seekPreview != null) return this.seekPreview
       return Math.round((this.current / this.timelineDuration) * 1000)
     },
     seekStyle() {
@@ -133,6 +141,7 @@ export default {
     },
     currentLabel() {
       if (this.loading && this.current <= 0) return this.loadingLabel
+      if (this.seekPreview != null) return formatClock((this.seekPreview / 1000) * this.timelineDuration)
       return formatClock(this.current)
     },
     durationLabel() {
@@ -294,12 +303,13 @@ export default {
       return target
     },
     previewSeek(event) {
-      const target = this.seekTarget(event)
-      if (target == null) return
-      this.setCurrentTime(target)
+      if (this.seekTarget(event) == null) return
+      this.seekPreview = Number(event.target.value)
     },
     commitSeek(event) {
-      const target = this.seekTarget(event)
+      if (this.seekPreview == null) return
+      const target = this.seekTarget({ target: { value: this.seekPreview } })
+      this.seekPreview = null
       if (target == null) return
       this.setCurrentTime(target)
     },
@@ -345,6 +355,7 @@ export default {
       this.current = 0
       this.duration = 0
       this.maxSeenTime = 0
+      this.seekPreview = null
       this.error = false
       this.loading = false
       this.playbackRate = 1

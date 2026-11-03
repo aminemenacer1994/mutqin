@@ -2805,6 +2805,7 @@
         "startRecommendedRevision": "Réviser maintenant",
         "planRecommended": "Recomendado",
         "planApplied": "« Applied»",
+        "planPassed": "Plan recommandé réussi",
         "planManual": "« Manually adjusted»",
         "continueToNextSurah": "Siguiente surah",
         "continueToAyat": "Continue to ayat {start}, {end}",

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildWorkspaceAiReciteResultView } from '../../resources/js/scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
+import { withStrictMadaniResultGlyphs } from '../../resources/js/scripts/workspaceAiRecite/strictMadaniResultView.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
@@ -50,6 +51,24 @@ assert.ok(view.infoArchitecture.weakAreas.items.length >= 1, 'weak areas are lis
 assert.equal(view.showDetailsToggle, true, 'details toggle is available')
 assert.ok(view.colourSegments.length >= 1, 'colour meter segments exist')
 assert.equal(view.audioUrl, 'blob:audio', 'audio url is preserved')
+
+const madaniGlyphs = [0, 1, 2, 3].map((index) => ({
+  word: index + 1,
+  text: String.fromCharCode(0xFC41 + index),
+  fontFamily: 'QCF2001',
+  page: 1,
+}))
+const strictResult = withStrictMadaniResultGlyphs(view, { 1: madaniGlyphs })
+assert.equal(strictResult.focusAyahRows[0].parts.length, 4, 'complete Madani ayah stays visible')
+assert.ok(strictResult.focusAyahRows[0].parts.every((part) => part.madaniGlyph && part.fontFamily === 'QCF2001'))
+assert.ok(strictResult.infoArchitecture.weakAreas.items[0].wordEntries.every((part) => part.madaniGlyph))
+
+const unavailableMadani = withStrictMadaniResultGlyphs(view)
+assert.deepEqual(unavailableMadani.focusAyahRows[0].parts, [], 'Unicode ayah is hidden if Madani font data is unavailable')
+assert.deepEqual(unavailableMadani.infoArchitecture.weakAreas.items[0].wordEntries, [])
+assert.equal(unavailableMadani.infoArchitecture.weakAreas.items[0].wordsLabel, '')
+const partialMadani = withStrictMadaniResultGlyphs(view, { 1: madaniGlyphs.slice(0, 2) })
+assert.deepEqual(partialMadani.focusAyahRows[0].parts, [], 'partial Madani rows never mix with Unicode words')
 
 const savedCanonical = buildWorkspaceAiReciteResultView({
   // This intentionally disagrees with the final response, as live alignment can

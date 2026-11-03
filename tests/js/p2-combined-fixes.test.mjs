@@ -22,6 +22,26 @@ assert.match(homepage, /\/memorisation\?journey=ten_minute/)
 assert.match(memorisationJs, /buildTenMinuteHeroSessionConfig/)
 assert.match(memorisationJs, /journey === 'ten_minute'/)
 assert.match(memorisationJs, /applyTenMinuteHeroSessionPreset/)
+const tenMinuteEntry = memorisationJs.slice(
+  memorisationJs.indexOf("if (entry.journey === 'ten_minute'"),
+  memorisationJs.indexOf('if (entry.aiCheck', memorisationJs.indexOf("if (entry.journey === 'ten_minute'")),
+)
+assert.match(tenMinuteEntry, /await this\.loadChapter\(this\.currentMode\)/)
+assert.match(tenMinuteEntry, /this\.prepareManualSessionSelection\(\)/)
+assert.match(tenMinuteEntry, /this\._pendingTenMinuteHeroStart = true/)
+const bootstrapFinish = memorisationJs.slice(
+  memorisationJs.indexOf('this.ensureEmptyWorkspaceEntrySurface()'),
+  memorisationJs.indexOf("window.addEventListener('online'", memorisationJs.indexOf('this.ensureEmptyWorkspaceEntrySurface()')),
+)
+assert.match(bootstrapFinish, /this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/)
+assert.match(bootstrapFinish, /this\.skipCountdownToPlay\(\)/)
+assert.match(bootstrapFinish, /await this\.commitManualSessionSelection\(\)/)
+assert.match(bootstrapFinish, /this\.prepareRangeRestart\(\)/)
+const tenMinutePreset = memorisationJs.slice(
+  memorisationJs.indexOf('applyTenMinuteHeroSessionPreset(options = {})'),
+  memorisationJs.indexOf('applyFullSurahRangeForCurrentChapter()', memorisationJs.indexOf('applyTenMinuteHeroSessionPreset(options = {})')),
+)
+assert.match(tenMinutePreset, /this\.resetRepetitionsForFreshSession\(\)/)
 
 assert.match(memorisationVue, /session-range-preset/)
 assert.match(memorisationVue, /session-range-preset__option/)

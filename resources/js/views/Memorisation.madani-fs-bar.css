@@ -975,6 +975,10 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   color: inherit;
 }
 
+.madani-fullscreen-bar--top .madani-fullscreen-bar__pill--technique {
+  gap: 0.3rem;
+}
+
 [data-theme="dark"] .madani-fullscreen-bar--top .madani-fullscreen-bar__pill,
 .madani-fullscreen-bar--top[data-theme="dark"] .madani-fullscreen-bar__pill {
   border-color: rgba(255, 236, 210, 0.22);

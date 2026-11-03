@@ -21,13 +21,13 @@ final class SeoCatalog
         'tools',
     ];
 
-    public const OG_IMAGE_PATH = '/images/landing/hero-center.jpg';
+    public const OG_IMAGE_PATH = '/images/landing/2026-11-hero-mushaf.jpg';
 
-    public const OG_IMAGE_WIDTH = 493;
+    public const OG_IMAGE_WIDTH = 706;
 
-    public const OG_IMAGE_HEIGHT = 1020;
+    public const OG_IMAGE_HEIGHT = 1432;
 
-    public const OG_IMAGE_ALT = 'Mutqin Quran memorization app showing a Hifz practice session';
+    public const OG_IMAGE_ALT = 'Mutqin Quran memorization app showing Al-Fatihah in the mushaf';
 
     public const LOGO_PATH = '/favicon-512.png';
 

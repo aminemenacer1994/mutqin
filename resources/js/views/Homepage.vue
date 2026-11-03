@@ -84,8 +84,8 @@
                       class="shot"
                       :src="shot.src"
                       :alt="shot.alt"
-                      width="444"
-                      height="929"
+                      width="706"
+                      height="1432"
                       :loading="shot.id === 'center' ? 'eager' : 'lazy'"
                       :fetchpriority="shot.id === 'center' ? 'high' : 'low'"
                       decoding="async"
@@ -168,8 +168,8 @@
                     class="shot demo__shot"
                     :src="demoSteps[demoActiveIndex]?.image"
                     :alt="demoSteps[demoActiveIndex]?.label || ''"
-                    width="446"
-                    height="930"
+                    width="706"
+                    height="1432"
                     loading="lazy"
                     decoding="async"
                   >
@@ -245,8 +245,8 @@
                   class="shot"
                   :src="feature.image"
                   :alt="feature.shotAlt"
-                  width="444"
-                  height="929"
+                  width="706"
+                  height="1432"
                   loading="lazy"
                   decoding="async"
                 >
@@ -285,8 +285,8 @@
                       class="shot"
                       :src="feature.image"
                       :alt="feature.shotAlt"
-                      width="444"
-                      height="929"
+                      width="706"
+                      height="1432"
                       :loading="idx === FEATURES_CAROUSEL_START_INDEX ? 'eager' : 'lazy'"
                       decoding="async"
                     >
@@ -531,27 +531,21 @@ export default {
       return [
         {
           id: 'setup',
-          image: '/images/landing/journey-01-setup.jpg',
+          image: '/images/landing/2026-11-session-setup.jpg',
           label: t('homepage.pipelineDemo.steps.setup.label'),
           text: t('homepage.pipelineDemo.steps.setup.text'),
         },
         {
           id: 'practise',
-          image: '/images/landing/journey-02-practise.jpg',
+          image: '/images/landing/2026-11-session-practice.jpg',
           label: t('homepage.pipelineDemo.steps.practise.label'),
           text: t('homepage.pipelineDemo.steps.practise.text'),
         },
         {
           id: 'check',
-          image: '/images/landing/journey-03-check.jpg',
+          image: '/images/landing/2026-11-recite-active.jpg',
           label: t('homepage.pipelineDemo.steps.check.label'),
           text: t('homepage.pipelineDemo.steps.check.text'),
-        },
-        {
-          id: 'recommend',
-          image: '/images/landing/demo-step-6.jpg',
-          label: t('homepage.pipelineDemo.steps.recommend.label'),
-          text: t('homepage.pipelineDemo.steps.recommend.text'),
         },
       ];
     });
@@ -723,9 +717,9 @@ export default {
     const heroShots = computed(() => {
       void locale.value;
       return [
-        { id: 'left', src: '/images/landing/hero-left.jpg', alt: t('homepage.shots.check') },
-        { id: 'center', src: '/images/landing/hero-center.jpg', alt: t('homepage.shots.hero') },
-        { id: 'right', src: '/images/landing/hero-right.jpg', alt: t('homepage.shots.next') },
+        { id: 'left', src: '/images/landing/2026-11-recite-active.jpg', alt: t('homepage.shots.check') },
+        { id: 'center', src: '/images/landing/2026-11-hero-mushaf.jpg', alt: t('homepage.features.items.translationTajweed.description') },
+        { id: 'right', src: '/images/landing/2026-11-hero-dashboard.jpg', alt: t('homepage.shots.return') },
       ];
     });
 
@@ -768,45 +762,45 @@ export default {
       return [
         {
           id: 'setup',
-          image: '/images/landing/feature-setup.jpg',
+          image: '/images/landing/2026-11-session-setup.jpg',
           title: t('homepage.features.items.setup.title'),
           description: t('homepage.features.items.setup.description'),
           shotAlt: t('homepage.shots.setup'),
         },
         {
           id: 'techniques',
-          image: '/images/landing/feature-tools.jpg',
+          image: '/images/landing/2026-11-practice-tools.jpg',
           title: t('homepage.features.items.techniques.title'),
           description: t('homepage.features.items.techniques.description'),
           shotAlt: t('homepage.shots.tools'),
         },
         {
           id: 'progress',
-          image: '/images/landing/hero-right.jpg',
+          image: '/images/landing/2026-11-review-list.jpg',
           title: t('homepage.features.items.progress.title'),
           description: t('homepage.features.items.progress.description'),
-          shotAlt: t('homepage.shots.progress'),
+          shotAlt: t('homepage.features.items.progress.description'),
         },
         {
           id: 'aiRecitation',
-          image: '/images/landing/feature-check.jpg',
+          image: '/images/landing/2026-11-recite-feedback.jpg',
           title: t('homepage.features.items.aiRecitation.title'),
           description: t('homepage.features.items.aiRecitation.description'),
-          shotAlt: t('homepage.shots.check'),
+          shotAlt: t('homepage.features.items.aiRecitation.description'),
         },
         {
           id: 'mushafLayout',
-          image: '/images/landing/feature-return.jpg',
+          image: '/images/landing/2026-11-focused-mushaf.jpg',
           title: t('homepage.features.items.mushafLayout.title'),
           description: t('homepage.features.items.mushafLayout.description'),
-          shotAlt: t('homepage.shots.practise'),
+          shotAlt: t('homepage.features.items.mushafLayout.description'),
         },
         {
           id: 'translationTajweed',
-          image: '/images/landing/feature-next.jpg',
+          image: '/images/landing/2026-11-reading-aids.jpg',
           title: t('homepage.features.items.translationTajweed.title'),
           description: t('homepage.features.items.translationTajweed.description'),
-          shotAlt: t('homepage.shots.setup'),
+          shotAlt: t('homepage.features.items.translationTajweed.description'),
         },
       ];
     });

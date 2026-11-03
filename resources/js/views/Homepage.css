@@ -38,7 +38,7 @@
     0 34px 60px -30px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
-/* Phone shell — original fill layout: thin black bezel, screenshot fills the screen */
+/* The screenshots include their own iPhone frame. */
 .shot {
   display: block;
   width: 100%;
@@ -53,7 +53,7 @@
   --device-radius: 1.85rem;
   --device-bezel: 0.22rem;
   --device-bezel-top: 0.22rem;
-  --device-ratio: 440 / 956;
+  --device-ratio: 706 / 1432;
   --device-shell: #000;
   --device-island-h: 0.9rem;
   --device-island-w: 30%;
@@ -61,7 +61,7 @@
   display: block;
   width: 100%;
   aspect-ratio: var(--device-ratio);
-  padding: var(--device-bezel-top) var(--device-bezel) var(--device-bezel);
+  padding: 0;
   border-radius: var(--device-radius);
   background: var(--device-shell);
   box-shadow:
@@ -102,6 +102,7 @@
 }
 
 .device__island {
+  display: none;
   position: absolute;
   top: calc(var(--device-bezel-top) + 0.32rem);
   left: 50%;
@@ -121,7 +122,7 @@
   overflow: hidden;
   width: 100%;
   height: 100%;
-  border-radius: calc(var(--device-radius) - var(--device-bezel));
+  border-radius: var(--device-radius);
   background: #0a0a0a;
   isolation: isolate;
   /* Keep screenshots sharp even if an ancestor animates */
@@ -136,7 +137,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: top center;
   border: 0;
   border-radius: 0;

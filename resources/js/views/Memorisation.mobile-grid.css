@@ -129,18 +129,6 @@
     padding-inline: 0 !important;
   }
 
-  .practice-technique-status {
-    margin-block: 0 8px;
-    padding-inline: 0;
-    gap: 6px;
-  }
-
-  .practice-technique-status__item {
-    min-height: 26px;
-    padding: 3px 8px;
-    font-size: 0.72rem;
-  }
-
   /* Workspace overview: title/utilities, actions, and metadata share one grid. */
   .workspace-shell,
 .main.mushaf-mode-active .workspace-shell {
@@ -6605,6 +6593,31 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 }
 
+/* The active tool is identified by its selected tab in this single pill row. */
+html body .app .tools .tools-topbar {
+  justify-content: space-between !important;
+}
+
+html body .app .tools .tools-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.35rem !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+html body .app .tools .tools-tabs > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding-inline: 0.25rem !important;
+  white-space: normal !important;
+}
+
 @media (min-width: 768px) and (max-width: 1440px) and (orientation: portrait) {
   html body .app .workspace-shell-bottom {
     justify-content: flex-end !important;
@@ -7343,14 +7356,18 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 }
 
 /* Setup feature cards — compact elevated panels (wins over transparent setup-field-row) */
+.app .tools-body .sheet .sheet-content .setup-field-list {
+  gap: 1rem !important;
+}
+
 .app .tools-body .setup-field-row.field-repetitions-clean,
 .app .tools-body .setup-field-row.field-individual-ayah-unified {
   gap: 6px !important;
   padding: 0.55rem 0.62rem !important;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 52%, transparent) !important;
   border-radius: 11px !important;
   background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 92%, var(--surface) 8%) !important;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--border) 22%, transparent) !important;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--border) 12%, transparent) !important;
 }
 
 .app .tools-body .setup-field-row.field-repetitions-clean .range-control,
@@ -7358,7 +7375,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   margin-top: 0 !important;
   padding: 0.4rem 0.52rem !important;
   border-radius: 999px !important;
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent) !important;
   background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
   box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 62%, transparent) !important;
 }
@@ -7390,7 +7407,7 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
 [data-theme="dark"] .app .tools-body .setup-field-row.field-repetitions-clean,
 [data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified {
   background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 236, 216, 0.14) !important;
+  border-color: rgba(255, 236, 216, 0.1) !important;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.2),
     0 6px 18px rgba(0, 0, 0, 0.24),
@@ -7405,6 +7422,72 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
 [data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-select {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 236, 216, 0.12) !important;
+}
+
+/* Session Setup uses white space between controls instead of nested cards. */
+.app .tools-body .sheet--setup > .sheet-section {
+  border-color: color-mix(in srgb, var(--border) 24%, transparent) !important;
+  background: #fff !important;
+}
+
+.app .tools-body .sheet--setup .sheet-content .setup-field-list {
+  gap: 1.2rem !important;
+}
+
+.app .tools-body .sheet--setup .setup-field-row,
+.app .tools-body .sheet--setup .setup-field-row.field-repetitions-clean,
+.app .tools-body .sheet--setup .setup-field-row.field-individual-ayah-unified {
+  padding: 0.25rem 0.2rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app .tools-body .sheet--setup .setup-field-row .select,
+.app .tools-body .sheet--setup .setup-field-row .input:not([type="range"]) {
+  border-color: color-mix(in srgb, var(--border) 42%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.app .tools-body .sheet--setup .setup-field-row .select:focus,
+.app .tools-body .sheet--setup .setup-field-row .input:not([type="range"]):focus {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important;
+}
+
+.app .tools-body .sheet--setup .session-range-preset {
+  border-color: color-mix(in srgb, var(--border) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--zone-reading) 6%) !important;
+}
+
+.app .tools-body .sheet--setup .session-range-preset__option:has(input:checked) {
+  border: 0 !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+}
+
+.app .tools-body .sheet--setup .setup-field-row.field-repetitions-clean .range-control,
+.app .tools-body .sheet--setup .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
+  padding-inline: 0.2rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app .tools-body .sheet--setup .field-repetitions-clean .range-value-pill,
+.app .tools-body .sheet--setup .field-individual-ayah-unified .range-value-pill {
+  border-color: transparent !important;
+}
+
+html[data-theme="sepia"] .app .tools-body .sheet--setup > .sheet-section,
+[data-theme="sepia"] .app .tools-body .sheet--setup > .sheet-section {
+  background: var(--surface) !important;
+}
+
+html[data-theme="dark"] .app .tools-body .sheet--setup > .sheet-section,
+[data-theme="dark"] .app .tools-body .sheet--setup > .sheet-section {
+  background: var(--zone-elevated) !important;
+  border-color: rgba(255, 236, 216, 0.08) !important;
 }
 
 /*
@@ -9701,10 +9784,12 @@ html body .app .workspace-recite-dock__button:hover {
 
   html body .app .workspace-shell-head-metadata {
     flex: 1 1 26rem !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
   }
 
   html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {

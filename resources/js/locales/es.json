@@ -2792,6 +2792,7 @@
         "startRecommendedRevision": "Revisa now",
         "planRecommended": "Recomendado",
         "planApplied": "مُطبَّق",
+        "planPassed": "Plan recomendado superado",
         "planManual": "مُعدَّل يدويًا",
         "continueToNextSurah": "Siguiente surah",
         "continueToAyat": "Continuar to ayat {start}, {end}",

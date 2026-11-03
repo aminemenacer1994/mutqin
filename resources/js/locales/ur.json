@@ -2799,6 +2799,7 @@
         "startRecommendedRevision": "راجع الآن",
         "planRecommended": "موصى به",
         "planApplied": "مُطبَّق",
+        "planPassed": "تجویز کردہ منصوبہ کامیابی سے مکمل ہوا",
         "planManual": "مُعدَّل يدويًا",
         "continueToNextSurah": "السورة التالية",
         "continueToAyat": "تابع إلى الآيات {start}, {end}",

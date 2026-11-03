@@ -510,10 +510,22 @@
               <template v-else>{{ topCardSessionLabel }}</template>
             </div>
             <div
-              v-if="topCardMetadataPills.length && !isMobileViewport()"
+              v-if="(topCardMetadataPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isMobileViewport()"
               class="workspace-shell-head-metadata"
               :aria-label="t('memorisation.a11y.sessionMetadata')"
             >
+              <span
+                v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
+                :key="`technique-${item.key}`"
+                class="badge rounded-pill workspace-shell-metadata-pill workspace-shell-technique-pill is-readonly"
+                :data-technique="item.key"
+                :title="item.label"
+                role="status"
+                aria-live="polite"
+              >
+                <i class="bi" :class="item.icon" aria-hidden="true"></i>
+                <span>{{ item.label }}</span>
+              </span>
               <span
                 v-for="item in topCardMetadataPills"
                 :key="item.key"
@@ -890,10 +902,23 @@
           </div>
           </div>
           <div
-            v-if="mobileProgressPills.length && !isPostSessionChoiceVisible && !askMutqinOpen"
+            v-if="(mobileProgressPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isPostSessionChoiceVisible && !askMutqinOpen"
             class="workspace-shell-progress-pills w-100"
             :aria-label="t('memorisation.a11y.sessionMetadata')"
           >
+            <span
+              v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
+              :key="`technique-${item.key}`"
+              class="badge rounded-pill workspace-shell-progress-pill workspace-shell-technique-pill"
+              :data-technique="item.key"
+              :title="item.label"
+              :aria-label="item.label"
+              role="status"
+              aria-live="polite"
+            >
+              <i class="bi" :class="item.icon" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </span>
             <span
               v-for="item in mobileProgressPills"
               :key="item.key"
@@ -1201,23 +1226,6 @@
             <i class="bi bi-mic" aria-hidden="true"></i>
             <span>{{ practiceTurnCalloutMessage }}</span>
           </div>
-          <div
-            v-if="isDataReady && practiceTechniqueStatusVisible"
-            class="practice-technique-status"
-            role="status"
-            aria-live="polite"
-          >
-            <span
-              v-for="item in practiceTechniqueStatusItems"
-              :key="item.key"
-              class="practice-technique-status__item"
-              :data-technique="item.key"
-            >
-              <i class="bi" :class="item.icon" aria-hidden="true"></i>
-              <span>{{ item.label }}</span>
-            </span>
-          </div>
-
           <main v-if="(isDataReady || hasVerses) && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             data-tour="workspace-main"
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
@@ -1835,8 +1843,8 @@
         :aria-hidden="showTools ? 'false' : 'true'" :inert="showTools ? undefined : true" tabindex="-1" @keydown="onToolsPanelKeydown">
         <div class="tools-top">
         <div class="tools-topbar">
-          <div id="memorisationToolsTitle" class="tools-title">
-            <h3 class="tools-title__heading">{{ controlsPanelTitle }}</h3>
+          <div class="tools-title">
+            <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ t('common.controls') }}</h3>
           </div>
             <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
@@ -4044,6 +4052,7 @@
         <div
           ref="postSessionDialog"
           class="post-session-simple__dialog post-session-simple__dialog--lg"
+          :class="{ 'post-session-simple__dialog--two-actions': !onboardingSampleSessionActive }"
           role="dialog"
           aria-modal="true"
           aria-labelledby="postSessionTitle"
@@ -4152,6 +4161,15 @@
                   <h3 class="post-session-simple__outcome-title">
                     {{ postSessionOutcomeHeadline }}
                   </h3>
+                  <p
+                    v-if="postSessionRecommendedPlanPassed"
+                    class="post-session-simple__plan-passed"
+                    data-testid="post-session-recommended-plan-passed"
+                    role="status"
+                  >
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                    {{ t('memorisation.postSession.recommendation.planPassed') }}
+                  </p>
                   <p
                     v-if="postSessionUnderstandingText"
                     class="post-session-simple__outcome-summary post-session-simple__ai-review-summary"
@@ -4836,7 +4854,7 @@
           <footer class="post-session-simple__footer">
             <div
               class="post-session-simple__actions"
-              :class="(onboardingSampleSessionActive || postSessionCtaButtons.length > 2) ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
+              :class="onboardingSampleSessionActive ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
               data-testid="post-session-actions"
               data-tour="rec-cta"
               :data-cta-state="postSessionCtaState || undefined"
@@ -4855,7 +4873,7 @@
 
               <template v-else>
                 <button
-                  v-for="btn in postSessionCtaButtons.slice(0, 3)"
+                  v-for="btn in postSessionCtaButtons.slice(0, 2)"
                   :key="btn.id"
                   type="button"
                   class="post-session-simple__btn"
@@ -5078,6 +5096,18 @@
             class="madani-fullscreen-bar__pills"
             role="list"
           >
+            <span
+              v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
+              :key="`technique-${item.key}`"
+              class="madani-fullscreen-bar__pill madani-fullscreen-bar__pill--technique"
+              :data-technique="item.key"
+              :title="item.label"
+              :aria-label="item.label"
+              role="listitem"
+            >
+              <i class="bi" :class="item.icon" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </span>
             <span
               v-for="item in madaniFullscreenTopBarPills"
               :key="item.key"

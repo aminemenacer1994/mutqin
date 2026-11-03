@@ -79,24 +79,6 @@
           </div>
         </header>
 
-        <LearnerTeacherSection
-          v-if="showLearnerTeacherSection"
-          :support="support"
-          :loading="supportLoading"
-          :error="supportError"
-          :saving-id="assignmentSavingId"
-          :completion-message="assignmentCompletionMessage"
-          :failed-item="assignmentFailedItem"
-          :student-first-name="learnerFirstName"
-          :on-send-note="sendSupportNote"
-          :on-send-direct-message="sendDirectTeacherMessage"
-          @start="startSupportAssignment"
-          @complete="completeSupportAssignment"
-          @view-completed="showCompletedAssignments"
-          @dismiss-completion="dismissAssignmentCompletion"
-          @support-thread-update="patchLearnerSupportThread"
-        />
-
         <div class="user-dashboard__content">
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
           <div class="dash-section__head dash-section__head--compact">

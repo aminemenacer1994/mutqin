@@ -44,6 +44,8 @@ assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, false, 'mobile session d
   assert.equal(ten.chapterId, 1)
   assert.equal(ten.rangeStart, 1)
   assert.equal(ten.rangeEnd, 7)
+  assert.equal(ten.reciterId, 'ar.alafasy')
+  assert.equal(ten.speed, 1)
   assert.equal(ten.readingViewMode, 'madani_mushaf')
   assert.equal(ten.repetitionsPerStep, TEN_MINUTE_SESSION_REPETITIONS)
   assert.equal(ten.selectedLoopCount, TEN_MINUTE_SESSION_REPETITIONS)

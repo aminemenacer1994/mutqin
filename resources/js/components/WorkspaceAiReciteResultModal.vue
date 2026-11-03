@@ -255,12 +255,6 @@
                           :style="entry.fontFamily ? { '--madani-glyph-font': `'${entry.fontFamily}', serif` } : null"
                         >{{ entry.text }}</span><template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
                       </span>
-                      <span
-                        v-else-if="row.wordsLabel"
-                        class="post-session-simple__weak-spots-words"
-                        dir="rtl"
-                        lang="ar"
-                      >{{ row.wordsLabel }}</span>
                     </li>
                   </ul>
                 </section>

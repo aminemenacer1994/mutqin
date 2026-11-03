@@ -2799,6 +2799,7 @@
         "startRecommendedRevision": "Ulang now",
         "planRecommended": "Disarankan",
         "planApplied": "مُطبَّق",
+        "planPassed": "Rencana rekomendasi berhasil diselesaikan",
         "planManual": "مُعدَّل يدويًا",
         "continueToNextSurah": "Berikutnya surah",
         "continueToAyat": "Continue to ayat {start}, {end}",
