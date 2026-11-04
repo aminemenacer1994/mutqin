@@ -15,7 +15,27 @@ class DonationCheckoutTest extends TestCase
     {
         $this->get(route('donate'))
             ->assertOk()
-            ->assertSee('<donation-page', false);
+            ->assertSee('<donation-page', false)
+            ->assertSee(__('donation.ssr_form_hint'), false);
+    }
+
+    public function test_ajax_donation_checkout_returns_stripe_url(): void
+    {
+        config(['services.stripe.secret_key' => 'sk_test']);
+
+        Http::fake([
+            'https://api.stripe.com/v1/checkout/sessions' => Http::response([
+                'id' => 'cs_donate_ajax',
+                'url' => 'https://checkout.stripe.com/c/pay/cs_donate_ajax',
+            ], 200),
+        ]);
+
+        $this->postJson(route('donate.checkout'), [
+            'amount' => 10,
+            'email' => 'donor@example.com',
+        ])
+            ->assertOk()
+            ->assertJsonPath('url', 'https://checkout.stripe.com/c/pay/cs_donate_ajax');
     }
 
     public function test_guest_can_start_donation_checkout(): void

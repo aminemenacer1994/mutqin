@@ -49,6 +49,28 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
     }
 
+    public function test_build_policy_includes_relative_form_action_self(): void
+    {
+        $policy = SetMutqinContentSecurityPolicy::buildPolicy();
+
+        $this->assertStringContainsString("form-action 'self'", $policy);
+    }
+
+    public function test_build_policy_allows_app_url_forms_in_local_when_hosts_differ(): void
+    {
+        $this->app->detectEnvironment(fn () => 'local');
+        config(['app.url' => 'http://localhost:8000']);
+
+        $request = \Illuminate\Http\Request::create('http://127.0.0.1:8000/donate', 'GET', [], [], [], [
+            'HTTP_HOST' => '127.0.0.1:8000',
+        ]);
+
+        $policy = SetMutqinContentSecurityPolicy::buildPolicy($request);
+
+        $this->assertStringContainsString("form-action 'self'", $policy);
+        $this->assertStringContainsString('http://localhost:8000', $policy);
+    }
+
     public function test_build_policy_includes_required_asset_hosts(): void
     {
         $policy = SetMutqinContentSecurityPolicy::buildPolicy();

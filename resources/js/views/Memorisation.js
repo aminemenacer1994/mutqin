@@ -7872,7 +7872,6 @@ export default {
         { key: 'start', selector: '[data-tour="start-session"]', pad: 10, radius: 16, placement: 'top' },
         { key: 'session', selector: '[data-tour="workspace-main"], [data-tour="end-session"]', pad: 8, radius: 14, placement: 'bottom' },
         { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
-        { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-section-1"]', pad: 8, radius: 18, placement: 'dock-outside', scroll: 'start' },
       ]
     },
     workspaceTourStep() {
@@ -11997,7 +11996,7 @@ export default {
     },
     amdOpen(newVal) {
       this.syncBodyScrollLock(!!newVal || this.isAnyModalOverlayActive)
-      if (this.workspaceTourActive && (this.workspaceTourStep?.key === 'ai' || this.workspaceTourStep?.key === 'results')) {
+      if (this.workspaceTourActive && this.workspaceTourStep?.key === 'ai') {
         this.$nextTick(() => this.measureWorkspaceTourTarget())
       }
     },
@@ -18595,7 +18594,7 @@ export default {
       this.measureWorkspaceTourTarget({ allowScroll: true })
       window.setTimeout(() => {
         if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: true })
-      }, step.key === 'results' ? 280 : 240)
+      }, 240)
     },
     async closeWorkspaceTourOverlays({ keepAi = false, keepPostSession = false } = {}) {
       this.topCardMenuOpen = false
@@ -18654,13 +18653,6 @@ export default {
         await this.closeWorkspaceTourOverlays({ keepAi: true })
         if (this.showTools) await this.closeToolsPanel()
         await this.ensureWorkspaceTourAiModal()
-        return
-      }
-
-      if (key === 'results') {
-        await this.closeWorkspaceTourOverlays({ keepPostSession: true })
-        if (this.showTools) await this.closeToolsPanel()
-        await this.ensureWorkspaceTourResultsPreview()
       }
     },
     isWorkspaceTourTargetVisible(el) {
@@ -18680,8 +18672,7 @@ export default {
       return step?.placement === 'dock-bottom' || step?.key === 'welcome' || step?.key === 'dashboard'
     },
     shouldParkWorkspaceTourTooltipOutside() {
-      const step = this.workspaceTourStep
-      return step?.placement === 'dock-outside' || step?.key === 'results'
+      return this.workspaceTourStep?.placement === 'dock-outside'
     },
     readWorkspaceTourDockHeight() {
       const tipEl = document.querySelector('.workspace-tour__tooltip')
@@ -19090,10 +19081,6 @@ export default {
         return
       }
       if (this.workspaceTourStep?.key === 'session' && this.showHeaderEndSessionAction) {
-        this.measureWorkspaceTourTarget()
-        return
-      }
-      if (this.workspaceTourStep?.key === 'results' && this.showPostSessionModal) {
         this.measureWorkspaceTourTarget()
       }
     },

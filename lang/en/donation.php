@@ -11,4 +11,5 @@ return [
     'product_name' => 'Sadaqah for Mutqin',
     'checkout_note' => 'May Allah accept your gift and put barakah in it for everyone who memorises.',
     'amount_min' => 'The minimum donation is £:amount.',
+    'ssr_form_hint' => 'The secure donation form loads in a moment. If it does not appear, refresh the page or enable JavaScript.',
 ];

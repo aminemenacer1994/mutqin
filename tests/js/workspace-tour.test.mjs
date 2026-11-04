@@ -53,17 +53,18 @@ function sliceMethod(source, name) {
 
 {
   const steps = sliceMethod(memorisationJs, 'workspaceTourSteps')
-  for (const key of ['welcome', 'controls', 'setup', 'practice', 'saved', 'start', 'session', 'ai', 'results']) {
+  for (const key of ['welcome', 'controls', 'setup', 'practice', 'saved', 'start', 'session', 'ai']) {
     assert.match(steps, new RegExp(`key:\\s*'${key}'`))
   }
+  assert.doesNotMatch(steps, /key:\s*'results'/)
   assert.doesNotMatch(steps, /key:\s*'weak'/)
   assert.doesNotMatch(steps, /key:\s*'plan'/)
   assert.doesNotMatch(steps, /key:\s*'dashboard'/)
   assert.match(steps, /data-tour="ai-modal"/)
-  assert.match(steps, /data-tour="ai-results"/)
-  assert.match(steps, /post-session-section-1/)
-  assert.match(steps, /scroll:\s*'start'/)
-  assert.match(steps, /placement:\s*'dock-outside'/)
+  assert.doesNotMatch(steps, /data-tour="ai-results"/)
+  assert.doesNotMatch(steps, /post-session-section-1/)
+  assert.doesNotMatch(steps, /scroll:\s*'start'/)
+  assert.doesNotMatch(steps, /placement:\s*'dock-outside'/)
   assert.match(steps, /workspace-welcome/)
   assert.match(steps, /placement:\s*'dock-bottom'/)
   assert.doesNotMatch(steps, /data-tour="weak-areas"/)
@@ -359,11 +360,11 @@ function sliceMethod(source, name) {
 
   const apply = sliceMethod(memorisationJs, 'applyWorkspaceTourStep')
   assert.doesNotMatch(apply, /step\.key === 'welcome' && !this\.showWelcomeBackModal/)
-  assert.match(apply, /step\.key === 'results' \? 280 : 240/)
+  assert.doesNotMatch(apply, /step\.key === 'results'/)
 
   const prepare = sliceMethod(memorisationJs, 'prepareWorkspaceTourStep')
   assert.match(prepare, /ensureWorkspaceTourAiModal/)
-  assert.match(prepare, /ensureWorkspaceTourResultsPreview/)
+  assert.doesNotMatch(prepare, /ensureWorkspaceTourResultsPreview/)
   assert.doesNotMatch(prepare, /ensureWorkspaceTourPlanPreview/)
   assert.match(prepare, /openWorkspaceTourControlsTab/)
   assert.doesNotMatch(prepare, /workspaceTourDashboardOpen = true/)
@@ -451,7 +452,7 @@ function sliceMethod(source, name) {
   assert.match(sliceMethod(memorisationJs, 'openPostSessionModal'), /workspaceTourActive \|\| this\.workspaceTourPreviewOwned/)
   assert.match(sliceMethod(memorisationJs, 'openPostSessionModal'), /showPostSessionConfetti = !\(/)
   assert.doesNotMatch(sliceMethod(memorisationJs, 'shouldDockWorkspaceTourTooltip'), /key === 'results'/)
-  assert.match(sliceMethod(memorisationJs, 'shouldParkWorkspaceTourTooltipOutside'), /key === 'results'/)
+  assert.doesNotMatch(sliceMethod(memorisationJs, 'shouldParkWorkspaceTourTooltipOutside'), /key === 'results'/)
   assert.match(memorisationJs, /parkWorkspaceTourTooltipOutside\(/)
   assert.match(memorisationCss, /\.workspace-tour__tooltip\.is-dock-top/)
   assert.match(memorisationVue, /showPostSessionConfetti && !workspaceTourActive/)

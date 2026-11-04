@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MutqinDomains;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,15 +24,13 @@ class SetMutqinContentSecurityPolicy
 
         $existing = strtolower((string) $response->headers->get('Content-Security-Policy', ''));
 
-        // Always ship the Mutqin shell policy on HTML. Embedded previews and some
-        // proxies inject script-src 'none'; leaving that header in place (or
-        // combining policies) blocks app.js and every inline boot script.
         if ($existing !== '' && ! $this->shouldReplacePolicy($existing)) {
             return $response;
         }
 
+        $response->headers->remove('Content-Security-Policy');
         $response->headers->remove('Content-Security-Policy-Report-Only');
-        $response->headers->set('Content-Security-Policy', self::buildPolicy());
+        $response->headers->set('Content-Security-Policy', self::buildPolicy($request));
 
         return $response;
     }
@@ -54,7 +53,7 @@ class SetMutqinContentSecurityPolicy
         return false;
     }
 
-    public static function buildPolicy(): string
+    public static function buildPolicy(?Request $request = null): string
     {
         $scriptSrc = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com";
         if (! app()->isProduction() || config('app.debug')) {
@@ -62,9 +61,11 @@ class SetMutqinContentSecurityPolicy
             $scriptSrc .= " 'unsafe-eval'";
         }
 
+        $formAction = self::formActionDirective($request);
+
         return "default-src 'self'; "
             ."base-uri 'self'; "
-            ."form-action 'self'; "
+            ."form-action {$formAction}; "
             ."frame-ancestors 'none'; "
             ."object-src 'none'; "
             ."script-src {$scriptSrc}; "
@@ -75,6 +76,41 @@ class SetMutqinContentSecurityPolicy
             ."connect-src 'self' https: wss:; "
             ."worker-src 'self' blob:; "
             ."manifest-src 'self';";
+    }
+
+    /**
+     * Allow same-origin forms; in local dev also permit APP_URL when it differs from the
+     * browser host (common localhost vs 127.0.0.1 mismatch with absolute form actions).
+     */
+    private static function formActionDirective(?Request $request): string
+    {
+        $sources = ["'self'"];
+
+        $candidates = [];
+        if ($request instanceof Request) {
+            $candidates[] = rtrim($request->getSchemeAndHttpHost(), '/');
+        }
+        $candidates[] = rtrim((string) config('app.url'), '/');
+
+        if (! app()->environment('local', 'testing')) {
+            $candidates[] = rtrim(MutqinDomains::marketingUrl(''), '/');
+        } else {
+            $candidates[] = 'http://localhost:8000';
+            $candidates[] = 'http://127.0.0.1:8000';
+            $candidates[] = 'http://localhost';
+            $candidates[] = 'http://127.0.0.1';
+        }
+
+        foreach ($candidates as $origin) {
+            if ($origin === '' || in_array($origin, $sources, true)) {
+                continue;
+            }
+            if (preg_match('#\Ahttps?://#i', $origin) === 1) {
+                $sources[] = $origin;
+            }
+        }
+
+        return implode(' ', $sources);
     }
 
     private function isHtmlDocument(Request $request, Response $response): bool

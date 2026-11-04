@@ -120,8 +120,10 @@ class BillingController extends Controller
 
     public function donationCheckout(Request $request)
     {
+        $wantsJson = $request->ajax() || $request->wantsJson();
+
         if (! config('services.stripe.secret_key')) {
-            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+            return $this->donationCheckoutFailure($wantsJson, __('donation.stripe_unavailable'));
         }
 
         $validated = $request->validate([
@@ -132,6 +134,12 @@ class BillingController extends Controller
 
         $amountPence = (int) round(((float) $validated['amount']) * 100);
         if ($amountPence < 500) {
+            if ($wantsJson) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => [__('donation.amount_min', ['amount' => '5'])],
+                ]);
+            }
+
             return back()->withInput()->withErrors([
                 'amount' => __('donation.amount_min', ['amount' => '5']),
             ]);
@@ -179,14 +187,27 @@ class BillingController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
-            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+            return $this->donationCheckoutFailure($wantsJson, __('donation.stripe_unavailable'));
         }
 
         if (empty($session['url'])) {
-            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+            return $this->donationCheckoutFailure($wantsJson, __('donation.stripe_unavailable'));
+        }
+
+        if ($wantsJson) {
+            return response()->json(['url' => (string) $session['url']]);
         }
 
         return redirect()->away($session['url']);
+    }
+
+    private function donationCheckoutFailure(bool $wantsJson, string $message): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        if ($wantsJson) {
+            return response()->json(['message' => $message], 503);
+        }
+
+        return redirect()->route('donate')->with('donation_error', $message);
     }
 
     public function donationSuccess(Request $request)

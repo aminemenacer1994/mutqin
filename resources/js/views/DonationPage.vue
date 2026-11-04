@@ -42,7 +42,7 @@
         <form
           class="donation-form"
           method="POST"
-          action="/donate/checkout"
+          novalidate
           @submit="onSubmit"
         >
           <input type="hidden" name="_token" :value="csrfToken">
@@ -184,12 +184,46 @@ export default {
         this.selectedPreset = this.amountValue;
       }
     },
-    onSubmit(event) {
+    async onSubmit(event) {
+      event.preventDefault();
       if (this.checkoutBusy || this.amountInvalid) {
-        event.preventDefault();
         return;
       }
+
       this.checkoutBusy = true;
+      const checkoutUrl = new URL('/donate/checkout', window.location.href).href;
+
+      try {
+        const form = event.currentTarget;
+        const response = await fetch(checkoutUrl, {
+          method: 'POST',
+          body: new FormData(form),
+          credentials: 'same-origin',
+          headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+
+        if (response.ok) {
+          const payload = await response.json();
+          if (payload?.url) {
+            window.location.assign(payload.url);
+            return;
+          }
+        }
+
+        if (response.status === 422) {
+          window.location.assign('/donate');
+          return;
+        }
+
+        window.location.assign('/donate?donation_error=1');
+      } catch {
+        window.location.assign('/donate?donation_error=1');
+      } finally {
+        this.checkoutBusy = false;
+      }
     },
   },
 };
