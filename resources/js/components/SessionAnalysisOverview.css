@@ -444,7 +444,7 @@ body.session-analysis-modal-open {
   white-space: normal;
   text-align: right;
   color: #2a2621;
-  font-family: var(--mushaf-quran-font, var(--quran-font, "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif));
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
   font-size: 1.42rem;
   line-height: 2.55;
   direction: rtl;

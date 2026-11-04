@@ -76,7 +76,7 @@ class MutqinDomainRoutingTest extends TestCase
         return $this->getOnHost('app.mutqin.ai', $uri);
     }
 
-    public function test_marketing_host_serves_the_application_and_blocks_waiting_list(): void
+    public function test_marketing_host_serves_the_application_and_waiting_list(): void
     {
         $this->onMarketingHost('/')
             ->assertOk()
@@ -86,7 +86,8 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertDontSee('class="mutqin-early-access-nav"', false);
 
         $this->onMarketingHost('/waiting-list')
-            ->assertRedirect('https://mutqin.ai/');
+            ->assertOk()
+            ->assertSee('<waiting-list-page', false);
     }
 
     public function test_marketing_host_keeps_public_pages_on_mutqin_ai(): void

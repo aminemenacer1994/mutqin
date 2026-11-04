@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "الجلسة الأولى المقترحة",
-      "title": "ابدأ صغيراً. وأنهِ وأنت تعرف ما الذي تفعله بعد ذلك.",
-      "subtitle": "خصص نحو 10 دقائق لآية إلى 3 آيات. ستستمع وتكرر وتتلو، ثم تخرج بخطوة مراجعة تالية واضحة.",
       "durationLabel": "خصص",
       "duration": "نحو 10 دقائق",
       "startLabel": "ابدأ بـ",
@@ -443,10 +440,6 @@
           "question": "كيف يعمل الحفظ؟",
           "answer": "اختر نطاقاً قصيراً وتدرب حتى يثبت. إعداد الجلسة والصوت وأدوات المبتدئين مجانية."
         },
-        "freeTools": {
-          "question": "ما الأدوات المجانية؟",
-          "answer": "إعداد الجلسة، والصوت (السرعة والتقدم التلقائي والتأخير)، وآية واحدة في كل مرة، وإخفاء النص تدريجياً، والاستماع ثم التكرار مجانية. ربط الآيات وإبراز كلمات التثبيت فقط يحتاجان Pro."
-        },
         "whatIsPro": {
           "question": "هل أحتاج Pro للبدء؟",
           "answer": "لا. ابدأ مجاناً. رقِّ فقط إن أردت ملاحظات وتاريخاً أغنى."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "كيف تعمل المراجعة؟",
           "answer": "يعيدك متقن إلى الآيات الحديثة والأضعف، ويقترح ما تتدرب عليه بعد ذلك."
-        },
-        "pricing": {
-          "question": "هل متقن مجاني؟ كم يكلف Pro؟",
-          "answer": "نعم. إعداد الجلسة والصوت وأدوات المبتدئين مجانية. ربط الآيات وإبراز كلمات التثبيت فقط يحتاجان Pro. يضيف Pro أيضاً فحوصات الذكاء الاصطناعي وتلاوة صوتية بتقييم ذاتي وجلسات بلا حد وتخطيطاً. يظهر السعر قبل الترقية."
         },
         "whoFor": {
           "question": "لمن صُمم متقن؟",
@@ -570,13 +559,6 @@
       "featureColumn": "الميزة",
       "freeTrial": "تجربة مجانية 7 أيام",
       "accountNote": "سجّل الدخول قبل الدفع حتى تُربط خطتك بحسابك في متقن."
-    },
-    "cta": {
-      "kicker": "ابدأ",
-      "title": "اعرف ماذا تتدرب عليه بعد ذلك.",
-      "subtitle": "سجّل آية، راجع نقاط الضعف، وركّز الجلسة التالية.",
-      "button": "إنشاء حساب مجاني",
-      "note": "لا حاجة لبطاقة للخطة المجانية."
     },
     "purpose": {
       "kicker": " journey",
@@ -5800,7 +5782,9 @@
       "launch_confirm_body": "This will queue the launch announcement to {count} eligible waiting-list addresses. This cannot be undone for addresses already marked sent.",
       "launch_confirm_input": "Type the eligible recipient count to confirm",
       "launch_confirm_send": "Queue send",
-      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first."
+      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache."
     },
     "kicker": "Admin",
     "dashboard": "لوحة التحكم",

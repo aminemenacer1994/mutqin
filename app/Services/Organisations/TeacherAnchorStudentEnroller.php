@@ -84,7 +84,7 @@ final class TeacherAnchorStudentEnroller
             'email_verified_at' => $user->email_verified_at ?? $joined,
             'password_set_at' => $user->password_set_at ?? $joined,
             'locale' => $user->locale ?? 'en',
-            'theme' => $user->theme ?? 'sepia-mode',
+            'theme' => $user->theme ?? 'light',
             'subscription_tier' => $user->subscription_tier ?? 'free',
             'subscription_plan' => $user->subscription_plan ?? 'free',
             'subscription_status' => $user->subscription_status ?? 'free',

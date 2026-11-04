@@ -9113,22 +9113,28 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     --controls-muted: color-mix(in srgb, var(--text) 76%, var(--text-muted));
     --controls-accent: var(--accent);
     --controls-accent-ink: var(--accent-contrast, #fff);
-    --controls-radius: 18px;
-    --controls-inner-radius: 13px;
+    --controls-radius: 20px;
+    --controls-inner-radius: 16px;
     background: var(--controls-canvas) !important;
     color: var(--controls-text) !important;
   }
 
+  html body .app[data-theme="dark"] .tools {
+    --controls-text: #f7f0e8;
+    --controls-muted: #e6d8cc;
+  }
+
   html[data-theme="dark"] body .app .tools,
   html body[data-theme="dark"] .app .tools,
-  [data-theme="dark"] body .app .tools {
+  [data-theme="dark"] body .app .tools,
+  html body .app[data-theme="dark"] .tools {
     --controls-canvas: var(--zone-reading);
     --controls-chrome: var(--zone-panel);
     --controls-card: var(--zone-elevated);
     --controls-field: var(--zone-action);
     --controls-border: color-mix(in srgb, var(--border) 68%, var(--accent) 32%);
-    --controls-text: var(--text);
-    --controls-muted: color-mix(in srgb, var(--text) 82%, var(--text-muted));
+    --controls-text: #f7f0e8;
+    --controls-muted: #e6d8cc;
     --controls-accent: var(--accent);
     --controls-accent-ink: var(--toolbar-control-active-fg, var(--zone-reading));
     --controls-positive-bg: var(--success-bg);
@@ -9154,7 +9160,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     color: var(--controls-text) !important;
   }
 
-  html body .app .tools :where(.field-hint, .st-sub, .technique-group-copy p, .technique-description, .technique-description span, .saved-sheet__row-meta, .saved-sheet__current-copy small) {
+  html body .app .tools :where(.field-hint, .st-sub, .technique-group-copy p, .technique-description, .technique-description span, .saved-sheet__row-meta, .saved-sheet__current-copy small, .range span, .slider-markers span, .slider-markers-aligned span) {
     color: var(--controls-muted) !important;
     opacity: 1 !important;
   }
@@ -9172,14 +9178,15 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
   html body .app .tools .tools-tabs {
     padding: 4px !important;
     border: 1px solid var(--controls-border) !important;
-    border-radius: 18px !important;
+    border-radius: var(--controls-radius) !important;
     background: var(--controls-card) !important;
+    overflow: hidden !important;
   }
 
   html body .app .tools .tools-tabs > button {
     min-height: 48px !important;
     border: 1px solid transparent !important;
-    border-radius: 14px !important;
+    border-radius: var(--controls-inner-radius) !important;
     color: var(--controls-muted) !important;
     background: transparent !important;
     font-weight: 700 !important;

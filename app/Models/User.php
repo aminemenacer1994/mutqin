@@ -32,7 +32,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'theme' => 'sepia-mode',
+        'theme' => 'light',
     ];
 
     /**

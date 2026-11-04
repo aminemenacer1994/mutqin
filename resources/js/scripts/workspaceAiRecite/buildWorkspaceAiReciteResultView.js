@@ -12,6 +12,7 @@ import {
 import { formatElapsedLabel } from '../memorisationDetection/sessionTimer.js'
 import { RECITATION_RESULT_STATE } from '../recommendations/recitationResultState.js'
 import { recitationAccuracyBand } from '../engine/recitationThresholds.js'
+import { buildReciteFocus } from './reciteFocus.js'
 
 function asText(value) {
   return String(value || '').trim()
@@ -173,11 +174,11 @@ function buildDetailsMetrics(details, t) {
     })
 }
 
-function buildOutcomeStatChips(details, durationSeconds, t) {
+function buildOutcomeStatChips(details, durationSeconds, t, reciteFocus = null) {
   if (String(details?.presentationMode || '') === 'insufficient_audio') return []
   const chips = []
-  const matched = Number(details.matchedWords)
-  const total = Number(details.totalWords)
+  const matched = reciteFocus ? Number(reciteFocus.matched) : Number(details.matchedWords)
+  const total = reciteFocus ? Number(reciteFocus.total) : Number(details.totalWords)
   const hasWordRatio = Number.isFinite(matched) && Number.isFinite(total) && total > 0
   const matchPercent = Number(details.accuracy)
   if (hasWordRatio) {
@@ -202,24 +203,18 @@ function buildOutcomeStatChips(details, durationSeconds, t) {
     })
   }
   const counts = details.colorCounts || {}
-  // Red means an incorrect match. Black is an omission and must not inflate
-  // the red "wrong" pill; keep it as a calm review count instead.
+  const focusNeedsWork = reciteFocus ? Number(reciteFocus.needsWork) : null
   const wrong = Number(counts.red || 0)
   const close = Number(counts.amber || 0)
   const omitted = Number(counts.black || 0)
-  if (wrong > 0 || close > 0 || omitted > 0) {
+  const needsWork = Number.isFinite(focusNeedsWork) ? focusNeedsWork : (wrong + close + omitted)
+  if (needsWork > 0) {
     chips.push({
       key: 'issues',
-      tone: wrong > 0 ? 'weak' : 'review',
+      tone: 'weak',
       icon: 'bi bi-exclamation-circle',
       label: t('memorisation.postSession.recommendation.statNeedsWork'),
-      value: wrong > 0
-        ? (t('memorisation.postSession.recommendation.statWrongCount', { count: wrong })
-          || `${wrong} wrong`)
-        : close > 0
-          ? (t('memorisation.postSession.recommendation.statCloseCount', { count: close })
-            || `${close} close`)
-          : `${omitted} omitted`,
+      value: String(needsWork),
       hint: t('memorisation.postSession.recommendation.statNeedsWorkHint')
         || 'Words that need another calm pass',
     })
@@ -345,13 +340,21 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
     weak_ayahs: Array.isArray(result?.weakAyahs) ? result.weakAyahs : undefined,
   }
   const reviewDetails = buildAiReviewDetails(outcome, extras, result, t)
-  const weakAyahs = reviewDetails.weakAyahs?.length
-    ? reviewDetails.weakAyahs
-    : deriveWeakAyahsFromWordStatuses(wordStatuses)
-  const weakSpotRows = buildWeakSpotRows(wordStatuses, weakAyahs, t)
+  const reciteFocus = buildReciteFocus(wordStatuses)
+  const weakAyahs = [...new Set(reciteFocus.weakWords.map((word) => word.ayah))]
+  const weakSpotRows = reciteFocus.weakWords.map((word) => ({
+    ayah: word.ayah,
+    ayahLabel: formatRecommendationAyahLabel(word.ayah, t) || word.ayahLabel,
+    wordsLabel: word.text,
+    wordEntries: [{
+      text: word.text,
+      tone: word.status === 'low_confidence' ? 'partial' : 'incorrect',
+      ayahWordIndex: word.index,
+    }],
+  }))
   const focusAyahRows = buildFocusAyahRows(wordStatuses, weakAyahs, t)
   const primaryWeakAyah = weakAyahs[0] || null
-  const understandingText = asText(reviewDetails.summaryLine)
+  const understandingText = reciteFocus.explanation
   const infoArchitecture = buildPostSessionInfoArchitecture({
     t,
     outcome: reviewDetails.outcome || null,
@@ -365,10 +368,22 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
     showRevisionOptions: false,
     revisionOptions: [],
   })
+  infoArchitecture.mainFocus = {
+    ...infoArchitecture.mainFocus,
+    explanation: reciteFocus.explanation,
+  }
+  infoArchitecture.weakAreas = {
+    ...infoArchitecture.weakAreas,
+    items: weakSpotRows,
+    lead: reciteFocus.weakCount > 0
+      ? (infoArchitecture.weakAreas.lead || 'Words to review before moving on.')
+      : '',
+  }
+  infoArchitecture.reciteFocus = reciteFocus
   const presentationMode = String(reviewDetails.presentationMode || 'standard')
   const detailsMetrics = buildDetailsMetrics(reviewDetails, t)
   const colourSegments = buildColourSegments(reviewDetails, t)
-  const outcomeStatChips = buildOutcomeStatChips(reviewDetails, durationSeconds, t)
+  const outcomeStatChips = buildOutcomeStatChips(reviewDetails, durationSeconds, t, reciteFocus)
   const surahName = asText(
     input.surahName
     || aiAttempt?.surah_name

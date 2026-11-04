@@ -2068,6 +2068,12 @@ html[data-theme="sepia"] body.memorisation-page .tools-top {
   background: rgba(208, 160, 107, 0.1);
 }
 
+/* Background follows .app[data-theme]; tokenized --text-muted may still come from :root. */
+.app[data-theme="dark"] .technique-description span,
+[data-theme="dark"] .technique-description span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 [data-theme="dark"] .technique-best {
   background: rgba(76, 175, 80, 0.1);
   border-color: rgba(76, 175, 80, 0.2);
@@ -11467,7 +11473,7 @@ html[data-theme="sepia"] body.memorisation-page nav.navbar.app-navbar {
 [data-theme="dark"] .technique-control span,
 [data-theme="dark"] .settings-heading-copy p,
 [data-theme="dark"] .settings-row-copy small {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 [data-theme="dark"] .tools-x,
@@ -11518,7 +11524,7 @@ html[data-theme="sepia"] body.memorisation-page nav.navbar.app-navbar {
 [data-theme="dark"] .workspace-fab-sub,
 [data-theme="dark"] .settings-row-copy small,
 [data-theme="dark"] .field-hint {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 [data-theme="dark"] .workspace-fab,
@@ -18607,7 +18613,7 @@ html[data-theme="sepia"] .player-dock-card .player-bar {
   border: 0;
   border-radius: 0;
   color: var(--text);
-  font-family: "Uthmanic Hafs", "Amiri Quran", "Scheherazade New", serif;
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
   font-size: clamp(1.35rem, 2.8vw, 2.35rem);
   font-weight: 400;
   line-height: 2.05;
@@ -18782,7 +18788,7 @@ html[data-theme="sepia"] .player-dock-card .player-bar {
   min-height: 42px;
   padding: 5px 12px 7px;
   border-radius: 8px;
-  font-family: "Uthmanic Hafs", "Amiri Quran", "Scheherazade New", serif;
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
   font-size: clamp(1.3rem, 2.5vw, 2.15rem);
   line-height: 1.35;
 }
@@ -33725,7 +33731,7 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
 
 [data-theme="dark"] .range span,
 [data-theme="dark"] .slider-markers span {
-  color: color-mix(in srgb, var(--text-muted) 88%, transparent);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 [data-theme="dark"] .session-resume-btn:not(.btn-primary) {
@@ -59506,7 +59512,7 @@ clearer hierarchy */
 }
 
 .post-session-simple__evidence-row[data-key="focus"] dd {
-  font-family: "KFGQPC Uthmanic Script HAFS", "Scheherazade New", "Amiri Quran", "Amiri", serif;
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
   font-size: 1.08rem;
 }
 
@@ -69367,7 +69373,7 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text,
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
-  font-family: Arial, sans-serif;
+  font-family: inherit;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text[data-madani-glyph="true"] {
@@ -70269,6 +70275,283 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 }
 
 
+@media (max-width: 768px) {
+
+/* ========================================================================
+   Offcanvas theme authority (mobile)
+   Keep the drawer palette local so every control follows the active app theme.
+   ======================================================================== */
+body.memorisation-page .tools {
+  --offcanvas-bg: var(--bg);
+  --offcanvas-panel: var(--surface);
+  --offcanvas-elevated: var(--surface-soft);
+  --offcanvas-control: var(--surface-strong);
+  --offcanvas-border: var(--border);
+  --offcanvas-border-strong: var(--border-strong);
+  --offcanvas-text: var(--text);
+  --offcanvas-muted: var(--text-muted);
+  --offcanvas-subtle: var(--text-subtle);
+  --offcanvas-accent: var(--accent);
+  --offcanvas-accent-foreground: var(--surface-strong);
+  color: var(--offcanvas-text) !important;
+  background: var(--offcanvas-bg) !important;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools,
+.app[data-theme="dark"] body.memorisation-page .tools {
+  --offcanvas-bg: #14110f;
+  --offcanvas-panel: #1d1916;
+  --offcanvas-elevated: #28221e;
+  --offcanvas-control: #29231f;
+  --offcanvas-border: rgba(247, 235, 223, 0.2);
+  --offcanvas-border-strong: rgba(247, 235, 223, 0.34);
+  --offcanvas-text: #f7f0e8;
+  --offcanvas-muted: #cdbfb1;
+  --offcanvas-subtle: #ad9e90;
+  --offcanvas-accent: #e2b47f;
+  --offcanvas-accent-foreground: #24170e;
+  color-scheme: dark;
+}
+
+body.memorisation-page .tools .tools-top,
+body.memorisation-page .tools .tools-footer {
+  background: var(--offcanvas-bg) !important;
+  border-color: var(--offcanvas-border) !important;
+}
+
+body.memorisation-page .tools .tools-title,
+body.memorisation-page .tools .tools-title__heading,
+body.memorisation-page .tools .st-title,
+body.memorisation-page .tools .field label,
+body.memorisation-page .tools .field-header label,
+body.memorisation-page .tools .technique-copy label,
+body.memorisation-page .tools .settings-heading-copy h3,
+body.memorisation-page .tools .settings-row-copy label,
+body.memorisation-page .tools .radio,
+body.memorisation-page .tools .mode-radio,
+body.memorisation-page .tools .tools-tabs button,
+body.memorisation-page .tools .sheet-toggle,
+body.memorisation-page .tools .st-chev {
+  color: var(--offcanvas-text) !important;
+}
+
+body.memorisation-page .tools .tools-context,
+body.memorisation-page .tools .st-sub,
+body.memorisation-page .tools .field-hint,
+body.memorisation-page .tools .technique-description span,
+body.memorisation-page .tools .technique-best span,
+body.memorisation-page .tools .technique-copy small,
+body.memorisation-page .tools .technique-control span,
+body.memorisation-page .tools .settings-heading-copy p,
+body.memorisation-page .tools .settings-row-copy small,
+body.memorisation-page .tools .range span,
+body.memorisation-page .tools .slider-markers span {
+  color: var(--offcanvas-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Guidance copy must remain readable in the dark drawer. Some older,
+   component-specific rules intentionally blend this text into the card. */
+body.memorisation-page .tools .technique-description,
+body.memorisation-page .tools .technique-description span,
+body.memorisation-page .tools .technique-best span {
+  opacity: 1 !important;
+}
+
+body.memorisation-page .tools .sheet-section {
+  background: var(--offcanvas-panel) !important;
+  border-color: var(--offcanvas-border) !important;
+  box-shadow: none !important;
+}
+
+body.memorisation-page .tools .sheet-toggle,
+body.memorisation-page .tools .technique-row,
+body.memorisation-page .tools .settings-card,
+body.memorisation-page .tools .radio,
+body.memorisation-page .tools .mode-radio,
+body.memorisation-page .tools .toggle-chip,
+body.memorisation-page .tools .segmented-control,
+body.memorisation-page .tools .technique-preview {
+  background: var(--offcanvas-elevated) !important;
+  border-color: var(--offcanvas-border) !important;
+  box-shadow: none !important;
+}
+
+body.memorisation-page .tools .sheet-content {
+  background: var(--offcanvas-bg) !important;
+}
+
+body.memorisation-page .tools .select,
+body.memorisation-page .tools .input,
+body.memorisation-page .tools input,
+body.memorisation-page .tools select,
+body.memorisation-page .tools textarea {
+  color: var(--offcanvas-text) !important;
+  background-color: var(--offcanvas-control) !important;
+  border-color: var(--offcanvas-border-strong) !important;
+  color-scheme: inherit;
+}
+
+body.memorisation-page .tools .select option,
+body.memorisation-page .tools select option {
+  color: var(--offcanvas-text) !important;
+  background: var(--offcanvas-control) !important;
+}
+
+body.memorisation-page .tools .range-value-pill,
+body.memorisation-page .tools .inline-setting-pill,
+body.memorisation-page .tools .value-pill {
+  color: var(--offcanvas-text) !important;
+  background: var(--offcanvas-elevated) !important;
+  border-color: color-mix(in srgb, var(--offcanvas-accent) 42%, var(--offcanvas-border)) !important;
+}
+
+body.memorisation-page .tools .st-ico,
+body.memorisation-page .tools .tools-tabs button.active {
+  color: var(--offcanvas-accent-foreground) !important;
+  background: var(--offcanvas-accent) !important;
+  border-color: var(--offcanvas-accent) !important;
+}
+
+body.memorisation-page .tools .tools-tabs {
+  background: var(--offcanvas-panel) !important;
+  border-color: var(--offcanvas-border) !important;
+}
+
+body.memorisation-page .tools .tools-x {
+  color: var(--offcanvas-text) !important;
+  background: var(--offcanvas-elevated) !important;
+  border-color: var(--offcanvas-border-strong) !important;
+}
+
+body.memorisation-page .tools .technique-range {
+  accent-color: var(--offcanvas-accent);
+}
+
+body.memorisation-page .tools .sheet-toggle:hover,
+body.memorisation-page .tools .tools-tabs button:hover:not(.active),
+body.memorisation-page .tools .select:focus,
+body.memorisation-page .tools .input:focus {
+  border-color: var(--offcanvas-accent) !important;
+}
+
+body.memorisation-page .tools-top {
+  padding: 22px max(22px, env(safe-area-inset-left, 0px) + 10px) 14px max(22px, env(safe-area-inset-right, 0px) + 10px);
+  padding-top: calc(22px + env(safe-area-inset-top, 0px));
+}
+
+body.memorisation-page .tools-body {
+  padding: 22px max(22px, env(safe-area-inset-left, 0px) + 10px)
+    calc(var(--tools-footer-h) + env(safe-area-inset-bottom, 0px) + 28px)
+    max(22px, env(safe-area-inset-right, 0px) + 10px);
+}
+
+body.memorisation-page .tools-body .field-stack,
+body.memorisation-page .tools-body .sheet-section {
+  gap: clamp(1.5rem, 4vw, 1.75rem);
+}
+
+body.memorisation-page .tools-body .field {
+  gap: 0.55rem;
+}
+
+body.memorisation-page .tools-body .field-hint,
+body.memorisation-page .tools-body .st-sub {
+  margin-top: 0.35rem;
+}
+
+body.memorisation-page .tools-body .radio-group-compact .radio,
+body.memorisation-page .tools-body .toggle-chip,
+body.memorisation-page .tools-body .select,
+body.memorisation-page .tools-body .input {
+  min-height: 44px;
+}
+
+body.memorisation-page .tools-body .field-repetitions-clean,
+body.memorisation-page .tools-body .field-individual-ayah-unified,
+body.memorisation-page .tools-body .settings-card,
+body.memorisation-page .tools-body .technique-row {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+body.memorisation-page .tools-body .sheet-section + .sheet-section,
+body.memorisation-page .tools-body .offcanvas-audio-panel {
+  margin-top: clamp(1.35rem, 3.5vw, 1.65rem);
+  padding-top: clamp(1.35rem, 3.5vw, 1.65rem);
+  border-top: 1px solid var(--offcanvas-border);
+}
+
+body.memorisation-page .tools-footer {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-theme="dark"] body.memorisation-page .tools-footer > .session-primary-action,
+html[data-theme="dark"] body.memorisation-page .tools-footer > .btn-primary,
+html[data-theme="dark"] body.memorisation-page .tools-footer > .tools-btn-primary,
+html[data-theme="dark"] body.memorisation-page .tools-footer > .tools-btn-soft,
+html[data-theme="dark"] body.memorisation-page .tools-footer > .tools-btn-ghost {
+  color: var(--offcanvas-accent-foreground) !important;
+  -webkit-text-fill-color: var(--offcanvas-accent-foreground) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools-footer > .tools-btn-soft,
+html[data-theme="dark"] body.memorisation-page .tools-footer > .tools-btn-ghost {
+  background: var(--offcanvas-elevated) !important;
+  border: 1px solid var(--offcanvas-border-strong) !important;
+  color: var(--offcanvas-text) !important;
+  -webkit-text-fill-color: var(--offcanvas-text) !important;
+}
+
+body.memorisation-page .tools .sheet-section {
+  border-radius: 16px !important;
+}
+
+body.memorisation-page .tools .sheet-content .field-repetitions-clean,
+body.memorisation-page .tools .sheet-content .field-individual-ayah-unified,
+body.memorisation-page .tools .sheet-content .settings-card,
+body.memorisation-page .tools .sheet-content .technique-row,
+body.memorisation-page .tools .sheet-content .technique-preview-block {
+  border-radius: 12px !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .field-repetitions-clean,
+html[data-theme="dark"] body.memorisation-page .tools .field-individual-ayah-unified {
+  box-shadow: none !important;
+  border-color: var(--offcanvas-border-strong) !important;
+  background: var(--offcanvas-control) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .switch-ui {
+  background: color-mix(in srgb, var(--offcanvas-muted) 42%, var(--offcanvas-control)) !important;
+  border: 1px solid var(--offcanvas-border-strong) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .switch input:checked + .switch-ui {
+  background: var(--offcanvas-accent) !important;
+  border-color: color-mix(in srgb, var(--offcanvas-accent) 72%, var(--offcanvas-border)) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .switch input:focus-visible + .switch-ui {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--offcanvas-accent) 36%, transparent) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .technique-best span {
+  color: #dff8eb !important;
+  background: color-mix(in srgb, var(--success, #2e7d64) 24%, var(--offcanvas-elevated)) !important;
+  border: 1px solid color-mix(in srgb, var(--success, #2e7d64) 36%, var(--offcanvas-border)) !important;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools .slider-markers span,
+html[data-theme="dark"] body.memorisation-page .tools .field-hint,
+html[data-theme="dark"] body.memorisation-page .tools .st-sub {
+  color: var(--offcanvas-muted) !important;
+}
+
+} /* max-width: 768px — mobile controls offcanvas */
+
+
 
 /* Secondary choices stay available without competing with the next step. */
 .post-session-simple__optional {
@@ -70286,4 +70569,190 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 .user-dashboard .dash-score-details > summary:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
+}
+
+/* Theme authority for the controls drawer, callouts, tabs, and result Arabic. */
+body.memorisation-page .tools {
+  --offcanvas-bg: var(--bg);
+  --offcanvas-panel: var(--surface);
+  --offcanvas-elevated: var(--surface-soft);
+  --offcanvas-control: var(--surface-strong);
+  --offcanvas-border: var(--border);
+  --offcanvas-border-strong: var(--border-strong);
+  --offcanvas-text: var(--text);
+  --offcanvas-muted: var(--text-muted);
+  --offcanvas-accent: var(--accent);
+  --offcanvas-accent-foreground: var(--surface-strong);
+  --tools-tab-radius: var(--radius, 16px);
+  --tools-tab-pad: 3px;
+  color: var(--offcanvas-text);
+  background: var(--offcanvas-bg);
+}
+
+html[data-theme="sepia"] body.memorisation-page .tools {
+  --offcanvas-bg: #f4ecd8;
+  --offcanvas-panel: #fbf5e6;
+  --offcanvas-elevated: #f3e6d0;
+  --offcanvas-control: #fbf6ea;
+  --offcanvas-border: #d9cbb0;
+  --offcanvas-border-strong: #c9b79a;
+  --offcanvas-text: #3b2f20;
+  --offcanvas-muted: #6b5b45;
+  --offcanvas-accent: #8b5e3c;
+  --offcanvas-accent-foreground: #fbf6ea;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] body.memorisation-page .tools,
+.app[data-theme="dark"] body.memorisation-page .tools {
+  --offcanvas-bg: #14110f;
+  --offcanvas-panel: #1d1916;
+  --offcanvas-elevated: #28221e;
+  --offcanvas-control: #29231f;
+  --offcanvas-border: rgba(247, 235, 223, 0.2);
+  --offcanvas-border-strong: rgba(247, 235, 223, 0.34);
+  --offcanvas-text: #f7f0e8;
+  --offcanvas-muted: #e6d8cc;
+  --offcanvas-accent: #e2b47f;
+  --offcanvas-accent-foreground: #24170e;
+  color-scheme: dark;
+}
+
+/* Drawer typography — all viewports (mobile block below mirrors spacing tweaks). */
+body.memorisation-page .tools .tools-title,
+body.memorisation-page .tools .tools-title__heading,
+body.memorisation-page .tools .st-title,
+body.memorisation-page .tools .field label,
+body.memorisation-page .tools .field-header label,
+body.memorisation-page .tools .setup-field-row > label,
+body.memorisation-page .tools .individual-ayah-repeat-label,
+body.memorisation-page .tools .technique-copy label,
+body.memorisation-page .tools .settings-heading-copy h3,
+body.memorisation-page .tools .settings-row-copy label,
+body.memorisation-page .tools .radio,
+body.memorisation-page .tools .mode-radio,
+body.memorisation-page .tools .tools-tabs button,
+body.memorisation-page .tools .sheet-toggle,
+body.memorisation-page .tools .st-chev {
+  color: var(--offcanvas-text) !important;
+}
+
+body.memorisation-page .tools .tools-context,
+body.memorisation-page .tools .st-sub,
+body.memorisation-page .tools .field-hint,
+body.memorisation-page .tools .technique-description span,
+body.memorisation-page .tools .technique-best span,
+body.memorisation-page .tools .technique-copy small,
+body.memorisation-page .tools .technique-control span,
+body.memorisation-page .tools .technique-group-copy p,
+body.memorisation-page .tools .settings-heading-copy p,
+body.memorisation-page .tools .settings-row-copy small,
+body.memorisation-page .tools .range span,
+body.memorisation-page .tools .slider-markers span,
+body.memorisation-page .tools .slider-markers-aligned span {
+  color: var(--offcanvas-muted, var(--text-muted)) !important;
+  opacity: 1 !important;
+}
+
+body.memorisation-page .tools .technique-description,
+body.memorisation-page .tools .technique-description span,
+body.memorisation-page .tools .technique-best span {
+  opacity: 1 !important;
+}
+
+.app[data-theme="dark"] body.memorisation-page .tools .field label,
+.app[data-theme="dark"] body.memorisation-page .tools .field-hint,
+.app[data-theme="dark"] body.memorisation-page .tools .st-sub,
+.app[data-theme="dark"] body.memorisation-page .tools .range span,
+.app[data-theme="dark"] body.memorisation-page .tools .slider-markers span,
+.app[data-theme="dark"] body.memorisation-page .tools .slider-markers-aligned span,
+html[data-theme="dark"] body.memorisation-page .tools .field-hint,
+html[data-theme="dark"] body.memorisation-page .tools .st-sub,
+html[data-theme="dark"] body.memorisation-page .tools .range span,
+html[data-theme="dark"] body.memorisation-page .tools .slider-markers span {
+  color: var(--offcanvas-muted, rgba(255, 255, 255, 0.78)) !important;
+}
+
+body.memorisation-page .tools .tools-tabs {
+  border-radius: var(--tools-tab-radius) !important;
+  padding: var(--tools-tab-pad) !important;
+  background: var(--offcanvas-panel) !important;
+  border-color: var(--offcanvas-border) !important;
+  overflow: hidden;
+}
+
+body.memorisation-page .tools .tools-tabs button,
+body.memorisation-page .tools .tools-tabs button.active,
+body.memorisation-page .tools .tools-tabs button:focus-visible,
+body.memorisation-page .tools .tools-tabs button:active {
+  border-radius: calc(var(--tools-tab-radius) - var(--tools-tab-pad)) !important;
+  color: var(--offcanvas-text) !important;
+}
+
+body.memorisation-page .tools .tools-tabs button.active {
+  background: var(--offcanvas-accent) !important;
+  color: var(--offcanvas-accent-foreground) !important;
+}
+
+.practice-turn-callout,
+[data-theme="dark"] .practice-turn-callout,
+[data-theme="sepia"] .practice-turn-callout {
+  background: var(--callout-bg, #f3e7d6) !important;
+  border-color: var(--callout-border, #d9cbb0) !important;
+  color: var(--callout-fg, #1f1a17) !important;
+}
+
+.practice-turn-callout span,
+.practice-turn-callout .talqin-callout-text,
+[data-theme="dark"] .practice-turn-callout span,
+[data-theme="sepia"] .practice-turn-callout span {
+  color: var(--callout-fg, #1f1a17) !important;
+}
+
+.practice-turn-callout i,
+[data-theme="dark"] .practice-turn-callout i {
+  color: var(--callout-icon, #6f4a2e) !important;
+}
+
+.recite-stream-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.75rem auto;
+  max-width: 40rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: var(--callout-bg);
+  color: var(--callout-fg);
+  border: 1px solid var(--callout-border);
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__body {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__focus-ayah-label {
+  margin: 0 0 0.7rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__weak-spots-list {
+  padding-bottom: 0.5rem;
+}
+
+.post-session-simple__quran-token-text[data-madani-glyph="true"] {
+  font-family: var(--madani-font), sans-serif !important;
+  line-height: 1.9 !important;
+}
+
+.post-session-simple__quran-token-text[data-arabic-fallback="true"],
+.post-session-simple__weak-spots-word[data-arabic-fallback="true"] {
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif !important;
+  line-height: 1.8 !important;
+}
+
+.post-session-simple__weak-spots-item {
+  background: var(--warning-soft) !important;
+  color: var(--text) !important;
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--border)) !important;
 }

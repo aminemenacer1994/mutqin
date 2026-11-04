@@ -885,7 +885,7 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 }
 
 .how__stage {
-  margin-top: 0.35rem;
+  margin-top: 0;
 }
 
 .session-brief {
@@ -893,7 +893,7 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
   max-width: 860px;
-  margin: 0 auto clamp(1.35rem, 2.7vw, 2rem);
+  margin: 0 auto clamp(0.85rem, 1.8vw, 1.35rem);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
   border-radius: 1rem;
@@ -1234,6 +1234,11 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 
 .purpose {
   padding-block: 0.15rem;
+}
+
+.purpose + .faq {
+  padding-top: clamp(2.5rem, 6vw, 3.5rem);
+  margin-top: 0;
 }
 
 .purpose__card {
@@ -1997,7 +2002,6 @@ html[dir="rtl"] .hero__fan-item--right {
    The hero, first-session walkthrough, and features carousel stay eager. */
 .homepage > .practice-types,
 .homepage > .purpose,
-.homepage > .closing,
 .homepage > .faq,
 .homepage > .contact {
   content-visibility: auto;

@@ -1,12 +1,14 @@
 import axios from 'axios';
 import { attachHttpErrorTracking } from './scripts/observability/errorTracking';
 import { attachNetworkFailureEmitter } from './utils/networkStatus';
+import { initThemeStorageSync } from './utils/theme';
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.withCredentials = true;
 attachNetworkFailureEmitter(window.axios);
 attachHttpErrorTracking(window.axios);
+initThemeStorageSync();
 
 // Bootstrap plugins used by the shell and marketing pages (navbar, FAQ, landing carousel).
 import Offcanvas from 'bootstrap/js/dist/offcanvas';

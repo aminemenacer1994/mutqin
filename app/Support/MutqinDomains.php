@@ -36,12 +36,12 @@ final class MutqinDomains
     }
 
     /**
-     * The public site always uses the full product navigation.
-     * The waiting-list shell is retired on every host.
+     * The waiting-list page keeps its focused early-access navigation.
      */
     public static function usesEarlyAccessNav(Request $request): bool
     {
-        return false;
+        return $request->routeIs('waiting-list', 'marketing.waiting-list')
+            || $request->is('waiting-list');
     }
 
     /**
@@ -193,11 +193,11 @@ final class MutqinDomains
     {
         $request ??= request();
 
-        // Real mutqin.ai (marketing-only host) posts to app.mutqin.ai. Local dev,
-        // including /etc/hosts mutqin.ai → 127.0.0.1, keeps same-origin so rows
-        // show up in local phpMyAdmin.
-        if (self::restrictMarketingHost($request)) {
-            return self::appUrl('/join-waiting-list');
+        // Keep local development and tests on the host that rendered the page.
+        // This also makes /etc/hosts mappings behave like a normal same-origin
+        // form and keeps registrations in the local database.
+        if (app()->environment('local', 'testing')) {
+            return rtrim($request->getSchemeAndHttpHost(), '/').'/join-waiting-list';
         }
 
         return url('/join-waiting-list');

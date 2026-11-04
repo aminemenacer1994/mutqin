@@ -8,6 +8,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Services\NextSessionRecommendationService;
+use App\Support\ReciteFocus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -1021,11 +1022,13 @@ class RecitationAssessmentService
                 ],
                 'weak_words' => $analysis['weak_words'] ?? [],
                 'word_statuses' => $aligned['word_results'],
-                'plan_snapshot' => $plan ? [
+                'plan_snapshot' => array_merge($plan ? [
                     'title' => $plan->title,
                     'techniques' => $plan->techniques,
                     'config' => $plan->config,
-                ] : [],
+                ] : [], [
+                    'recite_focus' => ReciteFocus::build(is_array($aligned['word_results'] ?? null) ? $aligned['word_results'] : []),
+                ]),
             ]
         );
     }

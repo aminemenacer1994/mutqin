@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\WaitingListEntry;
+use App\Support\WaitingListDatabase;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
 
 class WaitingListEntriesCommand extends Command
 {
@@ -15,13 +15,13 @@ class WaitingListEntriesCommand extends Command
 
     public function handle(): int
     {
-        if (! Schema::hasTable('waiting_list_entries')) {
-            $this->error('Table waiting_list_entries does not exist. Run php artisan migrate.');
+        if (! WaitingListDatabase::hasTable()) {
+            $this->error('Table waiting_list_entries does not exist on connection ['.WaitingListDatabase::connectionName().']. Run php artisan migrate.');
 
             return self::FAILURE;
         }
 
-        $database = (string) config('database.connections.'.config('database.default').'.database');
+        $database = WaitingListDatabase::databaseLabel();
         $count = WaitingListEntry::query()->count();
 
         if ($count === 0) {

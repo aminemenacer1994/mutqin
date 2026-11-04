@@ -87,6 +87,8 @@ import {
   assert.equal(canContinuePracticeWithoutAi(mic.kind), true)
   assert.equal(canContinuePracticeWithoutAi(usageCap.kind), true)
   assert.equal(canContinuePracticeWithoutAi(timeout.kind), true)
+  assert.equal(canContinuePracticeWithoutAi(RECITATION_FAILURE_KIND.RECORDING), true)
+  assert.equal(canContinuePracticeWithoutAi(RECITATION_FAILURE_KIND.UNKNOWN), true)
   assert.equal(canContinuePracticeWithoutAi(cancelled.kind), false)
   assert.equal(cancelled.retryable, false)
 

@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "Primera sesión recomendada",
-      "title": "Empieza poco a poco. Termina sabiendo qué hacer después.",
-      "subtitle": "Reserva unos 10 minutos para 1 a 3 aleyas. Escucharás, repetirás, recitarás y terminarás con un siguiente repaso claro.",
       "durationLabel": "Reserva",
       "duration": "Unos 10 minutos",
       "startLabel": "Empieza con",
@@ -443,10 +440,6 @@
           "question": "¿Cómo funciona la memorización?",
           "answer": "Elige un rango corto y practica hasta que se fije. La configuración de sesión, el audio y las herramientas de principiante son gratis."
         },
-        "freeTools": {
-          "question": "¿Qué herramientas son gratis?",
-          "answer": "La configuración de sesión, el audio (velocidad, avance automático, pausas), una ayah a la vez, ocultar el texto poco a poco y escuchar y repetir son gratis. Solo Unir ayahs y Resaltar palabras ancla necesitan Pro."
-        },
         "whatIsPro": {
           "question": "¿Necesito Pro para empezar?",
           "answer": "No. Empieza gratis. Mejora solo si quieres más comentarios e historial."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "¿Cómo funciona la revisión?",
           "answer": "Mutqin te devuelve a ayahs recientes y más débiles, y sugiere qué practicar después."
-        },
-        "pricing": {
-          "question": "¿Mutqin es gratis? ¿Cuánto cuesta Pro?",
-          "answer": "Sí. El plan gratuito incluye la preparación de la sesión, fuentes coránicas y 5 comprobaciones de recitación inteligentes. Pro añade 20 comprobaciones de recitación inteligentes, recitación de audio autoevaluada, descargas de audio sin conexión, planes de lección adaptativos, análisis del progreso y sesiones guardadas ilimitadas. El precio se muestra antes de mejorar el plan."
         },
         "whoFor": {
           "question": "¿Para quién es Mutqin?",
@@ -576,13 +565,6 @@
       "featureColumn": "Función",
       "freeTrial": "ESSAI GRATUIT 7 JOURS",
       "accountNote": "Sign en antes checkout so tu plan syncs a el correct Mutqin account."
-    },
-    "cta": {
-      "kicker": "Comenzar",
-      "title": "Sachez quoi pratiquer ensuite.",
-      "subtitle": "Crea tu espacio de memorización en Mutqin y empieza a tu ritmo.",
-      "button": "Empezar a memorizar",
-      "note": "Ningunoe carte requise para le plan gratuit."
     },
     "purpose": {
       "kicker": "El camino",
@@ -5793,7 +5775,9 @@
       "launch_confirm_body": "This will queue the launch announcement to {count} eligible waiting-list addresses. This cannot be undone for addresses already marked sent.",
       "launch_confirm_input": "Type the eligible recipient count to confirm",
       "launch_confirm_send": "Queue send",
-      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first."
+      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache."
     },
     "kicker": "Admin",
     "dashboard": "Panel",

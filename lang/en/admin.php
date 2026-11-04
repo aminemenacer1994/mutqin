@@ -17,6 +17,8 @@ return [
         'delete' => 'Delete permanently',
         'delete_confirm' => 'Remove this signup from the waiting list permanently?',
         'deleted_flash' => 'Waiting list signup removed.',
+        'storage_unavailable' => 'Waiting-list storage is unavailable. Check database connection and migrations.',
+        'storage_mismatch' => ':count signups exist on database [:database] but this admin view uses a different connection. Point MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* at the app database, then run config:cache.',
         'launch_storage_unavailable' => 'Waiting-list email storage is not ready. Run database migrations.',
         'launch_confirm_mismatch' => 'Recipient count does not match the latest preview. Refresh preview and try again.',
         'launch_no_recipients' => 'No eligible waiting-list recipients to email.',

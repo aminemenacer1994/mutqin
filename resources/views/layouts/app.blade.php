@@ -68,36 +68,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script>
-      (function () {
-        // SSR paints the account theme (or the guest cookie). Do not read localStorage.
-        var modes = @json(\App\Support\Theme::clientCatalog());
-        var defaultTheme = @json(\App\Support\Theme::DEFAULT);
-        var byId = {};
-        for (var i = 0; i < modes.length; i++) byId[modes[i].id] = modes[i];
-        function normalize(value) {
-          var raw = String(value || '').toLowerCase();
-          if (byId[raw]) return raw;
-          for (var j = 0; j < modes.length; j++) {
-            if (modes[j].preference === raw) return modes[j].id;
-          }
-          return defaultTheme;
-        }
-        var theme = document.documentElement.getAttribute('data-theme') || defaultTheme;
-        theme = normalize(theme);
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.classList.toggle('dark-mode', theme === 'dark');
-        var chrome = byId[theme] || byId[defaultTheme];
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta && chrome) {
-          meta.setAttribute('content', chrome.themeColor);
-          meta.removeAttribute('media');
-        }
-        var scheme = document.querySelector('meta[name="color-scheme"]');
-        if (scheme && chrome) scheme.setAttribute('content', chrome.colorScheme);
-        if (chrome) document.documentElement.style.colorScheme = chrome.colorScheme;
-      })();
-    </script>
+    @include('partials.theme-fouc-script')
     <meta name="apple-mobile-web-app-title" content="Mutqin">
     <meta name="application-name" content="Mutqin">
     @include('partials.seo-head')
@@ -3298,6 +3269,12 @@
         line-height: 1.48 !important;
         color: var(--pm-muted) !important;
       }
+      .post-session-simple.workspace-recite-result[data-theme="dark"] .post-session-simple__subtitle,
+      .post-session-simple.workspace-recite-result[data-theme="dark"] .post-session-simple__outcome-summary,
+      .post-session-simple.workspace-recite-result[data-theme="dark"] .post-session-simple__next-line,
+      .post-session-simple.workspace-recite-result[data-theme="dark"] .post-session-simple__weak-spots-lead {
+        color: rgba(247, 234, 219, 0.9) !important;
+      }
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num,
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-icon,
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
@@ -4202,6 +4179,46 @@
             background: var(--accent);
             border-radius: 999px;
             opacity: 0.7;
+        }
+
+        /* Dark navigation needs its own ink contrast; the default muted token
+           is intentionally softer for content surfaces and is too dim here. */
+        html[data-theme="dark"] body nav.navbar.app-navbar,
+        html[data-theme="dark"] body nav.navbar.app-navbar .navbar-shell,
+        html[data-theme="dark"] body nav.navbar.app-navbar #primaryNavbar,
+        html[data-theme="dark"] body nav.navbar.app-navbar #primaryNavbar .offcanvas-header,
+        html[data-theme="dark"] body nav.navbar.app-navbar #primaryNavbar .offcanvas-body {
+            background-color: #171411 !important;
+            color: #f1ece6;
+        }
+
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link,
+        html[data-theme="dark"] body nav.navbar.app-navbar .navbar-toggler,
+        html[data-theme="dark"] body nav.navbar.app-navbar .offcanvas-title,
+        html[data-theme="dark"] body nav.navbar.app-navbar .btn-close {
+            color: #e4d9ce !important;
+        }
+
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link:hover,
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link:focus-visible,
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link.active,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link:hover,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link:focus-visible,
+        html[data-theme="dark"] body nav.navbar.app-navbar .navbar-toggler:hover,
+        html[data-theme="dark"] body nav.navbar.app-navbar .navbar-toggler:focus-visible {
+            color: #e7b77e !important;
+        }
+
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link.active::after,
+        html[data-theme="dark"] body nav.navbar.app-navbar .nav-link:hover::after {
+            background: #e7b77e;
+            opacity: 1;
+        }
+
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link:hover,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link:focus-visible {
+            background: rgba(231, 183, 126, 0.12);
         }
 
         .navbar,
@@ -8515,6 +8532,11 @@
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
+        window.mutqinAccountTheme = @json(
+            Auth::check() && is_string($navUser?->theme) && $navUser->theme !== ''
+                ? \App\Support\Theme::toDataTheme($navUser->theme)
+                : null
+        );
         window.mutqinThemeModes = @json(\App\Support\Theme::clientCatalog());
         window.mutqinDefaultTheme = @json(\App\Support\Theme::DEFAULT);
         window.mutqinAudioPrivacy = @json(\App\Support\AudioPrivacy::clientConfig());
@@ -8540,8 +8562,15 @@
         // Theme management. Vue workspace uses resources/js/utils/theme.js;
         // keep this inline script in sync with App\Support\Theme / THEME_MODES.
         (function() {
+            const THEME_STORAGE_PREFIX = 'mutqin:theme';
             function safeRemove(key) {
                 try { localStorage.removeItem(key); } catch (e) {}
+            }
+            function safeSet(key, value) {
+                try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
+            }
+            function safeGet(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
             }
             function clearThemeDeviceCache() {
                 safeRemove('mutqin-theme');
@@ -8559,14 +8588,44 @@
                 } catch (e) {}
             }
             const themeModes = Array.isArray(window.mutqinThemeModes) ? window.mutqinThemeModes : [];
-            const defaultTheme = window.mutqinDefaultTheme || 'sepia';
+            const defaultTheme = window.mutqinDefaultTheme || 'light';
+            let themeSyncTimer = null;
+            let themeSyncRetryTimer = null;
+
+            function themeStorageKey(ownerId) {
+                const id = ownerId != null && String(ownerId).trim() !== '' ? String(ownerId) : 'guest';
+                return `${THEME_STORAGE_PREFIX}:${id}`;
+            }
 
             function findThemeMode(value) {
                 const raw = String(value || '').toLowerCase();
+                if (raw === 'dark' || raw === 'dark-mode') {
+                    return themeModes.find((mode) => mode.id === 'dark') || { id: 'dark', preference: 'dark', icon: 'bi-moon-stars', labelKey: 'theme_dark', themeColor: '#14110f', colorScheme: 'dark' };
+                }
+                if (raw === 'sepia' || raw === 'sepia-mode') {
+                    return themeModes.find((mode) => mode.id === 'sepia') || { id: 'sepia', preference: 'sepia', icon: 'bi-sunset', labelKey: 'theme_sepia', themeColor: '#8b5e3c', backgroundColor: '#f4ecd8', colorScheme: 'light' };
+                }
+                if (raw === 'light' || raw === 'light-mode') {
+                    return themeModes.find((mode) => mode.id === 'light') || { id: 'light', preference: 'light', icon: 'bi-sun', labelKey: 'theme_light', themeColor: '#8b5e3c', colorScheme: 'light' };
+                }
                 return themeModes.find((mode) => mode.id === raw || mode.preference === raw)
                     || themeModes.find((mode) => mode.id === defaultTheme)
                     || themeModes[0]
-                    || { id: defaultTheme, preference: defaultTheme + '-mode', icon: 'bi-sun', labelKey: 'theme_light', themeColor: '#8b5e3c', colorScheme: 'light' };
+                    || { id: defaultTheme, preference: defaultTheme, icon: 'bi-sun', labelKey: 'theme_light', themeColor: '#8b5e3c', colorScheme: 'light' };
+            }
+
+            function resolveThemeForLoad() {
+                const guestKey = themeStorageKey('guest');
+                if (window.mutqinAuthCheck) {
+                    if (window.mutqinAccountTheme) {
+                        return findThemeMode(window.mutqinAccountTheme).id;
+                    }
+                    const ownerKey = themeStorageKey(themeOwnerId());
+                    return findThemeMode(safeGet(ownerKey)).id
+                        || findThemeMode(safeGet(guestKey)).id
+                        || defaultTheme;
+                }
+                return findThemeMode(safeGet(guestKey)).id || defaultTheme;
             }
 
             function currentLocale() {
@@ -8576,21 +8635,6 @@
             function uiLabel(key, fallback) {
                 const pack = (window.mutqinUiLabels && (window.mutqinUiLabels[currentLocale()] || window.mutqinUiLabels.en)) || {};
                 return pack[key] || fallback || key;
-            }
-
-            function readCookie(name) {
-                const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-                return match ? decodeURIComponent(match[1]) : null;
-            }
-
-            function guestChoseTheme() {
-                const explicit = readCookie('mutqin_theme_set');
-                return explicit === '1' || explicit === 'true' || explicit === 'on' || explicit === 'yes';
-            }
-
-            function knownThemeValue(value) {
-                const raw = String(value || '').toLowerCase();
-                return themeModes.some((mode) => mode.id === raw || mode.preference === raw);
             }
 
             function themeOwnerId() {
@@ -8633,14 +8677,33 @@
                     return fetch('/sanctum/csrf-cookie', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
                         .then(function () { return send(); });
                 }).then(function (response) {
-                    if (!response || !response.ok) return null;
+                    if (!response || !response.ok) {
+                        themeSyncRetryTimer = window.setTimeout(function () {
+                            persistThemeToServer(themePreference);
+                        }, 5000);
+                        return null;
+                    }
                     return response.json().catch(function () { return null; });
                 }).then(function (payload) {
                     if (payload && payload.theme) {
-                        window.mutqinInitialTheme = findThemeMode(payload.theme).id;
+                        const mode = findThemeMode(payload.theme);
+                        window.mutqinInitialTheme = mode.id;
                         window.mutqinInitialThemePreference = payload.theme;
+                        window.mutqinAccountTheme = mode.id;
                     }
-                }).catch(function () {});
+                }).catch(function () {
+                    themeSyncRetryTimer = window.setTimeout(function () {
+                        persistThemeToServer(themePreference);
+                    }, 5000);
+                });
+            }
+
+            function schedulePersistThemeToServer(themePreference) {
+                if (themeSyncTimer) window.clearTimeout(themeSyncTimer);
+                themeSyncTimer = window.setTimeout(function () {
+                    themeSyncTimer = null;
+                    persistThemeToServer(themePreference);
+                }, 300);
             }
 
             function syncThemeDropdown(theme) {
@@ -8674,6 +8737,9 @@
                 if (document.body) document.body.classList.toggle('dark-mode', normalizedTheme === 'dark');
                 document.documentElement.style.colorScheme = mode.colorScheme || 'light';
                 clearThemeDeviceCache();
+                if (persist) {
+                    safeSet(themeStorageKey(ownerId), normalizedTheme);
+                }
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
                 if (persist) {
                     document.cookie = `mutqin_theme_set=1;path=/;max-age=31536000;samesite=lax`;
@@ -8681,6 +8747,7 @@
                 if (window.mutqinAuthCheck) {
                     window.mutqinInitialTheme = normalizedTheme;
                     window.mutqinInitialThemePreference = themePreference;
+                    window.mutqinAccountTheme = normalizedTheme;
                 }
                 var themeColorMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeColorMeta) {
@@ -8693,7 +8760,7 @@
                 }
                 syncThemeDropdown(normalizedTheme);
                 if (persist) {
-                    persistThemeToServer(themePreference);
+                    schedulePersistThemeToServer(themePreference);
                 }
                 window.dispatchEvent(new CustomEvent('mutqin:theme-change', {
                     detail: { theme: normalizedTheme, ownerId: ownerId },
@@ -8709,21 +8776,20 @@
 
             window.mutqinSetTheme = setTheme;
 
-            // Signed-in accounts use users.theme from SSR. Guests keep an explicit cookie.
+            // Signed-in accounts use users.theme from SSR/localStorage. Guests use mutqin:theme:guest.
             const earlyAccessShell = document.body.classList.contains('mutqin-early-access-nav')
                 || document.body.classList.contains('mutqin-waiting-list-public');
             if (earlyAccessShell) {
                 setTheme('dark', { persist: false });
             } else {
-                const cookieTheme = readCookie('mutqin_theme');
-                let initialTheme = window.mutqinInitialTheme
-                    || window.mutqinInitialThemePreference
-                    || defaultTheme;
-                if (!window.mutqinAuthCheck && guestChoseTheme() && knownThemeValue(cookieTheme)) {
-                    initialTheme = cookieTheme;
-                }
-                setTheme(initialTheme, { persist: false });
+                setTheme(resolveThemeForLoad(), { persist: false });
             }
+
+            window.addEventListener('storage', function (event) {
+                if (!event || event.key !== themeStorageKey(themeOwnerId())) return;
+                if (event.newValue == null) return;
+                setTheme(event.newValue, { persist: false });
+            });
 
             function bindThemeDropdown() {
                 const toggle = document.getElementById('globalThemeToggle');

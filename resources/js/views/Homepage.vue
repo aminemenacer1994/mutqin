@@ -122,14 +122,7 @@
 
     <section id="how-it-works" class="how" aria-labelledby="how-title">
       <div class="wrap">
-        <header id="first-session" class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.firstSession.kicker') }}</p>
-          <h2 id="how-title" class="section-title">{{ t('homepage.firstSession.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.firstSession.subtitle') }}</p>
-          <p class="how__audience">{{ t('homepage.hero.audience') }}</p>
-        </header>
-
-        <div class="session-brief" data-reveal>
+        <div id="first-session" class="session-brief" data-reveal>
           <div class="session-brief__item">
             <i class="bi bi-clock-history" aria-hidden="true"></i>
             <div>
@@ -317,26 +310,6 @@
           <p class="section-kicker">{{ t('homepage.purpose.kicker') }}</p>
           <h2 id="purpose-title" class="section-title">{{ t('homepage.purpose.title') }}</h2>
           <p class="section-sub">{{ t('homepage.purpose.text') }}</p>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="showStartMemorisationCta" class="closing" aria-labelledby="closing-title">
-      <div class="wrap wrap--tight">
-        <div class="closing__card" data-reveal>
-          <p class="section-kicker">{{ t('homepage.cta.kicker') }}</p>
-          <h2 id="closing-title" class="closing__title">{{ t('homepage.cta.title') }}</h2>
-          <p class="closing__sub">{{ t('homepage.cta.subtitle') }}</p>
-          <div class="closing__actions">
-            <a
-              :href="primaryCta.href"
-              class="btn btn--primary"
-              @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
-            >
-              <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
-              {{ primaryCta.label }}
-            </a>
-          </div>
         </div>
       </div>
     </section>
@@ -807,8 +780,6 @@ export default {
       return [
         { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
         { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
-        { id: 'freeTools', question: t('homepage.faq.items.freeTools.question'), answer: t('homepage.faq.items.freeTools.answer') },
-        { id: 'pricing', question: t('homepage.faq.items.pricing.question'), answer: t('homepage.faq.items.pricing.answer') },
         { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
         { id: 'whoFor', question: t('homepage.faq.items.whoFor.question'), answer: t('homepage.faq.items.whoFor.answer') },
       ];

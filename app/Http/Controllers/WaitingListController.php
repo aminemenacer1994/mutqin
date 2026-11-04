@@ -7,10 +7,10 @@ use App\Models\WaitingListEntry;
 use App\Services\AdminDashboardService;
 use App\Support\MutqinLog;
 use App\Support\WaitingListAttribution;
+use App\Support\WaitingListDatabase;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class WaitingListController extends Controller
@@ -18,7 +18,7 @@ class WaitingListController extends Controller
     public function store(StoreWaitingListEntryRequest $request): JsonResponse
     {
         try {
-            if (! Schema::connection((new WaitingListEntry)->getConnectionName())->hasTable('waiting_list_entries')) {
+            if (! WaitingListDatabase::hasTable()) {
                 MutqinLog::error('waiting_list.storage_unavailable', [
                     'reason' => 'missing_table',
                 ]);
@@ -33,11 +33,15 @@ class WaitingListController extends Controller
                 ? $validated['name']
                 : '';
 
-            $existing = WaitingListEntry::query()
+            $existing = WaitingListEntry::withTrashed()
                 ->where('email', $validated['email'])
                 ->first();
 
             if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+
                 return response()->json([
                     'message' => __('ui.waiting_list_already_joined'),
                     'already_joined' => true,
@@ -57,9 +61,13 @@ class WaitingListController extends Controller
             ]);
             AdminDashboardService::invalidateCaches();
         } catch (UniqueConstraintViolationException) {
-            $existing = WaitingListEntry::query()
+            $existing = WaitingListEntry::withTrashed()
                 ->where('email', $request->validated('email'))
                 ->first();
+
+            if ($existing?->trashed()) {
+                $existing->restore();
+            }
 
             if (! $existing) {
                 MutqinLog::error('waiting_list.store_failed', [

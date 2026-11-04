@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * mutqin.ai is the only public host. The waiting-list page is closed.
- * app.mutqin.ai GET/HEAD requests move to the same path on mutqin.ai.
+ * mutqin.ai is the public host. app.mutqin.ai GET/HEAD requests move to the
+ * same path on mutqin.ai.
  */
 class EnforceMarketingHostPolicy
 {
@@ -18,13 +18,6 @@ class EnforceMarketingHostPolicy
         $path = '/'.ltrim($request->path(), '/');
         if ($path === '//') {
             $path = '/';
-        }
-
-        $lower = strtolower($path);
-        $isWaitingList = $lower === '/waiting-list' || str_starts_with($lower, '/waiting-list/');
-        $isUnsubscribe = str_starts_with($lower, '/waiting-list/unsubscribe');
-        if ($isWaitingList && ! $isUnsubscribe) {
-            return redirect()->to(MutqinDomains::canonicalUrl('/'));
         }
 
         if ($this->shouldRedirectAppHost($request)) {

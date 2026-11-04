@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "Your first session",
-      "title": "Your first 10 minutes with Mutqin",
-      "subtitle": "Choose 1 to 3 ayahs. Listen, repeat and recite from memory. Mutqin saves your next step.",
       "durationLabel": "Set aside",
       "duration": "10 minutes",
       "startLabel": "Start with",
@@ -443,10 +440,6 @@
           "question": "How does memorisation work?",
           "answer": "Choose a short ayah range. Listen, repeat and recite until it feels stronger, then return to revise what you have already memorised. On Free you get basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights."
         },
-        "freeTools": {
-          "question": "Which tools are free?",
-          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions."
-        },
         "whatIsPro": {
           "question": "Do I need Pro to start?",
           "answer": "No. You can begin memorising on Free. Upgrade later if you want more recitation checks, self-assessed audio recitation, joined ayahs, memory-word highlights, or more saved sessions."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "How does revision work?",
           "answer": "Memorisation does not end when an ayah is learnt. Mutqin helps you return to recent and weaker ayahs, so revision stays part of the journey."
-        },
-        "pricing": {
-          "question": "Is Mutqin free? What does Pro cost?",
-          "answer": "Yes. Free covers basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions. The price is shown before you upgrade."
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
@@ -570,13 +559,6 @@
       "featureColumn": "Feature",
       "freeTrial": "7-DAY FREE TRIAL",
       "accountNote": "Sign in before checkout so your plan syncs to the correct Mutqin account."
-    },
-    "cta": {
-      "kicker": "Begin",
-      "title": "Begin with one small range.",
-      "subtitle": "Your first session takes about 10 minutes. You can begin free.",
-      "button": "Start your first session",
-      "note": "You will open your space and start from a short ayah range."
     },
     "purpose": {
       "kicker": "The journey",
@@ -1660,6 +1642,8 @@
       "recordingInvalid": "No usable audio was captured. Try recording again.",
       "serviceNetworkError": "We couldn't connect to the recitation service. Your session is safe. Try again.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.",
+      "streamReconnecting": "Connection hiccup. Still listening.",
+      "streamReconnectGaveUp": "Connection is unstable. Keep reciting — words so far are kept. Finish when you are ready.",
       "usageCapReached": "You have reached today's AI voice-check limit. Continue practising without AI, or try again tomorrow.",
       "continueWithoutAi": "Continue without AI",
       "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again.",
@@ -5374,7 +5358,10 @@
     "metric_contacts": "Pending messages",
     "metric_pending": "Pending messages",
     "metric_pending_hint": "Contact form messages waiting for a response.",
-    "trend_vs_last_week": "{arrow} {n}% vs last week",
+    "trend_vs_last_week": "{n}% vs previous {days} days",
+    "trend_vs_period": "{n}% vs previous {days} days",
+    "trend_new": "New",
+    "trend_flat": "—",
     "days_range": "Date range",
     "top_learners_title": "Top learners",
     "top_learners_empty": "No sessions in this range yet.",
@@ -5776,8 +5763,16 @@
       "deleteError": "Could not remove this signup.",
       "detailTitle": "Waiting list signup",
       "empty": "No waiting-list signups yet.",
+      "registered": "Registered",
+      "pending": "Pending",
+      "unsubscribed": "Unsubscribed",
+      "archived": "Archived",
+      "showArchived": "Show archived",
+      "exportCsv": "Export CSV",
       "emptySearch": "No signups match your search",
       "loadError": "Could not load the waiting list.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache.",
       "launch_title": "Mutqin is live email",
       "launch_lead": "One-time announcement to opted-in signups. Sends are queued in batches — nothing is sent automatically.",
       "launch_refresh": "Refresh preview",

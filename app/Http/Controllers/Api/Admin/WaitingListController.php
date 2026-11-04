@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\WaitingListEntry;
 use App\Rules\WaitingListEmail;
 use App\Services\AdminDashboardService;
 use App\Services\WaitingListAnalyticsService;
 use App\Services\WaitingListLaunchCampaignService;
 use App\Support\BulkMailQueue;
+use App\Support\WaitingListDatabase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WaitingListController extends Controller
 {
@@ -82,17 +85,38 @@ class WaitingListController extends Controller
     {
         $this->admin($request);
 
+        $storage = WaitingListDatabase::storageMeta();
+        if ($storage['misconfigured']) {
+            return response()->json([
+                'message' => __('admin.waiting_list.storage_mismatch', [
+                    'count' => (int) ($storage['alternate_count'] ?? 0),
+                    'database' => (string) ($storage['alternate_database'] ?? ''),
+                ]),
+                'storage' => $storage,
+            ], 503);
+        }
+        if (! $storage['available']) {
+            return response()->json([
+                'message' => __('admin.waiting_list.storage_unavailable'),
+                'storage' => $storage,
+            ], 503);
+        }
+
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:200'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:10', 'max:50'],
+            'archived' => ['nullable', 'boolean'],
         ]);
 
         $search = trim((string) ($validated['q'] ?? ''));
         $page = max(1, (int) ($validated['page'] ?? 1));
         $perPage = min(50, max(10, (int) ($validated['per_page'] ?? 25)));
+        $archived = $request->boolean('archived');
 
-        $query = WaitingListEntry::query();
+        $query = $archived
+            ? WaitingListEntry::onlyTrashed()
+            : WaitingListEntry::query();
 
         if ($search !== '') {
             $like = '%'.addcslashes($search, '%_\\').'%';
@@ -117,16 +141,58 @@ class WaitingListController extends Controller
             ->orderByDesc('id')
             ->forPage($page, $perPage)
             ->get();
+        $registeredEmails = $this->registeredEmails($rows->pluck('email')->all());
 
         return response()
             ->json([
-                'items' => $rows->map(fn (WaitingListEntry $row) => $this->serialize($row))->values()->all(),
+                'items' => $rows->map(fn (WaitingListEntry $row) => $this->serialize($row, $registeredEmails))->values()->all(),
+                'archived' => $archived,
                 'total' => $total,
                 'page' => $page,
                 'per_page' => $perPage,
                 'total_pages' => $totalPages,
             ])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->admin($request);
+
+        $archived = $request->boolean('archived');
+        $search = trim((string) $request->query('q', ''));
+        $query = $archived
+            ? WaitingListEntry::onlyTrashed()
+            : WaitingListEntry::query();
+        if ($search !== '') {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($inner) use ($like): void {
+                $inner->where('name', 'like', $like)->orWhere('email', 'like', $like);
+            });
+        }
+
+        $filename = 'waiting-list-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($query): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['id', 'name', 'email', 'status', 'created_at', 'unsubscribed_at', 'deleted_at']);
+            $query->orderBy('id')->chunk(200, function ($rows) use ($handle): void {
+                $registered = $this->registeredEmails($rows->pluck('email')->all());
+                foreach ($rows as $row) {
+                    $payload = $this->serialize($row, $registered);
+                    fputcsv($handle, [
+                        $payload['id'],
+                        $payload['name'],
+                        $payload['email'],
+                        $payload['status'],
+                        $payload['created_at'],
+                        $row->unsubscribed_at?->toIso8601String(),
+                        $row->deleted_at?->toIso8601String(),
+                    ]);
+                }
+            });
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function show(Request $request, WaitingListEntry $entry): JsonResponse
@@ -177,14 +243,48 @@ class WaitingListController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, email: string, created_at: string|null, joined_at: string|null}
+     * @param  list<string>  $emails
+     * @return array<string, true>
      */
-    private function serialize(WaitingListEntry $entry): array
+    private function registeredEmails(array $emails): array
     {
+        $normalized = array_values(array_unique(array_filter(array_map(
+            fn ($email) => strtolower(trim((string) $email)),
+            $emails
+        ))));
+        if ($normalized === []) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('email', $normalized)
+            ->pluck('email')
+            ->mapWithKeys(fn ($email) => [strtolower((string) $email) => true])
+            ->all();
+    }
+
+    /**
+     * @param  array<string, true>  $registeredEmails
+     * @return array<string, mixed>
+     */
+    private function serialize(WaitingListEntry $entry, array $registeredEmails = []): array
+    {
+        $email = strtolower((string) $entry->email);
+        $registered = $registeredEmails !== []
+            ? isset($registeredEmails[$email])
+            : User::query()->where('email', $email)->exists();
+        $status = $entry->trashed()
+            ? 'archived'
+            : ($registered
+                ? 'registered'
+                : ($entry->unsubscribed_at ? 'unsubscribed' : 'pending'));
+
         return [
             'id' => (int) $entry->id,
             'name' => (string) $entry->name,
             'email' => (string) $entry->email,
+            'status' => $status,
+            'registered' => $status === 'registered',
             'created_at' => $entry->created_at?->toIso8601String(),
             'joined_at' => $entry->created_at?->format('j M Y, H:i'),
             'attribution' => $entry->attribution,

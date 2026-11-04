@@ -206,8 +206,9 @@
                           >
                             <span
                               class="post-session-simple__quran-token-text"
-                              :data-madani-glyph="part.madaniGlyph ? 'true' : null"
-                              :style="{ fontFamily: part.fontFamily ? `'${part.fontFamily}', Arial, sans-serif` : 'Arial, sans-serif' }"
+                              :data-madani-glyph="part.madaniGlyph && part.fontFamily ? 'true' : null"
+                              :data-arabic-fallback="part.madaniGlyph && part.fontFamily ? null : 'true'"
+                              :style="part.madaniGlyph && part.fontFamily ? { '--madani-font': `'${part.fontFamily}'` } : null"
                             >{{ part.text }}</span>
                           </span>
                         </span>
@@ -231,8 +232,8 @@
                   >{{ view.infoArchitecture.weakAreas.lead }}</p>
                   <ul class="post-session-simple__weak-spots-list post-session-simple__weak-spots-list--inline">
                     <li
-                      v-for="row in view.infoArchitecture.weakAreas.items"
-                      :key="`workspace-weak-ayah-${row.ayah}`"
+                      v-for="(row, rowIdx) in view.infoArchitecture.weakAreas.items"
+                      :key="`workspace-weak-word-${row.ayah}-${rowIdx}`"
                       class="post-session-simple__weak-spots-item"
                     >
                       <strong class="post-session-simple__weak-spots-ayah">{{ row.ayahLabel }}</strong>
@@ -253,9 +254,10 @@
                           }"
                         ><span
                           class="post-session-simple__quran-token-text"
-                          :data-madani-glyph="entry.madaniGlyph ? 'true' : null"
-                          :style="{ fontFamily: entry.fontFamily ? `'${entry.fontFamily}', Arial, sans-serif` : 'Arial, sans-serif' }"
-                        >{{ entry.text }}</span><template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
+                          :data-madani-glyph="entry.madaniGlyph && entry.fontFamily ? 'true' : null"
+                          :data-arabic-fallback="entry.madaniGlyph && entry.fontFamily ? null : 'true'"
+                          :style="entry.madaniGlyph && entry.fontFamily ? { '--madani-font': `'${entry.fontFamily}'` } : null"
+                        >{{ entry.text }}</span></span>
                       </span>
                     </li>
                   </ul>

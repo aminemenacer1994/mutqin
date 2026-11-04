@@ -4,9 +4,6 @@
     <p>Recite aloud. AI Recite can highlight possible mistakes to practise again. Mutqin is for beginners, children with guidance, returning adults and experienced Hifz students.</p>
     <p>Available now: free to start. <a href="/memorisation">Start your first session</a>.</p>
 
-    <h2>Your first 10 minutes with Mutqin</h2>
-    <p>Choose 1 to 3 ayahs. Listen, repeat and recite from memory. Mutqin saves your next step.</p>
-
     <h2>The essentials for steady Hifz</h2>
     <p>Learn a small range, practise your recall, then return at the right time.</p>
     <h3>Guided memorisation</h3>
@@ -27,10 +24,7 @@
     <h2>Questions about memorising with Mutqin</h2>
     <p>Mutqin is a Qur’an memorisation companion. It helps you listen, recite, review and return, and supports practice between lessons. It does not replace a teacher.</p>
     <nav aria-label="Explore Mutqin">
-        <a href="/features">All features</a>
-        <a href="/articles">Articles &amp; guides</a>
         <a href="/about">About us</a>
-        <a href="/our-mission">Our mission</a>
         <a href="/privacy">Privacy</a>
         <a href="/pricing">Pricing</a>
         <a href="/features/ai-recite">AI Recite</a>

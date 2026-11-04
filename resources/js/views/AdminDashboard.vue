@@ -88,11 +88,12 @@
               </span>
               <span class="admin-kpi__label">{{ metric.label }}</span>
               <strong class="admin-kpi__value">{{ metric.value == null ? '—' : metric.value }}</strong>
-              <span v-if="metric.error" class="admin-kpi__error">{{ t('admin.retry') }}</span>
-              <em v-if="metric.trendLabel" class="admin-kpi__trend" :data-dir="metric.trendDir">
+              <span v-if="metric.error" class="admin-kpi__error">{{ metric.errorMessage || t('admin.retry') }}</span>
+              <em v-if="metric.trendLabel" class="admin-kpi__trend" :data-dir="metric.trendDir || 'flat'">
                 <i
+                  v-if="metric.trendDir === 'up' || metric.trendDir === 'down'"
                   class="bi"
-                  :class="metric.trendDir === 'up' ? 'bi-arrow-up-short' : metric.trendDir === 'down' ? 'bi-arrow-down-short' : 'bi-dash'"
+                  :class="metric.trendDir === 'up' ? 'bi-arrow-up-short' : 'bi-arrow-down-short'"
                   aria-hidden="true"
                 ></i>
                 {{ metric.trendLabel }}
@@ -741,6 +742,13 @@
                     @input="onWaitingSearchInput"
                   >
                 </div>
+                <label class="admin-toolbar__search">
+                  <input v-model="waitingFilters.archived" type="checkbox" @change="loadWaitingList(1)">
+                  {{ t('admin.waiting_list.showArchived') }}
+                </label>
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" @click="exportWaitingList">
+                  {{ t('admin.waiting_list.exportCsv') }}
+                </button>
               </div>
               <p v-if="!waitingLoading && !waitingError && waitingTotal != null" class="admin-results-count">
                 {{ t('admin.waiting_list_showing', { shown: waitingItems.length, total: waitingTotal }) }}
@@ -785,6 +793,7 @@
                       <div class="admin-user-card__top">
                         <div class="admin-user-card__who">
                           <strong>{{ row.name || t('admin.unnamed') }}</strong>
+                          <span v-if="row.status" class="admin-user-card__active">{{ t('admin.waiting_list.' + row.status) }}</span>
                           <span class="admin-user-card__email">{{ row.email }}</span>
                         </div>
                         <span class="admin-user-card__active">#{{ row.id }}</span>
@@ -1875,7 +1884,7 @@ export default {
       waitingTotalPages: 1,
       waitingLoading: false,
       waitingError: '',
-      waitingFilters: { q: '' },
+      waitingFilters: { q: '', archived: false },
       waitingSearchTimer: null,
       waitingDetail: null,
       waitingDetailMode: 'view',
@@ -1955,12 +1964,31 @@ export default {
     canViewUserAiReciteUsage() {
       return this.data?.meta?.capabilities?.user_ai_recite_usage === true
     },
+    waitingSnapshotCount() {
+      const metric = this.data?.snapshot?.waiting_list_total
+      if (metric?.available === false || metric?.value == null) return null
+      return Number(metric.value)
+    },
+    waitingStorageMismatchMessage() {
+      const storage = this.data?.meta?.waiting_list_storage
+      if (!storage?.misconfigured) return ''
+      return this.t('admin.waiting_list.storage_mismatch', {
+        count: Number(storage.alternate_count || 0),
+        database: storage.alternate_database || '',
+      })
+    },
     snapshotCards() {
       const snapshot = this.data?.snapshot || {}
       const waitingMetric = snapshot.waiting_list_total
+      const waitingStorageError = waitingMetric?.storage_error
       const waitingValue = waitingMetric?.available === false || waitingMetric?.value == null
         ? null
         : Number(waitingMetric.value)
+      const waitingLoadError = waitingStorageError === 'misconfigured'
+        ? this.waitingStorageMismatchMessage
+        : waitingStorageError === 'unavailable'
+          ? this.t('admin.waiting_list.storage_unavailable')
+          : null
       return [
         {
           key: 'users_total',
@@ -1969,8 +1997,8 @@ export default {
           action: 'users',
           toneClass: 'admin-kpi--users',
           icon: 'bi bi-people-fill',
-          trendLabel: this.formatTrend(snapshot.users_total?.trend_percent),
-          trendDir: this.trendDir(snapshot.users_total?.trend_percent),
+          trendLabel: this.formatTrend(snapshot.users_total),
+          trendDir: this.trendDir(snapshot.users_total),
         },
         {
           key: 'feedback_open',
@@ -1979,19 +2007,20 @@ export default {
           action: 'feedback',
           toneClass: 'admin-kpi--feedback',
           icon: 'bi bi-chat-left-text-fill',
-          trendLabel: this.formatTrend(snapshot.feedback_open?.trend_percent),
-          trendDir: this.trendDir(snapshot.feedback_open?.trend_percent),
+          trendLabel: this.formatTrend(snapshot.feedback_open),
+          trendDir: this.trendDir(snapshot.feedback_open),
         },
         {
           key: 'waiting_list_total',
           label: this.t('admin.metric_waiting_list'),
           value: Number.isFinite(waitingValue) ? waitingValue : null,
-          error: waitingMetric?.available === false || !Number.isFinite(waitingValue),
+          error: Boolean(waitingLoadError) || waitingMetric?.available === false || !Number.isFinite(waitingValue),
+          errorMessage: waitingLoadError,
           action: 'waiting',
           toneClass: 'admin-kpi--waiting',
           icon: 'bi bi-hourglass-split',
-          trendLabel: this.formatTrend(snapshot.waiting_list_total?.trend_percent),
-          trendDir: this.trendDir(snapshot.waiting_list_total?.trend_percent),
+          trendLabel: waitingMetric?.available === false ? null : this.formatTrend(snapshot.waiting_list_total),
+          trendDir: waitingMetric?.available === false ? null : this.trendDir(snapshot.waiting_list_total),
         },
         {
           key: 'sessions_completed',
@@ -2000,8 +2029,8 @@ export default {
           action: 'users',
           toneClass: 'admin-kpi--sessions',
           icon: 'bi bi-journal-check',
-          trendLabel: this.formatTrend(snapshot.sessions_completed?.trend_percent),
-          trendDir: this.trendDir(snapshot.sessions_completed?.trend_percent),
+          trendLabel: this.formatTrend(snapshot.sessions_completed),
+          trendDir: this.trendDir(snapshot.sessions_completed),
         },
       ]
     },
@@ -2023,7 +2052,7 @@ export default {
           kicker: this.t('admin.waiting_list_kicker'),
           icon: 'bi-hourglass-split',
           title: this.t('admin.waiting_list_title'),
-          count: this.waitingTotal,
+          count: this.waitingTotal ?? this.waitingSnapshotCount,
           subtitle: this.t('admin.waiting_list_subtitle'),
         }
       }
@@ -2523,6 +2552,23 @@ export default {
         this.bulkBusy = false
       }
     },
+    async exportWaitingList() {
+      try {
+        const response = await adminApi.exportWaitingList({
+          q: this.waitingFilters.q,
+          archived: this.waitingFilters.archived,
+        })
+        const blob = new Blob([response], { type: 'text/csv;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'waiting-list.csv'
+        link.click()
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.loadError')
+      }
+    },
     onWaitingSearchInput() {
       if (this.waitingSearchTimer) clearTimeout(this.waitingSearchTimer)
       this.waitingSearchTimer = setTimeout(() => this.loadWaitingList(1), 220)
@@ -2535,6 +2581,7 @@ export default {
           page,
           per_page: 25,
           q: this.waitingFilters.q,
+          archived: this.waitingFilters.archived,
         })
         this.waitingItems = [...data.items].sort((a, b) => {
           const aTime = Date.parse(a.created_at || '') || 0
@@ -2552,7 +2599,15 @@ export default {
         this.waitingItems = []
         this.waitingTotal = null
         this.waitingTotalPages = 1
-        this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.loadError')
+        const storage = error?.response?.data?.storage
+        if (storage?.misconfigured) {
+          this.waitingError = this.t('admin.waiting_list.storage_mismatch', {
+            count: Number(storage.alternate_count || 0),
+            database: storage.alternate_database || '',
+          })
+        } else {
+          this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.loadError')
+        }
       } finally {
         this.waitingLoading = false
       }
@@ -2748,20 +2803,25 @@ export default {
         this.refreshing = false
       }
     },
-    formatTrend(value) {
-      if (value == null || Number.isNaN(Number(value))) return ''
-      const n = Number(value)
-      const arrow = n > 0 ? '↑' : n < 0 ? '↓' : '→'
+    formatTrend(metric) {
+      if (!metric || typeof metric !== 'object') return ''
+      const days = Number(this.chartDays) === 7 ? 7 : 30
+      if (metric.trend_kind === 'new') return this.t('admin.trend_new')
+      const n = Number(metric.trend_percent)
+      if (metric.trend_kind === 'flat' || metric.trend_percent == null || !Number.isFinite(n)) {
+        return this.t('admin.trend_flat')
+      }
       const abs = Math.abs(n)
       const shown = Number.isInteger(abs) ? String(abs) : abs.toFixed(1)
-      return this.t('admin.trend_vs_last_week', { arrow, n: shown })
+      return this.t('admin.trend_vs_period', { n: shown, days })
     },
-    trendDir(value) {
-      if (value == null || Number.isNaN(Number(value))) return ''
-      const n = Number(value)
+    trendDir(metric) {
+      if (!metric || typeof metric !== 'object') return ''
+      if (metric.trend_kind === 'new' || metric.trend_kind === 'flat') return ''
+      const n = Number(metric.trend_percent)
+      if (!Number.isFinite(n) || n === 0) return ''
       if (n > 0) return 'up'
-      if (n < 0) return 'down'
-      return 'flat'
+      return 'down'
     },
     isDeleted(row) {
       return !!(row && (row.is_deleted || row.deleted_at))

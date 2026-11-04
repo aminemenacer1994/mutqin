@@ -11,13 +11,14 @@ class WaitingListFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_waiting_list_page_is_closed(): void
+    public function test_public_waiting_list_page_is_available(): void
     {
         $this->get(route('waiting-list'))
-            ->assertRedirect('/');
+            ->assertOk()
+            ->assertSee('<waiting-list-page', false);
     }
 
-    public function test_public_waiting_list_page_never_renders_signup_count(): void
+    public function test_public_waiting_list_page_exposes_real_signup_count(): void
     {
         WaitingListEntry::query()->create([
             'name' => 'Amina',
@@ -25,8 +26,8 @@ class WaitingListFlowTest extends TestCase
         ]);
 
         $this->get(route('waiting-list'))
-            ->assertRedirect('/')
-            ->assertDontSee('waiting-list-page', false);
+            ->assertOk()
+            ->assertSee('count="1"', false);
     }
 
     public function test_public_waiting_list_requires_name_and_email(): void
@@ -87,11 +88,11 @@ class WaitingListFlowTest extends TestCase
             ->assertJsonPath('data.email', 'menacer72@gmail.com');
     }
 
-    public function test_waiting_list_page_never_exposes_the_join_form(): void
+    public function test_waiting_list_page_exposes_csrf_free_join_endpoint(): void
     {
         $this->get(route('waiting-list'))
-            ->assertRedirect('/')
-            ->assertDontSee('join-waiting-list', false);
+            ->assertOk()
+            ->assertSee('join-waiting-list', false);
     }
 
     public function test_local_waiting_list_store_url_stays_on_the_current_host(): void

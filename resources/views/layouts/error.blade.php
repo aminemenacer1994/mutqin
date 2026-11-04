@@ -1,9 +1,7 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? (in_array($appLocale, ['ar', 'ur'], true) ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme_set')
-        ? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE))
-        : \App\Support\Theme::DEFAULT_PREFERENCE);
+    $appThemePreference = $appThemePreference ?? \App\Support\Theme::DEFAULT_PREFERENCE;
     $appTheme = $appTheme ?? \App\Support\Theme::toDataTheme($appThemePreference);
     $appThemeChrome = \App\Support\Theme::chrome($appTheme);
     $appThemeColor = $appThemeChrome['theme_color'];
@@ -16,6 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
+    @include('partials.theme-fouc-script')
     <title>@yield('title', __('ui.error_title')) · Mutqin</title>
     <meta name="robots" content="noindex, follow">
     <meta name="description" content="@yield('title', __('ui.error_title'))">

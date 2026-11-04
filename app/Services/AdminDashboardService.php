@@ -17,6 +17,7 @@ use App\Models\WaitingListEntry;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\UserAiReciteUsageService;
 use App\Support\QuranMetadata;
+use App\Support\WaitingListDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -78,6 +79,7 @@ class AdminDashboardService
                     'registered_user_broadcast_email' => $admin->can('manage-registered-user-broadcast-email'),
                     'user_ai_recite_usage' => $admin->isSuperAdmin(),
                 ],
+                'waiting_list_storage' => WaitingListDatabase::storageMeta(),
             ],
             'welcome' => [
                 'greeting' => 'Assalamu alaikum, '.$this->firstName($admin),
@@ -85,7 +87,7 @@ class AdminDashboardService
                 'eyebrow' => 'Super Admin',
                 'supporting_message' => 'Oversee learners, progress, and platform health.',
             ],
-            'snapshot' => $this->buildSnapshot(),
+            'snapshot' => $this->buildSnapshot($chartDays),
             'learning' => $this->buildLearningOverview(),
             'ai_health' => $this->buildAiHealth($chartDays),
             'learners' => $this->buildLearnerRoster(20),
@@ -871,18 +873,21 @@ class AdminDashboardService
     /**
      * @return array<string, mixed>
      */
-    private function buildSnapshot(): array
+    private function buildSnapshot(int $days = 30): array
     {
+        $days = in_array($days, [7, 30], true) ? $days : 30;
         $now = now();
+        $currentStart = $now->copy()->subDays($days);
+        $previousStart = $now->copy()->subDays($days * 2);
         $usersAgg = User::query()
             ->selectRaw(
                 'COUNT(*) as total,
                  SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as new_7d,
                  SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d',
                 [
-                    $now->copy()->subDays(7),
-                    $now->copy()->subDays(14),
-                    $now->copy()->subDays(7),
+                    $currentStart,
+                    $previousStart,
+                    $currentStart,
                 ]
             )
             ->first();
@@ -937,9 +942,9 @@ class AdminDashboardService
                  SUM(CASE WHEN ended_at >= ? THEN 1 ELSE 0 END) as last_7d,
                  SUM(CASE WHEN ended_at >= ? AND ended_at < ? THEN 1 ELSE 0 END) as prev_7d',
                 [
-                    $now->copy()->subDays(7),
-                    $now->copy()->subDays(14),
-                    $now->copy()->subDays(7),
+                    $currentStart,
+                    $previousStart,
+                    $currentStart,
                 ]
             )
             ->first();
@@ -951,22 +956,26 @@ class AdminDashboardService
         $waitingListLast7d = 0;
         $waitingListPrev7d = 0;
         $waitingListAvailable = false;
-        $waitingList = new WaitingListEntry;
-        $waitingListConnection = $waitingList->getConnectionName() ?: config('database.default');
+        $waitingListStorageError = null;
+        $storage = WaitingListDatabase::storageMeta();
+
+        if ($storage['misconfigured']) {
+            $waitingListStorageError = 'misconfigured';
+        } elseif (! $storage['available']) {
+            $waitingListStorageError = 'unavailable';
+        }
 
         try {
-            // The waiting list may deliberately use a dedicated connection. Checking the
-            // default connection here would turn a missing/unreachable table into a false 0.
-            if (Schema::connection($waitingListConnection)->hasTable($waitingList->getTable())) {
+            if ($waitingListStorageError === null && WaitingListDatabase::hasTable()) {
                 $waitingAgg = WaitingListEntry::query()
                 ->selectRaw(
                     'COUNT(*) as total,
                      SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
                      SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d',
                     [
-                        $now->copy()->subDays(7),
-                        $now->copy()->subDays(14),
-                        $now->copy()->subDays(7),
+                        $currentStart,
+                        $previousStart,
+                        $currentStart,
                     ]
                 )
                 ->first();
@@ -977,6 +986,9 @@ class AdminDashboardService
             }
         } catch (\Throwable $error) {
             report($error);
+            $waitingListStorageError = 'unavailable';
+            $waitingListAvailable = false;
+            $waitingListTotal = null;
         }
 
         $aiChecks = AiReciteAttempt::query()->count();
@@ -987,9 +999,9 @@ class AdminDashboardService
                  SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
                  SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d",
                 [
-                    $now->copy()->subDays(7),
-                    $now->copy()->subDays(14),
-                    $now->copy()->subDays(7),
+                    $currentStart,
+                    $previousStart,
+                    $currentStart,
                 ]
             )
             ->first();
@@ -1006,9 +1018,9 @@ class AdminDashboardService
                 [
                     Feedback::STATUS_NEW,
                     Feedback::STATUS_REVIEWING,
-                    $now->copy()->subDays(7),
-                    $now->copy()->subDays(14),
-                    $now->copy()->subDays(7),
+                    $currentStart,
+                    $previousStart,
+                    $currentStart,
                 ]
             )
             ->first();
@@ -1022,13 +1034,15 @@ class AdminDashboardService
                 'key' => 'users_total',
                 'value' => $usersTotal,
                 'delta_7d' => $usersNew7d,
-                'trend_percent' => $this->trendPercent($usersNew7d, $usersPrev7d),
+                'window_days' => $days,
+                ...$this->trendPayload($usersNew7d, $usersPrev7d),
             ],
             'feedback_open' => [
                 'key' => 'feedback_open',
                 'value' => $feedbackOpen,
                 'total' => $feedbackTotal,
-                'trend_percent' => $this->trendPercent($feedbackLast7d, $feedbackPrev7d),
+                'window_days' => $days,
+                ...$this->trendPayload($feedbackLast7d, $feedbackPrev7d),
             ],
             'active_users' => [
                 'key' => 'active_users',
@@ -1039,15 +1053,20 @@ class AdminDashboardService
             'sessions_completed' => [
                 'key' => 'sessions_completed',
                 'value' => $sessionsCompleted,
-                'trend_percent' => $this->trendPercent($sessionsLast7d, $sessionsPrev7d),
+                'window_days' => $days,
+                ...$this->trendPayload($sessionsLast7d, $sessionsPrev7d),
             ],
             'waiting_list_total' => [
                 'key' => 'waiting_list_total',
                 'value' => $waitingListTotal,
                 'available' => $waitingListAvailable,
-                'trend_percent' => $waitingListAvailable
-                    ? $this->trendPercent($waitingListLast7d, $waitingListPrev7d)
-                    : null,
+                'storage_error' => $waitingListStorageError,
+                'connection' => WaitingListDatabase::connectionName(),
+                'database' => WaitingListDatabase::databaseLabel(),
+                'window_days' => $days,
+                ...($waitingListAvailable
+                    ? $this->trendPayload($waitingListLast7d, $waitingListPrev7d)
+                    : ['trend_percent' => null, 'trend_kind' => 'flat']),
             ],
             'ai_recite_attempts' => [
                 'key' => 'ai_recite_attempts',
@@ -1065,13 +1084,29 @@ class AdminDashboardService
         ];
     }
 
-    private function trendPercent(int $current, int $previous): ?float
+    /**
+     * Equal-length period comparison. Previous of 0 never becomes Infinity.
+     *
+     * @return array{trend_percent: float|null, trend_kind: string}
+     */
+    private function trendPayload(int $current, int $previous): array
     {
+        if ($previous <= 0 && $current <= 0) {
+            return ['trend_percent' => null, 'trend_kind' => 'flat'];
+        }
         if ($previous <= 0) {
-            return null;
+            return ['trend_percent' => null, 'trend_kind' => 'new'];
         }
 
-        return round((($current - $previous) / $previous) * 100, 1);
+        return [
+            'trend_percent' => round((($current - $previous) / $previous) * 100, 1),
+            'trend_kind' => 'percent',
+        ];
+    }
+
+    private function trendPercent(int $current, int $previous): ?float
+    {
+        return $this->trendPayload($current, $previous)['trend_percent'];
     }
 
     /**

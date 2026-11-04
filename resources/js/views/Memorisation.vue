@@ -408,7 +408,17 @@
       aria-atomic="true"
     >
       {{ aiRecallModeAnnouncement }}
+      <span v-if="recitationStreamNotice">{{ recitationStreamNotice }}</span>
     </div>
+    <p
+      v-if="recitationStreamNotice && (recitationCheckPanelOpen || recitationCheckRecording)"
+      class="recite-stream-notice"
+      role="status"
+      aria-live="polite"
+    >
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <span>{{ recitationStreamNotice }}</span>
+    </p>
 
     <!-- Main Content -->
     <div v-if="appReady && (isLoggedIn || isDemoMode)" class="main container-fluid" :class="{
@@ -4057,7 +4067,7 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="postSessionTitle"
-          :aria-describedby="postSessionDisplayLead ? 'postSessionDescription' : undefined"
+          :aria-labelledby="postSessionTitle"
           tabindex="-1"
           @keydown="onPostSessionDialogKeydown"
           @vue:mounted="(vnode) => vnode?.el?.focus?.()"
@@ -4070,13 +4080,6 @@
               <h2 id="postSessionTitle" class="post-session-simple__title" tabindex="-1">
                 {{ postSessionDisplayTitle }}
               </h2>
-              <p
-                v-if="postSessionDisplayLead"
-                id="postSessionDescription"
-                class="post-session-simple__subtitle"
-              >
-                {{ postSessionDisplayLead }}
-              </p>
             </div>
             <button
               type="button"

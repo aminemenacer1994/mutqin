@@ -7,15 +7,6 @@
         $pendingEmail = $user->pending_email;
         $emailVerified = $user->email_verified_at !== null;
         $canLinkGoogle = $emailVerified && ! $user->connectedWithGoogle();
-        $subscriptionSummary = $subscriptionSummary ?? [
-            'plan_label' => __('profile.free_access'),
-            'status_label' => __('profile.status_free'),
-            'tier_label' => __('profile.tier_free'),
-            'renewal_label' => __('profile.renewal_free_never'),
-            'trial_label' => null,
-            'can_manage' => false,
-            'can_upgrade' => false,
-        ];
         $nameParts = preg_split('/\s+/', trim((string) $user->name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $initials = collect($nameParts)
             ->filter(fn ($part) => (bool) preg_match('/\p{L}/u', $part))
@@ -65,43 +56,6 @@
                     </div>
                 </div>
 
-                <aside
-                    class="profile-hero-summary"
-                    aria-label="{{ $isAdmin ? __('profile.org_snapshot') : __('profile.subscription_snapshot') }}"
-                >
-                    <div class="profile-summary-copy">
-                        <span class="profile-summary-label">
-                            {{ $isAdmin ? __('profile.org_plan_label') : __('profile.current_plan') }}
-                        </span>
-                        <strong class="profile-summary-plan">{{ $subscriptionSummary['plan_label'] }}</strong>
-                        @unless ($isAdmin)
-                            <p class="profile-summary-meta">{{ $subscriptionSummary['renewal_label'] }}</p>
-                            @if ($subscriptionSummary['trial_label'])
-                                <p class="profile-summary-meta">{{ $subscriptionSummary['trial_label'] }}</p>
-                            @endif
-                        @endunless
-                    </div>
-
-                    @unless ($isAdmin)
-                        <div class="profile-hero-actions">
-                            @if ($subscriptionSummary['can_manage'])
-                                <form method="POST" action="{{ route('billing.portal') }}">
-                                    @csrf
-                                    <button type="submit" class="billing-secondary-btn profile-action-btn">{{ __('profile.manage_subscription') }}</button>
-                                </form>
-                            @endif
-                            @if ($subscriptionSummary['can_upgrade'])
-                                <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('pricing') }}">
-                                    {{ __('profile.upgrade_plan') }}
-                                </a>
-                            @endif
-                            <a class="billing-secondary-btn profile-action-btn" href="{{ route('dashboard') }}">
-                                <i class="bi bi-graph-up" aria-hidden="true"></i>
-                                {{ __('ui.dashboard') }}
-                            </a>
-                        </div>
-                    @endunless
-                </aside>
             </div>
 
             @if (session('billing_status'))
@@ -353,6 +307,28 @@
                             </form>
                         </article>
 
+                        <article class="profile-card profile-pane profile-card-wide" id="appearance-preferences">
+                            <div class="profile-card-head">
+                                <h2>{{ __('profile.appearance') }}</h2>
+                                <p>{{ __('profile.appearance_desc') }}</p>
+                            </div>
+                            <div class="profile-choice-grid profile-choice-grid--pair" data-theme-group role="radiogroup" aria-label="{{ __('profile.appearance') }}">
+                                @foreach ($themeModes as $mode)
+                                    <button
+                                        type="button"
+                                        class="profile-choice{{ $mode['id'] === $currentTheme ? ' is-selected' : '' }}"
+                                        data-theme-choice="{{ $mode['id'] }}"
+                                        role="radio"
+                                        aria-checked="{{ $mode['id'] === $currentTheme ? 'true' : 'false' }}"
+                                    >
+                                        <i class="bi {{ $mode['icon'] }}" aria-hidden="true"></i>
+                                        <span>{{ __('profile.'.$mode['label_key']) }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                            <p class="profile-field-error" data-theme-error role="alert"></p>
+                        </article>
+
                         <article class="profile-card profile-pane profile-card-wide" id="sign-in-methods">
                             <div class="profile-card-head">
                                 <h2>{{ __('profile.sign_in_methods') }}</h2>
@@ -380,50 +356,6 @@
                                     @endif
                                 </li>
                             </ul>
-                        </article>
-
-                        <article class="profile-card profile-pane profile-card-wide" id="subscription">
-                            <div class="profile-card-head profile-card-head--inline">
-                                <div>
-                                    <h2>{{ __('profile.subscription') }}</h2>
-                                    <p>{{ __('profile.subscription_desc') }}</p>
-                                </div>
-                                @if ($subscriptionSummary['can_manage'] || $subscriptionSummary['can_upgrade'])
-                                    <div class="profile-card-actions profile-subscription-actions">
-                                        @if ($subscriptionSummary['can_manage'])
-                                            <form method="POST" action="{{ route('billing.portal') }}">
-                                                @csrf
-                                                <button type="submit" class="billing-secondary-btn profile-mini-btn">
-                                                    {{ __('profile.manage_subscription') }}
-                                                </button>
-                                            </form>
-                                        @endif
-                                        @if ($subscriptionSummary['can_upgrade'])
-                                            <a class="billing-primary-btn profile-mini-btn" href="{{ route('pricing') }}">
-                                                {{ __('profile.upgrade_plan') }}
-                                            </a>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                            <dl class="profile-facts">
-                                <div>
-                                    <dt>{{ __('profile.current_plan') }}</dt>
-                                    <dd>{{ $subscriptionSummary['plan_label'] }}</dd>
-                                </div>
-                                <div>
-                                    <dt>{{ __('profile.status') }}</dt>
-                                    <dd>{{ $subscriptionSummary['status_label'] }}</dd>
-                                </div>
-                                <div>
-                                    <dt>{{ __('profile.tier_label') }}</dt>
-                                    <dd>{{ $subscriptionSummary['tier_label'] }}</dd>
-                                </div>
-                                <div>
-                                    <dt>{{ __('profile.renewal_date') }}</dt>
-                                    <dd>{{ $subscriptionSummary['renewal_label'] }}</dd>
-                                </div>
-                            </dl>
                         </article>
 
                         @unless ($isAdmin)
@@ -948,14 +880,7 @@
                             if (typeof window.mutqinSetTheme === 'function') {
                                 window.mutqinSetTheme(theme);
                             } else {
-                                const response = await fetch(@json(route('api.profile.theme')), {
-                                    method: 'PATCH',
-                                    headers: jsonHeaders(),
-                                    credentials: 'same-origin',
-                                    body: JSON.stringify({ theme: theme }),
-                                });
-                                if (!response.ok) throw new Error('theme');
-                                document.documentElement.setAttribute('data-theme', theme);
+                                throw new Error('theme');
                             }
                             syncThemeChoices(theme);
                             if (themeError) themeError.textContent = '';

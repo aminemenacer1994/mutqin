@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WaitingListEntry;
 use App\Services\AdminDashboardService;
+use App\Support\WaitingListDatabase;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -14,15 +15,24 @@ class WaitingListController extends Controller
 {
     public function index(): View
     {
-        $entries = WaitingListEntry::query()
+        $waitingList = new WaitingListEntry;
+
+        if (! WaitingListDatabase::hasTable()) {
+            $entries = new LengthAwarePaginator([], 0, 25);
+
+            return view('admin.waiting-list.index', [
+                'entries' => $entries,
+                'totalEntries' => null,
+            ]);
+        }
+
+        $entries = $waitingList->newQuery()
             ->latest()
             ->paginate(25);
 
         return view('admin.waiting-list.index', [
             'entries' => $entries,
-            'totalEntries' => Schema::hasTable('waiting_list_entries')
-                ? WaitingListEntry::query()->count()
-                : 0,
+            'totalEntries' => $waitingList->newQuery()->count(),
         ]);
     }
 
@@ -38,7 +48,7 @@ class WaitingListController extends Controller
 
             fputcsv($handle, ['name', 'email', 'joined_at']);
 
-            WaitingListEntry::query()
+            (new WaitingListEntry)->newQuery()
                 ->orderBy('id')
                 ->chunk(200, function ($entries) use ($handle): void {
                     foreach ($entries as $entry) {

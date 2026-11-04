@@ -20,6 +20,9 @@
             'dashboard_url' => route('dashboard'),
             'show_recommendation_plan' => (bool) config('mutqin.show_recommendation_plan', false),
             'locale' => Auth::user()?->locale ?? 'en',
+            'theme' => Auth::check()
+                ? \App\Support\Theme::normalizePreference($memorisationUser?->theme)
+                : null,
             'ai_session_settings' => Auth::check()
                 ? app(\App\Services\Auth\AiSessionSettingsService::class)->snapshot($memorisationUser)
                 : null,

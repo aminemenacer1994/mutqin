@@ -2,13 +2,13 @@
 
 @section('content')
     @php
-        $waitingListCount = 0;
+        $waitingListCount = null;
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('waiting_list_entries')) {
+            if (\App\Support\WaitingListDatabase::hasTable()) {
                 $waitingListCount = (int) \App\Models\WaitingListEntry::query()->count();
             }
         } catch (\Throwable $exception) {
-            $waitingListCount = 0;
+            $waitingListCount = null;
         }
     @endphp
     <waiting-list-page count="{{ $waitingListCount }}">

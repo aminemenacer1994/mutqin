@@ -68,13 +68,14 @@ export const adminApi = {
     return !!data?.message
   },
 
-  async getWaitingList({ page = 1, per_page = 25, q = '' } = {}) {
+  async getWaitingList({ page = 1, per_page = 25, q = '', archived = false } = {}) {
     const { data } = await withRetry(() =>
       http.get('/admin/waiting-list', {
         params: {
           page,
           per_page,
           q: q || undefined,
+          archived: archived ? 1 : undefined,
         },
         headers: {
           'Cache-Control': 'no-cache',
@@ -107,6 +108,17 @@ export const adminApi = {
       per_page: responsePerPage,
       total_pages: totalPages,
     }
+  },
+
+  async exportWaitingList({ q = '', archived = false } = {}) {
+    const { data } = await http.get('/admin/waiting-list/export', {
+      params: {
+        q: q || undefined,
+        archived: archived ? 1 : undefined,
+      },
+      responseType: 'blob',
+    })
+    return data
   },
 
   async getWaitingListAnalytics() {

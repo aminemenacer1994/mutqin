@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "Première session recommandée",
-      "title": "Commencez petit. Terminez en sachant quoi faire ensuite.",
-      "subtitle": "Prévoyez environ 10 minutes pour 1 à 3 ayahs. Vous écouterez, répéterez, réciterez et repartirez avec un prochain retour clair.",
       "durationLabel": "Prévoyez",
       "duration": "Environ 10 minutes",
       "startLabel": "Commencez avec",
@@ -443,10 +440,6 @@
           "question": "Comment fonctionne la mémorisation ?",
           "answer": "Choisissez un court passage et pratiquez jusqu’à ce qu’il tienne. La configuration de session, l’audio et les outils débutants sont gratuits."
         },
-        "freeTools": {
-          "question": "Quels outils sont gratuits ?",
-          "answer": "La configuration de session, l’audio (vitesse, avance automatique, pauses), une ayah à la fois, masquer le texte progressivement et écouter puis répéter sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro."
-        },
         "whatIsPro": {
           "question": "Ai-je besoin de Pro pour commencer ?",
           "answer": "Non. Commencez gratuitement. Passez à Pro seulement si vous voulez plus de retours et d’historique."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "Comment fonctionne la révision ?",
           "answer": "Mutqin vous ramène aux ayahs récents et plus faibles, et suggère quoi pratiquer ensuite."
-        },
-        "pricing": {
-          "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
-          "answer": "Oui. La configuration de session, l’audio et les outils débutants sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro. Pro ajoute aussi les contrôles IA, la récitation audio en auto-évaluation, des sessions illimitées et la planification. Le tarif est indiqué avant le passage à Pro."
         },
         "whoFor": {
           "question": "Pour qui est Mutqin ?",
@@ -576,13 +565,6 @@
       "featureColumn": "Fonctionnalité",
       "freeTrial": "ESSAI GRATUIT 7 JOURS",
       "accountNote": "Sign en antes checkout so tu plan syncs a el correct Mutqin account."
-    },
-    "cta": {
-      "kicker": "Commencer",
-      "title": "Sachez quoi pratiquer ensuite.",
-      "subtitle": "Enregistrez un verset, révisez les points faibles, et gardez la prochaine session ciblée.",
-      "button": "Créer un compte gratuit",
-      "note": "Aucune carte requise pour le plan gratuit."
     },
     "purpose": {
       "kicker": "Le parcours",
@@ -816,7 +798,7 @@
       "desc": "Répétez le plan recommandé ou créez votre propre session.",
       "repeatRecommended": "Répéter la session",
       "repeatRecommendedDesc": "Pratiquez à nouveau la même plage et les mêmes réglages recommandés.",
-      "returnToWorkspace": "Retour à l’espace",
+      "returnToWorkspace": "Retour au Moushaf",
       "returnToWorkspaceDesc": "Quittez ce choix et revenez à l’espace principal de mémorisation. Votre session terminée et ses résultats sont conservés.",
       "createCustom": "Session perso",
       "createCustomDesc": "Choisissez votre sourate, votre plage d’ayahs et vos réglages.",
@@ -1666,6 +1648,8 @@
       "recordingInvalid": "No usable audio was captured. Try grabación again.",
       "serviceNetworkError": "No pudimos connect to the recitation service. Your sesión is safe. Intentar de nuevo.",
       "serviceUnavailable": "La vérification de récitation est temporairement indisponible. Vous pouvez continuer à pratiquer et réessayer la vérification IA plus tard.",
+      "streamReconnecting": "Connexion instable. L’écoute continue.",
+      "streamReconnectGaveUp": "La connexion reste instable. Continuez à réciter — les mots déjà captés sont conservés. Terminez quand vous êtes prêt.",
       "usageCapReached": "Vous avez atteint la limite quotidienne de vérification vocale par IA. Réessayez demain.",
       "continueWithoutAi": "Continuer sans l’IA",
       "rateLimited": "Vous lancez les contrôles vocaux IA trop vite. Patientez un instant, puis réessayez.",
@@ -5378,7 +5362,10 @@
     "metric_contacts": "Messages en attente",
     "metric_pending": "Messages en attente",
     "metric_pending_hint": "Messages du formulaire de contact en attente de réponse.",
-    "trend_vs_last_week": "{arrow} {n} % vs la semaine dernière",
+    "trend_vs_last_week": "{n} % vs les {days} jours précédents",
+    "trend_vs_period": "{n} % vs les {days} jours précédents",
+    "trend_new": "Nouveau",
+    "trend_flat": "—",
     "days_range": "Période",
     "top_learners_title": "Meilleurs apprenants",
     "top_learners_empty": "Aucune session sur cette période pour l’instant.",
@@ -5780,6 +5767,12 @@
       "deleteError": "Impossible de retirer cette inscription.",
       "detailTitle": "Inscription à la liste d'attente",
       "empty": "Aucune inscription pour l'instant.",
+      "registered": "Inscrit",
+      "pending": "En attente",
+      "unsubscribed": "Désinscrit",
+      "archived": "Archivé",
+      "showArchived": "Afficher les archivés",
+      "exportCsv": "Exporter en CSV",
       "emptySearch": "Aucune inscription ne correspond à votre recherche",
       "loadError": "Impossible de charger la liste d'attente.",
       "launch_title": "Launch announcement email",
@@ -5806,7 +5799,9 @@
       "launch_confirm_body": "This will queue the launch announcement to {count} eligible waiting-list addresses. This cannot be undone for addresses already marked sent.",
       "launch_confirm_input": "Type the eligible recipient count to confirm",
       "launch_confirm_send": "Queue send",
-      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first."
+      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache."
     },
     "kicker": "Admin",
     "dashboard": "Tableau de bord",

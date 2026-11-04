@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "Önerilen ilk oturum",
-      "title": "Küçük başla. Sonra ne yapacağını bilerek bitir.",
-      "subtitle": "1 ila 3 ayet için yaklaşık 10 dakika ayırın. Dinleyecek, tekrar edecek, ezberden okuyacak ve net bir sonraki tekrarla ayrılacaksınız.",
       "durationLabel": "Ayırın",
       "duration": "Yaklaşık 10 dakika",
       "startLabel": "Şununla başlayın",
@@ -443,10 +440,6 @@
           "question": "Ezber nasıl çalışır?",
           "answer": "Kısa bir ayet aralığı seçin ve oturana kadar çalışın. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir."
         },
-        "freeTools": {
-          "question": "Hangi araçlar ücretsiz?",
-          "answer": "Oturum kurulumu, ses (hız, otomatik ilerleme, gecikmeler), her seferinde bir ayet, metni yavaşça gizleme ve dinle-tekrar et ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister."
-        },
         "whatIsPro": {
           "question": "Başlamak için Pro gerekir mi?",
           "answer": "Hayır. Ücretsiz başlayın. Yalnızca daha fazla geri bildirim ve geçmiş istiyorsanız Pro’ya geçin."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "Tekrar nasıl çalışır?",
           "answer": "Mutqin sizi yeni ve daha zayıf ayetlere geri getirir ve sonra ne çalışacağınızı önerir."
-        },
-        "pricing": {
-          "question": "Mutqin ücretsiz mi? Pro ne kadar?",
-          "answer": "Evet. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister. Pro ayrıca yapay zeka kontrolleri, kendi değerlendirmeli sesli kıraat, sınırsız oturum ve planlama ekler. Fiyat yükseltmeden önce gösterilir."
         },
         "whoFor": {
           "question": "Mutqin kimler için?",
@@ -570,13 +559,6 @@
       "featureColumn": "« Feature»",
       "freeTrial": "7-gün FREE TRIAL",
       "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
-    },
-    "cta": {
-      "kicker": "Başla",
-      "title": "Know Ne to practise Sonraki.",
-      "subtitle": "Record a verse, review the weak spots, and keep the next oturum focused.",
-      "button": "Ücretsiz hesap oluştur",
-      "note": "No card needed için Free."
     },
     "purpose": {
       "kicker": "The journey",
@@ -5800,7 +5782,9 @@
       "launch_confirm_body": "This will queue the launch announcement to {count} eligible waiting-list addresses. This cannot be undone for addresses already marked sent.",
       "launch_confirm_input": "Type the eligible recipient count to confirm",
       "launch_confirm_send": "Queue send",
-      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first."
+      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache."
     },
     "kicker": "Admin",
     "dashboard": "kontrol paneli",

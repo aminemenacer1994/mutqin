@@ -67,6 +67,8 @@ assert.match(memorisation, /presentWorkspaceReciteAnalysis/, 'workspace recite o
 assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts the recite analysis modal')
 assert.match(memorisation, /WorkspaceAiReciteResultModal/, 'workspace recite uses the post-session-style result modal')
 assert.match(memorisation, /buildWorkspaceAiReciteResultView/, 'workspace recite builds guided AI review view')
+assert.match(memorisation, /workspaceReciteAnalysisView = withStrictMadaniResultGlyphs\(view\)/, 'live results start Madani-only')
+assert.match(memorisation, /_workspaceReciteAnalysisSourceView === view/, 'live result hydration is tied to its source view')
 assert.match(memorisation, /dashboard_ai_recite/, 'workspace recite saves standalone attempts')
 assert.match(memorisation, /workspaceReciteAttemptSaved/, 'workspace recite marks a saved attempt')
 assert.match(memorisation, /aiReciteResultsHref/, 'workspace recite links to the progress results section')

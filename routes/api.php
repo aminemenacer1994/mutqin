@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('api.admin.feedback.destroy');
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
         Route::get('/admin/waiting-list', [AdminWaitingListController::class, 'index'])->name('api.admin.waiting-list.index');
+        Route::get('/admin/waiting-list/export', [AdminWaitingListController::class, 'export'])->name('api.admin.waiting-list.export');
         Route::get('/admin/waiting-list/analytics', [AdminWaitingListController::class, 'analytics'])->name('api.admin.waiting-list.analytics');
         Route::middleware('can:manage-waitlist-launch-email')->group(function () {
             Route::get('/admin/waiting-list/launch-email/preview', [AdminWaitingListController::class, 'launchEmailPreview'])
@@ -112,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Preferences remain available while waiting to verify email.
     Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
+    Route::get('/profile/theme', [ProfileController::class, 'showTheme'])->name('api.profile.theme.show');
     Route::patch('/profile/theme', [ProfileController::class, 'updateTheme'])->name('api.profile.theme');
     Route::get('/profile/ai-audio-consent', [ProfileController::class, 'showAiAudioConsent'])
         ->name('api.profile.ai-audio-consent.show');

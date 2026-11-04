@@ -107,16 +107,21 @@ export function paintUnicodeTextWithTajweedToken(unicodeText = '', tajweedTokenH
     return escapeHtml(text)
   }
 
-  const chars = Array.from(text)
-  /** @type {string[]} */
-  const parts = []
-  let buffer = ''
-  /** @type {string} */
-  let openKey = ''
-  let baseIdx = 0
-  /** @type {string[]} */
-  let lastRules = []
+  /* Keep each word as one shaping run. Splitting Nastaleeq into several
+   * inline spans makes Chromium break joining at colour transitions. */
+  const ruleCounts = new Map()
+  for (const rules of baseRules) {
+    for (const rule of rules) {
+      ruleCounts.set(rule, (ruleCounts.get(rule) || 0) + 1)
+    }
+  }
+  const dominantRule = [...ruleCounts.entries()]
+    .sort((a, b) => b[1] - a[1])[0]?.[0]
+  if (!dominantRule) return escapeHtml(text)
 
+  return `<span class="tajweed-mark tajweed-${escapeHtml(dominantRule)}">${escapeHtml(text)}</span>`
+  /* legacy shaping implementation removed */
+if (false) {
   const flush = () => {
     if (!buffer) return
     if (openKey) {
@@ -152,6 +157,7 @@ export function paintUnicodeTextWithTajweedToken(unicodeText = '', tajweedTokenH
   }
   flush()
   return parts.join('')
+}
 }
 
 /**

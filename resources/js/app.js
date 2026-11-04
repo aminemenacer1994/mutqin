@@ -25,8 +25,15 @@ import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
 import { initWaitingListAttribution } from './scripts/analytics/waitingListAttribution.js';
+import { bootstrapThemeFromStore, initThemeStorageSync } from './utils/theme';
 
 initWaitingListAttribution();
+initThemeStorageSync();
+try {
+    bootstrapThemeFromStore();
+} catch {
+    /* ignore */
+}
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {

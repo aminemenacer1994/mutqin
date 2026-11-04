@@ -91,33 +91,12 @@ class SetLocale
             return Theme::DEFAULT_PREFERENCE;
         }
 
-        // Guests stay on the app default unless they actually picked a mode (mutqin_theme_set).
-        // Leftover cookies/session from an older default must not stick.
-        if (! $this->guestExplicitlyChoseTheme($request)) {
-            return Theme::DEFAULT_PREFERENCE;
-        }
-
-        $candidate = $request->cookie(Theme::COOKIE) ?: Theme::DEFAULT_PREFERENCE;
-
-        return Theme::normalizePreference((string) $candidate);
-    }
-
-    private function guestExplicitlyChoseTheme(Request $request): bool
-    {
-        $explicit = $request->cookie(Theme::CHOSEN_COOKIE);
-
-        return $explicit === '1'
-            || $explicit === 'true'
-            || $explicit === 'on'
-            || $explicit === 'yes';
+        // Guests default to light on SSR; persisted guest choice lives in localStorage (FOUC script).
+        return Theme::DEFAULT_PREFERENCE;
     }
 
     private function queueThemeCookies(Response $response, Request $request, string $themePreference): void
     {
         $response->headers->setCookie(cookie(Theme::COOKIE, $themePreference, 60 * 24 * 365, null, null, false, false, false, 'lax'));
-
-        if (! $request->user() && $this->guestExplicitlyChoseTheme($request)) {
-            $response->headers->setCookie(cookie(Theme::CHOSEN_COOKIE, '1', 60 * 24 * 365, null, null, false, false, false, 'lax'));
-        }
     }
 }

@@ -304,18 +304,9 @@ class SeoVerifyCommand extends Command
         }
 
         $waitingList = $this->getLocal('/waiting-list');
-        $waitingLocation = (string) ($waitingList?->headers->get('Location') ?? '');
-        $waitingPath = parse_url($waitingLocation, PHP_URL_PATH);
-        $waitingPath = is_string($waitingPath) && $waitingPath !== '' ? rtrim($waitingPath, '/') : '/';
-        if ($waitingPath === '') {
-            $waitingPath = '/';
-        }
-        if ($waitingList === null
-            || ! $waitingList->isRedirection()
-            || $waitingPath !== '/'
-            || str_contains($waitingLocation, 'waiting-list')
-        ) {
-            $failures[] = '/waiting-list must redirect to /';
+        if ($waitingList === null || ! $waitingList->isSuccessful()
+            || ! str_contains((string) $waitingList->getContent(), 'waiting-list-page')) {
+            $failures[] = '/waiting-list must render the signup page';
         }
 
         $this->record(

@@ -4,17 +4,17 @@ namespace App\Support;
 
 /**
  * Canonical Mutqin colour modes. Keep in sync with resources/js/utils/theme.js.
- * Do not add modes here unless they already exist as html[data-theme] tokens.
+ * User-facing preference is light | sepia | dark. Default for new users is light.
  */
 final class Theme
 {
-    public const DEFAULT = 'sepia';
+    public const DEFAULT = 'light';
 
-    public const DEFAULT_PREFERENCE = 'sepia-mode';
+    public const DEFAULT_PREFERENCE = 'light';
 
     public const COOKIE = 'mutqin_theme';
 
-    /** Set only when the visitor actually picks a mode (not leftover defaults). */
+    /** Set when the visitor explicitly picks a mode in the browser. */
     public const CHOSEN_COOKIE = 'mutqin_theme_set';
 
     /**
@@ -31,7 +31,7 @@ final class Theme
     public const MODES = [
         'light' => [
             'id' => 'light',
-            'preference' => 'light-mode',
+            'preference' => 'light',
             'icon' => 'bi-sun',
             'label_key' => 'theme_light',
             'theme_color' => '#8b5e3c',
@@ -40,16 +40,16 @@ final class Theme
         ],
         'sepia' => [
             'id' => 'sepia',
-            'preference' => 'sepia-mode',
-            'icon' => 'bi-book',
+            'preference' => 'sepia',
+            'icon' => 'bi-sunset',
             'label_key' => 'theme_sepia',
             'theme_color' => '#8b5e3c',
-            'background_color' => '#f1e7d8',
+            'background_color' => '#f4ecd8',
             'color_scheme' => 'light',
         ],
         'dark' => [
             'id' => 'dark',
-            'preference' => 'dark-mode',
+            'preference' => 'dark',
             'icon' => 'bi-moon-stars',
             'label_key' => 'theme_dark',
             'theme_color' => '#14110f',
@@ -62,12 +62,12 @@ final class Theme
      * @var array<string, string>
      */
     public const ALIASES = [
-        'light' => 'light-mode',
-        'light-mode' => 'light-mode',
-        'sepia' => 'sepia-mode',
-        'sepia-mode' => 'sepia-mode',
-        'dark' => 'dark-mode',
-        'dark-mode' => 'dark-mode',
+        'light' => 'light',
+        'light-mode' => 'light',
+        'sepia' => 'sepia',
+        'sepia-mode' => 'sepia',
+        'dark' => 'dark',
+        'dark-mode' => 'dark',
     ];
 
     /**
@@ -83,14 +83,11 @@ final class Theme
      */
     public static function preferences(): array
     {
-        return array_values(array_map(
-            static fn (array $mode): string => $mode['preference'],
-            self::MODES
-        ));
+        return self::ids();
     }
 
     /**
-     * Values accepted by the profile theme API (short ids and preference strings).
+     * Values accepted by the profile theme API.
      *
      * @return list<string>
      */
@@ -144,15 +141,7 @@ final class Theme
 
     public static function toDataTheme(?string $value): string
     {
-        $preference = self::normalizePreference($value);
-
-        foreach (self::MODES as $mode) {
-            if ($mode['preference'] === $preference) {
-                return $mode['id'];
-            }
-        }
-
-        return self::DEFAULT;
+        return self::normalizePreference($value);
     }
 
     /**

@@ -149,7 +149,7 @@ class GoogleAuthController extends Controller
             request()->session()->put('mutqin_register_method', 'google');
             // Existing-user Welcome Back must not win over first-run onboarding.
             request()->session()->forget('mutqin_just_logged_in');
-            // New Google accounts always start on sepia across every page.
+            // New Google accounts always start on light across every page.
             $theme = Theme::DEFAULT_PREFERENCE;
             if ($user instanceof User) {
                 $user->forceFill(['theme' => $theme])->save();

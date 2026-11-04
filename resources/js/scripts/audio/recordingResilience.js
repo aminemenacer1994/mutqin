@@ -85,22 +85,16 @@ let attemptCounter = 0
 /**
  * @returns {string}
  */
-const CONTINUE_WITHOUT_AI_KINDS = new Set([
-  RECITATION_FAILURE_KIND.MICROPHONE,
-  RECITATION_FAILURE_KIND.USAGE_CAP,
-  RECITATION_FAILURE_KIND.TIMEOUT,
-  RECITATION_FAILURE_KIND.NETWORK,
-  RECITATION_FAILURE_KIND.PROVIDER,
-])
-
 /**
- * Mic, cap, timeout, and service failures should offer a way back to practice.
+ * Any failed AI check should offer a way back to practice. The learner can keep
+ * reciting even when the check ends in a red error state; only an intentional
+ * cancellation is excluded because it is not an AI service failure.
  *
  * @param {string|null|undefined} kind
  * @returns {boolean}
  */
 export function canContinuePracticeWithoutAi(kind) {
-  return CONTINUE_WITHOUT_AI_KINDS.has(String(kind || ''))
+  return String(kind || '') !== RECITATION_FAILURE_KIND.CANCELLED
 }
 
 export function createRecitationAttemptId() {

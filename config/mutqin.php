@@ -182,8 +182,13 @@ return [
     'waiting_list' => [
         // Set true only in local/dev if DNS checks block legitimate test signups.
         'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', true), FILTER_VALIDATE_BOOL),
-        // mutqin.ai Cloud env: set to mysql (or app) when that connection points at the app DB.
-        'database_connection' => env('MUTQIN_WAITING_LIST_DB_CONNECTION'),
+        // mutqin.ai Cloud env: set to mysql, mutqin_signups, or attach the app MySQL cluster
+        // as the default DB (see .env.example). When MUTQIN_SIGNUP_DB_DATABASE is set,
+        // mutqin_signups is used automatically unless MUTQIN_WAITING_LIST_DB_CONNECTION overrides.
+        'database_connection' => env('MUTQIN_WAITING_LIST_DB_CONNECTION')
+            ?: (trim((string) env('MUTQIN_SIGNUP_DB_DATABASE', '')) !== ''
+                ? 'mutqin_signups'
+                : null),
         'launch_email' => [
             'campaign_key' => (string) env('MUTQIN_WAITLIST_LAUNCH_CAMPAIGN_KEY', 'waitlist_launch_2026'),
             'batch_size' => max(1, (int) env('MUTQIN_WAITLIST_LAUNCH_BATCH_SIZE', 25)),

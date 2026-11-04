@@ -128,6 +128,15 @@ class ProfileController extends Controller
             ->cookie(Theme::CHOSEN_COOKIE, '1', 60 * 24 * 365, null, null, false, false, false, 'lax');
     }
 
+    public function showTheme(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'theme' => Theme::normalizePreference($user->theme),
+        ]);
+    }
+
     public function showAiAudioConsent(Request $request, AiAudioConsentService $consent): JsonResponse
     {
         return response()->json($consent->snapshot($request->user()));

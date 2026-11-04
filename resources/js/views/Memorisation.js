@@ -1,5 +1,6 @@
 import { RTL_LOCALES, SWITCHER_LOCALES, SWITCHER_LOCALE_LABELS } from '../i18n'
 import {
+  applyThemeChrome,
   cycleGlobalTheme,
   DEFAULT_THEME,
   getSavedTheme,
@@ -1464,6 +1465,7 @@ export default {
       _recitationCaptureResolver: null,
       _recitationCapturingForReplay: false,
       recitationCheckError: '',
+      recitationStreamNotice: '',
       recitationCheckMediaRecorder: null,
       recitationCheckMediaStream: null,
       recitationCheckChunks: [],
@@ -7083,18 +7085,6 @@ export default {
       }
       return this.postSessionHeaderTitle
     },
-    /** Single lead under the hero title. */
-    postSessionDisplayLead() {
-      if (this.onboardingSampleSessionActive) return ''
-      if (!this.postSessionHasAiCheck && this.postSessionRecommendationStep !== 'confirm') return ''
-      const subtitle = String(this.postSessionHeaderSubtitle || '').trim()
-      if (subtitle) return subtitle
-      if (this.postSessionHasAiCheck) {
-        return this.t('memorisation.postSession.coach.subtitles.aiDone')
-          || 'Review the focus below, then choose how to practise.'
-      }
-      return ''
-    },
     postSessionHeaderSubtitle() {
       if (this.onboardingSampleSessionActive) return ''
       if (this.postSessionRecommendationStep === 'confirm') {
@@ -11195,10 +11185,14 @@ export default {
           this.refreshHifzJourneyState()
           return
         }
-        // Theme is stored on the user row. Ignore every browser theme key so
-        // accounts cannot inherit or overwrite each other from localStorage.
-        if (isCurrentOwnerThemeStorageKey(event?.key)
-          || event?.key === 'mutqin-theme'
+        if (isCurrentOwnerThemeStorageKey(event?.key)) {
+          const nextTheme = event?.newValue
+          if (nextTheme) {
+            setGlobalTheme(nextTheme, { persist: false, dispatchEvent: true })
+          }
+          return
+        }
+        if (event?.key === 'mutqin-theme'
           || event?.key === 'mutqin-theme-preference'
           || String(event?.key || '').startsWith('mutqin-theme')) {
           return
@@ -11947,6 +11941,9 @@ export default {
         this.toolsPanelMounted = true
         this.ensureSecondaryToolsLoaded()
       }
+      if (typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches) {
+        applyThemeChrome(getSavedTheme())
+      }
     },
     showHifzPlanModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -12508,6 +12505,7 @@ export default {
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisView = null
+      this._workspaceReciteAnalysisSourceView = null
       this.workspaceReciteAttemptSaved = false
       this.workspaceReciteSaveState = ''
       this.postSessionDashboardAfterRecite = false
@@ -12574,7 +12572,11 @@ export default {
         )
         return
       }
-      this.workspaceReciteAnalysisView = view
+      // Keep the modal Madani-only from its first render. The raw result view
+      // contains ordinary Quran Unicode from the recognition response; those
+      // code points must never be painted as a fallback for QCF page glyphs.
+      this._workspaceReciteAnalysisSourceView = view
+      this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view)
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisLoading = true
       this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
@@ -12585,12 +12587,19 @@ export default {
       const hydrationToken = this._workspaceMadaniGlyphToken
       void hydration.then(
         () => {
-          if (hydrationToken === this._workspaceMadaniGlyphToken && this.workspaceReciteAnalysisOpen) {
+          if (
+            hydrationToken === this._workspaceMadaniGlyphToken
+            && this.workspaceReciteAnalysisOpen
+            && this._workspaceReciteAnalysisSourceView === view
+          ) {
             this.workspaceReciteAnalysisLoading = false
           }
         },
         () => {
-          if (hydrationToken === this._workspaceMadaniGlyphToken && this.workspaceReciteAnalysisView === view) {
+          if (
+            hydrationToken === this._workspaceMadaniGlyphToken
+            && this._workspaceReciteAnalysisSourceView === view
+          ) {
             this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view)
             this.workspaceReciteAnalysisLoading = false
           }
@@ -14251,7 +14260,7 @@ export default {
         this.backendSessionSnapshot = null
         this.hasContinueSession = false
         this.continueSessionPayload = null
-        // New accounts always start sepia + tajweed off (no shared-device residue).
+        // New accounts always start light + tajweed off (no shared-device residue).
         this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
         this._tajweedDefaultRevision = TAJWEED_DEFAULT_REVISION
         this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
@@ -22092,7 +22101,7 @@ export default {
         }
       }))
       if (token !== this._workspaceMadaniGlyphToken) return
-      if (this.workspaceReciteAnalysisView !== view) return
+      if (this._workspaceReciteAnalysisSourceView !== view) return
       this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view, byAyah)
     },
     buildPostSessionFocusPartsForAyah(ayahNumber, focusInput = null) {
@@ -31775,14 +31784,15 @@ export default {
               reason: error?.providerReason,
               category: error?.category,
             })
-            if (!this.isTranscriptionClosing(kind)) this.abortInterruptedTranscription(kind)
             const providerType = String(error?.providerType || '').toLowerCase()
-            if (['quota_exceeded', 'timelimit_exceeded', 'not_authorised'].includes(providerType)) {
-              if (kind === 'recitation' && this.recitationCheckRecording) {
-                this.failoverTranscriptionToBrowserStt(kind)
-              } else if (kind === 'memorisation' && this.aiMemorisationCheckerRecording) {
-                this.failoverTranscriptionToBrowserStt(kind)
-              }
+            const fatal = failure?.kind === 'usage_cap'
+              || failure?.kind === 'microphone'
+              || ['quota_exceeded', 'timelimit_exceeded', 'not_authorised'].includes(providerType)
+            if (fatal || failure?.kind === 'rate_limit' || failure?.kind === 'permanent') {
+              this.recitationStreamNotice = ''
+              this.abortInterruptedTranscription(kind)
+            } else if (!this.isTranscriptionClosing(kind)) {
+              this.scheduleTranscriptionReconnect(kind)
             }
           })
           .onDisconnect((info = {}) => {
@@ -31790,8 +31800,8 @@ export default {
             if (this.getTranscriptionProvider(kind) !== provider) return
             this.setTranscriptionProvider(kind, null)
             if (!this.isTranscriptionClosing(kind) && !info?.intentional) {
-              this.stopTranscriptionAudioPump(kind)
-              this.startSpeechRecognitionFallbackForKind(kind)
+              this.scheduleTranscriptionReconnect(kind)
+              return
             }
             this.setTranscriptionClosing(kind, false)
           })
@@ -31802,6 +31812,7 @@ export default {
         this.setTranscriptionProvider(kind, provider)
         const ready = await provider.connect()
         if (!ready) await this.stopTranscriptionRecognition(kind)
+        else this[`_txReconnect_${kind}`] = 0
         return !!ready
       } catch (error) {
         const classification = classifyRecitationFailure(error, { context: 'transcription_token' })
@@ -31827,6 +31838,37 @@ export default {
         this.startRecitationSpeechRecognition()
       }
     },
+    scheduleTranscriptionReconnect(kind = 'recitation') {
+      const recording = kind === 'memorisation'
+        ? this.aiMemorisationCheckerRecording
+        : this.recitationCheckRecording
+      if (!recording || this[`_txReconnectPending_${kind}`]) return
+      const attempts = Number(this[`_txReconnect_${kind}`] || 0)
+      const notice = attempts >= 3
+        ? (this.t('memorisation.aiCheck.streamReconnectGaveUp')
+          || 'Connection is unstable. Keep reciting — words so far are kept. Finish when you are ready.')
+        : (this.t('memorisation.aiCheck.streamReconnecting')
+          || 'Connection hiccup. Still listening.')
+      this.recitationStreamNotice = notice
+      if (attempts >= 3) return
+      this[`_txReconnect_${kind}`] = attempts + 1
+      this[`_txReconnectPending_${kind}`] = true
+      const delay = [700, 1600, 3200][attempts] || 3200
+      clearTimeout(this._txReconnectTimer)
+      this._txReconnectTimer = setTimeout(async () => {
+        this[`_txReconnectPending_${kind}`] = false
+        const stillRecording = kind === 'memorisation'
+          ? this.aiMemorisationCheckerRecording
+          : this.recitationCheckRecording
+        if (!stillRecording) return
+        const ready = await this.startTranscriptionRecognition(kind, { preserveTranscriptionMeta: true })
+        if (!ready) return
+        this.startSpeechRecognitionWatchdog(kind)
+        this.startTranscriptionAudioPump(kind)
+        this.startTranscriptionBridgeHealthWatch(kind)
+        this.recitationStreamNotice = ''
+      }, delay)
+    },
     abortInterruptedTranscription(kind = 'recitation') {
       const message = this.getTranscriptionMeta(kind)?.failureMessage || this.t('memorisation.aiCheck.serviceUnavailable')
       if (kind === 'memorisation' && this.aiMemorisationCheckerRecording) {
@@ -31835,7 +31877,7 @@ export default {
         this.aiMemorisationCheckerRecording = false
         this.aiMemorisationCheckerError = message
       } else if (kind === 'recitation' && this.recitationCheckRecording) {
-        this.recitationCheckDiscardOnStop = true
+        this.recitationCheckDiscardOnStop = false
         this.stopRecitationCheckRecording()
         this.recitationCheckRecording = false
         if (this.amdOpen) this.failAmdAssessment(message)

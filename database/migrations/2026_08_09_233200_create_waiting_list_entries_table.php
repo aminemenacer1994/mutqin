@@ -8,18 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('waiting_list_entries', function (Blueprint $table) {
+        Schema::connection(config('mutqin.waiting_list.database_connection'))
+            ->create('waiting_list_entries', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamps();
 
             $table->index('created_at');
-        });
+            });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('waiting_list_entries');
+        Schema::connection(config('mutqin.waiting_list.database_connection'))
+            ->dropIfExists('waiting_list_entries');
     }
 };

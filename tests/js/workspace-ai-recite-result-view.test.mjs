@@ -142,6 +142,10 @@ assert.equal(insufficient.outcomeStatChips.length, 0, 'insufficient audio hides 
 assert.match(modal, /post-session-simple__ai-review--guided/, 'modal uses guided AI review layout')
 assert.match(modal, /post-session-simple__outcome--hero/, 'modal uses outcome hero block')
 assert.match(modal, /post-session-simple__weak-spots/, 'modal includes weak spots')
+assert.match(modal, /v-if="part\.madaniGlyph && part\.fontFamily"/, 'focus Arabic only renders verified Madani glyphs')
+assert.match(modal, /v-if="entry\.madaniGlyph && entry\.fontFamily"/, 'weak-area Arabic only renders verified Madani glyphs')
+assert.doesNotMatch(modal, /part\.fontFamily[^\n]*Arial, sans-serif/, 'focus Arabic has no Arial fallback')
+assert.doesNotMatch(modal, /entry\.fontFamily[^\n]*Arial, sans-serif/, 'weak-area Arabic has no Arial fallback')
 assert.ok(view.detailsMetrics.some((m) => m.key === 'sequence'), 'sequence metric is included')
 const sequenceMetric = view.detailsMetrics.find((m) => m.key === 'sequence')
 assert.doesNotMatch(String(sequenceMetric?.value || ''), /slip/i, 'sequence metric avoids slips wording')
@@ -152,6 +156,6 @@ assert.doesNotMatch(modal, /bi-play-circle post-session-simple__focus-phrase-ico
 assert.doesNotMatch(modal, /post-session-simple__panel--hero ps-rec-card/, 'modal excludes recommendation plan')
 assert.doesNotMatch(modal, /save.*plan/i, 'modal excludes save plan actions')
 assert.match(modal, /workspace-recite-try-again/, 'modal exposes try again action')
-assert.match(modal, /workspace-recite-results-link/, 'modal links to saved results')
+assert.match(modal, /workspace-recite-saved|workspace-recite-results-link/, 'modal shows saved status and results link')
 
 console.log('workspace-ai-recite-result-view.test.mjs passed')

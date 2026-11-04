@@ -387,9 +387,6 @@
       }
     },
     "firstSession": {
-      "kicker": "Sesi pertama yang dianjurkan",
-      "title": "Mulai kecil. Selesai dengan tahu apa yang dilakukan berikutnya.",
-      "subtitle": "Sediakan sekitar 10 menit untuk 1 sampai 3 ayat. Anda akan mendengar, mengulang, melafalkan, dan selesai dengan langkah ulang yang jelas.",
       "durationLabel": "Sediakan",
       "duration": "Sekitar 10 menit",
       "startLabel": "Mulai dengan",
@@ -443,10 +440,6 @@
           "question": "Bagaimana hafalan bekerja?",
           "answer": "Pilih rentang ayat singkat dan latih sampai kuat. Pengaturan sesi, audio, dan alat pemula gratis."
         },
-        "freeTools": {
-          "question": "Alat mana yang gratis?",
-          "answer": "Pengaturan sesi, audio (kecepatan, maju otomatis, jeda), satu ayat pada satu waktu, sembunyikan teks bertahap, dan dengar lalu ulang adalah gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro."
-        },
         "whatIsPro": {
           "question": "Apakah saya perlu Pro untuk mulai?",
           "answer": "Tidak. Mulai gratis. Upgrade hanya jika Anda ingin umpan balik dan riwayat yang lebih kaya."
@@ -454,10 +447,6 @@
         "howRevision": {
           "question": "Bagaimana murajaah bekerja?",
           "answer": "Mutqin mengembalikan Anda ke ayat terbaru dan lebih lemah, serta menyarankan apa yang dilatih berikutnya."
-        },
-        "pricing": {
-          "question": "Apakah Mutqin gratis? Berapa biaya Pro?",
-          "answer": "Ya. Pengaturan sesi, audio, dan alat pemula gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro. Pro juga menambah cek AI, tilawah audio penilaian mandiri, sesi tak terbatas, dan perencanaan. Harga ditampilkan sebelum upgrade."
         },
         "whoFor": {
           "question": "Untuk siapa Mutqin?",
@@ -570,13 +559,6 @@
       "featureColumn": "Fitur",
       "freeTrial": "COBA GRATIS 7 HARI",
       "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
-    },
-    "cta": {
-      "kicker": "Mulai",
-      "title": "Know Apa ke practise Berikutnya.",
-      "subtitle": "Record a verse, review the weak spots, and keep the next sesi focused.",
-      "button": "Buat akun gratis",
-      "note": "No card needed for Gratis."
     },
     "purpose": {
       "kicker": "The journey",
@@ -5800,7 +5782,9 @@
       "launch_confirm_body": "This will queue the launch announcement to {count} eligible waiting-list addresses. This cannot be undone for addresses already marked sent.",
       "launch_confirm_input": "Type the eligible recipient count to confirm",
       "launch_confirm_send": "Queue send",
-      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first."
+      "launch_confirm_mismatch": "That number does not match the current eligible count. Refresh preview first.",
+      "storage_unavailable": "Waiting-list storage is unavailable. Check database connection and migrations.",
+      "storage_mismatch": "{count} signups exist on database [{database}] but this admin view is pointed at a different connection. Set MUTQIN_WAITING_LIST_DB_CONNECTION or MUTQIN_SIGNUP_DB_* to the app database, then run config:cache."
     },
     "kicker": "Admin",
     "dashboard": "dasbor",

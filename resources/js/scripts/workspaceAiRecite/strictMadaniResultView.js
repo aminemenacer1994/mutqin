@@ -4,11 +4,20 @@ import { isQcfPageGlyphText } from '../mushaf/qpcMadaniReadingTools.js'
 function madaniParts(parts, glyphs, options = {}) {
   if (!Array.isArray(parts) || !parts.length) return []
   const painted = applyMadaniGlyphsToParts(parts, glyphs, options)
-  // A partial row could silently mix Madani glyphs with Unicode Uthmani text.
-  // Keep the ayah label, but hide its Arabic until every word has page glyphs.
-  return painted.every((part) => part.madaniGlyph === true
-    && /^QCF2\d{3}$/.test(String(part.fontFamily || ''))
-    && isQcfPageGlyphText(part.text)) ? painted : []
+  return painted.map((part) => {
+    const glyphOk = part.madaniGlyph === true
+      && /^QCF2\d{3}$/.test(String(part.fontFamily || ''))
+      && isQcfPageGlyphText(part.text)
+    if (glyphOk) return part
+    const plain = String(part.plainText || part.text || '').trim()
+    return {
+      ...part,
+      text: plain,
+      plainText: plain,
+      madaniGlyph: false,
+      fontFamily: '',
+    }
+  }).filter((part) => part.text)
 }
 
 export function withStrictMadaniResultGlyphs(view, glyphsByAyah = {}) {

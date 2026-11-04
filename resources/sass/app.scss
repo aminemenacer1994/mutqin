@@ -88,6 +88,12 @@
   --dur-slow: 260ms;
   --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 58%, var(--bg));
   --focus-ring-color: var(--accent);
+  --callout-bg: #f3e7d6;
+  --callout-fg: #1f1a17;
+  --callout-icon: #6f4a2e;
+  --callout-border: #d9cbb0;
+  --info: #5c4a3a;
+  --overlay: rgba(31, 26, 23, 0.45);
 }
 
 html[data-theme="light"] {
@@ -96,21 +102,50 @@ html[data-theme="light"] {
 
 html[data-theme="sepia"] {
   color-scheme: light;
-  --bg: #f1e7d8;
+  --bg: #f4ecd8;
   --theme-color: #8b5e3c;
-  --surface: #fffaf3;
-  --surface-soft: #f6eddf;
-  --surface-strong: #fffdf8;
-  --surface-2: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-strong));
-  --border: rgba(78, 58, 38, 0.26);
-  --border-strong: rgba(78, 58, 38, 0.4);
-  --text: #352516;
-  --text-muted: #5c4a3a;
-  --text-subtle: #6f5c49;
-  --text-disabled: #6f5a48;
+  --surface: #fbf5e6;
+  --surface-soft: #f3e6d0;
+  --surface-strong: #fbf6ea;
+  --surface-2: #f7edd9;
+  --border: #d9cbb0;
+  --border-strong: #c9b79a;
+  --text: #3b2f20;
+  --text-muted: #6b5b45;
+  --text-subtle: #7a684f;
+  --text-disabled: #8a7760;
   --accent: #8b5e3c;
-  --accent-strong: #765035;
-  --accent-light: rgba(139, 94, 60, 0.12);
+  --accent-strong: #6f4a2e;
+  --accent-light: rgba(139, 94, 60, 0.14);
+  --success: #2f6b45;
+  --success-strong: #245536;
+  --success-soft: rgba(47, 107, 69, 0.14);
+  --warning: #8a5a12;
+  --warning-strong: #6e470c;
+  --warning-soft: rgba(138, 90, 18, 0.16);
+  --bs-danger: #9a4336;
+  --bs-danger-rgb: 154, 67, 54;
+  --danger: #9a4336;
+  --danger-strong: #7d352b;
+  --danger-soft: rgba(154, 67, 54, 0.14);
+  --error: var(--danger);
+  --error-strong: var(--danger-strong);
+  --error-soft: var(--danger-soft);
+  --destructive: var(--danger);
+  --destructive-strong: var(--danger-strong);
+  --destructive-soft: var(--danger-soft);
+  --info: #6b5344;
+  --overlay: rgba(59, 47, 32, 0.45);
+  --shadow-sm: 0 10px 22px rgba(80, 56, 28, 0.08);
+  --shadow-md: 0 18px 44px rgba(80, 56, 28, 0.12);
+  --shadow-lg: -40px 0 120px rgba(59, 47, 32, 0.16);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, var(--bg));
+  --focus-ring-color: #6f4a2e;
+  --callout-bg: #efe2cc;
+  --callout-fg: #3b2f20;
+  --callout-icon: #6f4a2e;
+  --callout-border: #d9cbb0;
+  scrollbar-color: #c9b79a #f4ecd8;
 }
 
 html[data-theme="dark"] {
@@ -153,6 +188,13 @@ html[data-theme="dark"] {
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.55);
   --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 58%, transparent);
   --focus-ring-color: var(--accent);
+  --info: #e8d7c4;
+  --overlay: rgba(0, 0, 0, 0.62);
+  --callout-bg: #3a2e24;
+  --callout-fg: #f6ede3;
+  --callout-icon: #e8bf8f;
+  --callout-border: rgba(232, 191, 143, 0.45);
+  scrollbar-color: #8a7564 #14110f;
 }
 
 /* Keep UI type predictable; Arabic scripture remains explicitly scoped below. */

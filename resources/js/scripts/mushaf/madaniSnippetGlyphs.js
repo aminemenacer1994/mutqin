@@ -87,6 +87,7 @@ export function applyMadaniGlyphsToParts(parts, glyphs, options = {}) {
     if (!glyph) return part
     return {
       ...part,
+      plainText: part.plainText || part.text,
       text: glyph.text,
       fontFamily: glyph.fontFamily,
       madaniGlyph: true,
@@ -126,6 +127,10 @@ export async function loadMadaniAyahGlyphs(surah, ayah) {
       const url = String(leaf?.fontUrl || '').trim()
       if (family && url) {
         await ensureQpcMadaniPageFont(page, family, url)
+        if (typeof document !== 'undefined' && document.fonts?.load) {
+          await document.fonts.load(`16px "${family}"`)
+          await document.fonts.ready
+        }
       }
       for (const glyph of collectMadaniAyahGlyphsFromLeaf(leaf, surahN, ayahN)) {
         merged.set(glyph.word, glyph)

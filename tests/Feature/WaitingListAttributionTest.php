@@ -83,6 +83,19 @@ class WaitingListAttributionTest extends TestCase
         $this->actingAs(User::factory()->create())->getJson('/api/admin/waiting-list/analytics')->assertForbidden();
     }
 
+    public function test_admin_waiting_list_endpoint_returns_saved_entries(): void
+    {
+        config()->set('mutqin.admin_emails', ['admin@example.com']);
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        WaitingListEntry::query()->create(['name' => 'Amina', 'email' => 'amina@example.com']);
+
+        $this->actingAs($admin)->getJson('/api/admin/waiting-list')
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('items.0.name', 'Amina')
+            ->assertJsonPath('items.0.email', 'amina@example.com');
+    }
+
     public function test_marketing_proxy_forwards_attribution_and_preserves_the_success_response(): void
     {
         Http::fake(['*' => Http::response(['already_joined' => false, 'conversion_event_id' => 'test'], 201)]);

@@ -10,12 +10,13 @@ import { MUSHAF_LAYOUT_MADANI_V2 } from './mushafLayouts.js'
 import { mapWithConcurrency, selectPriorityPages } from './sessionPageLoad.js'
 
 /**
- * Stacked cards use Unicode Uthmani — QCF page codes only render in per-page mushaf fonts.
+ * Madani V2 stacked cards use the exact QCF page codes and per-page fonts from
+ * the Mushaf data. Rendering those presentation-form code points with a normal
+ * Arabic/Uthmani font produces unrelated, visibly broken letters.
  */
 export function shouldUseStackedQpcMadaniGlyphs({ readingViewMode, mushafLayoutId } = {}) {
-  void readingViewMode
-  void mushafLayoutId
-  return false
+  return String(readingViewMode || '') === 'stacked'
+    && String(mushafLayoutId || '') === MUSHAF_LAYOUT_MADANI_V2
 }
 
 export function verseWordsSupportQpcMadani(verse) {
