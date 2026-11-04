@@ -206,10 +206,8 @@
                           >
                             <span
                               class="post-session-simple__quran-token-text"
-                              :data-madani-glyph="part.madaniGlyph && part.fontFamily ? 'true' : null"
-                              :data-arabic-fallback="part.madaniGlyph && part.fontFamily ? null : 'true'"
-                              :style="part.madaniGlyph && part.fontFamily ? { '--madani-font': `'${part.fontFamily}'` } : null"
-                            >{{ part.text }}</span>
+                              data-arabic-fallback="true"
+                            >{{ part.plainText || part.text }}</span>
                           </span>
                         </span>
                       </div>
@@ -254,10 +252,8 @@
                           }"
                         ><span
                           class="post-session-simple__quran-token-text"
-                          :data-madani-glyph="entry.madaniGlyph && entry.fontFamily ? 'true' : null"
-                          :data-arabic-fallback="entry.madaniGlyph && entry.fontFamily ? null : 'true'"
-                          :style="entry.madaniGlyph && entry.fontFamily ? { '--madani-font': `'${entry.fontFamily}'` } : null"
-                        >{{ entry.text }}</span></span>
+                          data-arabic-fallback="true"
+                        >{{ entry.plainText || entry.text }}</span></span>
                       </span>
                     </li>
                   </ul>
@@ -481,30 +477,6 @@ export default {
 
 <style>
 .workspace-recite-saved {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem 1rem;
-  margin: 0 0 0.85rem;
-  color: var(--text-muted, #6d6256);
-  font-size: 0.92rem;
-}
-
-.workspace-recite-saved__link {
-  color: var(--accent-strong, #8a6230);
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
-}
-
-html[data-theme="dark"] .workspace-recite-saved,
-.post-session-simple[data-theme="dark"] .workspace-recite-saved {
-  color: rgba(247, 234, 219, 0.68);
-}
-
-html[data-theme="dark"] .workspace-recite-saved__link,
-.post-session-simple[data-theme="dark"] .workspace-recite-saved__link {
-  color: #f2bd6b;
+  display: none !important;
 }
 </style>

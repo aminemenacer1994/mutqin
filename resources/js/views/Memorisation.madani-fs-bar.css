@@ -494,12 +494,13 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
     display: grid;
-    grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr);
+    grid-template-columns: minmax(3.5rem, 1fr) auto minmax(3.5rem, 1fr);
     align-items: center;
     gap: 0.35rem;
     width: 100%;
     min-height: var(--mq-dock-height, 3.7rem);
     direction: ltr;
+    position: relative;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
@@ -521,17 +522,23 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     grid-column: 1;
     gap: 0.1rem;
     max-width: 100%;
+    position: relative;
+    z-index: 3;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
-    position: static;
-    transform: none;
+    position: absolute;
+    inset-inline-start: 50%;
+    left: 50%;
+    transform: translateX(-50%);
     justify-self: center;
     grid-column: 2;
     justify-content: center;
     gap: 0.05rem;
-    max-width: 100%;
+    max-width: calc(100% - 7.5rem);
     margin-inline-start: 0;
+    z-index: 2;
+    pointer-events: auto;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__spacer {
@@ -631,7 +638,13 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-select {
-    z-index: 2;
+    z-index: 4;
+    opacity: 0.001;
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-appearance: menulist-button;
+    appearance: menulist-button;
+    cursor: pointer;
   }
 
   .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {

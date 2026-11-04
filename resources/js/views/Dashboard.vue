@@ -381,21 +381,12 @@
                               <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                             </strong>
                             <span
-                              v-if="item.weak_words?.length"
-                              class="dash-ai-results__attempt-arabic"
-                              :class="{ 'is-ready': item.madani_preview?.length }"
+                              v-if="item.madani_preview?.length"
+                              class="dash-ai-results__attempt-arabic is-ready"
                               dir="rtl"
                               lang="ar"
                               aria-hidden="true"
-                            >
-                              <template v-if="item.madani_preview?.length">
-                                <span
-                                  v-for="(part, previewIndex) in item.madani_preview"
-                                  :key="['attempt-preview', item.id, previewIndex].join('-')"
-                                  :style="madaniPartStyle(part)"
-                                >{{ part.text }}</span>
-                              </template>
-                            </span>
+                            >{{ item.madani_preview.map((part) => part.plainText || part.text).filter(Boolean).join(' ') }}</span>
                             <span class="dash-ai-results__attempt-meta">
                               <span
                                 v-if="item.band"
@@ -810,16 +801,19 @@
       :error-desc="t('memorisation.analyticsEmpty.modalErrorDesc')"
       :empty-title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
       :empty-desc="t('dashboard.analysis_empty_desc')"
-      :attempt-saved="true"
-      save-state="saved"
-      :saved-label="t('dashboard.ai_recite.attempt_saved')"
-      results-href="#ai-recite-results"
-      :results-label="t('dashboard.ai_recite.see_all_results')"
+      :attempt-saved="false"
+      save-state=""
+      :saved-label="''"
+      results-href=""
+      :results-label="''"
+      :show-back-to-progress="true"
+      :back-to-progress-label="t('memorisation.back_to_progress') || 'Back to progress'"
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
       @close="closeSessionAnalysis"
       @try-again="retrySavedReciteAttempt"
+      @back-to-progress="closeSessionAnalysis"
     />
 
     <Teleport to="body">
@@ -845,8 +839,6 @@ import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThrea
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
-import { withStrictMadaniResultGlyphs } from '../scripts/workspaceAiRecite/strictMadaniResultView.js'
-import { loadMadaniAyahGlyphs } from '../scripts/mushaf/madaniSnippetGlyphs.js'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -2263,8 +2255,10 @@ export default {
       }
     },
     async hydrateAiRecitePreviewGlyphs(stats) {
+      // Dashboard previews must stay on shaped Unicode Arabic — never QCF page
+      // glyphs. Presentation-form fonts break joining in list rows.
       if (!stats || !Array.isArray(stats.recent_attempts)) return stats
-      const recentAttempts = await Promise.all(stats.recent_attempts.map(async (item) => {
+      const recentAttempts = stats.recent_attempts.map((item) => {
         const weakWords = Array.isArray(item?.weak_words) ? item.weak_words : []
         const ayah = Number(
           weakWords[0]?.ayahNumber
@@ -2272,38 +2266,32 @@ export default {
           ?? item?.ayah_start
           ?? 0,
         )
-        const chapter = Number(item?.surah_number || 0)
         const parts = weakWords
           .filter((word) => Number(word?.ayahNumber ?? word?.ayah_number ?? ayah) === ayah)
-          .map((word) => ({
-            text: String(word?.text || word?.word || word?.target_word || '').trim(),
-            tone: 'incorrect',
-            weak: true,
-            wordIndex: Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.word_index ?? -1),
-          }))
-          .filter((part) => part.text)
-        if (!(chapter > 0 && ayah > 0 && parts.length)) {
-          return { ...item, madani_preview: [] }
-        }
-        try {
-          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
-          const strict = withStrictMadaniResultGlyphs({
-            focusAyahRows: [{ ayah, parts }],
-            infoArchitecture: { weakAreas: { items: [] } },
-          }, { [ayah]: glyphs || [] })
-          return {
-            ...item,
-            madani_preview: strict.focusAyahRows?.[0]?.parts || [],
-          }
-        } catch (_) {
-          return { ...item, madani_preview: [] }
-        }
-      }))
+          .map((word) => {
+            const text = String(word?.text || word?.word || word?.target_word || '').trim()
+            return text
+              ? {
+                text,
+                plainText: text,
+                tone: 'incorrect',
+                weak: true,
+                madaniGlyph: false,
+                fontFamily: '',
+              }
+              : null
+          })
+          .filter(Boolean)
+          .slice(0, 4)
+        return { ...item, madani_preview: parts }
+      })
       return { ...stats, recent_attempts: recentAttempts }
     },
-    madaniPartStyle(part = {}) {
-      const family = String(part?.fontFamily || '').replace(/['"\\]/g, '')
-      return { fontFamily: family ? `'${family}', Arial, sans-serif` : 'Arial, sans-serif' }
+    madaniPartStyle() {
+      return {
+        fontFamily: 'var(--dash-font-ar, "Noto Naskh Arabic", "Amiri", "Geeza Pro", serif)',
+        letterSpacing: '0',
+      }
     },
     scrollToAiReciteResults() {
       if (typeof window === 'undefined' || window.location.hash !== '#ai-recite-results') return
@@ -2569,7 +2557,7 @@ export default {
             rangeStart: Number(session.ayah_start || payload?.assessment?.start_ayah || 0),
             rangeEnd: Number(session.ayah_end || payload?.assessment?.end_ayah || 0),
           }, this.t.bind(this))
-          this.analysisView = await this.hydrateSavedReciteMadaniGlyphs(view)
+          this.analysisView = view
         } else {
           this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this), { includeRecommendations: false })
         }
@@ -2584,22 +2572,8 @@ export default {
       }
     },
     async hydrateSavedReciteMadaniGlyphs(view) {
-      const chapter = Number(view?.surahNumber || 0)
-      const rows = [
-        ...(Array.isArray(view?.focusAyahRows) ? view.focusAyahRows : []),
-        ...(Array.isArray(view?.infoArchitecture?.weakAreas?.items)
-          ? view.infoArchitecture.weakAreas.items
-          : []),
-      ]
-      const ayahs = [...new Set(rows.map((row) => Number(row?.ayah)).filter((ayah) => ayah > 0))]
-      const glyphsByAyah = {}
-      await Promise.all((chapter > 0 ? ayahs : []).map(async (ayah) => {
-        try {
-          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
-          if (glyphs?.length) glyphsByAyah[ayah] = glyphs
-        } catch (_) { /* strict view hides unavailable Arabic instead of flashing another font */ }
-      }))
-      return withStrictMadaniResultGlyphs(view, glyphsByAyah)
+      // Keep Unicode Arabic for feedback — QCF page glyphs break outside mushaf.
+      return view
     },
     retrySavedReciteAttempt() {
       const view = this.analysisView || {}

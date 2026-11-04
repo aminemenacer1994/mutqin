@@ -1951,6 +1951,48 @@
     aspect-ratio: auto !important;
     flex: 0 0 auto !important;
     margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+    background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%) !important;
+    box-shadow: inset 0 1px 2px color-mix(in srgb, #000 8%, transparent) !important;
+    overflow: hidden !important;
+  }
+
+  .sheet-toggle--practice .mode-radio:not(.is-locked) .mode-radio-icon {
+    display: none !important;
+  }
+
+  .sheet-toggle--practice .mode-radio::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .sheet-toggle--practice .mode-radio::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 0.14rem !important;
+    inset-inline-start: 0.14rem !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    border: 0 !important;
+    box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent) !important;
+    transform: translateY(-50%) !important;
+    transition: left 180ms ease, inset-inline-start 180ms ease !important;
+  }
+
+  .sheet-toggle--practice .mode-radio.active {
+    border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  }
+
+  .sheet-toggle--practice .mode-radio.active::after {
+    left: calc(100% - 1.34rem) !important;
+    inset-inline-start: calc(100% - 1.34rem) !important;
+    transform: translateY(-50%) !important;
   }
 
   .sheet-toggle--practice .st-chev-btn,

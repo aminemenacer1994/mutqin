@@ -1191,33 +1191,40 @@
           :aria-valuetext="sessionProgressAriaText"
         >
           <div class="session-progress-rail__inner" aria-hidden="true">
-            <div class="session-progress-rail__row">
-              <div class="session-progress-rail__copy">
-                <span class="session-progress-rail__title">{{ sessionProgressTitle }}</span>
-                <span
-                  v-if="sessionProgressMeta || sessionProgressStateHint"
-                  class="session-progress-rail__sep"
-                  aria-hidden="true"
-                >·</span>
-                <span v-if="sessionProgressMeta" class="session-progress-rail__meta">{{ sessionProgressMeta }}</span>
-                <span
-                  v-if="sessionProgressMeta && sessionProgressStateHint"
-                  class="session-progress-rail__sep"
-                  aria-hidden="true"
-                >·</span>
-                <span
-                  v-if="sessionProgressStateHint"
-                  class="session-progress-rail__hint"
-                >{{ sessionProgressStateHint }}</span>
+            <div class="session-progress-rail__stack">
+              <div class="session-progress-rail__row">
+                <div class="session-progress-rail__copy">
+                  <span class="session-progress-rail__title">{{ sessionProgressTitle }}</span>
+                  <span
+                    v-if="sessionProgressMeta || sessionProgressStateHint"
+                    class="session-progress-rail__sep"
+                    aria-hidden="true"
+                  >·</span>
+                  <span v-if="sessionProgressMeta" class="session-progress-rail__meta">{{ sessionProgressMeta }}</span>
+                  <span
+                    v-if="sessionProgressMeta && sessionProgressStateHint"
+                    class="session-progress-rail__sep"
+                    aria-hidden="true"
+                  >·</span>
+                  <span
+                    v-if="sessionProgressStateHint"
+                    class="session-progress-rail__hint"
+                  >{{ sessionProgressStateHint }}</span>
+                  <span
+                    v-if="sessionProgressLabel"
+                    class="session-progress-rail__sep session-progress-rail__sep--value"
+                    aria-hidden="true"
+                  >·</span>
+                  <span class="session-progress-rail__value">{{ sessionProgressLabel }}</span>
+                </div>
               </div>
-              <span class="session-progress-rail__value">{{ sessionProgressLabel }}</span>
-            </div>
-            <div class="session-progress-rail__track">
-              <div
-                class="session-progress-rail__fill"
-                :class="{ 'is-complete': sessionProgressMeter >= 100 }"
-                :style="{ width: sessionProgressMeter + '%' }"
-              ></div>
+              <div class="session-progress-rail__track">
+                <div
+                  class="session-progress-rail__fill"
+                  :class="{ 'is-complete': sessionProgressMeter >= 100 }"
+                  :style="{ width: sessionProgressMeter + '%' }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1854,8 +1861,8 @@
         <div class="tools-top">
         <div class="tools-topbar">
           <div class="tools-title">
-            <p class="tools-title__eyebrow">{{ t('memorisation.controls_panel_eyebrow') }}</p>
             <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ controlsPanelTitle }}</h3>
+            <p v-if="controlsPanelHint" class="tools-title__hint">{{ controlsPanelHint }}</p>
           </div>
             <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
@@ -1888,12 +1895,21 @@
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
           </div>
-          <p v-if="shouldShowOffcanvasTabs && controlsPanelHint" class="tools-tab-hint">{{ controlsPanelHint }}</p>
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet sheet--setup">
+            <AppStatus
+              v-if="!chapterId"
+              class="tools-tab-empty tools-tab-empty--setup"
+              variant="empty"
+              icon="bi-journal-text"
+              :title="t('memorisation.no_surah_selected')"
+              :description="t('sessionSetup.surahHint')"
+              :action-label="t('memorisation.open_session_setup')"
+              @action="toggleSection('advanced_setup')"
+            />
             <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -2169,6 +2185,16 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-if="tab === 'techniques'" class="sheet sheet--practice" data-tour="practice-sheet">
+            <AppStatus
+              v-if="!hasVerses"
+              class="tools-tab-empty tools-tab-empty--practice"
+              variant="empty"
+              icon="bi-stars"
+              :title="t('toasts.noVersesToQuizOn')"
+              :description="t('memorisation.controlsHints.practice')"
+              :action-label="t('memorisation.open_session_setup')"
+              @action="openNewSessionSetup"
+            />
             <details class="technique-group-copy technique-group-copy--fold technique-group-beginner">
               <summary class="technique-group-kicker">
                 <span>{{ t('memorisation.practiceTools.beginner') }}</span>
@@ -2752,7 +2778,22 @@
               </div>
             </header>
 
-            <section v-if="hasVerses" class="saved-sheet__card saved-sheet__card--current" :aria-label="t('memorisation.a11y.currentSession')">
+            <section
+              v-if="!hasVerses"
+              class="saved-sheet__card saved-sheet__card--empty-current"
+              :aria-label="t('memorisation.a11y.currentSession')"
+            >
+              <AppStatus
+                variant="empty"
+                icon="bi-bookmark"
+                :title="t('memorisation.no_saved_sessions_yet')"
+                :description="t('memorisation.save_your_current_session_to_get_started')"
+                :action-label="t('memorisation.open_session_setup')"
+                @action="openNewSessionSetup"
+              />
+            </section>
+
+            <section v-else class="saved-sheet__card saved-sheet__card--current" :aria-label="t('memorisation.a11y.currentSession')">
               <div class="saved-sheet__current-copy">
                 <span class="saved-sheet__eyebrow">{{ t('memorisation.current_session') }}</span>
                 <strong>{{ getChapterDisplayName(currentChapter) || t('memorisation.no_surah_selected') }}</strong>
@@ -4867,6 +4908,7 @@
               <label
                 class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
                 :title="fullscreenReciterName"
+                @click.prevent="openMadaniFullscreenReciterSelect"
               >
                 <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
                 <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
@@ -4875,6 +4917,8 @@
                   :value="reciterId"
                   class="madani-fullscreen-bar__reciter-select"
                   :aria-label="t('sessionSetup.reciter')"
+                  @mousedown.stop
+                  @touchstart.stop
                   @change="onMadaniFullscreenReciterChange($event)"
                 >
                   <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>

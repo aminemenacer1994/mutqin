@@ -1447,10 +1447,17 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 .dash-murajaah-row__phrase {
-  font-family: var(--dash-font-ar);
-  font-size: 0.95rem;
-  line-height: 1.45;
-  color: var(--dash-muted);
+  display: block;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-family: var(--dash-font-ar, "Noto Naskh Arabic", "Amiri", "Geeza Pro", serif);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  letter-spacing: 0 !important;
+  word-spacing: 0.04em;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
+  font-kerning: normal;
+  color: var(--dash-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3685,28 +3692,25 @@ a.dash-ai-results__attempt {
 
 .dash-ai-results__attempt-arabic {
   display: block;
+  direction: rtl;
   text-align: start;
   unicode-bidi: plaintext;
   min-height: 1.9rem;
   overflow: hidden;
   color: var(--dash-ink);
-  font-family: var(--dash-font-ar, "Noto Naskh Arabic", "Geeza Pro", serif);
-  font-size: 1.45rem;
-  line-height: 1.75;
-  white-space: normal;
-  word-spacing: 0.06em;
-  font-feature-settings: "liga" 1, "calt" 1;
+  font-family: var(--dash-font-ar, "Noto Naskh Arabic", "Amiri", "Geeza Pro", serif);
+  font-size: 1.35rem;
+  line-height: 1.85;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  letter-spacing: 0 !important;
+  word-spacing: 0.08em;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
+  font-kerning: normal;
 }
 
 .dash-ai-results__attempt-arabic:not(.is-ready) {
   visibility: hidden;
-}
-
-.dash-ai-results__attempt-arabic span {
-  display: inline;
-  vertical-align: baseline;
-  font-weight: 400;
-  letter-spacing: 0;
 }
 
 .dash-ai-results__attempt-range,

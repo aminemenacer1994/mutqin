@@ -926,6 +926,12 @@ button.auth-google {
   margin-top: 0.1rem;
 }
 
+.auth-role,
+.auth-role--hidden,
+.auth-org--hidden {
+  display: none !important;
+}
+
 .auth-role {
   margin: 0;
   padding: 0;

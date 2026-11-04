@@ -155,11 +155,8 @@ class AuthPageRenderTest extends TestCase
             ->assertOk()
             ->assertSee(__('ui.auth_register_heading'))
             ->assertSee(__('ui.continue_google'))
-            ->assertSee(__('ui.auth_role_prompt'))
-            ->assertSee(__('ui.auth_role_individual'))
-            ->assertSee(__('ui.auth_org_name_placeholder'))
-            ->assertSee(route('auth.google.prepare'), false)
-            ->assertDontSee('Select an existing organisation', false)
+            ->assertDontSee(__('ui.auth_role_prompt'))
+            ->assertDontSee('class="auth-role"', false)
             ->assertSee(__('ui.create_account'));
     }
 

@@ -13902,6 +13902,66 @@ body.session-analysis-modal-open {
     min-height: var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v200">
+  @media (max-width: 767.98px) {
+    html body .app .session-progress-rail__inner,
+    html body .app .session-progress-rail__stack {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .session-progress-rail__row,
+    html body .app .session-progress-rail__copy {
+      width: 100% !important;
+      max-width: 100% !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+
+    html body .app .session-progress-rail__track {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-inline: auto !important;
+    }
+
+    html body .app .tools-body .sheet-toggle.sheet-toggle--practice .st-right-group {
+      width: auto !important;
+      min-width: calc(2.75rem + 2rem + 0.45rem) !important;
+      max-width: none !important;
+      grid-template-columns: 2.75rem 2rem !important;
+    }
+
+    html body .app .tools-body .sheet-toggle--practice .mode-radio::before {
+      content: none !important;
+      display: none !important;
+    }
+
+    html body .app .tools-body .sheet-toggle--practice .mode-radio::after {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
+      position: absolute !important;
+      left: 50% !important;
+      inset-inline-start: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 2 !important;
+    }
+
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
+      z-index: 3 !important;
+    }
+
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter-select {
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      opacity: 0.001 !important;
+      z-index: 4 !important;
+    }
+  }
+</style>
 @endif
 </body>
 </html>

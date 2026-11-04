@@ -8281,6 +8281,7 @@ html {
 .session-progress-rail__inner {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   justify-content: center;
   gap: 0.4rem;
   width: 100%;
@@ -8289,22 +8290,42 @@ html {
   border: 1px solid color-mix(in srgb, var(--zone-divider, var(--border)) 70%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--bg) 96%, transparent);
+  box-sizing: border-box;
+}
+
+.session-progress-rail__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.38rem;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .session-progress-rail__row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .session-progress-rail__copy {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.28rem;
+  justify-content: center;
+  row-gap: 0.12rem;
+  column-gap: 0.28rem;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  overflow: hidden;
+  text-align: center;
 }
 
 .session-progress-rail__title {
@@ -8354,7 +8375,7 @@ html {
 
 .session-progress-rail__value {
   flex: 0 0 auto;
-  margin-inline-start: auto;
+  margin-inline-start: 0;
   color: var(--text);
   font-size: 0.6875rem;
   font-weight: 650;
@@ -8365,11 +8386,13 @@ html {
 }
 
 .session-progress-rail__track {
-  width: min(100%, 40rem);
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  height: 2px;
+  height: 3px;
   margin-inline: auto;
   direction: ltr;
+  flex: 1 1 100%;
   border-radius: 999px;
   background: color-mix(in srgb, var(--zone-divider, var(--border)) 88%, var(--accent-light));
   overflow: hidden;
@@ -39060,16 +39083,16 @@ but not its destructive red. */
   color: color-mix(in srgb, var(--text-muted, #6d655b) 92%, transparent);
 }
 
+.tools-title__hint {
+  margin: 0.28rem 0 0;
+  font-size: clamp(0.82rem, 3.1vw, 0.94rem);
+  font-weight: 500;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 88%, transparent);
+}
+
 .tools-tab-hint {
-  margin: 0.45rem 0 0;
-  padding: 0.42rem 0.62rem;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 88%, var(--accent) 12%);
-  font-size: 0.72rem;
-  font-weight: 450;
-  line-height: 1.38;
-  color: color-mix(in srgb, var(--text) 78%, var(--text-muted, #6d655b) 22%);
+  display: none !important;
 }
 
 .practice-tool-stack {
@@ -39138,52 +39161,66 @@ but not its destructive red. */
   color: color-mix(in srgb, var(--text-muted, #6d655b) 94%, transparent);
 }
 
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio,
 .sheet-toggle--practice .mode-radio {
-  position: relative;
-  display: inline-block;
-  flex: 0 0 auto;
-  width: 2.65rem;
-  min-width: 2.65rem;
-  max-width: 2.65rem;
-  height: 1.55rem;
-  min-height: 1.55rem;
-  max-height: 1.55rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%);
-  box-shadow: inset 0 1px 2px color-mix(in srgb, #000 8%, transparent);
+  position: relative !important;
+  display: block !important;
+  place-items: unset !important;
+  flex: 0 0 2.75rem !important;
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+  max-width: 2.75rem !important;
+  height: 1.55rem !important;
+  min-height: 1.55rem !important;
+  max-height: 1.55rem !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+  background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%) !important;
+  box-shadow: inset 0 1px 2px color-mix(in srgb, #000 8%, transparent) !important;
+  overflow: hidden !important;
   transition:
     background 180ms ease,
     border-color 180ms ease,
     box-shadow 180ms ease;
 }
 
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio:not(.is-locked) .mode-radio-icon,
 .sheet-toggle--practice .mode-radio:not(.is-locked) .mode-radio-icon {
-  display: none;
+  display: none !important;
 }
 
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio::after,
 .sheet-toggle--practice .mode-radio::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  inset-inline-start: 0.16rem;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent);
-  transform: translateY(-50%);
-  transition: inset-inline-start 180ms ease, transform 180ms ease;
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 0.14rem !important;
+  right: auto !important;
+  inset-inline-start: 0.14rem !important;
+  inset-inline-end: auto !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent) !important;
+  transform: translateY(-50%) !important;
+  transition: left 180ms ease, inset-inline-start 180ms ease !important;
 }
 
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active,
 .sheet-toggle--practice .mode-radio.active {
-  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 28%, transparent) !important;
 }
 
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
 .sheet-toggle--practice .mode-radio.active::after {
-  inset-inline-start: calc(100% - 1.15rem - 0.16rem);
+  left: calc(100% - 1.34rem) !important;
+  inset-inline-start: calc(100% - 1.34rem) !important;
 }
 
 .sheet-toggle--practice .mode-radio.is-locked {
@@ -41820,7 +41857,7 @@ but not its destructive red. */
 }
 
 .tools-body .offcanvas-audio-panel {
-  padding: 0.55rem 0.65rem 0.75rem;
+  padding: 0.5rem 0.8125rem 0.8125rem;
 }
 
 .tools-body .offcanvas-audio-panel .field-stack-compact {
@@ -70494,11 +70531,8 @@ body.memorisation-page .tools-body .technique-row {
   overflow: hidden;
 }
 
-body.memorisation-page .tools-body .sheet-section + .sheet-section,
-body.memorisation-page .tools-body .offcanvas-audio-panel {
-  margin-top: clamp(1.35rem, 3.5vw, 1.65rem);
-  padding-top: clamp(1.35rem, 3.5vw, 1.65rem);
-  border-top: 1px solid var(--offcanvas-border);
+body.memorisation-page .tools-body .sheet-section + .sheet-section {
+  margin-top: clamp(0.85rem, 2.4vw, 1.1rem);
 }
 
 body.memorisation-page .tools-footer {
@@ -70763,14 +70797,130 @@ body.memorisation-page .tools .tools-tabs button.active {
   line-height: 1.9 !important;
 }
 
+.post-session-simple__quran-token-text,
 .post-session-simple__quran-token-text[data-arabic-fallback="true"],
-.post-session-simple__weak-spots-word[data-arabic-fallback="true"] {
-  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif !important;
-  line-height: 1.8 !important;
+.post-session-simple__weak-spots-word,
+.post-session-simple__weak-spots-word[data-arabic-fallback="true"],
+.post-session-simple__quran-focus-text,
+[lang="ar"].post-session-simple__quran-focus-text {
+  display: inline !important;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-family: "Noto Naskh Arabic", "Amiri", "Geeza Pro", "Arial", sans-serif !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0.06em !important;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1 !important;
+  font-kerning: normal !important;
+  line-height: 1.85 !important;
+  white-space: normal !important;
+}
+
+.post-session-simple__quran-token,
+.post-session-simple.workspace-recite-result .post-session-simple__quran-token {
+  display: inline !important;
+  padding: 0 !important;
+  margin: 0 0.08em !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .post-session-simple__weak-spots-item {
   background: var(--warning-soft) !important;
   color: var(--text) !important;
   border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--border)) !important;
+}
+
+/* Session offcanvas — tab empty states, title scale, setup selects in mushaf */
+.tools-title__heading {
+  font-size: clamp(1.05rem, 4.2vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+}
+
+.tools-tab-empty {
+  margin: 0 0 0.65rem;
+}
+
+.tools-tab-empty--setup,
+.tools-tab-empty--practice {
+  padding: 0.85rem 0.8rem;
+  border: 1px dashed color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 88%, var(--surface) 12%);
+}
+
+.saved-sheet__card--empty-current {
+  padding: 0.35rem 0 0.15rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.memorisation-page .tools-body .setup-field-row select.select {
+  position: relative;
+  z-index: 4;
+  touch-action: manipulation;
+}
+
+html body .app .tools-body .sheet-toggle.sheet-toggle--practice .st-right-group {
+  width: auto !important;
+  min-width: calc(2.75rem + 2rem + 0.45rem) !important;
+  max-width: none !important;
+  grid-template-columns: 2.75rem 2rem !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .app .session-progress-rail__stack,
+  html body .app .session-progress-rail__row,
+  html body .app .session-progress-rail__copy {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  html body .app .session-progress-rail__track {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+  }
+}
+
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio {
+  background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%) !important;
+  border: 1px solid color-mix(in srgb, var(--offcanvas-border, var(--border)) 82%, transparent) !important;
+  box-shadow: inset 0 1px 2px color-mix(in srgb, #000 8%, transparent) !important;
+}
+
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active {
+  background: linear-gradient(135deg, var(--offcanvas-accent, var(--accent)), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--offcanvas-accent, var(--accent)) 42%, transparent) !important;
+}
+
+body.memorisation-page .tools .sheet-toggle--practice .mode-radio::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body [data-arabic-fallback="true"],
+html body .post-session-simple__quran-token-text[data-arabic-fallback="true"],
+html body .post-session-simple__quran-focus-text,
+html body .post-session-simple__weak-spots-word {
+  direction: rtl !important;
+  unicode-bidi: plaintext !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  font-family: "Noto Naskh Arabic", "Amiri", "Geeza Pro", "Arial", sans-serif !important;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1 !important;
+  font-kerning: normal !important;
+  text-transform: none !important;
+}
+
+html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
+  font-family: "Noto Naskh Arabic", "Amiri", "Geeza Pro", "Arial", sans-serif !important;
+  letter-spacing: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }

@@ -59,26 +59,9 @@
             <button type="submit" class="auth-implicit-submit" hidden tabindex="-1" aria-hidden="true"></button>
 
             @if (config('mutqin.teacher_features_enabled'))
-            <fieldset class="auth-role">
-                <legend class="auth-role__legend">{{ __('ui.auth_role_prompt') }}</legend>
-                <div class="auth-role__options" role="radiogroup" aria-label="{{ __('ui.auth_role_prompt') }}">
-                    @foreach ($roleCards as $roleValue => $roleCard)
-                        <label class="auth-role__option" for="account-role-{{ $roleValue }}">
-                            <input id="account-role-{{ $roleValue }}" type="radio" name="account_role" value="{{ $roleValue }}" @checked($accountRole === $roleValue) @if($errors->has('account_role')) aria-invalid="true" aria-describedby="registerRoleError" @endif>
-                            <span class="auth-role__icon" aria-hidden="true"><i class="bi {{ $roleCard['icon'] }}"></i></span>
-                            <span class="auth-role__copy">
-                                <span class="visually-hidden">{{ __('ui.auth_role_'.$roleValue) }}</span>
-                                <span class="auth-role__title">{{ $roleCard['title'] }}</span>
-                                <span class="auth-role__lede">{{ $roleCard['lede'] }}</span>
-                            </span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('account_role')
-                    <span id="registerRoleError" class="invalid-feedback" role="alert">{{ $message }}</span>
-                @enderror
+            <input type="hidden" name="account_role" value="individual">
 
-                <div class="auth-org @if($organisationOpen) is-open @endif" data-auth-org>
+                <div class="auth-org auth-org--hidden @if($organisationOpen) is-open @endif" data-auth-org hidden aria-hidden="true">
                     <div class="auth-org__inner">
                         <p id="registerOrgIntro" class="auth-org__intro">{{ __('ui.auth_org_section_intro') }}</p>
 
@@ -143,7 +126,6 @@
                         </div>
                     </div>
                 </div>
-            </fieldset>
             @endif
 
             <button type="submit" class="auth-google" formaction="{{ route('auth.google.prepare') }}" formnovalidate data-register-google aria-label="{{ __('ui.continue_google') }}">

@@ -8659,9 +8659,24 @@ html body .app .tools-title__heading,
 html body .app .tools-title h3,
 html body .app .tools-tabs > button,
 html body .app .tools-tab-hint,
+html body .app .tools-title__hint,
 html body .app .sheet-toggle .st-title {
   font-family: "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif !important;
   letter-spacing: -0.02em !important;
+}
+
+html body .app .tools-title__heading,
+html body .app .tools-title h3 {
+  font-size: clamp(1.05rem, 4.2vw, 1.28rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.22 !important;
+}
+
+html body .app .tools-title__hint {
+  font-size: clamp(0.82rem, 3.1vw, 0.94rem) !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0 !important;
 }
 
 html body .app .tools-body .sheet.sheet--practice,
@@ -9372,7 +9387,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     background: var(--controls-card) !important;
   }
 
-  html body .app .tools .mode-radio {
+  html body .app .tools .individual-ayah-toggle.mode-radio {
     position: relative !important;
     width: 56px !important;
     height: 44px !important;
@@ -9384,7 +9399,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     box-shadow: none !important;
   }
 
-  html body .app .tools .mode-radio::before {
+  html body .app .tools .individual-ayah-toggle.mode-radio::before {
     content: "" !important;
     position: absolute !important;
     inset: 7px 1px !important;
@@ -9394,31 +9409,34 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     transition: background-color 160ms ease, border-color 160ms ease !important;
   }
 
-  html body .app .tools .mode-radio::after {
+  html body .app .tools .individual-ayah-toggle.mode-radio::after {
     content: "" !important;
     position: absolute !important;
     z-index: 1 !important;
     width: 24px !important;
     height: 24px !important;
-    inset-block-start: 10px !important;
+    top: 50% !important;
+    inset-block-start: 50% !important;
     inset-inline-start: 5px !important;
     border: 2px solid var(--controls-card) !important;
     border-radius: 50% !important;
     background: var(--controls-muted) !important;
-    transition: inset-inline-start 160ms ease, background-color 160ms ease !important;
+    transform: translateY(-50%) !important;
+    transition: inset-inline-start 160ms ease, background-color 160ms ease, transform 160ms ease !important;
   }
 
-  html body .app .tools .mode-radio.active::before {
+  html body .app .tools .individual-ayah-toggle.mode-radio.active::before {
     border-color: var(--controls-accent) !important;
     background: var(--controls-accent) !important;
   }
 
-  html body .app .tools .mode-radio.active::after {
+  html body .app .tools .individual-ayah-toggle.mode-radio.active::after {
     inset-inline-start: 27px !important;
     background: var(--controls-accent-ink) !important;
+    transform: translateY(-50%) !important;
   }
 
-  html body .app .tools .mode-radio .mode-radio-icon {
+  html body .app .tools .individual-ayah-toggle.mode-radio .mode-radio-icon {
     visibility: hidden !important;
   }
 
@@ -9571,12 +9589,35 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
 
   html body .app .tools .tools-body .sheet-toggle--practice .mode-radio,
   html body .app .tools .tools-body .individual-ayah-toggle.mode-radio {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    max-width: 2.75rem !important;
+    height: 1.55rem !important;
+    min-height: 1.55rem !important;
+    max-height: 1.55rem !important;
+  }
+
+  html body .app .tools .tools-body .sheet-toggle--practice .mode-radio::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  html body .app .tools .tools-body .sheet-toggle--practice .mode-radio::after {
+    top: 50% !important;
+    inset-block-start: 50% !important;
+    left: 0.14rem !important;
+    inset-inline-start: 0.14rem !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    border: 0 !important;
+    background: #fff !important;
+    transform: translateY(-50%) !important;
+  }
+
+  html body .app .tools .tools-body .sheet-toggle--practice .mode-radio.active::after {
+    left: calc(100% - 1.34rem) !important;
+    inset-inline-start: calc(100% - 1.34rem) !important;
+    transform: translateY(-50%) !important;
   }
 
   html body .app .tools {
