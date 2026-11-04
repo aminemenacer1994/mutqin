@@ -87,7 +87,8 @@
                 <i :class="metric.icon" aria-hidden="true"></i>
               </span>
               <span class="admin-kpi__label">{{ metric.label }}</span>
-              <strong class="admin-kpi__value">{{ metric.value }}</strong>
+              <strong class="admin-kpi__value">{{ metric.value == null ? '—' : metric.value }}</strong>
+              <span v-if="metric.error" class="admin-kpi__error">{{ t('admin.retry') }}</span>
               <em v-if="metric.trendLabel" class="admin-kpi__trend" :data-dir="metric.trendDir">
                 <i
                   class="bi"
@@ -741,13 +742,18 @@
                   >
                 </div>
               </div>
-              <p class="admin-results-count">
+              <p v-if="!waitingLoading && !waitingError && waitingTotal != null" class="admin-results-count">
                 {{ t('admin.waiting_list_showing', { shown: waitingItems.length, total: waitingTotal }) }}
               </p>
             </div>
 
             <p v-if="waitingLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
-            <p v-else-if="waitingError" class="admin-empty" role="alert">{{ waitingError }}</p>
+            <div v-else-if="waitingError" class="admin-empty" role="alert">
+              <p>{{ waitingError }}</p>
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" @click="loadWaitingList(waitingPage || 1)">
+                {{ t('admin.retry') }}
+              </button>
+            </div>
             <div v-else-if="!waitingItems.length" class="admin-users-empty" role="status">
               <i class="bi bi-hourglass admin-users-empty__icon" aria-hidden="true"></i>
               <p class="admin-users-empty__title">
@@ -1864,7 +1870,7 @@ export default {
       feedbackTypes: ['suggestion', 'bug', 'ai_recitation', 'design', 'other'],
       feedbackStatuses: ['new', 'reviewing', 'planned', 'resolved', 'closed'],
       waitingItems: [],
-      waitingTotal: 0,
+      waitingTotal: null,
       waitingPage: 1,
       waitingTotalPages: 1,
       waitingLoading: false,
@@ -1951,6 +1957,10 @@ export default {
     },
     snapshotCards() {
       const snapshot = this.data?.snapshot || {}
+      const waitingMetric = snapshot.waiting_list_total
+      const waitingValue = waitingMetric?.available === false || waitingMetric?.value == null
+        ? null
+        : Number(waitingMetric.value)
       return [
         {
           key: 'users_total',
@@ -1975,7 +1985,8 @@ export default {
         {
           key: 'waiting_list_total',
           label: this.t('admin.metric_waiting_list'),
-          value: Number(snapshot.waiting_list_total?.value || 0),
+          value: Number.isFinite(waitingValue) ? waitingValue : null,
+          error: waitingMetric?.available === false || !Number.isFinite(waitingValue),
           action: 'waiting',
           toneClass: 'admin-kpi--waiting',
           icon: 'bi bi-hourglass-split',
@@ -2538,6 +2549,9 @@ export default {
           this.waitingItems.some((row) => row.id === id)
         ))
       } catch (error) {
+        this.waitingItems = []
+        this.waitingTotal = null
+        this.waitingTotalPages = 1
         this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.loadError')
       } finally {
         this.waitingLoading = false

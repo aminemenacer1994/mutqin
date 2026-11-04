@@ -82,12 +82,30 @@ export const adminApi = {
         },
       })
     )
+    const total = Number(data?.total)
+    const responsePage = Number(data?.page)
+    const responsePerPage = Number(data?.per_page)
+    const totalPages = Number(data?.total_pages)
+    if (
+      !Array.isArray(data?.items)
+      || !Number.isInteger(total)
+      || total < 0
+      || !Number.isInteger(responsePage)
+      || responsePage < 1
+      || !Number.isInteger(responsePerPage)
+      || responsePerPage < 1
+      || !Number.isInteger(totalPages)
+      || totalPages < 1
+    ) {
+      throw new Error('Invalid waiting-list response')
+    }
+
     return {
-      items: Array.isArray(data?.items) ? data.items : [],
-      total: Number(data?.total || 0),
-      page: Number(data?.page || page || 1),
-      per_page: Number(data?.per_page || per_page || 25),
-      total_pages: Number(data?.total_pages || 1),
+      items: data.items,
+      total,
+      page: responsePage,
+      per_page: responsePerPage,
+      total_pages: totalPages,
     }
   },
 

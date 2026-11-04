@@ -9,6 +9,7 @@ use App\Http\Requests\Memorisation\StoreFailedMemorisationAssessmentRequest;
 use App\Http\Requests\Memorisation\StoreMemorisationAssessmentRequest;
 use App\Enums\AssignmentKind;
 use App\Models\AiReciteAttempt;
+use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
@@ -26,6 +27,17 @@ class MemorisationDetectionController extends Controller
     {
         $user = $request->user();
         if (! $user) {
+            return null;
+        }
+
+        // Idempotent delivery of an already-saved check must remain readable even
+        // after that check reaches the learner's limit.
+        $idempotencyKey = trim((string) $request->input('idempotency_key', ''));
+        if ($idempotencyKey !== '' && MemorisationAssessment::query()
+            ->where('user_id', $user->id)
+            ->where('idempotency_key', $idempotencyKey)
+            ->validScored()
+            ->exists()) {
             return null;
         }
 

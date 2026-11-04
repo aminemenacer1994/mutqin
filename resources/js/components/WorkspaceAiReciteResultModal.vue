@@ -81,6 +81,7 @@
                 :data-outcome="view.outcome || 'mixed'"
                 :aria-label="aiResultsAriaLabel"
                 data-testid="workspace-recite-ai-review"
+                data-tour="ai-results"
               >
                 <div
                   class="post-session-simple__outcome post-session-simple__outcome--hero"
@@ -162,6 +163,7 @@
                   v-if="view.infoArchitecture?.mainFocus?.explanation || view.focusAyahRows?.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="workspace-recite-main-focus"
+                  data-tour="weak-areas"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                     {{ view.infoArchitecture.mainFocus.title }}
@@ -205,7 +207,7 @@
                             <span
                               class="post-session-simple__quran-token-text"
                               :data-madani-glyph="part.madaniGlyph ? 'true' : null"
-                              :style="part.fontFamily ? { '--madani-glyph-font': `'${part.fontFamily}', serif` } : null"
+                              :style="{ fontFamily: part.fontFamily ? `'${part.fontFamily}', Arial, sans-serif` : 'Arial, sans-serif' }"
                             >{{ part.text }}</span>
                           </span>
                         </span>
@@ -252,7 +254,7 @@
                         ><span
                           class="post-session-simple__quran-token-text"
                           :data-madani-glyph="entry.madaniGlyph ? 'true' : null"
-                          :style="entry.fontFamily ? { '--madani-glyph-font': `'${entry.fontFamily}', serif` } : null"
+                          :style="{ fontFamily: entry.fontFamily ? `'${entry.fontFamily}', Arial, sans-serif` : 'Arial, sans-serif' }"
                         >{{ entry.text }}</span><template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
                       </span>
                     </li>
@@ -339,8 +341,9 @@
             </div>
 
             <footer v-if="!loading && !error && !empty" class="post-session-simple__footer">
-              <p v-if="attemptSaved || resultsHref" class="workspace-recite-saved" data-testid="workspace-recite-saved">
-                <span v-if="attemptSaved">{{ savedLabel }}</span>
+              <p v-if="attemptSaved || saveState === 'retrying' || resultsHref" class="workspace-recite-saved" data-testid="workspace-recite-saved" aria-live="polite">
+                <span v-if="saveState === 'retrying'" class="workspace-recite-saved__retrying">{{ retryingLabel }}</span>
+                <span v-else-if="attemptSaved || saveState === 'saved'">{{ savedLabel }}</span>
                 <a
                   v-if="resultsHref"
                   class="workspace-recite-saved__link"
@@ -418,7 +421,9 @@ export default {
     emptyTitle: { type: String, default: 'No results yet' },
     emptyDesc: { type: String, default: 'Complete a recitation check to see your results here.' },
     attemptSaved: { type: Boolean, default: false },
+    saveState: { type: String, default: '' },
     savedLabel: { type: String, default: 'This attempt is saved.' },
+    retryingLabel: { type: String, default: "Couldn't save yet. Retrying…" },
     resultsHref: { type: String, default: '' },
     resultsLabel: { type: String, default: 'See all results' },
     theme: { type: String, default: '' },

@@ -102,4 +102,26 @@ class UserAiReciteLifetimeLimitTest extends TestCase
             ->postJson(route('memorisation.transcription-token'))
             ->assertOk();
     }
+
+    public function test_failed_or_incomplete_checks_do_not_consume_the_limit(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+            'ai_recite_lifetime_limit' => 1,
+        ]);
+
+        MemorisationAssessment::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'status' => MemorisationAssessment::STATUS_FAILED,
+            'failure_reason' => 'processing_failed',
+        ]);
+
+        $usage = app(UserAiReciteUsageService::class)->inspect($user);
+
+        $this->assertSame(0, $usage['used']);
+        $this->assertTrue($usage['allowed']);
+    }
 }

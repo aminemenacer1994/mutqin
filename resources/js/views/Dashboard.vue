@@ -380,6 +380,22 @@
                               {{ aiCheckTitle(item) }}
                               <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                             </strong>
+                            <span
+                              v-if="item.weak_words?.length"
+                              class="dash-ai-results__attempt-arabic"
+                              :class="{ 'is-ready': item.madani_preview?.length }"
+                              dir="rtl"
+                              lang="ar"
+                              aria-hidden="true"
+                            >
+                              <template v-if="item.madani_preview?.length">
+                                <span
+                                  v-for="(part, previewIndex) in item.madani_preview"
+                                  :key="['attempt-preview', item.id, previewIndex].join('-')"
+                                  :style="madaniPartStyle(part)"
+                                >{{ part.text }}</span>
+                              </template>
+                            </span>
                             <span class="dash-ai-results__attempt-meta">
                               <span
                                 v-if="item.band"
@@ -733,7 +749,7 @@
     </Teleport>
 
     <SessionAnalysisModal
-      :open="analysisModalOpen"
+      :open="analysisModalOpen && analysisSourceKind !== 'attempt'"
       :loading="analysisLoading"
       :error="analysisError"
       :empty="!analysisLoading && !analysisError && analysisModalOpen && !analysisView?.hasContent"
@@ -766,6 +782,46 @@
       @retry="retrySessionAnalysis"
     />
 
+    <WorkspaceAiReciteResultModal
+      v-if="analysisModalOpen && analysisSourceKind === 'attempt'"
+      :theme="dashboardTheme"
+      :open="analysisModalOpen"
+      :loading="analysisLoading"
+      :error="analysisError"
+      :empty="!analysisLoading && !analysisError && analysisModalOpen && !analysisView?.hasContent"
+      :view="analysisView"
+      :title="analysisView?.headerTitle || t('memorisation.recite_check_results')"
+      :subtitle="analysisView?.headerLead || ''"
+      :close-label="t('common.close')"
+      :try-again-label="t('memorisation.amd.tryAgain')"
+      :your-result-label="t('memorisation.postSession.recommendation.yourResult')"
+      :beta-badge-label="t('memorisation.postSession.recommendation.aiRecitationBeta')"
+      :details-section-label="t('memorisation.postSession.recommendation.viewDetails')"
+      :view-details-label="t('memorisation.postSession.recommendation.viewDetails')"
+      :hide-details-label="t('memorisation.postSession.recommendation.hideDetails')"
+      :result-stats-aria-label="t('memorisation.postSession.recommendation.resultStats')"
+      :ai-results-aria-label="t('memorisation.a11y.aiMemorisationResult')"
+      :colour-meter-aria-label="t('memorisation.aiCheck.colourMeterAria')"
+      :audio-title="t('dashboard.analysis_audio_title')"
+      :play-label="t('dashboard.ai_recite.play')"
+      :pause-label="t('dashboard.ai_recite.pause')"
+      :restart-label="t('dashboard.ai_recite.restart')"
+      :error-title="t('memorisation.analyticsEmpty.modalErrorTitle')"
+      :error-desc="t('memorisation.analyticsEmpty.modalErrorDesc')"
+      :empty-title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
+      :empty-desc="t('dashboard.analysis_empty_desc')"
+      :attempt-saved="true"
+      save-state="saved"
+      :saved-label="t('dashboard.ai_recite.attempt_saved')"
+      results-href="#ai-recite-results"
+      :results-label="t('dashboard.ai_recite.see_all_results')"
+      :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
+      :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
+      :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
+      @close="closeSessionAnalysis"
+      @try-again="retrySavedReciteAttempt"
+    />
+
     <Teleport to="body">
       <Transition name="dash-toast">
         <div v-if="toastMessage" class="dash-toast" role="status" aria-live="polite">
@@ -788,6 +844,9 @@ import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.v
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
+import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
+import { withStrictMadaniResultGlyphs } from '../scripts/workspaceAiRecite/strictMadaniResultView.js'
+import { loadMadaniAyahGlyphs } from '../scripts/mushaf/madaniSnippetGlyphs.js'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -818,6 +877,11 @@ const DashboardWeeklyChart = defineAsyncComponent(() => import(
 const SessionAnalysisModal = defineAsyncComponent(() => import(
   /* webpackChunkName: "session-analysis-modal" */
   '../components/SessionAnalysisModal.vue'
+))
+
+const WorkspaceAiReciteResultModal = defineAsyncComponent(() => import(
+  /* webpackChunkName: "workspace-recite-result" */
+  '../components/WorkspaceAiReciteResultModal.vue'
 ))
 
 const METRIC_META = [
@@ -874,6 +938,7 @@ export default {
     LearnerTeacherSection,
     DashAnimatedNumber,
     SessionAnalysisModal,
+    WorkspaceAiReciteResultModal,
   },
   props: {
     auth: { type: Object, default: () => ({}) },
@@ -937,6 +1002,10 @@ export default {
     }
   },
   computed: {
+    dashboardTheme() {
+      if (typeof document === 'undefined') return this.darkTheme ? 'dark' : 'light'
+      return document.documentElement.getAttribute('data-theme') || (this.darkTheme ? 'dark' : 'light')
+    },
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
     },
@@ -2182,7 +2251,8 @@ export default {
       try {
         const stats = await learningApi.getDashboardAiReciteStats()
         if (requestId !== this.aiReciteRequestId) return
-        this.aiReciteStats = stats
+        this.aiReciteStats = await this.hydrateAiRecitePreviewGlyphs(stats)
+        if (requestId !== this.aiReciteRequestId) return
         this.scrollToAiReciteResults()
       } catch (error) {
         console.error('AI Recite results fetch failed', error)
@@ -2191,6 +2261,49 @@ export default {
       } finally {
         if (requestId === this.aiReciteRequestId) this.aiReciteLoading = false
       }
+    },
+    async hydrateAiRecitePreviewGlyphs(stats) {
+      if (!stats || !Array.isArray(stats.recent_attempts)) return stats
+      const recentAttempts = await Promise.all(stats.recent_attempts.map(async (item) => {
+        const weakWords = Array.isArray(item?.weak_words) ? item.weak_words : []
+        const ayah = Number(
+          weakWords[0]?.ayahNumber
+          ?? weakWords[0]?.ayah_number
+          ?? item?.ayah_start
+          ?? 0,
+        )
+        const chapter = Number(item?.surah_number || 0)
+        const parts = weakWords
+          .filter((word) => Number(word?.ayahNumber ?? word?.ayah_number ?? ayah) === ayah)
+          .map((word) => ({
+            text: String(word?.text || word?.word || word?.target_word || '').trim(),
+            tone: 'incorrect',
+            weak: true,
+            wordIndex: Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.word_index ?? -1),
+          }))
+          .filter((part) => part.text)
+        if (!(chapter > 0 && ayah > 0 && parts.length)) {
+          return { ...item, madani_preview: [] }
+        }
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          const strict = withStrictMadaniResultGlyphs({
+            focusAyahRows: [{ ayah, parts }],
+            infoArchitecture: { weakAreas: { items: [] } },
+          }, { [ayah]: glyphs || [] })
+          return {
+            ...item,
+            madani_preview: strict.focusAyahRows?.[0]?.parts || [],
+          }
+        } catch (_) {
+          return { ...item, madani_preview: [] }
+        }
+      }))
+      return { ...stats, recent_attempts: recentAttempts }
+    },
+    madaniPartStyle(part = {}) {
+      const family = String(part?.fontFamily || '').replace(/['"\\]/g, '')
+      return { fontFamily: family ? `'${family}', Arial, sans-serif` : 'Arial, sans-serif' }
     },
     scrollToAiReciteResults() {
       if (typeof window === 'undefined' || window.location.hash !== '#ai-recite-results') return
@@ -2444,7 +2557,22 @@ export default {
           ? await learningApi.getAiReciteAttemptAnalysis(id)
           : await learningApi.getSessionAnalysis(id)
         if (requestId !== this.analysisRequestId) return
-        this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this), { includeRecommendations: false })
+        if (kind === 'attempt') {
+          const session = payload?.session || {}
+          const view = buildWorkspaceAiReciteResultView({
+            submitData: payload,
+            assessment: payload?.assessment,
+            aiAttempt: payload?.ai_attempt,
+            audioUrl: payload?.audio?.url || '',
+            surahNumber: Number(session.surah_number || payload?.assessment?.surah_number || 0),
+            surahName: session.surah_name || payload?.assessment?.surah_name || '',
+            rangeStart: Number(session.ayah_start || payload?.assessment?.start_ayah || 0),
+            rangeEnd: Number(session.ayah_end || payload?.assessment?.end_ayah || 0),
+          }, this.t.bind(this))
+          this.analysisView = await this.hydrateSavedReciteMadaniGlyphs(view)
+        } else {
+          this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this), { includeRecommendations: false })
+        }
         this.analysisError = false
       } catch (error) {
         console.error('Session analysis fetch failed', error)
@@ -2454,6 +2582,40 @@ export default {
       } finally {
         if (requestId === this.analysisRequestId) this.analysisLoading = false
       }
+    },
+    async hydrateSavedReciteMadaniGlyphs(view) {
+      const chapter = Number(view?.surahNumber || 0)
+      const rows = [
+        ...(Array.isArray(view?.focusAyahRows) ? view.focusAyahRows : []),
+        ...(Array.isArray(view?.infoArchitecture?.weakAreas?.items)
+          ? view.infoArchitecture.weakAreas.items
+          : []),
+      ]
+      const ayahs = [...new Set(rows.map((row) => Number(row?.ayah)).filter((ayah) => ayah > 0))]
+      const glyphsByAyah = {}
+      await Promise.all((chapter > 0 ? ayahs : []).map(async (ayah) => {
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          if (glyphs?.length) glyphsByAyah[ayah] = glyphs
+        } catch (_) { /* strict view hides unavailable Arabic instead of flashing another font */ }
+      }))
+      return withStrictMadaniResultGlyphs(view, glyphsByAyah)
+    },
+    retrySavedReciteAttempt() {
+      const view = this.analysisView || {}
+      const surah = Number(view.surahNumber || 0)
+      const from = Number(view.rangeStart || 0)
+      const to = Math.max(from, Number(view.rangeEnd || from))
+      if (!(surah > 0 && from > 0)) return
+      const base = this.memorisationUrl.split('?')[0]
+      const params = new URLSearchParams({
+        surah: String(surah),
+        from: String(from),
+        to: String(to),
+        ai_check: '1',
+        return: 'dashboard',
+      })
+      window.location.assign(`${base}?${params.toString()}`)
     },
     syncDrawerBodyLock(open) {
       if (typeof document === 'undefined') return

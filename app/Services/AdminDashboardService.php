@@ -947,11 +947,18 @@ class AdminDashboardService
         $sessionsLast7d = (int) ($sessionsAgg->last_7d ?? 0);
         $sessionsPrev7d = (int) ($sessionsAgg->prev_7d ?? 0);
 
-        $waitingListTotal = 0;
+        $waitingListTotal = null;
         $waitingListLast7d = 0;
         $waitingListPrev7d = 0;
-        if (Schema::hasTable('waiting_list_entries')) {
-            $waitingAgg = WaitingListEntry::query()
+        $waitingListAvailable = false;
+        $waitingList = new WaitingListEntry;
+        $waitingListConnection = $waitingList->getConnectionName() ?: config('database.default');
+
+        try {
+            // The waiting list may deliberately use a dedicated connection. Checking the
+            // default connection here would turn a missing/unreachable table into a false 0.
+            if (Schema::connection($waitingListConnection)->hasTable($waitingList->getTable())) {
+                $waitingAgg = WaitingListEntry::query()
                 ->selectRaw(
                     'COUNT(*) as total,
                      SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
@@ -963,9 +970,13 @@ class AdminDashboardService
                     ]
                 )
                 ->first();
-            $waitingListTotal = (int) ($waitingAgg->total ?? 0);
-            $waitingListLast7d = (int) ($waitingAgg->last_7d ?? 0);
-            $waitingListPrev7d = (int) ($waitingAgg->prev_7d ?? 0);
+                $waitingListTotal = (int) ($waitingAgg->total ?? 0);
+                $waitingListLast7d = (int) ($waitingAgg->last_7d ?? 0);
+                $waitingListPrev7d = (int) ($waitingAgg->prev_7d ?? 0);
+                $waitingListAvailable = true;
+            }
+        } catch (\Throwable $error) {
+            report($error);
         }
 
         $aiChecks = AiReciteAttempt::query()->count();
@@ -1033,7 +1044,10 @@ class AdminDashboardService
             'waiting_list_total' => [
                 'key' => 'waiting_list_total',
                 'value' => $waitingListTotal,
-                'trend_percent' => $this->trendPercent($waitingListLast7d, $waitingListPrev7d),
+                'available' => $waitingListAvailable,
+                'trend_percent' => $waitingListAvailable
+                    ? $this->trendPercent($waitingListLast7d, $waitingListPrev7d)
+                    : null,
             ],
             'ai_recite_attempts' => [
                 'key' => 'ai_recite_attempts',

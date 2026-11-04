@@ -9,7 +9,6 @@
   justify-content: center;
   pointer-events: auto !important;
 }
-
 .amd-overlay .mutqin-modal-dialog,
 .amd-overlay .amd-modal,
 .amd-overlay .amd-modal button,
@@ -9101,4 +9100,483 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-sur
 html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-heading__title {
   margin-inline: auto !important;
   text-align: center !important;
+}
+/* Mobile Controls panel: one theme-aware surface and spacing system. */
+@media (max-width: 767.98px) {
+  html body .app .tools {
+    --controls-canvas: var(--zone-reading, var(--surface));
+    --controls-chrome: var(--zone-panel, var(--surface));
+    --controls-card: var(--zone-elevated, var(--surface-strong));
+    --controls-field: var(--zone-reading, var(--surface));
+    --controls-border: color-mix(in srgb, var(--border) 78%, transparent);
+    --controls-text: var(--text);
+    --controls-muted: color-mix(in srgb, var(--text) 76%, var(--text-muted));
+    --controls-accent: var(--accent);
+    --controls-accent-ink: var(--accent-contrast, #fff);
+    --controls-radius: 18px;
+    --controls-inner-radius: 13px;
+    background: var(--controls-canvas) !important;
+    color: var(--controls-text) !important;
+  }
+
+  html[data-theme="dark"] body .app .tools,
+  html body[data-theme="dark"] .app .tools,
+  [data-theme="dark"] body .app .tools {
+    --controls-canvas: var(--zone-reading);
+    --controls-chrome: var(--zone-panel);
+    --controls-card: var(--zone-elevated);
+    --controls-field: var(--zone-action);
+    --controls-border: color-mix(in srgb, var(--border) 68%, var(--accent) 32%);
+    --controls-text: var(--text);
+    --controls-muted: color-mix(in srgb, var(--text) 82%, var(--text-muted));
+    --controls-accent: var(--accent);
+    --controls-accent-ink: var(--toolbar-control-active-fg, var(--zone-reading));
+    --controls-positive-bg: var(--success-bg);
+    --controls-positive: color-mix(in srgb, var(--success-text) 86%, var(--text) 14%);
+  }
+
+  html body .app .tools .tools-top,
+  html body .app .tools .tools-footer {
+    background: var(--controls-chrome) !important;
+    border-color: var(--controls-border) !important;
+  }
+
+  html body .app .tools .tools-top {
+    padding: max(18px, env(safe-area-inset-top, 0px)) 20px 18px !important;
+  }
+
+  html body .app .tools .tools-topbar {
+    min-height: 48px !important;
+    margin-bottom: 16px !important;
+  }
+
+  html body .app .tools :where(.tools-title__heading, .st-title, .field label, .individual-ayah-repeat-label) {
+    color: var(--controls-text) !important;
+  }
+
+  html body .app .tools :where(.field-hint, .st-sub, .technique-group-copy p, .technique-description, .technique-description span, .saved-sheet__row-meta, .saved-sheet__current-copy small) {
+    color: var(--controls-muted) !important;
+    opacity: 1 !important;
+  }
+
+  html body .app .tools .tools-x {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 14px !important;
+    background: var(--controls-card) !important;
+    color: var(--controls-text) !important;
+  }
+
+  html body .app .tools .tools-tabs {
+    padding: 4px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 18px !important;
+    background: var(--controls-card) !important;
+  }
+
+  html body .app .tools .tools-tabs > button {
+    min-height: 48px !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    color: var(--controls-muted) !important;
+    background: transparent !important;
+    font-weight: 700 !important;
+  }
+
+  html body .app .tools .tools-tabs > button.active {
+    border-color: color-mix(in srgb, var(--controls-accent) 72%, var(--controls-border)) !important;
+    background: var(--controls-accent) !important;
+    color: var(--controls-accent-ink) !important;
+  }
+
+  html body .app .tools :where(.tools-x, .tools-tabs > button, .sheet-toggle, .mode-radio, .radio, .select, .input, .tools-btn, .session-primary-action):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--controls-accent) 72%, white) !important;
+    outline-offset: 2px !important;
+  }
+
+  html body .app .tools .tools-body {
+    padding: 20px 16px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--controls-canvas) !important;
+  }
+
+  html body .app .tools .sheet {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    background: transparent !important;
+  }
+
+  html body .app .tools .sheet-section,
+  html body .app .tools .sheet--setup > .sheet-section,
+  html body .app .tools .saved-sheet__card,
+  html body .app .tools .saved-sheet__group {
+    overflow: hidden !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-radius) !important;
+    background: var(--controls-card) !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools .sheet-toggle {
+    min-height: 64px !important;
+    padding: 12px 16px !important;
+    border-radius: var(--controls-radius) var(--controls-radius) 0 0 !important;
+    background: var(--controls-card) !important;
+    color: var(--controls-text) !important;
+  }
+
+  html body .app .tools .sheet-section > .sheet-toggle:last-child,
+  html body .app .tools .sheet-section > .sheet-toggle:not(.is-expanded):not(:has(+ .sheet-content[style*="display: none"])),
+  html body .app .tools .sheet-section > .sheet-toggle:has(+ .sheet-content[style*="display: none"]) {
+    border-radius: var(--controls-radius) !important;
+  }
+
+  html body .app .tools .sheet-content,
+  html body .app .tools .sheet-section-compact .sheet-content,
+  html[data-theme="dark"] body .app .tools .sheet-section-compact .sheet-content,
+  [data-theme="dark"] body .app .tools .sheet-section-compact .sheet-content {
+    padding: 22px !important;
+    border-top: 1px solid var(--controls-border) !important;
+    background: var(--controls-card) !important;
+  }
+
+  html body .app .tools .setup-field-list,
+  html body .app .tools .sheet .sheet-content .setup-field-list,
+  html body .app .tools .sheet-content > .field-stack,
+  html body .app .tools .sheet-content > .field-stack-compact {
+    gap: 26px !important;
+  }
+
+  html body .app .tools .sheet--setup .setup-field-row,
+  html body .app .tools .sheet--setup .setup-field-row.field-repetitions-clean,
+  html body .app .tools .sheet--setup .setup-field-row.field-individual-ayah-unified,
+  html body .app .tools .setup-field-row {
+    gap: 10px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools .sheet--setup .field-repetitions-clean,
+  html body .app .tools .sheet--setup .field-individual-ayah-unified {
+    padding: 18px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-inner-radius) !important;
+    background: var(--controls-field) !important;
+  }
+
+  html body .app .tools .field-header {
+    min-height: 44px !important;
+    gap: 12px !important;
+  }
+
+  html body .app .tools :where(.select, .input:not([type="range"]), .session-range-preset, .radio-group) {
+    min-height: 48px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-inner-radius) !important;
+    background: var(--controls-field) !important;
+    color: var(--controls-text) !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools :where(.select, .input:not([type="range"])) {
+    padding: 10px 14px !important;
+  }
+
+  html body .app .tools .session-range-preset {
+    gap: 8px !important;
+    padding: 4px !important;
+  }
+
+  html body .app .tools .session-range-preset__option,
+  html body .app .tools .radio-group .radio,
+  html body .app .tools .techniques-choice-group .radio {
+    min-height: 44px !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    color: var(--controls-text) !important;
+  }
+
+  html body .app .tools .session-range-preset__option:has(input:checked),
+  html body .app .tools .radio-group .radio:has(input:checked),
+  html body .app .tools .techniques-choice-group .radio:has(input:checked) {
+    border-color: var(--controls-accent) !important;
+    background: color-mix(in srgb, var(--controls-accent) 15%, var(--controls-field)) !important;
+  }
+
+  html body .app .tools input[type="radio"] {
+    width: 22px !important;
+    height: 22px !important;
+    flex: 0 0 22px !important;
+    accent-color: var(--controls-accent) !important;
+  }
+
+  html body .app .tools .session-range-inputs {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+
+  html body .app .tools .range-control,
+  html body .app .tools .sheet--setup .setup-field-row.field-repetitions-clean .range-control,
+  html body .app .tools .sheet--setup .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
+    min-height: 44px !important;
+    padding: 10px 8px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 999px !important;
+    background: var(--controls-card) !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools input[type="range"] {
+    min-height: 24px !important;
+    accent-color: var(--controls-accent) !important;
+  }
+
+  html body .app .tools input[type="range"]::-webkit-slider-runnable-track {
+    height: 7px !important;
+    border-radius: 999px !important;
+  }
+
+  html body .app .tools input[type="range"]::-webkit-slider-thumb {
+    width: 24px !important;
+    height: 24px !important;
+    margin-top: -8.5px !important;
+    border: 2px solid var(--controls-card) !important;
+    background: var(--controls-accent) !important;
+  }
+
+  html body .app .tools .slider-markers span,
+  html body .app .tools .range-value-pill {
+    color: var(--controls-muted) !important;
+    opacity: 1 !important;
+  }
+
+  html body .app .tools .range-value-pill {
+    min-height: 32px !important;
+    padding: 6px 12px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 999px !important;
+    background: var(--controls-card) !important;
+  }
+
+  html body .app .tools .mode-radio {
+    position: relative !important;
+    width: 56px !important;
+    height: 44px !important;
+    min-width: 56px !important;
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools .mode-radio::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 7px 1px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 999px !important;
+    background: var(--controls-field) !important;
+    transition: background-color 160ms ease, border-color 160ms ease !important;
+  }
+
+  html body .app .tools .mode-radio::after {
+    content: "" !important;
+    position: absolute !important;
+    z-index: 1 !important;
+    width: 24px !important;
+    height: 24px !important;
+    inset-block-start: 10px !important;
+    inset-inline-start: 5px !important;
+    border: 2px solid var(--controls-card) !important;
+    border-radius: 50% !important;
+    background: var(--controls-muted) !important;
+    transition: inset-inline-start 160ms ease, background-color 160ms ease !important;
+  }
+
+  html body .app .tools .mode-radio.active::before {
+    border-color: var(--controls-accent) !important;
+    background: var(--controls-accent) !important;
+  }
+
+  html body .app .tools .mode-radio.active::after {
+    inset-inline-start: 27px !important;
+    background: var(--controls-accent-ink) !important;
+  }
+
+  html body .app .tools .mode-radio .mode-radio-icon {
+    visibility: hidden !important;
+  }
+
+  html body .app .tools .technique-group-copy {
+    padding: 0 2px 14px !important;
+    border-bottom: 1px solid var(--controls-border) !important;
+  }
+
+  html body .app .tools .technique-group-kicker {
+    min-height: 44px !important;
+    color: var(--controls-accent) !important;
+  }
+
+  html body .app .tools .practice-tool-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  html body .app .tools .sheet-section--practice .sheet-toggle--practice {
+    border-radius: var(--controls-radius) var(--controls-radius) 0 0 !important;
+  }
+
+  html body .app .tools .sheet-section--practice .sheet-toggle--practice:not(.is-expanded) {
+    border-radius: var(--controls-radius) !important;
+  }
+
+  html body .app .tools :where(.technique-description, .technique-preview-block, .technique-best) {
+    padding: 16px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-inner-radius) !important;
+    background: var(--controls-field) !important;
+    color: var(--controls-muted) !important;
+  }
+
+  html body .app .tools .technique-best {
+    background: var(--controls-positive-bg, color-mix(in srgb, #238a49 14%, var(--controls-field))) !important;
+    color: var(--controls-positive, #176b36) !important;
+  }
+
+  html body .app .tools .technique-best :where(span, i) {
+    color: inherit !important;
+  }
+
+  html body .app .tools .saved-sheet {
+    gap: 20px !important;
+  }
+
+  html body .app .tools .saved-sheet__header,
+  html body .app .tools .saved-sheet__group-toggle,
+  html body .app .tools .saved-sheet__row {
+    min-height: 48px !important;
+  }
+
+  html body .app .tools .saved-sheet__row,
+  html body .app .tools .saved-sheet__group-body {
+    background: var(--controls-field) !important;
+    border-color: var(--controls-border) !important;
+  }
+
+  html body .app .tools .tools-footer,
+  html body .app .tools .tools-footer.settings-footer {
+    gap: 12px !important;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  html body .app .tools .tools-footer :where(.tools-btn, .session-primary-action, .btn) {
+    min-height: 48px !important;
+    border-radius: 14px !important;
+  }
+
+  html body .app .tools .tools-footer :where(.session-primary-action, .tools-btn-primary, .btn-primary) {
+    border: 1px solid var(--controls-accent) !important;
+    background: var(--controls-accent) !important;
+    color: var(--controls-accent-ink) !important;
+  }
+
+  html body .app .tools .tools-footer :where(.tools-btn-soft, .tools-btn-ghost) {
+    border: 1px solid var(--controls-border) !important;
+    background: var(--controls-card) !important;
+    color: var(--controls-text) !important;
+  }
+}
+
+/* The compact legacy rules above are intentionally superseded on phones. */
+@media (max-width: 767.98px) {
+  html body .app .tools .tools-body,
+  html body .app .tools .tools-body:has(.sheet--setup) {
+    padding: 20px 16px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 20px !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup {
+    gap: 20px !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .sheet-section-compact .sheet-toggle {
+    min-height: 64px !important;
+    padding: 12px 16px !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .sheet-content,
+  html body .app .tools .tools-body .sheet--practice .sheet-content {
+    padding: 22px !important;
+  }
+
+  html body .app .tools .tools-body .sheet.sheet--setup .sheet-content .setup-field-list {
+    gap: 26px !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .setup-field-row {
+    gap: 10px !important;
+    padding: 0 !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .setup-field-row.field-repetitions-clean,
+  html body .app .tools .tools-body .sheet--setup .setup-field-row.field-individual-ayah-unified,
+  html body .app .tools .tools-body .sheet--setup .offcanvas-audio-panel .setup-field-row {
+    gap: 10px !important;
+    padding: 18px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-inner-radius) !important;
+    background: var(--controls-field) !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .select,
+  html body .app .tools .tools-body .sheet--setup .input:not([type="range"]),
+  html body .app .tools .tools-body .sheet--setup .range.range-single .input:not([type="range"]) {
+    min-height: 48px !important;
+    padding: 10px 14px !important;
+  }
+
+  html body .app .tools .tools-body .sheet--setup .session-range-preset__option,
+  html body .app .tools .tools-body .sheet--setup .radio-group .radio,
+  html body .app .tools .tools-body .sheet--setup .offcanvas-audio-panel .radio-group-compact .radio {
+    min-height: 44px !important;
+    padding: 8px 10px !important;
+  }
+
+  html body .app .tools .tools-body .sheet.sheet--setup .range-control,
+  html body .app .tools .tools-body .sheet.sheet--setup .individual-ayah-range-control {
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 10px 8px !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: 999px !important;
+    background: var(--controls-card) !important;
+  }
+
+  html body .app .tools .tools-body .sheet-toggle--practice .mode-radio,
+  html body .app .tools .tools-body .individual-ayah-toggle.mode-radio {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  html body .app .tools {
+    --controls-positive: var(--success-text, #0b5e2a);
+  }
+
+  :root:not([data-theme="dark"]) body .app .tools {
+    --controls-positive: #0b5e2a;
+  }
 }

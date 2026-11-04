@@ -368,23 +368,22 @@ const t = (key, params = {}) => {
   ]), 80)
 }
 
-// Template order: score/mistakes → focus → next action → details disclosure.
+// Canonical template order: score/mistakes → focus → weak areas → details disclosure.
 {
-  const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
+  const vue = readFileSync(join(root, 'resources/js/components/WorkspaceAiReciteResultModal.vue'), 'utf8')
   const aiReviewStart = vue.indexOf('post-session-simple__ai-review')
   assert.ok(aiReviewStart > 0)
   const slice = vue.slice(aiReviewStart, aiReviewStart + 12000)
   const summaryIdx = slice.indexOf('post-session-simple__ai-review-summary')
   const focusIdx = slice.indexOf('post-session-simple__focus-block')
-  const nextActionIdx = slice.indexOf('post-session-simple__next-action')
+  const weakIdx = slice.indexOf('post-session-simple__weak-spots')
   const detailsIdx = slice.indexOf('post-session-simple__ai-details')
   assert.ok(summaryIdx > 0)
   assert.ok(focusIdx > summaryIdx, 'focus / recommendation appears after summary')
-  assert.ok(nextActionIdx > focusIdx, 'next action appears after visible mistakes')
-  assert.ok(detailsIdx > nextActionIdx, 'details disclosure appears after score, mistakes, and next action')
-  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows|postSessionFocusAyahRows/)
-  assert.match(slice, /postSessionOutcomeStatChips/)
-  assert.match(slice, /postSessionPrimaryNextLine/)
+  assert.ok(weakIdx > focusIdx, 'weak areas appear after the main focus')
+  assert.ok(detailsIdx > weakIdx, 'details disclosure appears after score and weak areas')
+  assert.match(slice, /view\.focusAyahRows/)
+  assert.match(slice, /view\.outcomeStatChips/)
   assert.match(slice, /viewDetails/)
   // Colour meter / metrics only inside expanded details body.
   const meterIdx = slice.indexOf('post-session-simple__check-meter')

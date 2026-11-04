@@ -73,6 +73,9 @@ class MemorisationLearningHistoryTest extends TestCase
         $create->assertCreated();
         $assessmentId = (int) $create->json('assessment.id');
         $planId = (int) $create->json('practice_plan.id');
+        $attemptId = (int) $create->json('ai_attempt.id');
+
+        $this->assertGreaterThan(0, $attemptId);
 
         $this->assertDatabaseHas('memorisation_assessments', [
             'id' => $assessmentId,
@@ -103,6 +106,11 @@ class MemorisationLearningHistoryTest extends TestCase
         $dashboard = $this->actingAs($user)->getJson('/api/memorisation/history/dashboard');
         $dashboard->assertOk()
             ->assertJsonPath('attempts.completed', 1);
+
+        $this->actingAs($user)->getJson('/api/ai-recite-attempts/stats')
+            ->assertOk()
+            ->assertJsonPath('stats.total_attempts', 1)
+            ->assertJsonPath('stats.recent_attempts.0.id', $attemptId);
     }
 
     public function test_idempotent_assessment_save_does_not_duplicate(): void

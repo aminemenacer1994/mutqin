@@ -11,6 +11,7 @@
   --hp-glow: color-mix(in srgb, var(--accent) 14%, transparent);
   --hp-border: color-mix(in srgb, var(--accent) 12%, var(--border));
   --hp-focus: color-mix(in srgb, var(--accent) 20%, transparent);
+  --hp-placeholder: #625a52;
   --shot-radius: 1.1rem;
   --shot-shadow:
     0 1px 2px color-mix(in srgb, var(--text) 8%, transparent),
@@ -32,6 +33,7 @@
 
 .homepage[data-theme="dark"] {
   --hp-glow: color-mix(in srgb, var(--accent) 18%, transparent);
+  --hp-placeholder: #c9c1b8;
   --shot-shadow:
     0 1px 2px rgba(0, 0, 0, 0.4),
     0 18px 36px -14px rgba(0, 0, 0, 0.55),
@@ -517,31 +519,7 @@
 .hero__visual {
   display: grid;
   min-width: 0;
-  gap: 0.55rem;
-}
-
-.hero__visual-note {
-  display: grid;
-  gap: 0.2rem;
-  justify-self: center;
-  width: min(100%, 27rem);
-  padding: 0.5rem 0.75rem;
-  text-align: center;
-}
-
-.hero__visual-note span {
-  color: var(--accent-strong);
-  font-size: 0.67rem;
-  font-weight: 780;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.hero__visual-note strong {
-  color: var(--hp-heading);
-  font-size: 0.82rem;
-  font-weight: 680;
-  line-height: 1.35;
+  margin-top: -0.6rem;
 }
 
 .hero__fan {
@@ -1471,6 +1449,11 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   box-shadow: 0 0 0 0.18rem var(--hp-focus);
 }
 
+.contact__field .form-control::placeholder {
+  color: var(--hp-placeholder);
+  opacity: 1;
+}
+
 .contact__message {
   min-height: 5.5rem;
   resize: vertical;
@@ -1901,8 +1884,7 @@ html[dir="rtl"] .hero__fan-item--right {
 
   .hero__desc--desktop,
   .hero__recite,
-  .hero__audience,
-  .hero__visual-note {
+  .hero__audience {
     display: none;
   }
 
@@ -1956,7 +1938,7 @@ html[dir="rtl"] .hero__fan-item--right {
     justify-self: center;
   }
 
-  .hero__visual { gap: 0; }
+  .hero__visual { margin-top: -1.25rem; }
   .hero__fan { min-height: 0; }
 
   .hero__title {

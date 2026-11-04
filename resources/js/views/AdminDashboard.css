@@ -444,6 +444,14 @@ html[data-theme="dark"] .admin-console {
   border: 1px solid var(--dash-line);
 }
 
+.admin-kpi__error {
+  grid-column: 2;
+  color: var(--admin-red);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .admin-kpi__trend i {
   font-size: 1rem;
   line-height: 1;

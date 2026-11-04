@@ -1329,6 +1329,7 @@ export default {
       postSessionAiReciteActive: false,
       postSessionDashboardNavigating: false,
       postSessionDashboardAfterRecite: false,
+      postSessionCompletionAfterRecite: false,
       postSessionSaveFailed: false,
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
@@ -1617,6 +1618,7 @@ export default {
       workspaceReciteAnalysisError: false,
       workspaceReciteAnalysisView: null,
       workspaceReciteAttemptSaved: false,
+      workspaceReciteSaveState: '',
       selectedSessionId: '',
       sessionName: '',
       showRecordingsLibrary: false,
@@ -6495,11 +6497,11 @@ export default {
             icon: 'bi bi-mic',
           },
           {
-            id: 'post-session-dashboard',
-            action: POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW,
-            dataAction: POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW,
+            id: 'post-session-return-to-mushaf',
+            action: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
+            dataAction: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
             variant: 'secondary',
-            label: this.t('common.dashboard'),
+            label: this.t('memorisation.postSession.actions.returnToWorkspace'),
             icon: 'bi bi-arrow-right',
           },
         ]
@@ -6603,7 +6605,7 @@ export default {
         chooseAnotherRange: 'Other range',
         skipForNow: 'Continue',
         keepPractising: 'Repeat session',
-        returnToWorkspace: 'Back to mushaf',
+        returnToWorkspace: 'Return to Mushaf',
         startSession: 'Continue',
         startRevision: 'Practise this range',
         continueToNextSurah: 'Continue',
@@ -7084,9 +7086,7 @@ export default {
     /** Single lead under the hero title. */
     postSessionDisplayLead() {
       if (this.onboardingSampleSessionActive) return ''
-      if (!this.postSessionHasAiCheck && this.postSessionRecommendationStep !== 'confirm') {
-        return this.t('memorisation.postSession.recommendation.completedWithCare')
-      }
+      if (!this.postSessionHasAiCheck && this.postSessionRecommendationStep !== 'confirm') return ''
       const subtitle = String(this.postSessionHeaderSubtitle || '').trim()
       if (subtitle) return subtitle
       if (this.postSessionHasAiCheck) {
@@ -11595,6 +11595,10 @@ export default {
 
   beforeUnmount() {
     this.unbindStaleScrollLockRelease()
+    if (this._workspaceReciteRetryTimer) {
+      window.clearTimeout(this._workspaceReciteRetryTimer)
+      this._workspaceReciteRetryTimer = null
+    }
     if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
     this._madaniFitTimers?.forEach((id) => window.clearTimeout(id))
     this._recitationComponentActive = false
@@ -12498,18 +12502,25 @@ export default {
     },
     closeWorkspaceReciteAnalysis() {
       const shouldReturnToDashboard = !!this.postSessionDashboardAfterRecite
+      const shouldReturnToCompletion = !!this.postSessionCompletionAfterRecite
       this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1
       this.workspaceReciteAnalysisOpen = false
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisView = null
       this.workspaceReciteAttemptSaved = false
+      this.workspaceReciteSaveState = ''
       this.postSessionDashboardAfterRecite = false
+      this.postSessionCompletionAfterRecite = false
       if (shouldReturnToDashboard) {
         void this.goToDashboardAfterSession()
+      } else if (shouldReturnToCompletion) {
+        this.showPostSessionModal = true
+        this.postSessionViewState = 'recommendation_ready'
+        this.syncBodyScrollLock(true)
       }
     },
-    presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '') {
+    presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '', options = {}) {
       const expectedSurah = Number(submitData?.assessment?.surah_number || this.chapterId || 0)
       const expectedAyah = Number(submitData?.assessment?.start_ayah || this.rangeStart || 0)
       const expectedVerseKey = expectedSurah > 0 && expectedAyah > 0 ? `${expectedSurah}:${expectedAyah}` : ''
@@ -12567,6 +12578,8 @@ export default {
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisLoading = true
       this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
+      this.workspaceReciteSaveState = options.saveState
+        || (this.workspaceReciteAttemptSaved ? 'saved' : 'retrying')
       this.workspaceReciteAnalysisOpen = true
       const hydration = this.hydrateWorkspaceReciteMadaniGlyphs(view)
       const hydrationToken = this._workspaceMadaniGlyphToken
@@ -12584,9 +12597,93 @@ export default {
         },
       )
     },
+    scheduleWorkspaceReciteSaveRetry({ result = null, audioUrl = '', audioBlob = null } = {}) {
+      if (!this._workspaceReciteRetryPayload || !this.isLoggedIn) return
+      this._workspaceReciteRetryResult = result || this._workspaceReciteRetryResult || null
+      this._workspaceReciteRetryAudioUrl = String(audioUrl || this._workspaceReciteRetryAudioUrl || '')
+      this._workspaceReciteRetryAudioBlob = audioBlob || this._workspaceReciteRetryAudioBlob || null
+      if (this._workspaceReciteRetryTimer) return
+      const attempt = Math.max(0, Number(this._workspaceReciteRetryCount || 0))
+      const delay = Math.min(30000, 1000 * (2 ** Math.min(attempt, 5)))
+      this._workspaceReciteRetryTimer = window.setTimeout(() => {
+        this._workspaceReciteRetryTimer = null
+        void this.retryWorkspaceReciteSaveInBackground()
+      }, delay)
+    },
+    async retryWorkspaceReciteSaveInBackground() {
+      const payload = this._workspaceReciteRetryPayload
+      if (!payload || !this.isLoggedIn) return
+      try {
+        const data = await memorisationDetectionApi.createAssessment(payload)
+        if (!data?.assessment && !data?.ai_attempt) throw new Error('assessment_not_saved')
+
+        this._workspaceReciteRetryCount = 0
+        this.lastAmdAssessmentKey = String(payload.idempotency_key || this.lastAmdAssessmentKey || '')
+        this._lastAmdSubmitData = data
+        const canonicalResult = applyBackendAlignmentToResult(
+          this._workspaceReciteRetryResult || this.recitationCheckResult || {},
+          data.assessment || {},
+        )
+        this.recitationCheckResult = canonicalResult
+
+        let audioUrl = String(this._workspaceReciteRetryAudioUrl || '')
+        const attemptId = Number(data?.ai_attempt?.id || data?.ai_attempt?.attempt_id || 0)
+        const audioBlob = this._workspaceReciteRetryAudioBlob
+        if (audioBlob?.size > 0) {
+          if (attemptId <= 0) throw new Error('attempt_id_missing_for_audio_retry')
+          const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
+            attemptId,
+            audioBlob,
+            Math.round(Number(canonicalResult?.durationSeconds || 0) * 1000),
+          )
+          if (!savedAudio?.url) throw new Error('audio_reference_not_saved')
+          audioUrl = String(savedAudio.url)
+        }
+
+        this._workspaceReciteRetryPayload = null
+        this._workspaceReciteRetryResult = null
+        this._workspaceReciteRetryAudioUrl = ''
+        this._workspaceReciteRetryAudioBlob = null
+        if (this.workspaceReciteAnalysisOpen) {
+          this.presentWorkspaceReciteAnalysis(data, canonicalResult, audioUrl, { saveState: 'saved' })
+        }
+        await this.refreshRecitationProgressAfterSave(data)
+      } catch (error) {
+        const status = Number(error?.response?.status || 0)
+        if (status >= 400 && status < 500 && status !== 419 && status !== 429) {
+          console.warn('AI Recite background save stopped after a non-retryable response', { status })
+          return
+        }
+        this._workspaceReciteRetryCount = Math.min(8, Number(this._workspaceReciteRetryCount || 0) + 1)
+        this.scheduleWorkspaceReciteSaveRetry()
+      }
+    },
+    async refreshRecitationProgressAfterSave(submitData = null) {
+      markDashboardRefreshAfterSession({
+        saveFailed: false,
+        completedSessionId: this.postSessionCompletedSessionId || this.backendSessionSnapshot?.id,
+      })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mutqin:recitation-attempt-saved', {
+          detail: {
+            attemptId: Number(submitData?.ai_attempt?.id || 0) || null,
+            assessmentId: Number(submitData?.assessment?.id || 0) || null,
+          },
+        }))
+      }
+      await Promise.allSettled([
+        learningApi.getDashboard(30, { fresh: true }),
+        learningApi.getAiReciteAttempts(),
+        learningApi.getDashboardAiReciteStats(),
+      ])
+    },
     async retryWorkspaceAiRecite() {
-      const retryPostSession = !!this.postSessionDashboardAfterRecite
+      const retryPostSession = !!(
+        this.postSessionDashboardAfterRecite
+        || this.postSessionCompletionAfterRecite
+      )
       this.postSessionDashboardAfterRecite = false
+      this.postSessionCompletionAfterRecite = false
       this.closeWorkspaceReciteAnalysis()
       if (retryPostSession) {
         await this.openPostSessionAiRecite({ resetAttempts: true, fromTestWithAi: true })
@@ -22450,6 +22547,13 @@ export default {
       this.persistUiState()
       try { this.persistModeState?.(this.currentMode) } catch (_) { /* ignore */ }
       try { this.persistCentralSessionState?.() } catch (_) { /* ignore */ }
+      try {
+        window.history.replaceState(
+          window.history.state,
+          '',
+          `${window.location.pathname}${window.location.search}${window.location.hash}`,
+        )
+      } catch (_) { /* the workspace is already restored even without History API */ }
     },
 
     /**
@@ -27974,23 +28078,32 @@ export default {
             }),
             this.submitAmdAssessmentToBackend(result),
           ]
-          await Promise.all(syncTasks)
+          const [, persistedAssessment] = await Promise.all(syncTasks)
+          submitData = persistedAssessment || null
           try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
         }
-        if (this._amdSubmitStatus === 'failed' && !isPostSessionDashboardFlow) {
+        if (this._amdSubmitStatus === 'failed'
+          && this.amdEntrySource !== 'test-with-ai'
+          && !isPostSessionDashboardFlow
+          && !isWorkspaceRecite) {
           this.failAmdAssessment(
             this.amdError || this.t?.('memorisation.amd.analyseFailed') || this.t?.('common.status.errorDesc')
           )
           return
         }
-        const assessmentSaved = this._amdSubmitStatus === 'ok' || this._amdSubmitStatus === 'guest'
-        if (isWorkspaceRecite && assessmentSaved) {
-          const attemptId = Number(
-            submitData?.ai_attempt?.id
-            || submitData?.ai_attempt?.attempt_id
-            || 0,
-          )
-          if (attemptId > 0 && capturedBlob && capturedBlob.size > 0) {
+        const assessmentPersisted = this._amdSubmitStatus === 'ok'
+        const localOnlyResult = this._amdSubmitStatus === 'guest'
+        const attemptId = Number(
+          submitData?.ai_attempt?.id
+          || submitData?.ai_attempt?.attempt_id
+          || 0,
+        )
+        let persistenceComplete = assessmentPersisted
+        if (assessmentPersisted && capturedBlob?.size > 0) {
+          if (attemptId <= 0) {
+            persistenceComplete = false
+            console.warn('AI Recite audio pending: missing attempt id after assessment')
+          } else {
             try {
               this.amdStage = AMD_STAGES.UPLOADING
               const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
@@ -27998,22 +28111,35 @@ export default {
                 capturedBlob,
                 Math.round(Number(result?.durationSeconds || 0) * 1000),
               )
-              if (savedAudio?.url) {
-                capturedAudioUrl = String(savedAudio.url)
-              } else {
-                console.warn('AI Recite audio upload returned no playable URL', {
-                  attemptId,
-                  reason: savedAudio?.reason,
-                })
-              }
+              if (!savedAudio?.url) throw new Error('audio_reference_not_saved')
+              capturedAudioUrl = String(savedAudio.url)
             } catch (error) {
-              console.warn('AI Recite audio upload failed', {
+              persistenceComplete = false
+              console.warn('AI Recite audio upload will retry', {
                 status: Number(error?.response?.status || 0) || undefined,
               })
             }
-          } else if (attemptId <= 0 && capturedBlob && this._amdSubmitStatus === 'ok') {
-            console.warn('AI Recite audio skipped: missing attempt id after assessment')
           }
+        }
+        if (persistenceComplete) this._workspaceReciteRetryPayload = null
+
+        const resultSaveState = persistenceComplete
+          ? 'saved'
+          : (localOnlyResult ? '' : 'retrying')
+        const refreshOrRetrySavedResult = () => {
+          if (persistenceComplete) {
+            void this.refreshRecitationProgressAfterSave(submitData)
+          } else if (!localOnlyResult) {
+            this.postSessionSaveFailed = true
+            this.scheduleWorkspaceReciteSaveRetry({
+              result: this.recitationCheckResult || result,
+              audioUrl: capturedAudioUrl,
+              audioBlob: capturedBlob,
+            })
+          }
+        }
+
+        if (isWorkspaceRecite) {
           // submitAmdAssessmentToBackend replaces recitationCheckResult with the
           // server's final Quran alignment. Use that same object in the immediate
           // result modal, rather than the provisional live result used for submit.
@@ -28021,23 +28147,40 @@ export default {
             submitData,
             this.recitationCheckResult || result,
             capturedAudioUrl,
+            { saveState: resultSaveState },
           )
+          refreshOrRetrySavedResult()
         }
         if (isPostSessionDashboardFlow) {
           this.postSessionDashboardAfterRecite = true
-          if (!assessmentSaved) this.postSessionSaveFailed = true
           this.presentWorkspaceReciteAnalysis(
             submitData,
             this.recitationCheckResult || result,
             capturedAudioUrl,
+            { saveState: resultSaveState },
           )
+          refreshOrRetrySavedResult()
         }
-        if (assessmentSaved) this.playUiTone?.('complete')
+        if (!isWorkspaceRecite
+          && !isPostSessionDashboardFlow
+          && this.amdEntrySource === 'test-with-ai') {
+          this.postSessionCompletionAfterRecite = true
+          this.showPostSessionModal = false
+          this.presentWorkspaceReciteAnalysis(
+            submitData,
+            this.recitationCheckResult || result,
+            capturedAudioUrl,
+            { saveState: resultSaveState },
+          )
+          refreshOrRetrySavedResult()
+        }
+        this.playUiTone?.('complete')
       }
 
       this.closeAmdModal({
         returnToCompletion: !isWorkspaceRecite
           && !isPostSessionDashboardFlow
+          && !this.postSessionCompletionAfterRecite
           && this.amdEntrySource !== 'saved-session-review',
       })
       this.amdStage = AMD_STAGES.IDLE
@@ -28788,6 +28931,10 @@ export default {
         previous_assessment_id: this.amdPreviousAssessmentId || undefined,
         tajweed_practice_check: tajweedPracticeCheck || undefined,
         idempotency_key: idempotencyKey,
+      }
+      if (this.amdEntrySource === 'workspace-ai-recite'
+        || this.amdEntrySource === 'test-with-ai') {
+        this._workspaceReciteRetryPayload = payload
       }
       if (this.amdEntrySource === 'workspace-ai-recite' || assignmentRecipientId) {
         payload.source = 'dashboard_ai_recite'
@@ -32702,7 +32849,7 @@ export default {
     },
     closePostSessionRecommendationModal() {
       if (!this.showRecommendationPlanFeature && !this.onboardingSampleSessionActive) {
-        void this.goToDashboardAfterSession()
+        void this.returnToMemorisationWorkspace()
         return
       }
       // Closing must not discard a saved recommendation — it stays on dashboard / history.

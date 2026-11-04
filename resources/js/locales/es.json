@@ -271,9 +271,7 @@
       "firstSessionLabel": "Tu primera sesión recomendada",
       "firstSessionTime": "Unos 10 minutos",
       "firstSessionRange": "Empieza con 1 a 3 aleyas",
-      "firstSessionOutcome": "Termina con un próximo repaso",
-      "previewKicker": "Dentro de una sesión real",
-      "previewTitle": "Elige un rango breve, practícalo y sabe qué hacer después"
+      "firstSessionOutcome": "Termina con un próximo repaso"
     },
     "access": {
       "available": {
@@ -483,6 +481,12 @@
       "extendedSubtitle": "Escribe con tranquilidad. Responderemos con claridad y respeto.",
       "sending": "Envoi...",
       "sendMessage": "Enviar mensaje",
+      "placeholders": {
+        "name": "Tu nombre completo",
+        "email": "tu@ejemplo.com",
+        "subject": "¿De qué trata tu mensaje?",
+        "message": "Escribe aquí tu pregunta o comentario…"
+      },
       "errors": {
         "name": "Por favor entrer tu nom.",
         "email": "Por favor entrer tu adresse e-mail.",
@@ -497,9 +501,7 @@
     "footer": {
       "product": "Produit",
       "features": "Funciones",
-      "featurePages": "Todas las funciones",
       "guides": "Guías de Hifz",
-      "articles": "Artículos y guías",
       "howToMemorize": "How to memorize the Quran",
       "howToRevise": "How to revise hifz",
       "tools": "Herramientas de Hifz",
@@ -516,7 +518,6 @@
       "terms": "Conditions",
       "tagline": "2026 Mutqin · « Récite le Qur'an con mesure. »",
       "aboutUs": "Acerca de",
-      "ourMission": "Nuestra misión",
       "workspace": "Memorización workspace",
       "dashboard": "panel",
       "connectNote": "Sigue a Mutqin para novedades sobre memorización y repaso.",
@@ -2962,7 +2963,6 @@
         "aiSummaryMatchedWords": "Hemos reconocido con claridad {matched} de {total} palabras.",
         "aiSummaryFocusPhrase": "Los tropiezos forman parte del aprendizaje. Escucha el pasaje señalado y repítelo despacio cuando estés preparado.",
         "moreOptions": "Más opciones",
-        "completedWithCare": "Alhamdulillah por el tiempo que pasaste con el Corán. Vuelve cuando estés preparado.",
         "aiSummaryFocusRange": "Repasa este rango y vuelve a comprobar.",
         "aiSummaryStrongMinorMistakes": "Fuerte recitation, a couple of small mistakes, but you are making good progreso.",
         "aiSummaryStrongFollowUp": "Buen trabajo: puedes continuar mientras aún lo sientes fresco.",
@@ -5334,6 +5334,7 @@
       "results_open": "Abrir esta comprobación",
       "view_all_results": "Todos los resultados",
       "attempt_saved": "Este intento está guardado.",
+      "attempt_retrying": "Aún no se pudo guardar. Reintentando…",
       "see_all_results": "Ver todos los resultados",
       "empty_recording": "Esa grabación era demasiado corta o estaba en silencio. Inténtalo de nuevo.",
       "network_error": "No hemos podido conectar con el servicio de recitación. Comprueba tu conexión e inténtalo de nuevo.",

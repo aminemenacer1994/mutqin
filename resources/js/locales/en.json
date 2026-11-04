@@ -271,9 +271,7 @@
       "firstSessionLabel": "Your recommended first session",
       "firstSessionTime": "About 10 minutes",
       "firstSessionRange": "Start with 1 to 3 ayahs",
-      "firstSessionOutcome": "Leave with a next return",
-      "previewKicker": "A real session",
-      "previewTitle": "Choose a range, practise it, and save your next step"
+      "firstSessionOutcome": "Leave with a next return"
     },
     "access": {
       "available": {
@@ -477,6 +475,12 @@
       "extendedSubtitle": "Write about practice, your account, or feedback. We reply clearly and respectfully.",
       "sending": "Sending…",
       "sendMessage": "Send message",
+      "placeholders": {
+        "name": "Your full name",
+        "email": "you@example.com",
+        "subject": "What is your message about?",
+        "message": "Write your question or feedback here…"
+      },
       "errors": {
         "name": "Please enter your name.",
         "email": "Please enter your email address.",
@@ -491,9 +495,7 @@
     "footer": {
       "product": "Explore",
       "features": "Features",
-      "featurePages": "All features",
       "guides": "Hifz guides",
-      "articles": "Articles & guides",
       "howToMemorize": "How to memorize the Quran",
       "howToRevise": "How to revise Hifz",
       "tools": "Hifz tools",
@@ -510,7 +512,6 @@
       "terms": "Terms",
       "tagline": "A companion for Qur’an memorisation, revision and return.",
       "aboutUs": "About us",
-      "ourMission": "Our mission",
       "workspace": "Memorisation workspace",
       "dashboard": "Dashboard",
       "connectNote": "Follow Mutqin for updates on memorisation and revision.",
@@ -2363,7 +2364,7 @@
         "reviewWeakAyahs": "Repeat ayahs {ayahs}",
         "chooseAnotherRange": "Other range",
         "chooseDifferentRange": "Other range",
-        "returnToWorkspace": "Back to mushaf"
+        "returnToWorkspace": "Return to Mushaf"
       },
       "memorisationCheckNudge": {
         "title": "Test your memorisation first?"
@@ -2969,7 +2970,6 @@
         "aiSummaryMatchedWords": "We clearly matched {matched} of {total} words.",
         "aiSummaryFocusPhrase": "A slip is part of learning. Listen to the highlighted phrase, then repeat it slowly when you are ready.",
         "moreOptions": "More options",
-        "completedWithCare": "Alhamdulillah for the time you spent with the Qur’an. Return whenever you are ready.",
         "aiSummaryFocusRange": "Revise this range, then check again.",
         "aiSummaryStrongMinorMistakes": "Strong recitation, a couple of small mistakes, but you are making good progress.",
         "aiSummaryStrongFollowUp": "Nice work, you can continue while this still feels fresh.",
@@ -5341,6 +5341,7 @@
       "results_open": "Open this check",
       "view_all_results": "All feedback",
       "attempt_saved": "This attempt is saved.",
+      "attempt_retrying": "Couldn't save yet. Retrying…",
       "see_all_results": "See all results",
       "empty_recording": "That recording was too short or silent. Try again.",
       "network_error": "We couldn’t reach the recitation service. Check your connection and try again.",

@@ -21,8 +21,6 @@ const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vu
   + readFileSync(join(root, 'resources/js/views/Memorisation.css'), 'utf8')
   + '\n'
   + readFileSync(join(root, 'resources/js/views/Memorisation.mobile-grid.css'), 'utf8')
-const modal = readFileSync(join(root, 'resources/js/components/DashboardAiReciteModal.vue'), 'utf8')
-const modalCss = readFileSync(join(root, 'resources/js/components/DashboardAiReciteModal.css'), 'utf8')
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
 
 function t(key, params = {}) {
@@ -56,7 +54,8 @@ assert.match(
 assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
 assert.match(dashboard, /aiReciteStats:\s*initial\?\.ai_recite_stats \|\| null/, 'progress page hydrates AI Recite results from dashboard DB payload')
 assert.match(dashboard, /ai-recite-results/, 'progress page can be linked to the results section')
-assert.match(modalCss, /prefers-reduced-motion/, 'modal animation respects reduced motion')
+assert.match(dashboard, /WorkspaceAiReciteResultModal/, 'saved attempts use the canonical result modal')
+assert.match(dashboard, /withStrictMadaniResultGlyphs/, 'saved results wait for strict Madani glyph hydration')
 
 assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the AI Recite CTA')
 assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the memory check modal')
@@ -98,27 +97,15 @@ assert.match(
   'mobile Resume label keeps its full width',
 )
 
-assert.match(modal, /Start Recording|ai_recite.start_recording/)
-assert.match(modal, /stopRecitation|stopRecording/)
-assert.match(modal, /peek next ayah|ai_recite.peek/i)
-assert.match(modal, /see_stats/)
-assert.match(modal, /try_again/)
-assert.match(modal, /test_another/)
-assert.match(modal, /dashboard_ai_recite/)
-assert.match(modal, /createMemorisationAssessment/)
-assert.match(modal, /uploadAiReciteAttemptAudio/)
-assert.match(modal, /stage = 'starting'/, 'microphone permission has an explicit preparing state')
-assert.match(modal, /hintUploading/, 'audio saving is surfaced as a distinct progress state')
-assert.match(modal, /recordingProgressActive/, 'recording lifecycle is visible in the modal body')
-assert.match(modal, /processingPhase/, 'finishing, AI review, and saving keep their own lifecycle phase')
-assert.match(modal, /is-ai-review/, 'AI review receives its own visible state')
-assert.match(modal, /recordingProgressIcon/, 'each lifecycle state has a distinct icon, not only a colour')
-assert.match(modalCss, /\.dash-ai-recite-pill\.is-ai-review/, 'AI review has a distinct visual treatment')
-assert.match(modalCss, /\.dash-ai-recite-pill\.is-saving/, 'saving has a distinct visual treatment')
-assert.doesNotMatch(modal, /submitRecommendationAiAssessment/)
-assert.doesNotMatch(modal, /startMemorisationPracticePlan/)
-assert.match(modal, /isBusy/, 'recording/processing blocks accidental dismiss')
-assert.match(modal, /dash-ai-recite-open/, 'background scroll is locked')
+assert.match(memorisation, /scheduleWorkspaceReciteSaveRetry/, 'failed saves retry in the active flow')
+assert.match(memorisation, /idempotency_key/, 'the active flow persists an idempotency key')
+assert.match(memorisation, /uploadAiReciteAttemptAudio/, 'the recording reference is persisted before save is confirmed')
+assert.match(
+  memorisation,
+  /uploadAiReciteAttemptAudio[\s\S]*presentWorkspaceReciteAnalysis/,
+  'audio persistence completes before the canonical result claims the attempt is saved',
+)
+assert.match(memorisation, /audio_reference_not_saved/, 'missing recording references stay in the retry path')
 
 assert.doesNotMatch(dashboard, /dash-ai-results__word/, 'often-missed chips are removed from the dashboard')
 assert.doesNotMatch(dashboard, /openMissedWordAttempt/, 'often-missed actions are removed with the section')

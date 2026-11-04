@@ -319,7 +319,7 @@ class RecitationAssessmentService
             if ($standalone) {
                 $standaloneAttempt = $this->persistStandaloneAttempt($user, $assessment, $aligned, $analysis, $payload);
             } else {
-                $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
+                $standaloneAttempt = $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
                 if ($practicePlan) {
                     $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);
                 }
@@ -975,7 +975,7 @@ class RecitationAssessmentService
         ?MemorisationPracticePlan $plan,
         array $aligned,
         array $analysis
-    ): void {
+    ): AiReciteAttempt {
         $recommendationId = $assessment->session_recommendation_id
             ? (int) $assessment->session_recommendation_id
             : null;
@@ -991,7 +991,7 @@ class RecitationAssessmentService
             ]
             : ['memorisation_assessment_id' => $assessment->id];
 
-        AiReciteAttempt::query()->updateOrCreate(
+        return AiReciteAttempt::query()->updateOrCreate(
             $identity,
             [
                 'user_id' => $user->id,
@@ -1001,11 +1001,15 @@ class RecitationAssessmentService
                 'source' => $assessment->assessment_type,
                 'attempt_number' => max(1, $attemptNumber),
                 'accuracy_percent' => $aligned['accuracy'],
-                'band' => $plan?->band ?? RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']),
+                // Feedback history uses the recitation result bands, while the
+                // practice plan keeps its own learning/difficulty band.
+                'band' => RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']),
                 'ayah_range' => [
+                    'surah' => $assessment->surah_number,
                     'from' => $assessment->start_ayah,
                     'to' => $assessment->end_ayah,
                     'count' => max(1, $assessment->end_ayah - $assessment->start_ayah + 1),
+                    'surah_name' => $assessment->surah_name,
                     'focus_ayahs' => $analysis['weak_ayahs'] ?? [],
                 ],
                 'color_counts' => [

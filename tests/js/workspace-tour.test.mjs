@@ -116,9 +116,9 @@ function sliceMethod(source, name) {
 
 {
   assert.match(amdVue, /data-tour="ai-modal"/)
-  assert.match(memorisationVue, /data-testid="post-session-section-1"[\s\S]{0,180}data-tour="ai-results"/)
-  assert.doesNotMatch(memorisationVue, /post-session-main-focus"[\s\S]{0,80}data-tour="ai-results"/)
-  assert.match(memorisationVue, /data-tour="weak-areas"/)
+  const canonicalResult = readFileSync(join(root, 'resources/js/components/WorkspaceAiReciteResultModal.vue'), 'utf8')
+  assert.match(canonicalResult, /data-testid="workspace-recite-ai-review"[\s\S]{0,180}data-tour="ai-results"/)
+  assert.match(canonicalResult, /data-testid="workspace-recite-main-focus"[\s\S]{0,180}data-tour="weak-areas"/)
   assert.match(memorisationVue, /data-tour="rec-why"/)
   assert.match(memorisationVue, /data-tour="rec-plan"/)
   assert.match(memorisationVue, /data-tour="rec-plans"/)

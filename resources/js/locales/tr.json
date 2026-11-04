@@ -271,9 +271,7 @@
       "firstSessionLabel": "Önerilen ilk oturumun",
       "firstSessionTime": "Yaklaşık 10 dakika",
       "firstSessionRange": "1 ila 3 ayetle başla",
-      "firstSessionOutcome": "Sonraki tekrar adımıyla bitir",
-      "previewKicker": "Gerçek bir oturumun içinde",
-      "previewTitle": "Küçük bir aralık belirle, çalış ve sırada ne olduğunu öğren"
+      "firstSessionOutcome": "Sonraki tekrar adımıyla bitir"
     },
     "access": {
       "available": {
@@ -477,6 +475,12 @@
       "extendedSubtitle": "Ask about billing, practice, veya feedback. We kalıcı olarak reply ile a clear answer.",
       "sending": "« Sending...»",
       "sendMessage": "« Send message»",
+      "placeholders": {
+        "name": "Adınız ve soyadınız",
+        "email": "siz@ornek.com",
+        "subject": "Mesajınız ne hakkında?",
+        "message": "Sorunuzu veya geri bildiriminizi buraya yazın…"
+      },
       "errors": {
         "name": "Lütfen enter your name.",
         "email": "Lütfen enter your email address.",
@@ -491,9 +495,7 @@
     "footer": {
       "product": "« Product»",
       "features": "« Features»",
-      "featurePages": "Tüm özellikler",
       "guides": "Hifz rehberleri",
-      "articles": "Yazılar ve rehberler",
       "howToMemorize": "How to memorize the Quran",
       "howToRevise": "How to revise hifz",
       "tools": "Hifz araçları",
@@ -510,7 +512,6 @@
       "terms": "« Terms»",
       "tagline": "2026 Mutqin · \"And recite the Kur'an with measured recitation.\"",
       "aboutUs": "About Us",
-      "ourMission": "Our Mission",
       "workspace": "Ezber workspace",
       "dashboard": "kontrol paneli",
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
@@ -2969,7 +2970,6 @@
         "aiSummaryMatchedWords": "{total} kelimeden {matched} tanesini net biçimde eşleştirdik.",
         "aiSummaryFocusPhrase": "Hatalar öğrenmenin bir parçasıdır. İşaretli bölümü dinle, hazır olduğunda yavaşça tekrarla.",
         "moreOptions": "Diğer seçenekler",
-        "completedWithCare": "Kur’an ile geçirdiğin zaman için elhamdülillah. Hazır olduğunda geri dönebilirsin.",
         "aiSummaryFocusRange": "Bu aralığı gözden geçir, sonra tekrar kontrol et.",
         "aiSummaryStrongMinorMistakes": "Güçlü recitation, a couple of small mistakes, but you are making good ilerleme.",
         "aiSummaryStrongFollowUp": "Güzel, henüz taze iken devam edebilirsin.",
@@ -5341,6 +5341,7 @@
       "results_open": "Aç this check",
       "view_all_results": "All results",
       "attempt_saved": "This deneme is saved.",
+      "attempt_retrying": "Henüz kaydedilemedi. Yeniden deneniyor…",
       "see_all_results": "See all results",
       "empty_recording": "Kayıt çok kısa veya sessizdi. Tekrar deneyin.",
       "network_error": "Tilavet hizmetine ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",

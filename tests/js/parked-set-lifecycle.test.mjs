@@ -251,7 +251,7 @@ const t = (key) => {
     en.memorisation?.welcomeBack?.continuePreviousSession || '',
     /Return to your place/,
   )
-  assert.equal(en.memorisation?.postSession?.actions?.returnToWorkspace, 'Back to mushaf')
+  assert.equal(en.memorisation?.postSession?.actions?.returnToWorkspace, 'Return to Mushaf')
 }
 
 {

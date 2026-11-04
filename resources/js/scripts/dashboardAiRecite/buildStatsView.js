@@ -146,6 +146,8 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       occurred_at: asText(item.occurred_at),
       has_audio: !!item.has_audio,
       audio_duration_ms: item.audio_duration_ms == null ? null : asNumber(item.audio_duration_ms),
+      weak_words: Array.isArray(item.weak_words) ? item.weak_words : [],
+      madani_preview: Array.isArray(item.madani_preview) ? item.madani_preview : [],
     })).filter((item) => item.id > 0)
     : []
 

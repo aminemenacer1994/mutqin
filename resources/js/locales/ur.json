@@ -271,9 +271,7 @@
       "firstSessionLabel": "آپ کا تجویز کردہ پہلا سیشن",
       "firstSessionTime": "تقریباً 10 منٹ",
       "firstSessionRange": "1 سے 3 آیات سے شروع کریں",
-      "firstSessionOutcome": "اگلی مراجعت کے ساتھ مکمل کریں",
-      "previewKicker": "ایک حقیقی سیشن کے اندر",
-      "previewTitle": "چھوٹی حد مقرر کریں، اس کی مشق کریں، پھر جانیں آگے کیا کرنا ہے"
+      "firstSessionOutcome": "اگلی مراجعت کے ساتھ مکمل کریں"
     },
     "access": {
       "available": {
@@ -477,6 +475,12 @@
       "extendedSubtitle": "اسأل عن الفوترة أو التدريب أو الملاحظات. سنرد بإجابة واضحة.",
       "sending": "جاري الإرسال...",
       "sendMessage": "إرسال الرسالة",
+      "placeholders": {
+        "name": "آپ کا پورا نام",
+        "email": "you@example.com",
+        "subject": "آپ کا پیغام کس بارے میں ہے؟",
+        "message": "اپنا سوال یا رائے یہاں لکھیں…"
+      },
       "errors": {
         "name": "يرجى إدخال اسمك.",
         "email": "يرجى إدخال بريدك الإلكتروني.",
@@ -491,9 +495,7 @@
     "footer": {
       "product": "المنتج",
       "features": "الميزات",
-      "featurePages": "كل الميزات",
       "guides": "أدلة الحفظ",
-      "articles": "مضامین اور رہنمائی",
       "howToMemorize": "كيف إلى memorize  القرآن",
       "howToRevise": "كيف إلى راجع hifz",
       "tools": "حفظ کے اوزار",
@@ -510,7 +512,6 @@
       "terms": "الشروط",
       "tagline": "2026 متقن · « ورتل القرآن ترتيلاً »",
       "aboutUs": "من نحن",
-      "ourMission": "مهمتنا",
       "workspace": "الحفظ workspace",
       "dashboard": "لوحة التحكم",
       "connectNote": "تابع Mutqin ل product updates.",
@@ -2969,7 +2970,6 @@
         "aiSummaryMatchedWords": "طابقنا بوضوح {matched} من أصل {total} كلمات.",
         "aiSummaryFocusPhrase": "بھولنا سیکھنے کا حصہ ہے۔ نشان زدہ عبارت سنیں، پھر جب تیار ہوں اسے آہستہ دہرائیں۔",
         "moreOptions": "مزید اختیارات",
-        "completedWithCare": "قرآن کے ساتھ گزارے ہوئے وقت پر الحمدللہ۔ جب تیار ہوں واپس آ جائیں۔",
         "aiSummaryFocusRange": "راجع هذا النطاق، ثم تحقّق مرة أخرى.",
         "aiSummaryStrongMinorMistakes": "قوي تلاوة, a couple من small mistakes, but making good تقدّم.",
         "aiSummaryStrongFollowUp": "أحسنت, يمكنك المتابعة بينما ما زال هذا طازجًا.",
@@ -5341,6 +5341,7 @@
       "results_open": "افتح هذا فحص",
       "view_all_results": "All results",
       "attempt_saved": "هذا محاولة  محفوظ.",
+      "attempt_retrying": "ابھی محفوظ نہیں ہو سکا۔ دوبارہ کوشش جاری ہے…",
       "see_all_results": "اطّلع على كل نتائج",
       "empty_recording": "ریکارڈنگ بہت مختصر یا خاموش تھی۔ دوبارہ کوشش کریں۔",
       "network_error": "تلاوت کی خدمت تک رسائی نہیں ہوئی۔ کنکشن چیک کر کے دوبارہ کوشش کریں۔",

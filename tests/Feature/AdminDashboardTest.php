@@ -134,8 +134,8 @@ class AdminDashboardTest extends TestCase
         WaitingListEntry::query()->create([
             'name' => 'Early Access',
             'email' => 'early@example.com',
-            'created_at' => now()->subDay(),
-            'updated_at' => now()->subDay(),
+            'created_at' => now()->subYear(),
+            'updated_at' => now()->subYear(),
         ]);
 
         UserLastPosition::create([
@@ -153,6 +153,7 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.chart.days', 7)
             ->assertJsonPath('data.snapshot.pending_contacts.value', 1)
             ->assertJsonPath('data.snapshot.waiting_list_total.value', 1)
+            ->assertJsonPath('data.snapshot.waiting_list_total.available', true)
             ->assertJsonPath('data.learning.memorised_ayahs', 1)
             ->assertJsonPath('data.ai_health.total', 1)
             ->assertJsonPath('data.ai_health.complaints', 0)
@@ -179,6 +180,7 @@ class AdminDashboardTest extends TestCase
             ->getJson('/api/admin/dashboard?days=30')
             ->assertOk()
             ->assertJsonPath('data.chart.days', 30)
+            ->assertJsonPath('data.snapshot.waiting_list_total.value', 1)
             ->assertJsonPath('data.chart.totals.sessions', 1);
     }
 

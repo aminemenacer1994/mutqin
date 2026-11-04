@@ -16,7 +16,7 @@ Generated: 2026-10-09
 | Workspace session CTA | `Memorisation.vue` → `openWorkspaceAiRecite` → AMD modal | Primary start path; saves as `dashboard_ai_recite` |
 | Post-session adaptive check | Post-session modal AI Recite prompt | Session-linked assessment |
 | Progress / dashboard results | `Dashboard.vue` `#ai-recite-results` | History/stats/listen — **no** start CTA |
-| Orphan modal (not mounted) | `DashboardAiReciteModal.vue` | Recording helpers remain; modal not mounted on Dashboard (by design) |
+| Canonical results | `WorkspaceAiReciteResultModal.vue` | Shared by live checks and saved Progress attempts |
 
 ## Architecture (brief)
 
@@ -51,8 +51,7 @@ Generated: 2026-10-09
 
 1. **Device / live Speechmatics** cells (AIR-054, AIR-055, AIR-092–AIR-097) are BLOCKED until filled on staging per [recitation-device-qa.md](./recitation-device-qa.md).
 2. **Mic disconnect mid-record** (AIR-098) has no `devicechange` listener — documented non-blocking in [production-qa.md](./production-qa.md).
-3. **Orphan** `DashboardAiReciteModal.vue` is unused; workspace path is the start surface (intentional).
-4. Do **not** claim live ASR accuracy from fixture scores alone.
+3. Do **not** claim live ASR accuracy from fixture scores alone.
 
 ### Production readiness
 

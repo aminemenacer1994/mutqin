@@ -14,13 +14,11 @@
           <a href="/#how-it-works">{{ t('homepage.footer.howItWorks') }}</a>
           <a href="/#features">{{ t('homepage.footer.features') }}</a>
           <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
-          <a href="/articles">{{ t('homepage.footer.articles') }}</a>
         </div>
         <div class="footer__links">
           <h3>{{ t('homepage.footer.company') }}</h3>
           <a href="/#contact">{{ t('homepage.footer.contact') }}</a>
           <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
-          <a href="/our-mission">{{ t('homepage.footer.ourMission') }}</a>
           <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
         </div>
       </div>

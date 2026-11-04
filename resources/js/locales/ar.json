@@ -271,9 +271,7 @@
       "firstSessionLabel": "جلستك الأولى المقترحة",
       "firstSessionTime": "نحو 10 دقائق",
       "firstSessionRange": "ابدأ بآية إلى 3 آيات",
-      "firstSessionOutcome": "اخرج بخطوة مراجعة تالية",
-      "previewKicker": "داخل جلسة حقيقية",
-      "previewTitle": "حدّد نطاقاً صغيراً، تدرّب عليه، ثم اعرف ما الخطوة التالية"
+      "firstSessionOutcome": "اخرج بخطوة مراجعة تالية"
     },
     "access": {
       "available": {
@@ -477,6 +475,12 @@
       "extendedSubtitle": "اكتب بطمأنينة. سنرد بجواب واضح ومحترم.",
       "sending": "جاري الإرسال...",
       "sendMessage": "إرسال الرسالة",
+      "placeholders": {
+        "name": "اسمك الكامل",
+        "email": "you@example.com",
+        "subject": "ما موضوع رسالتك؟",
+        "message": "اكتب سؤالك أو ملاحظاتك هنا…"
+      },
       "errors": {
         "name": "يرجى إدخال اسمك.",
         "email": "يرجى إدخال بريدك الإلكتروني.",
@@ -491,9 +495,7 @@
     "footer": {
       "product": "المنتج",
       "features": "الميزات",
-      "featurePages": "كل الميزات",
       "guides": "أدلة الحفظ",
-      "articles": "مقالات وأدلة",
       "howToMemorize": "كيف إلى memorize  القرآن",
       "howToRevise": "كيف إلى راجع hifz",
       "tools": "أدوات الحفظ",
@@ -510,7 +512,6 @@
       "terms": "الشروط",
       "tagline": "2026 متقن · « ورتل القرآن ترتيلاً »",
       "aboutUs": "من نحن",
-      "ourMission": "مهمتنا",
       "workspace": "الحفظ workspace",
       "dashboard": "لوحة التحكم",
       "connectNote": "تابع Mutqin ل product updates.",
@@ -2969,7 +2970,6 @@
         "aiSummaryMatchedWords": "طابقنا بوضوح {matched} من أصل {total} كلمات.",
         "aiSummaryFocusPhrase": "التعثر جزء من التعلم. استمع إلى المقطع المحدد ثم كرره ببطء عندما تكون مستعدًا.",
         "moreOptions": "خيارات أخرى",
-        "completedWithCare": "الحمد لله على الوقت الذي قضيته مع القرآن. عُد متى كنت مستعدًا.",
         "aiSummaryFocusRange": "راجع هذا النطاق، ثم تحقّق مرة أخرى.",
         "aiSummaryStrongMinorMistakes": "قوي تلاوة, a couple من small mistakes, but making good تقدّم.",
         "aiSummaryStrongFollowUp": "أحسنت, يمكنك المتابعة بينما ما زال هذا طازجًا.",
@@ -5341,6 +5341,7 @@
       "results_open": "افتح هذا فحص",
       "view_all_results": "All results",
       "attempt_saved": "هذا محاولة  محفوظ.",
+      "attempt_retrying": "تعذّر الحفظ الآن. جارٍ إعادة المحاولة…",
       "see_all_results": "اطّلع على كل نتائج",
       "empty_recording": "التسجيل قصير أو صامت جداً. حاول مرة أخرى.",
       "network_error": "تعذّر الوصول إلى خدمة التسميع. تحقق من الاتصال ثم أعد المحاولة.",

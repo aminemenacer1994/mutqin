@@ -98,6 +98,9 @@ class SeoPagesTest extends TestCase
         $this->assertStringContainsString('summary_large_image', $html);
         $this->assertStringNotContainsString('aggregateRating', $html);
         $this->assertStringNotContainsString('reviewCount', $html);
+        $this->assertStringNotContainsString('FAQPage', $html);
+        $this->assertStringNotContainsString('Which tools are free?', $html);
+        $this->assertStringNotContainsString('Is Mutqin free? What does Pro cost?', $html);
 
         $document = new \DOMDocument;
         @$document->loadHTML($html);

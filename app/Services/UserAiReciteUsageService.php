@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * AI voice-check usage (MemorisationAssessment rows): daily platform cap + optional lifetime admin limits.
+ * AI voice-check usage: only completed, persisted, valid scored checks count.
  */
 class UserAiReciteUsageService
 {
@@ -23,6 +23,7 @@ class UserAiReciteUsageService
     {
         return (int) MemorisationAssessment::query()
             ->where('user_id', $user->id)
+            ->validScored()
             ->count();
     }
 
@@ -33,6 +34,7 @@ class UserAiReciteUsageService
 
         return (int) MemorisationAssessment::query()
             ->where('user_id', $user->id)
+            ->validScored()
             ->whereBetween('created_at', [$day, $end])
             ->count();
     }

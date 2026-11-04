@@ -226,7 +226,9 @@ class SessionAnalysisQueryService
 
         $attempts = AiReciteAttempt::query()
             ->where('user_id', $user->id)
-            ->where('source', AiReciteAttempt::SOURCE_DASHBOARD)
+            // Only concrete, persisted checks belong in feedback stats. This
+            // includes checks launched from either supported UI entry point.
+            ->whereNotNull('memorisation_assessment_id')
             ->validScored()
             ->orderByDesc('created_at')
             ->orderByDesc('id')
@@ -380,6 +382,11 @@ class SessionAnalysisQueryService
                     'has_analysis' => true,
                     'has_audio' => $this->audio->hasPlayableAudio($attempt),
                     'audio_duration_ms' => $attempt->audio_duration_ms ? (int) $attempt->audio_duration_ms : null,
+                    'weak_words' => collect(is_array($attempt->weak_words) ? $attempt->weak_words : [])
+                        ->filter(fn ($word) => is_array($word) && trim((string) ($word['text'] ?? $word['word'] ?? $word['target_word'] ?? '')) !== '')
+                        ->take(3)
+                        ->values()
+                        ->all(),
                 ];
             })->values()->all(),
             'last_location' => ($lastRange && $lastRange['surah_number'] && $lastRange['ayah_start'])

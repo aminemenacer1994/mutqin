@@ -271,9 +271,7 @@
       "firstSessionLabel": "Votre première session recommandée",
       "firstSessionTime": "Environ 10 minutes",
       "firstSessionRange": "Commencez avec 1 à 3 ayahs",
-      "firstSessionOutcome": "Repartez avec un prochain retour",
-      "previewKicker": "Dans une vraie session",
-      "previewTitle": "Fixez un petit passage, pratiquez-le, puis sachez quoi faire ensuite"
+      "firstSessionOutcome": "Repartez avec un prochain retour"
     },
     "access": {
       "available": {
@@ -483,6 +481,12 @@
       "extendedSubtitle": "Écrivez en toute sérénité. Nous répondrons clairement et avec respect.",
       "sending": "Envoi...",
       "sendMessage": "Envoyer le message",
+      "placeholders": {
+        "name": "Votre nom complet",
+        "email": "vous@exemple.com",
+        "subject": "Quel est l’objet de votre message ?",
+        "message": "Écrivez votre question ou votre retour ici…"
+      },
       "errors": {
         "name": "Veuillez entrer votre nom.",
         "email": "Veuillez entrer votre adresse e-mail.",
@@ -497,9 +501,7 @@
     "footer": {
       "product": "Produit",
       "features": "Fonctionnalités",
-      "featurePages": "Toutes les fonctionnalités",
       "guides": "Guides de Hifz",
-      "articles": "Articles et guides",
       "howToMemorize": "How to memorize the Quran",
       "howToRevise": "How to revise hifz",
       "tools": "Outils Hifz",
@@ -516,7 +518,6 @@
       "terms": "Conditions",
       "tagline": "2026 Mutqin · « Récite le Coran avec mesure. »",
       "aboutUs": "À propos",
-      "ourMission": "Notre mission",
       "workspace": "Espace de mémorisation",
       "dashboard": "Progrès",
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
@@ -2369,7 +2370,7 @@
         "reviewWeakAyahs": "Repite ayahs {ayahs}",
         "chooseAnotherRange": "Autre plage",
         "chooseDifferentRange": "Autre plage",
-        "returnToWorkspace": "Retour à l’espace"
+        "returnToWorkspace": "Retour au Moushaf"
       },
       "memorisationCheckNudge": {
         "title": "Tester votre mémorisation d’abord ?"
@@ -2975,7 +2976,6 @@
         "aiSummaryMatchedWords": "Nous avons clairement reconnu {matched} mots sur {total}.",
         "aiSummaryFocusPhrase": "Une hésitation fait partie de l’apprentissage. Écoutez le passage indiqué, puis répétez-le lentement quand vous serez prêt.",
         "moreOptions": "Plus d’options",
-        "completedWithCare": "Alhamdulillah pour ce temps passé avec le Coran. Revenez quand vous serez prêt.",
         "aiSummaryFocusRange": "Révisez cette plage, puis revérifiez.",
         "aiSummaryStrongMinorMistakes": "Fuerte recitation, a couple of small mistakes, but you are making good progreso.",
         "aiSummaryStrongFollowUp": "Bel effort, continuez tant que c’est encore frais.",
@@ -5347,6 +5347,7 @@
       "results_open": "Ouvrir cette vérification",
       "view_all_results": "Tous les résultats",
       "attempt_saved": "Cette tentative est enregistrée.",
+      "attempt_retrying": "Enregistrement impossible pour le moment. Nouvelle tentative…",
       "see_all_results": "Voir tous les résultats",
       "empty_recording": "Cet enregistrement était trop court ou silencieux. Réessayez.",
       "network_error": "Le service de récitation est injoignable. Vérifiez votre connexion, puis réessayez.",

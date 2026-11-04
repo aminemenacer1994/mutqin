@@ -69367,11 +69367,10 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text,
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
-  font-family: Amiri, "Noto Naskh Arabic", serif !important;
+  font-family: Arial, sans-serif;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token-text[data-madani-glyph="true"] {
-  font-family: var(--madani-glyph-font) !important;
   font-weight: 400 !important;
   font-size: 1.72rem !important;
   line-height: 1.85 !important;

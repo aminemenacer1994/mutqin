@@ -271,9 +271,7 @@
       "firstSessionLabel": "Sesi pertama yang dianjurkan",
       "firstSessionTime": "Sekitar 10 menit",
       "firstSessionRange": "Mulai dengan 1 sampai 3 ayat",
-      "firstSessionOutcome": "Selesai dengan langkah ulang berikutnya",
-      "previewKicker": "Di dalam sesi nyata",
-      "previewTitle": "Tentukan rentang kecil, latih, lalu tahu langkah berikutnya"
+      "firstSessionOutcome": "Selesai dengan langkah ulang berikutnya"
     },
     "access": {
       "available": {
@@ -477,6 +475,12 @@
       "extendedSubtitle": "Ask about billing, practice, atau feedback. We akan reply dengan a clear answer.",
       "sending": "Mengirim...",
       "sendMessage": "« Send message»",
+      "placeholders": {
+        "name": "Nama lengkap Anda",
+        "email": "anda@contoh.com",
+        "subject": "Apa isi pesan Anda?",
+        "message": "Tulis pertanyaan atau masukan Anda di sini…"
+      },
       "errors": {
         "name": "Silakan masukkan nama Anda.",
         "email": "Silakan masukkan alamat email Anda.",
@@ -491,9 +495,7 @@
     "footer": {
       "product": "Produk",
       "features": "Fitur",
-      "featurePages": "Semua fitur",
       "guides": "Panduan Hifz",
-      "articles": "Artikel dan panduan",
       "howToMemorize": "How to memorize the Quran",
       "howToRevise": "How to revise hifz",
       "tools": "Alat Hifz",
@@ -510,7 +512,6 @@
       "terms": "Ketentuan",
       "tagline": "2026 Mutqin · \"And recite the Al-Quran with measured recitation.\"",
       "aboutUs": "Tentang Kami",
-      "ourMission": "Misi Kami",
       "workspace": "Hafalan workspace",
       "dashboard": "dasbor",
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
@@ -2969,7 +2970,6 @@
         "aiSummaryMatchedWords": "Kami mengenali dengan jelas {matched} dari {total} kata.",
         "aiSummaryFocusPhrase": "Kekeliruan adalah bagian dari belajar. Dengarkan bagian yang ditandai, lalu ulangi perlahan saat kamu siap.",
         "moreOptions": "Pilihan lainnya",
-        "completedWithCare": "Alhamdulillah atas waktu yang kamu luangkan bersama Al-Qur’an. Kembalilah saat kamu siap.",
         "aiSummaryFocusRange": "Revisi rentang ini, lalu periksa lagi.",
         "aiSummaryStrongMinorMistakes": "Kuat recitation, a couple of small mistakes, but you are making good kemajuan.",
         "aiSummaryStrongFollowUp": "Bagus, Anda bisa lanjut sementara masih segar.",
@@ -5341,6 +5341,7 @@
       "results_open": "Buka this check",
       "view_all_results": "All results",
       "attempt_saved": "This percobaan is saved.",
+      "attempt_retrying": "Belum dapat disimpan. Mencoba lagi…",
       "see_all_results": "See all results",
       "empty_recording": "Rekaman terlalu singkat atau sunyi. Coba lagi.",
       "network_error": "Layanan bacaan tidak terjangkau. Periksa koneksi, lalu coba lagi.",

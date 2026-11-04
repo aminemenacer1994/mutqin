@@ -785,7 +785,6 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   const memorisation = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
   const ask = await fs.readFile(path.join(root, 'resources/js/scripts/askMutqin/voiceSession.js'), 'utf8')
   const runtime = await fs.readFile(path.join(root, 'resources/js/scripts/memorisationRuntime.js'), 'utf8')
-  const dashboard = await fs.readFile(path.join(root, 'resources/js/components/DashboardAiReciteModal.vue'), 'utf8')
   assert.match(session, /live:\s*true/)
   assert.match(session, /amdLive:\s*true/)
   assert.match(session, /getRecitationMicrophoneConstraints/)
@@ -806,13 +805,6 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.doesNotMatch(memorisation, /committedSelection\.reliable \? committedSelection\.words : \[\]/)
   assert.doesNotMatch(ask, /updateRecognitionDelays/)
   assert.match(ask, /endOfUtteranceSeconds: delays\.endOfUtteranceSeconds/)
-  assert.match(dashboard, /evaluateSpeechmaticsAudioGate/)
-  assert.match(dashboard, /createMemorisationAssessment/)
-  assert.match(dashboard, /analysisRequestId/)
-  assert.match(dashboard, /isCurrentAnalysis/)
-  const gateBeforeSave = dashboard.indexOf('evaluateSpeechmaticsAudioGate')
-  const saveCall = dashboard.indexOf('createMemorisationAssessment')
-  assert.ok(gateBeforeSave >= 0 && gateBeforeSave < saveCall)
 }
 
 {

@@ -20,6 +20,7 @@ import { buildRevisionScopeOptions } from '../../resources/js/scripts/recommenda
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const js = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+const canonicalResult = readFileSync(join(root, 'resources/js/components/WorkspaceAiReciteResultModal.vue'), 'utf8')
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
 const rec = en.memorisation.postSession.recommendation
 
@@ -194,8 +195,8 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.match(js, /const persistedNext = this\.postSessionNextPracticeRange/)
   assert.match(js, /buildPostSessionInfoArchitecture/)
   assert.match(js, /formatRecommendationAyahLabel/)
-  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation/)
-  assert.match(completionModal, /postSessionInfoArchitecture\.weakAreas\.items/)
+  assert.match(canonicalResult, /view\.infoArchitecture\.mainFocus\.explanation/)
+  assert.match(canonicalResult, /view\.infoArchitecture\.weakAreas\.items/)
   assert.match(completionModal, /postSessionInfoArchitecture\.revisionOptions/)
   assert.match(completionModal, /postSessionInfoArchitecture\.successFlow/)
   assert.match(completionModal, /data-testid="post-session-success-flow"/)
@@ -206,7 +207,7 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.match(completionModal, /data-testid="post-session-next-meta"/)
   assert.match(completionModal, /data-testid="post-session-next-lead"/)
   assert.match(completionModal, /data-testid="post-session-next-target"/)
-  assert.match(completionModal, /data-section="main-focus-explanation"/)
+  assert.match(canonicalResult, /data-testid="workspace-recite-why"/)
   // Footer actions remain action verbs, not descriptive section copy
   assert.match(completionModal, /postSessionCtaButtons/)
   assert.match(js, /Continue|Review|Repeat Weak Ayah/)
