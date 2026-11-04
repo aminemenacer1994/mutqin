@@ -321,6 +321,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasPremiumAccess(): bool
     {
+        if (config('mutqin.unrestricted_subscription')) {
+            return true;
+        }
+
         $tier = $this->effectiveSubscriptionTier();
 
         return in_array($tier, ['premium', 'pro'], true);
@@ -328,6 +332,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasProAccess(): bool
     {
+        if (config('mutqin.unrestricted_subscription')) {
+            return true;
+        }
+
         return $this->effectiveSubscriptionTier() === 'pro';
     }
 

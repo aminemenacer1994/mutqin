@@ -129,18 +129,21 @@ class DeployPreflightCommand extends Command
         $stripeSecret = trim((string) config('services.stripe.secret_key'));
         $proMonthly = trim((string) (config('billing.plans.pro_monthly.price_id') ?? ''));
         $proYearly = trim((string) (config('billing.plans.pro_yearly.price_id') ?? ''));
-        $stripeOk = ! $protected || ($stripeSecret !== '' && $proMonthly !== '' && $proYearly !== '');
+        $stripeLive = str_starts_with($stripeSecret, 'sk_live_');
+        $stripeOk = ! $protected || ($stripeSecret !== '' && $proMonthly !== '' && $proYearly !== '' && $stripeLive);
         $checks[] = $this->check(
             'stripe_billing',
             $stripeOk,
             $stripeSecret === ''
                 ? 'STRIPE_SECRET_KEY is empty.'
-                : (($proMonthly === '' || $proYearly === '')
-                    ? 'Stripe secret is set, but Pro price ids are missing.'
-                    : 'Stripe secret and Pro price ids are set.'),
+                : (! $stripeLive && $protected
+                    ? 'STRIPE_SECRET_KEY is still test mode (sk_test_). Use Live keys from Stripe Dashboard.'
+                    : (($proMonthly === '' || $proYearly === '')
+                        ? 'Stripe secret is set, but Pro price ids are missing.'
+                        : 'Stripe live secret and Pro price ids are set.')),
             $stripeOk
                 ? null
-                : 'Refusing deploy: set STRIPE_SECRET_KEY, STRIPE_PRICE_PRO_MONTHLY, and STRIPE_PRICE_PRO_YEARLY so checkout works in production.'
+                : 'Refusing deploy: set sk_live_ STRIPE_SECRET_KEY, live STRIPE_PRICE_PRO_* ids, and STRIPE_WEBHOOK_SECRET from Live mode.'
         );
         if (! $stripeOk) {
             $failed = true;

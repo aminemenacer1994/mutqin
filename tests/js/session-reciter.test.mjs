@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  ayahUrlMatchesGlobalNumber,
   ayahUrlMatchesReciter,
   isDuplicateReciterCommit,
   orderAyahAudioCandidateUrls,
@@ -53,6 +54,21 @@ assert.equal(
 assert.equal(ayahUrlMatchesReciter('https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3', 'ar.abdurrahmaansudais'), true)
 assert.equal(ayahUrlMatchesReciter('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3', 'ar.abdurrahmaansudais'), false)
 
+assert.equal(ayahUrlMatchesGlobalNumber('/audio/ayah/ar.alafasy/5376.mp3', 5376), true)
+assert.equal(ayahUrlMatchesGlobalNumber('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3', 5376), false)
+
+const staleExisting = orderAyahAudioCandidateUrls({
+  reciterId: 'ar.alafasy',
+  globalAyahNumber: 5376,
+  bundledUrl: '/audio/ayah/ar.alafasy/5376.mp3',
+  existingUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+})
+assert.equal(staleExisting[0], '/audio/ayah/ar.alafasy/5376.mp3')
+assert.ok(
+  !staleExisting.includes('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3'),
+  'stale verse.audio with the wrong global ayah must not be reused',
+)
+
 const sudaisUrls = orderAyahAudioCandidateUrls({
   reciterId: 'ar.abdurrahmaansudais',
   globalAyahNumber: 1,
@@ -99,6 +115,16 @@ assert.doesNotMatch(
 assert.match(
   memorisationVue,
   /onMadaniFullscreenReciterChange\(\$event\)/,
+)
+assert.match(
+  memorisationVue,
+  /onMadaniFullscreenReciterPointerDown/,
+  'native overlay select must hold the picker open on pointerdown',
+)
+assert.doesNotMatch(
+  memorisationVue,
+  /@click\.prevent="openMadaniFullscreenReciterSelect"/,
+  'label must not re-open showPicker on top of the native select',
 )
 assert.doesNotMatch(
   memorisationVue,

@@ -117,6 +117,98 @@ class BillingController extends Controller
         return redirect()->route('login')->with('status', __('billing.checkout_complete_guest'));
     }
 
+    public function donationCheckout(Request $request)
+    {
+        if (! config('services.stripe.secret_key')) {
+            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+        }
+
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:5', 'max:10000'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'message' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $amountPence = (int) round(((float) $validated['amount']) * 100);
+        if ($amountPence < 500) {
+            return back()->withInput()->withErrors([
+                'amount' => __('donation.amount_min', ['amount' => '5']),
+            ]);
+        }
+
+        $user = $request->user();
+        $email = trim((string) ($validated['email'] ?? ''));
+        if ($email === '' && $user) {
+            $email = (string) $user->email;
+        }
+
+        $checkoutData = [
+            'mode' => 'payment',
+            'success_url' => $this->stripeReturnUrl('/donate/success').'?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => $this->stripeReturnUrl('/donate'),
+            'locale' => $this->stripeLocale(),
+            'line_items[0][quantity]' => 1,
+            'line_items[0][price_data][currency]' => 'gbp',
+            'line_items[0][price_data][unit_amount]' => $amountPence,
+            'line_items[0][price_data][product_data][name]' => __('donation.product_name'),
+            'metadata[type]' => 'donation',
+            'custom_text[submit][message]' => __('donation.checkout_note'),
+        ];
+
+        if ($user) {
+            $checkoutData['client_reference_id'] = (string) $user->id;
+            $checkoutData['metadata[user_id]'] = (string) $user->id;
+        }
+
+        if ($email !== '') {
+            $checkoutData['customer_email'] = $email;
+        }
+
+        $message = trim((string) ($validated['message'] ?? ''));
+        if ($message !== '') {
+            $checkoutData['metadata[donor_message]'] = $message;
+        }
+
+        try {
+            $session = $this->stripePost('checkout/sessions', $checkoutData);
+        } catch (\Throwable $e) {
+            MutqinLog::warning('donation.checkout.failed', [
+                'user_id' => $user?->id,
+                'status' => $e instanceof HttpException ? $e->getStatusCode() : 502,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+        }
+
+        if (empty($session['url'])) {
+            return redirect()->route('donate')->with('donation_error', __('donation.stripe_unavailable'));
+        }
+
+        return redirect()->away($session['url']);
+    }
+
+    public function donationSuccess(Request $request)
+    {
+        $sessionId = (string) $request->query('session_id', '');
+
+        if ($sessionId !== '') {
+            try {
+                $session = $this->stripeGet("checkout/sessions/$sessionId");
+                if (($session['payment_status'] ?? '') === 'paid' && ($session['metadata']['type'] ?? '') === 'donation') {
+                    return redirect()->route('donate')->with('donation_status', __('donation.thank_you'));
+                }
+            } catch (\Throwable $e) {
+                MutqinLog::warning('donation.success.verify_failed', [
+                    'session_id' => $sessionId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return redirect()->route('donate');
+    }
+
     public function portal(Request $request)
     {
         $user = $request->user();

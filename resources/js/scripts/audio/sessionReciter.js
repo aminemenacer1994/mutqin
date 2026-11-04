@@ -46,6 +46,13 @@ export function ayahUrlMatchesReciter(audioUrl, reciterId) {
   return url.includes(`/${reciter}/`) || url.includes(`${reciter}.`)
 }
 
+export function ayahUrlMatchesGlobalNumber(audioUrl, globalAyahNumber) {
+  const url = String(audioUrl || '').trim()
+  const global = Number(globalAyahNumber)
+  if (!url || !Number.isFinite(global) || global < 1) return false
+  return new RegExp(`/${global}(?:\\.mp3)?(?:[/?#]|$)`).test(url)
+}
+
 /**
  * Try the selected reciter on every host first. Alafasy is only a last-resort
  * fallback so a failed Sudais CDN hit cannot keep playing Mishary.
@@ -65,7 +72,11 @@ export function orderAyahAudioCandidateUrls({
   }
 
   push(bundledUrl)
-  if (existingUrl && ayahUrlMatchesReciter(existingUrl, reciter)) {
+  if (
+    existingUrl
+    && ayahUrlMatchesReciter(existingUrl, reciter)
+    && ayahUrlMatchesGlobalNumber(existingUrl, global)
+  ) {
     push(existingUrl)
   }
   if (Number.isFinite(global) && global > 0) {

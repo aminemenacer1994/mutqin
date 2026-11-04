@@ -18,6 +18,21 @@ class AyahAudioController extends Controller
 {
     private const PROXY_CACHE_TTL_SECONDS = 86400;
 
+    /**
+     * @return list<string>
+     */
+    public static function remoteCandidateUrls(string $reciter, int $ayah): array
+    {
+        $id = preg_match('/^[a-z0-9._-]+$/i', $reciter) ? $reciter : 'ar.alafasy';
+
+        return array_values(array_unique([
+            "https://cdn.islamic.network/quran/audio/128/{$id}/{$ayah}.mp3",
+            "https://cdn.islamic.network/quran/audio/128/ar.alafasy/{$ayah}.mp3",
+            "https://cdn.alquran.cloud/media/audio/ayah/{$id}/{$ayah}",
+            "https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/{$ayah}",
+        ]));
+    }
+
     public function __invoke(Request $request, string $reciter, int $ayah): Response|BinaryFileResponse
     {
         if (! preg_match('/^[a-z0-9._-]+$/i', $reciter)) {
@@ -32,6 +47,7 @@ class AyahAudioController extends Controller
         if (is_file($localPath)) {
             return response()->file($localPath, [
                 'Content-Type' => 'audio/mpeg',
+                'Content-Disposition' => $this->contentDisposition($request, $ayah),
                 'Cache-Control' => 'public, max-age=31536000, immutable',
                 'X-Content-Type-Options' => 'nosniff',
             ]);
@@ -43,15 +59,10 @@ class AyahAudioController extends Controller
         $audioCache = Cache::store('file');
         $cached = $audioCache->get($cacheKey);
         if (is_array($cached) && is_string($cached['body'] ?? null) && $cached['body'] !== '') {
-            return $this->audioResponse($cached['body'], $ayah);
+            return $this->audioResponse($cached['body'], $ayah, $request);
         }
 
-        $candidates = array_values(array_unique([
-            "https://cdn.islamic.network/quran/audio/128/{$reciter}/{$ayah}.mp3",
-            "https://cdn.islamic.network/quran/audio/128/ar.alafasy/{$ayah}.mp3",
-            "https://cdn.alquran.cloud/media/audio/ayah/{$reciter}/{$ayah}",
-            "https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/{$ayah}",
-        ]));
+        $candidates = self::remoteCandidateUrls($reciter, $ayah);
 
         $lastStatus = 502;
         foreach ($candidates as $url) {
@@ -72,7 +83,7 @@ class AyahAudioController extends Controller
                     }
                 }
 
-                return $this->audioResponse($body, $ayah);
+                return $this->audioResponse($body, $ayah, $request);
             }
 
             $lastStatus = $response->status() ?: 502;
@@ -81,12 +92,20 @@ class AyahAudioController extends Controller
         abort($lastStatus, 'Failed to fetch audio');
     }
 
-    private function audioResponse(string $body, int $ayah): Response
+    private function contentDisposition(Request $request, int $ayah): string
+    {
+        $filename = preg_replace('/[^A-Za-z0-9._-]/', '-', (string) $request->query('filename', ''))
+            ?: "{$ayah}.mp3";
+
+        return ($request->boolean('download') ? 'attachment' : 'inline').'; filename="'.$filename.'"';
+    }
+
+    private function audioResponse(string $body, int $ayah, Request $request): Response
     {
         return response($body, 200, [
             'Content-Type' => 'audio/mpeg',
             'Content-Length' => (string) strlen($body),
-            'Content-Disposition' => 'inline; filename="'.$ayah.'.mp3"',
+            'Content-Disposition' => $this->contentDisposition($request, $ayah),
             'Cache-Control' => 'public, max-age=86400',
             'X-Content-Type-Options' => 'nosniff',
         ]);

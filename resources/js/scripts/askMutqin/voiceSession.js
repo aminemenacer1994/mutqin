@@ -48,6 +48,13 @@ export function createAskMutqinVoiceSession(options = {}) {
   let active = false
   let tokenPromise = null
   let switching = false
+  let generation = 0
+
+  const isStale = (sessionGeneration) => sessionGeneration !== generation
+
+  const releaseStream = (mediaStream) => {
+    try { mediaStream?.getTracks?.().forEach((track) => track.stop()) } catch { /* ignore */ }
+  }
 
   const stopPump = () => {
     if (pumpTimer) window.clearInterval(pumpTimer)
@@ -144,6 +151,7 @@ export function createAskMutqinVoiceSession(options = {}) {
     language: () => language,
     async start(nextLanguage = 'ar') {
       if (starting || active) return
+      const sessionGeneration = generation
       starting = true
       try {
         const env = validateRecordingEnvironment()
@@ -152,7 +160,7 @@ export function createAskMutqinVoiceSession(options = {}) {
           error.code = env.reason || 'unsupported'
           throw error
         }
-        stream = await navigator.mediaDevices.getUserMedia({
+        const nextStream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -161,6 +169,11 @@ export function createAskMutqinVoiceSession(options = {}) {
             sampleRate: { ideal: 48000 },
           },
         })
+        if (isStale(sessionGeneration)) {
+          releaseStream(nextStream)
+          return
+        }
+        stream = nextStream
         bridge = createTranscriptionAudioBridge(stream)
         if (!bridge) {
           const error = new Error('unsupported')
@@ -168,11 +181,26 @@ export function createAskMutqinVoiceSession(options = {}) {
           throw error
         }
         await bridge.ensureRunning?.()
+        if (isStale(sessionGeneration)) {
+          stopPump()
+          disconnectProvider()
+          stopBridge()
+          stopTracks()
+          return
+        }
         await connectProvider(nextLanguage)
+        if (isStale(sessionGeneration)) {
+          stopPump()
+          disconnectProvider()
+          stopBridge()
+          stopTracks()
+          return
+        }
         startPump()
         emitAudioQuality(true)
         active = true
       } catch (error) {
+        if (isStale(sessionGeneration)) return
         stopPump()
         disconnectProvider()
         stopBridge()
@@ -186,7 +214,7 @@ export function createAskMutqinVoiceSession(options = {}) {
         }
         throw error
       } finally {
-        starting = false
+        if (sessionGeneration === generation) starting = false
       }
     },
     async setLanguage(nextLanguage) {
@@ -204,6 +232,7 @@ export function createAskMutqinVoiceSession(options = {}) {
       return bridge?.getQualityMetrics?.() || null
     },
     stop() {
+      generation += 1
       active = false
       starting = false
       switching = false

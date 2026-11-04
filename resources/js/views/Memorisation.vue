@@ -1182,6 +1182,9 @@
 </section>
         <div
           v-if="showSessionProgressRail"
+          class="container-fluid session-progress-rail-fluid px-0"
+        >
+        <div
           class="session-progress-rail"
           role="progressbar"
           :aria-valuenow="sessionProgressMeter"
@@ -1227,6 +1230,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
 
           <div v-if="showWorkspaceRefreshSpinner && !hasVerses" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
@@ -1666,16 +1670,9 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
-                    <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
-                      @click.stop="downloadVerseAudio(verse)"
-                      :disabled="!resolveAyahAudioUrl(verse)"
-                      :title="t('memorisation.offlineDownload.buttonHint')"
-                      :aria-label="t('memorisation.offlineDownload.buttonHint')">
-                      <i class="bi bi-download" aria-hidden="true"></i>
-                    </button>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
                       @click.stop="playAyahCardAudio(verse)"
-                      :disabled="!resolveAyahAudioUrl(verse)"
+                      :disabled="!ensureVerseAudioUrl(verse)"
                       :title="isAyahCardPlaying(verse) ? t('memorisation.a11y.pauseAyahAudio') : t('memorisation.a11y.playAyahAudio')"
                       :aria-label="isAyahCardPlaying(verse) ? t('memorisation.a11y.pauseAyahAudio') : t('memorisation.a11y.playAyahAudio')">
                       <i class="bi" :class="isAyahCardPlaying(verse) ? 'bi-pause-fill' : 'bi-play-fill'"></i>
@@ -1828,7 +1825,7 @@
                     <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--mid" aria-hidden="true"></span>
                     <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--delayed" aria-hidden="true"></span>
                     <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                    <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
                   </button>
                 </div>
 
@@ -4908,7 +4905,6 @@
               <label
                 class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
                 :title="fullscreenReciterName"
-                @click.prevent="openMadaniFullscreenReciterSelect"
               >
                 <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
                 <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
@@ -4917,8 +4913,9 @@
                   :value="reciterId"
                   class="madani-fullscreen-bar__reciter-select"
                   :aria-label="t('sessionSetup.reciter')"
-                  @mousedown.stop
-                  @touchstart.stop
+                  @pointerdown.stop="onMadaniFullscreenReciterPointerDown"
+                  @focus="onMadaniFullscreenReciterFocus"
+                  @blur="onMadaniFullscreenReciterBlur"
                   @change="onMadaniFullscreenReciterChange($event)"
                 >
                   <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>

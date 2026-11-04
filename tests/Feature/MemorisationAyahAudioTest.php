@@ -69,6 +69,22 @@ class MemorisationAyahAudioTest extends TestCase
             ->assertSee('fallback-audio-bytes', false);
     }
 
+    public function test_bundled_ayah_audio_supports_attachment_download(): void
+    {
+        Cache::store('file')->forget('ayah-audio:v1:ar.alafasy:5376');
+
+        Http::fake([
+            'https://cdn.islamic.network/quran/audio/128/ar.alafasy/5376.mp3' => Http::response('surah-70-ayah-1-bytes', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $this->get('/audio/ayah/ar.alafasy/5376.mp3?download=1&filename=surah-70-ayah-1.mp3')
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="surah-70-ayah-1.mp3"')
+            ->assertHeader('content-length', (string) strlen('surah-70-ayah-1-bytes'));
+    }
+
     public function test_bundled_ayah_audio_rejects_out_of_range_ayah(): void
     {
         $this->get('/audio/ayah/ar.alafasy/0.mp3')

@@ -141,6 +141,10 @@ Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
+Route::post('/donate/checkout', [BillingController::class, 'donationCheckout'])
+    ->middleware('throttle:10,1')
+    ->name('donate.checkout');
+Route::get('/donate/success', [BillingController::class, 'donationSuccess'])->name('donate.success');
 Route::redirect('/waiting-list', '/', 301)->name('waiting-list');
 Route::view('/articles', 'content.articles')->name('articles');
 Route::get('/articles/{slug}', [ArticleController::class, 'show'])
@@ -220,11 +224,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $pushCandidate($url);
         if (preg_match('#/(?:quran/audio/\d+|media/audio/ayah)/([a-z0-9.]+)/(\d+)(?:\.mp3)?#i', $url, $match)) {
             $reciter = $match[1];
-            $ayah = $match[2];
-            $pushCandidate("https://cdn.islamic.network/quran/audio/128/{$reciter}/{$ayah}.mp3");
-            $pushCandidate("https://cdn.islamic.network/quran/audio/128/ar.alafasy/{$ayah}.mp3");
-            $pushCandidate("https://cdn.alquran.cloud/media/audio/ayah/{$reciter}/{$ayah}");
-            $pushCandidate("https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/{$ayah}");
+            $ayah = (int) $match[2];
+            foreach (AyahAudioController::remoteCandidateUrls($reciter, $ayah) as $candidate) {
+                $pushCandidate($candidate);
+            }
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        if (preg_match('#^/audio/ayah/([a-z0-9._-]+)/(\d+)\.mp3$#i', (string) $path, $bundled)) {
+            $reciter = $bundled[1];
+            $ayah = (int) $bundled[2];
+            foreach (AyahAudioController::remoteCandidateUrls($reciter, $ayah) as $candidate) {
+                $pushCandidate($candidate);
+            }
         }
 
         if ($candidates === []) {

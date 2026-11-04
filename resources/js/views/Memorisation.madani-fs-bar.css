@@ -494,9 +494,10 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
     display: grid;
-    grid-template-columns: minmax(3.5rem, 1fr) auto minmax(3.5rem, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    gap: 0.35rem;
+    justify-content: stretch;
+    gap: 0.15rem;
     width: 100%;
     min-height: var(--mq-dock-height, 3.7rem);
     direction: ltr;
@@ -504,7 +505,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
-    grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster {
@@ -518,8 +519,9 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
-    justify-self: start;
     grid-column: 1;
+    justify-self: start;
+    justify-content: flex-start;
     gap: 0.1rem;
     max-width: 100%;
     position: relative;
@@ -527,15 +529,15 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
-    position: absolute;
-    inset-inline-start: 50%;
-    left: 50%;
-    transform: translateX(-50%);
-    justify-self: center;
     grid-column: 2;
+    justify-self: center;
+    position: relative;
+    left: auto;
+    inset-inline-start: auto;
+    transform: none;
     justify-content: center;
     gap: 0.05rem;
-    max-width: calc(100% - 7.5rem);
+    max-width: none;
     margin-inline-start: 0;
     z-index: 2;
     pointer-events: auto;
@@ -546,8 +548,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
-    justify-self: end;
     grid-column: 3;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {

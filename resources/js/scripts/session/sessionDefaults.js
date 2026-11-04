@@ -12,6 +12,16 @@ export function resolveStoredTajweedEnabled(saved, revision = 0) {
   return DEFAULT_TAJWEED_ENABLED
 }
 
+/** Translation starts on. Bump so previously auto-saved "off" does not stick. */
+export const DEFAULT_SHOW_TRANSLATION = true
+export const TRANSLATION_DEFAULT_REVISION = 1
+
+export function resolveStoredShowTranslation(saved, revision = 0) {
+  if (Number(revision) < TRANSLATION_DEFAULT_REVISION) return DEFAULT_SHOW_TRANSLATION
+  if (typeof saved === 'boolean') return saved
+  return DEFAULT_SHOW_TRANSLATION
+}
+
 /** Mobile session overview (Pause/Resume, pills) starts minimised on each page load. */
 export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = false
 
@@ -76,7 +86,7 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
     anchorModeEnabled: false,
     anchorCount: 2,
     tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
-    showTranslation: false,
+    showTranslation: true,
     showTransliteration: false,
     showWordByWord: false,
     wordByWordAudioEnabled: true,

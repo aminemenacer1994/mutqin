@@ -422,6 +422,7 @@
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
             <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
+            <a href="/donate">{{ t('homepage.footer.donate') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
           </div>
         </div>

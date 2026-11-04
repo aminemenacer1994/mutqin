@@ -318,7 +318,8 @@ export default {
 .qpc-madani-line--surah_name,
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
-  justify-content: center;
+  /* Permanent Madani v2 rule: basmala + titles stay centred. Do not override. */
+  justify-content: center !important;
   overflow: visible;
 }
 
@@ -334,9 +335,16 @@ export default {
 
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
+  /* LTR flex axis so center is stable; Arabic glyphs stay RTL inside words. */
+  direction: ltr !important;
+  justify-content: center !important;
+  text-align: center !important;
+  align-items: center !important;
   min-height: 1.6em;
   margin-block-end: calc(var(--qpc-word-size, 22px) * 0.55);
   padding-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
@@ -423,7 +431,10 @@ export default {
 .qpc-madani-basmallah-words {
   display: flex;
   flex-flow: row nowrap;
-  justify-content: center;
+  justify-content: center !important;
+  align-items: center;
+  margin-inline: auto;
+  direction: rtl;
 }
 
 .qpc-madani-surah-header {

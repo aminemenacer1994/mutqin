@@ -501,6 +501,7 @@
       "terms": "Terms",
       "tagline": "A companion for Qur’an memorisation, revision and return.",
       "aboutUs": "About us",
+      "donate": "Donate",
       "workspace": "Memorisation workspace",
       "dashboard": "Dashboard",
       "connectNote": "Follow Mutqin for updates on memorisation and revision.",
@@ -4549,46 +4550,38 @@
     }
   },
   "donate": {
-    "kicker": "Support",
-    "title": "Support",
-    "highlightsAria": "Support topics",
-    "highlights": {
-      "start": "Start",
-      "account": "Account",
-      "contact": "Contact"
-    },
-    "heroDesc": "Need help with practice, your account, or a session? Find answers here, or write to us anytime.",
-    "ctaContact": "Contact us",
-    "ctaStartPractising": "Start practising",
-    "sections": {
-      "gettingStarted": {
-        "title": "Getting started",
-        "desc": "Open Memorisation, pick a short passage, then listen and repeat.",
-        "link": "Go to Memorisation"
+    "kicker": "Sadaqah",
+    "title": "Support the path of hifz",
+    "lead": "Your gift helps Mutqin stay free to begin with and dependable for daily revision.",
+    "body": "We build quiet tools for listening, repeating, and returning to what you memorised — between lessons, not instead of your teacher. Sadaqah here keeps that path open for more students.",
+    "arabicLine": "مَنْ ذَا الَّذِي يُقْرِضُ اللَّهَ قَرْضًا حَسَنًا",
+    "arabicRef": "Al-Baqarah 2:245 — a goodly loan to Allah",
+    "impactTitle": "Where your gift helps",
+    "impact": {
+      "hifz": {
+        "title": "Memorisation tools",
+        "desc": "Session setup, mushaf, audio, and recitation checks that students use every day."
       },
-      "account": {
-        "title": "Your account",
-        "desc": "Sign in to keep your progress saved. Forgot your password? Use the reset link on the login page.",
-        "link": "Sign in"
+      "students": {
+        "title": "Students between lessons",
+        "desc": "Free entry and steady improvements so revision does not depend on a paid tutor app."
       },
-      "session": {
-        "title": "During a session",
-        "desc": "Listen, follow the words, and repeat. When you finish, follow the suggested next step."
-      },
-      "recitation": {
-        "title": "Checking your recitation",
-        "desc": "Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher."
-      },
-      "troubleshooting": {
-        "title": "Something not working?",
-        "desc": "Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser."
-      },
-      "feedback": {
-        "title": "Share feedback",
-        "desc": "Tell us what helped, what was unclear, or how practice could be easier.",
-        "link": "Write to us"
+      "trust": {
+        "title": "Given for Allah's sake",
+        "desc": "One-time support — no subscription. May He accept it and multiply its reward."
       }
-    }
+    },
+    "formTitle": "Give once",
+    "formLead": "Choose an amount in GBP (from £10 suggested). Checkout is secure; you do not need a Mutqin account.",
+    "amountLabel": "Amount (GBP)",
+    "amountCustom": "Or enter another amount",
+    "emailLabel": "Email for receipt",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Continue to secure checkout",
+    "submitting": "Opening checkout…",
+    "trustLine": "One-time payment · encrypted checkout · guest-friendly",
+    "closing": "JazakAllahu khayran for supporting everyone who is memorising for His sake.",
+    "ctaContact": "Questions? Contact us"
   },
   "waitingList": {
     "brand": "Mutqin",

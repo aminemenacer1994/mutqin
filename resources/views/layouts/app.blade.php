@@ -4351,12 +4351,16 @@
         .app-navbar .nav-link-about:focus,
         .app-navbar .nav-link-about:focus-visible,
         .app-navbar .nav-link-about.active,
-        .app-navbar .nav-link-guides,
-        .app-navbar .nav-link-guides:hover,
-        .app-navbar .nav-link-guides:focus,
-        .app-navbar .nav-link-guides:focus-visible,
-        .app-navbar .nav-link-guides.active {
+        .app-navbar .nav-link-donate,
+        .app-navbar .nav-link-donate:hover,
+        .app-navbar .nav-link-donate:focus,
+        .app-navbar .nav-link-donate:focus-visible,
+        .app-navbar .nav-link-donate.active {
             box-shadow: none !important;
+        }
+
+        .app-navbar .nav-link-guides {
+            display: none !important;
         }
 
         .global-theme-switcher {
@@ -8233,6 +8237,11 @@
                                 <span class="nav-link-copy"><strong data-i18n="about">{{ __('ui.about') }}</strong><small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            <a class="nav-link nav-link-donate {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}" @if (request()->routeIs('donate')) aria-current="page" @endif>
+                                <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="donate">{{ __('ui.donate') }}</strong><small class="d-lg-none">{{ __('ui.nav_donate_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
                             @auth
                             @unless ($authAwaitingVerification)
                             @if (Auth::user()->showsAdminNavigation())
@@ -8250,13 +8259,6 @@
                             @endif
                             @endunless
                             @endauth
-                            @unless (app()->environment('production'))
-                            <a class="nav-link nav-link-guides {{ request()->is('articles') || request()->is('articles/*') || request()->routeIs('articles', 'articles.show', 'marketing.articles', 'marketing.articles.show') ? 'active' : '' }}" href="{{ url('/articles') }}">
-                                <i class="bi bi-journal-text nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="guides">{{ __('ui.guides') }}</strong><small class="d-lg-none">{{ __('ui.nav_guides_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endunless
                         </div>
                     </div>
 
@@ -8526,6 +8528,7 @@
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());
         window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);
+        window.mutqinUnrestrictedSubscription = @json((bool) config('mutqin.unrestricted_subscription'));
         window.mutqinCanManageBilling = @json($navUser !== null && $navUser->hasBillableStripeCustomer());
         window.mutqinSubscriptionTier = @json($navUser?->billingSubscriptionTier() ?? 'free');
         window.mutqinBilling = @json($mutqinBillingDisplay);
@@ -10684,28 +10687,44 @@ body.session-analysis-modal-open {
       overflow: visible !important;
     }
 
-    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
-      display: grid !important;
-      grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr) !important;
-      align-items: center !important;
-      gap: 0.35rem !important;
-      min-height: 3.7rem !important;
-    }
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 0.15rem !important;
+    min-height: 3.7rem !important;
+    position: relative !important;
+    width: 100% !important;
+  }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
       display: inline-flex !important;
       align-items: center !important;
+      justify-content: flex-start !important;
       justify-self: start !important;
       grid-column: 1 !important;
       gap: 0.1rem !important;
+      position: relative !important;
+      transform: none !important;
+      left: auto !important;
+      flex: none !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
       display: inline-flex !important;
       align-items: center !important;
+      justify-content: center !important;
       justify-self: center !important;
       grid-column: 2 !important;
       gap: 0.05rem !important;
+      position: relative !important;
+      left: auto !important;
+      inset-inline-start: auto !important;
+      transform: none !important;
+      max-width: none !important;
+      flex: none !important;
+      z-index: 2 !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__spacer {
@@ -10713,8 +10732,14 @@ body.session-analysis-modal-open {
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
       justify-self: end !important;
       grid-column: 3 !important;
+      position: relative !important;
+      transform: none !important;
+      flex: none !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon {
@@ -11053,6 +11078,13 @@ body.session-analysis-modal-open {
     var reciteLabel = 'Recite';
     var reciteHint = 'Test your memorisation anytime';
 
+    function immersiveBarHasOpenReciterPicker() {
+      if (window.__mutqinReciterPickerOpen) return true;
+      var active = document.activeElement;
+      return active instanceof HTMLSelectElement
+        && active.classList.contains('madani-fullscreen-bar__reciter-select');
+    }
+
     function addRing(button, className) {
       var ring = document.createElement('span');
       ring.className = className;
@@ -11236,6 +11268,7 @@ body.session-analysis-modal-open {
 
     /** Network-first layout: [headphones + exit] | centered transport | recite */
     function fixImmersiveBarLayout() {
+      if (immersiveBarHasOpenReciterPicker()) return;
       var bar = document.querySelector('.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top)');
       if (!bar || bar.hidden) return;
       var inner = bar.querySelector('.madani-fullscreen-bar__inner');
@@ -11267,8 +11300,7 @@ body.session-analysis-modal-open {
         var sep = transport.querySelector('.madani-fullscreen-bar__sep');
         if (sep) sep.remove();
 
-        if (reciter) leading.appendChild(reciter);
-        if (exitBtn) leading.appendChild(exitBtn);
+        if (immersiveBarHasOpenReciterPicker()) return;
         var nestedTransport = leading.querySelector('.madani-fullscreen-bar__cluster--transport');
         if (nestedTransport) {
           // Keep transport as a sibling of leading (centered column).
@@ -11316,7 +11348,7 @@ body.session-analysis-modal-open {
     window.__mutqinFixImmersiveBarLayout = fixImmersiveBarLayout;
 
     function syncMadaniToolbarChrome() {
-      if (syncing) return;
+      if (syncing || immersiveBarHasOpenReciterPicker()) return;
       syncing = true;
       try {
         hideBarOnWideViewports();
@@ -11335,7 +11367,7 @@ body.session-analysis-modal-open {
     var madaniChromeTimer = 0;
     function scheduleMadaniToolbarChrome() {
       window.clearTimeout(madaniChromeTimer);
-      madaniChromeTimer = window.setTimeout(syncMadaniToolbarChrome, 150);
+      madaniChromeTimer = window.setTimeout(syncMadaniToolbarChrome, 280);
     }
 
     window.addEventListener('resize', scheduleMadaniToolbarChrome);
@@ -11345,12 +11377,6 @@ body.session-analysis-modal-open {
       scheduleMadaniToolbarChrome();
     }
     window.setTimeout(scheduleMadaniToolbarChrome, 0);
-    window.setTimeout(scheduleMadaniToolbarChrome, 400);
-    window.setTimeout(scheduleMadaniToolbarChrome, 1200);
-    if (typeof MutationObserver !== 'undefined') {
-      var reciteObserver = new MutationObserver(scheduleMadaniToolbarChrome);
-      reciteObserver.observe(document.body, { childList: true, subtree: true });
-    }
   })();
 </script>
 <script id="mutqin-mobile-reciter-v196">
@@ -11419,10 +11445,8 @@ body.session-analysis-modal-open {
   }
 </style>
 <style id="mutqin-memorisation-hotfix-v195">
-  /* Last-wins phone inset. QPC/mushaf rules set width:100% and margin:0 after v186. */
+  /* Last-wins phone inset for workspace shell only — progress rail stays full width. */
   @media (max-width: 767.98px) {
-    html body.memorisation-page .app .main.madani-qpc-mode-active .session-progress-rail,
-    html body.memorisation-page .app .main.mushaf-mode-active .session-progress-rail,
     html body.memorisation-page .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card),
     html body.memorisation-page .app .main.mushaf-mode-active .workspace-shell:not(.is-idle-card) {
       box-sizing: border-box !important;
@@ -11431,20 +11455,17 @@ body.session-analysis-modal-open {
       inline-size: calc(100% - 2 * clamp(16px, 4.8vw, 22px)) !important;
       max-inline-size: none !important;
       margin-inline: auto !important;
-    }
-
-    html body.memorisation-page .app .main.madani-qpc-mode-active .session-progress-rail__inner,
-    html body.memorisation-page .app .main.mushaf-mode-active .session-progress-rail__inner {
-      border-radius: 14px !important;
-      border-inline-width: 1px !important;
-      padding-inline: clamp(12px, 3.6vw, 16px) !important;
-    }
-
-    html body.memorisation-page .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card),
-    html body.memorisation-page .app .main.mushaf-mode-active .workspace-shell:not(.is-idle-card) {
       border-radius: 20px !important;
       border-inline-width: 1px !important;
       padding: 0.72rem 0.82rem 0.62rem !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .session-progress-rail__inner,
+    html body.memorisation-page .app .main.mushaf-mode-active .session-progress-rail__inner,
+    html body .app .session-progress-rail__inner {
+      border-radius: 14px !important;
+      border-inline-width: 1px !important;
+      padding-inline: clamp(12px, 3.6vw, 16px) !important;
     }
   }
 </style>
@@ -13531,6 +13552,7 @@ body.session-analysis-modal-open {
     }
 
     function applyBottomChrome() {
+      if (window.__mutqinReciterPickerOpen) return;
       var theme = themeKey();
       var chrome = glassChrome(theme);
       var insetL = 'max(0.7rem, env(safe-area-inset-left, 0px))';
@@ -13680,10 +13702,37 @@ body.session-analysis-modal-open {
     }
     html body .app .workspace-reading-bottom-bar__recite-btn > .workspace-reading-bottom-bar__recite-ring--mid { animation-delay: .7s !important; }
     html body .app .workspace-reading-bottom-bar__recite-btn > .workspace-reading-bottom-bar__recite-ring--delayed { animation-delay: 1.4s !important; }
-    html body .app .workspace-reading-bottom-bar__recite-btn > i,
-    html body .app .workspace-reading-bottom-bar__recite-btn > span:not(.workspace-reading-bottom-bar__recite-ring) {
+    html body .app .workspace-reading-bottom-bar__recite-btn > i {
+      position: absolute !important;
+      inset: 0 !important;
+      z-index: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+      text-align: center !important;
+      transform: none !important;
+      animation: none !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn > span:not(.workspace-reading-bottom-bar__recite-ring):not(.sr-only) {
       position: relative !important;
       z-index: 1 !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn > .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+      padding: 0 !important;
     }
   }
 
@@ -13915,8 +13964,9 @@ body.session-analysis-modal-open {
     html body .app .session-progress-rail__copy {
       width: 100% !important;
       max-width: 100% !important;
-      justify-content: center !important;
-      text-align: center !important;
+      justify-content: flex-start !important;
+      text-align: start !important;
+      gap: 0.22rem !important;
     }
 
     html body .app .session-progress-rail__track {
@@ -13942,24 +13992,318 @@ body.session-analysis-modal-open {
       transform: translateY(-50%) !important;
     }
 
-    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
-      position: absolute !important;
-      left: 50% !important;
-      inset-inline-start: 50% !important;
-      transform: translateX(-50%) !important;
-      z-index: 2 !important;
-    }
-
-    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
-      z-index: 3 !important;
-    }
-
     html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter-select {
       pointer-events: auto !important;
       touch-action: manipulation !important;
       opacity: 0.001 !important;
       z-index: 4 !important;
     }
+  }
+</style>
+<style id="mutqin-ui-fix-v209">
+  /*
+   * Last paint:
+   * - progress CARD stays inset; INNER copy expands
+   * - Madani v2 basmala stays centred
+   * - fullscreen mobile bar uses equal grid columns so transport is true-center
+   * - dark-mode control hints
+   */
+  html body .app .session-progress-rail-fluid,
+  html body .app .workspace > .session-progress-rail-fluid,
+  html body .app .main .workspace > .session-progress-rail-fluid {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: calc(100% - 2 * clamp(16px, 4.8vw, 22px)) !important;
+    max-width: none !important;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
+  }
+
+  html body .app .session-progress-rail-fluid .session-progress-rail,
+  html body .app .session-progress-rail,
+  html body .app .workspace .session-progress-rail,
+  html body .app .main .workspace .session-progress-rail,
+  html body .app .main.mushaf-mode-active .session-progress-rail,
+  html body .app .main.madani-qpc-mode-active .session-progress-rail,
+  html body .app .main:not(.mushaf-mode-active):not(.madani-qpc-mode-active) .session-progress-rail {
+    width: 100% !important;
+    max-width: none !important;
+    inline-size: 100% !important;
+    max-inline-size: none !important;
+    margin-inline: 0 !important;
+    margin-block: 0.35rem 0.45rem !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .app .session-progress-rail__inner {
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 14px !important;
+    border: 1px solid color-mix(in srgb, var(--zone-divider, var(--border)) 70%, transparent) !important;
+    box-sizing: border-box !important;
+    padding-inline: clamp(12px, 3.6vw, 16px) !important;
+  }
+
+  html body .app .session-progress-rail__stack,
+  html body .app .session-progress-rail__row,
+  html body .app .session-progress-rail__copy,
+  html body .app .session-progress-rail__track {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .session-progress-rail__copy {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    text-align: start !important;
+    gap: 0.22rem !important;
+  }
+
+  html body .app .session-progress-rail__title,
+  html body .app .session-progress-rail__meta,
+  html body .app .session-progress-rail__hint,
+  html body .app .session-progress-rail__value {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+    font-size: clamp(0.58rem, 2.1vw, 0.68rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .app .session-progress-rail__sep {
+    flex: 0 0 auto !important;
+    font-size: 0.55rem !important;
+    opacity: 0.72 !important;
+  }
+
+  html body .app .session-progress-rail__track {
+    width: 100% !important;
+  }
+
+  /* Madani v2 basmala — permanently centered. Never override. */
+  html body .app .qpc-madani-line--basmala,
+  html body .app .qpc-madani-line--basmallah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--basmala,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--basmallah {
+    direction: ltr !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .qpc-madani-basmallah,
+  html body .app .qpc-madani-basmallah-words {
+    margin-inline: auto !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__inner,
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+      align-items: center !important;
+      justify-content: stretch !important;
+      gap: 0.15rem !important;
+      position: relative !important;
+      width: 100% !important;
+      min-height: 3.7rem !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading,
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
+      grid-column: 1 !important;
+      justify-self: start !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 0.05rem !important;
+      position: relative !important;
+      transform: none !important;
+      left: auto !important;
+      inset-inline-start: auto !important;
+      flex: none !important;
+      z-index: 3 !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport,
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
+      grid-column: 2 !important;
+      justify-self: center !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.05rem !important;
+      position: relative !important;
+      transform: none !important;
+      left: auto !important;
+      inset-inline-start: auto !important;
+      margin: 0 !important;
+      max-width: none !important;
+      flex: none !important;
+      z-index: 2 !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite,
+    html body .app .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      grid-column: 3 !important;
+      justify-self: end !important;
+      position: relative !important;
+      transform: none !important;
+      left: auto !important;
+      inset-inline-start: auto !important;
+      margin: 0 !important;
+      flex: none !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter-select {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      opacity: 0.011 !important;
+      font-size: 16px !important;
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      pointer-events: auto !important;
+      z-index: 6 !important;
+    }
+  }
+
+  html[data-theme="dark"] body.memorisation-page .tools .tools-title__hint,
+  [data-theme="dark"] .app .tools .tools-title__hint,
+  .app[data-theme="dark"] .tools .tools-title__hint,
+  html[data-theme="dark"] body.memorisation-page .tools .tools-title__hint,
+  body.memorisation-page .app[data-theme="dark"] .tools .tools-title__hint {
+    color: #eadfd3 !important;
+    opacity: 1 !important;
+  }
+</style>
+<style id="mutqin-ui-fix-v210">
+  /* Mic glyph true-center; progress copy compact (left-aligned). */
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button.is-animated,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+    display: grid !important;
+    place-items: center !important;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn i,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+    grid-area: 1 / 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1em !important;
+    height: 1em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    transform: translateX(0.02em) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn .sr-only,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app .session-progress-rail__copy,
+  html body .app .session-progress-rail__row {
+    justify-content: flex-start !important;
+    gap: 0.2rem !important;
+  }
+
+  html body .app .session-progress-rail__title,
+  html body .app .session-progress-rail__meta,
+  html body .app .session-progress-rail__hint,
+  html body .app .session-progress-rail__value {
+    flex: 0 0 auto !important;
+    font-size: clamp(0.58rem, 2.1vw, 0.68rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .app .session-progress-rail__sep {
+    flex: 0 0 auto !important;
+    font-size: 0.55rem !important;
+    opacity: 0.72 !important;
+  }
+</style>
+<style id="mutqin-ui-fix-v211">
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-ai-recite-cta,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+    display: block !important;
+    position: relative !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-ai-recite-cta.is-animated::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > i.bi,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite > i.bi {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.45rem !important;
+    line-height: 1 !important;
+    grid-area: auto !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > i.bi::before,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite > i.bi::before {
+    display: block !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    transform: translateX(-0.04em) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > .sr-only,
+  html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite > .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    padding: 0 !important;
   }
 </style>
 @endif

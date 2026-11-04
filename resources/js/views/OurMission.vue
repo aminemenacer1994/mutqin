@@ -20,7 +20,7 @@
             <a class="info-btn info-btn--primary" href="/memorisation">
               <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
             </a>
-            <a class="info-btn info-btn--ghost" href="/donate">
+            <a class="info-btn info-btn--ghost" href="/#contact">
               <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
             </a>
           </div>
@@ -46,7 +46,7 @@
         <a class="info-btn info-btn--primary" href="/memorisation">
           <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
         </a>
-        <a class="info-btn info-btn--ghost" href="/donate">
+        <a class="info-btn info-btn--ghost" href="/#contact">
           <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
         </a>
       </div>

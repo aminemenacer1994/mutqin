@@ -120,4 +120,23 @@ class MemorisationAudioDownloadTest extends TestCase
             ->assertOk()
             ->assertSee('fallback-audio-bytes', false);
     }
+
+    public function test_pro_user_can_download_using_same_origin_bundled_path(): void
+    {
+        Http::fake([
+            'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2.mp3' => Http::response('ayah-two-bytes', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $user = User::factory()->pro()->create();
+
+        $this->actingAs($user)
+            ->get(route('memorisation.audio-download', [
+                'url' => '/audio/ayah/ar.alafasy/2.mp3',
+                'filename' => 'surah-1-ayah-2.mp3',
+            ]))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+    }
 }

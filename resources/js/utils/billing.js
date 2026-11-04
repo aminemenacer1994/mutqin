@@ -3,6 +3,11 @@
  * Mirrors User::effectiveSubscriptionTier / hasPremiumAccess / hasProAccess.
  */
 
+function isUnrestricted() {
+  if (typeof window === 'undefined') return false
+  return window.mutqinUnrestrictedSubscription !== false
+}
+
 function isAdmin(auth = {}) {
   return !!auth?.is_admin
 }
@@ -36,7 +41,7 @@ export function hasActiveSubscription(auth = {}) {
 }
 
 export function hasPremiumAccess(auth = {}) {
-  if (auth?.has_premium_access === true || isAdmin(auth)) {
+  if (isUnrestricted() || auth?.has_premium_access === true || isAdmin(auth)) {
     return true
   }
 
@@ -46,7 +51,7 @@ export function hasPremiumAccess(auth = {}) {
 }
 
 export function hasProAccess(auth = {}) {
-  if (auth?.has_pro_access === true || isAdmin(auth)) {
+  if (isUnrestricted() || auth?.has_pro_access === true || isAdmin(auth)) {
     return true
   }
 
@@ -54,6 +59,10 @@ export function hasProAccess(auth = {}) {
 }
 
 export function maxSavedSessionsForTier(auth = {}) {
+  if (isUnrestricted()) {
+    return Number.POSITIVE_INFINITY
+  }
+
   const tier = resolveSubscriptionTier(auth)
 
   if (tier === 'pro') {

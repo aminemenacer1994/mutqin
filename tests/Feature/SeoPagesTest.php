@@ -137,7 +137,7 @@ class SeoPagesTest extends TestCase
 
         $this->get('/donate')
             ->assertOk()
-            ->assertSee('Help and Support | Mutqin', false)
+            ->assertSee('Donate | Support hifz with Mutqin', false)
             ->assertHeader('X-Robots-Tag', 'index, follow');
     }
 

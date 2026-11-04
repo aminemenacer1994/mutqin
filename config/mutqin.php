@@ -179,6 +179,16 @@ return [
         ],
     ],
 
+    /*
+     | When true, authenticated learners pass all plan:premium / plan:pro gates
+     | (Find by voice token mint, AI assessments, offline audio, etc.).
+     | Defaults on. Set MUTQIN_UNRESTRICTED_SUBSCRIPTION=false to restore paid gates.
+     */
+    'unrestricted_subscription' => filter_var(
+        env('MUTQIN_UNRESTRICTED_SUBSCRIPTION', true),
+        FILTER_VALIDATE_BOOL
+    ),
+
     'waiting_list' => [
         // Set true only in local/dev if DNS checks block legitimate test signups.
         'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', true), FILTER_VALIDATE_BOOL),

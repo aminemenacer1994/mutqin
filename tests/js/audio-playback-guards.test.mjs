@@ -118,6 +118,9 @@ describe('audio playback guards', () => {
 
   it('attaches fallback ayah audio when Play is pressed without a source', () => {
     assert.match(memorisationSource, /ensureVerseAudioUrl\(verse/)
+    assert.match(memorisationSource, /pickAyahAudioDownloadUrl\(/)
+    assert.match(memorisationSource, /buildAyahAudioDownloadAttempts\(/)
+    assert.match(memorisationSource, /downloadVerseAudio\(verse\)[\s\S]*fetchAyahAudioBlob/)
     assert.match(memorisationSource, /ensureLiveSessionAudioAttached\(\)/)
     assert.match(memorisationSource, /toPlayableAudioUrl\(/)
     assert.match(memorisationSource, /listAyahAudioCandidates\(/)

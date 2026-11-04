@@ -1318,9 +1318,18 @@ export default {
     },
     fail(error) {
       const status = Number(error?.response?.status || error?.cause?.response?.status || 0)
+      const responseReason = String(
+        error?.response?.data?.reason
+        || error?.cause?.response?.data?.reason
+        || '',
+      )
+      const unrestricted = typeof window !== 'undefined' && window.mutqinUnrestrictedSubscription === true
+      const planDenied = !unrestricted
+        && (responseReason === 'plan_required' || error?.code === 'plan_required')
       const code = String(
-        error?.code
-        || (status === 401 || status === 403 ? 'plan_required' : '')
+        (planDenied ? 'plan_required' : '')
+        || (error?.code && error.code !== 'plan_required' ? error.code : '')
+        || (status === 401 || status === 403 ? 'transcription_unavailable' : '')
         || (error?.category === 'connection' || error?.category === 'auth' ? 'transcription_unavailable' : '')
         || '',
       )
@@ -1368,8 +1377,9 @@ export default {
       this.clearSpeechIdle()
       this.stopPlaybackWordSync({ reset: true })
       this.stopMatchedAyahAudio()
-      try { this.voice?.stop?.() } catch { /* ignore */ }
+      const voice = this.voice
       this.voice = null
+      try { voice?.stop?.() } catch { /* ignore */ }
       this.interpreting = false
       this.audioQualityHint = ''
       if (!options.keepLock) this.syncBodyLock(false)

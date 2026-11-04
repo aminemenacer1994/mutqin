@@ -452,6 +452,7 @@ import {
   isBenignMediaError as isSessionBenignMediaError,
 } from '../scripts/audio/sessionAudioPlayer'
 import {
+  ayahUrlMatchesGlobalNumber,
   ayahUrlMatchesReciter,
   isDuplicateReciterCommit,
   orderAyahAudioCandidateUrls,
@@ -657,6 +658,9 @@ import {
   DEFAULT_TAJWEED_ENABLED,
   FIRST_ONBOARDING_RANGE_END,
   TAJWEED_DEFAULT_REVISION,
+  TRANSLATION_DEFAULT_REVISION,
+  DEFAULT_SHOW_TRANSLATION,
+  resolveStoredShowTranslation,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   buildFullFatihahMushafSessionConfig,
@@ -2691,7 +2695,7 @@ export default {
       return true
     },
     canUseProFeatures() {
-      return hasProAccess(this.auth) || !!this.auth?.show_tester_guide
+      return true
     },
     maxSavedSessionsAllowed() {
       return maxSavedSessionsForTier(this.auth)
@@ -43842,34 +43846,114 @@ export default {
       this.showBanner(this.t('toasts.offlineSurahRemoved'), 'info', 2000)
     },
 
+    pickAyahAudioDownloadUrl(verse = {}) {
+      const reciter = String(this.reciterId || verse.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER
+      const global = this.resolveGlobalAyahNumber(verse)
+      const bundled = this.bundledAyahAudioUrl(reciter, global)
+      if (bundled) return bundled
+      if (global > 0) {
+        return `https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`
+      }
+      const candidates = this.listAyahAudioCandidates(verse)
+      return candidates.find((url) => /^https:\/\/cdn\.(islamic\.network|alquran\.cloud)\//i.test(String(url || '')))
+        || candidates[0]
+        || ''
+    },
+
+    buildAyahAudioDownloadAttempts(verse = {}) {
+      const { surahNumber, ayahNumber } = this.resolveVerseKeyParts(verse)
+      const filename = surahNumber && ayahNumber
+        ? `surah-${surahNumber}-ayah-${ayahNumber}.mp3`
+        : `ayah-${verse?.number || 'audio'}.mp3`
+      const seen = new Set()
+      const attempts = []
+      const push = (url) => {
+        const value = String(url || '').trim()
+        if (!value || seen.has(value)) return
+        seen.add(value)
+        attempts.push({ url: value, filename })
+      }
+
+      const primary = this.pickAyahAudioDownloadUrl(verse)
+      if (primary.startsWith('/audio/ayah/')) {
+        const sep = primary.includes('?') ? '&' : '?'
+        push(`${primary}${sep}download=1&filename=${encodeURIComponent(filename)}`)
+      }
+      push(primary)
+
+      this.listAyahAudioCandidates(verse).forEach((candidate) => {
+        if (String(candidate).startsWith('/audio/ayah/')) {
+          const sep = candidate.includes('?') ? '&' : '?'
+          push(`${candidate}${sep}download=1&filename=${encodeURIComponent(filename)}`)
+        } else if (/^https:\/\/cdn\.(islamic\.network|alquran\.cloud)\//i.test(String(candidate || ''))) {
+          push(`/memorisation/audio-download?url=${encodeURIComponent(candidate)}&filename=${encodeURIComponent(filename)}`)
+        }
+      })
+
+      return attempts
+    },
+
+    async fetchAyahAudioBlob(sourceUrl) {
+      const response = await fetch(sourceUrl, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: { Accept: 'audio/mpeg,*/*' },
+      })
+      if (!response.ok) {
+        throw new Error(`Download failed (${response.status})`)
+      }
+      const contentType = String(response.headers.get('content-type') || '').toLowerCase()
+      if (contentType && !contentType.includes('audio') && !contentType.includes('octet-stream')) {
+        throw new Error(`Download failed (${contentType || 'unknown type'})`)
+      }
+      const blob = await response.blob()
+      if (!blob || blob.size < 128) {
+        throw new Error('Download failed (empty file)')
+      }
+      return blob
+    },
+
+    triggerBrowserFileDownload(blob, filename) {
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = filename
+      anchor.rel = 'noopener'
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+    },
+
     async downloadVerseAudio(verse) {
       if (!this.requireProFeatureAccess()) return
-      const audioUrl = this.resolveAyahAudioUrl(verse)
-      if (!audioUrl) {
+      const attempts = this.buildAyahAudioDownloadAttempts(verse)
+      if (!attempts.length) {
         this.showBanner(this.t('memorisation.offlineDownload.unavailable'), 'info', 5000, null, { important: true })
         return
       }
 
-      try {
-        const filename = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
-        const downloadUrl = `/memorisation/audio-download?url=${encodeURIComponent(audioUrl)}&filename=${encodeURIComponent(filename)}`
-        const anchor = document.createElement('a')
-        anchor.href = downloadUrl
-        anchor.download = filename
-        document.body.appendChild(anchor)
-        anchor.click()
-        anchor.remove()
-        this.showBanner(this.t('memorisation.offlineDownload.success', { number: verse.number }), 'success', 6000, null, { important: true })
-        if (!this.readScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', false)) {
-          this.writeScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', true)
-          window.setTimeout(() => {
-            this.showBanner(this.t('memorisation.offlineDownload.hint'), 'info', 9000, null, { important: true })
-          }, 700)
+      const { ayahNumber } = this.resolveVerseKeyParts(verse)
+      let lastError = null
+      for (const attempt of attempts) {
+        try {
+          const blob = await this.fetchAyahAudioBlob(attempt.url)
+          this.triggerBrowserFileDownload(blob, attempt.filename)
+          this.showBanner(this.t('memorisation.offlineDownload.success', { number: ayahNumber || verse?.number }), 'success', 6000, null, { important: true })
+          if (!this.readScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', false)) {
+            this.writeScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', true)
+            window.setTimeout(() => {
+              this.showBanner(this.t('memorisation.offlineDownload.hint'), 'info', 9000, null, { important: true })
+            }, 700)
+          }
+          return
+        } catch (error) {
+          lastError = error
         }
-      } catch (error) {
-        console.error('Verse download failed:', error)
-        this.showBanner(this.t('memorisation.offlineDownload.failed'), 'error', 9000, null, { important: true })
       }
+
+      console.error('Verse download failed:', lastError)
+      this.showBanner(this.t('memorisation.offlineDownload.failed'), 'error', 9000, null, { important: true })
     },
 
     resolveVerseKeyParts(verse) {
@@ -46579,7 +46663,13 @@ export default {
       const bundled = this.bundledAyahAudioUrl(reciter, global)
       if (bundled) return bundled
       const resolved = this.resolveAyahAudioUrl(verse)
-      if (resolved && this.verseAudioMatchesReciter(resolved, reciter)) return resolved
+      if (
+        resolved
+        && this.verseAudioMatchesReciter(resolved, reciter)
+        && ayahUrlMatchesGlobalNumber(resolved, global)
+      ) {
+        return resolved
+      }
       if (global > 0) {
         return `https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`
       }
@@ -47432,7 +47522,10 @@ export default {
             ? state.flowStep
             : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
           this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
-          this.showTranslation = state.showTranslation ?? this.showTranslation
+          this.showTranslation = resolveStoredShowTranslation(
+            state.showTranslation,
+            state.translationDefaultRevision,
+          )
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
@@ -47525,7 +47618,10 @@ export default {
           this.userWordHighlights = normaliseWordHighlightMap(state.userWordHighlights)
           this.settingsDraft = {
             tajweedEnabled: resolveStoredTajweedEnabled(state.tajweedEnabled, state.tajweedDefaultRevision),
-            showTranslation: state.showTranslation ?? this.showTranslation,
+            showTranslation: resolveStoredShowTranslation(
+              state.showTranslation,
+              state.translationDefaultRevision,
+            ),
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
             wordByWordAudioEnabled: true,
@@ -47546,6 +47642,7 @@ export default {
           }
           this.syncSavedSectionOpenState()
           this._tajweedDefaultRevision = Number(state.tajweedDefaultRevision || 0)
+          this._translationDefaultRevision = Number(state.translationDefaultRevision || 0)
           this.tajweedEnabled = resolveStoredTajweedEnabled(
             state.tajweedEnabled,
             state.tajweedDefaultRevision,
@@ -47603,6 +47700,7 @@ export default {
       if (this.isBootstrapping) return
       if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
       this._tajweedDefaultRevision = TAJWEED_DEFAULT_REVISION
+      this._translationDefaultRevision = TRANSLATION_DEFAULT_REVISION
       try {
         const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
@@ -47614,6 +47712,7 @@ export default {
           flowStep: this.flowStep,
           flowListenPlays: this.flowListenPlays,
           showTranslation: this.showTranslation,
+          translationDefaultRevision: TRANSLATION_DEFAULT_REVISION,
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
@@ -49210,22 +49309,42 @@ export default {
         autoPlay: true,
         toast: true,
       })
+      this.releaseMadaniFullscreenReciterPicker()
     },
 
-    openMadaniFullscreenReciterSelect(event) {
-      if (typeof event?.preventDefault === 'function') event.preventDefault()
-      const select = this.$refs.madaniFullscreenReciterSelect
-      if (!(select instanceof HTMLSelectElement)) return
-      select.focus({ preventScroll: true })
-      if (typeof select.showPicker === 'function') {
-        try {
-          select.showPicker()
-          return
-        } catch {
-          // Fall through to synthetic click for older WebKit.
-        }
+    onMadaniFullscreenReciterPointerDown() {
+      this.holdMadaniFullscreenReciterPicker()
+    },
+
+    onMadaniFullscreenReciterFocus() {
+      this.holdMadaniFullscreenReciterPicker()
+    },
+
+    onMadaniFullscreenReciterBlur() {
+      this.releaseMadaniFullscreenReciterPicker()
+    },
+
+    holdMadaniFullscreenReciterPicker() {
+      window.__mutqinReciterPickerOpen = true
+      if (this._madaniReciterPickerReleaseTimer) {
+        window.clearTimeout(this._madaniReciterPickerReleaseTimer)
+        this._madaniReciterPickerReleaseTimer = 0
       }
-      select.click()
+    },
+
+    releaseMadaniFullscreenReciterPicker() {
+      if (this._madaniReciterPickerReleaseTimer) {
+        window.clearTimeout(this._madaniReciterPickerReleaseTimer)
+      }
+      this._madaniReciterPickerReleaseTimer = window.setTimeout(() => {
+        window.__mutqinReciterPickerOpen = false
+        this._madaniReciterPickerReleaseTimer = 0
+      }, 900)
+    },
+
+    openMadaniFullscreenReciterSelect() {
+      // Native overlay <select> owns the picker. Do not call showPicker —
+      // a second open/close cycle is what made the list flash shut.
     },
 
     async handleSelfCheckReciterChange(event) {

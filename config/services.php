@@ -132,6 +132,8 @@ return [
         'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
         'secret_key' => env('STRIPE_SECRET_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Derived from secret key prefix — swap sk_test_ for sk_live_ in .env for production charges.
+        'livemode' => str_starts_with(trim((string) env('STRIPE_SECRET_KEY', '')), 'sk_live_'),
     ],
 
     'pexels' => [

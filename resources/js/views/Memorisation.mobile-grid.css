@@ -5027,6 +5027,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     overflow: visible !important;
   }
 
+  .workspace-reading-surface--stacked .verses-grid .verse-arabic,
+  .workspace-reading-surface--stacked .verses-grid .verse-arabic.verse-arabic-primary,
+  .workspace-reading-surface--stacked .verses-grid .verse-arabic.verse-arabic-with-end {
+    --verse-font-percent: 108 !important;
+    font-size: calc((var(--verse-font-percent, 108) / 100) * clamp(1.52rem, 7vw, 2.15rem)) !important;
+    line-height: 1.88 !important;
+  }
+
   .verses-grid .verse-arabic.verse-arabic--indopak,
   .verses-grid .verse-arabic.verse-arabic--indopak .wbw-word,
   .verses-grid .verse-arabic.verse-arabic--indopak .qpc-madani-word,
@@ -9535,15 +9543,59 @@ html body .app .workspace-recite-dock__button:hover {
     animation-delay: 1.4s !important;
   }
 
-  html body .app .workspace-reading-bottom-bar__recite-btn i,
-  html body .app .workspace-reading-bottom-bar__recite-btn span:not(.workspace-reading-bottom-bar__recite-ring) {
+  html body .app .workspace-reading-bottom-bar__recite-btn i {
     position: relative !important;
     z-index: 1 !important;
-  }
-
-  html body .app .workspace-reading-bottom-bar__recite-btn i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1em !important;
+    height: 1em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
     font-size: 1.45rem !important;
     color: var(--ai-recite-icon) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button.is-animated {
+    display: block !important;
+    position: relative !important;
+    place-items: unset !important;
+    gap: 0 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > i.bi {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > i.bi::before {
+    display: block !important;
+    line-height: 1 !important;
+    transform: translateX(-0.04em) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn > .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
   }
 
   @keyframes workspace-reading-recite-breathe {
@@ -9774,17 +9826,17 @@ html body .app .workspace-recite-dock__button:hover {
   }
 }
 
-/* Desktop stacked reading only: reduce ayah text without touching Mushaf or mobile. */
+/* Desktop stacked reading only: comfortable ayah size without touching Mushaf. */
 @media (min-width: 768px) {
   html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic,
   html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verse-card .verse-arabic {
-    --verse-font-percent: 100 !important;
-    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.35rem, 3.4vw, 1.85rem)) !important;
-    line-height: 1.9 !important;
+    --verse-font-percent: 110 !important;
+    font-size: calc((var(--verse-font-percent, 110) / 100) * clamp(1.45rem, 3.6vw, 2rem)) !important;
+    line-height: 1.92 !important;
   }
 
   html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
-    font-size: calc(var(--qpc-word-size, 22px) * 0.72) !important;
+    font-size: calc(var(--qpc-word-size, 22px) * 0.82) !important;
   }
 }
 

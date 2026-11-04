@@ -418,12 +418,12 @@ final class SeoCatalog
                 'indexable' => true,
                 'priority' => '0.5',
                 'changefreq' => 'monthly',
-                'title' => 'Help and Support | Mutqin',
-                'description' => 'Get help with Mutqin accounts, sessions, and Quran memorization practice, or write to the team with a question.',
+                'title' => 'Donate | Support hifz with Mutqin',
+                'description' => 'Give sadaqah to support Qur’an memorisation tools for students — one-time secure checkout from £10.',
                 'json_ld' => ['organization'],
                 'breadcrumbs' => [
                     ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                    ['name' => 'Support', 'path' => '/donate', 'host' => 'app'],
+                    ['name' => 'Donate', 'path' => '/donate', 'host' => 'app'],
                 ],
             ],
         ];

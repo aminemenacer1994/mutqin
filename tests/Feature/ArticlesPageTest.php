@@ -33,9 +33,8 @@ class ArticlesPageTest extends TestCase
         $this->assertStringContainsString('rel="canonical"', $html);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/articles', 'marketing'), $html);
         $this->assertStringContainsString('BreadcrumbList', $html);
-        $this->assertStringContainsString('nav-link-guides', $html);
-        $this->assertStringContainsString('href="'.url('/articles').'"', $html);
-        $this->assertStringContainsString('>Articles</strong>', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
+        $this->assertStringNotContainsString('>Articles</strong>', $html);
         $this->assertStringNotContainsString('data-tour="nav-dashboard"', $html);
     }
 
@@ -66,7 +65,7 @@ class ArticlesPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/articles/how-to-memorise-the-quran-beginners-guide', 'marketing'), $html);
-        $this->assertStringContainsString('nav-link-guides', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
     }
 
     public function test_unknown_article_slug_is_not_found(): void
@@ -74,20 +73,13 @@ class ArticlesPageTest extends TestCase
         $this->get('/articles/not-a-real-article')->assertNotFound();
     }
 
-    public function test_articles_nav_link_is_hidden_in_production(): void
+    public function test_articles_nav_link_is_hidden(): void
     {
-        $previous = $this->app['env'] ?? config('app.env');
-        $this->app['env'] = 'production';
+        $html = $this->get('/articles')
+            ->assertOk()
+            ->getContent();
 
-        try {
-            $html = $this->get('/articles')
-                ->assertOk()
-                ->getContent();
-
-            $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
-            $this->assertStringNotContainsString('>Articles</strong>', $html);
-        } finally {
-            $this->app['env'] = $previous;
-        }
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
+        $this->assertStringNotContainsString('>Articles</strong>', $html);
     }
 }

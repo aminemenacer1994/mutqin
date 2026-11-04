@@ -7,7 +7,8 @@ import { readFileSync } from 'node:fs'
 //   - Memorisation.css         the (non-scoped) styles
 //   - scripts/memorisationRuntime.js  framework-agnostic constants + helpers
 // This guard asserts on all of them, so read them together as the full source.
-const source = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+const memorisationVueSource = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+const source = memorisationVueSource
   + '\n'
   + readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
   + '\n'
@@ -610,8 +611,9 @@ includesAll('ai recitation speechmatics stability', [
   /class="verse-inline-action-btn verse-inline-play-btn"/,
 ])
 
-// Download control may live in CSS/layout helpers; do not require obsolete Vue class wiring.
-assert.match(source, /verse-inline-download-btn/, 'verse inline download styles/helpers should remain available')
+// Per-ayah download icon hidden in UI; server helper remains for any future entry points.
+assert.match(source, /downloadVerseAudio\(/)
+assert.doesNotMatch(memorisationVueSource, /verse-inline-download-btn/)
 
 includesAll('ai recitation full-session recording', [
   /getActiveSessionQueueForCheck\(\)/,

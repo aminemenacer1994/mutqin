@@ -28,6 +28,10 @@ class EnsureSubscriptionTier
             return $next($request);
         }
 
+        if (config('mutqin.unrestricted_subscription')) {
+            return $next($request);
+        }
+
         $allowed = match ($tier) {
             'pro' => $user->hasProAccess(),
             default => $user->hasPremiumAccess(),
