@@ -3684,17 +3684,18 @@ a.dash-ai-results__attempt {
 }
 
 .dash-ai-results__attempt-arabic {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.2rem;
+  display: block;
+  text-align: start;
+  unicode-bidi: plaintext;
   min-height: 1.9rem;
   overflow: hidden;
   color: var(--dash-ink);
-  font-family: Arial, sans-serif;
+  font-family: var(--dash-font-ar, "Noto Naskh Arabic", "Geeza Pro", serif);
   font-size: 1.45rem;
   line-height: 1.75;
-  white-space: nowrap;
+  white-space: normal;
+  word-spacing: 0.06em;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 .dash-ai-results__attempt-arabic:not(.is-ready) {
@@ -3702,6 +3703,8 @@ a.dash-ai-results__attempt {
 }
 
 .dash-ai-results__attempt-arabic span {
+  display: inline;
+  vertical-align: baseline;
   font-weight: 400;
   letter-spacing: 0;
 }

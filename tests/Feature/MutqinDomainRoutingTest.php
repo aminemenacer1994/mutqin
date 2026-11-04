@@ -86,8 +86,7 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertDontSee('class="mutqin-early-access-nav"', false);
 
         $this->onMarketingHost('/waiting-list')
-            ->assertOk()
-            ->assertSee('<waiting-list-page', false);
+            ->assertRedirect('/');
     }
 
     public function test_marketing_host_keeps_public_pages_on_mutqin_ai(): void

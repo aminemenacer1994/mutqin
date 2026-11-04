@@ -8365,9 +8365,11 @@ html {
 }
 
 .session-progress-rail__track {
-  width: 100%;
+  width: min(100%, 40rem);
   min-width: 0;
   height: 2px;
+  margin-inline: auto;
+  direction: ltr;
   border-radius: 999px;
   background: color-mix(in srgb, var(--zone-divider, var(--border)) 88%, var(--accent-light));
   overflow: hidden;
@@ -8391,11 +8393,6 @@ html {
   .session-progress-rail {
     display: none;
   }
-}
-
-.app.is-rtl .session-progress-rail__fill,
-[dir="rtl"] .session-progress-rail__fill {
-  margin-inline-start: auto;
 }
 
 [data-theme="dark"] .session-progress-rail__inner {
@@ -38969,7 +38966,7 @@ but not its destructive red. */
   }
 }
 
-.tools-body .mode-radio {
+.tools-body .sheet-toggle:not(.sheet-toggle--practice) .mode-radio {
   width: 32px;
   min-width: 32px;
   height: 32px;
@@ -39142,10 +39139,15 @@ but not its destructive red. */
 }
 
 .sheet-toggle--practice .mode-radio {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
   width: 2.65rem;
   min-width: 2.65rem;
   max-width: 2.65rem;
   height: 1.55rem;
+  min-height: 1.55rem;
+  max-height: 1.55rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%);
@@ -56920,14 +56922,16 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 0.22rem 0.35rem;
+  display: block;
+  text-align: start;
+  unicode-bidi: plaintext;
   font-size: clamp(1.12rem, 2.6vw, 1.35rem);
   line-height: 1.72;
   font-weight: 500;
   min-width: 0;
+  word-spacing: 0.08em;
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus .post-session-simple__focus-phrase-icon {
@@ -56937,14 +56941,22 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token {
   display: inline;
-  align-items: baseline;
-  gap: 0;
+  vertical-align: baseline;
+  white-space: normal;
   padding: 0;
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
+  display: inline;
+  text-align: start;
+  unicode-bidi: plaintext;
+  font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
@@ -65171,11 +65183,14 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     --tajweed-colour: #15803d;
     color: #14532d !important;
     -webkit-text-fill-color: #14532d !important;
-    background: color-mix(in srgb, #15803d 20%, #ecfdf3) !important;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #15803d 42%, transparent) !important;
-    border-radius: 0.28em !important;
-    padding-inline: 0.14em !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-inline: 0 !important;
     font-weight: 700 !important;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, #15803d 55%, transparent);
+    text-underline-offset: 0.12em;
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
@@ -65183,11 +65198,14 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     --tajweed-colour: #b91c1c;
     color: #9f1239 !important;
     -webkit-text-fill-color: #9f1239 !important;
-    background: color-mix(in srgb, #b91c1c 18%, #fff1f2) !important;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 46%, transparent) !important;
-    border-radius: 0.28em !important;
-    padding-inline: 0.14em !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-inline: 0 !important;
     font-weight: 700 !important;
+    text-decoration: underline wavy;
+    text-decoration-color: color-mix(in srgb, #b91c1c 62%, transparent);
+    text-underline-offset: 0.12em;
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected .post-session-simple__quran-token-text {

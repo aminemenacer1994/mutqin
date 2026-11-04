@@ -141,7 +141,7 @@ Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
-Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
+Route::redirect('/waiting-list', '/', 301)->name('waiting-list');
 Route::view('/articles', 'content.articles')->name('articles');
 Route::get('/articles/{slug}', [ArticleController::class, 'show'])
     ->where('slug', '[a-z0-9\-]+')

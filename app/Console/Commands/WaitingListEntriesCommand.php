@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\WaitingListEntry;
+use App\Support\MutqinDomains;
 use App\Support\WaitingListDatabase;
 use Illuminate\Console\Command;
 
@@ -23,16 +24,26 @@ class WaitingListEntriesCommand extends Command
 
         $database = WaitingListDatabase::databaseLabel();
         $count = WaitingListEntry::query()->count();
+        $archived = WaitingListEntry::onlyTrashed()->count();
 
-        if ($count === 0) {
+        if ($count === 0 && $archived === 0) {
             $this->warn("No signups in database [{$database}].");
-            $this->line('Live signups from mutqin.ai are stored on app.mutqin.ai (Laravel Cloud app DB), not local phpMyAdmin.');
-            $this->line('View them at: https://app.mutqin.ai/admin/waiting-list (admin login)');
+            $this->line('Live production signups are on the production MySQL cluster, not local phpMyAdmin.');
+            $this->line('View them at: '.MutqinDomains::adminUrl('waiting-list').' (admin login)');
+            $this->line('If you ran migrate:fresh, local rows were dropped — use a DB backup or production connection.');
+            $this->line('Archived signups can be restored with: php artisan mutqin:waiting-list-restore');
 
             return self::SUCCESS;
         }
 
-        $this->info("Waiting list ({$count}) — database [{$database}]");
+        if ($count === 0 && $archived > 0) {
+            $this->warn("No active signups in database [{$database}], but {$archived} archived (soft-deleted).");
+            $this->line('Restore them with: php artisan mutqin:waiting-list-restore');
+
+            return self::SUCCESS;
+        }
+
+        $this->info("Waiting list ({$count} active, {$archived} archived) — database [{$database}]");
 
         if ($this->option('csv')) {
             $this->line('name,email,joined_at');

@@ -156,6 +156,7 @@ assert.doesNotMatch(modal, /bi-play-circle post-session-simple__focus-phrase-ico
 assert.doesNotMatch(modal, /post-session-simple__panel--hero ps-rec-card/, 'modal excludes recommendation plan')
 assert.doesNotMatch(modal, /save.*plan/i, 'modal excludes save plan actions')
 assert.match(modal, /workspace-recite-try-again/, 'modal exposes try again action')
-assert.match(modal, /workspace-recite-saved|workspace-recite-results-link/, 'modal shows saved status and results link')
+assert.doesNotMatch(modal, /workspace-recite-saved|workspace-recite-results-link/, 'modal omits saved status row and results link')
+assert.match(modal, /workspace-recite-back-progress|showBackToProgress|back-to-progress/, 'modal supports back to progress when requested')
 
 console.log('workspace-ai-recite-result-view.test.mjs passed')

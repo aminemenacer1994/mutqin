@@ -195,12 +195,14 @@ class WaitingListController extends Controller
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    public function show(Request $request, WaitingListEntry $entry): JsonResponse
+    public function show(Request $request, int $entry): JsonResponse
     {
         $this->admin($request);
 
+        $row = WaitingListEntry::withTrashed()->findOrFail($entry);
+
         return response()
-            ->json(['entry' => $this->serialize($entry)])
+            ->json(['entry' => $this->serialize($row)])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
@@ -239,6 +241,43 @@ class WaitingListController extends Controller
 
         return response()->json([
             'message' => __('admin.waiting_list.deleted'),
+        ]);
+    }
+
+    public function restoreArchived(Request $request): JsonResponse
+    {
+        $this->admin($request);
+
+        $restored = 0;
+        WaitingListEntry::onlyTrashed()
+            ->orderBy('id')
+            ->chunkById(200, function ($rows) use (&$restored): void {
+                foreach ($rows as $row) {
+                    $row->restore();
+                    $restored++;
+                }
+            });
+
+        AdminDashboardService::invalidateCaches();
+
+        return response()->json([
+            'message' => __('admin.waiting_list.restored_all', ['count' => $restored]),
+            'restored' => $restored,
+        ]);
+    }
+
+    public function restore(Request $request, int $entry): JsonResponse
+    {
+        $this->admin($request);
+
+        $row = WaitingListEntry::onlyTrashed()->findOrFail($entry);
+        $row->restore();
+
+        AdminDashboardService::invalidateCaches();
+
+        return response()->json([
+            'message' => __('admin.waiting_list.restored'),
+            'entry' => $this->serialize($row->fresh()),
         ]);
     }
 

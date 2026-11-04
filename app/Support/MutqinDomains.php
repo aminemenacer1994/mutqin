@@ -179,6 +179,17 @@ final class MutqinDomains
         return self::marketingOrigin().($path === '//' ? '/' : $path);
     }
 
+    /**
+     * Admin UI (https://mutqin.ai/admin) — same host as the public app when canonicalized.
+     */
+    public static function adminUrl(string $suffix = ''): string
+    {
+        $suffix = ltrim($suffix, '/');
+        $path = $suffix === '' ? '/admin' : '/admin/'.$suffix;
+
+        return self::canonicalUrl($path);
+    }
+
     public static function hostsDifferForSeo(): bool
     {
         return self::hostRoutingEnabled();

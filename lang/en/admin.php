@@ -14,6 +14,8 @@ return [
         'export_csv' => 'Download CSV',
         'total' => '{0} No signups yet.|{1} :count signup.|[2,*] :count signups.',
         'deleted' => 'Waiting list signup removed.',
+        'restored' => 'Waiting list signup restored.',
+        'restored_all' => ':count archived signup(s) restored.',
         'delete' => 'Delete permanently',
         'delete_confirm' => 'Remove this signup from the waiting list permanently?',
         'deleted_flash' => 'Waiting list signup removed.',

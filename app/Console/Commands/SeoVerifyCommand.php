@@ -304,9 +304,8 @@ class SeoVerifyCommand extends Command
         }
 
         $waitingList = $this->getLocal('/waiting-list');
-        if ($waitingList === null || ! $waitingList->isSuccessful()
-            || ! str_contains((string) $waitingList->getContent(), 'waiting-list-page')) {
-            $failures[] = '/waiting-list must render the signup page';
+        if ($waitingList === null || ! $waitingList->isRedirection()) {
+            $failures[] = '/waiting-list must redirect away from the public signup page';
         }
 
         $this->record(

@@ -327,6 +327,15 @@
               </div>
 
               <div v-else-if="isComplete" class="amd-complete__actions amd-complete__actions--footer">
+                <button
+                  v-if="showBackToProgress"
+                  type="button"
+                  class="btn-ghost amd-complete__back-progress"
+                  @click.stop="$emit('back-to-progress')"
+                >
+                  <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  {{ backToProgressLabel }}
+                </button>
                 <button type="button" class="btn-secondary" @click.stop="$emit('test-again')">
                   {{ testAgainLabel }}
                 </button>
@@ -462,6 +471,8 @@ export default {
     genericError: { type: String, default: 'Please try again in a moment.' },
     emptyAyahTitle: { type: String, default: 'Ayah text not ready' },
     emptyAyahDesc: { type: String, default: 'We could not show the ayah for this check. Close and try again.' },
+    showBackToProgress: { type: Boolean, default: false },
+    backToProgressLabel: { type: String, default: 'Back to progress' },
   },
   emits: [
     'cancel',
@@ -477,6 +488,7 @@ export default {
     'retry',
     'enable-mic',
     'continue-without-ai',
+    'back-to-progress',
   ],
   data() {
     return {

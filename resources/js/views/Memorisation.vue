@@ -1854,7 +1854,8 @@
         <div class="tools-top">
         <div class="tools-topbar">
           <div class="tools-title">
-            <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ t('common.controls') }}</h3>
+            <p class="tools-title__eyebrow">{{ t('memorisation.controls_panel_eyebrow') }}</p>
+            <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ controlsPanelTitle }}</h3>
           </div>
             <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
@@ -3675,17 +3676,20 @@
       :error-desc="translateOrFallback('memorisation.analyticsEmpty.modalErrorDesc', 'Please close and try again.')"
       :empty-title="translateOrFallback('memorisation.analyticsEmpty.modalEmptyTitle', 'No results yet')"
       :empty-desc="translateOrFallback('memorisation.analyticsEmpty.modalEmptyDesc', 'Complete a recitation check to see your results here.')"
-      :attempt-saved="workspaceReciteAttemptSaved"
-      :save-state="workspaceReciteSaveState"
-      :saved-label="translateOrFallback('dashboard.ai_recite.attempt_saved', 'This attempt is saved.')"
-      :retrying-label="translateOrFallback('dashboard.ai_recite.attempt_retrying', 'Couldn\'t save yet. Retrying…')"
-      :results-href="aiReciteResultsHref"
-      :results-label="translateOrFallback('dashboard.ai_recite.see_all_results', 'See all results')"
+      :attempt-saved="false"
+      :save-state="''"
+      :saved-label="''"
+      :retrying-label="''"
+      :results-href="''"
+      :results-label="''"
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
+      :show-back-to-progress="showProgressExitCta"
+      :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Back to progress')"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
+      @back-to-progress="exitToProgressPage"
       @mutashabihat-compare="onWorkspaceReciteMutashabihatCompare"
     />
 
@@ -5240,6 +5244,8 @@
       :done-label="amdLabels.done"
       :enable-mic-label="amdLabels.enableMic"
       :try-again-label="amdLabels.retry"
+      :show-back-to-progress="showProgressExitCta"
+      :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Back to progress')"
       :empty-ayah-title="t('memorisation.amd.emptyAyahTitle')"
       :empty-ayah-desc="t('memorisation.amd.emptyAyahDesc')"
       :generic-error="t('common.status.errorDesc')"
@@ -5254,6 +5260,7 @@
       @test-again="resetAmdLiveSurface"
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
+      @back-to-progress="exitToProgressPage"
       @enable-mic="retryMicrophoneHelp"
       @continue-without-ai="continuePracticeWithoutAi"
     />

@@ -189,6 +189,16 @@ export const adminApi = {
     return !!data?.message
   },
 
+  async restoreWaitingListEntry(id) {
+    const { data } = await http.post(`/admin/waiting-list/${id}/restore`)
+    return data?.entry || null
+  },
+
+  async restoreArchivedWaitingList() {
+    const { data } = await http.post('/admin/waiting-list/restore-archived')
+    return Number(data?.restored || 0)
+  },
+
   async getUsers({
     limit = 20,
     page = 1,

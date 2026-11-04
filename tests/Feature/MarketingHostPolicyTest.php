@@ -65,7 +65,7 @@ class MarketingHostPolicyTest extends TestCase
             ->assertSee('<articles-page', false);
 
         $this->getOnMarketingHost('/waiting-list')
-            ->assertRedirect('https://mutqin.ai/');
+            ->assertRedirect('/');
     }
 
     public function test_marketing_host_admin_waiting_list_stays_on_mutqin_ai(): void

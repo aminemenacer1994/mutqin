@@ -2652,6 +2652,9 @@ export default {
       }
       return hints[this.tab] || ''
     },
+    showProgressExitCta() {
+      return !!(this.dashboardEntryReturnHref || this.dashboardAiCheckReturnTo)
+    },
     showPracticeToolsTab() {
       return true
     },
@@ -36890,6 +36893,22 @@ export default {
     returnToDashboard() {
       const href = this.dashboardEntryReturnHref || this.learnerDashboardUrl || '/dashboard'
       window.location.assign(href)
+    },
+    exitToProgressPage() {
+      if (this.workspaceReciteAnalysisOpen) {
+        this.workspaceReciteAnalysisOpen = false
+        this.workspaceReciteAnalysisLoading = false
+        this.workspaceReciteAnalysisError = false
+        this.workspaceReciteAnalysisView = null
+        this._workspaceReciteAnalysisSourceView = null
+        this.postSessionDashboardAfterRecite = false
+        this.postSessionCompletionAfterRecite = false
+      }
+      if (this.amdOpen && this.isAmdEntryActive(this.amdEntrySource)) {
+        this.closeAmdModal({ returnToCompletion: false })
+        return
+      }
+      this.returnToDashboard()
     },
     handleHeaderSessionAction() {
       if (this.workspaceTourFreshStartPending) {

@@ -343,17 +343,21 @@
             </div>
 
             <footer v-if="!loading && !error && !empty" class="post-session-simple__footer">
-              <p v-if="attemptSaved || saveState === 'retrying' || resultsHref" class="workspace-recite-saved" data-testid="workspace-recite-saved" aria-live="polite">
-                <span v-if="saveState === 'retrying'" class="workspace-recite-saved__retrying">{{ retryingLabel }}</span>
-                <span v-else-if="attemptSaved || saveState === 'saved'">{{ savedLabel }}</span>
-                <a
-                  v-if="resultsHref"
-                  class="workspace-recite-saved__link"
-                  :href="resultsHref"
-                  data-testid="workspace-recite-results-link"
-                >{{ resultsLabel }}</a>
-              </p>
-              <div class="post-session-simple__actions post-session-simple__actions--2">
+              <div
+                class="post-session-simple__actions"
+                :class="showBackToProgress ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
+              >
+                <button
+                  v-if="showBackToProgress"
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--ghost"
+                  :disabled="actionsBusy"
+                  data-testid="workspace-recite-back-progress"
+                  @click="$emit('back-to-progress')"
+                >
+                  <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  <span>{{ backToProgressLabel }}</span>
+                </button>
                 <button
                   type="button"
                   class="post-session-simple__btn post-session-simple__btn--secondary"
@@ -432,8 +436,10 @@ export default {
     mutashabihatTitle: { type: String, default: 'Possible similar ayah confusion' },
     mutashabihatLead: { type: String, default: 'Your recitation may have drifted toward a similar ayah.' },
     compareDifferencesLabel: { type: String, default: 'Compare differences' },
+    showBackToProgress: { type: Boolean, default: false },
+    backToProgressLabel: { type: String, default: 'Back to progress' },
   },
-  emits: ['close', 'try-again', 'mutashabihat-compare'],
+  emits: ['close', 'try-again', 'mutashabihat-compare', 'back-to-progress'],
   data() {
     return {
       returnFocusEl: null,

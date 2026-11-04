@@ -78,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('api.admin.feedback.destroy');
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
         Route::get('/admin/waiting-list', [AdminWaitingListController::class, 'index'])->name('api.admin.waiting-list.index');
+        Route::post('/admin/waiting-list/restore-archived', [AdminWaitingListController::class, 'restoreArchived'])
+            ->name('api.admin.waiting-list.restore-archived');
         Route::get('/admin/waiting-list/export', [AdminWaitingListController::class, 'export'])->name('api.admin.waiting-list.export');
         Route::get('/admin/waiting-list/analytics', [AdminWaitingListController::class, 'analytics'])->name('api.admin.waiting-list.analytics');
         Route::middleware('can:manage-waitlist-launch-email')->group(function () {
@@ -106,6 +108,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'update'])
             ->whereNumber('entry')
             ->name('api.admin.waiting-list.update');
+        Route::post('/admin/waiting-list/{entry}/restore', [AdminWaitingListController::class, 'restore'])
+            ->whereNumber('entry')
+            ->name('api.admin.waiting-list.restore');
         Route::delete('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'destroy'])
             ->whereNumber('entry')
             ->name('api.admin.waiting-list.destroy');

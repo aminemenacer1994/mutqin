@@ -41,6 +41,14 @@ class MutqinDomainsTest extends TestCase
         $this->assertSame('https://app.mutqin.ai/register', MutqinDomains::appUrl('/register'));
     }
 
+    public function test_admin_url_uses_marketing_host_when_canonicalized(): void
+    {
+        $this->enableSplitHosts();
+
+        $this->assertSame('https://mutqin.ai/admin', MutqinDomains::adminUrl());
+        $this->assertSame('https://mutqin.ai/admin/waiting-list', MutqinDomains::adminUrl('waiting-list'));
+    }
+
     public function test_app_host_defaults_to_app_subdomain_when_app_url_is_marketing(): void
     {
         config([

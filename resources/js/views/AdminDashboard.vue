@@ -746,6 +746,15 @@
                   <input v-model="waitingFilters.archived" type="checkbox" @change="loadWaitingList(1)">
                   {{ t('admin.waiting_list.showArchived') }}
                 </label>
+                <button
+                  v-if="waitingFilters.archived && waitingTotal > 0"
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="waitingRestoreBusy"
+                  @click="askRestoreAllArchived"
+                >
+                  {{ t('admin.waiting_list.restoreAllArchived') }}
+                </button>
                 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" @click="exportWaitingList">
                   {{ t('admin.waiting_list.exportCsv') }}
                 </button>
@@ -811,6 +820,16 @@
                         {{ t('admin.waiting_list.view') }}
                       </button>
                       <button
+                        v-if="waitingFilters.archived || row.status === 'archived'"
+                        type="button"
+                        class="admin-btn admin-btn--ghost admin-btn--sm"
+                        :disabled="waitingRestoreBusy"
+                        @click="restoreWaitingRow(row)"
+                      >
+                        {{ t('admin.waiting_list.restore') }}
+                      </button>
+                      <button
+                        v-else
                         type="button"
                         class="admin-btn admin-btn--ghost admin-btn--sm"
                         @click="openWaitingEdit(row.id)"
@@ -882,6 +901,16 @@
                               {{ t('admin.waiting_list.view') }}
                             </button>
                             <button
+                              v-if="waitingFilters.archived || row.status === 'archived'"
+                              type="button"
+                              class="admin-btn admin-btn--ghost admin-btn--sm"
+                              :disabled="waitingRestoreBusy"
+                              @click="restoreWaitingRow(row)"
+                            >
+                              {{ t('admin.waiting_list.restore') }}
+                            </button>
+                            <button
+                              v-else
                               type="button"
                               class="admin-btn admin-btn--ghost admin-btn--sm"
                               @click="openWaitingEdit(row.id)"
@@ -1683,6 +1712,16 @@
             </div>
             <div class="admin-form__actions admin-form__actions--split">
               <button
+                v-if="waitingDetail.status === 'archived'"
+                type="button"
+                class="admin-btn admin-btn--primary"
+                :disabled="waitingRestoreBusy"
+                @click="restoreWaitingRow(waitingDetail, true)"
+              >
+                {{ t('admin.waiting_list.restore') }}
+              </button>
+              <button
+                v-else
                 type="button"
                 class="admin-btn admin-btn--danger"
                 :disabled="waitingDeletingId === waitingDetail.id || confirmBusy"
@@ -1892,6 +1931,7 @@ export default {
       waitingDetailSaving: false,
       waitingDetailError: '',
       waitingDeletingId: null,
+      waitingRestoreBusy: false,
       selectedWaitingIds: [],
       waitingDeleteFromModal: false,
       syncTimer: null,
@@ -2133,6 +2173,7 @@ export default {
       if (this.confirmKind === 'bulk_delete_feedback') return this.t('admin.feedback.bulkDelete')
       if (this.confirmKind === 'delete_waiting') return this.t('admin.waiting_list.delete')
       if (this.confirmKind === 'bulk_delete_waiting') return this.t('admin.waiting_list.bulkDelete')
+      if (this.confirmKind === 'restore_all_waiting') return this.t('admin.waiting_list.restoreAllArchived')
       return ''
     },
     confirmMessage() {
@@ -2156,6 +2197,9 @@ export default {
       if (this.confirmKind === 'bulk_delete_waiting') {
         return this.t('admin.waiting_list.bulkDeleteConfirm', { n: this.selectedWaitingIds.length })
       }
+      if (this.confirmKind === 'restore_all_waiting') {
+        return this.t('admin.waiting_list.restoreAllConfirm', { n: this.waitingTotal || 0 })
+      }
       return ''
     },
     confirmIsDanger() {
@@ -2167,6 +2211,9 @@ export default {
       }
       if (this.confirmKind === 'delete_waiting' || this.confirmKind === 'bulk_delete_waiting') {
         return this.t('admin.waiting_list.delete')
+      }
+      if (this.confirmKind === 'restore_all_waiting') {
+        return this.t('admin.waiting_list.restoreAllArchived')
       }
       return this.confirmTitle
     },
@@ -2702,6 +2749,51 @@ export default {
       this.confirmRow = { id: 'bulk' }
       this.confirmOpen = true
     },
+    askRestoreAllArchived() {
+      if (!this.waitingTotal) return
+      this.confirmKind = 'restore_all_waiting'
+      this.confirmRow = { id: 'restore-all' }
+      this.confirmOpen = true
+    },
+    async restoreWaitingRow(row, fromModal = false) {
+      if (!row?.id || this.waitingRestoreBusy) return
+      this.waitingRestoreBusy = true
+      try {
+        await adminApi.restoreWaitingListEntry(row.id)
+        if (fromModal || this.waitingDetail?.id === row.id) {
+          this.waitingDetail = null
+        }
+        this.waitingFilters.archived = false
+        await this.loadWaitingList(1)
+        await this.$refs.waitingAnalytics?.load()
+        await this.refreshSnapshotQuiet()
+        this.showToast(this.t('admin.waiting_list.restored'))
+      } catch (error) {
+        const message = error?.response?.data?.message || this.t('admin.waiting_list.restoreError')
+        this.waitingError = message
+        this.showToast(message)
+      } finally {
+        this.waitingRestoreBusy = false
+      }
+    },
+    async restoreAllArchivedWaiting() {
+      if (this.waitingRestoreBusy) return
+      this.waitingRestoreBusy = true
+      try {
+        const restored = await adminApi.restoreArchivedWaitingList()
+        this.waitingFilters.archived = false
+        await this.loadWaitingList(1)
+        await this.$refs.waitingAnalytics?.load()
+        await this.refreshSnapshotQuiet()
+        this.showToast(this.t('admin.waiting_list.restoredAll', { n: restored }))
+      } catch (error) {
+        const message = error?.response?.data?.message || this.t('admin.waiting_list.restoreError')
+        this.waitingError = message
+        this.showToast(message)
+      } finally {
+        this.waitingRestoreBusy = false
+      }
+    },
     async deleteWaitingRow(row, fromModal = false) {
       if (!row?.id || this.waitingDeletingId) return
       this.waitingDeletingId = row.id
@@ -3079,7 +3171,7 @@ export default {
     },
     async runConfirmAction() {
       if (!this.confirmKind) return
-      if (this.confirmKind !== 'bulk_delete_feedback' && this.confirmKind !== 'bulk_delete_waiting' && !this.confirmRow?.id) return
+      if (this.confirmKind !== 'bulk_delete_feedback' && this.confirmKind !== 'bulk_delete_waiting' && this.confirmKind !== 'restore_all_waiting' && !this.confirmRow?.id) return
       this.confirmBusy = true
       try {
         if (this.confirmKind === 'reset') {
@@ -3094,6 +3186,8 @@ export default {
           await this.deleteWaitingRow(this.confirmRow, this.waitingDeleteFromModal)
         } else if (this.confirmKind === 'bulk_delete_waiting') {
           await this.bulkDeleteWaiting()
+        } else if (this.confirmKind === 'restore_all_waiting') {
+          await this.restoreAllArchivedWaiting()
         }
         this.confirmOpen = false
         this.confirmKind = ''

@@ -55,8 +55,8 @@ return [
     ))),
 
     /*
-     | Host-based routing (production): mutqin.ai serves the public site; app.mutqin.ai
-     | serves the Laravel application. Disabled automatically when hosts match (local/tests).
+     | Host-based routing (production): mutqin.ai serves the application (including /admin);
+     | app.mutqin.ai redirects GET/HEAD to mutqin.ai. Disabled when hosts match (local/tests).
      */
     'domains' => [
         'marketing_host' => env('MUTQIN_MARKETING_HOST', 'mutqin.ai'),

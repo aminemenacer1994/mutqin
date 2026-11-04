@@ -11,11 +11,10 @@ class WaitingListFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_waiting_list_page_is_available(): void
+    public function test_public_waiting_list_page_is_not_available(): void
     {
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('<waiting-list-page', false);
+            ->assertRedirect('/');
     }
 
     public function test_public_waiting_list_page_exposes_real_signup_count(): void
@@ -26,8 +25,7 @@ class WaitingListFlowTest extends TestCase
         ]);
 
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('count="1"', false);
+            ->assertRedirect('/');
     }
 
     public function test_public_waiting_list_requires_name_and_email(): void
@@ -91,8 +89,7 @@ class WaitingListFlowTest extends TestCase
     public function test_waiting_list_page_exposes_csrf_free_join_endpoint(): void
     {
         $this->get(route('waiting-list'))
-            ->assertOk()
-            ->assertSee('join-waiting-list', false);
+            ->assertRedirect('/');
     }
 
     public function test_local_waiting_list_store_url_stays_on_the_current_host(): void
@@ -290,9 +287,29 @@ class WaitingListFlowTest extends TestCase
             ->deleteJson("/api/admin/waiting-list/{$entry->id}")
             ->assertOk();
 
-        $this->assertDatabaseMissing('waiting_list_entries', [
+        $this->assertSoftDeleted('waiting_list_entries', [
             'id' => $entry->id,
         ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/waiting-list?archived=1')
+            ->assertOk()
+            ->assertJsonPath('total', 1);
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/waiting-list/{$entry->id}/restore")
+            ->assertOk()
+            ->assertJsonPath('entry.email', 'layla.beginner@example.com');
+
+        $this->assertDatabaseHas('waiting_list_entries', [
+            'id' => $entry->id,
+            'deleted_at' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson('/api/admin/waiting-list/restore-archived')
+            ->assertOk()
+            ->assertJsonPath('restored', 0);
     }
 
     public function test_non_admin_cannot_use_waiting_list_admin_api(): void

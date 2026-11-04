@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Waiting-list rows may live on a dedicated connection (e.g. app.mutqin.ai MySQL
- * while the admin UI runs on mutqin.ai). Use this helper for schema checks and ops.
+ * Waiting-list rows may live on a dedicated connection (production MySQL while the
+ * admin UI runs at mutqin.ai/admin). Use this helper for schema checks and ops.
  */
 final class WaitingListDatabase
 {

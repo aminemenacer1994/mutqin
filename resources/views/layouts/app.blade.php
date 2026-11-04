@@ -3321,8 +3321,12 @@
         padding: 0.78rem 0.95rem !important;
       }
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
+        display: block !important;
+        flex-wrap: unset !important;
         font-size: clamp(1.6rem, 3vw, 2.15rem) !important;
         line-height: 1.8 !important;
+        unicode-bidi: plaintext;
+        font-family: "Noto Naskh Arabic", "Geeza Pro", "Arial", sans-serif;
       }
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
         padding: 0.92rem 1rem !important;
