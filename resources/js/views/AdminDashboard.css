@@ -3481,6 +3481,38 @@ html[data-theme="dark"] .admin-toast {
   font-size: 0.86rem;
 }
 
+.admin-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 35%, var(--dash-line));
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-card));
+  color: var(--dash-ink);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.admin-banner p {
+  margin: 0 0 0.65rem;
+}
+
+.admin-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-banner--warn {
+  border-color: color-mix(in srgb, var(--dash-danger, #b55041) 45%, var(--dash-line));
+  background: color-mix(in srgb, var(--dash-danger, #b55041) 12%, var(--dash-card));
+}
+
+.admin-banner--muted {
+  border-color: var(--dash-line);
+  background: color-mix(in srgb, var(--dash-muted) 8%, var(--dash-card));
+  color: var(--dash-muted);
+}
+
 .admin-btn,
 .admin-icon-btn {
   appearance: none;

@@ -131,6 +131,9 @@ class WaitingListController extends Controller
         }
 
         $total = (clone $query)->count();
+        $archivedTotal = $archived
+            ? $total
+            : (int) WaitingListEntry::onlyTrashed()->count();
         $totalPages = max(1, (int) ceil($total / $perPage));
         if ($page > $totalPages) {
             $page = $totalPages;
@@ -147,6 +150,8 @@ class WaitingListController extends Controller
             ->json([
                 'items' => $rows->map(fn (WaitingListEntry $row) => $this->serialize($row, $registeredEmails))->values()->all(),
                 'archived' => $archived,
+                'archived_total' => $archivedTotal,
+                'active_total' => $archived ? (int) WaitingListEntry::query()->count() : $total,
                 'total' => $total,
                 'page' => $page,
                 'per_page' => $perPage,

@@ -100,6 +100,9 @@
               </em>
             </button>
           </div>
+          <p v-if="waitingStorageMismatchMessage" class="admin-banner admin-banner--warn" role="alert">
+            {{ waitingStorageMismatchMessage }}
+          </p>
         </header>
 
         <!-- DIRECTORY -->
@@ -146,6 +149,7 @@
                   @click="setDirectoryTab('waiting')"
                 >
                   {{ t('admin.tab_waiting_list') }}
+                  <span v-if="waitingArchivedSnapshot > 0" class="admin-directory-tab__badge">{{ waitingArchivedSnapshot }}</span>
                 </button>
               </div>
             </div>
@@ -730,6 +734,25 @@
 
           <template v-else-if="directoryTab === 'waiting'">
             <WaitingListAnalytics ref="waitingAnalytics" :show-launch-email="canManageWaitlistLaunchEmail" />
+            <div v-if="waitingArchivedBanner" class="admin-banner" role="status">
+              <p>{{ waitingArchivedBanner }}</p>
+              <div class="admin-banner__actions">
+                <button type="button" class="admin-btn admin-btn--primary admin-btn--sm" @click="showArchivedWaiting">
+                  {{ t('admin.waiting_list.showArchived') }}
+                </button>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="waitingRestoreBusy"
+                  @click="askRestoreAllArchivedFromBanner"
+                >
+                  {{ t('admin.waiting_list.restoreAllArchived') }}
+                </button>
+              </div>
+            </div>
+            <p v-else-if="waitingEmptyDiagnostic" class="admin-banner admin-banner--muted" role="status">
+              {{ waitingEmptyDiagnostic }}
+            </p>
             <div class="admin-toolbar">
               <div class="admin-toolbar__row">
                 <div class="admin-toolbar__search-wrap">
@@ -1924,6 +1947,7 @@ export default {
       waitingLoading: false,
       waitingError: '',
       waitingFilters: { q: '', archived: false },
+      waitingArchivedTotal: null,
       waitingSearchTimer: null,
       waitingDetail: null,
       waitingDetailMode: 'view',
@@ -2009,6 +2033,27 @@ export default {
       if (metric?.available === false || metric?.value == null) return null
       return Number(metric.value)
     },
+    waitingArchivedSnapshot() {
+      return Number(this.data?.snapshot?.waiting_list_total?.archived || 0)
+    },
+    waitingArchivedCount() {
+      const fromList = this.waitingArchivedTotal
+      if (Number.isFinite(fromList) && fromList > 0) return Number(fromList)
+      return this.waitingArchivedSnapshot
+    },
+    waitingArchivedBanner() {
+      if (this.waitingFilters.archived || this.waitingArchivedCount <= 0) return ''
+      return this.t('admin.waiting_list.archivedBanner', { n: this.waitingArchivedCount })
+    },
+    waitingEmptyDiagnostic() {
+      if (this.waitingStorageMismatchMessage || this.waitingArchivedCount > 0) return ''
+      if (this.waitingLoading || this.waitingError) return ''
+      if (this.waitingTotal == null || this.waitingTotal > 0) return ''
+      const db = this.data?.snapshot?.waiting_list_total?.database
+        || this.data?.meta?.waiting_list_storage?.database
+        || ''
+      return this.t('admin.waiting_list.emptyDiagnostic', { database: db || '—' })
+    },
     waitingStorageMismatchMessage() {
       const storage = this.data?.meta?.waiting_list_storage
       if (!storage?.misconfigured) return ''
@@ -2059,7 +2104,11 @@ export default {
           action: 'waiting',
           toneClass: 'admin-kpi--waiting',
           icon: 'bi bi-hourglass-split',
-          trendLabel: waitingMetric?.available === false ? null : this.formatTrend(snapshot.waiting_list_total),
+          trendLabel: waitingMetric?.available === false
+            ? null
+            : (waitingMetric?.archived > 0 && waitingValue === 0
+              ? this.t('admin.waiting_list.archivedKpiHint', { n: Number(waitingMetric.archived) })
+              : this.formatTrend(snapshot.waiting_list_total)),
           trendDir: waitingMetric?.available === false ? null : this.trendDir(snapshot.waiting_list_total),
         },
         {
@@ -2198,7 +2247,9 @@ export default {
         return this.t('admin.waiting_list.bulkDeleteConfirm', { n: this.selectedWaitingIds.length })
       }
       if (this.confirmKind === 'restore_all_waiting') {
-        return this.t('admin.waiting_list.restoreAllConfirm', { n: this.waitingTotal || 0 })
+        return this.t('admin.waiting_list.restoreAllConfirm', {
+          n: this.waitingArchivedCount || this.waitingTotal || 0,
+        })
       }
       return ''
     },
@@ -2639,6 +2690,9 @@ export default {
         this.waitingTotal = data.total
         this.waitingPage = data.page
         this.waitingTotalPages = data.total_pages
+        if (typeof data.archived_total === 'number') {
+          this.waitingArchivedTotal = data.archived_total
+        }
         this.selectedWaitingIds = this.selectedWaitingIds.filter((id) => (
           this.waitingItems.some((row) => row.id === id)
         ))
@@ -2754,6 +2808,17 @@ export default {
       this.confirmKind = 'restore_all_waiting'
       this.confirmRow = { id: 'restore-all' }
       this.confirmOpen = true
+    },
+    askRestoreAllArchivedFromBanner() {
+      if (this.waitingArchivedCount <= 0) return
+      this.waitingFilters.archived = true
+      this.confirmKind = 'restore_all_waiting'
+      this.confirmRow = { id: 'restore-all' }
+      this.confirmOpen = true
+    },
+    showArchivedWaiting() {
+      this.waitingFilters.archived = true
+      this.loadWaitingList(1)
     },
     async restoreWaitingRow(row, fromModal = false) {
       if (!row?.id || this.waitingRestoreBusy) return

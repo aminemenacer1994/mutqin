@@ -991,6 +991,15 @@ class AdminDashboardService
             $waitingListTotal = null;
         }
 
+        $waitingListArchived = 0;
+        if ($waitingListAvailable) {
+            try {
+                $waitingListArchived = (int) WaitingListEntry::onlyTrashed()->count();
+            } catch (\Throwable) {
+                $waitingListArchived = 0;
+            }
+        }
+
         $aiChecks = AiReciteAttempt::query()->count();
         $notes = AyahNote::query()->count();
         $contactAgg = ContactSubmission::query()
@@ -1059,6 +1068,7 @@ class AdminDashboardService
             'waiting_list_total' => [
                 'key' => 'waiting_list_total',
                 'value' => $waitingListTotal,
+                'archived' => $waitingListArchived,
                 'available' => $waitingListAvailable,
                 'storage_error' => $waitingListStorageError,
                 'connection' => WaitingListDatabase::connectionName(),
