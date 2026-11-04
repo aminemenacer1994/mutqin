@@ -2,7 +2,7 @@
 
 Mutqin is a Quran memorisation workspace: practise short ayah ranges, use memorisation techniques (Focus, Blur, Chaining, Anchor), check recitation with AI, and get personalised next-session recommendations.
 
-**Production:** [https://app.mutqin.ai](https://app.mutqin.ai)
+**Production:** [https://mutqin.ai](https://mutqin.ai)
 
 ## Stack
 

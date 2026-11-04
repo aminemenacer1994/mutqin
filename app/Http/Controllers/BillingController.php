@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\StripeWebhookEvent;
 use App\Support\BillingIntent;
+use App\Support\MutqinDomains;
 use App\Support\MutqinLog;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -489,13 +490,19 @@ class BillingController extends Controller
 
     private function stripeReturnUrl(string $path): string
     {
+        $path = '/'.ltrim($path, '/');
+
+        if (! app()->environment('local', 'testing')) {
+            return MutqinDomains::marketingUrl($path);
+        }
+
         $request = request();
         $origin = $request ? rtrim($request->getSchemeAndHttpHost(), '/') : '';
         if ($origin === '') {
             $origin = rtrim((string) config('app.url'), '/');
         }
 
-        return $origin.'/'.ltrim($path, '/');
+        return $origin.$path;
     }
 
     private function redirectStripeFailure(): \Illuminate\Http\RedirectResponse

@@ -412,13 +412,13 @@ class EmailVerificationTest extends TestCase
 
     public function test_production_verification_urls_stay_on_https_app_host(): void
     {
-        PublicAppUrl::apply('https://app.mutqin.ai', 'production');
+        PublicAppUrl::apply('https://mutqin.ai', 'production');
 
         try {
             $user = User::factory()->unverified()->create();
             $url = (new VerifyEmail)->toMail($user)->viewData['url'];
 
-            $this->assertStringStartsWith('https://app.mutqin.ai/email/verify/', $url);
+            $this->assertStringStartsWith('https://mutqin.ai/email/verify/', $url);
             parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
             $this->assertArrayHasKey('expires', $query);
             $this->assertArrayHasKey('signature', $query);

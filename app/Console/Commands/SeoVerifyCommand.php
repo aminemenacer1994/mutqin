@@ -19,7 +19,7 @@ class SeoVerifyCommand extends Command
     protected $signature = 'mutqin:seo-verify
                             {--live : Also HTTP-check marketing/app hosts}
                             {--base= : Override marketing origin (default https://mutqin.ai)}
-                            {--app-base= : Override app origin (default https://app.mutqin.ai)}
+                            {--app-base= : Override app origin (default https://mutqin.ai)}
                             {--json : Emit machine-readable JSON}';
 
     protected $description = 'Verify Mutqin SEO readiness (robots, sitemap, canonicals, noindex, SSR).';

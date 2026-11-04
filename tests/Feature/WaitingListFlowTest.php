@@ -107,10 +107,6 @@ class WaitingListFlowTest extends TestCase
             'http://localhost:8000/join-waiting-list',
             \App\Support\MutqinDomains::waitingListStoreUrl($request)
         );
-        $this->assertStringNotContainsString(
-            'app.mutqin.ai',
-            \App\Support\MutqinDomains::waitingListStoreUrl($request)
-        );
     }
 
     public function test_marketing_hostname_on_local_app_still_posts_to_same_origin(): void
@@ -127,7 +123,7 @@ class WaitingListFlowTest extends TestCase
         ]);
 
         $this->assertStringNotContainsString(
-            'app.mutqin.ai',
+            'legacy-host.test',
             \App\Support\MutqinDomains::waitingListStoreUrl($request)
         );
         $this->assertStringContainsString(

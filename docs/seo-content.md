@@ -15,7 +15,7 @@ Related: [Technical SEO](seo.md), [Keyword map](seo-keyword-map.md), [Monitoring
 | Sitemap / robots / JSON-LD | `SeoCatalog` merges `SeoArticles::catalogDefinitions()` |
 | UI | Same `seo-launch-page` island + `info-pages` / `seo-pages` styles |
 
-Do **not** invent a second `/quran-memorization/*` tree for the same articles. Canonical path is `/guides/{slug}` on `app.mutqin.ai`.
+Do **not** invent a second `/quran-memorization/*` tree for the same articles. Canonical path is `/guides/{slug}` on `mutqin.ai`.
 
 ## Add a new article
 

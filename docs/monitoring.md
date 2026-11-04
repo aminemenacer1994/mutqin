@@ -1,6 +1,6 @@
 # Production health & uptime monitoring
 
-Mutqin runs on **Laravel Cloud** (`https://app.mutqin.ai`). Monitoring uses the platform you already have — **Laravel Cloud** (deploy / resource / Slack alerts, automatic SSL) and **Sentry** (exceptions + health/alert probes) — plus a small in-app health surface for external uptime checkers. Do **not** add a second APM or self-hosted uptime package.
+Mutqin runs on **Laravel Cloud** (`https://mutqin.ai`). Monitoring uses the platform you already have — **Laravel Cloud** (deploy / resource / Slack alerts, automatic SSL) and **Sentry** (exceptions + health/alert probes) — plus a small in-app health surface for external uptime checkers. Do **not** add a second APM or self-hosted uptime package.
 
 ## Endpoints
 
@@ -20,7 +20,7 @@ Mutqin runs on **Laravel Cloud** (`https://app.mutqin.ai`). Monitoring uses the 
 | `degraded` | **200** | App is serving; non-critical issue (stale scheduler/worker, Speechmatics misconfig, …) |
 | `unavailable` | **503** | Critical failure (database, cache, required Redis, or storage write) |
 
-Point the primary uptime monitor at **`https://app.mutqin.ai/health`** and alert on **non-200** (i.e. `unavailable`). Optionally keep a second check on `/up` for pure process liveness. Do **not** require the JSON body to equal `"ok"` — `degraded` is still “up”.
+Point the primary uptime monitor at **`https://mutqin.ai/health`** and alert on **non-200** (i.e. `unavailable`). Optionally keep a second check on `/up` for pure process liveness. Do **not** require the JSON body to equal `"ok"` — `degraded` is still “up”.
 
 ### What is never exposed
 
@@ -92,8 +92,8 @@ Enable the **Laravel Cloud scheduler** on the environment or heartbeats stay mis
 
 Laravel Cloud renews TLS automatically. For belt-and-suspenders:
 
-1. Create one monitor against `https://app.mutqin.ai/health` (expect **200**; follow redirects off).
-2. Enable the provider’s **SSL certificate expiry** check on `app.mutqin.ai` if offered.
+1. Create one monitor against `https://mutqin.ai/health` (expect **200**; follow redirects off).
+2. Enable the provider’s **SSL certificate expiry** check on `mutqin.ai` if offered.
 3. Track **domain registration** expiry at your registrar (e.g. 30/14/7 day reminders) — separate from TLS.
 
 Do not run Spatie Uptime Monitor (or similar) inside the Mutqin app itself.
@@ -123,12 +123,12 @@ Do not run Spatie Uptime Monitor (or similar) inside the Mutqin app itself.
 ### Production / staging uptime
 
 ```bash
-curl -sS -o /tmp/mutqin-health.json -w "%{http_code}\n" https://app.mutqin.ai/health
+curl -sS -o /tmp/mutqin-health.json -w "%{http_code}\n" https://mutqin.ai/health
 cat /tmp/mutqin-health.json
 # Expect HTTP 200 and {"status":"ok"} or {"status":"degraded"} after scheduler is on.
 # Expect HTTP 503 only when critical deps fail.
 
-curl -sS -o /dev/null -w "%{http_code}\n" https://app.mutqin.ai/up
+curl -sS -o /dev/null -w "%{http_code}\n" https://mutqin.ai/up
 # Expect 200
 ```
 
@@ -168,7 +168,7 @@ curl -sS -H "Accept: application/json" \
 4. Confirm production returns **404**:
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://app.mutqin.ai/internal/alert-test
+curl -sS -o /dev/null -w "%{http_code}\n" https://mutqin.ai/internal/alert-test
 ```
 
 ## Related

@@ -54,7 +54,7 @@ final class TransactionalMail
         $isLoopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 
         if ($isLoopback) {
-            $base = rtrim((string) config('mail.brand.asset_url', 'https://app.mutqin.ai'), '/');
+            $base = rtrim((string) config('mail.brand.asset_url', 'https://mutqin.ai'), '/');
         }
 
         $url = $base.'/images/logo_email.png';
@@ -135,7 +135,7 @@ final class TransactionalMail
     {
         $base = rtrim((string) config('app.url'), '/');
         if ($base === '' || str_contains($base, 'localhost') || str_contains($base, '127.0.0.1')) {
-            $base = 'https://app.mutqin.ai';
+            $base = 'https://mutqin.ai';
         }
 
         return [

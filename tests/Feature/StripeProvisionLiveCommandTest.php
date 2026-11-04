@@ -7,6 +7,17 @@ use Tests\TestCase;
 
 class StripeProvisionLiveCommandTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'app.url' => 'https://mutqin.ai',
+            'mutqin.domains.marketing_host' => 'mutqin.ai',
+            'mutqin.domains.app_host' => 'mutqin.ai',
+        ]);
+    }
+
     public function test_command_refuses_without_live_secret(): void
     {
         config(['services.stripe.secret_key' => 'sk_test_x']);
@@ -64,6 +75,7 @@ class StripeProvisionLiveCommandTest extends TestCase
         });
 
         $this->artisan('mutqin:stripe-provision-live')
+            ->expectsOutputToContain('Webhook URL: https://mutqin.ai/api/stripe/webhook')
             ->expectsOutputToContain('STRIPE_PRICE_PRO_MONTHLY=price_pro_m')
             ->expectsOutputToContain('STRIPE_WEBHOOK_SECRET=whsec_live_test')
             ->assertSuccessful();

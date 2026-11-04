@@ -85,11 +85,11 @@ class AckeeAnalyticsTest extends TestCase
     {
         config(array_merge($this->enabledConfig(), [
             'mutqin.domains.enable_in_tests' => true,
-            'app.url' => 'https://app.mutqin.ai',
+            'app.url' => 'https://mutqin.ai',
         ]));
 
         $this->assertSame(self::WEBSITE_ID, Ackee::domainIdForHost('mutqin.ai'));
-        $this->assertSame(self::APP_ID, Ackee::domainIdForHost('app.mutqin.ai'));
+        $this->assertSame(self::APP_ID, Ackee::domainIdForHost('legacy-host.test'));
     }
 
     public function test_error_pages_include_ackee_config_when_enabled(): void

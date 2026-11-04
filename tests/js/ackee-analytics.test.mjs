@@ -16,7 +16,7 @@ import {
 const DOMAIN_ID = '11111111-1111-4111-8111-111111111111'
 const EVENT_ID = '22222222-2222-4222-8222-222222222222'
 
-function installWindow({ hostname = 'app.mutqin.ai', href = 'https://app.mutqin.ai/memorisation?token=secret', environment = 'production' } = {}) {
+function installWindow({ hostname = 'mutqin.ai', href = 'https://mutqin.ai/memorisation?token=secret', environment = 'production' } = {}) {
   const calls = []
   const session = new Map()
   const location = new URL(href)
@@ -62,23 +62,23 @@ function installWindow({ hostname = 'app.mutqin.ai', href = 'https://app.mutqin.
 
 test('strips query strings and reset tokens from Ackee locations', () => {
   assert.equal(
-    sanitiseSiteLocation('https://app.mutqin.ai/memorisation?email=a@b.com#notes'),
-    'https://app.mutqin.ai/memorisation',
+    sanitiseSiteLocation('https://mutqin.ai/memorisation?email=a@b.com#notes'),
+    'https://mutqin.ai/memorisation',
   )
   assert.equal(
-    sanitiseSiteLocation('https://app.mutqin.ai/reset-password/super-secret-token'),
-    'https://app.mutqin.ai/reset-password',
+    sanitiseSiteLocation('https://mutqin.ai/reset-password/super-secret-token'),
+    'https://mutqin.ai/reset-password',
   )
   assert.equal(
-    sanitiseSiteLocation('https://app.mutqin.ai/email/verify/9/abcHASH'),
-    'https://app.mutqin.ai/email/verify',
+    sanitiseSiteLocation('https://mutqin.ai/email/verify/9/abcHASH'),
+    'https://mutqin.ai/email/verify',
   )
 })
 
 test('localhost and development stay off unless allowed', () => {
   assert.equal(isLocalHost('localhost'), true)
   assert.equal(isLocalHost('127.0.0.1'), true)
-  assert.equal(isLocalHost('app.mutqin.ai'), false)
+  assert.equal(isLocalHost('mutqin.ai'), false)
 
   installWindow({ hostname: 'localhost', href: 'http://localhost:8000/', environment: 'local' })
   assert.equal(isAckeeRuntimeEnabled(), false)
@@ -99,7 +99,7 @@ test('records one page view and updates on History API path changes', async () =
   assert.equal(calls.length, 1)
   const body = JSON.parse(calls[0].options.body)
   assert.equal(body.variables.domainId, DOMAIN_ID)
-  assert.equal(body.variables.input.siteLocation, 'https://app.mutqin.ai/memorisation')
+  assert.equal(body.variables.input.siteLocation, 'https://mutqin.ai/memorisation')
   assert.equal(body.variables.input.siteReferrer, 'https://mutqin.ai/waiting-list')
   assert.equal(calls[0].options.credentials, 'omit')
 
@@ -107,7 +107,7 @@ test('records one page view and updates on History API path changes', async () =
   await new Promise((resolve) => setTimeout(resolve, 20))
   assert.equal(calls.length, 2)
   const second = JSON.parse(calls[1].options.body)
-  assert.equal(second.variables.input.siteLocation, 'https://app.mutqin.ai/madani/page/2')
+  assert.equal(second.variables.input.siteLocation, 'https://mutqin.ai/madani/page/2')
 
   window.history.replaceState({}, '', '/madani/page/2?checkout=1')
   await new Promise((resolve) => setTimeout(resolve, 20))
@@ -153,8 +153,8 @@ test('Ackee fetch failures do not throw', () => {
 })
 
 test('resolveAckeeGraphqlUrl uses same-origin for relative server', () => {
-  installWindow({ href: 'https://app.mutqin.ai/dashboard' })
+  installWindow({ href: 'https://mutqin.ai/dashboard' })
   assert.equal(isAllowedAckeeServer('/ackee'), true)
-  assert.equal(resolveAckeeGraphqlUrl('/ackee'), 'https://app.mutqin.ai/ackee/api')
+  assert.equal(resolveAckeeGraphqlUrl('/ackee'), 'https://mutqin.ai/ackee/api')
   assert.equal(resolveAckeeGraphqlUrl(''), null)
 })

@@ -166,14 +166,6 @@ function resolveWaitingListEndpoint() {
     return window.mutqinWaitingListEndpoint;
   }
 
-  const host = typeof window !== 'undefined'
-    ? String(window.location.hostname || '').replace(/^www\./, '')
-    : '';
-
-  if (host === 'mutqin.ai') {
-    return 'https://app.mutqin.ai/join-waiting-list';
-  }
-
   return '/join-waiting-list';
 }
 
@@ -407,7 +399,7 @@ export default {
         const endpoint = resolveWaitingListEndpoint();
 
         // fetch + omit credentials: axios defaults attach the marketing-host
-        // CSRF cookie/token, which Sanctum rejects on app.mutqin.ai (419).
+        // Prefer the CSRF-free join path (same origin on mutqin.ai).
         const response = await fetch(endpoint, {
           method: 'POST',
           credentials: 'omit',

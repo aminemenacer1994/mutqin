@@ -1,7 +1,7 @@
 {
     "generated_at": "2026-09-03T16:14:34+00:00",
     "environment": "local",
-    "base_url": "https://app.mutqin.ai",
+    "base_url": "https://mutqin.ai",
     "user_id": 25,
     "iterations": 5,
     "endpoints": {

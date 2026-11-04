@@ -281,14 +281,14 @@ class WaitingListLaunchEmailTest extends TestCase
         $mail = new WaitingListLaunchMail(
             recipientName: 'Amina',
             platformUrl: 'https://mutqin.ai',
-            unsubscribeUrl: 'https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test',
+            unsubscribeUrl: 'https://mutqin.ai/waiting-list/unsubscribe/1?signature=test',
         );
 
         $html = $mail->render();
         $text = view('mail.text.waitlist-launch', [
             'recipientName' => 'Amina',
             'platformUrl' => 'https://mutqin.ai',
-            'unsubscribeUrl' => 'https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test',
+            'unsubscribeUrl' => 'https://mutqin.ai/waiting-list/unsubscribe/1?signature=test',
         ])->render();
 
         $this->assertSame(__('mail.launch_subject'), $mail->envelope()->subject);
@@ -299,7 +299,7 @@ class WaitingListLaunchEmailTest extends TestCase
         $this->assertStringContainsString(e(__('mail.launch_tagline')), $html);
         $this->assertStringContainsString(e(__('mail.launch_closing')), $html);
         $this->assertStringContainsString('Amina', $html);
-        $this->assertStringContainsString('https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test', $html);
+        $this->assertStringContainsString('https://mutqin.ai/waiting-list/unsubscribe/1?signature=test', $html);
         $this->assertStringContainsString(__('mail.launch_unsubscribe'), $html);
         $this->assertStringContainsString('role="presentation"', $html);
         $this->assertStringContainsString('v:roundrect', $html);
@@ -311,7 +311,7 @@ class WaitingListLaunchEmailTest extends TestCase
         $this->assertStringNotContainsString('signed up at mutqin.ai', strtolower($html));
         $this->assertStringContainsString('Start Memorising: https://mutqin.ai', $text);
         $this->assertStringContainsString('Amina', $text);
-        $this->assertStringContainsString('https://app.mutqin.ai/waiting-list/unsubscribe/1?signature=test', $text);
+        $this->assertStringContainsString('https://mutqin.ai/waiting-list/unsubscribe/1?signature=test', $text);
         $this->assertStringNotContainsString('&#039;', $text);
     }
 }

@@ -26,7 +26,7 @@ return [
      | Off unless MUTQIN_TEACHER_FEATURES_ENABLED=true. Do not infer this from
      | APP_ENV. Laravel Cloud config:cache reads this value at deploy time, so
      | set it in each environment before caching config. One application serves
-     | both mutqin.ai and app.mutqin.ai, so false hides the features on both.
+     | the public site, so false hides teacher features everywhere.
      */
     'teacher_features_enabled' => filter_var(env('MUTQIN_TEACHER_FEATURES_ENABLED', false), FILTER_VALIDATE_BOOL),
 
@@ -55,12 +55,12 @@ return [
     ))),
 
     /*
-     | Host-based routing (production): mutqin.ai serves the application (including /admin);
-     | app.mutqin.ai redirects GET/HEAD to mutqin.ai. Disabled when hosts match (local/tests).
+     | Host-based routing (production): mutqin.ai is the canonical app and marketing host.
+     | Disabled when marketing and app hosts match (local/tests).
      */
     'domains' => [
         'marketing_host' => env('MUTQIN_MARKETING_HOST', 'mutqin.ai'),
-        'app_host' => env('MUTQIN_APP_HOST', 'app.mutqin.ai'),
+        'app_host' => env('MUTQIN_APP_HOST', 'mutqin.ai'),
         'enable_in_local' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_LOCAL', false), FILTER_VALIDATE_BOOL),
         'enable_in_tests' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_TESTS', false), FILTER_VALIDATE_BOOL),
         'force_enabled' => filter_var(env('MUTQIN_DOMAIN_ROUTING_FORCE', false), FILTER_VALIDATE_BOOL),

@@ -8,15 +8,14 @@ This is the crawlable HTML strategy: **server-printed metadata + in-document cop
 
 | Host | Role | Indexable HTML |
 |------|------|----------------|
-| `https://mutqin.ai` | Marketing (home, waiting list, articles, robots, sitemap) | Yes |
-| `https://app.mutqin.ai` | Application (auth, workspace, remaining public pages) | Public marketing-style pages yes; product/auth no |
+| `https://mutqin.ai` | Public site (home, app, SEO pages, robots, sitemap) | Public marketing-style pages yes; product/auth no |
 
 `www.*` 301s to the apex host. Trailing slashes 301 to the slash-free path. `/about-us` 301s to `/about`. `/home` 301s to `/`.
 
 Canonical hosts:
 
 - Home, waiting list, and articles → `https://mutqin.ai…`
-- About, pricing, privacy, mission, support → `https://app.mutqin.ai…`
+- About, pricing, privacy, mission, support → `https://mutqin.ai…`
 
 ## Central catalog
 
@@ -117,12 +116,12 @@ Full operating cadence, KPIs, and review template: [SEO monitoring](seo-monitori
 ### You must configure manually
 
 1. **DNS / Domain property (preferred):** Add Domain property `mutqin.ai` in Google Search Console; add the TXT record at your DNS host. In Bing Webmaster Tools, import GSC or verify the same domain.
-2. **URL-prefix fallback:** If DNS is delayed, add `https://mutqin.ai/` and `https://app.mutqin.ai/`, set `SEO_GOOGLE_SITE_VERIFICATION` / `SEO_BING_SITE_VERIFICATION` in **Laravel Cloud** (both marketing and app envs if you use meta tags on each host), redeploy / `config:cache`, then click verify.
+2. **URL-prefix fallback:** If DNS is delayed, add `https://mutqin.ai/` in GSC and Bing, set `SEO_GOOGLE_SITE_VERIFICATION` / `SEO_BING_SITE_VERIFICATION` in **Laravel Cloud**, redeploy / `config:cache`, then click verify.
 3. Submit **`https://mutqin.ai/sitemap.xml`** in GSC and Bing (robots already advertises this URL).
 4. Inspect home, waiting list, about, pricing, and sample `/features`, `/guides`, `/tools` URLs; confirm canonical + indexable.
 5. Inspect `/login` and `/memorisation`; confirm noindex (do not request indexing).
 6. Bing: preferred host / canonical = apex `mutqin.ai` (`www` already 301s via `RedirectWwwHost`).
-7. **Laravel Cloud:** `APP_URL=https://app.mutqin.ai`, `MUTQIN_MARKETING_HOST=mutqin.ai`, `MUTQIN_APP_HOST=app.mutqin.ai`, HTTPS only; marketing app must serve `/` + `/waiting-list` + `/robots.txt` + `/sitemap.xml` (no static `public/robots.txt`).
+7. **Laravel Cloud:** `APP_URL=https://mutqin.ai`, `MUTQIN_MARKETING_HOST=mutqin.ai`, `MUTQIN_APP_HOST=mutqin.ai`, HTTPS only; serve `/` + `/waiting-list` + `/robots.txt` + `/sitemap.xml` (no static `public/robots.txt`).
 
 ### Engineering already provides
 

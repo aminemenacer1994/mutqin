@@ -34,8 +34,8 @@ test('isChunkLoadError detects webpack and dynamic import failures', () => {
     recovery.isChunkLoadError({
       name: 'ChunkLoadError',
       type: 'error',
-      request: 'https://app.mutqin.ai/js/dashboard.20283d40.js',
-      message: 'Loading chunk dashboard failed.\n(error: https://app.mutqin.ai/js/dashboard.20283d40.js)',
+      request: 'https://mutqin.ai/js/dashboard.20283d40.js',
+      message: 'Loading chunk dashboard failed.\n(error: https://mutqin.ai/js/dashboard.20283d40.js)',
     }),
     true
   )
@@ -53,8 +53,8 @@ test('isLikelyStaleDeploymentError ignores offline, timeouts, and API noise', ()
   const mix404 = {
     name: 'ChunkLoadError',
     type: 'error',
-    request: 'https://app.mutqin.ai/js/memorisation.aaaaaaaa.js',
-    message: 'Loading chunk memorisation failed.\n(error: https://app.mutqin.ai/js/memorisation.aaaaaaaa.js)',
+    request: 'https://mutqin.ai/js/memorisation.aaaaaaaa.js',
+    message: 'Loading chunk memorisation failed.\n(error: https://mutqin.ai/js/memorisation.aaaaaaaa.js)',
   }
   assert.equal(recovery.isLikelyStaleDeploymentError(mix404, { offline: false }), true)
   assert.equal(recovery.isLikelyStaleDeploymentError(mix404, { offline: true }), false)
@@ -62,7 +62,7 @@ test('isLikelyStaleDeploymentError ignores offline, timeouts, and API noise', ()
     recovery.isLikelyStaleDeploymentError({
       name: 'ChunkLoadError',
       type: 'timeout',
-      message: 'Loading chunk homepage failed.\n(timeout: https://app.mutqin.ai/js/homepage.bbbbbbbb.js)',
+      message: 'Loading chunk homepage failed.\n(timeout: https://mutqin.ai/js/homepage.bbbbbbbb.js)',
     }, { offline: false }),
     false
   )
@@ -71,7 +71,7 @@ test('isLikelyStaleDeploymentError ignores offline, timeouts, and API noise', ()
     false
   )
   assert.equal(
-    recovery.isStaleMixAssetUrl('https://app.mutqin.ai/js/homepage.20283d40.js'),
+    recovery.isStaleMixAssetUrl('https://mutqin.ai/js/homepage.20283d40.js'),
     true
   )
   assert.equal(
@@ -89,7 +89,7 @@ test('recoverFromStaleChunk reloads at most once then gives up', async () => {
     { name: 'ChunkLoadError', message: 'Loading chunk memorisation failed' },
     {
       store,
-      locationHref: 'https://app.mutqin.ai/memorisation?mutqin_force=old',
+      locationHref: 'https://mutqin.ai/memorisation?mutqin_force=old',
       clearCaches: async () => { clears.push(1) },
       showNotice: () => {},
       reload: (url) => { reloads.push(url) },
@@ -126,7 +126,7 @@ test('offline chunk failure does not auto-reload', async () => {
   const outcome = recovery.recoverFromStaleChunk(
     {
       name: 'ChunkLoadError',
-      message: 'Failed to fetch dynamically imported module: https://app.mutqin.ai/js/about.deadbeef.js',
+      message: 'Failed to fetch dynamically imported module: https://mutqin.ai/js/about.deadbeef.js',
     },
     {
       store,
@@ -156,7 +156,7 @@ test('before-chunk-reload persist hook runs and session keys are left intact', a
       persist: () => {
         persisted.push(store.getItem('mutqin.activeSession.v1'))
       },
-      locationHref: 'https://app.mutqin.ai/memorisation',
+      locationHref: 'https://mutqin.ai/memorisation',
       clearCaches: async () => {},
       showNotice: () => {},
       reload: (url) => { reloads.push(url) },
@@ -277,7 +277,7 @@ test('syncChunkReloadFlagWithAssetBuild clears reload guard when build marker ch
 })
 
 test('buildFreshReloadUrl strips legacy force params', () => {
-  const url = recovery.buildFreshReloadUrl('https://app.mutqin.ai/memorisation?mutqin_force=1&_=9&keep=1')
+  const url = recovery.buildFreshReloadUrl('https://mutqin.ai/memorisation?mutqin_force=1&_=9&keep=1')
   assert.match(url, /keep=1/)
   assert.match(url, /mutqin_chunk_reload=1/)
   assert.doesNotMatch(url, /mutqin_force=/)

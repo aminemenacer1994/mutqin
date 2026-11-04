@@ -9,7 +9,7 @@ Do **not** invent positions, CTR, or traffic. If Search Console (GSC) or Analyti
 | Host | Typical indexable HTML |
 |------|------------------------|
 | `https://mutqin.ai` | Home, waiting list, `robots.txt`, `sitemap.xml` |
-| `https://app.mutqin.ai` | About, pricing, privacy, mission, donate, `/features/*`, `/guides/*`, `/tools/*` |
+| `https://mutqin.ai` | About, pricing, privacy, mission, donate, `/features/*`, `/guides/*`, `/tools/*` |
 
 `www` 301s to the apex host. Canonicals are set in `SeoCatalog`. Product/auth routes are **noindex** — do not request indexing for them.
 
@@ -25,7 +25,7 @@ Manual owner work in the Google account that should own the properties. Engineer
 2. Verify with a **DNS TXT** record at the registrar (or DNS host). Keep the TXT record permanently.
 3. If DNS is not available yet, use **URL-prefix** properties as a fallback:
    - `https://mutqin.ai/`
-   - `https://app.mutqin.ai/`
+   - `https://mutqin.ai/`
    Verify with the HTML tag **or** (better) Google Analytics / Google Tag if the same Google account owns GA4 **and** the tag fires on that host. Mutqin injects gtag from `resources/views/partials/google-analytics.blade.php` when `services.google_analytics` is enabled and the ID matches `G-…`.
    For the HTML-tag method, set `SEO_GOOGLE_SITE_VERIFICATION` (and optionally `SEO_BING_SITE_VERIFICATION`) in Laravel Cloud — **do not invent tokens**. Empty env = no meta tag. Then run `php artisan mutqin:seo-verify` (and `--live` after deploy).
 4. After a Domain property exists, you can still keep URL-prefix properties for host-specific filters, or use hostname filters inside Performance.
@@ -55,7 +55,7 @@ Request indexing **only** for important **indexable** URLs after a meaningful co
 |----------------------|----------------|--------|
 | Excluded by `noindex` | Auth/product/error as designed | No fix if the URL should stay private |
 | Alternate with proper canonical | `www` or trailing slash → canonical | Confirm 301s still work ([seo.md](seo.md)) |
-| Duplicate, Google chose different canonical | Host mix (`mutqin.ai` vs `app.mutqin.ai`) | Check `SeoCatalog` canonical_host; do not create a second copy of the page |
+| Duplicate, Google chose different canonical | Competing URLs for the same page | Check `SeoCatalog` canonical_host; do not create a second copy of the page |
 | Crawled — currently not indexed | Quality / recrawl, not a 500 | Improve uniqueness; wait; do not spam inspect |
 | Discovered — currently not indexed | Budget / new URL | Ensure sitemap + internal links; request inspect once |
 | Soft 404 / 404 | Wrong path or deleted launch page | Restore or 301 to the real canonical |
@@ -104,7 +104,7 @@ Export CSV for the monthly review. Do not screenshot a 7-day spike and call it a
 ## Bing Webmaster Tools
 
 1. Sign in at Bing Webmaster Tools with a work account.
-2. Add **`https://mutqin.ai`** and **`https://app.mutqin.ai`** (or import from GSC if Bing offers it — still confirm sitemaps).
+2. Add **`https://mutqin.ai`** (or import from GSC if Bing offers it — still confirm sitemaps).
 3. Verify (DNS or Bing file/meta — prefer DNS aligned with GSC).
 4. Submit **`https://mutqin.ai/sitemap.xml`**.
 5. Set preferred domain / canonical host to apex **`mutqin.ai`** for the marketing site (`www` already 301s).
@@ -264,7 +264,7 @@ Copy into a doc or spreadsheet. Fill only from exports.
 ```
 # Mutqin SEO review — [Month YYYY]
 Date: 
-Properties: mutqin.ai / app.mutqin.ai (GSC) · Bing
+Properties: mutqin.ai (GSC) · Bing
 Compared to: previous 28 days / previous year (if data)
 
 ## Data quality

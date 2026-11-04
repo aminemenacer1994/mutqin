@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * mutqin.ai is the public host. app.mutqin.ai GET/HEAD requests move to the
- * same path on mutqin.ai.
+ * mutqin.ai is the public host. When app and marketing hosts differ in config,
+ * GET/HEAD on the non-canonical host move to the same path on mutqin.ai.
  */
 class EnforceMarketingHostPolicy
 {

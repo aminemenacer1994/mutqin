@@ -145,7 +145,7 @@ return [
         'name' => env('MAIL_BRAND_NAME', 'Mutqin'),
         'home_url' => env('MAIL_HOME_URL', 'https://mutqin.ai'),
         // Public app host serves /images/* for email clients (mutqin.ai marketing site does not).
-        'asset_url' => env('MAIL_ASSET_URL', 'https://app.mutqin.ai'),
+        'asset_url' => env('MAIL_ASSET_URL', 'https://mutqin.ai'),
         'logo_url' => env('MAIL_LOGO_URL'),
     ],
 

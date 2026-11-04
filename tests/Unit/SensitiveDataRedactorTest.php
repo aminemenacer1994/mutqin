@@ -40,11 +40,11 @@ class SensitiveDataRedactorTest extends TestCase
         );
         $this->assertSame(
             '[redacted]',
-            SensitiveDataRedactor::redactString('https://app.mutqin.ai/email/verify/12/abcdef123456')
+            SensitiveDataRedactor::redactString('https://mutqin.ai/email/verify/12/abcdef123456')
         );
         $this->assertSame(
             '[redacted]',
-            SensitiveDataRedactor::redactString('https://app.mutqin.ai/email/verify/12/abcdef?expires=1710000000&signature=abc')
+            SensitiveDataRedactor::redactString('https://mutqin.ai/email/verify/12/abcdef?expires=1710000000&signature=abc')
         );
     }
 }

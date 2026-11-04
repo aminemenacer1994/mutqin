@@ -4553,9 +4553,9 @@
     "kicker": "Sadaqah",
     "title": "Support the path of hifz",
     "lead": "Your gift helps Mutqin stay free to begin with and dependable for daily revision.",
-    "body": "We build quiet tools for listening, repeating, and returning to what you memorised — between lessons, not instead of your teacher. Sadaqah here keeps that path open for more students.",
+    "body": "We build quiet tools for listening, repeating, and returning to what you memorised, between lessons, not instead of your teacher. Sadaqah here keeps that path open for more students.",
     "arabicLine": "مَنْ ذَا الَّذِي يُقْرِضُ اللَّهَ قَرْضًا حَسَنًا",
-    "arabicRef": "Al-Baqarah 2:245 — a goodly loan to Allah",
+    "arabicRef": "Al-Baqarah 2:245, a goodly loan to Allah",
     "impactTitle": "Where your gift helps",
     "impact": {
       "hifz": {
@@ -4568,7 +4568,7 @@
       },
       "trust": {
         "title": "Given for Allah's sake",
-        "desc": "One-time support — no subscription. May He accept it and multiply its reward."
+        "desc": "One-time support, no subscription. May He accept it and multiply its reward."
       }
     },
     "formTitle": "Give once",
@@ -4578,10 +4578,9 @@
     "emailLabel": "Email for receipt",
     "emailPlaceholder": "you@example.com",
     "submit": "Continue to secure checkout",
-    "submitting": "Opening checkout…",
-    "trustLine": "One-time payment · encrypted checkout · guest-friendly",
-    "closing": "JazakAllahu khayran for supporting everyone who is memorising for His sake.",
-    "ctaContact": "Questions? Contact us"
+    "submitting": "Opening checkout...",
+    "trustLine": "One-time payment. Encrypted checkout. Guest-friendly.",
+    "closing": "JazakAllahu khayran for supporting everyone who is memorising for His sake."
   },
   "waitingList": {
     "brand": "Mutqin",

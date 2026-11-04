@@ -40,6 +40,16 @@
   max-width: 34rem;
 }
 
+.donation-arabic-block {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  width: 100%;
+  margin-top: var(--donation-space-sm);
+  padding-top: var(--donation-space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--donation-warm) 28%, var(--border));
+}
+
 .donation-arabic {
   margin: 0;
   padding-bottom: 0.15rem;
@@ -50,7 +60,7 @@
 }
 
 .donation-arabic-ref {
-  margin: 0 0 var(--donation-space-xs);
+  margin: 0;
   font-size: 0.8rem;
   letter-spacing: 0.02em;
   color: var(--text-muted);

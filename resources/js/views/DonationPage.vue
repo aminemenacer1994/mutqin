@@ -3,8 +3,6 @@
     <div class="donation-shell">
       <header class="donation-hero info-reveal">
         <div class="donation-copy">
-          <p class="donation-arabic" dir="rtl" lang="ar">{{ t('donate.arabicLine') }}</p>
-          <p class="donation-arabic-ref">{{ t('donate.arabicRef') }}</p>
           <span class="donation-kicker">
             <i class="bi bi-moon-stars" aria-hidden="true"></i>
             {{ t('donate.kicker') }}
@@ -12,6 +10,10 @@
           <h1>{{ t('donate.title') }}</h1>
           <p class="donation-lead">{{ t('donate.lead') }}</p>
           <p class="donation-body">{{ t('donate.body') }}</p>
+          <div class="donation-arabic-block">
+            <p class="donation-arabic" dir="rtl" lang="ar">{{ t('donate.arabicLine') }}</p>
+            <p class="donation-arabic-ref">{{ t('donate.arabicRef') }}</p>
+          </div>
         </div>
       </header>
 
@@ -108,10 +110,6 @@
 
       <footer class="donation-cta info-reveal" style="--d: 160ms">
         <p class="donation-closing">{{ t('donate.closing') }}</p>
-        <a class="donation-inline-link" href="/#contact">
-          <i class="bi bi-envelope" aria-hidden="true"></i>
-          {{ t('donate.ctaContact') }}
-        </a>
       </footer>
     </div>
   </section>

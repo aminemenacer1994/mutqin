@@ -5,12 +5,11 @@ namespace App\Support;
 use Illuminate\Http\Request;
 
 /**
- * mutqin.ai is the public application. app.mutqin.ai redirects here.
- * Local and automated tests keep a single host unless explicitly enabled.
+ * mutqin.ai is the public application host.
  */
 final class MutqinDomains
 {
-    private const DEFAULT_APP_HOST = 'app.mutqin.ai';
+    private const DEFAULT_APP_HOST = 'mutqin.ai';
 
     public static function marketingHost(): string
     {
@@ -32,7 +31,7 @@ final class MutqinDomains
             return $fromAppUrl;
         }
 
-        return self::DEFAULT_APP_HOST;
+        return $marketing !== '' ? $marketing : self::DEFAULT_APP_HOST;
     }
 
     /**
@@ -53,7 +52,7 @@ final class MutqinDomains
     }
 
     /**
-     * Production requests on app.mutqin.ai are sent to mutqin.ai.
+     * When hosts differ, production GET/HEAD on the legacy app host redirect to mutqin.ai.
      * Local and default test runs stay on the current host.
      */
     public static function canonicalizePublicHost(): bool
@@ -196,9 +195,7 @@ final class MutqinDomains
     }
 
     /**
-     * Public signup must hit the application host on a CSRF-free path.
-     * mutqin.ai is a separate Cloud app (its /api/* POSTs 500), and
-     * Sanctum CSRF-checks /api/* when Origin is mutqin.ai (419).
+     * Public signup uses a CSRF-free path on the same origin as the waiting-list page.
      */
     public static function waitingListStoreUrl(?Request $request = null): string
     {

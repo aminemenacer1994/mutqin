@@ -101,7 +101,7 @@ return [
 
         /*
         | Optional read/write target for waiting-list signups when mutqin.ai and
-        | app.mutqin.ai use different Laravel Cloud apps but share one MySQL cluster.
+        | Optional second Laravel Cloud app on a different hostname may share one MySQL cluster.
         | Set MUTQIN_SIGNUP_DB_* on the marketing deployment (see .env.example).
         */
         'mutqin_signups' => [

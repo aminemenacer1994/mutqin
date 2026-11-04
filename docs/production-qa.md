@@ -116,5 +116,5 @@ Run `npm run test:production-qa`. Recorded **2026-09-03**: all listed checks **P
 - [ ] `npm run test:production-qa` exits 0
 - [ ] Device Manual cells for iPhone Safari and Android Chrome are filled on staging
 - [ ] Recitation device pass (quiet / noisy / pause / live paint) is filled — [recitation-device-qa.md](./recitation-device-qa.md)
-- [ ] Health URL `https://app.mutqin.ai/health` returns 200 with `{ "status": "ok" }` or `"degraded"` (never 404)
+- [ ] Health URL `https://mutqin.ai/health` returns 200 with `{ "status": "ok" }` or `"degraded"` (never 404)
 )

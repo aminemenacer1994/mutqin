@@ -17,9 +17,9 @@ docker compose up -d
 ```
 
 3. Open [http://127.0.0.1:3000](http://127.0.0.1:3000) and sign in with `ACKEE_USERNAME` / `ACKEE_PASSWORD`.
-4. **Settings → Domains** → add `mutqin.ai` and `app.mutqin.ai`. Copy each ID into Laravel `.env`:
+4. **Settings → Domains** → add `mutqin.ai`. Copy the domain ID into Laravel `.env`:
    - `ACKEE_DOMAIN_ID_WEBSITE=`
-   - `ACKEE_DOMAIN_ID_APP=`
+   - `ACKEE_DOMAIN_ID_APP=` (optional; same host uses the website ID)
 5. **Events** → New event (name: `Mutqin actions`). Copy the UUID into Laravel `.env`:
    - `ACKEE_EVENT_ID=`
 
@@ -65,4 +65,4 @@ ACKEE_DOMAIN_ID_APP=
 ACKEE_EVENT_ID=
 ```
 
-CORS is already set for `https://mutqin.ai` and `https://app.mutqin.ai` via `ACKEE_ALLOW_ORIGIN`.
+CORS is already set for `https://mutqin.ai` via `ACKEE_ALLOW_ORIGIN`.

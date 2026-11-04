@@ -192,14 +192,14 @@ class TeacherFeaturesTest extends TestCase
         }
     }
 
-    public function test_both_production_hosts_hide_the_teacher_dashboard_when_disabled(): void
+    public function test_production_hosts_hide_the_teacher_dashboard_when_disabled(): void
     {
         config([
             'app.url' => 'https://mutqin.ai',
             'mutqin.domains.enable_in_tests' => true,
             'mutqin.domains.force_disabled' => false,
             'mutqin.domains.marketing_host' => 'mutqin.ai',
-            'mutqin.domains.app_host' => 'app.mutqin.ai',
+            'mutqin.domains.app_host' => 'legacy-host.test',
         ]);
 
         $teacher = User::factory()->create([
@@ -208,9 +208,9 @@ class TeacherFeaturesTest extends TestCase
 
         $kernel = $this->app->make(HttpKernel::class);
         $legacyAppHost = Request::create('/teacher', 'GET', [], [], [], [
-            'HTTP_HOST' => 'app.mutqin.ai',
+            'HTTP_HOST' => 'legacy-host.test',
             'HTTPS' => 'on',
-            'SERVER_NAME' => 'app.mutqin.ai',
+            'SERVER_NAME' => 'legacy-host.test',
         ]);
         $legacyAppHost->setUserResolver(fn () => $teacher);
         $legacyResponse = $kernel->handle($legacyAppHost);

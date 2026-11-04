@@ -1897,16 +1897,6 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet sheet--setup">
-            <AppStatus
-              v-if="!chapterId"
-              class="tools-tab-empty tools-tab-empty--setup"
-              variant="empty"
-              icon="bi-journal-text"
-              :title="t('memorisation.no_surah_selected')"
-              :description="t('sessionSetup.surahHint')"
-              :action-label="t('memorisation.open_session_setup')"
-              @action="toggleSection('advanced_setup')"
-            />
             <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">

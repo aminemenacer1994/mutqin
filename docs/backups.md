@@ -1,6 +1,6 @@
 # Mutqin backups
 
-Production recovery for Mutqin user data. Hosting target: **Laravel Cloud** (`https://app.mutqin.ai`).
+Production recovery for Mutqin user data. Hosting target: **Laravel Cloud** (`https://mutqin.ai`).
 
 This document describes what is configured in-repo, what you must enable in the Laravel Cloud dashboard, and how to verify restores on staging. **Do not assume backups are live** until the dashboard checks and (if used) `MUTQIN_BACKUP_ENABLED` path below are completed.
 

@@ -24,7 +24,7 @@ return [
     */
     'verify' => [
         'marketing_base' => env('SEO_VERIFY_MARKETING_BASE', 'https://mutqin.ai'),
-        'app_base' => env('SEO_VERIFY_APP_BASE', 'https://app.mutqin.ai'),
+        'app_base' => env('SEO_VERIFY_APP_BASE', 'https://mutqin.ai'),
         'timeout' => max(5, (int) env('SEO_VERIFY_TIMEOUT', 20)),
     ],
 ];

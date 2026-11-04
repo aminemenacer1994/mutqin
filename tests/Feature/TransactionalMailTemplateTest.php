@@ -100,7 +100,7 @@ class TransactionalMailTemplateTest extends TestCase
 
         App::setLocale('fr');
         $frHtml = view('mail.verify-email', [
-            'url' => 'https://app.mutqin.ai/email/verify/0/preview',
+            'url' => 'https://mutqin.ai/email/verify/0/preview',
             'userName' => $user->name,
             'expireMinutes' => 60,
         ])->render();
@@ -109,7 +109,7 @@ class TransactionalMailTemplateTest extends TestCase
 
         App::setLocale('es');
         $esHtml = view('mail.reset-password', [
-            'url' => 'https://app.mutqin.ai/password/reset/preview-token?email=preview%40example.com',
+            'url' => 'https://mutqin.ai/password/reset/preview-token?email=preview%40example.com',
             'userName' => $user->name,
             'expireMinutes' => 60,
         ])->render();
@@ -156,19 +156,19 @@ class TransactionalMailTemplateTest extends TestCase
         config([
             'app.url' => 'http://localhost',
             'mail.brand.logo_url' => null,
-            'mail.brand.asset_url' => 'https://app.mutqin.ai',
+            'mail.brand.asset_url' => 'https://mutqin.ai',
         ]);
-        $this->assertSame('https://app.mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
+        $this->assertSame('https://mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
 
         config([
-            'app.url' => 'http://app.mutqin.ai',
+            'app.url' => 'http://mutqin.ai',
             'mail.brand.logo_url' => null,
         ]);
 
-        $this->assertSame('https://app.mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
+        $this->assertSame('https://mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
 
-        config(['mail.brand.logo_url' => 'https://app.mutqin.ai/images/logo_email.png']);
-        $this->assertSame('https://app.mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
+        config(['mail.brand.logo_url' => 'https://mutqin.ai/images/logo_email.png']);
+        $this->assertSame('https://mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
     }
 
     public function test_noreply_from_gets_reply_to_hello_mutqin(): void

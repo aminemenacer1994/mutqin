@@ -14,11 +14,11 @@ Inspected: `routes/web/app.php`, `routes/web/marketing.php`, `SeoCatalog`, homep
 |-----|----------------|--------------|---------------|
 | `/` | `mutqin.ai` | **Quran memorization app**, Hifz app, memorize Quran (commercial), Quran memorization (commercial) | `/hifz-app`, `/quran-memorization-app`, `/memorize-quran` |
 | `/waiting-list` | `mutqin.ai` | Early access conversion | Extra “join Mutqin” landers |
-| `/pricing` | `app.mutqin.ai` | Free vs Pro, plan cost | `/free-quran-memorization-app` as a thin duplicate |
-| `/about` | `app.mutqin.ai` | Brand / “what Mutqin is” | Second about page |
-| `/our-mission` | `app.mutqin.ai` | Why Mutqin exists | Lifestyle / dawah essays |
-| `/privacy` | `app.mutqin.ai` | Privacy / AI audio | — |
-| `/donate` | `app.mutqin.ai` | Help and support | `/contact` duplicate |
+| `/pricing` | `mutqin.ai` | Free vs Pro, plan cost | `/free-quran-memorization-app` as a thin duplicate |
+| `/about` | `mutqin.ai` | Brand / “what Mutqin is” | Second about page |
+| `/our-mission` | `mutqin.ai` | Why Mutqin exists | Lifestyle / dawah essays |
+| `/privacy` | `mutqin.ai` | Privacy / AI audio | — |
+| `/donate` | `mutqin.ai` | Help and support | `/contact` duplicate |
 
 Homepage already covers guided memorisation, listen/repeat, spaced review, AI Recite, Mushaf, reading aids, FAQ, and footer links. New pages **deepen one intent**; they must not rewrite the homepage.
 
@@ -32,7 +32,7 @@ No `/quran-memorization` hub, `/compare`, blog, or surah encyclopaedia yet. Find
 
 ### Host constraint
 
-`mutqin.ai` currently serves only `/`, `/waiting-list`, robots, and sitemap. Until that policy is widened, **new indexable pages should ship on `app.mutqin.ai`** (same pattern as `/about` and `/pricing`) and be listed in `sitemap.xml`. Do not publish empty prefix indexes.
+Production uses a **single canonical host** (`mutqin.ai`). New indexable pages ship on that host and appear in `sitemap.xml`. Do not publish duplicate URLs for the same page.
 
 ---
 

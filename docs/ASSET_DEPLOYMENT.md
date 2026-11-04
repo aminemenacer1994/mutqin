@@ -31,7 +31,7 @@ Never hard-code `/js/app.js` without the manifest query id in production HTML.
 
 | Variable | Purpose |
 | --- | --- |
-| `APP_URL` | Canonical HTTPS origin (`https://app.mutqin.ai` in production) |
+| `APP_URL` | Canonical HTTPS origin (`https://mutqin.ai` in production) |
 | `ASSET_URL` | Optional CDN origin for `mix()` / `asset()`. Leave empty to serve from `APP_URL`. Must be HTTPS and publicly reachable |
 | `MUTQIN_ASSET_BUILD` | Client stamp; when bumped, browsers clear Mutqin SW caches (no forced reload loop) |
 | `SENTRY_RELEASE` / `MUTQIN_RELEASE` | Observability release label (prefer git SHA) |
@@ -96,7 +96,7 @@ Run after every production/staging frontend release:
 - [ ] Manifest maps `/js/app.js` and `/css/app.css` to `?id=` URLs
 - [ ] Lazy files exist as `/js/<name>.<8-hex>.js` and match hashes referenced inside `public/js/app.js`
 - [ ] View source of `/` shows `mix()` URLs with `?id=`, not bare `/js/app.js`
-- [ ] `curl -I https://app.mutqin.ai/` → `Cache-Control` includes `no-cache` / `no-store`
+- [ ] `curl -I https://mutqin.ai/` → `Cache-Control` includes `no-cache` / `no-store`
 - [ ] `curl -I` a hashed chunk → `max-age=31536000` + `immutable` (when Apache headers module is active)
 - [ ] `curl -I /js/app.js` → `no-cache` / must-revalidate
 - [ ] `curl -I /sw.js` → `no-cache`

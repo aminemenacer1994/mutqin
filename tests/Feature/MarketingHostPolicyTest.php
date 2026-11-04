@@ -82,7 +82,7 @@ class MarketingHostPolicyTest extends TestCase
         $this->assertTrue($response->isRedirection());
         $location = (string) $response->headers->get('Location');
         $this->assertStringContainsString('/login', $location);
-        $this->assertStringNotContainsString('app.mutqin.ai', $location);
+        $this->assertStringContainsString('mutqin.ai', $location);
     }
 
 }

@@ -130,5 +130,5 @@ self.addEventListener('fetch', event => {
   }
 
   // Do not intercept API, auth, or other dynamic same-origin traffic — SW caching
-  // caused Failed to fetch / boot failures on https://app.mutqin.ai.
+  // caused Failed to fetch / boot failures on https://mutqin.ai.
 });

@@ -14,10 +14,10 @@ class GoogleOAuthRedirectTest extends TestCase
     public function test_placeholder_app_url_is_expanded(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::fromEnvironment(
                 '${APP_URL}/auth/google/callback',
-                'https://app.mutqin.ai'
+                'https://mutqin.ai'
             )
         );
     }
@@ -25,26 +25,26 @@ class GoogleOAuthRedirectTest extends TestCase
     public function test_empty_redirect_falls_back_to_app_url_callback(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
-            GoogleOAuthRedirect::fromEnvironment('', 'https://app.mutqin.ai/')
+            'https://mutqin.ai/auth/google/callback',
+            GoogleOAuthRedirect::fromEnvironment('', 'https://mutqin.ai/')
         );
     }
 
     public function test_origin_only_redirect_appends_callback_path(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
-            GoogleOAuthRedirect::fromEnvironment('https://app.mutqin.ai', 'https://app.mutqin.ai')
+            'https://mutqin.ai/auth/google/callback',
+            GoogleOAuthRedirect::fromEnvironment('https://mutqin.ai', 'https://mutqin.ai')
         );
     }
 
     public function test_http_redirect_is_upgraded_when_app_url_is_https(): void
     {
         $this->assertSame(
-            'https://app.mutqin.ai/auth/google/callback',
+            'https://mutqin.ai/auth/google/callback',
             GoogleOAuthRedirect::fromEnvironment(
-                'http://app.mutqin.ai/auth/google/callback',
-                'https://app.mutqin.ai'
+                'http://mutqin.ai/auth/google/callback',
+                'https://mutqin.ai'
             )
         );
     }
@@ -129,10 +129,10 @@ class GoogleOAuthRedirectTest extends TestCase
 
     public function test_production_pins_generated_routes_to_app_url(): void
     {
-        PublicAppUrl::apply('https://app.mutqin.ai', 'production');
+        PublicAppUrl::apply('https://mutqin.ai', 'production');
 
-        $this->assertSame('https://app.mutqin.ai/auth/google/callback', route('auth.google.callback'));
-        $this->assertSame('https://app.mutqin.ai/memorisation', route('memorisation'));
+        $this->assertSame('https://mutqin.ai/auth/google/callback', route('auth.google.callback'));
+        $this->assertSame('https://mutqin.ai/memorisation', route('memorisation'));
 
         URL::forceRootUrl(null);
         URL::forceScheme(null);
@@ -150,9 +150,9 @@ class GoogleOAuthRedirectTest extends TestCase
 
     public function test_trusted_proxies_treat_forwarded_https_as_secure(): void
     {
-        $request = Request::create('http://app.mutqin.ai/login', 'GET', [], [], [], [
+        $request = Request::create('http://mutqin.ai/login', 'GET', [], [], [], [
             'HTTP_X_FORWARDED_PROTO' => 'https',
-            'HTTP_X_FORWARDED_HOST' => 'app.mutqin.ai',
+            'HTTP_X_FORWARDED_HOST' => 'mutqin.ai',
             'REMOTE_ADDR' => '10.0.0.1',
         ]);
 

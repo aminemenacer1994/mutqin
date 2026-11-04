@@ -64,14 +64,14 @@ Checklist when resets land in spam:
 1. In Gmail open the message → **Show original** → confirm **SPF: PASS**, **DKIM: PASS**, **DMARC: PASS**.
 2. In Resend → Domains → `mutqin.ai` is **Verified** (green). Fix any missing DNS Resend still flags.
 3. Laravel Cloud / `.env`: `MAIL_FROM_ADDRESS=hello@mutqin.ai` (not `noreply@`), `MAIL_FROM_NAME=Mutqin`, then redeploy.
-4. Resend email **Insights** on a sample reset: no “shared tracking domain”, links stay on `app.mutqin.ai` / `mutqin.ai`.
+4. Resend email **Insights** on a sample reset: no “shared tracking domain”, links stay on `mutqin.ai`.
 5. Have recipients mark **Not spam** / move to Primary once — mailbox reputation recovers faster after first engagement.
 6. Prefer the small `logo_email.png` mark (`MAIL_LOGO_URL` optional). Do not force the large `logo_main.png` into the MIME body.
 
 Optional production asset override when `APP_URL` is not the public HTTPS origin:
 
 ```env
-MAIL_LOGO_URL=https://app.mutqin.ai/images/logo_email.png
+MAIL_LOGO_URL=https://mutqin.ai/images/logo_email.png
 ```
 
 ## Transactional email design

@@ -6,7 +6,6 @@ return [
     'allowed_origins' => [
         'https://mutqin.ai',
         'https://www.mutqin.ai',
-        'https://app.mutqin.ai',
     ],
     'allowed_origins_patterns' => [
         '#\Ahttps://([a-z0-9-]+\.)?mutqin\.ai\z#',

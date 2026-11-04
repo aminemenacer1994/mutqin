@@ -50,7 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware('web')->group(function (): void {
                 require base_path('routes/web/seo.php');
-                // mutqin.ai serves the full application. app.mutqin.ai redirects to it.
+                // mutqin.ai serves the full application (legacy app subdomain redirects when configured).
                 require base_path('routes/web/app.php');
             });
         },

@@ -148,7 +148,7 @@ export function isAckeeRuntimeEnabled(config = readConfig()) {
 
 export function sanitiseSiteLocation(href = '', origin = '') {
   try {
-    const url = new URL(href, origin || (typeof window !== 'undefined' ? window.location.origin : 'https://app.mutqin.ai'))
+    const url = new URL(href, origin || (typeof window !== 'undefined' ? window.location.origin : 'https://mutqin.ai'))
     let path = url.pathname || '/'
     if (/^\/email\/verify(\/|$)/i.test(path)) path = '/email/verify'
     else if (/^\/reset-password(\/|$)/i.test(path)) path = '/reset-password'

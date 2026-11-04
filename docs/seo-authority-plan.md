@@ -4,7 +4,7 @@ Phase 5 is **strategy only**. Do not buy links, spin PBNs, auto-comment, or ship
 
 **Goal:** Earn a small number of **relevant, editorial** mentions and links from people who actually teach, study, or write about Hifz — because Mutqin is useful between lessons, not because a ranking dashboard asked for more referring domains.
 
-**Hosts:** Home and waiting list live on `https://mutqin.ai`. Most linkable pages today canonicalise to `https://app.mutqin.ai` (tools, features, guides). In outreach, paste the **canonical URL** from the page (or `sitemap.xml`). If the marketing host later serves `/tools` and `/guides`, update the tracker; do not leave two competing public URLs for the same asset.
+**Hosts:** Home and waiting list live on `https://mutqin.ai`. Most linkable pages today canonicalise to `https://mutqin.ai` (tools, features, guides). In outreach, paste the **canonical URL** from the page (or `sitemap.xml`). If the marketing host later serves `/tools` and `/guides`, update the tracker; do not leave two competing public URLs for the same asset.
 
 **Voice that must not be broken:** Mutqin supports practice between lessons. It does not replace a teacher, does not grant ijāzah, and does not invent completion dates, testimonials, or recitation accuracy claims.
 
