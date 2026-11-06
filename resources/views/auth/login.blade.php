@@ -7,6 +7,9 @@
             <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.auth_login_arabic') }}</p>
             <h1 class="auth-heading">{{ __('ui.auth_login_heading') }}</h1>
             <p class="auth-lede">{{ __('ui.auth_login_subtitle') }}</p>
+            @guest
+                <p class="auth-offer">{{ __('ui.auth_register_offer') }}</p>
+            @endguest
         </header>
 
         @include('partials.ios-pwa-install')
@@ -77,7 +80,7 @@
         @if (Route::has('register'))
             <p class="auth-footer">
                 {{ __('ui.auth_new_to_mutqin') }}
-                <a href="{{ route('register', \App\Support\BillingIntent::routeParams()) }}">{{ __('ui.create_account') }}</a>
+                <a class="auth-footer__register" href="{{ route('register', \App\Support\BillingIntent::routeParams(), false) }}" data-public-register="1">{{ __('ui.create_account') }}</a>
             </p>
         @endif
     </div>

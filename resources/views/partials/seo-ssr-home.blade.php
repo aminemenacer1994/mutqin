@@ -1,8 +1,11 @@
 <article class="seo-ssr">
-    <h1>Forgetting ayahs or unsure what to revise next?</h1>
-    <p>A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.</p>
-    <p>Recite aloud. AI Recite can highlight possible mistakes to practise again. Mutqin is for beginners, children with guidance, returning adults and experienced Hifz students.</p>
-    <p>Available now: free to start. <a href="/memorisation">Start your first session</a>.</p>
+    <h1>Qur’an memorisation, revision, and AI recitation</h1>
+    <p>A Quran memorisation app for Hifz. Learn a short range, return to weaker ayahs, and recite from memory with optional AI recitation feedback.</p>
+    <p>Memorise, revise, and use optional AI Recite. Mutqin is for beginners, children with guidance, returning adults and experienced Hifz students.</p>
+    <p>Eligible new users receive 30 days of free access. <a href="/register">Create a free account</a> or <a href="/memorisation">start your first session</a>.</p>
+
+    <h2>Your first 10 minutes with Mutqin</h2>
+    <p>Set a short range, practise, recite, then leave with a next return.</p>
 
     <h2>The essentials for steady Hifz</h2>
     <p>Learn a small range, practise your recall, then return at the right time.</p>

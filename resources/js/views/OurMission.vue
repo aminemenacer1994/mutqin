@@ -17,8 +17,8 @@
         <div class="info-header-aside">
           <p>{{ t('mission.heroDesc') }}</p>
           <div class="info-actions">
-            <a class="info-btn info-btn--primary" href="/memorisation">
-              <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
+            <a class="info-btn info-btn--primary" :href="primaryCtaHref" data-public-register="1">
+              <i class="bi bi-play-fill" aria-hidden="true"></i> {{ primaryCtaLabel }}
             </a>
             <a class="info-btn info-btn--ghost" href="/#contact">
               <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
@@ -43,8 +43,8 @@
       </div>
 
       <div class="info-actions info-reveal" style="--d: 240ms">
-        <a class="info-btn info-btn--primary" href="/memorisation">
-          <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
+        <a class="info-btn info-btn--primary" :href="primaryCtaHref" data-public-register="1">
+          <i class="bi bi-play-fill" aria-hidden="true"></i> {{ primaryCtaLabel }}
         </a>
         <a class="info-btn info-btn--ghost" href="/#contact">
           <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
@@ -55,9 +55,21 @@
 </template>
 
 <script>
+import { publicRegisterHref } from '../scripts/analytics/registerLinks.js';
+
 export default {
   name: 'OurMissionPage',
   computed: {
+    isAuthenticated() {
+      return typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
+    },
+    primaryCtaHref() {
+      if (typeof window !== 'undefined' && window.mutqinRestrictMarketingHost) return '/';
+      return this.isAuthenticated ? '/memorisation' : publicRegisterHref();
+    },
+    primaryCtaLabel() {
+      return this.isAuthenticated ? this.t('mission.ctaStartSession') : this.t('homepage.hero.startFree');
+    },
     sections() {
       return [
         {

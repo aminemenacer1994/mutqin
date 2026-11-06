@@ -154,9 +154,10 @@ class AuthPageRenderTest extends TestCase
         $this->get(route('register'))
             ->assertOk()
             ->assertSee(__('ui.auth_register_heading'))
+            ->assertSee(__('ui.auth_register_offer'))
             ->assertSee(__('ui.continue_google'))
-            ->assertDontSee(__('ui.auth_role_prompt'))
             ->assertDontSee('class="auth-role"', false)
+            ->assertDontSee('id="account-role-individual"', false)
             ->assertSee(__('ui.create_account'));
     }
 
@@ -233,6 +234,7 @@ class AuthPageRenderTest extends TestCase
     {
         $required = [
             'auth_register_heading',
+            'auth_register_offer',
             'auth_sign_in',
             'auth_demo_title',
             'auth_demo_use',
@@ -283,7 +285,7 @@ class AuthPageRenderTest extends TestCase
         $html = $this->get(route('home'))->assertOk()->getContent();
 
         $this->assertStringContainsString('rel="preload"', $html);
-        $this->assertStringContainsString('as="script"', $html);
+        $this->assertStringContainsString('as="image"', $html);
         $this->assertStringContainsString('window.mutqinUiLabels', $html);
     }
 

@@ -55,6 +55,7 @@ return [
     'tester_guide_dismiss' => 'Anladım',
     'auth_register_kicker' => 'Buradan başlayın',
     'auth_register_subtitle' => 'Ezber, tekrar ve takip için temiz bir kurulum.',
+    'auth_register_offer' => 'Uygun yeni kullanıcılar 30 gün ücretsiz erişim alır.',
     'auth_access_eyebrow' => 'Mutqin erişimi',
     'auth_resume_title' => 'Hızlıca devam et',
     'auth_resume_desc' => 'Ek ekranlar arasında kaybolmadan son oturumunuza dönün.',

@@ -974,6 +974,8 @@ export default {
       hasContinueSession: false,
       startingFreshSessionSelection: false,
       sessionStartGoal: 'memorise',
+      ayahWindowPreset: null,
+      sessionMoreOptionsOpen: false,
       sessionFeedbackPromptLatched: false,
       sessionFeedbackPromptNoted: false,
       returningUserChoicePending: false,
@@ -2611,6 +2613,26 @@ export default {
       if (goal === 'revise') return this.t('memorisation.sessionGoal.helpRevise')
       if (goal === 'test') return this.t('memorisation.sessionGoal.helpTest')
       return this.t('memorisation.sessionGoal.helpMemorise')
+    },
+    inferredAyahWindow() {
+      const max = this.resolveCurrentSurahAyahCount()
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      if (start === 1 && max > 0 && end === Math.min(3, max)) return 'first_3'
+      if (start === 1 && max > 3 && end === Math.min(5, max)) return 'first_5'
+      return 'choose'
+    },
+    activeAyahWindow() {
+      return this.ayahWindowPreset || this.inferredAyahWindow
+    },
+    sessionAyahSummary() {
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      if (start === end) return this.t('memorisation.labels.ayah', { ayah: start })
+      return this.t('memorisation.labels.ayahs', { start, end })
+    },
+    showMemoriseRepetitions() {
+      return normaliseSessionGoal(this.sessionStartGoal) === 'memorise'
     },
     showSessionFeedbackPrompt() {
       if (this.onboardingSampleSessionActive || !this.showPostSessionModal) return false
@@ -6483,7 +6505,7 @@ export default {
       return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0, 160))
     },
     postSessionTestWithAiLabel() {
-      if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
+      if (this.postSessionHasAiCheck) {
         return this.t('memorisation.postSession.actions.retest')
       }
       if (this.postSessionIsRepeatRecommendation) {
@@ -7156,7 +7178,36 @@ export default {
           || this.t('memorisation.sessionComplete.title')
           || 'Practice complete'
       }
+      if (
+        this.postSessionCtaState === POST_SESSION_CTA_STATES.AWAITING_CHECK
+        && this.postSessionRecommendationStep !== 'confirm'
+        && this.postSessionRecommendationStep !== 'memorisation_check_nudge'
+      ) {
+        return this.postSessionModalTitle
+      }
       return this.postSessionHeaderTitle
+    },
+    /** Optional line under the title (surah · range) before the first recite check. */
+    postSessionDialogSubtitle() {
+      if (this.onboardingSampleSessionActive) return ''
+      if (this.postSessionHasAiCheck) return ''
+      if (this.postSessionRecommendationStep === 'memorisation_check_nudge') return ''
+      if (
+        this.postSessionCtaState !== POST_SESSION_CTA_STATES.AWAITING_CHECK
+        || this.postSessionRecommendationStep === 'confirm'
+        || this.postSessionRecommendationStep === 'memorisation_check_nudge'
+      ) {
+        return ''
+      }
+      const j = this.postSessionJustFinishedSummary || {}
+      const latin = String(j.surahLatin || j.surah || '').trim()
+      const arabic = String(j.surahArabic || '').trim()
+      const range = String(j.range || '').trim()
+      const surahPart = latin && arabic && arabic !== latin
+        ? `${latin} · ${arabic}`
+        : (latin || arabic)
+      const line = [surahPart, range].filter(Boolean).join(' · ')
+      return line || ''
     },
     postSessionHeaderSubtitle() {
       if (this.onboardingSampleSessionActive) return ''
@@ -14625,12 +14676,30 @@ export default {
       const next = preset === 'full_surah' ? 'full_surah' : 'custom'
       this.sessionRangePreset = next
       if (next === 'full_surah') {
+        this.ayahWindowPreset = 'choose'
         this.applyFullSurahRangeForCurrentChapter()
         void this.adjustRange?.({ immediate: true })
       }
     },
 
+    applyAyahWindow(preset, { adjust = true } = {}) {
+      const next = preset === 'first_3' || preset === 'first_5' ? preset : 'choose'
+      this.ayahWindowPreset = next
+      if (next === 'choose') return
+      const max = this.resolveCurrentSurahAyahCount()
+      const count = next === 'first_5' ? 5 : 3
+      this.sessionRangePreset = 'custom'
+      this.rangeStart = 1
+      this.rangeEnd = Math.max(1, Math.min(count, max || count))
+      if (adjust) void this.adjustRange?.({ immediate: true })
+    },
+
+    toggleSessionMoreOptions() {
+      this.sessionMoreOptionsOpen = !this.sessionMoreOptionsOpen
+    },
+
     markSessionRangePresetCustom() {
+      this.ayahWindowPreset = 'choose'
       if (this.sessionRangePreset !== 'full_surah') return
       const surahMax = this.resolveCurrentSurahAyahCount()
       const start = Math.max(1, Number(this.rangeStart || 1))
@@ -49226,14 +49295,21 @@ export default {
     },
 
     onChapterChange(event) {
+      const windowPreset = this.ayahWindowPreset || this.inferredAyahWindow
       const nextChapterId = Number.parseInt(event.target.value, 10) || 0
       this.chapterId = nextChapterId
       const selectedChapter = this.chapters.find(chapter => Number(chapter.id) === nextChapterId) || null
       this.currentChapter = selectedChapter
       if (selectedChapter || nextChapterId) {
-        const lastAyah = Math.max(1, this.resolveCurrentSurahAyahCount() || Number(selectedChapter?.verses_count || 1))
-        this.rangeStart = 1
-        this.rangeEnd = lastAyah
+        if (windowPreset === 'first_3' || windowPreset === 'first_5') {
+          this.applyAyahWindow(windowPreset, { adjust: false })
+        } else {
+          const lastAyah = Math.max(1, this.resolveCurrentSurahAyahCount() || Number(selectedChapter?.verses_count || 1))
+          this.rangeStart = 1
+          this.rangeEnd = lastAyah
+          this.sessionRangePreset = 'full_surah'
+          this.ayahWindowPreset = 'choose'
+        }
       }
       this.setupIndividualAyah = null
       this.individualAyahFocusEnabled = false

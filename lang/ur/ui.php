@@ -55,6 +55,7 @@ return [
     'tester_guide_dismiss' => 'سمجھ گیا',
     'auth_register_kicker' => 'ابدأ من هنا',
     'auth_register_subtitle' => 'إعداد واضح للحفظ والمراجعة والمتابعة.',
+    'auth_register_offer' => 'اہل نئے صارفین کو 30 دن مفت رسائی ملتی ہے۔',
     'auth_access_eyebrow' => 'وصول متقن',
     'auth_resume_title' => 'استئناف سريع',
     'auth_resume_desc' => 'تابع جلستك الأخيرة دون شاشات إضافية.',

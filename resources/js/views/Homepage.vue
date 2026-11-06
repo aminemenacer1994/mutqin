@@ -1,5 +1,5 @@
 <template>
-  <div class="homepage" :data-theme="currentTheme">
+  <div class="homepage" :data-theme="currentTheme" :data-inapp="inAppBrowser ? '1' : null">
     <section class="hero" aria-labelledby="homepage-hero-title">
       <div class="hero__glow" aria-hidden="true"></div>
       <div class="hero__inner">
@@ -8,12 +8,14 @@
             <h1 id="homepage-hero-title" class="hero__title">
               {{ t('homepage.hero.title') }}
             </h1>
+            <ul class="hero__pillars" :aria-label="t('homepage.hero.pillarsLabel')">
+              <li v-for="pillar in heroPillars" :key="pillar.id">
+                <i class="bi" :class="pillar.icon" aria-hidden="true"></i>
+                <span>{{ pillar.label }}</span>
+              </li>
+            </ul>
             <p class="hero__desc hero__desc--desktop">{{ t('homepage.hero.desc') }}</p>
             <p class="hero__desc hero__desc--mobile">{{ t('homepage.hero.mobileDesc') }}</p>
-            <p class="hero__recite">
-              <i class="bi bi-mic" aria-hidden="true"></i>
-              <span>{{ t('homepage.pipelineDemo.steps.check.text') }}</span>
-            </p>
             <p class="hero__audience">
               <i class="bi bi-people" aria-hidden="true"></i>
               <span>{{ t('homepage.hero.audience') }}</span>
@@ -24,6 +26,7 @@
                 v-if="showStartMemorisationCta"
                 :href="primaryCta.href"
                 class="btn btn--primary"
+                data-public-register="1"
                 @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
               >
                 <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
@@ -66,9 +69,9 @@
           </div>
 
           <div class="hero__visual">
-            <div class="hero__fan">
+            <div class="hero__fan" :class="{ 'hero__fan--single': isHeroMobile }">
               <figure
-                v-for="shot in heroShots"
+                v-for="shot in visibleHeroShots"
                 :key="shot.id"
                 class="hero__fan-item"
                 :class="`hero__fan-item--${shot.id}`"
@@ -82,6 +85,7 @@
                       :alt="shot.alt"
                       width="706"
                       height="1432"
+                      sizes="(max-width: 767.98px) 58vw, (max-width: 991.98px) 210px, 230px"
                       :loading="shot.id === 'center' ? 'eager' : 'lazy'"
                       :fetchpriority="shot.id === 'center' ? 'high' : 'low'"
                       decoding="async"
@@ -122,6 +126,12 @@
 
     <section id="how-it-works" class="how" aria-labelledby="how-title">
       <div class="wrap">
+        <header class="section-head" data-reveal>
+          <p class="section-kicker">{{ t('homepage.how.kicker') }}</p>
+          <h2 id="how-title" class="section-title">{{ t('homepage.how.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.how.subtitle') }}</p>
+        </header>
+
         <div id="first-session" class="session-brief" data-reveal>
           <div class="session-brief__item">
             <i class="bi bi-clock-history" aria-hidden="true"></i>
@@ -301,6 +311,19 @@
           <h3>{{ activeFeature.title }}</h3>
           <p>{{ activeFeature.description }}</p>
         </div>
+
+        <div v-if="showStartMemorisationCta" class="cta-band" data-reveal>
+          <p class="cta-band__offer">{{ t('homepage.access.available.detail') }}</p>
+          <a
+            :href="primaryCta.href"
+            class="btn btn--primary"
+            data-public-register="1"
+            @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
+          >
+            <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+            {{ primaryCta.label }}
+          </a>
+        </div>
       </div>
     </section>
 
@@ -454,12 +477,14 @@ import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
 import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
+import { isInAppBrowser, publicRegisterHref } from '../scripts/analytics/registerLinks.js';
 
 export default {
   name: 'Homepage',
   setup() {
     const { t, locale } = useI18n();
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
+    const inAppBrowser = typeof window !== 'undefined' && isInAppBrowser();
     const primaryCta = computed(() => {
       const isAuthenticated = typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
 
@@ -471,13 +496,16 @@ export default {
         }
         : {
           destination: 'registration',
-          href: '/register',
+          href: publicRegisterHref(),
           label: t('homepage.hero.startFree'),
         };
     });
     const currentTheme = ref(getSavedTheme());
     const FEATURES_CAROUSEL_START_INDEX = 2;
     const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
+    const isHeroMobile = ref(
+      typeof window !== 'undefined' ? window.matchMedia(FEATURES_MOBILE_MQ).matches : false,
+    );
     const featuresSection = ref(null);
     const featuresCarouselEl = ref(null);
     const isFeaturesMobile = ref(
@@ -564,7 +592,9 @@ export default {
     let revealObserver = null;
 
     const syncFeaturesMobile = () => {
-      isFeaturesMobile.value = featuresMobileMq?.matches ?? false;
+      const mobile = featuresMobileMq?.matches ?? false;
+      isFeaturesMobile.value = mobile;
+      isHeroMobile.value = mobile;
     };
 
     const onFeaturesCarouselSlide = (event) => {
@@ -690,6 +720,21 @@ export default {
       ];
     });
 
+    const visibleHeroShots = computed(() => (
+      isHeroMobile.value
+        ? heroShots.value.filter((shot) => shot.id === 'center')
+        : heroShots.value
+    ));
+
+    const heroPillars = computed(() => {
+      void locale.value;
+      return [
+        { id: 'memorise', icon: 'bi-journal-plus', label: t('homepage.practiceTypes.items.memorise.title') },
+        { id: 'revise', icon: 'bi-arrow-repeat', label: t('homepage.practiceTypes.items.revise.title') },
+        { id: 'ai-recite', icon: 'bi-mic-fill', label: t('homepage.practiceTypes.items.aiRecite.title') },
+      ];
+    });
+
     const practiceModes = computed(() => {
       void locale.value;
       return [
@@ -713,13 +758,6 @@ export default {
           title: t('homepage.practiceTypes.items.aiRecite.title'),
           description: t('homepage.practiceTypes.items.aiRecite.description'),
           cue: t('homepage.practiceTypes.items.aiRecite.cue'),
-        },
-        {
-          id: 'assess',
-          icon: 'bi-clipboard2-check',
-          title: t('homepage.practiceTypes.items.assess.title'),
-          description: t('homepage.practiceTypes.items.assess.description'),
-          cue: t('homepage.practiceTypes.items.assess.cue'),
         },
       ];
     });
@@ -782,6 +820,7 @@ export default {
         { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
         { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
         { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
+        { id: 'freeAccess', question: t('homepage.faq.items.freeAccess.question'), answer: t('homepage.faq.items.freeAccess.answer') },
         { id: 'whoFor', question: t('homepage.faq.items.whoFor.question'), answer: t('homepage.faq.items.whoFor.answer') },
       ];
     });
@@ -839,7 +878,11 @@ export default {
       t,
       showStartMemorisationCta,
       primaryCta,
+      inAppBrowser,
       currentTheme,
+      isHeroMobile,
+      visibleHeroShots,
+      heroPillars,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
       isFeaturesMobile,

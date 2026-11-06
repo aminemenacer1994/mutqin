@@ -9902,3 +9902,19 @@ html body .app .workspace-recite-dock__button:hover {
     gap: 0.6rem !important;
   }
 }
+
+@media (max-width: 767.98px) {
+  .tools-body .sheet--setup .session-range-preset--windows {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .tools .tools-body {
+    padding-bottom: calc(var(--tools-footer-h, 78px) + 26px) !important;
+  }
+
+  .tools-footer--single > .session-primary-action,
+  .tools-footer--single > .tools-btn-primary,
+  .tools-footer--single > .btn-primary {
+    grid-column: 1 / -1 !important;
+  }
+}

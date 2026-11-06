@@ -56634,6 +56634,15 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   gap: 0.35rem;
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ps-muted) 96%, var(--ps-ink));
+}
+
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-range {
   margin: 0;
   font-size: 1rem;
@@ -71020,4 +71029,100 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   .tools-body .session-goal {
     grid-template-columns: 1fr;
   }
+}
+
+.tools-body .session-essentials {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.tools-body .sheet--setup .session-range-preset--windows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tools-body .sheet--setup .session-range-preset--windows .session-range-preset__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.4rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.tools-body .sheet--setup .session-range-preset--windows .session-range-preset__option.is-selected {
+  border-color: var(--accent-strong, var(--accent));
+  background: var(--accent-strong, var(--accent));
+  color: #fff;
+}
+
+.session-ayah-summary {
+  margin: 0.45rem 0 0;
+  color: var(--muted, var(--text-muted, inherit));
+  font-size: 0.84rem;
+}
+
+.session-full-surah {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent-strong, var(--accent));
+  font: inherit;
+  font-size: 0.84rem;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+}
+
+.session-more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  margin: 0.15rem 0 0.5rem;
+  padding: 0.45rem 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.session-more {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.session-more-reset {
+  align-self: flex-start;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.tools-footer--single > .session-primary-action {
+  flex: 1 1 auto;
+}
+
+.tools .tools-body {
+  padding-bottom: calc(var(--tools-footer-h, 78px) + 26px);
 }

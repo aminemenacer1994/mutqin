@@ -1918,79 +1918,92 @@
               </button>
             </div>
             <p class="session-goal__help">{{ sessionGoalHelp }}</p>
-            <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
-              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-journal-text"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('sessionSetup.title') }}</span>
-                    <span v-if="!sectionOpen.advanced_setup" class="st-sub">{{ controlsSetupCollapsedSummary }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
+            <div class="session-essentials" data-tour="setup-sheet">
+              <div class="field setup-field-row" data-tour="setup-surah">
+                <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
+                <select ref="workspaceSurahSelect" :value="chapterId" @change="onChapterChange" class="select">
+                  <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
+                  <option v-for="c in chapters" :key="c.id" :value="c.id">{{ chapterOptionLabel(c) }}</option>
+                </select>
+              </div>
+              <div class="field setup-field-row setup-field-row--range" data-tour="setup-range">
+                <label><i class="bi bi-bounding-box"></i> {{ t('memorisation.sessionGoal.ayahsLabel') }}</label>
+                <div
+                  class="session-range-preset session-range-preset--windows"
+                  role="radiogroup"
+                  :aria-label="t('memorisation.sessionGoal.ayahsLabel')"
+                >
+                  <button
+                    type="button"
+                    class="session-range-preset__option"
+                    role="radio"
+                    :aria-checked="activeAyahWindow === 'first_3' ? 'true' : 'false'"
+                    :class="{ 'is-selected': activeAyahWindow === 'first_3' }"
+                    @click="applyAyahWindow('first_3')"
+                  >{{ t('memorisation.sessionGoal.first3') }}</button>
+                  <button
+                    type="button"
+                    class="session-range-preset__option"
+                    role="radio"
+                    :aria-checked="activeAyahWindow === 'first_5' ? 'true' : 'false'"
+                    :class="{ 'is-selected': activeAyahWindow === 'first_5' }"
+                    @click="applyAyahWindow('first_5')"
+                  >{{ t('memorisation.sessionGoal.first5') }}</button>
+                  <button
+                    type="button"
+                    class="session-range-preset__option"
+                    role="radio"
+                    :aria-checked="activeAyahWindow === 'choose' ? 'true' : 'false'"
+                    :class="{ 'is-selected': activeAyahWindow === 'choose' }"
+                    @click="applyAyahWindow('choose')"
+                  >{{ t('memorisation.sessionGoal.chooseAyahs') }}</button>
+                </div>
+                <p v-if="activeAyahWindow !== 'choose'" class="session-ayah-summary">{{ sessionAyahSummary }}</p>
+                <div v-else class="session-range-block">
+                  <div class="range range-single session-range-inputs">
+                    <input
+                      type="number"
+                      class="input"
+                      inputmode="numeric"
+                      v-model.number="rangeStart"
+                      @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
+                      min="1"
+                      :max="resolveCurrentSurahAyahCount() || undefined"
+                    >
+                    <span>{{ t('sessionSetup.to') }}</span>
+                    <input
+                      type="number"
+                      class="input"
+                      inputmode="numeric"
+                      v-model.number="rangeEnd"
+                      @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
+                      min="1"
+                      :max="resolveCurrentSurahAyahCount() || undefined"
+                    >
+                  </div>
+                  <button
+                    type="button"
+                    class="session-full-surah"
+                    @click="onSessionRangePresetChange('full_surah')"
+                  >
+                    {{ t('sessionSetup.rangePresetFullSurah') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="session-more-toggle"
+              :aria-expanded="sessionMoreOptionsOpen ? 'true' : 'false'"
+              @click="toggleSessionMoreOptions"
+            >
+              <span>{{ t('memorisation.sessionGoal.moreOptions') }}</span>
+              <i class="bi" :class="sessionMoreOptionsOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+            </button>
+            <div v-show="sessionMoreOptionsOpen" class="session-more">
+            <section class="sheet-section sheet-section-compact" data-tour="setup-sheet-more">
+              <div class="sheet-content">
                 <div class="field-stack field-stack-compact setup-field-list">
-                  <div class="field setup-field-row" data-tour="setup-surah">
-                    <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
-                    <select ref="workspaceSurahSelect" :value="chapterId" @change="onChapterChange" class="select">
-                      <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
-                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ chapterOptionLabel(c) }}</option>
-                    </select>
-                  </div>
-                  <div class="field setup-field-row setup-field-row--range" data-tour="setup-range">
-                    <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
-                    <div class="session-range-block">
-                      <div
-                        class="session-range-preset"
-                        role="radiogroup"
-                        :aria-label="t('sessionSetup.rangePresetLabel')"
-                      >
-                        <label class="session-range-preset__option radio">
-                          <input
-                            type="radio"
-                            name="session-range-preset"
-                            value="full_surah"
-                            :checked="sessionRangePreset === 'full_surah'"
-                            @change="onSessionRangePresetChange('full_surah')"
-                          >
-                          <span class="session-range-preset__label">{{ t('sessionSetup.rangePresetFullSurah') }}</span>
-                        </label>
-                        <label class="session-range-preset__option radio">
-                          <input
-                            type="radio"
-                            name="session-range-preset"
-                            value="custom"
-                            :checked="sessionRangePreset === 'custom'"
-                            @change="onSessionRangePresetChange('custom')"
-                          >
-                          <span class="session-range-preset__label">{{ t('sessionSetup.rangePresetCustom') }}</span>
-                        </label>
-                      </div>
-                      <div class="range range-single session-range-inputs">
-                      <input
-                        type="number"
-                        class="input"
-                        inputmode="numeric"
-                        v-model.number="rangeStart"
-                        @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
-                        min="1"
-                        :max="resolveCurrentSurahAyahCount() || undefined"
-                      >
-                      <span>{{ t('sessionSetup.to') }}</span>
-                      <input
-                        type="number"
-                        class="input"
-                        inputmode="numeric"
-                        v-model.number="rangeEnd"
-                        @change="markSessionRangePresetCustom(); adjustRange({ immediate: true })"
-                        min="1"
-                        :max="resolveCurrentSurahAyahCount() || undefined"
-                      >
-                      </div>
-                    </div>
-                  </div>
                   <div class="field setup-field-row">
                     <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
                     <select
@@ -2008,7 +2021,7 @@
                     </small>
                     <small v-else class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
                   </div>
-                  <div class="field field-repetitions-clean setup-field-row">
+                  <div v-if="showMemoriseRepetitions" class="field field-repetitions-clean setup-field-row">
                     <div class="field-header">
                       <label><i class="bi bi-arrow-repeat"></i> {{ t('sessionSetup.repetitions') }}</label>
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
@@ -2124,18 +2137,7 @@
               </div>
             </section>
             <section class="sheet-section sheet-section-compact">
-              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-mic"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.audio.title') }}</span>
-                    <span v-if="!sectionOpen.advanced_playback" class="st-sub">{{ controlsPlaybackCollapsedSummary }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content offcanvas-audio-panel" v-show="sectionOpen.advanced_playback">
+              <div class="sheet-content offcanvas-audio-panel">
                 <div class="field-stack field-stack-compact setup-field-list">
                   <div class="field field-repetitions-clean setup-field-row">
                     <div class="field-header">
@@ -2187,6 +2189,15 @@
                 </div>
               </div>
             </section>
+              <button
+                type="button"
+                class="tools-btn tools-btn-ghost tools-btn-soft session-more-reset"
+                :disabled="toolsStartBusy"
+                @click="resetControls"
+              >
+                <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- TECHNIQUES TAB -->
@@ -2965,7 +2976,7 @@
 
         </div>
 
-        <div class="tools-footer">
+        <div class="tools-footer tools-footer--single">
           <button
             type="button"
             class="tools-btn btn btn-primary session-primary-action"
@@ -2978,9 +2989,6 @@
           >
             <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
             <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
-          </button>
-          <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
-            <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
           </button>
         </div>
       </aside>
@@ -4131,6 +4139,9 @@
               <h2 id="postSessionTitle" class="post-session-simple__title" tabindex="-1">
                 {{ postSessionDisplayTitle }}
               </h2>
+              <p v-if="postSessionDialogSubtitle" class="post-session-simple__subtitle">
+                {{ postSessionDialogSubtitle }}
+              </p>
             </div>
             <button
               type="button"
@@ -4558,7 +4569,7 @@
                 class="post-session-simple__plan-prompt post-session-simple__plan-prompt--context"
                 data-testid="post-session-awaiting-ai"
               >
-                <p class="post-session-simple__section-kicker">
+                <p class="post-session-simple__section-kicker post-session-simple__plan-prompt-eyebrow">
                   {{ translateOrFallback('memorisation.postSession.recommendation.justFinished', 'Just finished') }}
                 </p>
                 <p

@@ -70,6 +70,7 @@ return [
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'Crea tu cuenta',
     'auth_register_subtitle' => 'Una configuración clara para memorización, revisión y seguimiento.',
+    'auth_register_offer' => 'Los usuarios nuevos elegibles reciben 30 días de acceso gratuito.',
     'auth_access_eyebrow' => 'Acceso Mutqin',
     'auth_resume_title' => 'Reanudar rápidamente',
     'auth_resume_desc' => 'Retoma tu última sesión sin pantallas extra.',

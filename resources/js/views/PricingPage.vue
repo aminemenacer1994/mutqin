@@ -200,6 +200,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
+import { publicRegisterHref, withRegistrationQuery } from '../scripts/analytics/registerLinks.js';
 
 function readBillingDisplay() {
   const billing = window.mutqinBilling || {};
@@ -224,9 +225,9 @@ export default {
     const billingBusy = ref(false);
     let revealObserver = null;
     const checkoutPlanKey = computed(() => (billingCycle.value === 'annual' ? 'pro_yearly' : 'pro_monthly'));
-    const registerHref = computed(() => `/register?plan=${checkoutPlanKey.value}`);
+    const registerHref = computed(() => withRegistrationQuery(`/register?plan=${checkoutPlanKey.value}`));
 
-    const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
+    const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : publicRegisterHref()));
     const subscriptionTier = computed(() => String(window.mutqinSubscriptionTier || 'free').toLowerCase());
     const hasPaidAccess = computed(() => !!window.mutqinHasPaidAccess);
     const canManageBilling = computed(() => !!window.mutqinCanManageBilling);

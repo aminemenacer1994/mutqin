@@ -67,6 +67,7 @@ return [
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'أنشئ حسابك',
     'auth_register_subtitle' => 'إعداد واضح للحفظ والمراجعة والمتابعة.',
+    'auth_register_offer' => 'المستخدمون الجدد المؤهّلون يحصلون على 30 يومًا من الوصول المجاني.',
     'auth_access_eyebrow' => 'وصول متقن',
     'auth_resume_title' => 'استئناف سريع',
     'auth_resume_desc' => 'تابع جلستك الأخيرة دون شاشات إضافية.',

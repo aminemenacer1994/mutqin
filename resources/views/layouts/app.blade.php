@@ -4049,6 +4049,18 @@
             outline-offset: 2px;
         }
 
+        .app-auth-links--bar .app-auth-link--register {
+            background: var(--accent);
+            color: var(--text-on-accent);
+            font-weight: 700;
+        }
+
+        .app-auth-links--bar .app-auth-link--register:hover,
+        .app-auth-links--bar .app-auth-link--register:focus-visible {
+            background: var(--accent-strong, var(--accent));
+            color: var(--text-on-accent);
+        }
+
         .app-auth-links--bar .app-auth-link::after {
             display: none;
         }
@@ -4212,6 +4224,12 @@
         html[data-theme="dark"] body nav.navbar.app-navbar .navbar-toggler:hover,
         html[data-theme="dark"] body nav.navbar.app-navbar .navbar-toggler:focus-visible {
             color: #e7b77e !important;
+        }
+
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link--register,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link--register:hover,
+        html[data-theme="dark"] body nav.navbar.app-navbar .app-auth-link--register:focus-visible {
+            color: var(--text-on-accent) !important;
         }
 
         html[data-theme="dark"] body nav.navbar.app-navbar .nav-link.active::after,
@@ -7473,6 +7491,19 @@
                 border-color: var(--border);
             }
 
+            .app-navbar .offcanvas-body .app-auth-link--register {
+                background: var(--accent);
+                color: var(--text-on-accent) !important;
+                border-color: transparent;
+                font-weight: 700;
+            }
+
+            .app-navbar .offcanvas-body .app-auth-link--register:hover,
+            .app-navbar .offcanvas-body .app-auth-link--register:focus-visible {
+                background: var(--accent-strong, var(--accent));
+                color: var(--text-on-accent) !important;
+            }
+
             .app-navbar .offcanvas-body .nav-link.active {
                 color: var(--text);
                 background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
@@ -8266,7 +8297,7 @@
                         {{-- Mobile menu only; desktop auth links sit in navbar-quick-actions after lang/theme. --}}
                         <div class="app-auth-links app-auth-links--drawer d-flex d-lg-none flex-column align-items-stretch gap-2">
                             <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right nav-link-icon" aria-hidden="true"></i><span data-i18n="login">{{ __('ui.login') }}</span></a>
-                            <a class="nav-link" href="{{ route('register') }}"><i class="bi bi-person-plus nav-link-icon" aria-hidden="true"></i><span data-i18n="register">{{ __('ui.register') }}</span></a>
+                            <a class="nav-link app-auth-link--register" href="{{ route('register', [], false) }}" data-public-register="1"><i class="bi bi-person-plus nav-link-icon" aria-hidden="true"></i><span data-i18n="register">{{ __('ui.register') }}</span></a>
                         </div>
                     @endguest
                     @auth
@@ -8367,7 +8398,7 @@
                 @guest
                     <div class="app-auth-links app-auth-links--bar d-none d-lg-flex align-items-center gap-1">
                         <a class="nav-link app-auth-link" href="{{ route('login') }}"><span data-i18n="login">{{ __('ui.login') }}</span></a>
-                        <a class="nav-link app-auth-link" href="{{ route('register') }}"><span data-i18n="register">{{ __('ui.register') }}</span></a>
+                        <a class="nav-link app-auth-link app-auth-link--register" href="{{ route('register', [], false) }}" data-public-register="1"><span data-i18n="register">{{ __('ui.register') }}</span></a>
                     </div>
                 @endguest
                 </div>{{-- /.navbar-inline-tools: lang + theme sit left of login/register --}}

@@ -245,9 +245,10 @@
   "homepage": {
     "hero": {
       "badge": "Qur’an memorisation companion",
-      "title": "Forgetting ayahs or unsure what to revise next?",
-      "desc": "A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.",
-      "mobileDesc": "A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.",
+      "title": "Qur’an memorisation, revision, and AI recitation",
+      "desc": "A Quran memorisation app for Hifz. Learn a short range, return to weaker ayahs, and recite from memory with optional AI recitation feedback.",
+      "mobileDesc": "Memorise a short range, revise weaker ayahs, and check recitation with optional AI Recite.",
+      "pillarsLabel": "What Mutqin helps you do",
       "painKicker": "If this feels familiar, you are not alone.",
       "painPoints": {
         "recall": "Some ayahs feel less secure than they used to.",
@@ -276,8 +277,8 @@
     "access": {
       "available": {
         "label": "Available now",
-        "detail": "Free to start.",
-        "mobileDetail": "Free to start"
+        "detail": "Eligible new users receive 30 days of free access.",
+        "mobileDetail": "30 days free for eligible new users"
       },
       "early": {
         "label": "Early access",
@@ -334,8 +335,8 @@
     },
     "how": {
       "kicker": "How Mutqin works",
-      "title": "A clear path for every ayah",
-      "subtitle": "Set a short range, practise, recite, then return to what still needs care.",
+      "title": "Your first 10 minutes with Mutqin",
+      "subtitle": "Set a short range, practise, recite, then leave with a next return.",
       "items": {
         "choose": {
           "title": "Set your range",
@@ -361,8 +362,8 @@
     },
     "practiceTypes": {
       "kicker": "Choose the right practice",
-      "title": "Four distinct parts of your Hifz practice",
-      "subtitle": "They work together, but each has a different job in helping a small range stay with you.",
+      "title": "Memorise, revise, and recite",
+      "subtitle": "Three parts of Hifz practice, each with a different job in helping a small range stay with you.",
       "items": {
         "memorise": {
           "title": "Memorise",
@@ -451,6 +452,10 @@
         "whoFor": {
           "question": "Who is Mutqin for?",
           "answer": "Mutqin is for beginners, adults returning after a pause and experienced learners who want a calmer way to continue. Children can use it with a parent or teacher."
+        },
+        "freeAccess": {
+          "question": "Is there 30 days of free access?",
+          "answer": "Eligible new users receive 30 days of free access — the first month is a gift, so you can begin your hifz with ease. After that you can continue on Free, or choose Pro. Pro checkout still includes a 7-day trial."
         }
       }
     },
@@ -764,9 +769,14 @@
       "reviseHint": "A set you know",
       "test": "Test recitation",
       "testHint": "Recite and check",
-      "helpMemorise": "Choose a surah and a few ayahs. You can start without a long-term plan.",
-      "helpRevise": "Choose ayahs you already know. This does not create a memorisation plan.",
-      "helpTest": "Choose a short range, then recite it. Mutqin checks the recitation.",
+      "helpMemorise": "Learn new ayahs with guided listening.",
+      "helpRevise": "Practise ayahs you already know.",
+      "helpTest": "Recite and get AI feedback.",
+      "ayahsLabel": "Ayahs",
+      "first3": "First 3",
+      "first5": "First 5",
+      "chooseAyahs": "Choose ayahs",
+      "moreOptions": "More options",
       "startMemorise": "Memorise",
       "startRevise": "Revise",
       "startTest": "Test recitation",
@@ -2662,7 +2672,7 @@
         "practiceSetup": "Practice setup",
         "justFinished": "Just finished",
         "repsDone": "{count} repetitions",
-        "aiFirstBodyShort": "When you are ready, an optional check can help you find a place to revisit.",
+        "aiFirstBodyShort": "When you are ready, you can check this range from memory to find a place to revisit.",
         "aiFirstBodyNamed": "When you are ready, you can check {surah} {range} to find a place to revisit.",
         "mainFocus": "Main focus",
         "mainFocusExplanationAyah": "Give Ayah {ayah} one more pass.",
@@ -4605,7 +4615,7 @@
   "waitingList": {
     "brand": "Mutqin",
     "kicker": "Early access",
-    "promoOffer": "The first three months are a gift, so you can begin your hifz with ease.",
+    "promoOffer": "The first month is a gift, so you can begin your hifz with ease.",
     "title": "Keep your hifz close",
     "subtitle": "Mutqin is opening soon. Join the list to get invited first and try Qur'an memorisation support between lessons.",
     "homeHintPrefix": "For more detail, see the ",

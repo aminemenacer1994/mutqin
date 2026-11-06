@@ -10,9 +10,10 @@
             <a
               v-if="showExploreCta"
               class="about-btn about-btn--primary"
-              href="/memorisation"
+              :href="primaryCtaHref"
+              data-public-register="1"
             >
-              {{ t('aboutUs.ctaExplore') }}
+              {{ primaryCtaLabel }}
             </a>
           </div>
         </div>
@@ -66,6 +67,8 @@
 </template>
 
 <script>
+import { publicRegisterHref } from '../scripts/analytics/registerLinks.js';
+
 const HERO_PEXELS = {
   id: 30890556,
   fallbackId: 36188877,
@@ -100,6 +103,15 @@ export default {
   computed: {
     showExploreCta() {
       return typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
+    },
+    isAuthenticated() {
+      return typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
+    },
+    primaryCtaHref() {
+      return this.isAuthenticated ? '/memorisation' : publicRegisterHref();
+    },
+    primaryCtaLabel() {
+      return this.isAuthenticated ? this.t('aboutUs.ctaExplore') : this.t('homepage.hero.startFree');
     },
     howSteps() {
       return [

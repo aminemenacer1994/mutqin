@@ -55,6 +55,7 @@ return [
     'tester_guide_dismiss' => 'Mengerti',
     'auth_register_kicker' => 'Mulai di sini',
     'auth_register_subtitle' => 'Pengaturan yang rapi untuk hafalan, murajaah, dan pelacakan.',
+    'auth_register_offer' => 'Pengguna baru yang memenuhi syarat mendapat 30 hari akses gratis.',
     'auth_access_eyebrow' => 'Akses Mutqin',
     'auth_resume_title' => 'Lanjutkan dengan cepat',
     'auth_resume_desc' => 'Lanjutkan sesi terakhir tanpa mencari-cari layar tambahan.',

@@ -30,6 +30,7 @@ import {
     initSpaPageViews,
     trackLoginFromFlash,
 } from './scripts/analytics/productEvents.js';
+import { initPublicRegisterLinks } from './scripts/analytics/registerLinks.js';
 import { bootstrapThemeFromStore, initThemeStorageSync } from './utils/theme';
 
 initWaitingListAttribution();
@@ -42,6 +43,7 @@ try {
         justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
         registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
     });
+    initPublicRegisterLinks();
 } catch {
     /* analytics must never block boot */
 }
