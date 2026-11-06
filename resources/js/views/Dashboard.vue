@@ -54,6 +54,7 @@
                 'dash-continue-card--primary': true,
                 'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
                 'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
+                'dash-continue-card--revise': primaryContinueAction.kind === 'revise',
               }"
               :href="primaryContinueAction.href"
               :aria-label="primaryContinueAction.ariaLabel || undefined"
@@ -205,7 +206,7 @@
                 <i class="bi bi-check2-circle" aria-hidden="true"></i>
               </span>
               <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
-              <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
+              <p v-if="!showOptionalReviewAside" class="dash-murajaah-block__empty-hint">
                 {{ t('dashboard.weak_empty_message') }}
               </p>
               <div v-else class="dash-murajaah-suggestion">
@@ -216,14 +217,6 @@
                   {{ t('dashboard.murajaah_practise') }}
                 </a>
               </div>
-              <a
-                v-if="!optionalReviewSuggestion"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :href="primaryContinueAction?.href || memorisationUrl"
-              >
-                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                {{ primaryContinueAction?.cta || t('dashboard.cta_start') }}
-              </a>
             </div>
 
             <ul v-else class="dash-murajaah-list">
@@ -312,9 +305,9 @@
               </span>
               <p class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</p>
               <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
-              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="memorisationUrl">
+              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="testRecitationHref">
                 <i class="bi bi-mic" aria-hidden="true"></i>
-                {{ t('dashboard.open_practice') }}
+                {{ t('dashboard.ai_recite.test_cta') || t('dashboard.open_practice') }}
               </a>
             </div>
             <template v-else>
@@ -843,6 +836,8 @@ import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/network
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
+import { pickDashboardPrimaryKind } from '../scripts/dashboard/primaryAction'
+import { memorisationGoalHref } from '../scripts/session/sessionGoal'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import {
   clearAiAssessmentRetry,
@@ -1000,6 +995,12 @@ export default {
     },
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
+    },
+    freshMemoriseHref() {
+      return memorisationGoalHref(this.memorisationUrl, 'memorise')
+    },
+    testRecitationHref() {
+      return memorisationGoalHref(this.memorisationUrl, 'test')
     },
     showLearnerTeacherSection() {
       return this.auth?.learner_teacher_section_enabled === true
@@ -1221,8 +1222,48 @@ export default {
       if (this.isSavedSessionContinue) return this.data?.continue || {}
       return null
     },
+    revisionPrimaryTarget() {
+      const review = this.journeyReview
+      if (review?.href) {
+        const start = Number(review.ayah_start || review.ayah_number || 0)
+        const end = Number(review.ayah_end || start)
+        const range = start > 0
+          ? (start === end
+            ? this.t('dashboard.ayah_n', { n: start })
+            : this.t('dashboard.ayah_range', { start, end }))
+          : ''
+        return {
+          href: review.href,
+          title: range ? `${review.surah_name} · ${range}` : review.surah_name,
+        }
+      }
+      const item = this.murajaahPreview[0]
+      if (!item) return null
+      const href = this.reviewNowHref(item)
+      if (!href) return null
+      return {
+        href,
+        title: `${item.surah_name} · ${this.t('dashboard.ayah_n', { n: item.ayah_number })}`,
+      }
+    },
+    showOptionalReviewAside() {
+      const suggestion = this.optionalReviewSuggestion
+      if (!suggestion?.href) return false
+      return suggestion.href !== this.primaryContinueAction?.href
+    },
     primaryContinueAction() {
-      if (this.isSavedSessionContinue) {
+      const journey = this.journeyMemorisationAction
+      const review = this.revisionPrimaryTarget
+      const row = this.journeyContinue || {}
+      const kind = pickDashboardPrimaryKind({
+        hasSaved: this.isSavedSessionContinue,
+        review,
+        journey,
+        continueActionType: String(row.action_type || this.data?.continue?.action_type || ''),
+        remembered: row.remembered_count,
+        rangeTotal: row.range_ayah_count,
+      })
+      if (kind === 'saved') {
         const source = this.savedSessionContinueSource || {}
         const title = this.continueSessionTitle(source)
         return {
@@ -1236,37 +1277,45 @@ export default {
           ariaLabel: `${this.t('dashboard.saved_session_label')}. ${title}. ${this.t('dashboard.saved_session_hint')}`,
         }
       }
-      if (!this.journeyMemorisationAction) {
-        if (!this.hasMemorisationHistory && !this.liveReturnSession) {
-          return {
-            kind: 'fresh',
-            href: this.memorisationUrl,
-            label: this.t('memorisation.workspaceJourney.kicker'),
-            title: this.t('memorisation.workspaceEmpty.journeyTitle'),
-            hint: this.t('memorisation.workspaceEmpty.journeyDesc'),
-            cta: this.t('dashboard.cta_start'),
-            icon: 'bi bi-play-circle-fill',
-            ariaLabel: `${this.t('memorisation.workspaceJourney.kicker')}. ${this.t('memorisation.workspaceEmpty.journeyTitle')}. ${this.t('memorisation.workspaceEmpty.journeyDesc')}`,
-          }
+      if (kind === 'revise' && review) {
+        return {
+          kind: 'revise',
+          href: review.href,
+          label: this.t('dashboard.journey_review_label'),
+          title: review.title,
+          hint: this.t('memorisation.sessionGoal.reviseHint'),
+          cta: this.t('dashboard.journey_review_cta'),
+          icon: 'bi bi-arrow-repeat',
+          ariaLabel: `${this.t('dashboard.journey_review_label')}. ${review.title}. ${this.t('memorisation.sessionGoal.reviseHint')}`,
         }
-        return null
       }
-      const action = this.journeyMemorisationAction
-      const why = String(
-        this.journeyContinue?.why_summary
-        || this.data?.continue?.why_summary
-        || this.data?.recommended_next?.why_summary
-        || '',
-      ).trim()
+      if (kind === 'journey' && journey) {
+        const why = String(
+          this.journeyContinue?.why_summary
+          || this.data?.continue?.why_summary
+          || this.data?.recommended_next?.why_summary
+          || '',
+        ).trim()
+        return {
+          kind: 'journey',
+          href: journey.href,
+          label: journey.label,
+          title: journey.title,
+          hint: why || null,
+          range: why ? null : this.continueRangeLabel(this.journeyContinue || this.data?.progress),
+          cta: journey.cta,
+          icon: 'bi bi-book-half',
+        }
+      }
       return {
-        kind: 'journey',
-        href: action.href,
-        label: action.label,
-        title: action.title,
-        hint: why || null,
-        range: why ? null : this.continueRangeLabel(this.journeyContinue || this.data?.progress),
-        cta: action.cta,
-        icon: 'bi bi-book-half',
+        kind: 'fresh',
+        href: this.freshMemoriseHref,
+        label: this.t('memorisation.sessionGoal.memorise'),
+        title: this.t('memorisation.sessionGoal.freshTitle'),
+        hint: this.t('memorisation.sessionGoal.freshHint'),
+        cta: this.t('memorisation.sessionGoal.startMemorise'),
+        icon: 'bi bi-play-circle-fill',
+        ariaLabel: `${this.t('memorisation.sessionGoal.memorise')}. ${this.t('memorisation.sessionGoal.freshTitle')}. ${this.t('memorisation.sessionGoal.freshHint')}`,
       }
     },
     journeyMemorisationAction() {

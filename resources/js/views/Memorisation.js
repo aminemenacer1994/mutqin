@@ -11,6 +11,11 @@ import {
 } from '../utils/theme'
 import { openFeedbackModal } from '../scripts/feedback/feedbackLauncher'
 import {
+  rememberSessionFeedbackPrompt,
+  shouldOfferSessionFeedback,
+} from '../scripts/feedback/sessionPrompt'
+import { memorisationGoalHref, normaliseSessionGoal } from '../scripts/session/sessionGoal'
+import {
   ACTIVE_SESSION_SNAPSHOT_KEY,
   clearSharedMutqinBrowserResidue,
   migrateTelawaLocalStorageKeys,
@@ -474,6 +479,7 @@ import {
   createSessionBroadcast,
   isResumableSessionPayload,
   buildContinuePayloadFromLastPosition,
+  resumeFieldsFromBackendSession,
   pickContinuePayloadForResume,
   readStashedDashboardEntryIntent,
   reconcileBootstrapSessionState,
@@ -967,6 +973,9 @@ export default {
       continueSessionPayload: null, // Make sure this exists
       hasContinueSession: false,
       startingFreshSessionSelection: false,
+      sessionStartGoal: 'memorise',
+      sessionFeedbackPromptLatched: false,
+      sessionFeedbackPromptNoted: false,
       returningUserChoicePending: false,
       welcomeBackWorkspaceHidden: false,
       welcomeBackContinueInFlight: false,
@@ -2573,7 +2582,44 @@ export default {
       ) {
         return this.t('memorisation.postSessionChoice.startCustomSession')
       }
-      return this.t('memorisation.welcomeBack.startNewSession')
+      const goal = normaliseSessionGoal(this.sessionStartGoal)
+      if (goal === 'revise') return this.t('memorisation.sessionGoal.startRevise')
+      if (goal === 'test') return this.t('memorisation.sessionGoal.startTest')
+      return this.t('memorisation.sessionGoal.startMemorise')
+    },
+    sessionGoalOptions() {
+      return [
+        {
+          id: 'memorise',
+          title: this.t('memorisation.sessionGoal.memorise'),
+          hint: this.t('memorisation.sessionGoal.memoriseHint'),
+        },
+        {
+          id: 'revise',
+          title: this.t('memorisation.sessionGoal.revise'),
+          hint: this.t('memorisation.sessionGoal.reviseHint'),
+        },
+        {
+          id: 'test',
+          title: this.t('memorisation.sessionGoal.test'),
+          hint: this.t('memorisation.sessionGoal.testHint'),
+        },
+      ]
+    },
+    sessionGoalHelp() {
+      const goal = normaliseSessionGoal(this.sessionStartGoal)
+      if (goal === 'revise') return this.t('memorisation.sessionGoal.helpRevise')
+      if (goal === 'test') return this.t('memorisation.sessionGoal.helpTest')
+      return this.t('memorisation.sessionGoal.helpMemorise')
+    },
+    showSessionFeedbackPrompt() {
+      if (this.onboardingSampleSessionActive || !this.showPostSessionModal) return false
+      if (this.sessionFeedbackPromptLatched) return true
+      try {
+        return shouldOfferSessionFeedback(window.localStorage)
+      } catch {
+        return false
+      }
     },
     toolsStartBusy() {
       return !!this.toolsStartInFlight
@@ -2650,7 +2696,6 @@ export default {
     },
     controlsPanelHint() {
       const hints = {
-        tools: this.t('memorisation.controlsHints.setup'),
         techniques: this.t('memorisation.controlsHints.practice'),
         saved: this.t('memorisation.controlsHints.saved'),
       }
@@ -12524,6 +12569,24 @@ export default {
     openSessionFeedback() {
       this.openFeedbackModal({ type: 'suggestion' })
     },
+    noteSessionFeedbackPromptSeen() {
+      if (this.sessionFeedbackPromptNoted) return
+      this.sessionFeedbackPromptLatched = true
+      this.sessionFeedbackPromptNoted = true
+      try {
+        rememberSessionFeedbackPrompt(window.localStorage)
+      } catch { /* ignore */ }
+    },
+    openSessionFeedbackPrompt() {
+      this.noteSessionFeedbackPromptSeen()
+      this.openSessionFeedback()
+    },
+    setSessionStartGoal(goal) {
+      const next = normaliseSessionGoal(goal)
+      if (this.sessionStartGoal === next) return
+      this.sessionStartGoal = next
+      this.persistUiState()
+    },
     closeWorkspaceReciteAnalysis() {
       const shouldReturnToDashboard = !!this.postSessionDashboardAfterRecite
       const shouldReturnToCompletion = !!this.postSessionCompletionAfterRecite
@@ -13651,6 +13714,8 @@ export default {
         const journey = String(params.get('journey') || '').trim().toLowerCase()
         const view = String(params.get('view') || params.get('layout') || '').trim()
         const weak = String(params.get('weak') || '').trim()
+        const goal = normaliseSessionGoal(params.get('goal') || '')
+        const hasGoal = params.has('goal')
         const hasUrlIntent = !!(
           resume
           || setup
@@ -13660,6 +13725,7 @@ export default {
           || aiCheck
           || journey
           || review
+          || hasGoal
         )
         if (hasUrlIntent) {
           return {
@@ -13678,6 +13744,7 @@ export default {
             to: to > 0 ? to : 0,
             view: view || null,
             weak: weak || null,
+            goal: hasGoal ? goal : null,
           }
         }
         // Refresh mid-consume: URL may already be cleaned; restore stashed destination.
@@ -13691,7 +13758,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -13732,6 +13799,7 @@ export default {
       if (entry.journey === 'main' || entry.journey === 'choose') {
         this.pendingMainJourney = true
       }
+      if (entry.goal) this.setSessionStartGoal(entry.goal)
 
       try {
         if (entry.journey === 'ten_minute' || entry.journey === '10_minute') {
@@ -13813,18 +13881,8 @@ export default {
           } else {
             this.syncWelcomeBackResumeFromBackend()
           }
-          if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {
-            await this.welcomeBackContinueSession({ preferredSessionId })
-            this.finishDashboardMadaniEntry(entry)
-            this.markDashboardEntryIntentConsumed()
-            return true
-          }
-          this.showBanner?.(
-            this.t('toasts.sessionResumeUnavailable')
-              || 'That session is no longer available to resume.',
-            'warning',
-            3600
-          )
+          await this.welcomeBackContinueSession({ preferredSessionId })
+          this.finishDashboardMadaniEntry(entry)
           this.markDashboardEntryIntentConsumed()
           return true
         }
@@ -13858,11 +13916,22 @@ export default {
 
         if (entry.surah > 0 && entry.from > 0) {
           const rangeEnd = Math.max(entry.from, entry.to || entry.from)
+          const goal = normaliseSessionGoal(entry.goal || this.sessionStartGoal)
+          if (goal === 'test') {
+            this.chapterId = entry.surah
+            this.rangeStart = entry.from
+            this.rangeEnd = rangeEnd
+            await this.applyWorkspaceControls({ reason: 'chapter' })
+            await this.startSessionAndClose({ sessionGoal: 'test' })
+            this.finishDashboardMadaniEntry(entry)
+            this.markDashboardEntryIntentConsumed()
+            return true
+          }
           await this.startSessionFromRecommendationPayload({
             chapterId: entry.surah,
             rangeStart: entry.from,
             rangeEnd,
-            sessionMode: 'new_learning',
+            sessionMode: goal === 'revise' ? 'revision' : 'new_learning',
             autoStart: true,
           })
           this.finishDashboardMadaniEntry(entry)
@@ -13870,10 +13939,11 @@ export default {
           return true
         }
 
-        if (entry.setup) {
+        if (entry.setup || entry.goal) {
           this.startingFreshSessionSelection = true
           this.prepareManualSessionSelection()
           this.resetRepetitionsForFreshSession()
+          this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           this.markDashboardEntryIntentConsumed()
           return true
@@ -17395,10 +17465,28 @@ export default {
           }
         }
         this.closePostSessionChoice()
+        const explicitRevision = options.sessionMode === 'revision'
+        const goal = explicitRevision
+          ? 'revise'
+          : normaliseSessionGoal(options.sessionGoal || this.sessionStartGoal)
+        if (goal === 'test') {
+          await this.closeToolsPanel()
+          this.clearToolsStartInFlight()
+          if (!this.aiTestModalsEnabled) {
+            this.showBanner(
+              this.t('memorisation.sessionGoal.testUnavailable'),
+              'info',
+              3600,
+            )
+            return
+          }
+          await this.openAiMemorisationDetection({ scope: 'session', fromSessionGoal: true })
+          return
+        }
         await this.closeToolsPanel()
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
         await this.$nextTick()
-        if (options.sessionMode === 'revision') {
+        if (goal === 'revise') {
           this.markCurrentSessionAsRecommended({ sessionMode: 'revision' })
         }
         this.primeSessionAudioForCountdown()
@@ -19080,14 +19168,14 @@ export default {
       this.teardownWorkspaceTourPreview({ fullFatihah: !!dismiss })
       restoreReturnFocus(this.workspaceTourReturnFocusEl)
       this.workspaceTourReturnFocusEl = null
-      if (dismiss) {
-        try {
-          localStorage.setItem(this.getTesterGuideStorageKey(), '1')
-        } catch { /* ignore */ }
-        if (!this.hasCompletedOnboarding()) {
-          this.markOnboardingCompleted()
-          trackAckeeEvent(ACKEE_EVENTS.ONBOARDING_COMPLETED)
-        }
+      // First-run completion must run for both Skip and Finish — Finish used to pass
+      // dismiss:false only, which left onboarding incomplete so the tour replayed.
+      try {
+        localStorage.setItem(this.getTesterGuideStorageKey(), '1')
+      } catch { /* ignore */ }
+      if (!this.hasCompletedOnboarding()) {
+        this.markOnboardingCompleted()
+        trackAckeeEvent(ACKEE_EVENTS.ONBOARDING_COMPLETED)
       }
     },
     maybeAdvanceWorkspaceTourFromSession() {
@@ -26962,9 +27050,10 @@ export default {
       fromDashboardReview = false,
       fromSavedSessionReview = false,
       fromWorkspaceAiRecite = false,
+      fromSessionGoal = false,
     } = {}) {
-      // Hard gate: Session Complete → Test with AI, dashboard Needs Review, saved-session review, or workspace AI Recite.
-      if (!fromTestWithAi && !fromDashboardReview && !fromSavedSessionReview && !fromWorkspaceAiRecite) {
+      // Hard gate: Session Complete → Test with AI, dashboard Needs Review, saved-session review, workspace AI Recite, or the Test recitation goal.
+      if (!fromTestWithAi && !fromDashboardReview && !fromSavedSessionReview && !fromWorkspaceAiRecite && !fromSessionGoal) {
         console.warn('Blocked openAiMemorisationDetection — authorised entry required.')
         return
       }
@@ -32925,6 +33014,7 @@ export default {
       this.showPostSessionModal = true
     },
     closePostSessionRecommendationModal() {
+      if (this.showSessionFeedbackPrompt) this.noteSessionFeedbackPromptSeen()
       if (!this.showRecommendationPlanFeature && !this.onboardingSampleSessionActive) {
         void this.returnToMemorisationWorkspace()
         return
@@ -36915,6 +37005,7 @@ export default {
         || this.showSessionExitModal
         || this.shouldShowWelcomeBackResumeGate
       ) return
+      this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
       this.openToolsPanel({ tab: 'tools' })
     },
     openDashboardView() {
@@ -37413,32 +37504,15 @@ export default {
     },
 
     buildContinuePayloadFromBackendSession(session) {
-      if (!session || typeof session !== 'object') return null
-      const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {}
-      const config = meta.config && typeof meta.config === 'object' ? meta.config : {}
-      const chapterId = Number(config.chapterId || session.surah_number || 0)
-      if (!chapterId) return null
-      const rangeStart = Math.max(1, Number(config.rangeStart || 1))
-      const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || rangeStart))
-      let queueIndex = Math.max(0, Number(session.current_step ?? meta.current_index ?? 0))
-      const activeAyah = resolveResumeAyahNumber({
-        activeVerseKey: meta.activeVerseKey || meta.activeKey || config.activeVerseKey || null,
-        queueIndex,
-        config: { chapterId, rangeStart, rangeEnd },
-      }, {
-        ayah_number: session.ayah_number,
-        rangeStart,
-      }) || rangeStart
-      // If backend only stored absolute ayah (or a legacy relative was corrected), keep queue in sync.
-      if (activeAyah > rangeStart && queueIndex === 0) {
-        queueIndex = Math.max(0, activeAyah - rangeStart)
-      }
+      const fields = resumeFieldsFromBackendSession(session)
+      if (!fields) return null
+      const { chapterId, rangeStart, rangeEnd, queueIndex, activeVerseKey, config, meta } = fields
       return {
         timestamp: Date.now(),
-        mode: session.memorisation_mode || meta.mode || this.currentMode || 'advanced',
+        mode: fields.mode || this.currentMode || 'advanced',
         tab: 'tools',
-        activeKey: `${chapterId}:${activeAyah}`,
-        activeVerseKey: `${chapterId}:${activeAyah}`,
+        activeKey: activeVerseKey,
+        activeVerseKey,
         queueIndex,
         currentTime: 0,
         duration: 0,
@@ -47664,6 +47738,12 @@ export default {
           this.blurModeEnabled = !!state.blurModeEnabled
           this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
           this.talqinModeEnabled = !!state.talqinModeEnabled
+          if (['memorise', 'revise', 'test'].includes(state.sessionStartGoal)) {
+            this.sessionStartGoal = state.sessionStartGoal
+          }
+          if (!this.hasCompletedOnboarding() && this.readWorkspaceStateValue('onboardingPending', false)) {
+            this.applyPersistedOnboardingPreferences()
+          }
           this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
           this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
             ? state.chainingMethod
@@ -47851,6 +47931,7 @@ export default {
           blurModeEnabled: this.blurModeEnabled,
           blurIntensity: this.blurIntensity,
           talqinModeEnabled: !!this.talqinModeEnabled,
+          sessionStartGoal: normaliseSessionGoal(this.sessionStartGoal),
           defaultFontSize: this.defaultFontSize,
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),

@@ -1898,6 +1898,26 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet sheet--setup">
+            <div
+              class="session-goal"
+              role="radiogroup"
+              :aria-label="t('memorisation.sessionGoal.label')"
+            >
+              <button
+                v-for="goal in sessionGoalOptions"
+                :key="goal.id"
+                type="button"
+                class="session-goal__option"
+                role="radio"
+                :aria-checked="sessionStartGoal === goal.id ? 'true' : 'false'"
+                :class="{ 'is-selected': sessionStartGoal === goal.id }"
+                @click="setSessionStartGoal(goal.id)"
+              >
+                <strong>{{ goal.title }}</strong>
+                <span>{{ goal.hint }}</span>
+              </button>
+            </div>
+            <p class="session-goal__help">{{ sessionGoalHelp }}</p>
             <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -1918,7 +1938,6 @@
                       <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ chapterOptionLabel(c) }}</option>
                     </select>
-                    <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                   </div>
                   <div class="field setup-field-row setup-field-row--range" data-tour="setup-range">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
@@ -1970,7 +1989,6 @@
                         :max="resolveCurrentSurahAyahCount() || undefined"
                       >
                       </div>
-                      <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                     </div>
                   </div>
                   <div class="field setup-field-row">
@@ -2956,20 +2974,10 @@
             :disabled="toolsStartDisabled"
             :aria-busy="toolsStartBusy ? 'true' : 'false'"
             :aria-disabled="toolsStartDisabled ? 'true' : 'false'"
-            @click="startSessionAndClose"
+            @click="startSessionAndClose({ sessionGoal: sessionStartGoal })"
           >
             <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
             <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
-          </button>
-          <button
-            type="button"
-            class="tools-btn tools-btn-ghost"
-            data-testid="revise-current-range"
-            :disabled="toolsStartBusy"
-            @click="beginRevisionFromCurrentRange"
-          >
-            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-            <span>{{ t('memorisation.tools.reviseRange') }}</span>
           </button>
           <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
             <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
@@ -4648,6 +4656,15 @@
                 </button>
               </template>
             </div>
+            <button
+              v-if="showSessionFeedbackPrompt"
+              type="button"
+              class="post-session-simple__feedback"
+              @vue:mounted="noteSessionFeedbackPromptSeen"
+              @click="openSessionFeedbackPrompt"
+            >
+              {{ t('memorisation.sessionGoal.feedbackPrompt') }}
+            </button>
           </footer>
         </div>
       </div>

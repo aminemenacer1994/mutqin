@@ -330,6 +330,52 @@ export function buildContinuePayloadFromLastPosition(position) {
   }
 }
 
+function furthestProgressIndex(...values) {
+  return values.reduce((best, value) => {
+    const n = Number(value)
+    if (!Number.isFinite(n) || n < 0) return best
+    return Math.max(best, Math.floor(n))
+  }, 0)
+}
+
+/**
+ * Resume fields from an unfinished backend row.
+ * A stored current_step of 0 must not hide a later checkpoint in metadata.
+ */
+export function resumeFieldsFromBackendSession(session) {
+  if (!session || typeof session !== 'object') return null
+  const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {}
+  const config = meta.config && typeof meta.config === 'object' ? meta.config : {}
+  const chapterId = Number(config.chapterId || meta.chapterId || session.surah_number || 0)
+  if (!chapterId) return null
+  const ayah = Number(session.ayah_number || 0)
+  const rangeStart = Math.max(1, Number(config.rangeStart || meta.rangeStart || ayah || 1))
+  const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || meta.rangeEnd || ayah || rangeStart))
+  const step = furthestProgressIndex(session.current_step, meta.current_index, meta.queueIndex, config.queueIndex)
+  const activeVerseKey = meta.activeVerseKey || meta.activeKey || config.activeVerseKey || null
+  let activeAyah = resolveResumeAyahNumber({
+    activeVerseKey,
+    queueIndex: step,
+    config: { chapterId, rangeStart, rangeEnd },
+  }, {
+    ayah_number: ayah,
+    rangeStart,
+  }) || rangeStart
+  const fromStep = rangeStart + step
+  if (fromStep > activeAyah && fromStep <= rangeEnd) activeAyah = fromStep
+  activeAyah = Math.min(rangeEnd, Math.max(rangeStart, activeAyah))
+  return {
+    chapterId,
+    rangeStart,
+    rangeEnd,
+    queueIndex: Math.max(step, activeAyah - rangeStart),
+    activeVerseKey: `${chapterId}:${activeAyah}`,
+    mode: session.memorisation_mode || meta.mode || null,
+    config,
+    meta,
+  }
+}
+
 export function isResumableSessionPayload(payload, options = {}) {
   if (!payload || typeof payload !== 'object') return false
   if (options.isSample || payload.isOnboardingSample || payload.sessionKind === 'sample') return false
@@ -1263,6 +1309,7 @@ export function readStashedDashboardEntryIntent(storage = null, userId = null) {
       && !intent.aiCheck
       && !intent.journey
       && !intent.review
+      && !intent.goal
     ) {
       return null
     }
@@ -1588,6 +1635,7 @@ export default {
   resolvePreferredSessionResumeGate,
   pickContinuePayloadForResume,
   buildContinuePayloadFromLastPosition,
+  resumeFieldsFromBackendSession,
   dashboardEntryIntentStorageKey,
   stashDashboardEntryIntent,
   readStashedDashboardEntryIntent,

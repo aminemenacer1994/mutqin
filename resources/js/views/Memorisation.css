@@ -70953,3 +70953,71 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   font-size: inherit !important;
   line-height: inherit !important;
 }
+
+.tools-body .session-goal {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0 0 0.35rem;
+}
+
+.tools-body .session-goal__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.tools-body .session-goal__option strong {
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.tools-body .session-goal__option span {
+  color: var(--muted, var(--text-muted, inherit));
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.tools-body .session-goal__option.is-selected {
+  border-color: var(--accent-strong, var(--accent));
+  color: var(--accent-strong, var(--accent));
+  background: color-mix(in srgb, var(--accent-strong, var(--accent)) 10%, transparent);
+}
+
+.tools-body .session-goal__help {
+  margin: 0 0 0.85rem;
+  color: var(--muted, var(--text-muted, inherit));
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.post-session-simple__feedback {
+  align-self: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted, var(--text-muted, inherit));
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+  .tools-body .session-goal {
+    grid-template-columns: 1fr;
+  }
+}
