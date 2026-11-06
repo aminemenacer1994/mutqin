@@ -157,10 +157,10 @@ import {
   stackedIndopakFontFamily,
   verseHasStackedIndopakWords,
 } from '../scripts/mushaf/stackedIndopakDisplay.js'
+import { isConstrainedMushafClient } from '../scripts/mushaf/constrainedClient.js'
 import {
   mapWithConcurrency,
-  orderPagesAroundFocus,
-  selectPriorityPages,
+  planSessionPageWave,
 } from '../scripts/mushaf/sessionPageLoad.js'
 import {
   buildIndopakTajweedTokenByLocation,
@@ -215,6 +215,7 @@ import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState 
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js'
+import { contextFromWorkspace, trackProductEvent } from '../scripts/analytics/productEvents.js'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import {
   RECOMMENDATION_TYPES,
@@ -12656,6 +12657,9 @@ export default {
         this._workspaceReciteRetryResult = null
         this._workspaceReciteRetryAudioUrl = ''
         this._workspaceReciteRetryAudioBlob = null
+        trackProductEvent('ai_assessment_completed', this.analyticsContext({
+          duration_seconds: Number(canonicalResult?.durationSeconds || 0),
+        }), { onceKey: String(payload.idempotency_key || '') })
         if (this.workspaceReciteAnalysisOpen) {
           this.presentWorkspaceReciteAnalysis(data, canonicalResult, audioUrl, { saveState: 'saved' })
         }
@@ -17378,6 +17382,9 @@ export default {
         await this.closeToolsPanel()
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
         await this.$nextTick()
+        if (options.sessionMode === 'revision') {
+          this.markCurrentSessionAsRecommended({ sessionMode: 'revision' })
+        }
         this.primeSessionAudioForCountdown()
         const started = this.startSessionWithCountdown({ skipPrime: true })
         if (!started) {
@@ -17390,6 +17397,11 @@ export default {
         this.showBanner(this.t('toasts.failedToStartSession'), 'error', 4200)
         this.clearToolsStartInFlight()
       }
+    },
+    beginRevisionFromCurrentRange() {
+      // Revision uses the surah and ayah range already in setup.
+      // It does not create or require a memorisation plan.
+      void this.startSessionAndClose({ sessionMode: 'revision' })
     },
     handlePrimaryAction() {
       if (this.isPlaying) {
@@ -19428,7 +19440,22 @@ export default {
         return false
       }
     },
+    analyticsContext(extra = {}) {
+      try {
+        return contextFromWorkspace({
+          sample: !!this.onboardingSampleSessionActive,
+          sessionMode: this.currentSessionRecommendationMeta?.sessionMode,
+          currentMode: this.currentMode,
+          playMode: this.playMode,
+          surahId: this.chapterId || this.currentChapter?.id,
+          durationSeconds: extra.duration_seconds,
+        })
+      } catch {
+        return {}
+      }
+    },
     markOnboardingCompleted() {
+      const alreadyCompleted = this.hasCompletedOnboarding()
       const workspaceKey = this.getOnboardingWorkspaceKey()
       if (this.learningBackendEnabled()) {
         this.writeWorkspaceStateValue(workspaceKey, true)
@@ -19449,6 +19476,9 @@ export default {
       this.persistMutqinStateLocally()
       if (this.learningBackendEnabled()) {
         this.pushLearningState(true).catch(() => { /* best-effort; local gate still holds */ })
+      }
+      if (!alreadyCompleted) {
+        trackProductEvent('onboarding_complete', this.analyticsContext(), { onceKey: 'onboarding' })
       }
     },
     openOnboardingModal(force = false) {
@@ -20351,6 +20381,9 @@ export default {
           this.showBanner?.(this.t('toasts.sessionEndFailed'), 'warning', 3600)
           return false
         }
+        trackProductEvent('session_abandoned', this.analyticsContext(), {
+          onceKey: String(origin.backendSessionId || ''),
+        })
       }
       this.manualSessionDraftOrigin = null
       this.resetPostSessionRecommendationState()
@@ -28772,6 +28805,9 @@ export default {
           this.amdStage = AMD_STAGES.RESULTS
           this.amdBusy = false
           trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
+          trackProductEvent('ai_assessment_completed', this.analyticsContext({
+            duration_seconds: Number(result?.durationSeconds || 0),
+          }), { onceKey: `guest:${this.recitationCheckStartedAt || 'local'}` })
         }
         return null
       }
@@ -28970,6 +29006,9 @@ export default {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
           trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
+          trackProductEvent('ai_assessment_completed', this.analyticsContext({
+            duration_seconds: durationSeconds,
+          }), { onceKey: idempotencyKey })
         }
         this.amdError = ''
         this._amdSubmitStatus = 'ok'
@@ -33893,6 +33932,11 @@ export default {
         this._recitationPaceObserver = createRecitationPaceObserver()
         this._amdAdaptiveDripMs = null
         this.recitationCheckRecording = true
+        if (!options.preserveProgress) {
+          trackProductEvent('recitation_started', this.analyticsContext(), {
+            onceKey: String(this.recitationCheckStartedAt || ''),
+          })
+        }
         this.recitationCheckPreparing = false
         this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.RECORDING)
         if (this.amdOpen) {
@@ -38399,7 +38443,12 @@ export default {
         })
         const next = this.applyQpcWordsToVerseList(verses, wordsByKey)
         if (plan.rest.length) {
-          void this.enrichRemainingStackedQpcPages(next, index || {}, plan.rest, requestId)
+          const delay = isConstrainedMushafClient() ? 1200 : 0
+          const enrichRest = () => {
+            void this.enrichRemainingStackedQpcPages(next, index || {}, plan.rest, requestId)
+          }
+          if (delay) setTimeout(enrichRest, delay)
+          else enrichRest()
         }
         return next
       } catch (error) {
@@ -38427,8 +38476,13 @@ export default {
     },
 
     async enrichRemainingStackedQpcPages(verses, index, pages, requestId) {
-      const chunkSize = 3
+      const constrained = isConstrainedMushafClient()
+      const chunkSize = constrained ? 1 : 3
+      const gapMs = constrained ? 450 : 40
       for (let offset = 0; offset < pages.length; offset += chunkSize) {
+        if (offset > 0) {
+          await new Promise((resolve) => setTimeout(resolve, gapMs))
+        }
         if (requestId !== this.verseRequestId || !this.useStackedQpcMadaniGlyphs) return
         const chunk = pages.slice(offset, offset + chunkSize)
         let wordsByKey = new Map()
@@ -38996,7 +39050,10 @@ export default {
         }
         const sessionPages = this.qpcMadaniSessionPageNumbers
         const focus = Number(this.qpcMadaniCurrentPage) || sessionPages[0]
-        const immediate = selectPriorityPages(sessionPages, focus, 1)
+        const wave = planSessionPageWave(sessionPages, focus, {
+          constrained: isConstrainedMushafClient(),
+        })
+        const immediate = wave.immediate
         if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
           await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
         }
@@ -39004,7 +39061,7 @@ export default {
           await this.loadSessionMushafLeaves(immediate)
         }
         if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
-        this.prefetchRemainingSessionMushaf(sessionPages, immediate)
+        this.prefetchRemainingSessionMushaf(sessionPages, immediate, wave)
       } catch (error) {
         if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
         console.error('QPC Madani viewer bootstrap failed:', error)
@@ -39019,10 +39076,14 @@ export default {
           : loadMadaniPageLeaf(page).catch(() => null)
       ))
     },
-    prefetchRemainingSessionMushaf(sessionPages, immediate) {
+    prefetchRemainingSessionMushaf(sessionPages, immediate, wave = null) {
       const done = new Set(immediate)
       const focus = immediate[0] || sessionPages[0]
-      const rest = orderPagesAroundFocus(sessionPages, focus).filter((page) => !done.has(page))
+      const planned = wave || planSessionPageWave(sessionPages, focus, {
+        constrained: isConstrainedMushafClient(),
+      })
+      const followUp = planned.prefetch.concat(planned.background)
+      const rest = followUp.filter((page) => !done.has(page))
       if (!rest.length) return
       const token = (this._qpcMadaniBootstrapToken || 0) + 1
       this._qpcMadaniBootstrapToken = token
@@ -39551,17 +39612,23 @@ export default {
         // Paint the active page first. A long range keeps loading behind that first paint.
         const sessionPages = [...this.madaniPageNumbers]
         const primaryPage = sessionPages[this.safeMushafPageIndex] || sessionPages[0]
-        const immediate = selectPriorityPages(sessionPages, primaryPage, 1)
+        const constrained = isConstrainedMushafClient()
+        const wave = planSessionPageWave(sessionPages, primaryPage, { constrained })
+        const immediate = wave.immediate
         await mapWithConcurrency(immediate, 2, (pageNumber) => (
           this.ensureMadaniPageLoaded(pageNumber, { force: !!options.force })
         ))
         if (requestId !== this.madaniLoadRequestId) return []
         this.prefetchAdjacentMadaniFonts(primaryPage)
         const immediateSet = new Set(immediate)
-        const rest = orderPagesAroundFocus(sessionPages, primaryPage)
-          .filter((pageNumber) => !immediateSet.has(pageNumber))
+        // This view has no scroll loader, so the rest of the range still loads.
+        // Constrained clients do it one page at a time instead of a burst.
+        const rest = (constrained
+          ? sessionPages
+          : wave.prefetch.concat(wave.background)
+        ).filter((pageNumber) => !immediateSet.has(pageNumber))
         if (rest.length) {
-          void mapWithConcurrency(rest, 2, (pageNumber) => {
+          void mapWithConcurrency(rest, constrained ? 1 : 2, (pageNumber) => {
             if (requestId !== this.madaniLoadRequestId) return null
             return this.ensureMadaniPageLoaded(pageNumber, { force: !!options.force })
           }, () => requestId === this.madaniLoadRequestId)
@@ -40248,6 +40315,10 @@ export default {
       this.currentChapter = matchedChapter || (this.chapters.length ? null : this.currentChapter)
       this.clampControlRange(mode)
       this.persistModeState(mode)
+      if (reason === 'range') {
+        const key = store?.activeKey || this.activeVerseKey || ''
+        this._rangePreserveActiveKey = key || ''
+      }
 
       // If Surah/range/reciter/display already match the loaded mushaf, do not wipe it.
       // Never rebuild the queue here — that was resetting live session progress on open/close.
@@ -42170,12 +42241,24 @@ export default {
       this.isPlaying = false
       this.currentTime = 0
       this.duration = 0
+      const sittingKey = String(
+        Number(this.backendSessionSnapshot?.id || this.mutqinState?.sessionState?.backendSessionId || 0)
+        || this.sessionStartedAt
+        || ''
+      )
+      const sittingStarted = sittingKey !== ''
+      const sittingContext = this.analyticsContext({
+        duration_seconds: this.getSessionElapsedSeconds(),
+      })
       this.sessionStartedAt = 0
       this.sessionCompleted = endedEarly ? false : true
       this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
-      if (!endedEarly) {
+      if (sittingStarted && !endedEarly) {
         trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_COMPLETED)
         trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_COMPLETED)
+        trackProductEvent('session_completed', sittingContext, { onceKey: sittingKey })
+      } else if (sittingStarted && endedEarly) {
+        trackProductEvent('session_abandoned', sittingContext, { onceKey: sittingKey })
       }
 
       if (this.mutqinState?.sessionState) {
@@ -42752,6 +42835,12 @@ export default {
       const backendSessionId = this.backendSessionSnapshot?.id
         || this.mutqinState?.sessionState?.backendSessionId
         || null
+      const hadUnfinishedSitting = !!(
+        this.backendUnfinishedSession
+        || this.hasContinueSession
+        || Number(this.sessionStartedAt || 0) > 0
+      )
+      const abandonKey = String(Number(backendSessionId || 0) || this.sessionStartedAt || '')
       this.hasContinueSession = false
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
@@ -42794,6 +42883,11 @@ export default {
         }
       }
       this.sessionPaused = false
+      if (hadUnfinishedSitting && abandonKey) {
+        trackProductEvent('session_abandoned', this.analyticsContext({
+          duration_seconds: this.getSessionElapsedSeconds(),
+        }), { onceKey: abandonKey })
+      }
       this.showBanner(this.t('toasts.savedSessionDismissed'), 'info', 1800)
     },
 
@@ -45808,6 +45902,8 @@ export default {
       const rangeEnd = Number(target.rangeEnd || rangeStart || 1)
       const reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER
       const requestId = ++this.verseRequestId
+      const preserveActiveKey = String(this._rangePreserveActiveKey || '') || null
+      this._rangePreserveActiveKey = ''
       const targetConfig = this.buildSessionConfig(mode)
 
       try {
@@ -45830,7 +45926,7 @@ export default {
               showWordByWord: this.showWordByWord,
             }
             this.buildQueue(mode)
-            this.syncActiveVerseState(mode)
+            this.syncActiveVerseState(mode, preserveActiveKey)
             this.syncMutqinAyahs(target.verses)
             this.isDataReady = true
             this.isWorkspaceRefreshing = false
@@ -45988,7 +46084,7 @@ export default {
         let enrichedVerses = this.sanitizeVersesDisplayText(mappedVerses)
         target.verses = enrichedVerses
         this.buildQueue(mode)
-        this.syncActiveVerseState(mode)
+        this.syncActiveVerseState(mode, preserveActiveKey)
         this.isDataReady = true
         this.isWorkspaceRefreshing = false
         this.workspaceRefreshReason = ''
@@ -46020,7 +46116,7 @@ export default {
         })
 
         this.buildQueue(mode)
-        this.syncActiveVerseState(mode)
+        this.syncActiveVerseState(mode, preserveActiveKey)
         this.clearMushafAyahHtmlCache()
 
         if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
@@ -46035,7 +46131,10 @@ export default {
 
       } catch (e) {
         console.error('Error loading verses:', e)
-        this.showBanner(this.t('toasts.failedToLoadVerses'), 'error', 7000, null, { important: true })
+        this.showBanner(this.t('toasts.failedToLoadVerses'), 'error', 0, {
+          key: 'reload-verses',
+          label: this.t('common.retry'),
+        }, { important: true, persistent: true })
         this.isDataReady = true
       } finally {
         if (requestId === this.verseRequestId) {
@@ -46503,6 +46602,12 @@ export default {
       )
       trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_STARTED)
       trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_STARTED)
+      const startedContext = this.analyticsContext()
+      const startedKey = String(this.sessionStartedAt || '')
+      trackProductEvent('session_started', startedContext, { onceKey: startedKey })
+      if (startedContext.session_type === 'revision') {
+        trackProductEvent('revision_started', startedContext, { onceKey: startedKey })
+      }
     },
 
     getSessionElapsedSeconds(options = {}) {
@@ -46788,6 +46893,10 @@ export default {
       }
       if (actionKey === 'start-quiz') {
         this.openRetentionQuiz()
+        return
+      }
+      if (actionKey === 'reload-verses') {
+        void this.loadVerses(this.currentMode)
       }
     },
 

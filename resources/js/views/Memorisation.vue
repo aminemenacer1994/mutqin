@@ -1540,6 +1540,7 @@
                 :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
                 :code-v2-by-location="qpcMadaniCodeV2ByLocation"
                 :tajweed-html-by-location="qpcIndopakTajweedHtmlByLocation"
+                :retry-label="t('memorisation.mushafLoad.retry')"
                 @select="onQpcMadaniWordSelect"
                 @ayah-enter="onQpcMadaniAyahEnter"
                 @ayah-leave="onQpcMadaniAyahLeave"
@@ -2959,6 +2960,16 @@
           >
             <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
             <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
+          </button>
+          <button
+            type="button"
+            class="tools-btn tools-btn-ghost"
+            data-testid="revise-current-range"
+            :disabled="toolsStartBusy"
+            @click="beginRevisionFromCurrentRange"
+          >
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            <span>{{ t('memorisation.tools.reviseRange') }}</span>
           </button>
           <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
             <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>

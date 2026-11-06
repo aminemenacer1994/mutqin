@@ -42,7 +42,9 @@ export function qcfFontUrl(pageNumber, { tajweed = false } = {}) {
 function qcfFontFaceSource(pageNumber, options = {}) {
   const localName = qcfLocalFontName(pageNumber, options)
   const urls = qcfFontUrl(pageNumber, options)
-  return `local('${localName}'), url('${urls.woff2}') format('woff2'), url('${urls.woff}') format('woff'), url('${urls.ttf}') format('truetype')`
+  // woff2 only. Listing woff and ttf in one FontFace makes older WebViews
+  // and Instagram's in-app browser download the large TTF fallback.
+  return `local('${localName}'), url('${urls.woff2}') format('woff2')`
 }
 
 export function isQcfFontLoaded(pageNumber, options = {}) {

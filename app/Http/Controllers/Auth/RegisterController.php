@@ -139,6 +139,7 @@ class RegisterController extends Controller
         $request->session()->put('mutqin_register_method', 'email');
         // Existing-user Welcome Back must not win over first-run onboarding.
         $request->session()->forget('mutqin_just_logged_in');
+        $request->session()->forget('mutqin_login_method');
 
         // Force light on every surface for brand-new accounts (session + cookie).
         $theme = Theme::DEFAULT_PREFERENCE;

@@ -25,9 +25,26 @@ import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
 import { initWaitingListAttribution } from './scripts/analytics/waitingListAttribution.js';
+import {
+    captureAcquisitionAttribution,
+    initSpaPageViews,
+    trackLoginFromFlash,
+} from './scripts/analytics/productEvents.js';
 import { bootstrapThemeFromStore, initThemeStorageSync } from './utils/theme';
 
 initWaitingListAttribution();
+try {
+    captureAcquisitionAttribution();
+    initSpaPageViews();
+    trackLoginFromFlash();
+    initSeoConversionTracking({
+        path: typeof window !== 'undefined' ? window.location.pathname : '',
+        justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
+        registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
+    });
+} catch {
+    /* analytics must never block boot */
+}
 initThemeStorageSync();
 try {
     bootstrapThemeFromStore();

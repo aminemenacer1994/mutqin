@@ -30,6 +30,7 @@ class DemoLoginController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
+        $request->session()->put('mutqin_login_method', 'demo');
         $request->session()->put('mutqin_just_logged_in', true);
 
         $request->session()->forget('url.intended');

@@ -8524,6 +8524,10 @@
         {{-- /memorisation consumes the session flag for onboarding, so retain its view value for conversion tracking. --}}
         window.mutqinJustRegisteredFlash = @json(!empty($justRegistered) || (bool) session('mutqin_just_registered', false));
         window.mutqinRegisterMethod = @json((string) session('mutqin_register_method', 'email'));
+        {{-- Read, do not pull: Welcome Back still consumes mutqin_just_logged_in on /memorisation. --}}
+        window.mutqinJustLoggedInFlash = @json(!empty($justLoggedIn) || (bool) session('mutqin_just_logged_in', false));
+        window.mutqinLoginEventId = @json((string) session('mutqin_login_event_id', ''));
+        window.mutqinLoginMethod = @json((string) session('mutqin_login_method', ''));
         window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());

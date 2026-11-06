@@ -48,9 +48,16 @@
         v-else
         class="qpc-madani-session-scroll__placeholder"
         :style="placeholderStyle(pageNumber)"
-        aria-busy="true"
+        :aria-busy="failedPages[pageNumber] ? 'false' : 'true'"
         :aria-label="`Page ${pageNumber}`"
-      />
+      >
+        <button
+          v-if="failedPages[pageNumber]"
+          type="button"
+          class="qpc-madani-session-scroll__retry"
+          @click="retryPage(pageNumber)"
+        >{{ retryLabel }}</button>
+      </div>
     </div>
   </section>
 </template>
@@ -74,10 +81,10 @@ import { loadQcfPageFont, prefetchQcfPageFonts } from '../../scripts/mushaf/qcfF
 import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
+import { isConstrainedMushafClient } from '../../scripts/mushaf/constrainedClient'
 import {
   mapWithConcurrency,
-  orderPagesAroundFocus,
-  selectPriorityPages,
+  planSessionPageWave,
 } from '../../scripts/mushaf/sessionPageLoad'
 import { MOBILE_MUSHAF_WORD_SIZE_FLOOR } from '../../scripts/mushaf/mobileMushafLineFit'
 
@@ -116,6 +123,7 @@ export default {
     tajweedEnabled: { type: Boolean, default: false },
     codeV2ByLocation: { type: Object, default: null },
     tajweedHtmlByLocation: { type: Object, default: null },
+    retryLabel: { type: String, default: 'Retry' },
   },
   data() {
     return {
@@ -127,6 +135,7 @@ export default {
       fitSizesByPage: {},
       sharedWordSize: 0,
       loadToken: 0,
+      failedPages: {},
       pageObserver: null,
       heightObserver: null,
     }
@@ -144,7 +153,8 @@ export default {
       return Number.isFinite(focus) && focus > 0 ? [focus] : []
     },
     windowedSession() {
-      return this.resolvedPageNumbers.length > FULL_PAINT_PAGE_LIMIT
+      const limit = isConstrainedMushafClient() ? 4 : FULL_PAINT_PAGE_LIMIT
+      return this.resolvedPageNumbers.length > limit
         && typeof IntersectionObserver === 'function'
     },
     mountAllow() {
@@ -290,6 +300,9 @@ export default {
         if (entry.isIntersecting && !next[page]) {
           next[page] = true
           changed = true
+          if (!this.leafByPage[page]?.page && !this.cachedLeaf(page)?.page) {
+            void this.loadPageBatch([page], this.loadToken, 1)
+          }
         }
       }
       if (changed) this.visiblePages = next
@@ -319,11 +332,25 @@ export default {
     },
     noteLeaf(pageNumber, leaf) {
       if (!leaf?.page || !this.shouldPaintPage(pageNumber)) return
+      if (this.failedPages[pageNumber]) {
+        const nextFailed = { ...this.failedPages }
+        delete nextFailed[pageNumber]
+        this.failedPages = nextFailed
+      }
       if (this.leafByPage[pageNumber] === leaf) return
       this.leafByPage = {
         ...this.leafByPage,
         [pageNumber]: leaf,
       }
+    },
+    retryPage(pageNumber) {
+      const page = Number(pageNumber)
+      if (!Number.isFinite(page) || page < 1) return
+      const nextFailed = { ...this.failedPages }
+      delete nextFailed[page]
+      this.failedPages = nextFailed
+      this.visiblePages = { ...this.visiblePages, [page]: true }
+      void this.loadPageBatch([page], this.loadToken, 1)
     },
     hydrateMountedLeaves() {
       const next = { ...this.leafByPage }
@@ -365,12 +392,13 @@ export default {
       }
 
       const focus = Number(this.focusPageNumber) || pages[0]
-      const immediate = this.windowedSession
-        ? selectPriorityPages(pages, focus, FOCUS_RADIUS)
-        : pages
+      const constrained = isConstrainedMushafClient()
+      const wave = this.windowedSession
+        ? planSessionPageWave(pages, focus, { constrained })
+        : { immediate: pages, prefetch: [], background: [] }
       // Start page faces before JSON returns so ink is ready when leaves mount.
-      this.prefetchFonts(immediate)
-      await this.loadPageBatch(immediate, token, 3)
+      this.prefetchFonts(wave.immediate)
+      await this.loadPageBatch(wave.immediate, token, constrained ? 2 : 3)
       if (token !== this.loadToken) return
       this.hydrateMountedLeaves()
       this.$nextTick(() => {
@@ -379,15 +407,17 @@ export default {
       })
       if (!this.windowedSession) return
 
-      const immediateSet = new Set(immediate)
-      const rest = orderPagesAroundFocus(pages, focus).filter((page) => !immediateSet.has(page))
+      const followUp = constrained
+        ? wave.prefetch
+        : wave.prefetch.concat(wave.background)
+      if (!followUp.length) return
       if (this._restLoadTimer) clearTimeout(this._restLoadTimer)
       this._restLoadTimer = setTimeout(() => {
         this._restLoadTimer = null
         if (token !== this.loadToken) return
-        this.prefetchFonts(rest.slice(0, 6))
-        void this.loadPageBatch(rest, token, 2)
-      }, 200)
+        this.prefetchFonts(followUp.slice(0, constrained ? 1 : 6))
+        void this.loadPageBatch(followUp, token, constrained ? 1 : 2)
+      }, constrained ? 700 : 200)
     },
     async ensurePageFont(pageNumber, leaf = null) {
       if (this.isIndopakLayout) {
@@ -430,6 +460,9 @@ export default {
           return leaf
         } catch {
           await fontPromise.catch(() => null)
+          if (token === this.loadToken) {
+            this.failedPages = { ...this.failedPages, [pageNumber]: true }
+          }
           return null
         }
       }, () => token === this.loadToken)
@@ -521,5 +554,18 @@ export default {
 .qpc-madani-session-scroll__placeholder {
   min-height: 160px;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qpc-madani-session-scroll__retry {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
 }
 </style>

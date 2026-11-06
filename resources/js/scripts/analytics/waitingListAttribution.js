@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'mutqin_waiting_attribution_v1';
-const LEGACY_ATTRIBUTION_KEYS = ['mutqin_seo_attr', 'mutqin_seo_tool', 'mutqin_seo_guide'];
+const LEGACY_ATTRIBUTION_KEYS = ['mutqin_seo_attr', 'mutqin_seo_tool', 'mutqin_seo_guide', 'mutqin_acq_attr'];
 const KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid'];
 let attribution = null;
 let initialised = false;

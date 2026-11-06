@@ -56,6 +56,25 @@ export function selectPriorityPages(pages, focusPage, radius = 1) {
 }
 
 /**
+ * First paint, a short neighbour prefetch, and optional background pages.
+ * Constrained clients stop after one neighbour so a long surah does not
+ * download every page face up front.
+ * @param {number[]} pages
+ * @param {number} focusPage
+ * @param {{ constrained?: boolean }} [options]
+ */
+export function planSessionPageWave(pages, focusPage, options = {}) {
+  const constrained = options.constrained === true
+  const immediate = selectPriorityPages(pages, focusPage, constrained ? 1 : 2)
+  const immediateSet = new Set(immediate)
+  const rest = orderPagesAroundFocus(pages, focusPage).filter((page) => !immediateSet.has(page))
+  if (constrained) {
+    return { immediate, prefetch: rest.slice(0, 1), background: [] }
+  }
+  return { immediate, prefetch: rest.slice(0, 6), background: rest.slice(6) }
+}
+
+/**
  * @template T
  * @param {T[]} items
  * @param {number} concurrency

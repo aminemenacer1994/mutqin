@@ -74,6 +74,7 @@ class LoginController extends Controller
         }
 
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
+        $request->session()->put('mutqin_login_method', 'email');
         // Put (not flash): Welcome Back is consumed on first /memorisation visit.
         $request->session()->put('mutqin_just_logged_in', true);
 

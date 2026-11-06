@@ -32,7 +32,9 @@ class GoogleAnalyticsTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('googletagmanager.com/gtag/js?id=G-TEST12345', false)
-            ->assertSee('gtag(\'config\', "G-TEST12345")', false);
+            ->assertSee('gtag(\'config\', "G-TEST12345")', false)
+            ->assertSee('window.mutqinJustLoggedInFlash = false', false)
+            ->assertSee('window.mutqinLoginEventId', false);
     }
 
     public function test_invalid_measurement_id_is_rejected(): void

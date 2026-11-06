@@ -6,6 +6,11 @@
  */
 
 import { hasMarketingConsent } from '../analytics/waitingListAttribution.js'
+import {
+  analyticsMeasurementAllowed,
+  captureAcquisitionAttribution,
+  getAcquisitionAttribution,
+} from '../analytics/productEvents.js'
 
 const TOOL_ATTR_KEY = 'mutqin_seo_tool'
 const ATTR_KEY = 'mutqin_seo_attr'
@@ -113,6 +118,7 @@ function classifyTraffic({ utmSource, utmMedium, host }) {
  * First landing_path wins for the browser tab session.
  */
 export function captureSeoAttribution(extra = {}) {
+  captureAcquisitionAttribution()
   if (typeof window === 'undefined') return readAttr()
 
   const params = new URLSearchParams(window.location.search || '')
@@ -184,16 +190,18 @@ export function captureSeoToolFromUrl() {
 }
 
 function emit(eventName, params = {}) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return false
+  if (!analyticsMeasurementAllowed()) return false
   const attr = getSeoAttribution()
+  const acq = getAcquisitionAttribution()
   const merged = safeParams({
     event_category: 'seo_conversion',
     landing_path: attr.landing_path,
     page_path: attr.page_path || pathOnly(window.location?.pathname),
     referrer_host: attr.referrer_host,
-    utm_source: attr.utm_source,
-    utm_medium: attr.utm_medium,
-    utm_campaign: attr.utm_campaign,
+    utm_source: attr.utm_source || acq.utm_source,
+    utm_medium: attr.utm_medium || acq.utm_medium,
+    utm_campaign: attr.utm_campaign || acq.utm_campaign,
     traffic_source: attr.traffic_source,
     organic_likely: Boolean(attr.organic_likely),
     tool: attr.tool || undefined,
@@ -203,6 +211,7 @@ function emit(eventName, params = {}) {
     ...params,
   })
   window.gtag('event', eventName, merged)
+  return true
 }
 
 /** Low-level helper for custom SEO events. */
@@ -354,17 +363,20 @@ export function trackRegistrationStart() {
 export function trackRegistrationComplete({ method = 'email' } = {}) {
   if (typeof window === 'undefined') return
   if (readStorage(REG_COMPLETE_KEY) === '1') return
-  writeStorage(REG_COMPLETE_KEY, '1')
   captureSeoAttribution()
   const tool = peekSeoTool()
-  emit('seo_registration_complete', {
-    method: String(method).slice(0, 20),
+  const methodLabel = String(method || 'email').slice(0, 20)
+  // Mark the signup sent only after GA4 accepts it, so a refused or missing
+  // tag does not swallow the one registration event.
+  const sent = emit('sign_up', {
+    event_category: 'conversion',
+    method: methodLabel,
     ...(tool ? { tool } : {}),
   })
-  // GA4 recommended event for signup funnels
-  emit('sign_up', {
-    event_category: 'conversion',
-    method: String(method).slice(0, 20),
+  if (!sent) return
+  writeStorage(REG_COMPLETE_KEY, '1')
+  emit('seo_registration_complete', {
+    method: methodLabel,
     ...(tool ? { tool } : {}),
   })
   if (tool) {
