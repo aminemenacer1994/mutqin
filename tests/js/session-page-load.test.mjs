@@ -83,6 +83,9 @@ const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.
 const sessionScroll = readFileSync(join(root, 'resources/js/components/madani/MadaniSessionScroll.vue'), 'utf8')
 
 assert.match(memorisationJs, /planSessionPageWave\(sessionPages/)
+assert.match(memorisationJs, /constrained\s*\?\s*wave\.prefetch/)
+assert.match(memorisationJs, /failAmdOnMicrophoneAccess\(error\)/)
+assert.doesNotMatch(memorisationJs, /constrained\s*\?\s*sessionPages/)
 assert.match(memorisationJs, /beginRevisionFromCurrentRange/)
 assert.match(memorisationJs, /_rangePreserveActiveKey/)
 assert.match(memorisationJs, /sessionMode === 'revision'/)

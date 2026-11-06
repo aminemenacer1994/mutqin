@@ -13049,6 +13049,22 @@ export default {
         this.amdStage = AMD_STAGES.READY
       }
     },
+    failAmdOnMicrophoneAccess(error, options = {}) {
+      const help = resolveMicrophoneHelp(this.t?.bind(this), {
+        error,
+        unsupported: options.unsupported === true,
+        kind: options.kind,
+      })
+      this.microphoneHelp = help
+      this.microphoneHelpRetry = 'amd'
+      this.amdMicStatus = help?.kind === 'unsupported' ? 'unsupported' : 'denied'
+      this.amdBusy = false
+      this.amdError = help?.heading || ''
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      if (this.amdOpen) this.amdStage = AMD_STAGES.ERROR
+    },
     presentMicrophoneHelp(error, options = {}) {
       const help = resolveMicrophoneHelp(this.t?.bind(this), {
         error,
@@ -28670,7 +28686,10 @@ export default {
       this.refreshAmdLiveTajweedCoach(0)
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-          this.resetAmdAfterMicAccessFailure()
+          this.failAmdOnMicrophoneAccess(
+            { name: 'NotSupportedError', code: 'unsupported' },
+            { unsupported: true },
+          )
           return
         }
         const hasBrowserStt = !!(this.getSpeechRecognitionConstructor?.() || window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -28711,6 +28730,9 @@ export default {
           this.noteAmdRecognitionActivity?.()
         } else if (this.recitationCheckPreparing) {
           this.amdStage = AMD_STAGES.STARTING
+        } else if (this.microphoneHelp) {
+          this.amdStage = AMD_STAGES.ERROR
+          if (!this.amdError) this.amdError = this.microphoneHelp.heading || ''
         } else {
           this.amdStage = AMD_STAGES.ERROR
           if (!this.amdError) {
@@ -28725,7 +28747,8 @@ export default {
         const kind = classifyMicrophoneAccessError(error)
         const isMicError = ['not_allowed', 'not_found', 'not_readable', 'security', 'unsupported', 'aborted'].includes(kind)
         if (isMicError) {
-          this.resetAmdAfterMicAccessFailure()
+          this.failAmdOnMicrophoneAccess(error)
+          this.playUiTone?.('error')
         } else {
           this.amdStage = AMD_STAGES.ERROR
           this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
@@ -33579,7 +33602,10 @@ export default {
     async startRecitationCheckRecording(targetVerse = null, options = {}) {
       if (!this.supportsSelfCheckRecording()) {
         if (this.amdOpen) {
-          this.resetAmdAfterMicAccessFailure()
+          this.failAmdOnMicrophoneAccess(
+            { name: 'NotSupportedError', code: 'unsupported' },
+            { unsupported: true },
+          )
           return
         }
         const help = this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
@@ -33991,11 +34017,8 @@ export default {
         const kind = classifyMicrophoneAccessError(error)
         if (kind !== 'unknown') {
           if (this.amdOpen) {
-            this.reportRecitationCheckFailure('', {
-              error,
-              skipBanner: true,
-              micAccessFailure: true,
-            })
+            this.failAmdOnMicrophoneAccess(error)
+            this.playUiTone?.('error')
           } else {
             const help = this.presentMicrophoneHelp(error, { retry: 'recitation' })
             this.reportRecitationCheckFailure(help.heading, { error, skipBanner: true })
@@ -39621,10 +39644,10 @@ export default {
         if (requestId !== this.madaniLoadRequestId) return []
         this.prefetchAdjacentMadaniFonts(primaryPage)
         const immediateSet = new Set(immediate)
-        // This view has no scroll loader, so the rest of the range still loads.
-        // Constrained clients do it one page at a time instead of a burst.
+        // Desktop still fetches the rest of the wave. Constrained clients only
+        // prefetch the next page; goToMushafPage loads later pages on navigation.
         const rest = (constrained
-          ? sessionPages
+          ? wave.prefetch
           : wave.prefetch.concat(wave.background)
         ).filter((pageNumber) => !immediateSet.has(pageNumber))
         if (rest.length) {

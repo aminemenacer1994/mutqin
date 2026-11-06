@@ -1331,7 +1331,7 @@ includesAll('chaining runtime application', [
   /buildChainingGroups\(verses, method\)/,
   /pushQueueGroup\(group\)/,
   /linking:single:\$\{verseKey\(verse\)\}/,
-  /linking:\$\{verseKey\(verse\)\}->\$\{verseKey\(nextVerse\)\}/,
+  /linking:\$\{verseKey\(current\)\}->\$\{verseKey\(next\)\}/,
   /uiChaining/,
   /\.\.\.\(uiChaining \|\| \{\}\)/,
   /uiState\.chainingMethod/,

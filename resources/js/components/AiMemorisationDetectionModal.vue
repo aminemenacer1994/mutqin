@@ -352,8 +352,8 @@
                   type="button"
                   class="amd-record-btn amd-record-btn--inline"
                   :class="{ 'is-busy': busy }"
-                  :aria-label="startLabel"
-                  :title="startHint || startLabel"
+                  :aria-label="errorRecordLabel"
+                  :title="errorRecordLabel"
                   :disabled="busy"
                   :aria-busy="busy ? 'true' : 'false'"
                   @click.stop="onErrorRecord"
@@ -361,7 +361,7 @@
                   <span class="amd-record-btn__core" aria-hidden="true">
                     <i class="bi bi-mic-fill"></i>
                   </span>
-                  <strong class="amd-record-btn__label">{{ startLabel }}</strong>
+                  <strong class="amd-record-btn__label">{{ errorRecordLabel }}</strong>
                 </button>
               </div>
 
@@ -655,10 +655,13 @@ export default {
       return this.displayMicStatusLabel
     },
     footerMicRetryLabel() {
-      if (this.errorAction === 'enable-mic' || this.micStatusKey === 'need_access') {
-        return this.startLabel || this.tryAgainLabel || 'Try again'
+      return this.errorRecordLabel
+    },
+    errorRecordLabel() {
+      if (this.errorAction === 'enable-mic' || this.micStatusKey === 'need_access' || this.micStatusKey === 'no_device') {
+        return this.enableMicLabel || this.startLabel || 'Enable microphone'
       }
-      return this.tryAgainLabel || 'Try again'
+      return this.tryAgainLabel || this.startLabel || 'Try again'
     },
     micLevelAriaLabel() {
       return this.recordingActiveLabel || 'Microphone input level'
