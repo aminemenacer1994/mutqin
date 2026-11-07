@@ -2173,9 +2173,24 @@ export default {
         || null
     },
     shouldShowWorkspaceEmptyState() {
-      // Session setup belongs in the tools offcanvas / Welcome Back modal.
-      // Keep the legacy inline card retired so there is one clear setup prompt.
-      return false
+      // No session and the setup panel is closed: show the three plans on the page.
+      // Closing the panel must not leave a blank workspace or a stuck loader.
+      const loadingSession = this.isBootstrapping || this.isRestoringWorkspace || this.showWorkspaceRefreshSpinner
+      const emptyWorkspaceReady = this.isDataReady || (!Number(this.chapterId || 0) && !loadingSession)
+      if (!this.appReady || !emptyWorkspaceReady || this.hasVerses || this.showTools) return false
+      if (loadingSession) return false
+      if (
+        this.isOnboardingExperienceActive
+        || this.workspaceTourActive
+        || this.isWelcomeBackWorkspaceHidden
+        || this.showWelcomeBackModal
+        || this.returningUserChoicePending
+        || this.showPostSessionModal
+        || this.isPostSessionChoiceVisible
+        || this.showSessionExitModal
+        || this.shouldShowWelcomeBackResumeGate
+      ) return false
+      return true
     },
     shouldShowWorkspaceMain() {
       return this.shouldShowWorkspaceEmptyState || this.shouldShowReadingWorkspace
@@ -2593,18 +2608,24 @@ export default {
       return [
         {
           id: 'memorise',
+          icon: 'bi-journal-bookmark',
           title: this.t('memorisation.sessionGoal.memorise'),
           hint: this.t('memorisation.sessionGoal.memoriseHint'),
+          description: this.t('memorisation.sessionGoal.planDescMemorise'),
         },
         {
           id: 'revise',
+          icon: 'bi-arrow-repeat',
           title: this.t('memorisation.sessionGoal.revise'),
           hint: this.t('memorisation.sessionGoal.reviseHint'),
+          description: this.t('memorisation.sessionGoal.planDescRevise'),
         },
         {
           id: 'test',
+          icon: 'bi-mic',
           title: this.t('memorisation.sessionGoal.test'),
           hint: this.t('memorisation.sessionGoal.testHint'),
+          description: this.t('memorisation.sessionGoal.planDescTest'),
         },
       ]
     },
@@ -10679,8 +10700,8 @@ export default {
       if (this.hasVerses && !this.isBootstrapping && !this.isRestoringWorkspace) return false
       if (!this.appReady || this.isBootstrapping || this.isRestoringWorkspace) return true
       if (Number(this.chapterId || 0) > 0 && !this.hasVerses && !this.isDataReady) return true
-      if (!this.isDataReady && !Number(this.chapterId || 0)) return true
-      // Surah selected but ayahs still fetching — keep the shell visible, not a full-page veil.
+      // No surah yet is the plan chooser, not a load that can get stuck.
+      if (!Number(this.chapterId || 0)) return false
       return false
     },
 
@@ -20515,6 +20536,7 @@ export default {
       this.clearWorkspaceForConfigChange(this.currentMode)
       this.persistModeState(this.currentMode)
       this.persistUiState()
+      this.markEmptyWorkspaceReady()
     },
     restoreManualSessionSelection() {
       const origin = this.manualSessionDraftOrigin
@@ -20531,9 +20553,17 @@ export default {
       ) || null
       this.persistModeState(this.currentMode)
       this.persistUiState()
-      if (origin.config.chapterId > 0 && !this.hasVerses) {
+      if (Number(origin.config?.chapterId || 0) > 0 && !this.hasVerses) {
         void this.loadChapter(this.currentMode)
+        return
       }
+      this.markEmptyWorkspaceReady()
+    },
+    markEmptyWorkspaceReady() {
+      if (Number(this.chapterId || 0) > 0) return
+      this.isDataReady = true
+      this.isWorkspaceRefreshing = false
+      this.workspaceRefreshReason = ''
     },
     async commitManualSessionSelection() {
       const origin = this.manualSessionDraftOrigin
@@ -37065,21 +37095,12 @@ export default {
       return true
     },
     ensureEmptyWorkspaceEntrySurface() {
-      if (!this.appReady || !this.isDataReady || this.hasVerses || this.showTools) return
-      if (this._suppressEmptyWorkspaceTools) return
-      if (
-        this.isOnboardingExperienceActive
-        || this.workspaceTourActive
-        || this.isWelcomeBackWorkspaceHidden
-        || this.showWelcomeBackModal
-        || this.returningUserChoicePending
-        || this.showPostSessionModal
-        || this.isPostSessionChoiceVisible
-        || this.showSessionExitModal
-        || this.shouldShowWelcomeBackResumeGate
-      ) return
-      this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
-      this.openToolsPanel({ tab: 'tools' })
+      // The page shows Memorise / Revise / Test when there is no session.
+      // Auto-opening the panel here left a blank page after the user closed it.
+    },
+    openSetupForGoal(goalId) {
+      this.setSessionStartGoal(goalId)
+      this.openNewSessionSetup()
     },
     openDashboardView() {
       try {

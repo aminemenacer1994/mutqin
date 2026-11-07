@@ -1253,14 +1253,28 @@
             -->
             <!-- Mobile recite dock lives after the reading surface (see bottom of workspace-main). -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
-              <div class="workspace-empty-card">
-                <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
-                <h2>{{ t('memorisation.workspaceEmpty.title') }}</h2>
-                <p>{{ t('memorisation.workspaceEmpty.desc') }}</p>
-                <p class="workspace-empty-instruction">{{ t('memorisation.workspaceEmpty.instruction') }}</p>
-                <div class="workspace-empty-actions">
-                  <button class="action-btn primary" type="button" @click="openNewSessionSetup">
-                    {{ t('memorisation.open_session_setup') }}
+              <div class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans">
+                <header class="plan-choice-head">
+                  <h2>{{ t('memorisation.sessionGoal.label') }}</h2>
+                  <p class="plan-choice-head__intro">{{ t('memorisation.sessionGoal.planChooserIntro') }}</p>
+                </header>
+                <div class="plan-choice-grid" role="group" :aria-label="t('memorisation.sessionGoal.label')">
+                  <button
+                    v-for="goal in sessionGoalOptions"
+                    :key="goal.id"
+                    type="button"
+                    class="plan-choice"
+                    :data-plan="goal.id"
+                    :aria-label="`${goal.title}. ${goal.description}`"
+                    @click="openSetupForGoal(goal.id)"
+                  >
+                    <span class="plan-choice__icon" aria-hidden="true"><i class="bi" :class="goal.icon"></i></span>
+                    <span class="plan-choice__copy">
+                      <strong>{{ goal.title }}</strong>
+                      <span class="plan-choice__desc plan-choice__desc--long">{{ goal.description }}</span>
+                      <span class="plan-choice__desc plan-choice__desc--short">{{ goal.hint }}</span>
+                    </span>
+                    <span class="plan-choice__go" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                   </button>
                 </div>
               </div>
@@ -2182,16 +2196,6 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-if="tab === 'techniques'" class="sheet sheet--practice" data-tour="practice-sheet">
-            <AppStatus
-              v-if="!hasVerses"
-              class="tools-tab-empty tools-tab-empty--practice"
-              variant="empty"
-              icon="bi-stars"
-              :title="t('toasts.noVersesToQuizOn')"
-              :description="t('memorisation.controlsHints.practice')"
-              :action-label="t('memorisation.open_session_setup')"
-              @action="openNewSessionSetup"
-            />
             <details class="practice-group" open>
               <summary class="practice-group__summary">
                 <span class="practice-group__copy">

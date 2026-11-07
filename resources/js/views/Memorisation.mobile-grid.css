@@ -142,6 +142,11 @@
     border-radius: 20px;
   }
 
+  .workspace-shell[style*="display: none"],
+  .workspace-shell[style*="display:none"] {
+    display: none !important;
+  }
+
   .workspace-shell-head:not(.is-idle) {
     grid-column: 1 / -1;
     display: grid !important;
