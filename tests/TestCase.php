@@ -18,4 +18,19 @@ abstract class TestCase extends BaseTestCase
             'mutqin.learner_teacher_section_enabled' => true,
         ]);
     }
+
+    protected function enableArticles(): void
+    {
+        config(['mutqin.show_articles' => true]);
+    }
+
+    protected function enableDonation(): void
+    {
+        config(['mutqin.show_donate' => true]);
+    }
+
+    protected function enableHowItWorks(): void
+    {
+        config(['mutqin.show_how_it_works' => true]);
+    }
 }

@@ -162,12 +162,8 @@ function sliceMethod(source, name) {
 
 {
   const auto = sliceMethod(memorisationJs, 'shouldAutoStartWorkspaceTour')
-  assert.match(auto, /just_registered/)
-  assert.match(auto, /hasDismissedWorkspaceTour/)
-  assert.match(auto, /hasCompletedOnboarding/)
-  assert.match(auto, /isDemoWorkspaceAccount\(\)\) return true/)
-  assert.match(auto, /just_logged_in && !this\.auth\?\.just_registered/)
-  assert.match(auto, /isRegistrationSession/)
+  assert.match(auto, /return false/)
+  assert.doesNotMatch(auto, /just_registered/)
 
   const schedule = sliceMethod(memorisationJs, 'scheduleWorkspaceTourStart')
   assert.match(schedule, /shouldAutoStartWorkspaceTour\(\)/)
@@ -179,11 +175,8 @@ function sliceMethod(source, name) {
   assert.doesNotMatch(init, /localStorage\.removeItem/)
 
   const firstRun = sliceMethod(memorisationJs, 'requiresFirstTimeOnboarding')
-  assert.match(firstRun, /just_logged_in && !this\.auth\?\.just_registered/)
-  assert.match(firstRun, /just_registered \|\| this\._signupIsolationFreshlyActivated/)
-  assert.match(firstRun, /isRegistrationSession/)
-  assert.match(firstRun, /isDemoWorkspaceAccount/)
-  assert.match(firstRun, /hasDismissedWorkspaceTour/)
+  assert.match(firstRun, /return false/)
+  assert.doesNotMatch(firstRun, /just_registered/)
 
   assert.match(memorisationJs, /finalizeRegistrationOnboardingForReturningLogin\(\)/)
   assert.match(memorisationJs, /markRegistrationSession\(\)/)
@@ -224,22 +217,20 @@ function sliceMethod(source, name) {
     hasPostOnboardingPracticeEvidence: () => false,
     readWorkspaceStateValue: () => false,
   }
-  // Regular existing login never auto-starts.
+  // Onboarding stays hidden, including after registration and for demo accounts.
   assert.equal(run('shouldAutoStartWorkspaceTour', existingLogin), false)
   assert.equal(run('requiresFirstTimeOnboarding', firstRunCtx), false)
-  // Demo testers: first time only, even when seeded completion/practice exists.
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     isDemoWorkspaceAccount: () => true,
     hasCompletedOnboarding: () => true,
-  }), true)
+  }), false)
   assert.equal(run('requiresFirstTimeOnboarding', {
     ...firstRunCtx,
     isDemoWorkspaceAccount: () => true,
     hasCompletedOnboarding: () => true,
     hasPostOnboardingPracticeEvidence: () => true,
-  }), true)
-  // After Skip / Done they are existing — no second auto-show.
+  }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     isDemoWorkspaceAccount: () => true,
@@ -262,11 +253,15 @@ function sliceMethod(source, name) {
     isRegistrationSession: () => false,
     readWorkspaceStateValue: () => true,
   }), false)
-  // New signup: first time only.
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     auth: { check: true, just_logged_in: false, just_registered: true },
-  }), true)
+  }), false)
+  assert.equal(run('requiresFirstTimeOnboarding', {
+    ...firstRunCtx,
+    auth: { check: true, just_logged_in: false, just_registered: true },
+    isRegistrationSession: () => true,
+  }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     auth: { check: true, just_logged_in: true, just_registered: false },

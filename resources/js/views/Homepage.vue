@@ -442,10 +442,15 @@
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
           </div>
           <div class="footer__links">
+            <h4>{{ t('homepage.footer.resources') }}</h4>
+            <a v-if="showArticles" href="/articles">{{ t('homepage.footer.articles') }}</a>
+            <a href="/#purpose">{{ t('homepage.footer.explanation') }}</a>
+          </div>
+          <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
             <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
-            <a href="/donate">{{ t('homepage.footer.donate') }}</a>
+            <a v-if="showDonate" href="/donate">{{ t('homepage.footer.donate') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
           </div>
         </div>
@@ -484,6 +489,8 @@ export default {
   setup() {
     const { t, locale } = useI18n();
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
+    const showArticles = typeof window !== 'undefined' && window.mutqinShowArticles === true;
+    const showDonate = typeof window !== 'undefined' && window.mutqinShowDonate === true;
     const inAppBrowser = typeof window !== 'undefined' && isInAppBrowser();
     const primaryCta = computed(() => {
       const isAuthenticated = typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
@@ -657,6 +664,7 @@ export default {
       { id: 'instagram', href: 'https://www.instagram.com/mutqinai/', icon: 'bi-instagram' },
       { id: 'facebook', href: 'https://www.facebook.com/profile.php?id=61594103506759', icon: 'bi-facebook' },
       { id: 'linkedin', href: 'https://www.linkedin.com/company/146569969/', icon: 'bi-linkedin' },
+      { id: 'youtube', href: 'https://www.youtube.com/@Mutqin-w7h', icon: 'bi-youtube' },
     ];
 
     const contactForm = reactive({ name: '', email: '', subject: '', message: '' });
@@ -877,6 +885,8 @@ export default {
     return {
       t,
       showStartMemorisationCta,
+      showArticles,
+      showDonate,
       primaryCta,
       inAppBrowser,
       currentTheme,

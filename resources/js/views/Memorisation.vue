@@ -886,10 +886,6 @@
                       <i class="bi bi-shield-check" aria-hidden="true"></i>
                       <span>{{ t('common.adminDashboard') || 'Admin' }}</span>
                     </a>
-                    <button type="button" class="top-card-menu-row" @click="openOnboardingFromTopMenu">
-                      <i class="bi bi-compass" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.revisitOnboarding') }}</span>
-                    </button>
                     <button
                       v-if="!isMobileViewport() && !isPostSessionChoiceVisible"
                       type="button"
@@ -1898,26 +1894,30 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet sheet--setup">
-            <div
-              class="session-goal"
-              role="radiogroup"
-              :aria-label="t('memorisation.sessionGoal.label')"
-            >
-              <button
-                v-for="goal in sessionGoalOptions"
-                :key="goal.id"
-                type="button"
-                class="session-goal__option"
-                role="radio"
-                :aria-checked="sessionStartGoal === goal.id ? 'true' : 'false'"
-                :class="{ 'is-selected': sessionStartGoal === goal.id }"
-                @click="setSessionStartGoal(goal.id)"
+            <section class="setup-plan" aria-labelledby="setup-plan-label">
+              <h4 id="setup-plan-label" class="setup-plan__label">{{ t('memorisation.sessionGoal.label') }}</h4>
+              <div
+                class="session-goal"
+                role="radiogroup"
+                :aria-label="t('memorisation.sessionGoal.label')"
               >
-                <strong>{{ goal.title }}</strong>
-                <span>{{ goal.hint }}</span>
-              </button>
-            </div>
-            <p class="session-goal__help">{{ sessionGoalHelp }}</p>
+                <button
+                  v-for="goal in sessionGoalOptions"
+                  :key="goal.id"
+                  type="button"
+                  class="session-goal__option"
+                  role="radio"
+                  :aria-checked="sessionStartGoal === goal.id ? 'true' : 'false'"
+                  :class="{ 'is-selected': sessionStartGoal === goal.id }"
+                  @click="setSessionStartGoal(goal.id)"
+                >
+                  <strong>{{ goal.title }}</strong>
+                  <span>{{ goal.hint }}</span>
+                </button>
+              </div>
+              <p class="session-goal__help">{{ sessionGoalHelp }}</p>
+            </section>
+            <section class="setup-plan setup-plan--passage">
             <div class="session-essentials" data-tour="setup-sheet">
               <div class="field setup-field-row" data-tour="setup-surah">
                 <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
@@ -1934,31 +1934,17 @@
                   :aria-label="t('memorisation.sessionGoal.ayahsLabel')"
                 >
                   <button
+                    v-for="option in ayahWindowOptions"
+                    :key="option.id"
                     type="button"
                     class="session-range-preset__option"
                     role="radio"
-                    :aria-checked="activeAyahWindow === 'first_3' ? 'true' : 'false'"
-                    :class="{ 'is-selected': activeAyahWindow === 'first_3' }"
-                    @click="applyAyahWindow('first_3')"
-                  >{{ t('memorisation.sessionGoal.first3') }}</button>
-                  <button
-                    type="button"
-                    class="session-range-preset__option"
-                    role="radio"
-                    :aria-checked="activeAyahWindow === 'first_5' ? 'true' : 'false'"
-                    :class="{ 'is-selected': activeAyahWindow === 'first_5' }"
-                    @click="applyAyahWindow('first_5')"
-                  >{{ t('memorisation.sessionGoal.first5') }}</button>
-                  <button
-                    type="button"
-                    class="session-range-preset__option"
-                    role="radio"
-                    :aria-checked="activeAyahWindow === 'choose' ? 'true' : 'false'"
-                    :class="{ 'is-selected': activeAyahWindow === 'choose' }"
-                    @click="applyAyahWindow('choose')"
-                  >{{ t('memorisation.sessionGoal.chooseAyahs') }}</button>
+                    :aria-checked="ayahWindowSelection === option.id ? 'true' : 'false'"
+                    :class="{ 'is-selected': ayahWindowSelection === option.id }"
+                    @click="selectAyahWindow(option.id)"
+                  >{{ option.label }}</button>
                 </div>
-                <p v-if="activeAyahWindow !== 'choose'" class="session-ayah-summary">{{ sessionAyahSummary }}</p>
+                <p v-if="ayahWindowSelection !== 'choose'" class="session-ayah-summary">{{ sessionAyahSummary }}</p>
                 <div v-else class="session-range-block">
                   <div class="range range-single session-range-inputs">
                     <input
@@ -1970,7 +1956,7 @@
                       min="1"
                       :max="resolveCurrentSurahAyahCount() || undefined"
                     >
-                    <span>{{ t('sessionSetup.to') }}</span>
+                    <span class="session-range-sep">{{ t('sessionSetup.to') }}</span>
                     <input
                       type="number"
                       class="input"
@@ -1981,16 +1967,10 @@
                       :max="resolveCurrentSurahAyahCount() || undefined"
                     >
                   </div>
-                  <button
-                    type="button"
-                    class="session-full-surah"
-                    @click="onSessionRangePresetChange('full_surah')"
-                  >
-                    {{ t('sessionSetup.rangePresetFullSurah') }}
-                  </button>
                 </div>
               </div>
             </div>
+            </section>
             <button
               type="button"
               class="session-more-toggle"
@@ -2000,7 +1980,7 @@
               <span>{{ t('memorisation.sessionGoal.moreOptions') }}</span>
               <i class="bi" :class="sessionMoreOptionsOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
             </button>
-            <div v-show="sessionMoreOptionsOpen" class="session-more">
+            <div v-if="sessionMoreOptionsOpen" class="session-more is-open">
             <section class="sheet-section sheet-section-compact" data-tour="setup-sheet-more">
               <div class="sheet-content">
                 <div class="field-stack field-stack-compact setup-field-list">
@@ -2212,14 +2192,14 @@
               :action-label="t('memorisation.open_session_setup')"
               @action="openNewSessionSetup"
             />
-            <details class="technique-group-copy technique-group-copy--fold technique-group-beginner">
-              <summary class="technique-group-kicker">
-                <span>{{ t('memorisation.practiceTools.beginner') }}</span>
-                <i class="bi bi-chevron-down technique-group-kicker__chev" aria-hidden="true"></i>
+            <details class="practice-group" open>
+              <summary class="practice-group__summary">
+                <span class="practice-group__copy">
+                  <strong>{{ t('memorisation.practiceTools.beginner') }}</strong>
+                  <small>{{ t('memorisation.practiceTools.beginnerDesc') }}</small>
+                </span>
+                <i class="bi bi-chevron-down practice-group__chev" aria-hidden="true"></i>
               </summary>
-              <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
-            </details>
-
             <div class="practice-tool-stack">
             <section class="sheet-section sheet-section--practice">
               <div
@@ -2436,15 +2416,16 @@
               </div>
             </section>
             </div>
-
-            <details class="technique-group-copy technique-group-copy--fold technique-group-advanced">
-              <summary class="technique-group-kicker">
-                <span>{{ t('memorisation.practiceTools.advanced') }}</span>
-                <i class="bi bi-chevron-down technique-group-kicker__chev" aria-hidden="true"></i>
-              </summary>
-              <p>{{ t('memorisation.practiceTools.advancedDesc') }}</p>
             </details>
-            
+
+            <details class="practice-group" open>
+              <summary class="practice-group__summary">
+                <span class="practice-group__copy">
+                  <strong>{{ t('memorisation.practiceTools.advanced') }}</strong>
+                  <small>{{ t('memorisation.practiceTools.advancedDesc') }}</small>
+                </span>
+                <i class="bi bi-chevron-down practice-group__chev" aria-hidden="true"></i>
+              </summary>
             <div class="practice-tool-stack">
             <section class="sheet-section sheet-section--practice">
               <div
@@ -2637,10 +2618,9 @@
                 </div>
               </div>
             </section>
-            </div>
 
             <section class="sheet-section sheet-section--practice">
-              <button class="sheet-toggle" @click="toggleSection('mutashabihat')" type="button">
+              <button class="sheet-toggle sheet-toggle--practice" @click="toggleSection('mutashabihat')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-shuffle"></i></span>
                   <span class="st-txt">
@@ -2696,6 +2676,8 @@
                 </div>
               </div>
             </section>
+            </div>
+            </details>
 
             <!-- <section class="sheet-section retention-check-section">
               <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
@@ -3742,6 +3724,7 @@
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
       :show-back-to-progress="showProgressExitCta"
       :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Back to progress')"
+      :progress-href="progressPageUrl"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
       @back-to-progress="exitToProgressPage"
@@ -5316,6 +5299,7 @@
       :try-again-label="amdLabels.retry"
       :show-back-to-progress="showProgressExitCta"
       :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Back to progress')"
+      :progress-href="progressPageUrl"
       :empty-ayah-title="t('memorisation.amd.emptyAyahTitle')"
       :empty-ayah-desc="t('memorisation.amd.emptyAyahDesc')"
       :generic-error="t('common.status.errorDesc')"

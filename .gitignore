@@ -33,3 +33,4 @@ tmp-*.json
 /scratch/
 /ackee/.env
 /ackee/data/
+tutorials/videos/*.webm

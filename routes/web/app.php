@@ -140,16 +140,20 @@ Route::redirect('/about-us', '/about', 301)->name('about-us');
 Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
-Route::view('/donate', 'content.donate')->name('donate');
-Route::post('/donate/checkout', [BillingController::class, 'donationCheckout'])
-    ->middleware('throttle:10,1')
-    ->name('donate.checkout');
-Route::get('/donate/success', [BillingController::class, 'donationSuccess'])->name('donate.success');
+Route::middleware(\App\Http\Middleware\EnsureDonationVisible::class)->group(function (): void {
+    Route::view('/donate', 'content.donate')->name('donate');
+    Route::post('/donate/checkout', [BillingController::class, 'donationCheckout'])
+        ->middleware('throttle:10,1')
+        ->name('donate.checkout');
+    Route::get('/donate/success', [BillingController::class, 'donationSuccess'])->name('donate.success');
+});
 Route::redirect('/waiting-list', '/', 301)->name('waiting-list');
-Route::view('/articles', 'content.articles')->name('articles');
-Route::get('/articles/{slug}', [ArticleController::class, 'show'])
-    ->where('slug', '[a-z0-9\-]+')
-    ->name('articles.show');
+Route::middleware(\App\Http\Middleware\EnsureArticlesVisible::class)->group(function (): void {
+    Route::view('/articles', 'content.articles')->name('articles');
+    Route::get('/articles/{slug}', [ArticleController::class, 'show'])
+        ->where('slug', '[a-z0-9\-]+')
+        ->name('articles.show');
+});
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');
@@ -168,11 +172,15 @@ Route::get('/email/unsubscribe/{user}', \App\Http\Controllers\RegisteredUserUnsu
 Route::get('/guides', [SeoGuidesController::class, 'index'])->name('seo.guides');
 
 foreach (SeoLaunchPages::paths() as $seoPath) {
-    if ($seoPath === '/guides') {
+    if ($seoPath === '/guides' || $seoPath === '/features') {
         continue;
     }
     Route::view($seoPath, 'content.seo-launch')->name('seo.launch.'.str_replace('/', '.', trim($seoPath, '/')));
 }
+
+Route::middleware(\App\Http\Middleware\EnsureHowItWorksVisible::class)->group(function (): void {
+    Route::view('/features', 'content.seo-launch')->name('seo.launch.features');
+});
 
 // File-based articles: after specific launch /guides/* routes so they take precedence.
 Route::get('/guides/{slug}', [SeoArticleController::class, 'show'])

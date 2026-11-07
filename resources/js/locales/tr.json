@@ -277,8 +277,8 @@
     "access": {
       "available": {
         "label": "Şimdi kullanılabilir",
-        "detail": "Uygun yeni kullanıcılar 30 gün ücretsiz erişim alır.",
-        "mobileDetail": "Uygun yeni kullanıcılar için 30 gün ücretsiz"
+        "detail": "Ezber ve tekrar için ücretsiz hesap oluşturun.",
+        "mobileDetail": "Ücretsiz hesaplar hazır"
       },
       "early": {
         "label": "Erken erişim",
@@ -454,8 +454,8 @@
           "answer": "Ezberleyen veya tekrar eden, kısa oturumlar ve kaydedilmiş bir yer isteyen herkes için."
         },
         "freeAccess": {
-          "question": "30 gün ücretsiz erişim var mı?",
-          "answer": "Uygun yeni kullanıcılar 30 gün ücretsiz erişim alır — ilk ay bir hediyedir, hıfza rahat başlamanız için. Sonra Ücretsiz’de kalabilir veya Pro’yu seçebilirsiniz. Pro ödemesi hâlâ 7 günlük deneme içerir."
+          "question": "Ücretsiz başlayabilir miyim?",
+          "answer": "Evet. Oturum kurulumu ve pratik araçlarıyla Ücretsiz planda başlayabilirsiniz. Pro, AI kontrolleri dahil gelişmiş araçları açar ve ödemede 7 günlük deneme sunar."
         }
       }
     },
@@ -497,7 +497,9 @@
       "howItWorks": "How it works",
       "pricing": "« Pricing»",
       "waitlist": "Waiting list",
-      "resources": "« Resources»",
+      "resources": "Kaynaklar",
+      "articles": "Makaleler",
+      "explanation": "Mutqin neden var",
       "company": "« Company»",
       "contact": "« Contact»",
       "faq": "SSS",
@@ -518,7 +520,8 @@
         "facebook": "Facebook",
         "x": "X",
         "linkedin": "LinkedIn",
-        "tiktok": "TikTok"
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
       }
     },
     "name": "« Name»",
@@ -6158,7 +6161,9 @@
     "copyLink": "Bağlantıyı kopyala",
     "copied": "Kopyalandı",
     "related": "İlgili yazılar",
-    "back": "Tüm yazılar"
+    "back": "Tüm yazılar",
+    "toc": "On this page",
+    "progress": "Reading progress"
   },
   "ui": {
     "home": "Ana sayfa",

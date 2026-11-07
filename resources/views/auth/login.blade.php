@@ -7,9 +7,6 @@
             <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.auth_login_arabic') }}</p>
             <h1 class="auth-heading">{{ __('ui.auth_login_heading') }}</h1>
             <p class="auth-lede">{{ __('ui.auth_login_subtitle') }}</p>
-            @guest
-                <p class="auth-offer">{{ __('ui.auth_register_offer') }}</p>
-            @endguest
         </header>
 
         @include('partials.ios-pwa-install')

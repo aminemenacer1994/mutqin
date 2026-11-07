@@ -19,6 +19,10 @@ assert.match(homepage, /rel="noopener noreferrer"/)
 assert.match(homepage, /https:\/\/www\.instagram\.com\/mutqinai\//)
 assert.match(homepage, /https:\/\/www\.facebook\.com\/profile\.php\?id=61594103506759/)
 assert.match(homepage, /https:\/\/www\.linkedin\.com\/company\/146569969\//)
+assert.match(homepage, /bi-youtube/)
+assert.match(homepage, /https:\/\/www\.youtube\.com\/@Mutqin-w7h/)
+assert.match(homepage, /href="\/articles"/)
+assert.match(homepage, /href="\/#purpose"/)
 assert.match(homepage, /class="footer__copy"/)
 
 assert.match(css, /\.footer__social-link \{/)
@@ -30,5 +34,6 @@ const social = en.homepage.footer.social
 assert.equal(social.instagram, 'Instagram')
 assert.equal(social.facebook, 'Facebook')
 assert.equal(social.linkedin, 'LinkedIn')
+assert.equal(social.youtube, 'YouTube')
 
 console.log('homepage-footer-social.test.mjs: ok')

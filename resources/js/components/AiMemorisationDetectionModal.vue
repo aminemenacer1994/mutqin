@@ -226,6 +226,9 @@
             >
               <p class="amd-complete__title">{{ completeTitle }}</p>
               <p class="amd-complete__body">{{ completeBody }}</p>
+              <p v-if="showBackToProgress" class="amd-complete__link">
+                <a :href="progressHref" @click.stop="onBackToProgress">{{ backToProgressLabel }}</a>
+              </p>
             </section>
 
             <section
@@ -327,15 +330,15 @@
               </div>
 
               <div v-else-if="isComplete" class="amd-complete__actions amd-complete__actions--footer">
-                <button
+                <a
                   v-if="showBackToProgress"
-                  type="button"
+                  :href="progressHref"
                   class="btn-ghost amd-complete__back-progress"
-                  @click.stop="$emit('back-to-progress')"
+                  @click.stop="onBackToProgress"
                 >
                   <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
                   {{ backToProgressLabel }}
-                </button>
+                </a>
                 <button type="button" class="btn-secondary" @click.stop="$emit('test-again')">
                   {{ testAgainLabel }}
                 </button>
@@ -473,6 +476,7 @@ export default {
     emptyAyahDesc: { type: String, default: 'We could not show the ayah for this check. Close and try again.' },
     showBackToProgress: { type: Boolean, default: false },
     backToProgressLabel: { type: String, default: 'Back to progress' },
+    progressHref: { type: String, default: '/progress' },
   },
   emits: [
     'cancel',
@@ -786,6 +790,9 @@ export default {
     if (this.open) this.restoreReturnFocus()
   },
   methods: {
+    onBackToProgress(event) {
+      this.$emit('back-to-progress', event)
+    },
     formatShownOption(shown) {
       const n = Number(shown)
       if (!Number.isFinite(n)) return `${shown}%`

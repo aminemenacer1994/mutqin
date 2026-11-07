@@ -277,8 +277,8 @@
     "access": {
       "available": {
         "label": "Available now",
-        "detail": "Eligible new users receive 30 days of free access.",
-        "mobileDetail": "30 days free for eligible new users"
+        "detail": "Create a free account to begin memorising and revision.",
+        "mobileDetail": "Free accounts available now"
       },
       "early": {
         "label": "Early access",
@@ -454,8 +454,8 @@
           "answer": "Mutqin is for beginners, adults returning after a pause and experienced learners who want a calmer way to continue. Children can use it with a parent or teacher."
         },
         "freeAccess": {
-          "question": "Is there 30 days of free access?",
-          "answer": "Eligible new users receive 30 days of free access — the first month is a gift, so you can begin your hifz with ease. After that you can continue on Free, or choose Pro. Pro checkout still includes a 7-day trial."
+          "question": "Can I start for free?",
+          "answer": "Yes. You can begin on the Free plan with session setup and practice tools. Pro unlocks advanced tools including AI checks and includes a 7-day trial at checkout."
         }
       }
     },
@@ -498,6 +498,8 @@
       "pricing": "Pricing",
       "waitlist": "Waiting list",
       "resources": "Resources",
+      "articles": "Articles",
+      "explanation": "Why Mutqin exists",
       "company": "Company",
       "contact": "Contact",
       "faq": "FAQ",
@@ -518,7 +520,8 @@
         "facebook": "Facebook",
         "x": "X",
         "linkedin": "LinkedIn",
-        "tiktok": "TikTok"
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
       }
     },
     "name": "Name",
@@ -6133,6 +6136,11 @@
     "aboutLink": "About",
     "contactLink": "Contact"
   },
+  "howItWorksPage": {
+    "listLabel": "Mutqin walkthroughs",
+    "watchVideo": "Watch video",
+    "videoUnavailable": "This walkthrough is not on YouTube yet. Check back soon."
+  },
   "articlesPage": {
     "kicker": "Articles & Guides",
     "title": "Qur'an Memorisation Resources & Insights",
@@ -6163,7 +6171,9 @@
     "copyLink": "Copy link",
     "copied": "Copied",
     "related": "Related articles",
-    "back": "All articles"
+    "back": "All articles",
+    "toc": "On this page",
+    "progress": "Reading progress"
   },
   "ui": {
     "home": "Home",

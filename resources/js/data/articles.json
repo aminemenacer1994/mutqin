@@ -1,5 +1,279 @@
 [
   {
+    "id": "how-to-memorise-quran-and-retain-it",
+    "slug": "how-to-memorise-quran-and-retain-it",
+    "title": "A Complete Guide to Memorising the Qur'an and Retaining It",
+    "excerpt": "Practical steps to memorise the Qur'an, build a daily revision routine, and strengthen your Hifz with consistency.",
+    "seoTitle": "How to Memorise the Qur'an and Retain It | Mutqin",
+    "seoDescription": "Learn how to memorise the Qur'an and retain it with practical Hifz techniques, daily revision methods, and authentic Islamic guidance.",
+    "category": "Qur'an Memorisation",
+    "publishedAt": "2026-11-07",
+    "updatedAt": "2026-11-07",
+    "image": "https://images.pexels.com/photos/36188885/pexels-photo-36188885.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=500&w=800",
+    "imageAlt": "An open Qur'an illuminated by sunlight on a wooden stand",
+    "imageCredit": "Jahra Tasfia Reza",
+    "imageSource": "pexels",
+    "imagePhotographerUrl": "https://www.pexels.com/photo/open-quran-in-sunlight-on-wooden-stand-36188885/",
+    "imagePage": "https://www.pexels.com/photo/open-quran-in-sunlight-on-wooden-stand-36188885/",
+    "lede": "Memorising the Qur'an is a beautiful journey, but keeping it strong requires consistency. Discover practical memorisation techniques, daily revision habits, and Islamic guidance to help strengthen your Hifz.",
+    "intro": [
+      "Many people begin Hifz with sincerity and hope, then struggle when busy weeks interrupt revision. Retention is not a separate stage that begins after you finish; it grows beside every new ayah you learn.",
+      "This guide gathers spiritual foundations, a clear daily memorisation method, and practical revision habits. Treat the techniques as helpful suggestions you can adjust to your level, teacher, and schedule — not as fixed rules prescribed for every student."
+    ],
+    "introQuote": {
+      "kind": "quran",
+      "arabic": "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ",
+      "translation": "And We have certainly made the Qur'an easy to remember. So is there anyone who will be mindful?",
+      "reference": "Qur'an 54:17 — Surah Al-Qamar",
+      "sourceUrl": "https://quran.com/54/17",
+      "sourceLabel": "Quran.com",
+      "translator": "Clear Quran (adapted)"
+    },
+    "relatedSlugs": [
+      "how-to-revise-the-quran-and-retain-hifz",
+      "how-to-memorise-the-quran-beginners-guide",
+      "how-to-build-a-consistent-hifz-routine"
+    ],
+    "cta": {
+      "heading": "Make Your Qur'an Revision More Consistent",
+      "body": "Building a consistent memorisation routine takes time. Mutqin brings memorisation, revision and recitation practice together in one place, helping you stay organised as you work towards your Hifz goals.",
+      "label": "Start Memorising with Mutqin",
+      "href": "/"
+    },
+    "sections": [
+      {
+        "id": "spiritual-foundations",
+        "h2": "Spiritual Foundations",
+        "paragraphs": [
+          "Before methods and schedules, Hifz rests on the heart. Technique helps the tongue and memory; sincerity, dua, and righteous living shape the journey itself."
+        ],
+        "image": {
+          "src": "https://images.pexels.com/photos/31301338/pexels-photo-31301338.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=500&w=800",
+          "alt": "An open Qur'an on a wooden table lit by soft window sunlight",
+          "credit": "bernahanım_",
+          "photographerUrl": "https://www.pexels.com/photo/open-quran-on-wooden-table-with-sunlight-31301338/",
+          "page": "https://www.pexels.com/photo/open-quran-on-wooden-table-with-sunlight-31301338/",
+          "source": "pexels"
+        },
+        "subs": [
+          {
+            "h3": "Sincerity (Ikhlas)",
+            "paragraphs": [
+              "Begin by intending Allah's pleasure — not praise, competition, or a public milestone. When the intention is sincere, a short sitting done well is worth more than a large portion done for show. Renew that intention often, especially when motivation dips."
+            ]
+          },
+          {
+            "h3": "Persistent Supplication (Dua)",
+            "paragraphs": [
+              "Ask Allah to open the Qur'an for you, to make retention easy, and to keep you consistent. Dua is not a replacement for effort; it accompanies effort. Many students find it helpful to make a short dua before memorising and after revision."
+            ]
+          },
+          {
+            "h3": "Righteousness and avoiding sins",
+            "paragraphs": [
+              "Islamic teachers have long encouraged students of the Qur'an to guard their hearts and habits. Taqwa supports clarity and discipline, but memory itself is also shaped by sleep, focus, repetition, and revision. Avoid presenting piety as a guaranteed memory technique."
+            ],
+            "quotes": [
+              {
+                "kind": "quran",
+                "arabic": "وَاتَّقُوا اللَّهَ وَيُعَلِّمُكُمُ اللَّهُ",
+                "translation": "…And fear Allah. And Allah teaches you…",
+                "reference": "Qur'an 2:282 — Surah Al-Baqarah (excerpt)",
+                "sourceUrl": "https://quran.com/2/282",
+                "sourceLabel": "Quran.com",
+                "note": "This is an excerpt from a longer verse about contracts and testimony. It reminds believers that taqwa and learning from Allah belong together; it should not be read as a standalone promise of improved memory."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "daily-memorisation-method",
+        "h2": "Daily Memorisation Method",
+        "paragraphs": [
+          "A steady method reduces overwhelm. The five steps below are a practical sequence many students use. Adjust the portion size and repetition count to what you can revise tomorrow."
+        ],
+        "image": {
+          "src": "https://images.pexels.com/photos/34633380/pexels-photo-34633380.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=500&w=800",
+          "alt": "A person studying a holy book at a wooden desk with a notebook and pens",
+          "credit": "Murad Khan",
+          "photographerUrl": "https://www.pexels.com/@murad-khan-2157016942",
+          "page": "https://www.pexels.com/photo/man-reading-holy-book-at-wooden-desk-34633380/",
+          "source": "pexels"
+        },
+        "steps": [
+          {
+            "title": "Correct Pronunciation and Tajweed",
+            "body": "Learn each ayah correctly before you lock it into memory. Mistakes repeated early become harder to undo. Listen to a reliable reciter, and where possible recite to a teacher who can correct tajweed."
+          },
+          {
+            "title": "Use One Consistent Mushaf",
+            "body": "Keep the same print and page layout when you can. Visual memory of where an ayah sits on the page often supports recall. Switching mushafs frequently can make similar passages harder to place."
+          },
+          {
+            "title": "Understand the Meaning (Tafsir)",
+            "body": "A brief understanding of the meaning helps the ayahs connect as a message, not only as sounds. You do not need a full scholarly study before every sitting — a clear translation or short tafsir note is often enough to begin."
+          },
+          {
+            "title": "Choose a Suitable Memorisation Time",
+            "body": "Pick a time when your mind is quieter and the sitting is protected — often after Fajr, before sleep, or after a salah you already keep. Consistency matters more than finding a theoretically perfect hour."
+          },
+          {
+            "title": "Segment and Repeat",
+            "body": "Break the portion into small segments, repeat each segment until it feels steady, then join the segments together. The example below is optional and adjustable — not a prescribed Islamic rule."
+          }
+        ],
+        "sequence": {
+          "title": "An optional segmenting example",
+          "intro": "If you are memorising roughly half a page, one workable pattern is:",
+          "items": [
+            "Read and listen to the first small segment carefully.",
+            "Repeat it aloud until you can recite it without looking — for many students this may take around 10–15 repetitions, more or less depending on the ayahs.",
+            "Do the same with the next segment.",
+            "Connect both segments and recite them together from memory.",
+            "Continue until the half-page (or your chosen portion) holds together, then test the whole portion once more."
+          ],
+          "outro": "If 10–15 repetitions feel too many or too few, change the number. What matters is that you can recite the portion from memory and still have time to revise recent work."
+        }
+      },
+      {
+        "id": "golden-rules-of-retention",
+        "h2": "The Golden Rules of Retention",
+        "paragraphs": [
+          "New memorisation feels rewarding. Retention is quieter — and it is what keeps Hifz alive. The Prophet ﷺ taught that the Qur'an needs regular review, or it slips away."
+        ],
+        "quotes": [
+          {
+            "kind": "hadith",
+            "arabic": "تَعَاهَدُوا هَذَا الْقُرْآنَ فَوَالَّذِي نَفْسُ مُحَمَّدٍ بِيَدِهِ لَهُوَ أَشَدُّ تَفَلُّتًا مِنَ الإِبِلِ فِي عُقُلِهَا",
+            "translation": "Keep refreshing your knowledge of the Qur'an, for I swear by Him in Whose Hand is the life of Muhammad that it is more liable to escape than camels which are hobbled.",
+            "reference": "Sahih Muslim 791",
+            "sourceUrl": "https://sunnah.com/muslim:791",
+            "sourceLabel": "Sunnah.com",
+            "note": "A closely related wording is also reported in Sahih al-Bukhari 5033."
+          },
+          {
+            "kind": "hadith",
+            "arabic": "إِنَّمَا مَثَلُ صَاحِبِ الْقُرْآنِ كَمَثَلِ الإِبِلِ الْمُعَقَّلَةِ إِنْ عَاهَدَ عَلَيْهَا أَمْسَكَهَا وَإِنْ أَطْلَقَهَا ذَهَبَتْ",
+            "translation": "The example of a man who has memorised the Qur'an is like that of a hobbled camel. If he remained vigilant, he would be able to retain it, and if he loosened the hobbled camel it would escape.",
+            "reference": "Sahih Muslim 789a; see also Sahih al-Bukhari 5031",
+            "sourceUrl": "https://sunnah.com/muslim:789a",
+            "sourceLabel": "Sunnah.com",
+            "note": "Bukhari’s wording is similar and mentions “the owner of tied camels”."
+          },
+          {
+            "kind": "hadith",
+            "arabic": "وَإِذَا قَامَ صَاحِبُ الْقُرْآنِ فَقَرَأَهُ بِاللَّيْلِ وَالنَّهَارِ ذَكَرَهُ وَإِذَا لَمْ يَقُمْ بِهِ نَسِيَهُ",
+            "translation": "When the companion of the Qur'an gets up and recites it by night and by day, he remembers it; and if he does not get up with it, he forgets it.",
+            "reference": "Sahih Muslim 789b (addition in the narration of Musa ibn ‘Uqba)",
+            "sourceUrl": "https://sunnah.com/muslim:789b",
+            "sourceLabel": "Sunnah.com"
+          }
+        ],
+        "image": {
+          "src": "https://images.pexels.com/photos/35187268/pexels-photo-35187268.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=500&w=800",
+          "alt": "An open Qur'an on a wooden stand with prayer beads nearby",
+          "credit": "Rocky Gendu",
+          "photographerUrl": "https://www.pexels.com/photo/open-quran-with-prayer-beads-on-wooden-table-35187268/",
+          "page": "https://www.pexels.com/photo/open-quran-with-prayer-beads-on-wooden-table-35187268/",
+          "source": "pexels"
+        },
+        "subs": [
+          {
+            "h3": "Prioritise revision over new memorisation",
+            "paragraphs": [
+              "As your memorised amount grows, protect revision first. Adding new ayahs while older ones weaken creates a fragile Hifz. When time is short, revise what you already carry before opening a new page. See also [how to revise and retain Hifz](/articles/how-to-revise-the-quran-and-retain-hifz) and [balancing new Hifz with revision](/articles/how-to-balance-new-hifz-with-revision)."
+            ]
+          },
+          {
+            "h3": "Recite memorised verses in Salah",
+            "paragraphs": [
+              "Using familiar memorised portions in salah strengthens recall through lived practice. Choose portions you already know reasonably well, so prayer remains calm and focused."
+            ]
+          },
+          {
+            "h3": "Recite to a teacher or memorisation partner",
+            "paragraphs": [
+              "Self-testing is valuable; hearing yourself through another person is stronger. A teacher or reliable partner catches slips, mix-ups between similar ayahs, and tajweed issues you may miss alone."
+            ]
+          },
+          {
+            "h3": "Continue when forgetting occurs",
+            "paragraphs": [
+              "Forgetting is common and does not mean the journey has failed. Return to the weak ayahs, repair them with listening and repetition, and resume your revision cycle. Guilt rarely restores memory; consistent return does. [Why forgetting happens](/articles/why-you-keep-forgetting-memorised-ayahs) often comes down to gaps in revision rather than a weak mind."
+            ]
+          }
+        ],
+        "comparison": {
+          "intro": "Two revision rhythms work together. Neither replaces the other, and neither should be turned into an unrealistic quota.",
+          "left": {
+            "title": "Recent revision",
+            "body": "Review recently memorised verses frequently — often the same day and across the next several days — while they are still forming."
+          },
+          "right": {
+            "title": "Cumulative revision",
+            "body": "Regularly revisit older memorisation through a manageable cycle. The amount depends on how much you have memorised and how strong it is. Do not prescribe heavy daily juz’ targets to beginners."
+          }
+        }
+      },
+      {
+        "id": "daily-hifz-routine",
+        "h2": "A Simple Daily Hifz Routine",
+        "paragraphs": [
+          "The routine below is an illustrative example, not a religiously prescribed schedule. Shape it around your salah times, energy, and teacher’s guidance."
+        ],
+        "routine": [
+          {
+            "title": "Before memorising",
+            "body": "Listen to the portion, read it carefully, and understand the meaning enough to follow the message."
+          },
+          {
+            "title": "During memorisation",
+            "body": "Memorise small portions, repeat them until steady, and connect verses before moving on."
+          },
+          {
+            "title": "After memorisation",
+            "body": "Recite without looking, note mistakes, and repair weak spots while the sitting is still fresh."
+          },
+          {
+            "title": "Daily revision",
+            "body": "Review recent memorisation thoroughly, then touch older material through a cycle you can keep."
+          },
+          {
+            "title": "In Salah",
+            "body": "Practise familiar memorised portions so recall becomes part of worship, not only study."
+          }
+        ],
+        "paragraphsAfter": [
+          "If life becomes busy, shrink the new portion first and protect revision. A finished short sitting is stronger than an ambitious plan you abandon mid-week. For building the habit itself, see [how to build a consistent Hifz routine](/articles/how-to-build-a-consistent-hifz-routine)."
+        ]
+      },
+      {
+        "id": "conclusion",
+        "h2": "Conclusion",
+        "paragraphs": [
+          "Hifz is a trust and a companionship with the Book of Allah. Begin with sincerity, ask Allah for help, learn carefully, and return often. Methods support the journey; consistency and humility carry it.",
+          "May Allah make the Qur'an firm in your heart, easy on your tongue, and a light in your life. We close with the ending request from an authentic Prophetic dua:"
+        ],
+        "quotes": [
+          {
+            "kind": "dua",
+            "arabic": "أَنْ تَجْعَلَ الْقُرْآنَ رَبِيعَ قَلْبِي وَنُورَ صَدْرِي وَجَلَاءَ حُزْنِي وَذَهَابَ هَمِّي",
+            "translation": "…to make the Qur'an the spring of my heart, the light of my chest, the banisher of my sadness, and the reliever of my distress.",
+            "reference": "Excerpt from a longer Prophetic dua — Hisn al-Muslim 120 (from Musnad Ahmad)",
+            "sourceUrl": "https://sunnah.com/hisn:120",
+            "sourceLabel": "Sunnah.com",
+            "note": "This is the closing request of a longer authentic dua. Prefer learning the complete wording when possible."
+          }
+        ],
+        "paragraphsAfter": [
+          "Prefer learning the full dua when you can, beginning with “Allahumma inni ‘abduka…” as recorded in the source above."
+        ]
+      }
+    ],
+    "author": "Mutqin"
+  },
+  {
     "id": "how-to-memorise-the-quran-beginners-guide",
     "slug": "how-to-memorise-the-quran-beginners-guide",
     "title": "How to Memorise the Qur'an: A Beginner's Guide",

@@ -277,8 +277,8 @@
     "access": {
       "available": {
         "label": "Tersedia sekarang",
-        "detail": "Pengguna baru yang memenuhi syarat mendapat 30 hari akses gratis.",
-        "mobileDetail": "30 hari gratis untuk pengguna baru yang memenuhi syarat"
+        "detail": "Buat akun gratis untuk mulai menghafal dan muraja'ah.",
+        "mobileDetail": "Akun gratis tersedia"
       },
       "early": {
         "label": "Akses awal",
@@ -454,8 +454,8 @@
           "answer": "Untuk siapa pun yang menghafal atau merevisi dan ingin sesi singkat serta posisi tersimpan."
         },
         "freeAccess": {
-          "question": "Apakah ada 30 hari akses gratis?",
-          "answer": "Pengguna baru yang memenuhi syarat mendapat 30 hari akses gratis — bulan pertama sebagai hadiah, agar hifz bisa dimulai dengan tenang. Setelah itu Anda bisa lanjut di Gratis, atau pilih Pro. Pembayaran Pro tetap termasuk uji coba 7 hari."
+          "question": "Bisakah saya mulai gratis?",
+          "answer": "Ya. Anda bisa mulai di paket Gratis dengan pengaturan sesi dan alat latihan. Pro membuka alat lanjutan termasuk pemeriksaan AI, dengan uji coba 7 hari saat pembayaran."
         }
       }
     },
@@ -497,7 +497,9 @@
       "howItWorks": "How it works",
       "pricing": "Harga",
       "waitlist": "Waiting list",
-      "resources": "Sumber Daya",
+      "resources": "Sumber daya",
+      "articles": "Artikel",
+      "explanation": "Mengapa Mutqin ada",
       "company": "Perusahaan",
       "contact": "Kontak",
       "faq": "FAQ",
@@ -518,7 +520,8 @@
         "facebook": "Facebook",
         "x": "X",
         "linkedin": "LinkedIn",
-        "tiktok": "TikTok"
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
       }
     },
     "name": "Nama",
@@ -6158,7 +6161,9 @@
     "copyLink": "Salin tautan",
     "copied": "Disalin",
     "related": "Artikel terkait",
-    "back": "Semua artikel"
+    "back": "Semua artikel",
+    "toc": "On this page",
+    "progress": "Reading progress"
   },
   "ui": {
     "home": "Beranda",

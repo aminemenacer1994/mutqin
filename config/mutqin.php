@@ -82,6 +82,55 @@ return [
         explode(',', (string) env('MUTQIN_ADMIN_NAVIGATION_EMAILS', 'menacer72@gmail.com'))
     ))),
 
+    /*
+     | When true, navigation owners see both Admin and Progress in the main nav.
+     | Default is local-only; production keeps Admin instead of Progress for owners.
+     */
+    'admin_navigation_dual_progress' => filter_var(
+        env(
+            'MUTQIN_ADMIN_NAVIGATION_DUAL_PROGRESS',
+            env('APP_ENV', 'production') === 'local' ? 'true' : 'false'
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    /*
+     | File-based /articles index and detail pages. Default is local-only so
+     | drafts do not ship in production nav, sitemap, or public URLs.
+     */
+    'show_articles' => filter_var(
+        env(
+            'MUTQIN_SHOW_ARTICLES',
+            env('APP_ENV', 'production') === 'local' ? 'true' : 'false'
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    'show_donate' => filter_var(
+        env('MUTQIN_SHOW_DONATE', 'false'),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    'show_how_it_works' => filter_var(
+        env(
+            'MUTQIN_SHOW_HOW_IT_WORKS',
+            env('APP_ENV', 'production') === 'local' ? 'true' : 'false'
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    /*
+     | Optional YouTube watch URLs for /features walkthrough cards (full watch?v= links).
+     */
+    'how_it_works_videos' => [
+        'ai-recite' => env('MUTQIN_HOW_IT_WORKS_VIDEO_AI_RECITE'),
+        'mushaf' => env('MUTQIN_HOW_IT_WORKS_VIDEO_MUSHAF'),
+        'mutashabihat' => env('MUTQIN_HOW_IT_WORKS_VIDEO_MUTASHABIHAT'),
+        'find-an-ayah' => env('MUTQIN_HOW_IT_WORKS_VIDEO_FIND_AN_AYAH'),
+        'quran-revision' => env('MUTQIN_HOW_IT_WORKS_VIDEO_REVISION'),
+        'hifz-plan' => env('MUTQIN_HOW_IT_WORKS_VIDEO_HIFZ_PLAN'),
+    ],
+
     'learning_history' => [
         // Explainable historical results.
         'algorithm_version' => env('MUTQIN_ALGORITHM_VERSION', 'mutqin-recitation-v1'),

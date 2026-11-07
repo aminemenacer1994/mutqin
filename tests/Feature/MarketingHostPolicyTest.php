@@ -60,9 +60,14 @@ class MarketingHostPolicyTest extends TestCase
         $this->getOnMarketingHost('/pricing')
             ->assertOk();
 
+        config(['mutqin.show_articles' => true]);
         $this->getOnMarketingHost('/articles')
             ->assertOk()
             ->assertSee('<articles-page', false);
+
+        config(['mutqin.show_articles' => false]);
+        $this->getOnMarketingHost('/articles')
+            ->assertNotFound();
 
         $this->getOnMarketingHost('/waiting-list')
             ->assertRedirect('/');

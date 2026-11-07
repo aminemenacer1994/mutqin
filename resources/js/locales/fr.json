@@ -277,8 +277,8 @@
     "access": {
       "available": {
         "label": "Disponible maintenant",
-        "detail": "Les nouveaux utilisateurs éligibles reçoivent 30 jours d’accès gratuit.",
-        "mobileDetail": "30 jours gratuits pour les nouveaux utilisateurs éligibles"
+        "detail": "Créez un compte gratuit pour commencer la mémorisation et la révision.",
+        "mobileDetail": "Comptes gratuits disponibles"
       },
       "early": {
         "label": "Accès anticipé",
@@ -454,8 +454,8 @@
           "answer": "Pour toute personne qui mémorise ou révise et veut de courtes sessions et une place sauvegardée."
         },
         "freeAccess": {
-          "question": "Y a-t-il 30 jours d’accès gratuit ?",
-          "answer": "Les nouveaux utilisateurs éligibles reçoivent 30 jours d’accès gratuit — le premier mois en cadeau, pour commencer le hifz avec aisance. Ensuite vous pouvez rester sur Gratuit, ou choisir Pro. Le paiement Pro inclut toujours un essai de 7 jours."
+          "question": "Puis-je commencer gratuitement ?",
+          "answer": "Oui. Commencez sur l’offre Gratuit avec la préparation de session et les outils de pratique. Pro débloque les outils avancés, dont les contrôles IA, avec un essai de 7 jours au paiement."
         }
       }
     },
@@ -498,6 +498,8 @@
       "pricing": "Tarifs",
       "waitlist": "Liste d’attente",
       "resources": "Ressources",
+      "articles": "Articles",
+      "explanation": "Pourquoi Mutqin existe",
       "company": "Entreprise",
       "contact": "« Contact»",
       "faq": "FAQ",
@@ -518,7 +520,8 @@
         "facebook": "Facebook",
         "x": "X",
         "linkedin": "LinkedIn",
-        "tiktok": "TikTok"
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
       }
     },
     "name": "Nom",
@@ -6158,7 +6161,9 @@
     "copyLink": "Copier le lien",
     "copied": "Copié",
     "related": "Articles liés",
-    "back": "Tous les articles"
+    "back": "Tous les articles",
+    "toc": "On this page",
+    "progress": "Reading progress"
   },
   "ui": {
     "home": "Accueil",

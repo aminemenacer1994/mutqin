@@ -12,6 +12,8 @@
         "prebuild": "node scripts/verify-js-imports.mjs",
         "test:attribution": "node --experimental-vm-modules tests/js/waiting-list-attribution.test.mjs && node --experimental-vm-modules tests/js/meta-pixel-funnel.test.mjs && node --experimental-vm-modules tests/js/seo-tools.test.mjs",
         "test:mutqin": "node scripts/run-js-unit-tests.mjs",
+        "tutorial:revise-surah": "node scripts/tutorials/record-how-to-revise-a-surah.mjs --record",
+        "tutorial:revise-surah:rehearse": "node scripts/tutorials/record-how-to-revise-a-surah.mjs --rehearse",
         "test:mutqin:browser": "node tests/js/mutqin-browser-smoke.mjs",
         "test:mutqin:mobile": "node tests/js/mutqin-mobile-responsive.test.mjs",
         "test:mutqin:overflow": "node tests/js/mobile-horizontal-overflow.test.mjs",

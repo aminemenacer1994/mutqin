@@ -14,6 +14,13 @@ class SeoPagesTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->enableHowItWorks();
+        $this->enableDonation();
+    }
+
     public function createApplication(): Application
     {
         putenv('MUTQIN_DOMAIN_ROUTING_FORCE=false');
@@ -83,7 +90,7 @@ class SeoPagesTest extends TestCase
             ->assertSee('Quran revision', false)
             ->assertSee('memorisation progress', false)
             ->assertSee('Your first 10 minutes with Mutqin', false)
-            ->assertSee('30 days of free access', false)
+            ->assertDontSee('Eligible new users receive 30 days of free access', false)
             ->assertDontSee('href="/waiting-list"', false)
             ->assertSee('href="/register"', false)
             ->assertSee('href="/memorisation"', false)
@@ -208,6 +215,57 @@ class SeoPagesTest extends TestCase
             ->assertNotFound()
             ->assertSee('noindex, follow', false)
             ->assertSee('Page not found', false);
+    }
+
+    public function test_how_it_works_hub_matches_articles_style_grid(): void
+    {
+        $html = $this->get('/features')
+            ->assertOk()
+            ->assertSee('How Mutqin Works | Quran Memorization Walkthroughs', false)
+            ->assertSee('See how Mutqin works', false)
+            ->assertSee('class="articles-page how-it-works-page"', false)
+            ->assertSee('class="articles-grid"', false)
+            ->assertSee('class="articles-title"', false)
+            ->assertSee('class="walkthrough-card"', false)
+            ->assertSee('Watch video', false)
+            ->assertSee('type="button"', false)
+            ->assertDontSee('target="_blank"', false)
+            ->assertDontSee('youtube.com/@Mutqin-w7h', false)
+            ->assertSee('Practice &amp; checking', false)
+            ->assertDontSee('article-card__arrow', false)
+            ->assertDontSee('Open guide', false)
+            ->assertDontSee('class="nav-link nav-link-about', false)
+            ->getContent();
+
+        $this->assertStringContainsString('images/landing/2026-11-hero-mushaf.jpg', $html);
+        $this->assertStringNotContainsString('Practice and checking', $html);
+    }
+
+    public function test_how_it_works_and_donate_stay_hidden_when_disabled(): void
+    {
+        config([
+            'mutqin.show_how_it_works' => false,
+            'mutqin.show_donate' => false,
+        ]);
+
+        $this->get('/features')->assertNotFound();
+        $this->get('/donate')->assertNotFound();
+
+        $this->get('/robots.txt')
+            ->assertOk()
+            ->assertSee('Disallow: /donate', false)
+            ->assertDontSee('Allow: /donate', false);
+
+        $xml = $this->get('/sitemap.xml')->assertOk()->getContent();
+        $featuresHubLoc = '<loc>'.SeoCatalog::absoluteUrl('/features', 'app').'</loc>';
+        $donateLoc = '<loc>'.SeoCatalog::absoluteUrl('/donate', 'app').'</loc>';
+        $this->assertStringNotContainsString($featuresHubLoc, $xml);
+        $this->assertStringNotContainsString($donateLoc, $xml);
+        $this->assertStringContainsString(SeoCatalog::absoluteUrl('/features/ai-recite', 'app'), $xml);
+
+        $html = $this->get('/')->assertOk()->getContent();
+        $this->assertStringNotContainsString('>How it works</strong>', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-donate', $html);
     }
 
     public function test_launch_feature_and_guide_pages_are_indexable_with_unique_copy(): void

@@ -71,6 +71,7 @@ class MutqinDomainRoutingTest extends TestCase
 
     public function test_public_host_serves_donate_and_checkout_routes(): void
     {
+        $this->enableDonation();
         $this->onPublicHost('/donate')->assertOk();
 
         $this->onPublicHost('/donate/success')
@@ -103,6 +104,7 @@ class MutqinDomainRoutingTest extends TestCase
 
     public function test_public_host_serves_robots_and_sitemap(): void
     {
+        $this->enableDonation();
         $this->onPublicHost('/robots.txt')
             ->assertOk()
             ->assertSee('Sitemap:', false);
@@ -134,7 +136,7 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertDontSee('Early access:', false)
             ->assertSee('id="primaryNavbar"', false)
             ->assertSee('class="nav-link nav-link-memorisation', false)
-            ->assertSee('class="nav-link nav-link-about', false)
+            ->assertDontSee('class="nav-link nav-link-about', false)
             ->assertSee('class="nav-link nav-link-home', false)
             ->assertDontSee('class="mutqin-early-access-nav"', false)
             ->assertDontSee('id="earlyAccessNavbar"', false)

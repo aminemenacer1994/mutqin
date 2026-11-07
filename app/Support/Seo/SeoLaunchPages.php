@@ -105,48 +105,73 @@ final class SeoLaunchPages
             id: 'features-hub',
             path: '/features',
             kind: 'hub',
-            kicker: 'Features',
-            title: 'Hifz Features in Mutqin | Quran Memorization Tools',
-            description: 'Explore Mutqin features for Hifz: AI Recite, Mutashābihāt, Mushaf practice, revision, progress, and Find an ayah — built for practice between lessons.',
-            h1: 'Mutqin features for Quran memorization',
-            lede: 'Each tool below is part of the same workspace. Open a page to see how it supports listening, reciting, and returning — without replacing a teacher.',
-            sections: [
-                [
-                    'h2' => 'Practice and checking',
-                    'paragraphs' => [
-                        'AI Recite can follow along when you recite from memory. A separate check, “Check what you kept”, uses short questions on the range you just practised.',
-                    ],
-                ],
-                [
-                    'h2' => 'Page, similar ayahs, and finding a place',
-                    'paragraphs' => [
-                        'Mushaf layout keeps a familiar page while you hide text or join ayahs. Mutashābihāt compare similar passages. Find an ayah lets you recite a few words to open the right place.',
-                    ],
-                ],
-                [
-                    'h2' => 'Plan, revision, and progress',
-                    'paragraphs' => [
-                        'A Hifz plan and next-session suggestions sit beside revision of weak ayahs. Progress and strength stay on your dashboard after you practise — those screens are private to your account.',
-                    ],
-                ],
-            ],
+            kicker: 'How it works',
+            title: 'How Mutqin Works | Quran Memorization Walkthroughs',
+            description: 'See how Mutqin supports Hifz: AI Recite, Mutashābihāt, Mushaf practice, revision, progress, and Find an ayah. Short walkthroughs of the same workspace.',
+            h1: 'See how Mutqin works',
+            lede: 'Each tool below is part of the same workspace. Watch a short walkthrough, then open it for practice between lessons, without replacing a teacher.',
+            sections: [],
             links: [
-                ['href' => '/features/ai-recite', 'label' => 'AI Recite'],
-                ['href' => '/features/mutashabihat', 'label' => 'Mutashābihāt'],
-                ['href' => '/features/mushaf', 'label' => 'Mushaf and hiding text'],
-                ['href' => '/features/find-an-ayah', 'label' => 'Find an ayah'],
-                ['href' => '/features/hifz-plan', 'label' => 'Hifz plan'],
-                ['href' => '/features/quran-revision', 'label' => 'Quran revision'],
-                ['href' => '/features/hifz-progress', 'label' => 'Hifz progress'],
-                ['href' => '/guides', 'label' => 'Hifz guides'],
-                ['href' => '/tools', 'label' => 'Free Hifz tools'],
+                ['href' => '/memorisation', 'label' => 'Open memorisation'],
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
             sitemapPriority: '0.8',
+            ctaPrimary: ['href' => '/memorisation', 'label' => 'Open memorisation'],
+            ctaSecondary: ['href' => '/register', 'label' => 'Create a free account'],
+            showcase: self::hydrateShowcaseVideos([
+                [
+                    'href' => '/features/ai-recite',
+                    'label' => 'AI Recite',
+                    'category' => 'Practice & checking',
+                    'summary' => 'Recite from memory and see which words and ayahs need another return.',
+                    'image' => '/images/landing/2026-11-recite-active.jpg',
+                    'image_alt' => 'Recitation check in Mutqin',
+                ],
+                [
+                    'href' => '/features/mushaf',
+                    'label' => 'Mushaf',
+                    'category' => 'Mushaf',
+                    'summary' => 'Practise on a familiar page, then gradually hide the text as recall improves.',
+                    'image' => '/images/landing/2026-11-hero-mushaf.jpg',
+                    'image_alt' => 'Mushaf memorisation in Mutqin',
+                ],
+                [
+                    'href' => '/features/mutashabihat',
+                    'label' => 'Mutashābihāt',
+                    'category' => 'Similar ayahs',
+                    'summary' => 'Compare similar ayahs and practise the wording that distinguishes them.',
+                    'image' => '/images/landing/2026-11-hero-mushaf.jpg',
+                    'image_alt' => 'Similar ayah practice',
+                ],
+                [
+                    'href' => '/features/find-an-ayah',
+                    'label' => 'Find an ayah',
+                    'category' => 'Find a place',
+                    'summary' => 'Recite a few words to open the right place in your session.',
+                    'image' => '/images/landing/2026-11-recite-active.jpg',
+                    'image_alt' => 'Find an ayah in Mutqin',
+                ],
+                [
+                    'href' => '/features/quran-revision',
+                    'label' => 'Revision',
+                    'category' => 'Muraja\'ah',
+                    'summary' => 'Return to weak ayahs in the same workspace you used to memorise them.',
+                    'image' => '/images/landing/2026-11-hero-dashboard.jpg',
+                    'image_alt' => 'Revision and progress in Mutqin',
+                ],
+                [
+                    'href' => '/features/hifz-plan',
+                    'label' => 'Hifz plan',
+                    'category' => 'Planning',
+                    'summary' => 'Keep a range you can finish, then take the next suggested return.',
+                    'image' => '/images/landing/2026-11-hero-dashboard.jpg',
+                    'image_alt' => 'Hifz plan in Mutqin',
+                ],
+            ]),
         );
     }
 
@@ -205,7 +230,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'AI Recite', 'path' => '/features/ai-recite', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website', 'software'],
@@ -262,7 +287,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Mutashābihāt', 'path' => '/features/mutashabihat', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -318,7 +343,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Mushaf', 'path' => '/features/mushaf', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -376,7 +401,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Hifz plan', 'path' => '/features/hifz-plan', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -434,7 +459,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Revision', 'path' => '/features/quran-revision', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -492,7 +517,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Progress', 'path' => '/features/hifz-progress', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -543,7 +568,7 @@ final class SeoLaunchPages
             ],
             breadcrumbs: [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
-                ['name' => 'Features', 'path' => '/features', 'host' => 'app'],
+                ['name' => 'How it works', 'path' => '/features', 'host' => 'app'],
                 ['name' => 'Find an ayah', 'path' => '/features/find-an-ayah', 'host' => 'app'],
             ],
             jsonLd: ['organization', 'website'],
@@ -1482,8 +1507,53 @@ final class SeoLaunchPages
      * @param  list<array{href: string, label: string}>  $relatedGuides
      * @param  list<array{href: string, label: string}>  $relatedTools
      * @param  list<array{href: string, label: string}>  $relatedFeatures
+     * @param  list<array{href: string, label: string, summary: string, youtube_id?: ?string, youtube_watch?: ?string}>  $showcase
      * @return array<string, mixed>
      */
+    private static function hydrateShowcaseVideos(array $showcase): array
+    {
+        return array_map(static function (array $item): array {
+            $slug = trim(str_replace('/features/', '', (string) ($item['href'] ?? '')), '/');
+            $item['youtube_watch'] = self::howItWorksWatchUrl($slug);
+            $item['youtube_id'] = self::extractYoutubeVideoId($item['youtube_id'] ?? null)
+                ?? self::extractYoutubeVideoId($item['youtube_watch'] ?? null);
+
+            return $item;
+        }, $showcase);
+    }
+
+    private static function extractYoutubeVideoId(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^[A-Za-z0-9_-]{11}$/', $value) === 1) {
+            return $value;
+        }
+
+        if (preg_match('~(?:youtube\.com/watch\?v=|youtu\.be/|youtube(?:-nocookie)?\.com/embed/)([A-Za-z0-9_-]{11})~', $value, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    private static function howItWorksWatchUrl(string $featureSlug): string
+    {
+        $configured = config("mutqin.how_it_works_videos.{$featureSlug}");
+        if (is_string($configured) && trim($configured) !== '') {
+            return trim($configured);
+        }
+
+        return 'https://www.youtube.com/@Mutqin-w7h';
+    }
+
     private static function page(
         string $id,
         string $path,
@@ -1510,6 +1580,8 @@ final class SeoLaunchPages
         array $relatedGuides = [],
         array $relatedTools = [],
         array $relatedFeatures = [],
+        array $showcase = [],
+        ?string $youtubeId = null,
     ): array {
         return [
             'id' => $id,
@@ -1537,6 +1609,9 @@ final class SeoLaunchPages
             'updated_at' => $updatedAt,
             'cta_primary' => $ctaPrimary ?? ['href' => '/', 'label' => 'Mutqin'],
             'cta_secondary' => $ctaSecondary ?? ['href' => '/memorisation', 'label' => 'Open memorisation'],
+            'showcase' => $showcase,
+            'youtube_id' => $youtubeId,
+            'youtube_channel' => 'https://www.youtube.com/@Mutqin-w7h',
         ];
     }
 }

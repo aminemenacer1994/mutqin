@@ -40,7 +40,7 @@ class MemorisationRoutingTest extends TestCase
             ->assertSee('homepage')
             ->assertSee('id="primaryNavbar"', false)
             ->assertSee('class="nav-link nav-link-memorisation', false)
-            ->assertSee('class="nav-link nav-link-dashboard', false)
+            ->assertDontSee('class="nav-link nav-link-dashboard', false)
             ->assertDontSee('class="mutqin-early-access-nav"', false)
             ->assertDontSee('id="earlyAccessNavbar"', false);
     }

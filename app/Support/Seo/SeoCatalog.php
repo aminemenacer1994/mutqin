@@ -3,6 +3,9 @@
 namespace App\Support\Seo;
 
 use App\Support\Articles\PlaceholderArticles;
+use App\Support\ArticlesVisibility;
+use App\Support\DonationVisibility;
+use App\Support\HowItWorksVisibility;
 use App\Support\MutqinDomains;
 use Illuminate\Http\Request;
 
@@ -149,11 +152,10 @@ final class SeoCatalog
             'Allow: /pricing',
             'Allow: /privacy',
             'Allow: /our-mission',
-            'Allow: /donate',
-            'Allow: /features',
+            DonationVisibility::enabled() ? 'Allow: /donate' : 'Disallow: /donate',
             'Allow: /guides',
             'Allow: /tools',
-            'Allow: /articles',
+            ArticlesVisibility::enabled() ? 'Allow: /articles' : 'Disallow: /articles',
             'Disallow: /login',
             'Disallow: /register',
             'Disallow: /password',
@@ -274,12 +276,37 @@ final class SeoCatalog
      */
     private static function indexableDefinitions(): array
     {
-        return array_merge(
+        $definitions = array_merge(
             self::coreIndexableDefinitions(),
             SeoLaunchPages::catalogDefinitions(),
             SeoArticles::catalogDefinitions(),
-            PlaceholderArticles::catalogDefinitions(),
+            ArticlesVisibility::enabled() ? PlaceholderArticles::catalogDefinitions() : [],
         );
+
+        $definitions = array_values(array_filter(
+            $definitions,
+            static function (array $definition): bool {
+                $path = (string) ($definition['canonical_path'] ?? '');
+
+                if (! ArticlesVisibility::enabled()) {
+                    if ($path === '/articles' || str_starts_with($path, '/articles/')) {
+                        return false;
+                    }
+                }
+
+                if (! HowItWorksVisibility::enabled() && $path === '/features') {
+                    return false;
+                }
+
+                if (! DonationVisibility::enabled() && $path === '/donate') {
+                    return false;
+                }
+
+                return true;
+            }
+        ));
+
+        return $definitions;
     }
 
     /**

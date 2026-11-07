@@ -1,5 +1,36 @@
 <template>
-  <article class="info-page info-page--seo">
+  <div v-if="isFeaturesHub" class="articles-page how-it-works-page">
+    <section class="articles-hero" aria-labelledby="how-it-works-heading">
+      <div class="wrap">
+        <header class="section-head articles-hero__head">
+          <p class="section-kicker">{{ page.kicker }}</p>
+          <h1 id="how-it-works-heading" class="articles-title">{{ page.h1 }}</h1>
+          <p class="section-sub">{{ page.lede }}</p>
+        </header>
+      </div>
+    </section>
+
+    <section class="articles-grid-section" :aria-label="t('howItWorksPage.listLabel')">
+      <div class="wrap">
+        <div class="articles-grid">
+          <walkthrough-card
+            v-for="(item, index) in showcase"
+            :key="item.href"
+            :title="item.label"
+            :summary="item.summary"
+            :category="item.category || page.kicker"
+            :youtube-id="item.youtube_id || ''"
+            :youtube-watch="item.youtube_watch || ''"
+            :image="item.image || ''"
+            :image-alt="item.image_alt || item.label"
+            :eager="index < 3"
+          />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <article v-else class="info-page info-page--seo">
     <div class="info-shell">
       <nav class="info-crumbs" aria-label="Breadcrumb">
         <ol>
@@ -34,6 +65,17 @@
         </div>
       </header>
 
+      <figure v-if="page.youtube_id" class="how-it-works-media how-it-works-media--page">
+        <iframe
+          :src="youtubeEmbedSrc(page.youtube_id)"
+          :title="page.h1"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      </figure>
+
       <seo-tool-planner v-if="page.tool === 'planner'" />
       <seo-tool-progress v-else-if="page.tool === 'progress'" />
       <seo-tool-quiz v-else-if="page.tool === 'quiz'" />
@@ -67,7 +109,7 @@
         <p v-if="!guideIndex.entries.length" class="seo-guide-empty">{{ t('about.seo.noGuidesInCategory') }}</p>
       </div>
 
-      <div class="info-prose">
+      <div v-if="page.sections && page.sections.length" class="info-prose">
         <section v-for="section in page.sections" :key="section.h2" class="info-prose__block">
           <h2>{{ section.h2 }}</h2>
           <p
@@ -86,7 +128,7 @@
         </section>
       </div>
 
-      <aside v-if="page.related_feature && page.related_feature.href" class="seo-feature-cta">
+      <aside v-if="!isFeaturesHub && page.related_feature && page.related_feature.href" class="seo-feature-cta">
         <h2>Continue in Mutqin</h2>
         <p>{{ continueCopy }}</p>
         <a
@@ -96,7 +138,7 @@
         >{{ page.related_feature.label }}</a>
       </aside>
 
-      <section v-if="relatedGuides.length" class="seo-related" aria-label="Related guides">
+      <section v-if="!isFeaturesHub && relatedGuides.length" class="seo-related" aria-label="Related guides">
         <h2>Related guides</h2>
         <ul class="seo-related__list">
           <li v-for="related in relatedGuides" :key="'g-' + related.href">
@@ -107,7 +149,7 @@
         </ul>
       </section>
 
-      <section v-if="relatedTools.length" class="seo-related" aria-label="Related tools">
+      <section v-if="!isFeaturesHub && relatedTools.length" class="seo-related" aria-label="Related tools">
         <h2>Related tools</h2>
         <ul class="seo-related__list">
           <li v-for="related in relatedTools" :key="'t-' + related.href">
@@ -118,7 +160,7 @@
         </ul>
       </section>
 
-      <section v-if="relatedFeatures.length" class="seo-related" aria-label="Related features">
+      <section v-if="!isFeaturesHub && relatedFeatures.length" class="seo-related" aria-label="Related features">
         <h2>Related features</h2>
         <ul class="seo-related__list">
           <li v-for="related in relatedFeatures" :key="'f-' + related.href">
@@ -137,7 +179,7 @@
         </div>
       </section>
 
-      <section v-if="relatedArticles.length" class="seo-related" aria-label="More related guides">
+      <section v-if="!isFeaturesHub && relatedArticles.length" class="seo-related" aria-label="More related guides">
         <h2>{{ relatedGuides.length ? 'More related guides' : 'Related guides' }}</h2>
         <ul class="seo-related__list">
           <li v-for="related in relatedArticles" :key="related.href">
@@ -150,7 +192,7 @@
         </ul>
       </section>
 
-      <nav class="about-more" aria-label="Related">
+      <nav v-if="!isFeaturesHub" class="about-more" aria-label="Related">
         <a
           v-for="link in page.links"
           :key="link.href"
@@ -161,7 +203,7 @@
         </a>
       </nav>
 
-      <div class="info-actions">
+      <div v-if="!isFeaturesHub" class="info-actions">
         <a
           class="info-btn info-btn--primary"
           :href="page.cta_primary.href"
@@ -194,6 +236,9 @@ export default {
     return { t }
   },
   components: {
+    WalkthroughCard: defineAsyncComponent(() => import(
+      /* webpackChunkName: "walkthrough-card" */ '../components/seo/WalkthroughCard.vue'
+    )),
     SeoToolFindAyah: defineAsyncComponent(() => import(
       /* webpackChunkName: "seo-tool-find-ayah" */ '../components/seoTools/SeoToolFindAyah.vue'
     )),
@@ -228,6 +273,9 @@ export default {
         related_feature: null,
         faqs: [],
         guide_index: null,
+        showcase: [],
+        youtube_id: null,
+        youtube_channel: 'https://www.youtube.com/@Mutqin-w7h',
         cta_primary: { href: '/', label: 'Mutqin' },
         cta_secondary: { href: '/memorisation', label: 'Open memorisation' },
       },
@@ -236,6 +284,15 @@ export default {
   computed: {
     isArticle() {
       return this.page.kind === 'article';
+    },
+    isFeaturesHub() {
+      return this.page.id === 'features-hub' || this.page.path === '/features';
+    },
+    showcase() {
+      return Array.isArray(this.page.showcase) ? this.page.showcase : [];
+    },
+    youtubeChannel() {
+      return this.page.youtube_channel || 'https://www.youtube.com/@Mutqin-w7h';
     },
     isTool() {
       return Boolean(this.page.tool) || this.page.kind === 'tool';
@@ -289,6 +346,10 @@ export default {
     proseHtml(text) {
       return seoProseHtml(text);
     },
+    youtubeEmbedSrc(videoId) {
+      const id = encodeURIComponent(String(videoId || '').trim());
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : '';
+    },
     onCtaClick(dest) {
       if (this.page.tool) rememberSeoTool(this.page.tool);
       let href = '';
@@ -317,3 +378,4 @@ export default {
 
 <style src="../styles/info-pages.css"></style>
 <style src="../styles/seo-pages.css"></style>
+<style src="../styles/articles-page.css"></style>

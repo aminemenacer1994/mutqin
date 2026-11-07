@@ -1564,7 +1564,7 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 
 .footer__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 0.8fr));
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 0.8fr));
   gap: 1.25rem;
   margin-bottom: 1.15rem;
 }

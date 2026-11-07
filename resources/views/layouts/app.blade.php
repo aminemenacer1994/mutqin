@@ -4373,12 +4373,18 @@
         .app-navbar .nav-link-donate:hover,
         .app-navbar .nav-link-donate:focus,
         .app-navbar .nav-link-donate:focus-visible,
-        .app-navbar .nav-link-donate.active {
+        .app-navbar .nav-link-donate.active,
+        .app-navbar .nav-link-guides,
+        .app-navbar .nav-link-guides:hover,
+        .app-navbar .nav-link-guides:focus,
+        .app-navbar .nav-link-guides:focus-visible,
+        .app-navbar .nav-link-guides.active,
+        .app-navbar .nav-link-features,
+        .app-navbar .nav-link-features:hover,
+        .app-navbar .nav-link-features:focus,
+        .app-navbar .nav-link-features:focus-visible,
+        .app-navbar .nav-link-features.active {
             box-shadow: none !important;
-        }
-
-        .app-navbar .nav-link-guides {
-            display: none !important;
         }
 
         .global-theme-switcher {
@@ -8158,6 +8164,16 @@
                 max-width: 100%;
                 justify-content: space-evenly;
                 gap: clamp(0.25rem, 0.8vw, 0.75rem);
+                flex-wrap: wrap;
+                row-gap: 0.2rem;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .nav-links-desktop .nav-link {
+                padding-inline: clamp(0.2rem, 0.55vw, 0.55rem);
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .nav-links-desktop .nav-link-copy strong {
+                font-size: clamp(0.78rem, 0.72rem + 0.18vw, 0.94rem);
             }
 
             body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .navbar-quick-actions {
@@ -8263,28 +8279,40 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">{{ __('ui.nav_memorisation_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            <a class="nav-link nav-link-about {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about') }}" @if (request()->routeIs('about', 'about-us')) aria-current="page" @endif>
-                                <i class="bi bi-info-circle nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="about">{{ __('ui.about') }}</strong><small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
+                            @if (\App\Support\DonationVisibility::enabled())
                             <a class="nav-link nav-link-donate {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}" @if (request()->routeIs('donate')) aria-current="page" @endif>
                                 <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong data-i18n="donate">{{ __('ui.donate') }}</strong><small class="d-lg-none">{{ __('ui.nav_donate_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            @endif
+                            @if (\App\Support\ArticlesVisibility::enabled())
+                            <a class="nav-link nav-link-guides {{ request()->routeIs('articles', 'articles.show') ? 'active' : '' }}" href="{{ route('articles') }}" @if (request()->routeIs('articles', 'articles.show')) aria-current="page" @endif>
+                                <i class="bi bi-journal-text nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="guides">{{ __('ui.guides') }}</strong><small class="d-lg-none">{{ __('ui.nav_guides_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endif
+                            @if (\App\Support\HowItWorksVisibility::enabled())
+                            <a class="nav-link nav-link-features {{ request()->routeIs('seo.launch.features', 'seo.launch.features.*') ? 'active' : '' }}" href="{{ route('seo.launch.features') }}" @if (request()->routeIs('seo.launch.features', 'seo.launch.features.*')) aria-current="page" @endif>
+                                <i class="bi bi-play-circle nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="features">{{ __('ui.features') }}</strong><small class="d-lg-none">{{ __('ui.nav_features_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endif
                             @auth
                             @unless ($authAwaitingVerification)
                             @if (Auth::user()->showsAdminNavigation())
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
+                            <a class="nav-link nav-link-dashboard nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
                                 <i class="bi bi-shield-check nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong>{{ __('ui.admin_dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            @else
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs(Auth::user()->isTeacher() ? 'teacher.dashboard' : 'dashboard') ? 'active' : '' }}" href="{{ Auth::user()->isTeacher() ? route('teacher.dashboard') : route('dashboard') }}" data-tour="nav-dashboard">
+                            @endif
+                            @if (Auth::user()->isTeacher())
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong @unless (Auth::user()->isTeacher()) data-i18n="dashboard" @endunless>{{ Auth::user()->isTeacher() ? __('admin.dashboard') : __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
+                                <span class="nav-link-copy"><strong>{{ __('admin.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
@@ -8424,15 +8452,16 @@
                                     <span>{{ __('ui.admin_dashboard') }}</span>
                                 </a>
                             </li>
-                            @else
+                            @endif
+                            @if (Auth::user()->isTeacher())
                             <li>
                                 <a
                                     class="dropdown-item"
-                                    href="{{ Auth::user()->isTeacher() ? route('teacher.dashboard') : route('dashboard') }}"
+                                    href="{{ route('teacher.dashboard') }}"
                                     role="menuitem"
                                 >
                                     <i class="bi bi-speedometer2" aria-hidden="true"></i>
-                                    <span @unless (Auth::user()->isTeacher()) data-i18n="dashboard" @endunless>{{ Auth::user()->isTeacher() ? __('admin.dashboard') : __('ui.dashboard') }}</span>
+                                    <span>{{ __('admin.dashboard') }}</span>
                                 </a>
                             </li>
                             @endif
@@ -8560,6 +8589,9 @@
         window.mutqinLoginEventId = @json((string) session('mutqin_login_event_id', ''));
         window.mutqinLoginMethod = @json((string) session('mutqin_login_method', ''));
         window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
+        window.mutqinShowArticles = @json(\App\Support\ArticlesVisibility::enabled());
+        window.mutqinShowDonate = @json(\App\Support\DonationVisibility::enabled());
+        window.mutqinShowHowItWorks = @json(\App\Support\HowItWorksVisibility::enabled());
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());
         window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);

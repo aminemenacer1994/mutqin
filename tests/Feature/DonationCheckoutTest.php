@@ -11,6 +11,12 @@ class DonationCheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->enableDonation();
+    }
+
     public function test_donate_page_is_public(): void
     {
         $this->get(route('donate'))

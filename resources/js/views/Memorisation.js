@@ -2614,6 +2614,14 @@ export default {
       if (goal === 'test') return this.t('memorisation.sessionGoal.helpTest')
       return this.t('memorisation.sessionGoal.helpMemorise')
     },
+    ayahWindowOptions() {
+      return [
+        { id: 'first_3', label: this.t('memorisation.sessionGoal.first3') },
+        { id: 'first_5', label: this.t('memorisation.sessionGoal.first5') },
+        { id: 'choose', label: this.t('memorisation.sessionGoal.chooseAyahs') },
+        { id: 'full', label: this.t('sessionSetup.rangePresetFullSurah') },
+      ]
+    },
     inferredAyahWindow() {
       const max = this.resolveCurrentSurahAyahCount()
       const start = Math.max(1, Number(this.rangeStart || 1))
@@ -2624,6 +2632,10 @@ export default {
     },
     activeAyahWindow() {
       return this.ayahWindowPreset || this.inferredAyahWindow
+    },
+    ayahWindowSelection() {
+      if (this.sessionRangePreset === 'full_surah') return 'full'
+      return this.activeAyahWindow
     },
     sessionAyahSummary() {
       const start = Math.max(1, Number(this.rangeStart || 1))
@@ -2737,6 +2749,16 @@ export default {
       ) {
         return true
       }
+      if (this.amdOpen && this.amdStage === AMD_STAGES.COMPLETE) {
+        return true
+      }
+      if (
+        this.workspaceReciteAnalysisOpen
+        && !this.workspaceReciteAnalysisLoading
+        && !this.workspaceReciteAnalysisError
+      ) {
+        return true
+      }
       if (this.workspaceReciteAnalysisOpen) {
         return reviewExitSources.has(this.amdEntrySource)
           || !!this.dashboardEntryReturnHref
@@ -2746,6 +2768,9 @@ export default {
         return true
       }
       return false
+    },
+    progressPageUrl() {
+      return '/progress'
     },
     showPracticeToolsTab() {
       return true
@@ -7357,33 +7382,12 @@ export default {
       return RTL_LOCALES.includes(this.activeLocale)
     },
     requiresFirstTimeOnboarding() {
-      if (!this.isLoggedIn) return false
-      if (this.onboardingManualLaunch) return false
-      // Skip / Done (or a previous auto-show) means they are now existing.
-      if (this.hasDismissedWorkspaceTour()) return false
-      // Demo testers get first-run chrome until they finish or skip the tour.
-      // Seeded practice data must not skip that first visit.
-      if (this.isDemoWorkspaceAccount()) return true
-      // Exploring / finishing onboarding must immediately unlock Start Session
-      // once completion is marked, even while auth.just_registered is still true.
-      if (this.hasCompletedOnboarding()) return false
-      // Regular returning logins never re-enter first-time onboarding.
-      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
-      // Live / resumable practice must never trap the header on Start Onboarding.
-      if (this.hasPostOnboardingPracticeEvidence()) return false
-      // New accounts stay on first-run onboarding until they finish it themselves.
-      if (this.isRegistrationSession()) {
-        if (this.auth?.just_registered || this._signupIsolationFreshlyActivated) return true
-        return !!this.readWorkspaceStateValue('onboardingPending', false)
-      }
+      // Onboarding is hidden. A new registration must not enter it.
       return false
     },
     shouldAutoOpenOnboarding() {
-      if (!this.requiresFirstTimeOnboarding) return false
-      if (this.hasDismissedFirstTimeOnboarding()) return false
-      // Incomplete first-run (pending) must reopen after refresh at the saved step.
-      if (!!this.readWorkspaceStateValue('onboardingPending', false)) return true
-      return !this.hasOnboardingAutoPresented()
+      // Onboarding stays closed. Registration must not seed or reopen it.
+      return false
     },
     isExistingUserLogin() {
       // Welcome Back is for returning learners after their first-time tour.
@@ -14694,6 +14698,17 @@ export default {
       if (adjust) void this.adjustRange?.({ immediate: true })
     },
 
+    selectAyahWindow(preset) {
+      if (preset === 'full') {
+        this.onSessionRangePresetChange('full_surah')
+        return
+      }
+      if (this.sessionRangePreset === 'full_surah') {
+        this.sessionRangePreset = 'custom'
+      }
+      this.applyAyahWindow(preset)
+    },
+
     toggleSessionMoreOptions() {
       this.sessionMoreOptionsOpen = !this.sessionMoreOptionsOpen
     },
@@ -18652,18 +18667,7 @@ export default {
       }
     },
     shouldAutoStartWorkspaceTour() {
-      if (!this.auth?.check) return false
-      if (this.showWelcomeBackModal || this.returningUserChoicePending) return false
-      if (this.hasDismissedWorkspaceTour()) return false
-      // Demo testers: first browser visit only. Seeded completion/practice
-      // flags must not consume that first-time spotlight.
-      if (this.isDemoWorkspaceAccount()) return true
-      if (this.hasCompletedOnboarding()) return false
-      // Regular existing-account login never auto-starts.
-      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
-      if (this.auth?.just_registered || this._signupIsolationFreshlyActivated) return true
-      // Refresh during the registration redirect session can resume the tour.
-      if (this.isRegistrationSession()) return true
+      // Keep the tour available from code, but never open it on registration.
       return false
     },
     initTesterStartGuide() {
@@ -37091,7 +37095,8 @@ export default {
       const href = this.dashboardEntryReturnHref || this.learnerDashboardUrl || '/dashboard'
       window.location.assign(href)
     },
-    exitToProgressPage() {
+    exitToProgressPage(event) {
+      if (event?.preventDefault) event.preventDefault()
       if (this.workspaceReciteAnalysisOpen) {
         this.workspaceReciteAnalysisOpen = false
         this.workspaceReciteAnalysisLoading = false
@@ -37101,11 +37106,20 @@ export default {
         this.postSessionDashboardAfterRecite = false
         this.postSessionCompletionAfterRecite = false
       }
+      try {
+        this.persistContinueSession?.()
+        this.markActiveSessionSnapshot?.()
+      } catch (error) {
+        console.error('Failed to snapshot session before progress:', error)
+      }
       if (this.amdOpen && this.isAmdEntryActive(this.amdEntrySource)) {
         this.closeAmdModal({ returnToCompletion: false })
-        return
       }
-      this.returnToDashboard()
+      const href = this.dashboardEntryReturnHref
+        || this.dashboardAiCheckReturnTo
+        || this.progressPageUrl
+        || '/progress'
+      window.location.assign(href)
     },
     handleHeaderSessionAction() {
       if (this.workspaceTourFreshStartPending) {
@@ -38603,9 +38617,10 @@ export default {
         const plan = planStackedQpcPageFetch(verses, index || {}, focusPage)
         if (!plan.priority.length) return verses
         const requestId = this.verseRequestId
+        const stackedConstrained = isConstrainedMushafClient()
         const wordsByKey = await loadStackedQpcWordsForVerses(verses, index || {}, {
           pages: plan.priority,
-          concurrency: 3,
+          concurrency: stackedConstrained ? 1 : 3,
         })
         const next = this.applyQpcWordsToVerseList(verses, wordsByKey)
         if (plan.rest.length) {
@@ -39216,15 +39231,18 @@ export default {
         }
         const sessionPages = this.qpcMadaniSessionPageNumbers
         const focus = Number(this.qpcMadaniCurrentPage) || sessionPages[0]
-        const wave = planSessionPageWave(sessionPages, focus, {
-          constrained: isConstrainedMushafClient(),
-        })
+        const constrained = isConstrainedMushafClient()
+        const wave = planSessionPageWave(sessionPages, focus, { constrained })
         const immediate = wave.immediate
-        if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
+        const needsTajweed = this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)
+        if (needsTajweed && !constrained) {
           await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
         }
         if (immediate.length) {
-          await this.loadSessionMushafLeaves(immediate)
+          await this.loadSessionMushafLeaves(immediate, { constrained })
+        }
+        if (needsTajweed && constrained) {
+          void this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
         }
         if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
         this.prefetchRemainingSessionMushaf(sessionPages, immediate, wave)
@@ -39234,9 +39252,10 @@ export default {
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
       }
     },
-    loadSessionMushafLeaves(pages) {
+    loadSessionMushafLeaves(pages, options = {}) {
+      const constrained = options.constrained === true || isConstrainedMushafClient()
       const indopak = isIndopakMushafLayout(this.mushafLayoutId)
-      return mapWithConcurrency(pages, 3, (page) => (
+      return mapWithConcurrency(pages, constrained ? 1 : 3, (page) => (
         indopak
           ? loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)
           : loadMadaniPageLeaf(page).catch(() => null)
@@ -39254,6 +39273,8 @@ export default {
       const token = (this._qpcMadaniBootstrapToken || 0) + 1
       this._qpcMadaniBootstrapToken = token
       const indopak = isIndopakMushafLayout(this.mushafLayoutId)
+      const constrained = isConstrainedMushafClient()
+      const prefetchDelayMs = constrained ? 750 : 200
       // Let the visible page's font win the network before the rest of the range.
       setTimeout(() => {
         if (token !== this._qpcMadaniBootstrapToken) return
@@ -39266,7 +39287,7 @@ export default {
         void mapWithConcurrency(rest, 2, (page) => (
           this.ensureQpcMadaniTajweedGlyphsForPage(page).catch(() => null)
         ), () => token === this._qpcMadaniBootstrapToken && !!this.tajweedEnabled)
-      }, 200)
+      }, prefetchDelayMs)
     },
     async reconcileQpcMadaniEmptySessionPage() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return

@@ -277,8 +277,8 @@
     "access": {
       "available": {
         "label": "Disponible ahora",
-        "detail": "Los usuarios nuevos elegibles reciben 30 días de acceso gratuito.",
-        "mobileDetail": "30 días gratis para usuarios nuevos elegibles"
+        "detail": "Crea una cuenta gratuita para empezar a memorizar y revisar.",
+        "mobileDetail": "Cuentas gratuitas disponibles"
       },
       "early": {
         "label": "Acceso anticipado",
@@ -454,8 +454,8 @@
           "answer": "Para quien memoriza o revisa y quiere sesiones cortas y un lugar guardado al que volver."
         },
         "freeAccess": {
-          "question": "¿Hay 30 días de acceso gratuito?",
-          "answer": "Los usuarios nuevos elegibles reciben 30 días de acceso gratuito: el primer mes es un regalo, para empezar el hifz con calma. Después puedes seguir en Gratis o elegir Pro. El pago de Pro sigue incluyendo una prueba de 7 días."
+          "question": "¿Puedo empezar gratis?",
+          "answer": "Sí. Puedes empezar con el plan Gratis, con configuración de sesión y herramientas de práctica. Pro desbloquea herramientas avanzadas, incluidos los controles con IA, con una prueba de 7 días al pagar."
         }
       }
     },
@@ -497,7 +497,9 @@
       "howItWorks": "Cómo funciona",
       "pricing": "Precios",
       "waitlist": "Lista de espera",
-      "resources": "Ressources",
+      "resources": "Recursos",
+      "articles": "Artículos",
+      "explanation": "Por qué existe Mutqin",
       "company": "Entreprise",
       "contact": "« Contact»",
       "faq": "FAQ",
@@ -518,7 +520,8 @@
         "facebook": "Facebook",
         "x": "X",
         "linkedin": "LinkedIn",
-        "tiktok": "TikTok"
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
       }
     },
     "name": "Nom",
@@ -6145,7 +6148,9 @@
     "copyLink": "Copiar enlace",
     "copied": "Copiado",
     "related": "Artículos relacionados",
-    "back": "Todos los artículos"
+    "back": "Todos los artículos",
+    "toc": "On this page",
+    "progress": "Reading progress"
   },
   "ui": {
     "home": "Inicio",

@@ -641,6 +641,18 @@
   font-size: 0.92rem;
 }
 
+.amd-complete__link {
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+}
+
+.amd-complete__link a {
+  color: var(--amd-accent, #0f766e);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
 .amd-complete__actions {
   display: flex;
   justify-content: center;
@@ -9219,7 +9231,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
   }
 
   html body .app .tools .tools-body {
-    padding: 20px 16px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     background: var(--controls-canvas) !important;
   }
 
@@ -9525,7 +9537,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
 @media (max-width: 767.98px) {
   html body .app .tools .tools-body,
   html body .app .tools .tools-body:has(.sheet--setup) {
-    padding: 20px 16px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     gap: 20px !important;
   }
 
@@ -9631,27 +9643,272 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
 
 html body .app .tools-body .sheet--setup .session-range-preset--windows {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 0.35rem !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.4rem !important;
+  min-height: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+  border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
 html body .app .tools-body .sheet--setup .session-range-preset--windows .session-range-preset__option {
   min-height: 44px !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 999px !important;
-  background: transparent !important;
-  color: var(--text) !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-inner-radius, 12px) !important;
+  background: var(--controls-field, transparent) !important;
+  color: var(--controls-text, var(--text)) !important;
   font-size: 0.82rem !important;
   font-weight: 650 !important;
-  white-space: nowrap !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  box-shadow: none !important;
 }
 
 html body .app .tools-body .sheet--setup .session-range-preset--windows .session-range-preset__option.is-selected {
-  border-color: var(--accent-strong, var(--accent)) !important;
-  background: var(--accent-strong, var(--accent)) !important;
-  color: #fff !important;
+  border-color: var(--controls-accent, var(--accent)) !important;
+  background: color-mix(in srgb, var(--controls-accent, var(--accent)) 14%, var(--controls-field, var(--surface, #fff))) !important;
+  color: var(--accent-strong, var(--accent)) !important;
+  box-shadow: inset 0 0 0 1px var(--controls-accent, var(--accent)) !important;
+}
+
+/* Memorise / revise / recitation setup: one card and one choice style. */
+html body .app .tools .tools-body .sheet.sheet--setup {
+  gap: 0.85rem !important;
+}
+
+html body .app .tools .sheet--setup .setup-plan {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.7rem !important;
+  margin: 0 !important;
+  padding: 0.85rem !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-radius, 16px) !important;
+  background: var(--controls-card, var(--zone-elevated, var(--surface))) !important;
+  box-shadow: none !important;
+}
+
+html body .app .tools .sheet--setup .setup-plan__label {
+  margin: 0 !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: var(--controls-text, var(--text)) !important;
+}
+
+html body .app .tools .sheet--setup .session-goal {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.4rem !important;
+  margin: 0 !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__option {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.18rem !important;
+  min-height: 4.5rem !important;
+  margin: 0 !important;
+  padding: 0.55rem 0.35rem !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-inner-radius, 12px) !important;
+  background: var(--controls-field, transparent) !important;
+  color: var(--controls-text, var(--text)) !important;
+  text-align: center !important;
+  box-shadow: none !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__option strong {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: inherit !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__option span {
+  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__option.is-selected {
+  border-color: var(--controls-accent, var(--accent)) !important;
+  background: color-mix(in srgb, var(--controls-accent, var(--accent)) 14%, var(--controls-field, var(--surface, #fff))) !important;
+  color: var(--accent-strong, var(--accent)) !important;
+  box-shadow: inset 0 0 0 1px var(--controls-accent, var(--accent)) !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__option.is-selected span {
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, var(--controls-text, var(--text))) !important;
+}
+
+html body .app .tools .sheet--setup .session-goal__help {
+  margin: 0 !important;
+  padding: 0.65rem 0 0 !important;
+  border-top: 1px solid var(--controls-border, var(--border)) !important;
+  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+}
+
+html body .app .tools .sheet--setup .session-essentials {
+  gap: 0.85rem !important;
+  margin: 0 !important;
+}
+
+html body .app .tools .sheet--setup .session-ayah-summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0.45rem 0.75rem !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-inner-radius, 12px) !important;
+  background: var(--controls-field, transparent) !important;
+  color: var(--controls-text, var(--text)) !important;
+  font-size: 0.88rem !important;
+  font-weight: 650 !important;
+  text-align: center !important;
+}
+
+html body .app .tools .sheet--setup .session-range-inputs .session-range-sep {
+  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+}
+
+html body .app .tools .sheet--setup .session-more-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 0.8rem 0.95rem !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-radius, 16px) !important;
+  background: var(--controls-card, var(--zone-elevated, var(--surface))) !important;
+  color: var(--controls-text, var(--text)) !important;
+  font-size: 0.92rem !important;
+  font-weight: 650 !important;
+}
+
+html body .app .tools .sheet--setup .session-more {
+  display: none !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  margin: 0 !important;
+}
+
+html body .app .tools .sheet--setup .session-more.is-open {
+  display: flex !important;
+}
+
+/* Practice tools: beginner and advanced are the sections, tools sit inside them. */
+html body .app .tools .tools-body .sheet.sheet--practice {
+  gap: 0.75rem !important;
+}
+
+html body .app .tools .practice-group {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0.3rem !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-radius, 16px) !important;
+  background: var(--controls-card, var(--zone-elevated, var(--surface))) !important;
+  box-shadow: none !important;
+}
+
+html body .app .tools .practice-group__summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 0.65rem 0.7rem !important;
+  list-style: none !important;
+  cursor: pointer !important;
+  color: var(--controls-text, var(--text)) !important;
+}
+
+html body .app .tools .practice-group__summary::-webkit-details-marker,
+html body .app .tools .practice-group__summary::marker {
+  display: none !important;
+  content: none !important;
+}
+
+html body .app .tools .practice-group__copy {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0.15rem !important;
+  min-width: 0 !important;
+}
+
+html body .app .tools .practice-group__copy strong {
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+  color: var(--controls-accent, var(--accent-strong, var(--accent))) !important;
+}
+
+html body .app .tools .practice-group__copy small {
+  font-size: 0.78rem !important;
+  font-weight: 450 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
+}
+
+html body .app .tools .practice-group__chev {
+  flex: 0 0 auto !important;
+  font-size: 0.95rem !important;
+  transition: transform 0.15s ease !important;
+}
+
+html body .app .tools .practice-group[open] .practice-group__chev {
+  transform: rotate(180deg) !important;
+}
+
+html body .app .tools .practice-group:not([open]) > :not(summary) {
+  display: none !important;
+}
+
+html body .app .tools .practice-group .practice-tool-stack {
+  gap: 0.45rem !important;
+  padding: 0 0.25rem 0.3rem !important;
+}
+
+html body .app .tools .practice-group .sheet-section--practice {
+  overflow: hidden !important;
+  border: 1px solid var(--controls-border, var(--border)) !important;
+  border-radius: var(--controls-inner-radius, 12px) !important;
+  background: var(--controls-field, var(--surface, #fff)) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .app .tools .practice-group .sheet-toggle--practice .st-title {
+    font-size: 0.92rem !important;
+  }
+
+  html body .app .tools .practice-group .sheet-toggle--practice .st-sub {
+    font-size: 0.75rem !important;
+  }
+
+  html body .app .tools .practice-group .sheet-content,
+  html body .app .tools .practice-group .sheet-section-compact .sheet-content {
+    padding: 0.75rem !important;
+  }
 }

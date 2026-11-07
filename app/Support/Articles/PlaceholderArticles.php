@@ -81,8 +81,8 @@ final class PlaceholderArticles
                 'indexable' => true,
                 'priority' => '0.7',
                 'changefreq' => 'monthly',
-                'title' => $article['title'].' | Mutqin',
-                'description' => $article['excerpt'],
+                'title' => $article['seoTitle'],
+                'description' => $article['seoDescription'],
                 'og_type' => 'article',
                 'og_image' => $article['og_image'],
                 'og_image_width' => 1200,
@@ -155,20 +155,38 @@ final class PlaceholderArticles
             }
         }
 
+        $title = (string) ($raw['title'] ?? '');
+        $excerpt = (string) ($raw['excerpt'] ?? '');
+        $seoTitle = trim((string) ($raw['seoTitle'] ?? ''));
+        $seoDescription = trim((string) ($raw['seoDescription'] ?? ''));
+        $intro = [];
+        foreach ($raw['intro'] ?? [] as $paragraph) {
+            if (is_string($paragraph) && $paragraph !== '') {
+                $intro[] = $paragraph;
+            }
+        }
+        $introQuote = is_array($raw['introQuote'] ?? null) ? $raw['introQuote'] : null;
+        $cta = is_array($raw['cta'] ?? null) ? $raw['cta'] : null;
+
         $article = [
             'id' => (string) ($raw['id'] ?? $slug),
             'slug' => $slug,
             'path' => $path,
-            'title' => (string) ($raw['title'] ?? ''),
-            'excerpt' => (string) ($raw['excerpt'] ?? ''),
-            'lede' => (string) ($raw['lede'] ?? $raw['excerpt'] ?? ''),
+            'title' => $title,
+            'excerpt' => $excerpt,
+            'seoTitle' => $seoTitle !== '' ? $seoTitle : ($title !== '' ? $title.' | Mutqin' : 'Mutqin'),
+            'seoDescription' => $seoDescription !== '' ? $seoDescription : $excerpt,
+            'lede' => (string) ($raw['lede'] ?? $excerpt),
+            'intro' => $intro,
+            'introQuote' => $introQuote,
+            'cta' => $cta,
             'category' => (string) ($raw['category'] ?? ''),
             'author' => (string) ($raw['author'] ?? 'Mutqin'),
             'publishedAt' => $publishedAt,
             'updatedAt' => $updatedAt,
             'image' => $image,
             'og_image' => self::ogImageUrl($image),
-            'imageAlt' => (string) ($raw['imageAlt'] ?? $raw['title'] ?? ''),
+            'imageAlt' => (string) ($raw['imageAlt'] ?? $title),
             'imageCredit' => (string) ($raw['imageCredit'] ?? ''),
             'imagePhotographerUrl' => (string) ($raw['imagePhotographerUrl'] ?? ''),
             'imagePage' => (string) ($raw['imagePage'] ?? ''),
@@ -178,7 +196,7 @@ final class PlaceholderArticles
             'breadcrumbs' => [
                 ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
                 ['name' => 'Articles', 'path' => '/articles', 'host' => 'marketing'],
-                ['name' => (string) ($raw['title'] ?? 'Article'), 'path' => $path, 'host' => 'marketing'],
+                ['name' => $title !== '' ? $title : 'Article', 'path' => $path, 'host' => 'marketing'],
             ],
         ];
         $article['readingMinutes'] = self::readingMinutes($article);
@@ -195,6 +213,15 @@ final class PlaceholderArticles
             (string) ($article['title'] ?? ''),
             (string) ($article['lede'] ?? $article['excerpt'] ?? ''),
         ];
+        foreach ($article['intro'] ?? [] as $paragraph) {
+            $parts[] = (string) $paragraph;
+        }
+        self::appendQuoteParts($parts, is_array($article['introQuote'] ?? null) ? $article['introQuote'] : null);
+        if (is_array($article['cta'] ?? null)) {
+            $parts[] = (string) ($article['cta']['heading'] ?? '');
+            $parts[] = (string) ($article['cta']['body'] ?? '');
+            $parts[] = (string) ($article['cta']['label'] ?? '');
+        }
         foreach ($article['sections'] ?? [] as $section) {
             if (! is_array($section)) {
                 continue;
@@ -202,6 +229,41 @@ final class PlaceholderArticles
             $parts[] = (string) ($section['h2'] ?? '');
             foreach ($section['paragraphs'] ?? [] as $paragraph) {
                 $parts[] = (string) $paragraph;
+            }
+            foreach ($section['paragraphsAfter'] ?? [] as $paragraph) {
+                $parts[] = (string) $paragraph;
+            }
+            foreach ($section['quotes'] ?? [] as $quote) {
+                self::appendQuoteParts($parts, is_array($quote) ? $quote : null);
+            }
+            foreach ($section['steps'] ?? [] as $step) {
+                if (! is_array($step)) {
+                    continue;
+                }
+                $parts[] = (string) ($step['title'] ?? '');
+                $parts[] = (string) ($step['body'] ?? '');
+            }
+            if (is_array($section['sequence'] ?? null)) {
+                $parts[] = (string) ($section['sequence']['title'] ?? '');
+                $parts[] = (string) ($section['sequence']['intro'] ?? '');
+                $parts[] = (string) ($section['sequence']['outro'] ?? '');
+                foreach ($section['sequence']['items'] ?? [] as $item) {
+                    $parts[] = (string) $item;
+                }
+            }
+            if (is_array($section['comparison'] ?? null)) {
+                $parts[] = (string) ($section['comparison']['intro'] ?? '');
+                $parts[] = (string) ($section['comparison']['left']['title'] ?? '');
+                $parts[] = (string) ($section['comparison']['left']['body'] ?? '');
+                $parts[] = (string) ($section['comparison']['right']['title'] ?? '');
+                $parts[] = (string) ($section['comparison']['right']['body'] ?? '');
+            }
+            foreach ($section['routine'] ?? [] as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                $parts[] = (string) ($item['title'] ?? '');
+                $parts[] = (string) ($item['body'] ?? '');
             }
             foreach ($section['subs'] ?? [] as $sub) {
                 if (! is_array($sub)) {
@@ -211,12 +273,31 @@ final class PlaceholderArticles
                 foreach ($sub['paragraphs'] ?? [] as $paragraph) {
                     $parts[] = (string) $paragraph;
                 }
+                foreach ($sub['quotes'] ?? [] as $quote) {
+                    self::appendQuoteParts($parts, is_array($quote) ? $quote : null);
+                }
             }
         }
         $words = preg_split('/\s+/', trim(implode(' ', $parts))) ?: [];
         $count = count(array_filter($words, static fn (string $word): bool => $word !== ''));
 
         return max(1, (int) ceil($count / self::WORDS_PER_MINUTE));
+    }
+
+    /**
+     * @param  list<string>  $parts
+     * @param  array<string, mixed>|null  $quote
+     */
+    private static function appendQuoteParts(array &$parts, ?array $quote): void
+    {
+        if ($quote === null) {
+            return;
+        }
+        $parts[] = (string) ($quote['arabic'] ?? '');
+        $parts[] = (string) ($quote['translation'] ?? '');
+        $parts[] = (string) ($quote['reference'] ?? '');
+        $parts[] = (string) ($quote['note'] ?? '');
+        $parts[] = (string) ($quote['translator'] ?? '');
     }
 
     private static function ogImageUrl(string $image): string

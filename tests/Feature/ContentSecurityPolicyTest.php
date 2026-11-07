@@ -84,6 +84,10 @@ class ContentSecurityPolicyTest extends TestCase
             $policy
         );
         $this->assertStringContainsString("media-src 'self' blob: data: https:", $policy);
+        $this->assertStringContainsString(
+            "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
+            $policy
+        );
     }
 
     public function test_middleware_replaces_script_src_none_policy(): void

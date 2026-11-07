@@ -154,7 +154,7 @@ class AuthPageRenderTest extends TestCase
         $this->get(route('register'))
             ->assertOk()
             ->assertSee(__('ui.auth_register_heading'))
-            ->assertSee(__('ui.auth_register_offer'))
+            ->assertDontSee('auth-offer', false)
             ->assertSee(__('ui.continue_google'))
             ->assertDontSee('class="auth-role"', false)
             ->assertDontSee('id="account-role-individual"', false)
@@ -234,7 +234,6 @@ class AuthPageRenderTest extends TestCase
     {
         $required = [
             'auth_register_heading',
-            'auth_register_offer',
             'auth_sign_in',
             'auth_demo_title',
             'auth_demo_use',

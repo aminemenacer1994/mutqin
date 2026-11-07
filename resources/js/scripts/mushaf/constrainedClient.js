@@ -16,6 +16,9 @@ export function isConstrainedMushafClient(probe) {
   const memory = Number(nav?.deviceMemory)
   if (Number.isFinite(memory) && memory > 0 && memory <= 4) return true
 
+  const cores = Number(nav?.hardwareConcurrency)
+  if (Number.isFinite(cores) && cores > 0 && cores <= 4) return true
+
   const ua = String(nav?.userAgent || '')
   if (/Instagram|FBAN|FBAV/i.test(ua)) return true
 

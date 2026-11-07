@@ -77,6 +77,10 @@ assert.equal(isConstrainedMushafClient({
   navigator: { userAgent: 'Mozilla', deviceMemory: 4 },
   window: { innerWidth: 1280 },
 }), true)
+assert.equal(isConstrainedMushafClient({
+  navigator: { userAgent: 'Mozilla', deviceMemory: 8, hardwareConcurrency: 4 },
+  window: { innerWidth: 1280 },
+}), true)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')

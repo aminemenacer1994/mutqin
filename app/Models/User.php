@@ -369,6 +369,24 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return false;
     }
 
+    /**
+     * Learner/teacher Progress link in the main nav. Hidden for nav owners when
+     * dual Admin+Progress is disabled (production default).
+     */
+    public function showsLearnerDashboardNavLink(): bool
+    {
+        if ($this->showsAdminNavigation() && ! self::adminNavigationShowsDualProgress()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function adminNavigationShowsDualProgress(): bool
+    {
+        return filter_var(config('mutqin.admin_navigation_dual_progress', false), FILTER_VALIDATE_BOOL);
+    }
+
     public function scopeWithoutSeededDemoAccounts($query)
     {
         return $query

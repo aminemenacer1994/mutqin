@@ -343,17 +343,18 @@
                 class="post-session-simple__actions"
                 :class="showBackToProgress ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
               >
-                <button
+                <a
                   v-if="showBackToProgress"
-                  type="button"
+                  :href="progressHref"
                   class="post-session-simple__btn post-session-simple__btn--ghost"
-                  :disabled="actionsBusy"
+                  :class="{ 'is-disabled': actionsBusy }"
+                  :aria-disabled="actionsBusy ? 'true' : 'false'"
                   data-testid="workspace-recite-back-progress"
-                  @click="$emit('back-to-progress')"
+                  @click="onBackToProgress"
                 >
                   <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
                   <span>{{ backToProgressLabel }}</span>
-                </button>
+                </a>
                 <button
                   type="button"
                   class="post-session-simple__btn post-session-simple__btn--secondary"
@@ -434,6 +435,7 @@ export default {
     compareDifferencesLabel: { type: String, default: 'Compare differences' },
     showBackToProgress: { type: Boolean, default: false },
     backToProgressLabel: { type: String, default: 'Back to progress' },
+    progressHref: { type: String, default: '/progress' },
   },
   emits: ['close', 'try-again', 'mutashabihat-compare', 'back-to-progress'],
   data() {
@@ -470,6 +472,13 @@ export default {
     requestClose() {
       if (this.actionsBusy) return
       this.$emit('close')
+    },
+    onBackToProgress(event) {
+      if (this.actionsBusy) {
+        event?.preventDefault?.()
+        return
+      }
+      this.$emit('back-to-progress', event)
     },
   },
 }

@@ -70963,49 +70963,81 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   line-height: inherit !important;
 }
 
+.tools-body .sheet--setup {
+  gap: 0.85rem;
+}
+
+.tools-body .setup-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--zone-elevated, var(--surface, #fff)) 86%, transparent);
+}
+
+.tools-body .setup-plan__label {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
 .tools-body .session-goal {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-  margin: 0 0 0.35rem;
+  gap: 0.4rem;
+  margin: 0;
 }
 
 .tools-body .session-goal__option {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.12rem;
-  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 4.5rem;
   margin: 0;
-  padding: 0.55rem 0.65rem;
+  padding: 0.55rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: transparent;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
   color: var(--text);
-  text-align: start;
+  text-align: center;
   cursor: pointer;
 }
 
 .tools-body .session-goal__option strong {
-  font-size: 0.92rem;
-  font-weight: 650;
+  font-size: 0.82rem;
+  font-weight: 700;
   line-height: 1.2;
 }
 
 .tools-body .session-goal__option span {
   color: var(--muted, var(--text-muted, inherit));
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 500;
   line-height: 1.25;
 }
 
 .tools-body .session-goal__option.is-selected {
   border-color: var(--accent-strong, var(--accent));
   color: var(--accent-strong, var(--accent));
-  background: color-mix(in srgb, var(--accent-strong, var(--accent)) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-strong, var(--accent)) 12%, var(--surface, #fff));
+  box-shadow: inset 0 0 0 1px var(--accent-strong, var(--accent));
+}
+
+.tools-body .session-goal__option.is-selected span {
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, var(--text));
 }
 
 .tools-body .session-goal__help {
-  margin: 0 0 0.85rem;
+  margin: 0;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
   color: var(--muted, var(--text-muted, inherit));
   font-size: 0.84rem;
   line-height: 1.4;
@@ -71027,7 +71059,7 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
 
 @media (max-width: 767.98px) {
   .tools-body .session-goal {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -71040,8 +71072,8 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
 
 .tools-body .sheet--setup .session-range-preset--windows {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -71053,42 +71085,48 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   justify-content: center;
   min-height: 44px;
   margin: 0;
-  padding: 0.4rem 0.35rem;
+  padding: 0.45rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
   color: var(--text);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
   cursor: pointer;
 }
 
 .tools-body .sheet--setup .session-range-preset--windows .session-range-preset__option.is-selected {
   border-color: var(--accent-strong, var(--accent));
-  background: var(--accent-strong, var(--accent));
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-strong, var(--accent)) 12%, var(--surface, #fff));
+  color: var(--accent-strong, var(--accent));
+  box-shadow: inset 0 0 0 1px var(--accent-strong, var(--accent));
 }
 
 .session-ayah-summary {
-  margin: 0.45rem 0 0;
-  color: var(--muted, var(--text-muted, inherit));
-  font-size: 0.84rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-align: center;
 }
 
-.session-full-surah {
-  align-self: flex-start;
-  min-height: 44px;
-  margin-top: 0.45rem;
-  padding: 0.35rem 0.2rem;
-  border: 0;
-  background: transparent;
-  color: var(--accent-strong, var(--accent));
-  font: inherit;
-  font-size: 0.84rem;
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
-  cursor: pointer;
+.session-range-inputs .session-range-sep {
+  color: var(--muted, var(--text-muted, inherit));
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .session-more-toggle {
@@ -71096,22 +71134,24 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 44px;
-  margin: 0.15rem 0 0.5rem;
-  padding: 0.45rem 0.15rem;
-  border: 0;
-  background: transparent;
+  min-height: 52px;
+  margin: 0;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--zone-elevated, var(--surface, #fff)) 86%, transparent);
   color: var(--text);
   font: inherit;
   font-size: 0.92rem;
+  font-weight: 650;
   cursor: pointer;
 }
 
 .session-more {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
+  gap: 0.85rem;
+  margin: 0;
 }
 
 .session-more-reset {

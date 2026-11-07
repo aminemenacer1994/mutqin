@@ -75,7 +75,8 @@ class SetMutqinContentSecurityPolicy
             ."media-src 'self' blob: data: https:; "
             ."connect-src 'self' https: wss:; "
             ."worker-src 'self' blob:; "
-            ."manifest-src 'self';";
+            ."manifest-src 'self'; "
+            ."frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com;";
     }
 
     /**

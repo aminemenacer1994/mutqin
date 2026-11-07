@@ -535,9 +535,10 @@ class AdminDashboardTest extends TestCase
             ->assertStatus(422);
     }
 
-    public function test_admin_nav_shows_admin_dashboard_without_progress_link(): void
+    public function test_admin_nav_shows_admin_and_progress_for_navigation_owner_only(): void
     {
         config()->set('mutqin.admin_emails', ['admin@example.com', 'menacer72@gmail.com']);
+        config()->set('mutqin.admin_navigation_emails', ['menacer72@gmail.com']);
 
         $otherAdmin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
@@ -550,8 +551,16 @@ class AdminDashboardTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertDontSee('href="'.route('admin.dashboard').'"', false)
-            ->assertSee('href="'.route('dashboard').'"', false);
+            ->assertDontSee('href="'.route('dashboard').'"', false);
 
+        config()->set('mutqin.admin_navigation_dual_progress', true);
+        $this->actingAs($owner)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('href="'.route('admin.dashboard').'"', false)
+            ->assertDontSee('href="'.route('dashboard').'"', false);
+
+        config()->set('mutqin.admin_navigation_dual_progress', false);
         $this->actingAs($owner)
             ->get(route('home'))
             ->assertOk()
