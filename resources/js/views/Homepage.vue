@@ -69,9 +69,9 @@
           </div>
 
           <div class="hero__visual">
-            <div class="hero__fan" :class="{ 'hero__fan--single': isHeroMobile }">
+            <div class="hero__fan">
               <figure
-                v-for="shot in visibleHeroShots"
+                v-for="shot in heroShots"
                 :key="shot.id"
                 class="hero__fan-item"
                 :class="`hero__fan-item--${shot.id}`"
@@ -510,9 +510,6 @@ export default {
     const currentTheme = ref(getSavedTheme());
     const FEATURES_CAROUSEL_START_INDEX = 2;
     const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
-    const isHeroMobile = ref(
-      typeof window !== 'undefined' ? window.matchMedia(FEATURES_MOBILE_MQ).matches : false,
-    );
     const featuresSection = ref(null);
     const featuresCarouselEl = ref(null);
     const isFeaturesMobile = ref(
@@ -599,9 +596,7 @@ export default {
     let revealObserver = null;
 
     const syncFeaturesMobile = () => {
-      const mobile = featuresMobileMq?.matches ?? false;
-      isFeaturesMobile.value = mobile;
-      isHeroMobile.value = mobile;
+      isFeaturesMobile.value = featuresMobileMq?.matches ?? false;
     };
 
     const onFeaturesCarouselSlide = (event) => {
@@ -727,12 +722,6 @@ export default {
         { id: 'right', src: '/images/landing/2026-11-hero-dashboard.jpg', alt: t('homepage.shots.return') },
       ];
     });
-
-    const visibleHeroShots = computed(() => (
-      isHeroMobile.value
-        ? heroShots.value.filter((shot) => shot.id === 'center')
-        : heroShots.value
-    ));
 
     const heroPillars = computed(() => {
       void locale.value;
@@ -890,8 +879,6 @@ export default {
       primaryCta,
       inAppBrowser,
       currentTheme,
-      isHeroMobile,
-      visibleHeroShots,
       heroPillars,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,

@@ -1896,9 +1896,8 @@ html[dir="rtl"] .hero__fan-item--right {
 
 /* Premium mobile rhythm */
 @media (max-width: 767.98px) {
-  /* Keep decorative layers still while the user scrolls on a phone. */
+  /* Keep demo decorative layers still while the user scrolls on a phone. */
   .hero__glow,
-  .hero__fan-item,
   .demo__phone::before,
   .demo__phone .device {
     animation: none !important;
@@ -1907,10 +1906,6 @@ html[dir="rtl"] .hero__fan-item--right {
 
   .demo__phone::before {
     filter: none;
-  }
-
-  .hero__fan {
-    perspective: none;
   }
 
   [data-reveal] {
@@ -1993,7 +1988,6 @@ html[dir="rtl"] .hero__fan-item--right {
   }
 
   .hero__visual { margin-top: 0.15rem; }
-  .hero__fan { min-height: 0; }
 
   .hero__title {
     font-size: clamp(1.65rem, 6.6vw, 2.05rem);
