@@ -7220,9 +7220,9 @@ export default {
     /** Hero title — keep short; outcome headline lives in the results section. */
     postSessionDisplayTitle() {
       if (this.postSessionHasAiCheck) {
-        return this.t('memorisation.postSession.coach.headers.practiceDone')
-          || this.t('memorisation.sessionComplete.title')
-          || 'Practice complete'
+        return this.t('memorisation.postSession.recommendation.checkComplete')
+          || this.t('memorisation.recite_check_results')
+          || 'Check complete'
       }
       if (
         this.postSessionCtaState === POST_SESSION_CTA_STATES.AWAITING_CHECK
@@ -12665,7 +12665,7 @@ export default {
     },
     closeWorkspaceReciteAnalysis() {
       const shouldReturnToDashboard = !!this.postSessionDashboardAfterRecite
-      const shouldReturnToCompletion = !!this.postSessionCompletionAfterRecite
+      const openedFromSessionComplete = !!this.postSessionCompletionAfterRecite
       this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1
       this.workspaceReciteAnalysisOpen = false
       this.workspaceReciteAnalysisLoading = false
@@ -12678,10 +12678,9 @@ export default {
       this.postSessionCompletionAfterRecite = false
       if (shouldReturnToDashboard) {
         void this.goToDashboardAfterSession()
-      } else if (shouldReturnToCompletion) {
-        this.showPostSessionModal = true
-        this.postSessionViewState = 'recommendation_ready'
-        this.syncBodyScrollLock(true)
+      } else if (openedFromSessionComplete) {
+        // Recite-check results close back to the Mushaf — not the session-complete modal.
+        this.syncBodyScrollLock(false)
       }
     },
     presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '', options = {}) {

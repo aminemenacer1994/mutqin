@@ -1830,7 +1830,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%);
+  background: #2f6f58;
   color: #fffaf8;
   box-shadow: none;
 }
@@ -2764,15 +2764,15 @@
   justify-content: center !important;
   gap: 0.55rem !important;
   width: auto !important;
-  max-width: min(14.5rem, 100%) !important;
-  min-width: min(10.5rem, 100%) !important;
-  min-height: 3rem !important;
-  height: 3rem !important;
-  padding: 0.45rem 1.25rem !important;
-  border-radius: 999px !important;
-  background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
+  max-width: min(16rem, 100%) !important;
+  min-width: min(9.5rem, 100%) !important;
+  min-height: 2.85rem !important;
+  height: 2.85rem !important;
+  padding: 0.4rem 1.15rem !important;
+  border-radius: 0.65rem !important;
+  background: #2f6f58 !important;
   box-shadow: none !important;
-  border: 0 !important;
+  border: 1px solid color-mix(in srgb, #1d4f3c 35%, transparent) !important;
 }
 
 .amd-record-btn--inline .amd-record-btn__ring {
@@ -2821,7 +2821,8 @@
 }
 
 .amd-record-btn--inline.amd-record-btn--stop.active {
-  background: linear-gradient(180deg, #c24a40 0%, #a83b33 55%, #8f312b 100%) !important;
+  background: #8f312b !important;
+  border-color: color-mix(in srgb, #6b241f 40%, transparent) !important;
   box-shadow: none !important;
 }
 
@@ -5137,14 +5138,15 @@
 .amd-footer__stop .amd-record-btn--inline,
 .amd-footer-stop-btn {
   width: auto !important;
-  max-width: min(14.5rem, 100%) !important;
-  min-width: min(10.5rem, 100%) !important;
-  min-height: 3rem !important;
-  height: 3rem !important;
-  padding: 0.45rem 1.25rem !important;
+  max-width: min(16rem, 100%) !important;
+  min-width: min(9.5rem, 100%) !important;
+  min-height: 2.85rem !important;
+  height: 2.85rem !important;
+  padding: 0.4rem 1.15rem !important;
   gap: 0.55rem !important;
-  border-radius: 999px !important;
-  background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
+  border-radius: 0.65rem !important;
+  background: #2f6f58 !important;
+  border: 1px solid color-mix(in srgb, #1d4f3c 35%, transparent) !important;
   box-shadow: none !important;
 }
 

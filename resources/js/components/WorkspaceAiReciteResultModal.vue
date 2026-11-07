@@ -3,7 +3,7 @@
     <transition name="post-session-fade">
       <div
         v-if="open"
-        class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium workspace-recite-result"
+        class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium workspace-recite-result workspace-recite-result--refresh"
         :data-theme="theme"
         data-testid="workspace-recite-result"
       >
@@ -94,15 +94,30 @@
                     {{ yourResultLabel }}
                     <span class="post-session-simple__beta-tag mutqin-label--uncertain" role="note">{{ betaBadgeLabel }}</span>
                   </p>
-                  <h3 class="post-session-simple__outcome-title">
-                    {{ view.outcomeHeadline }}
-                  </h3>
-                  <p
-                    v-if="view.understandingText"
-                    class="post-session-simple__outcome-summary post-session-simple__ai-review-summary"
-                  >
-                    {{ view.understandingText }}
-                  </p>
+                  <div class="wrr-hero wrr-hero--editorial" :data-tone="view.outcomeTone || 'mixed'">
+                    <p class="wrr-hero__eyebrow">
+                      {{ yourResultLabel }}
+                      <span class="wrr-hero__beta">{{ betaBadgeLabel }}</span>
+                    </p>
+                    <div class="wrr-hero__headline-row">
+                      <h3 class="post-session-simple__outcome-title">
+                        {{ view.outcomeHeadline }}
+                      </h3>
+                      <p
+                        v-if="accuracyPercent != null"
+                        class="wrr-hero__metric"
+                        :aria-label="matchShortLabel"
+                      >
+                        {{ accuracyRingLabel }}
+                      </p>
+                    </div>
+                    <p
+                      v-if="view.understandingText"
+                      class="post-session-simple__outcome-summary post-session-simple__ai-review-summary"
+                    >
+                      {{ view.understandingText }}
+                    </p>
+                  </div>
                   <ul
                     v-if="view.outcomeStatChips?.length"
                     class="post-session-simple__outcome-tools"
@@ -160,7 +175,7 @@
                 </div>
 
                 <div
-                  v-if="view.infoArchitecture?.mainFocus?.explanation || view.focusAyahRows?.length"
+                  v-if="showMainFocusBlock"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="workspace-recite-main-focus"
                   data-tour="weak-areas"
@@ -169,7 +184,7 @@
                     {{ view.infoArchitecture.mainFocus.title }}
                   </p>
                   <p
-                    v-if="view.infoArchitecture.mainFocus.explanation"
+                    v-if="showMainFocusExplanation"
                     class="post-session-simple__why-block post-session-simple__next-line"
                     data-testid="workspace-recite-why"
                   >{{ view.infoArchitecture.mainFocus.explanation }}</p>
@@ -271,7 +286,8 @@
                     aria-controls="workspaceReciteAiDetailsDisclosure"
                     @click="aiDetailsExpanded = !aiDetailsExpanded"
                   >
-                    {{ aiDetailsExpanded ? hideDetailsLabel : viewDetailsLabel }}
+                    <span>{{ aiDetailsExpanded ? hideDetailsLabel : viewDetailsLabel }}</span>
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
                   </button>
                   <div
                     v-if="aiDetailsExpanded"
@@ -386,6 +402,7 @@
 <script>
 import AppStatus from './AppStatus.vue'
 import RecitationAudioPlayer from './RecitationAudioPlayer.vue'
+import './WorkspaceAiReciteResultModal.css'
 import {
   captureReturnFocus,
   focusInitialElement,
@@ -412,6 +429,7 @@ export default {
     detailsSectionLabel: { type: String, default: 'Details' },
     viewDetailsLabel: { type: String, default: 'View details' },
     hideDetailsLabel: { type: String, default: 'Hide details' },
+    matchShortLabel: { type: String, default: 'Match' },
     resultStatsAriaLabel: { type: String, default: 'Check results' },
     aiResultsAriaLabel: { type: String, default: 'AI memorisation result' },
     colourMeterAriaLabel: { type: String, default: 'Word colour breakdown' },
@@ -443,6 +461,36 @@ export default {
       returnFocusEl: null,
       aiDetailsExpanded: false,
     }
+  },
+  computed: {
+    accuracyPercent() {
+      const raw = Number(this.view?.reviewDetails?.accuracy)
+      return Number.isFinite(raw) ? Math.max(0, Math.min(100, Math.round(raw))) : null
+    },
+    accuracyRingStyle() {
+      if (this.accuracyPercent == null) return {}
+      return { '--wrr-ring-p': String(this.accuracyPercent) }
+    },
+    accuracyRingLabel() {
+      if (this.accuracyPercent != null) return `${this.accuracyPercent}%`
+      const matchChip = (this.view?.outcomeStatChips || []).find(
+        (chip) => chip.key === 'match' || chip.key === 'match_percent',
+      )
+      return matchChip?.value || '—'
+    },
+    showMainFocusBlock() {
+      if ((this.view?.focusAyahRows || []).length) return true
+      const explanation = String(this.view?.infoArchitecture?.mainFocus?.explanation || '').trim()
+      if (!explanation) return false
+      const summary = String(this.view?.understandingText || '').trim()
+      return explanation !== summary
+    },
+    showMainFocusExplanation() {
+      const explanation = String(this.view?.infoArchitecture?.mainFocus?.explanation || '').trim()
+      if (!explanation) return false
+      const summary = String(this.view?.understandingText || '').trim()
+      return explanation !== summary
+    },
   },
   watch: {
     open(value) {
