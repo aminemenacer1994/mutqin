@@ -118,7 +118,8 @@ assert.doesNotMatch(
   /v-if="!isPostSessionChoiceVisible"\s*\n\s*class="top-card-icon-controls"/,
   'top-card icon controls must remain mounted after session ends',
 )
-assert.match(vue, /action-btn-secondary top-card-action-trigger top-card-controls-trigger/)
+assert.match(vue, /data-testid="workspace-change-session"/)
+assert.match(vue, /data-tour="controls"/)
 assert.doesNotMatch(vue, /post-session-choice-actions/)
 assert.match(en, /"What next\?"/)
 assert.match(en, /"repeatRecommended":\s*"Repeat this set"/)

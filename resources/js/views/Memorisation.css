@@ -31170,9 +31170,17 @@ and review
   line-height: 1.16;
 }
 
-/* Mobile-only progress pills under Surah title — hidden on desktop */
+/* Session metadata pills (range, reciter, repetitions) — shell head mounts the row */
 .workspace-shell-progress-pills {
-  display: none;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
 
 .workspace-shell-actions {
@@ -71458,11 +71466,11 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
 .tools-body .setup-plan {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.55rem;
   margin: 0;
-  padding: 0.85rem;
+  padding: 0.65rem 0.7rem 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--zone-elevated, var(--surface, #fff)) 86%, transparent);
 }
 

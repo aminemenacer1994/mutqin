@@ -519,36 +519,33 @@
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
             </div>
-            <div
-              v-if="(topCardMetadataPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isMobileViewport()"
-              class="workspace-shell-head-metadata"
-              :aria-label="t('memorisation.a11y.sessionMetadata')"
+          </div>
+          <div
+            v-if="(mobileProgressPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isPostSessionChoiceVisible && !askMutqinOpen"
+            class="workspace-shell-progress-pills"
+            :aria-label="t('memorisation.a11y.sessionMetadata')"
+          >
+            <span
+              v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
+              :key="`technique-${item.key}`"
+              class="badge rounded-pill workspace-shell-progress-pill workspace-shell-technique-pill"
+              :data-technique="item.key"
+              :title="item.label"
+              :aria-label="item.label"
+              role="status"
+              aria-live="polite"
             >
-              <span
-                v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
-                :key="`technique-${item.key}`"
-                class="badge rounded-pill workspace-shell-metadata-pill workspace-shell-technique-pill is-readonly"
-                :data-technique="item.key"
-                :title="item.label"
-                role="status"
-                aria-live="polite"
-              >
-                <i class="bi" :class="item.icon" aria-hidden="true"></i>
-                <span>{{ item.label }}</span>
-              </span>
-              <span
-                v-for="item in topCardMetadataPills"
-                :key="item.key"
-                class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
-                :data-pill="item.key"
-                :data-session-chapter="item.key === 'surah' || item.key === 'range' ? (Number(chapterId || currentConfig?.chapterId || 0) || null) : null"
-                :data-ayah-range="item.key === 'range' ? `${Number(rangeStart || currentConfig?.rangeStart || 0) || ''}-${Number(rangeEnd || currentConfig?.rangeEnd || 0) || ''}` : null"
-                aria-disabled="true"
-              >
-                <strong>{{ item.label }}:</strong>
-                <span>{{ item.value }}</span>
-              </span>
-            </div>
+              <i class="bi" :class="item.icon" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </span>
+            <span
+              v-for="item in mobileProgressPills"
+              :key="item.key"
+              class="badge rounded-pill workspace-shell-progress-pill"
+              :data-pill="item.key"
+              :title="`${item.label}: ${item.value}`"
+              :aria-label="`${item.label}: ${item.value}`"
+            >{{ item.value }}</span>
           </div>
           <div class="workspace-shell-head-utility-row">
           <div class="workspace-shell-actions workspace-shell-head-actions">
@@ -660,6 +657,18 @@
           />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
+              v-if="hasVerses && !isPostSessionChoiceVisible"
+              type="button"
+              class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control top-card-setup-trigger"
+              data-testid="workspace-change-session"
+              data-tour="controls"
+              :title="t('memorisation.open_session_setup')"
+              :aria-label="t('memorisation.open_session_setup')"
+              @click="openChangeSession"
+            >
+              <i class="bi bi-sliders" aria-hidden="true"></i>
+            </button>
+            <button
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -679,21 +688,6 @@
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
             </button>
-            <div v-if="!isPostSessionChoiceVisible" class="top-card-controls-wrap">
-              <div
-                class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
-                role="button"
-                tabindex="0"
-                data-tour="controls"
-                @click="openAdvancedControls"
-                @keydown.enter.prevent="openAdvancedControls"
-                @keydown.space.prevent="openAdvancedControls"
-                :title="t('memorisation.open_controls')"
-                :aria-label="t('memorisation.open_controls')"
-              >
-                <i class="bi bi-sliders" aria-hidden="true"></i>
-              </div>
-            </div>
             <div v-if="dashboardEntryReturnHref" class="top-card-dashboard-wrap">
               <button
                 type="button"
@@ -906,33 +900,6 @@
             </div>
           </div>
           </div>
-          </div>
-          <div
-            v-if="(mobileProgressPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isPostSessionChoiceVisible && !askMutqinOpen"
-            class="workspace-shell-progress-pills w-100"
-            :aria-label="t('memorisation.a11y.sessionMetadata')"
-          >
-            <span
-              v-for="item in (isDataReady && practiceTechniqueStatusVisible && !isPostSessionChoiceVisible ? practiceTechniqueStatusItems : [])"
-              :key="`technique-${item.key}`"
-              class="badge rounded-pill workspace-shell-progress-pill workspace-shell-technique-pill"
-              :data-technique="item.key"
-              :title="item.label"
-              :aria-label="item.label"
-              role="status"
-              aria-live="polite"
-            >
-              <i class="bi" :class="item.icon" aria-hidden="true"></i>
-              <span>{{ item.label }}</span>
-            </span>
-            <span
-              v-for="item in mobileProgressPills"
-              :key="item.key"
-              class="badge rounded-pill workspace-shell-progress-pill"
-              :data-pill="item.key"
-              :title="`${item.label}: ${item.value}`"
-              :aria-label="`${item.label}: ${item.value}`"
-            >{{ item.value }}</span>
           </div>
           </template>
           <div

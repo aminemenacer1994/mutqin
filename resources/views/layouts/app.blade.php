@@ -1040,9 +1040,9 @@
       .live-practice-guidance--mushaf {
         display: none !important;
       }
-      /* Progress pills are mobile-only; desktop keeps the bottom metadata row */
+      /* Session metadata pills live in the workspace shell head on all viewports. */
       .app .workspace-shell-progress-pills {
-        display: none !important;
+        display: flex !important;
       }
       @media (max-width: 767.98px) {
         .app .workspace-shell-bottom,
@@ -2421,16 +2421,6 @@
       html body .app .workspace-shell-bottom {
         min-width: 0 !important;
         padding-bottom: 0.85rem !important;
-      }
-
-      /* Desktop already has the labeled chips. The progress line under the
-       * title is Bootstrap badge white text — hide it above the phone layout. */
-      @media (min-width: 768px) {
-        html body .app .workspace-shell-progress-pills,
-        html body .app .workspace-shell-head > .workspace-shell-progress-pills,
-        html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
-          display: none !important;
-        }
       }
 
       @media (max-width: 767.98px) {

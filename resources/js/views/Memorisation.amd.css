@@ -7350,8 +7350,7 @@ html body .amd-overlay .amd-record-btn:hover {
   transition: none !important;
 }
 
-/* Dashboard metadata stays on one scrolling row, clear of the card edge.
- * The progress line under the title is white badge text — keep it hidden. */
+/* Dashboard metadata: one compact scrolling row under the toolbar (all viewports). */
 html body .app .workspace-shell-bottom {
   padding-bottom: 0.85rem !important;
 }
@@ -7359,15 +7358,39 @@ html body .app .workspace-shell-bottom {
 html body .app .workspace-shell-progress-pills,
 html body .app .workspace-shell-head .workspace-shell-progress-pills,
 html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html body .app .workspace-shell-progress-pills::-webkit-scrollbar {
   display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media (min-width: 768px) {
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-content: flex-start !important;
+    align-self: stretch !important;
+    padding: 0.15rem 0 0 !important;
+    margin: 0 !important;
+  }
 }
 
 @media (max-width: 767.98px) {
   html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
-    display: flex !important;
-    flex-flow: row nowrap !important;
-    justify-content: safe center !important;
-    padding-bottom: 0.85rem !important;
+    justify-content: flex-start !important;
+    padding-bottom: 0.35rem !important;
   }
 
   html body .app .workspace-shell-metadata-pill[data-pill="reciter"],
@@ -9912,5 +9935,155 @@ html body .app .tools .practice-group .sheet-section--practice {
   html body .app .tools .practice-group .sheet-content,
   html body .app .tools .practice-group .sheet-section-compact .sheet-content {
     padding: 0.75rem !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.workspace-shell-main-title {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app .top-card-icon-controls .top-card-setup-trigger.top-card-icon-control {
+    flex: 0 0 var(--top-card-toolbar-icon, 36px) !important;
+    width: var(--top-card-toolbar-icon, 36px) !important;
+    height: var(--top-card-toolbar-icon, 36px) !important;
+    min-width: var(--top-card-toolbar-icon, 36px) !important;
+    min-height: var(--top-card-toolbar-icon, 36px) !important;
+  }
+}
+
+/* Metadata chips: the original outlined pill, always one scrolling row. */
+html body .app .workspace-shell-head > .workspace-shell-progress-pills,
+html body .app .workspace-shell-progress-pills {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.35rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+}
+
+html body .app .badge.workspace-shell-progress-pill,
+html body .app .workspace-shell-progress-pill {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  align-self: center !important;
+  gap: 0.22rem !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0.18rem 0.46rem !important;
+  border: 1px solid rgba(90, 68, 48, 0.32) !important;
+  border-radius: 999px !important;
+  background: rgba(120, 90, 60, 0.08) !important;
+  color: #4a3c30 !important;
+  -webkit-text-fill-color: #4a3c30 !important;
+  font-size: 0.64rem !important;
+  font-weight: 650 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app .workspace-shell-progress-pill,
+html[data-theme="dark"] body .app .workspace-shell-progress-pill span {
+  color: #f4efe8 !important;
+  -webkit-text-fill-color: #f4efe8 !important;
+  background: rgba(255, 248, 235, 0.08) !important;
+  border-color: rgba(224, 192, 138, 0.4) !important;
+}
+
+/* Pills share the surah row, immediately to the right of the name. */
+@media (min-width: 768px) {
+  html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    grid-template-columns: none !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-copy {
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    min-width: max-content !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row {
+    margin-inline-start: auto !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    grid-template-columns: none !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-copy {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: 42% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    margin-inline-start: auto !important;
+    width: auto !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-progress-pills {
+    display: none !important;
   }
 }

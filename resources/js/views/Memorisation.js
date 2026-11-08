@@ -1466,6 +1466,8 @@ export default {
       // Session State
       activeVerseKey: null,
       isPlaying: false,
+      /** Latched once playback actually starts, so the progress rail stays hidden until then. */
+      sessionAudioHasStarted: false,
       /** True after blocked autoplay / failed start — keep Play reachable until audio runs. */
       playbackAwaitingGesture: false,
       /** Dedupes restored-session audio init for the same ayah/reciter/index. */
@@ -2733,6 +2735,9 @@ export default {
       if (!this.hasVerses && !this.hifzPlanExists && !this.isPostSessionChoiceVisible) return false
       // Hide from the start for everyone; only surface once there is real progress.
       if (this.sessionProgressMeter <= 0) return false
+      // Hide until this visit's audio has actually started. A restored
+      // "ready to resume" position is not playback.
+      if (!this.sessionAudioHasStarted) return false
       // Keep the rail available while paused and during scrolling. Playback
       // state should not remove the user's progress context from the page.
       return true
@@ -3347,6 +3352,15 @@ export default {
         { key: 'repetition', label: this.t('memorisation.topCard.metadata.repetition'), value: repeatValue },
         { key: 'delay', label: this.t('memorisation.topCard.metadata.delay'), value: delayValue }
       ]
+    },
+    toolbarSessionContext() {
+      if (!this.hasVerses || this.isPostSessionChoiceVisible) return ''
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      const range = start === end ? String(start) : `${start}–${end}`
+      const goal = normaliseSessionGoal(this.sessionStartGoal)
+      const key = goal === 'revise' ? 'contextRevise' : goal === 'test' ? 'contextTest' : 'contextMemorise'
+      return this.t(`memorisation.sessionGoal.${key}`, { range })
     },
     mobileProgressPills() {
       const pills = this.topCardMetadataPills
@@ -12345,6 +12359,7 @@ export default {
       this.applyChainingQueueChange(this.currentMode);
     },
     chapterId(val) {
+      this.sessionAudioHasStarted = false
       this.persistUiState()
       const id = Number(val || 0)
       this.currentChapter = id ? (this.chapters.find(c => Number(c.id) === id) || null) : null
@@ -12362,9 +12377,11 @@ export default {
       }
     },
     rangeStart() {
+      this.sessionAudioHasStarted = false
       this.persistUiState()
     },
     rangeEnd() {
+      this.sessionAudioHasStarted = false
       this.persistUiState()
     },
     speed() {
@@ -12481,6 +12498,7 @@ export default {
     },
     playerCompact: 'persistUiState',
     isPlaying(val) {
+      if (val) this.sessionAudioHasStarted = true
       this.persistAudioState()
       this.$nextTick(() => {
         if (isQpcMadaniMushafView(this.readingViewMode)) {
@@ -36474,6 +36492,12 @@ export default {
       this.showPlannerModal = false
       this.showConfirmModal = false
       this.showWelcomeBackModal = false
+      this._toolsOpenSessionSnapshot = {
+        chapterId: Number(this.chapterId || 0),
+        rangeStart: Number(this.rangeStart || 0),
+        rangeEnd: Number(this.rangeEnd || 0),
+        goal: normaliseSessionGoal(this.sessionStartGoal),
+      }
       this.showTools = true
       if (this.tab === 'tools') {
         this.ensureDefaultToolsSectionsOpen()
@@ -36525,13 +36549,28 @@ export default {
         this.scheduleAnchorHighlights()
       }
       // Never reload workspace media mid-playback — that froze the player after ayah 1.
-      if (this.isPlaying || this.advanceLocked || this.hasSessionStarted || this.isSessionLive) {
+      if (this.isPlaying || this.advanceLocked || this.hasSessionStarted || this.isSessionLive || this.resumableWorkspaceUnchanged()) {
         this.persistUiState()
         this.persistModeState(this.currentMode)
         return
       }
       // Persist + soft-apply. Queue rebuild stays on the repetitions/chaining watchers.
       await this.flushOffcanvasToWorkspace('offcanvas-commit')
+    },
+
+    resumableWorkspaceUnchanged() {
+      const snap = this._toolsOpenSessionSnapshot
+      if (!snap) return false
+      const sameSet = Number(this.chapterId || 0) === snap.chapterId
+        && Number(this.rangeStart || 0) === snap.rangeStart
+        && Number(this.rangeEnd || 0) === snap.rangeEnd
+        && normaliseSessionGoal(this.sessionStartGoal) === snap.goal
+      if (!sameSet) return false
+      return !!(
+        this.continueSessionPayload?.config?.chapterId
+        || this.hasValidatedResumableSession
+        || this.backendUnfinishedSession
+      )
     },
 
     /**
@@ -37083,6 +37122,11 @@ export default {
       // Explicit user open — clear muraja'ah auto-suppress so Controls still works.
       this._suppressEmptyWorkspaceTools = false
       this.openToolsPanel()
+    },
+    openChangeSession() {
+      // Reopen the existing Setup sheet on the current surah, range, and mode.
+      this._suppressEmptyWorkspaceTools = false
+      this.openToolsPanel({ tab: 'tools' })
     },
     openToolsForSetupFailure() {
       // Muraja'ah / progress review deep-links stay on the mushaf.
