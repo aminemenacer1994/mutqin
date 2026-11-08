@@ -68,4 +68,36 @@ import {
   )
 }
 
+{
+  const continued = []
+  continued.push({ status: 'correct', ayahNumber: 1, ayahWordIndex: 0 })
+  for (let index = 0; index < 8; index += 1) {
+    continued.push({ status: 'pending', ayahNumber: 2, ayahWordIndex: index })
+  }
+  continued.push(
+    { status: 'correct', ayahNumber: 3, ayahWordIndex: 0 },
+    { status: 'correct', ayahNumber: 3, ayahWordIndex: 1 },
+    { status: 'correct', ayahNumber: 4, ayahWordIndex: 0 },
+  )
+  const confirmed = resolveConfirmedWordIndex(continued)
+  assert.equal(confirmed, continued.length - 1, 'a later ayah phrase continues past the weak ayah')
+  const clamped = clampStatusesToConfirmedCursor(continued, 0, { keepSettledAhead: true })
+  assert.equal(clamped[1].status, 'pending', 'the weak ayah itself stays unmarked')
+  assert.equal(clamped[continued.length - 1].status, 'correct', 'the ayah after the weak one stays painted')
+  assert.equal(clamped[continued.length - 3].status, 'correct')
+}
+
+{
+  const sameAyahEnding = [
+    { status: 'correct', ayahNumber: 1, ayahWordIndex: 0 },
+    { status: 'pending', ayahNumber: 1, ayahWordIndex: 1 },
+    { status: 'pending', ayahNumber: 1, ayahWordIndex: 2 },
+    { status: 'pending', ayahNumber: 1, ayahWordIndex: 3 },
+    { status: 'correct', ayahNumber: 1, ayahWordIndex: 4 },
+    { status: 'correct', ayahNumber: 1, ayahWordIndex: 5 },
+  ]
+  const confirmed = resolveConfirmedWordIndex(sameAyahEnding)
+  assert.ok(confirmed < 4, 'greens at the other end of the same ayah must not pull the cursor')
+}
+
 console.log('amd-skip-hole-soft-continue: ok')

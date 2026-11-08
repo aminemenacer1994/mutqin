@@ -11,6 +11,7 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Memorisation\RecitationAssessmentService;
+use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Collection;
 
@@ -251,6 +252,7 @@ class SessionAnalysisQueryService
         }
 
         $ayahBuckets = [];
+        $testedAyahs = [];
         $wordBuckets = [];
         foreach ($attempts as $attempt) {
             $range = $this->attemptRange($attempt);
@@ -259,19 +261,33 @@ class SessionAnalysisQueryService
             $to = (int) ($range['ayah_end'] ?? $from);
             if ($surah > 0 && $from > 0) {
                 for ($ayah = $from; $ayah <= max($from, $to); $ayah++) {
-                    $key = $surah.':'.$ayah;
-                    if (! isset($ayahBuckets[$key])) {
-                        $ayahBuckets[$key] = [
-                            'surah_number' => $surah,
-                            'surah_name' => $range['surah_name'],
-                            'ayah' => $ayah,
-                            'accuracy_sum' => 0,
-                            'attempts' => 0,
-                        ];
-                    }
-                    $ayahBuckets[$key]['accuracy_sum'] += (int) $attempt->accuracy_percent;
-                    $ayahBuckets[$key]['attempts']++;
+                    $testedAyahs[$surah.':'.$ayah] = true;
                 }
+            }
+
+            $scoredAyahs = $this->scoreAttemptAyahs($attempt);
+            if ($scoredAyahs === []) {
+                $scoredAyahs = $this->focusAyahsFromRange($attempt);
+            }
+            foreach ($scoredAyahs as $scored) {
+                $ayah = (int) ($scored['ayah'] ?? 0);
+                if ($surah <= 0 || $ayah <= 0) {
+                    continue;
+                }
+                $key = $surah.':'.$ayah;
+                $testedAyahs[$key] = true;
+                if (! isset($ayahBuckets[$key])) {
+                    $ayahBuckets[$key] = [
+                        'surah_number' => $surah,
+                        'surah_name' => $range['surah_name'],
+                        'ayah' => $ayah,
+                        'accuracy_sum' => 0,
+                        'attempts' => 0,
+                        'latest_needs_practice' => (bool) ($scored['needs_practice'] ?? false),
+                    ];
+                }
+                $ayahBuckets[$key]['accuracy_sum'] += (int) ($scored['accuracy'] ?? 0);
+                $ayahBuckets[$key]['attempts']++;
             }
 
             $words = is_array($attempt->weak_words) ? $attempt->weak_words : [];
@@ -329,15 +345,19 @@ class SessionAnalysisQueryService
         $weakest = collect($ayahBuckets)
             ->map(function (array $row) {
                 $attempts = max(1, (int) $row['attempts']);
+                $accuracy = (int) round($row['accuracy_sum'] / $attempts);
+                $needsPractice = $accuracy < 90 || (bool) ($row['latest_needs_practice'] ?? false);
 
                 return [
                     'surah_number' => $row['surah_number'],
                     'surah_name' => $row['surah_name'],
                     'ayah' => $row['ayah'],
                     'attempts' => $attempts,
-                    'accuracy' => (int) round($row['accuracy_sum'] / $attempts),
+                    'accuracy' => $accuracy,
+                    'needs_practice' => $needsPractice,
                 ];
             })
+            ->filter(fn (array $row) => $row['needs_practice'] === true)
             ->sortBy('accuracy')
             ->take(5)
             ->values()
@@ -358,7 +378,7 @@ class SessionAnalysisQueryService
             'average_accuracy' => $accuracies->isEmpty() ? null : (int) round($accuracies->avg()),
             'recent_accuracy' => $recent->isEmpty() ? null : (int) round($recent->avg()),
             'best_accuracy' => $accuracies->isEmpty() ? null : (int) $accuracies->max(),
-            'ayahs_tested' => count($ayahBuckets),
+            'ayahs_tested' => count($testedAyahs),
             'peek_used_count' => $peekUsed,
             'peek_used_percent' => $attempts->isEmpty()
                 ? null
@@ -725,6 +745,92 @@ class SessionAnalysisQueryService
         $to = (int) ($config['rangeEnd'] ?? $from);
 
         return $this->namedRange($surah, $from, $to);
+    }
+
+    /**
+     * Per-ayah score from this attempt's own words. A strong attempt no longer
+     * paints every ayah in the range as weak, and a weak ayah stays visible
+     * when the rest of the set was recited well.
+     *
+     * @return list<array{ayah: int, accuracy: int, needs_practice: bool}>
+     */
+    private function scoreAttemptAyahs(AiReciteAttempt $attempt): array
+    {
+        $statuses = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
+        $byAyah = [];
+        foreach ($statuses as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            $ayah = (int) ($word['ayah_number'] ?? $word['ayahNumber'] ?? $word['ayah'] ?? 0);
+            if ($ayah <= 0) {
+                continue;
+            }
+            $status = strtolower(trim((string) ($word['status'] ?? $word['result_type'] ?? '')));
+            if (! isset($byAyah[$ayah])) {
+                $byAyah[$ayah] = ['total' => 0, 'weight' => 0.0, 'hard' => 0, 'attempted' => 0];
+            }
+            $byAyah[$ayah]['total']++;
+            if (in_array($status, ['correct', 'match', 'ok', 'green'], true)) {
+                $byAyah[$ayah]['weight'] += 1;
+                $byAyah[$ayah]['attempted']++;
+            } elseif (in_array($status, ['partial', 'minor_mistake', 'amber'], true)) {
+                $byAyah[$ayah]['weight'] += RecitationScoringThresholds::PARTIAL_ACCURACY_WEIGHT;
+                $byAyah[$ayah]['attempted']++;
+            } elseif (in_array($status, ['wrong', 'incorrect', 'missing', 'omitted', 'skipped', 'unmatched', 'deletion', 'red', 'black'], true)) {
+                $byAyah[$ayah]['hard']++;
+                $byAyah[$ayah]['attempted']++;
+            }
+        }
+
+        $rows = [];
+        foreach ($byAyah as $ayah => $stats) {
+            $total = max(1, (int) $stats['total']);
+            $unattempted = (int) $stats['attempted'] === 0;
+            $accuracy = $unattempted ? 0 : (int) round(((float) $stats['weight'] / $total) * 100);
+            $rows[] = [
+                'ayah' => (int) $ayah,
+                'accuracy' => $accuracy,
+                'needs_practice' => $unattempted || (int) $stats['hard'] > 0 || $accuracy < 90,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Attempts saved before per-word statuses existed: only the ayahs already
+     * marked weak, never the whole recited range.
+     *
+     * @return list<array{ayah: int, accuracy: int, needs_practice: bool}>
+     */
+    private function focusAyahsFromRange(AiReciteAttempt $attempt): array
+    {
+        $stored = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+        $focus = $stored['focus_ayahs'] ?? [];
+        if (! is_array($focus) || $focus === []) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($focus as $item) {
+            $ayah = is_array($item)
+                ? (int) ($item['ayah'] ?? $item['ayah_number'] ?? $item['ayahNumber'] ?? 0)
+                : (int) $item;
+            if ($ayah <= 0) {
+                continue;
+            }
+            $accuracy = is_array($item) && isset($item['accuracy'])
+                ? (int) $item['accuracy']
+                : (int) $attempt->accuracy_percent;
+            $rows[] = [
+                'ayah' => $ayah,
+                'accuracy' => $accuracy,
+                'needs_practice' => true,
+            ];
+        }
+
+        return $rows;
     }
 
     /**

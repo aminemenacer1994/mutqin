@@ -109,6 +109,9 @@ assert.match(
 )
 assert.match(memorisation, /audio_reference_not_saved/, 'missing recording references stay in the retry path')
 
+assert.match(dashboard, /aiReciteFocus/, 'progress page shows weak ayahs that need practice')
+assert.match(dashboard, /dash-ai-results__focus/, 'weak ayahs use the focus list')
+assert.match(dashboard, /dashboard\.ai_recite\.results_focus/, 'weak ayahs section uses the needs-practice heading')
 assert.doesNotMatch(dashboard, /dash-ai-results__word/, 'often-missed chips are removed from the dashboard')
 assert.doesNotMatch(dashboard, /openMissedWordAttempt/, 'often-missed actions are removed with the section')
 assert.doesNotMatch(dashboard, /missed_words_hint/, 'often-missed helper copy is removed with the section')
@@ -223,6 +226,14 @@ const perfect = buildDashboardAiReciteStatsView({
 }, t)
 assert.equal(perfect.focus.length, 0)
 assert.equal(perfect.holding, true)
+
+const markedWeak = buildDashboardAiReciteStatsView({
+  total_attempts: 1,
+  weakest_ayahs: [{ surah_number: 1, surah_name: 'Al-Fatiha', ayah: 2, accuracy: 96, needs_practice: true }],
+}, t)
+assert.equal(markedWeak.focus.length, 1)
+assert.equal(markedWeak.focus[0].ayah, 2)
+assert.equal(markedWeak.holding, false)
 assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
 
 assert.match(

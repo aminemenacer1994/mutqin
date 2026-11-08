@@ -408,6 +408,26 @@
                   </div>
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
                 </section>
+
+                <div v-if="aiReciteFocus.length" class="dash-ai-results__insights">
+                  <section class="dash-ai-results__panel" :aria-label="t('dashboard.ai_recite.results_focus')">
+                    <h3 class="dash-ai-results__panel-title">{{ t('dashboard.ai_recite.results_focus') }}</h3>
+                    <ul class="dash-ai-results__focus">
+                      <li v-for="item in aiReciteFocus" :key="item.key" :class="`is-${item.tone}`">
+                        <div class="dash-ai-results__focus-top">
+                          <span>
+                            <strong>{{ item.surah_name }}</strong>
+                            <small>{{ item.ayah_label }}</small>
+                          </span>
+                          <strong>{{ item.value }}</strong>
+                        </div>
+                        <span class="dash-ai-results__bar" aria-hidden="true">
+                          <span :style="{ width: `${Math.max(0, Math.min(100, item.accuracy))}%` }"></span>
+                        </span>
+                      </li>
+                    </ul>
+                  </section>
+                </div>
               </div>
             </template>
           </div>
@@ -1546,6 +1566,9 @@ export default {
         .map((key) => cards.find((card) => card.key === key))
         .filter((card) => card && card.value && card.value !== '—')
         .filter((card) => !(this.aiReciteScore?.key === 'average' && card.key === 'average'))
+    },
+    aiReciteFocus() {
+      return this.aiReciteView?.focus || []
     },
     aiReciteHolding() {
       return !!this.aiReciteView?.holding

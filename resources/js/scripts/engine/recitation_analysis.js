@@ -366,21 +366,23 @@ function paintLiveSkipGap(
   fromIndex,
   toIndex,
   isLiveLifecycle,
+  omitOnLive = false,
 ) {
+  const leavePending = isLiveLifecycle && !omitOnLive
   for (let skipIndex = fromIndex; skipIndex < toIndex; skipIndex += 1) {
     const skipUnit = targetUnits[skipIndex] || null
     statuses[skipIndex] = {
       text: displayWords[skipIndex] || targetWords[skipIndex] || '',
       targetWord: targetWords[skipIndex] || '',
-      status: isLiveLifecycle ? 'pending' : 'omitted',
-      type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+      status: leavePending ? 'pending' : 'omitted',
+      type: leavePending ? 'UNASSESSED' : 'DELETION',
       errorCategory: 'skipped',
-      note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
+      note: leavePending ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
       actual: '',
       confidence: 0,
       similarity: 0,
-      visualStatus: isLiveLifecycle ? 'neutral' : 'red',
-      highlight: isLiveLifecycle ? 'neutral' : 'red',
+      visualStatus: leavePending ? 'neutral' : 'red',
+      highlight: leavePending ? 'neutral' : 'red',
       targetIndex: skipIndex,
       ayahKey: skipUnit?.ayahKey || '',
       ayahNumber: skipUnit?.ayahNumber ?? null,
@@ -392,9 +394,9 @@ function paintLiveSkipGap(
 }
 
 /**
- * After two consecutive live reds the sequential matcher has lost the lock.
- * Resume only on a two-word exact/high-similarity anchor so the unread tail
- * is not painted red one substitution at a time.
+ * After the matcher loses the lock, resume only on a two-word anchor so a
+ * single repeated word cannot jump to the other end of the set. The window
+ * covers the rest of the session: a weak ayah must not stop the words after it.
  */
 function findLiveTwoWordRecovery({
   heardWords = [],
@@ -646,9 +648,20 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         cursor,
         matchThresholds,
         allowArticleMatch,
+        window: Math.max(8, targetWords.length),
       })
-      if (recovery) {
-        paintLiveSkipGap(statuses, targetUnits, displayWords, targetWords, cursor, recovery.targetIndex, isLiveLifecycle)
+      if (recovery && recovery.targetIndex >= cursor) {
+        const distant = recovery.targetIndex - cursor > skipWindow
+        paintLiveSkipGap(
+          statuses,
+          targetUnits,
+          displayWords,
+          targetWords,
+          cursor,
+          recovery.targetIndex,
+          isLiveLifecycle,
+          distant,
+        )
         lostLock = false
         consecutiveIncorrect = 0
         cursor = recovery.targetIndex
@@ -882,6 +895,38 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       continue
     }
 
+    // A weak or skipped stretch longer than the short window must not consume
+    // the next ayah. Resume on a two-word anchor anywhere in the rest of the set.
+    if (options.advanceOnIncorrect && heardIndex + 1 < heardWords.length) {
+      const distantRecovery = findLiveTwoWordRecovery({
+        heardWords,
+        heardIndex,
+        targetWords,
+        cursor,
+        matchThresholds,
+        allowArticleMatch,
+        window: Math.max(8, targetWords.length),
+      })
+      if (distantRecovery && distantRecovery.targetIndex - cursor > skipWindow) {
+        paintLiveSkipGap(
+          statuses,
+          targetUnits,
+          displayWords,
+          targetWords,
+          cursor,
+          distantRecovery.targetIndex,
+          isLiveLifecycle,
+          true,
+        )
+        firstBlockingIndex = cursor
+        consecutiveIncorrect = 0
+        lostLock = false
+        cursor = distantRecovery.targetIndex
+        heardIndex = distantRecovery.heardIndex - 1
+        continue
+      }
+    }
+
     statuses[cursor] = classified
     firstBlockingIndex = cursor
     // Soft continue MUST advance past a red so the next heard token cannot
@@ -899,9 +944,20 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
               cursor,
               matchThresholds,
               allowArticleMatch,
+              window: Math.max(8, targetWords.length),
             })
-            if (recovery) {
-              paintLiveSkipGap(statuses, targetUnits, displayWords, targetWords, cursor, recovery.targetIndex, isLiveLifecycle)
+            if (recovery && recovery.targetIndex >= cursor) {
+              const distant = recovery.targetIndex - cursor > skipWindow
+              paintLiveSkipGap(
+                statuses,
+                targetUnits,
+                displayWords,
+                targetWords,
+                cursor,
+                recovery.targetIndex,
+                isLiveLifecycle,
+                distant,
+              )
               consecutiveIncorrect = 0
               lostLock = false
               cursor = recovery.targetIndex

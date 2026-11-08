@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { buildQuranAlignment, buildRealtimePreviewAlignment } from '../../resources/js/scripts/engine/recitation_analysis.js'
+import { resolveConfirmedWordIndex } from '../../resources/js/scripts/memorisationDetection/liveCursor.js'
 
 const ayahs = [
   { key: '1:1', number: 1, text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ' },
@@ -46,6 +47,41 @@ for (const build of [buildQuranAlignment, buildRealtimePreviewAlignment]) {
       assert.ok(settled >= 8, `${build.name} n=${n} must not snap back to ayah 1 after ayah 3 phrase (settled=${settled})`)
     }
   }
+}
+
+{
+  const weakAyah = ['كتاب', 'قلم', 'مدرسة', 'شارع', 'حديقة', 'سيارة', 'جسر', 'نهر', 'جبل', 'بحر', 'قمر', 'نجم']
+  const nextAyah = ['مالك', 'يوم', 'الدين']
+  const set = [
+    { key: '1:1', number: 1, text: 'بسم الله الرحمن الرحيم' },
+    { key: '1:2', number: 2, text: weakAyah.join(' ') },
+    { key: '1:3', number: 3, text: nextAyah.join(' ') },
+  ]
+  const heard = ['بسم', 'الله', 'الرحمن', 'الرحيم', ...nextAyah]
+  const alignment = buildRealtimePreviewAlignment(
+    set.map((ayah) => ayah.text).join(' '),
+    words(heard),
+    {
+      lifecycle: 'live',
+      strictProgression: true,
+      targetAyahs: set.map((ayah) => ({ ayahKey: ayah.key, number: ayah.number, text: ayah.text })),
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      partialAdvances: true,
+      advanceOnIncorrect: true,
+      allowArticleMatch: false,
+    },
+  )
+  const statuses = alignment.wordStatuses || []
+  const ayahOf = (ayah) => statuses.filter((word) => Number(word.ayahNumber) === ayah)
+  assert.ok(ayahOf(1).every((word) => word.status === 'correct'), 'the ayah before the weak one stays green')
+  assert.ok(ayahOf(2).every((word) => word.status === 'omitted'), 'the skipped ayah is the weak one')
+  assert.ok(ayahOf(3).every((word) => word.status === 'correct'), 'recitation continues through the ayah after it')
+  assert.equal(
+    resolveConfirmedWordIndex(statuses),
+    statuses.length - 1,
+    'the live cursor reaches the end of the set',
+  )
 }
 
 console.log('amd-al-fatiha-live-alignment: ok')

@@ -158,6 +158,46 @@ class DashboardAiReciteTest extends TestCase
         $this->assertTrue((bool) AiReciteAttempt::query()->find($attemptId)?->peek_used);
     }
 
+    public function test_needs_practice_lists_only_the_ayah_that_was_weak(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        $create = $this->actingAs($user)->postJson('/api/memorisation/assessments', $this->payload([
+            'idempotency_key' => 'dash-ai-weak-ayah',
+        ]));
+        $create->assertCreated();
+
+        $attempt = AiReciteAttempt::query()->findOrFail($create->json('ai_attempt.id'));
+        $attempt->accuracy_percent = 80;
+        $attempt->ayah_range = [
+            'surah' => 1,
+            'from' => 1,
+            'to' => 4,
+            'surah_name' => 'Al-Fatihah',
+        ];
+        $attempt->word_statuses = [
+            ['ayah_number' => 1, 'status' => 'correct', 'text' => 'بسم'],
+            ['ayah_number' => 1, 'status' => 'correct', 'text' => 'الله'],
+            ['ayah_number' => 2, 'status' => 'wrong', 'text' => 'الحمد'],
+            ['ayah_number' => 2, 'status' => 'missing', 'text' => 'لله'],
+            ['ayah_number' => 3, 'status' => 'correct', 'text' => 'الرحمن'],
+            ['ayah_number' => 3, 'status' => 'correct', 'text' => 'الرحيم'],
+            ['ayah_number' => 4, 'status' => 'correct', 'text' => 'مالك'],
+            ['ayah_number' => 4, 'status' => 'correct', 'text' => 'يوم'],
+            ['ayah_number' => 4, 'status' => 'correct', 'text' => 'الدين'],
+        ];
+        $attempt->save();
+
+        $ayahs = $this->actingAs($user)
+            ->getJson('/api/ai-recite-attempts/stats')
+            ->assertOk()
+            ->json('stats.weakest_ayahs');
+
+        $this->assertSame([2], array_values(array_map(fn ($row) => $row['ayah'], $ayahs)));
+        $this->assertTrue($ayahs[0]['needs_practice']);
+        $this->assertSame(4, $this->actingAs($user)->getJson('/api/ai-recite-attempts/stats')->json('stats.ayahs_tested'));
+    }
+
     public function test_broken_dashboard_ai_recite_is_not_saved_as_success(): void
     {
         $user = User::factory()->pro()->create();

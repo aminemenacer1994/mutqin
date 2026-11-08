@@ -77,13 +77,14 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
         ayah_label: ayahLabel,
         accuracy,
         tone: toneForAccuracy(accuracy),
+        needs_practice: item.needs_practice === true,
         label: [surahName, ayahLabel].filter(Boolean).join(' · '),
         value: t('dashboard.drawer_accuracy', { n: accuracy }),
       }
     })
     : []
 
-  const focus = weakest.filter((item) => item.accuracy < FOCUS_BELOW)
+  const focus = weakest.filter((item) => item.needs_practice === true || item.accuracy < FOCUS_BELOW)
   const holding = weakest.length > 0 && focus.length === 0
 
   const recentAccuracy = payload.recent_accuracy == null ? null : asNumber(payload.recent_accuracy)

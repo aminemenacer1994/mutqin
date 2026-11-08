@@ -26,8 +26,56 @@ export function isPaintedLiveStatus(status = '') {
     || value === 'uncertain'
 }
 
-/** Soft-continue / keepSettledAhead may bridge this many pending slots — not a later ayah. */
+/** Soft-continue / keepSettledAhead may bridge this many pending slots. */
 export const LIVE_SKIP_HOLE_MAX_GAP = 2
+
+function liveAyahNumber(word) {
+  const ayah = Number(word?.ayahNumber ?? word?.ayah_number ?? word?.ayah)
+  return Number.isFinite(ayah) && ayah > 0 ? ayah : 0
+}
+
+function liveAyahWordIndex(word) {
+  const index = Number(word?.ayahWordIndex ?? word?.ayah_word_index)
+  return Number.isFinite(index) && index >= 0 ? index : 99
+}
+
+/**
+ * The learner has reached a later ayah: its opening is a committed phrase.
+ * Rows without ayah numbers never qualify, so an isolated far green cannot
+ * pull the cursor to the other end of the current ayah.
+ */
+export function hasLaterAyahContinuation(statuses = [], fromIndex = 0) {
+  const words = Array.isArray(statuses) ? statuses : []
+  const start = Math.max(0, Number(fromIndex) || 0)
+  const hereAyah = liveAyahNumber(words[start])
+  if (!hereAyah) return false
+  let runAyah = 0
+  let run = 0
+  let runStartWordIndex = 99
+  for (let index = start + 1; index < words.length; index += 1) {
+    const word = words[index]
+    const ayah = liveAyahNumber(word)
+    if (!ayah) return false
+    const settled = isSettledLiveStatus(word?.status)
+      && word?.interim !== true
+      && word?.hypothesis !== true
+    if (!settled || ayah <= hereAyah) {
+      run = 0
+      runAyah = 0
+      runStartWordIndex = 99
+      continue
+    }
+    if (ayah !== runAyah) {
+      runAyah = ayah
+      run = 1
+      runStartWordIndex = liveAyahWordIndex(word)
+    } else {
+      run += 1
+    }
+    if (run >= 2 && runStartWordIndex <= 1) return true
+  }
+  return false
+}
 
 export function hasLaterSettledLiveStatus(statuses = [], fromIndex = 0, maxGap = LIVE_SKIP_HOLE_MAX_GAP) {
   const words = Array.isArray(statuses) ? statuses : []
@@ -61,7 +109,7 @@ export function resolveConfirmedWordIndex(statuses = [], options = {}) {
       lastSettled = i
       continue
     }
-    if (softContinue && hasLaterSettledLiveStatus(words, i)) {
+    if (softContinue && (hasLaterSettledLiveStatus(words, i) || hasLaterAyahContinuation(words, i))) {
       continue
     }
     return i
@@ -232,7 +280,11 @@ export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex
         continue
       }
       gap += 1
-      if (gap > maxGap) break
+      if (gap > maxGap) {
+        const holeStart = index - gap
+        if (hasLaterAyahContinuation(list, holeStart)) continue
+        break
+      }
     }
   }
   return list.map((word, index) => {
