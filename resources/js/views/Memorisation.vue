@@ -666,6 +666,18 @@
               <i class="bi bi-sliders" aria-hidden="true"></i>
             </button>
             <button
+              v-if="auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible"
+              type="button"
+              class="action-btn action-btn-secondary top-card-action-trigger top-card-icon-control top-card-voice-trigger"
+              data-testid="workspace-voice-open"
+              :title="t('dashboard.voice.open')"
+              :aria-label="t('dashboard.voice.open')"
+              :aria-expanded="sessionVoiceOpen ? 'true' : 'false'"
+              @click="sessionVoiceOpen = true"
+            >
+              <i class="bi bi-mic" aria-hidden="true"></i>
+            </button>
+            <button
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -5146,6 +5158,12 @@
     </Teleport>
 
   </div>
+
+    <SessionVoiceAssistant
+      v-if="auth.session_voice_enabled && sessionVoiceOpen"
+      :theme="theme"
+      @close="sessionVoiceOpen = false"
+    />
 
     <AskMutqinModal
       v-if="askMutqinOpen"

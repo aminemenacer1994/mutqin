@@ -231,6 +231,25 @@ export function createAskMutqinVoiceSession(options = {}) {
     getAudioQualityMetrics() {
       return bridge?.getQualityMetrics?.() || null
     },
+    getMediaStream() {
+      return stream
+    },
+    hasRecentSpeech(windowMs = 350) {
+      return !!bridge?.getRecentSpeechActivity?.(windowMs)
+    },
+    async recover() {
+      if (!active || !stream || !bridge) return false
+      switching = true
+      tokenPromise = null
+      try {
+        await connectProvider(language)
+        return true
+      } catch {
+        return false
+      } finally {
+        switching = false
+      }
+    },
     stop() {
       generation += 1
       active = false

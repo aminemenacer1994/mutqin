@@ -10,6 +10,7 @@
             'email' => $memorisationUser?->email,
             'name' => $memorisationUser?->name,
             'is_admin' => $memorisationUser?->showsAdminNavigation() ?? false,
+            'session_voice_enabled' => \App\Support\SessionVoiceAccess::visible($memorisationUser),
             'admin_dashboard_url' => route('admin.dashboard'),
             'subscription_tier' => Auth::user()?->effectiveSubscriptionTier() ?? 'free',
             'subscription_status' => Auth::user()?->subscription_status ?? 'free',

@@ -1,0 +1,215 @@
+html body .session-voice-overlay.mutqin-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 13050 !important;
+  padding: 0.75rem !important;
+}
+
+html body .session-voice-overlay .session-voice-dialog.mutqin-modal-dialog {
+  width: min(26rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(26rem, calc(100vw - 1.5rem)) !important;
+  margin: 0 auto !important;
+}
+
+.session-voice-modal {
+  --sv-ink: #2f261f;
+  --sv-muted: #6b5c4e;
+  --sv-line: rgba(120, 88, 48, 0.16);
+  --sv-accent: #8a5a32;
+  --sv-accent-strong: #6d4524;
+  --sv-on-accent: #fffdf8;
+  --sv-surface: #fbf6ec;
+  width: 100%;
+  max-height: min(88vh, 38rem);
+  overflow: auto;
+  padding: 1rem 1rem 1.1rem;
+  color: var(--sv-ink);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-line);
+  border-radius: 1rem;
+}
+
+.session-voice-overlay[data-theme="sepia"] .session-voice-modal {
+  --sv-ink: #4a3828;
+  --sv-muted: #7a6248;
+  --sv-accent: #8a5a32;
+  --sv-surface: #f6ead4;
+}
+
+.session-voice-overlay[data-theme="dark"] .session-voice-modal {
+  --sv-ink: #f7efe4;
+  --sv-muted: #c9bbaa;
+  --sv-line: rgba(232, 214, 186, 0.14);
+  --sv-accent: #e0b878;
+  --sv-accent-strong: #c89a58;
+  --sv-on-accent: #1c1814;
+  --sv-surface: #1c1814;
+  color-scheme: dark;
+}
+
+.session-voice__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.session-voice__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.session-voice__kicker {
+  margin: 0 0 0.15rem;
+  color: var(--sv-accent);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.session-voice__close {
+  color: var(--sv-muted);
+}
+
+.session-voice__langs,
+.session-voice__actions,
+.session-voice__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.session-voice__langs {
+  margin-top: 0.85rem;
+}
+
+.session-voice__lang {
+  border: 1px solid var(--sv-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sv-muted);
+  padding: 0.28rem 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.session-voice__lang.is-active {
+  border-color: color-mix(in srgb, var(--sv-accent) 48%, var(--sv-line));
+  background: color-mix(in srgb, var(--sv-accent) 14%, var(--sv-surface));
+  color: var(--sv-accent-strong);
+}
+
+.session-voice__listen,
+.session-voice__busy,
+.session-voice__clarify,
+.session-voice__error {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.session-voice__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--sv-accent-strong);
+  font-weight: 650;
+}
+
+.session-voice__pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--sv-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--sv-accent) 45%, transparent);
+  animation: session-voice-pulse 1.4s ease-out infinite;
+}
+
+.session-voice__wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  height: 3.2rem;
+}
+
+.session-voice__wave span {
+  display: block;
+  width: 0.28rem;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sv-accent);
+  transform-origin: center;
+  transition: transform 90ms linear;
+}
+
+.session-voice__heard,
+.session-voice__hint,
+.session-voice__limit,
+.session-voice__summary,
+.session-voice__clarify p,
+.session-voice__error p,
+.session-voice__busy p {
+  margin: 0;
+}
+
+.session-voice__heard {
+  color: var(--sv-ink);
+  line-height: 1.45;
+}
+
+.session-voice__heard span,
+.session-voice__hint,
+.session-voice__limit {
+  color: var(--sv-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.session-voice__heard span {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-weight: 650;
+}
+
+.session-voice__busy {
+  justify-items: center;
+  text-align: center;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.session-voice__spinner {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-width: 0.16rem;
+  color: var(--sv-accent-strong);
+}
+
+.session-voice-modal .btn-primary {
+  background: var(--sv-accent);
+  border-color: var(--sv-accent);
+  color: var(--sv-on-accent);
+}
+
+.session-voice-modal .btn-primary:hover,
+.session-voice-modal .btn-primary:focus-visible {
+  background: var(--sv-accent-strong);
+  border-color: var(--sv-accent-strong);
+  color: var(--sv-on-accent);
+}
+
+.session-voice-modal .btn-outline-secondary {
+  border-color: var(--sv-line);
+  color: var(--sv-ink);
+  background: transparent;
+}
+
+.session-voice__choice {
+  text-align: start;
+}
+
+@keyframes session-voice-pulse {
+  70% { box-shadow: 0 0 0 0.45rem transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}

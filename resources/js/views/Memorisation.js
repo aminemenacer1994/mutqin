@@ -634,6 +634,10 @@ const AskMutqinModal = lazyWorkspaceChunk(
   () => preloadAskMutqinModal(),
   'ask-mutqin-modal'
 )
+const SessionVoiceAssistant = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "session-voice" */ '../components/SessionVoiceAssistant.vue'),
+  'session-voice'
+)
 const MutashabihatCompareModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "mutashabihat-compare" */ '../components/MutashabihatCompareModal.vue'),
   'mutashabihat-compare'
@@ -938,6 +942,7 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AskMutqinModal,
+    SessionVoiceAssistant,
     AyahNotesModal,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
@@ -1657,6 +1662,7 @@ export default {
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
       askMutqinOpen: false,
+      sessionVoiceOpen: false,
       mutashabihatCompareOpen: false,
       mutashabihatCompareView: null,
       showTajweedColourGuide: false,
@@ -13810,6 +13816,14 @@ export default {
         const weak = String(params.get('weak') || '').trim()
         const goal = normaliseSessionGoal(params.get('goal') || '')
         const hasGoal = params.has('goal')
+        const reciterParam = String(params.get('reciter') || '').trim()
+        const voiceReciter = ALQURAN_RECITER_OPTIONS.some((item) => item.id === reciterParam) ? reciterParam : null
+        const speedParam = params.has('speed') ? Number(params.get('speed')) : null
+        const voiceSpeed = [0.5, 0.75, 1, 1.25, 1.5, 2].includes(speedParam) ? speedParam : null
+        const repetitionParam = params.has('repetitions') ? Number(params.get('repetitions')) : null
+        const voiceRepetitions = Number.isInteger(repetitionParam) && repetitionParam >= 1 && repetitionParam <= 10
+          ? repetitionParam
+          : null
         const hasUrlIntent = !!(
           resume
           || setup
@@ -13839,6 +13853,9 @@ export default {
             view: view || null,
             weak: weak || null,
             goal: hasGoal ? goal : null,
+            reciter: voiceReciter,
+            speed: voiceSpeed,
+            repetitions: voiceRepetitions,
           }
         }
         // Refresh mid-consume: URL may already be cleaned; restore stashed destination.
@@ -13852,7 +13869,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14011,11 +14028,22 @@ export default {
         if (entry.surah > 0 && entry.from > 0) {
           const rangeEnd = Math.max(entry.from, entry.to || entry.from)
           const goal = normaliseSessionGoal(entry.goal || this.sessionStartGoal)
+          const voiceSettings = {}
+          if (entry.reciter) voiceSettings.reciter = entry.reciter
+          if (entry.speed != null) voiceSettings.playback_speed = entry.speed
+          if (entry.repetitions != null) voiceSettings.repetitions = entry.repetitions
           if (goal === 'test') {
             this.chapterId = entry.surah
             this.rangeStart = entry.from
             this.rangeEnd = rangeEnd
+            if (voiceSettings.reciter) this.reciterId = voiceSettings.reciter
             await this.applyWorkspaceControls({ reason: 'chapter' })
+            if (voiceSettings.reciter) this.reciterId = voiceSettings.reciter
+            if (voiceSettings.playback_speed != null) this.setPlaybackSpeed(voiceSettings.playback_speed, { silent: true })
+            if (voiceSettings.repetitions) {
+              this.repetitionsPerStep = Number(voiceSettings.repetitions)
+              this.selectedLoopCount = Number(voiceSettings.repetitions)
+            }
             await this.startSessionAndClose({ sessionGoal: 'test' })
             this.finishDashboardMadaniEntry(entry)
             this.markDashboardEntryIntentConsumed()
@@ -14026,6 +14054,7 @@ export default {
             rangeStart: entry.from,
             rangeEnd,
             sessionMode: goal === 'revise' ? 'revision' : 'new_learning',
+            settings: Object.keys(voiceSettings).length ? voiceSettings : null,
             autoStart: true,
           })
           this.finishDashboardMadaniEntry(entry)
@@ -23851,6 +23880,7 @@ export default {
       }
       if (mergedSettings.repetitions) {
         this.repetitionsPerStep = Number(mergedSettings.repetitions)
+        this.selectedLoopCount = Number(mergedSettings.repetitions)
       }
       this.applyWeakAyahRepeatOverrides(mergedSettings, chapterId)
 
@@ -23895,6 +23925,7 @@ export default {
       }
       if (mergedSettings.repetitions) {
         this.repetitionsPerStep = Number(mergedSettings.repetitions)
+        this.selectedLoopCount = Number(mergedSettings.repetitions)
       }
       this.applyWeakAyahRepeatOverrides(mergedSettings, chapterId)
       this.prepareRangeRestart()

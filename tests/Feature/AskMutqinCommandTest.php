@@ -125,6 +125,62 @@ class AskMutqinCommandTest extends TestCase
         $this->assertSame(0.75, $result['command']['speed']);
     }
 
+    public function test_session_voice_command_uses_the_existing_endpoint_family(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.ask-mutqin.interpret-session'), [
+                'transcript' => 'Play Surah Al-Fatiha from ayah 1 to ayah 5 with Al-Sudais at 0.5x, repeated 3 times.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('command.surah', 1)
+            ->assertJsonPath('command.start_ayah', 1)
+            ->assertJsonPath('command.end_ayah', 5)
+            ->assertJsonPath('command.reciter', 'ar.abdurrahmaansudais')
+            ->assertJsonPath('command.repetitions', 3)
+            ->assertJsonPath('command.speed', 0.5)
+            ->assertJsonPath('command.goal', 'memorise');
+    }
+
+    public function test_guest_cannot_interpret_a_session_voice_command(): void
+    {
+        $this->postJson(route('memorisation.ask-mutqin.interpret-session'), [
+            'transcript' => 'Play Al-Fatiha',
+        ])->assertUnauthorized();
+    }
+
+    public function test_session_voice_is_limited_to_the_super_admin_when_deployed(): void
+    {
+        $this->app['env'] = 'production';
+        config()->set('mutqin.admin_emails', ['menacer72@gmail.com']);
+
+        $learner = User::factory()->pro()->create([
+            'email' => 'learner@example.com',
+            'is_admin' => false,
+        ]);
+
+        $this->actingAs($learner)
+            ->postJson(route('memorisation.ask-mutqin.interpret-session'), [
+                'transcript' => 'Play Surah Al-Fatiha',
+            ])
+            ->assertForbidden();
+
+        $admin = User::factory()->pro()->admin()->create([
+            'email' => 'menacer72@gmail.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('memorisation.ask-mutqin.interpret-session'), [
+                'transcript' => 'Play Surah Al-Fatiha',
+            ])
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('command.surah', 1);
+    }
+
     public function test_invalid_ayah_is_rejected(): void
     {
         $user = User::factory()->pro()->create();
