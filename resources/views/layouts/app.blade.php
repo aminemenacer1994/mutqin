@@ -1083,7 +1083,7 @@
           min-width: 0 !important;
         }
         .app .workspace-shell-head-utility-row {
-          display: contents !important;
+          display: block !important;
         }
         .app .workspace-shell-head-utility-row > .top-card-session-hr {
           display: block !important;
@@ -13828,6 +13828,397 @@ body.session-analysis-modal-open {
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after {
     display: none !important;
+  }
+
+  /* Resume/Pause + End: one shared chip size on every viewport. */
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 0.45rem !important;
+  }
+
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action,
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action[style],
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit,
+  html body.memorisation-page .app .workspace-shell .top-card-session-cluster.has-paired-actions :is(.session-primary-action, .action-btn-exit),
+  html body.memorisation-page .app .workspace-shell .top-card-session-cluster.has-paired-actions .session-primary-action[style] {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: var(--primary-action-min-height, 2.45rem) !important;
+    min-height: var(--primary-action-min-height, 2.45rem) !important;
+    max-height: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    margin: 0 !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+    gap: var(--primary-action-gap, 0.35rem) !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
+    border-width: 1.5px !important;
+    border-style: solid !important;
+    font-size: var(--primary-action-font-size, 0.8rem) !important;
+    font-weight: var(--primary-action-font-weight, 600) !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    box-shadow: none !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    flex: 1 1 0 !important;
+  }
+
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > i,
+  html body.memorisation-page .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > span {
+    font-size: inherit !important;
+    line-height: 1 !important;
+  }
+
+  /*
+   * Mobile session card only. Desktop toolbar is unchanged.
+   * Icons stay on row 1 in both states so collapse does not move them.
+   * Collapsed is exactly two rows: title+icons, then centered Resume.
+   * Expanded inserts the pills between those rows.
+   */
+  @media (max-width: 767.98px) {
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+      position: relative !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-template-rows: auto auto auto !important;
+      grid-template-areas:
+        "copy"
+        "pills"
+        "resume" !important;
+      align-items: center !important;
+      justify-items: stretch !important;
+      column-gap: 0 !important;
+      row-gap: 0.55rem !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-copy,
+    html body.memorisation-page .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-copy {
+      grid-area: copy !important;
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      align-self: center !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.workspace-shell-main-title {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 0.35rem !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      min-height: 2.35rem !important;
+      overflow: hidden !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: baseline !important;
+      width: auto !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      text-overflow: clip !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text {
+      flex: 1 1 auto !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__chevron {
+      flex: 0 0 auto !important;
+      margin-inline-start: 0.15rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+    html body.memorisation-page .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
+      flex: 0 0 auto !important;
+      overflow: visible !important;
+      max-width: none !important;
+      text-overflow: clip !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-progress-pills,
+    html body.memorisation-page .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills {
+      grid-area: pills !important;
+      grid-column: 1 / -1 !important;
+      grid-row: 2 !important;
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      gap: 0.32rem !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-progress-pills::-webkit-scrollbar {
+      display: none !important;
+      height: 0 !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row,
+    html body.memorisation-page .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row {
+      display: block !important;
+      grid-area: resume !important;
+      grid-column: 1 !important;
+      grid-row: 3 !important;
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row > .workspace-shell-actions,
+    html body.memorisation-page .app .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-actions,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row .action-buttons-group,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .action-buttons-group.w-100,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-cluster,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.w-100 {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: center !important;
+      grid-area: auto !important;
+      grid-column: auto !important;
+      grid-row: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Solo Resume (no End): keep it prominent and centered. */
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions) > .session-primary-action,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions) > .session-primary-action[style],
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions) .session-primary-action {
+      width: auto !important;
+      min-width: 12.75rem !important;
+      max-width: none !important;
+      flex: 0 0 auto !important;
+      align-self: center !important;
+      justify-self: center !important;
+      height: 3rem !important;
+      min-height: 3rem !important;
+      max-height: 3rem !important;
+      block-size: 3rem !important;
+      min-block-size: 3rem !important;
+      max-block-size: 3rem !important;
+      padding: 0 1.7rem !important;
+      font-size: 1.05rem !important;
+      font-weight: 650 !important;
+      letter-spacing: 0.01em !important;
+      box-shadow: 0 10px 22px rgba(92, 54, 28, 0.24) !important;
+    }
+
+    /* Paired Resume/Pause + End: identical chip geometry. */
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      align-items: stretch !important;
+      gap: 0.45rem !important;
+      width: 100% !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action[style],
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions :is(.session-primary-action, .action-btn-exit) {
+      box-sizing: border-box !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+      max-height: 2.75rem !important;
+      block-size: 2.75rem !important;
+      min-block-size: 2.75rem !important;
+      max-block-size: 2.75rem !important;
+      margin: 0 !important;
+      padding: 0 0.95rem !important;
+      gap: 0.35rem !important;
+      border-radius: 999px !important;
+      border-width: 1.5px !important;
+      border-style: solid !important;
+      font-size: 0.92rem !important;
+      font-weight: 600 !important;
+      line-height: 1 !important;
+      letter-spacing: 0 !important;
+      box-shadow: none !important;
+      align-self: stretch !important;
+      justify-self: stretch !important;
+      flex: 1 1 0 !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > i,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > span {
+      font-size: inherit !important;
+      line-height: 1 !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row > .top-card-icon-controls,
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row > .top-card-icon-controls,
+    html body.memorisation-page .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .top-card-icon-controls,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-utility-row > .top-card-icon-controls,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .top-card-icon-controls {
+      display: inline-flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      position: absolute !important;
+      top: 0 !important;
+      inset-inline-end: 0 !important;
+      z-index: 3 !important;
+      width: max-content !important;
+      max-width: none !important;
+      min-width: max-content !important;
+      height: 2.35rem !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      pointer-events: auto !important;
+      white-space: nowrap !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+      padding-inline-end: 7.6rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .action-buttons-group .top-card-session-cluster.w-100 > .top-card-session-actions,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .action-buttons-group .top-card-session-cluster.w-100 > .top-card-session-actions.w-100,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions.w-100 {
+      display: flex !important;
+      pointer-events: auto !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions.has-paired-actions,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions.has-paired-actions.w-100 {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      pointer-events: auto !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row .session-primary-action,
+    html body.memorisation-page .app .workspace-shell-head-utility-row .action-btn-exit,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head button.session-primary-action,
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head button.action-btn-exit {
+      pointer-events: auto !important;
+      position: relative !important;
+      z-index: 6 !important;
+      touch-action: manipulation !important;
+      cursor: pointer !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .session-primary-action > span,
+    html body.memorisation-page .app .workspace-shell .session-primary-action > i,
+    html body.memorisation-page .app .workspace-shell .action-btn-exit > span,
+    html body.memorisation-page .app .workspace-shell .action-btn-exit > i {
+      position: static !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      clip: auto !important;
+      clip-path: none !important;
+      pointer-events: none !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row > .top-card-icon-controls > *,
+    html body.memorisation-page .app .top-card-icon-controls .top-card-setup-trigger,
+    html body.memorisation-page .app .top-card-icon-controls .top-card-search-trigger,
+    html body.memorisation-page .app .top-card-icon-controls .top-card-menu-wrap,
+    html body.memorisation-page .app .top-card-icon-controls .top-card-ellipsis {
+      flex: 0 0 auto !important;
+      float: none !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell-head-utility-row > .top-card-session-hr,
+    html body.memorisation-page .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row > .top-card-session-hr,
+    html body.memorisation-page .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .top-card-session-hr {
+      display: none !important;
+      width: 0 !important;
+      min-width: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-template-rows: auto auto !important;
+      grid-template-areas:
+        "copy"
+        "resume" !important;
+      row-gap: 0.55rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-progress-pills,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-utility-row > .top-card-session-hr,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .top-card-session-hr {
+      display: none !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-toolbar > .workspace-shell-head-utility-row,
+    html body.memorisation-page .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+      grid-row: 2 !important;
+    }
   }
 
   html body .app .workspace-shell-head-metadata {

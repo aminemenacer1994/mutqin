@@ -614,26 +614,23 @@
                   class="top-card-session-actions w-100"
                   :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
                 >
-                <div
+                <button
                   v-if="showHeaderSessionAction"
+                  type="button"
                   class="action-btn btn btn-primary session-primary-action top-card-action-trigger w-100"
-                  role="button"
-                  tabindex="0"
-                  :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                  :disabled="headerSessionActionDisabled"
                   :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
                   :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
                   :style="showHeaderEndSessionAction
                     ? null
                     : { minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
-                  @click="handleHeaderSessionAction"
-                  @keydown.enter.prevent="handleHeaderSessionAction"
-                  @keydown.space.prevent="handleHeaderSessionAction"
+                  @click.stop.prevent="handleHeaderSessionAction"
                   :title="headerSessionActionLabel"
                   :aria-label="headerSessionActionLabel"
                 >
                   <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                   <span>{{ headerSessionActionLabel }}</span>
-                </div>
+                </button>
                 <button
                   v-if="showHeaderEndSessionAction"
                   type="button"

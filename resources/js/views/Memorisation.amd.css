@@ -6349,14 +6349,14 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
-    display: flex !important;
-    flex-flow: row wrap !important;
-    flex-wrap: wrap !important;
+    display: inline-flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
     align-items: baseline !important;
     justify-content: flex-start !important;
-    column-gap: 0.45rem !important;
-    row-gap: 0.05rem !important;
-    gap: 0.05rem 0.45rem !important;
+    column-gap: 0.28rem !important;
+    row-gap: 0 !important;
+    gap: 0 0.28rem !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -6365,10 +6365,10 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     overflow: visible !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
-    text-wrap: wrap !important;
-    white-space: normal !important;
+    text-wrap: nowrap !important;
+    white-space: nowrap !important;
     text-overflow: clip !important;
-    font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
+    font-size: clamp(0.95rem, 0.8rem + 1.2vw, 1.2rem) !important;
     line-height: 1.45 !important;
     padding-block: 0.08rem 0.32rem !important;
   }
@@ -6393,7 +6393,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
-    padding-inline-end: 0.2em !important;
+    padding-inline-end: 0.1em !important;
     font-family: var(--font-surah-latin) !important;
     font-weight: 500 !important;
   }
@@ -6411,7 +6411,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   }
 
   html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
-    display: contents !important;
+    display: block !important;
   }
 
   html body .app .workspace-shell-head-utility-row > .top-card-icon-controls {
@@ -6459,7 +6459,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .top-card-session-actions,
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions > .top-card-session-actions,
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .top-card-session-actions.w-100 {
-    display: contents !important;
+    display: flex !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster .session-primary-action,
@@ -6574,7 +6574,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .workspace-ai-cta-pair,
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions,
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions.w-100 {
-    display: contents !important;
+    display: flex !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 .session-primary-action.w-100,
@@ -8454,12 +8454,39 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions :is
   .action-btn-exit
 ),
 html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .session-primary-action[style] {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: 100% !important;
   min-width: 0 !important;
   max-width: none !important;
+  height: var(--primary-action-min-height, 2.45rem) !important;
+  min-height: var(--primary-action-min-height, 2.45rem) !important;
+  max-height: var(--primary-action-min-height, 2.45rem) !important;
+  block-size: var(--primary-action-min-height, 2.45rem) !important;
+  min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+  max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+  margin: 0 !important;
+  padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+  gap: var(--primary-action-gap, 0.35rem) !important;
+  border-radius: var(--primary-action-radius, 999px) !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  font-size: var(--primary-action-font-size, 0.8rem) !important;
+  font-weight: var(--primary-action-font-weight, 600) !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
   flex: 1 1 0 !important;
   align-self: stretch !important;
   justify-self: stretch !important;
+}
+
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > i,
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > :is(.session-primary-action, .action-btn-exit) > span {
+  font-size: inherit !important;
+  line-height: 1 !important;
 }
 
 /* Mobile header polish: aligned title row + matched crisp icon set */
@@ -8477,20 +8504,24 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .se
     padding-block: 0.12rem 0.32rem !important;
     line-height: 1.45 !important;
     font-size: 1.08rem !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
   }
 
   html body .app .workspace-shell-overview-toggle__text {
     align-items: baseline !important;
-    gap: 0.45rem !important;
+    gap: 0.28rem !important;
     overflow: visible !important;
+    white-space: nowrap !important;
     line-height: 1.45 !important;
+    text-overflow: clip !important;
   }
 
   html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     line-height: 1.5 !important;
     overflow: visible !important;
+    text-overflow: clip !important;
   }
 
   html body .app .workspace-shell-overview-toggle__chevron {
@@ -9946,16 +9977,17 @@ html body .app .tools .practice-group .sheet-section--practice {
     align-items: center !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     white-space: nowrap !important;
+    text-overflow: clip !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     white-space: nowrap !important;
   }
 
@@ -10051,39 +10083,267 @@ html[data-theme="dark"] body .app .workspace-shell-progress-pill span {
 }
 
 @media (max-width: 767.98px) {
+  /*
+   * Mobile + pills: stacked rows. Desktop is unchanged.
+   * Icons stay on row 1 far right in every state.
+   * Expanded: title+icons / pills / Resume
+   * Collapsed: title+icons / Resume
+   */
   html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
-    display: flex !important;
-    flex-flow: row nowrap !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "copy icons"
+      "pills pills"
+      "resume resume" !important;
     align-items: center !important;
-    gap: 0.4rem !important;
-    grid-template-columns: none !important;
+    column-gap: 0.55rem !important;
+    row-gap: 0.55rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
   html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-copy {
-    flex: 0 1 auto !important;
-    width: auto !important;
-    max-width: 42% !important;
+    grid-area: copy !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    flex: unset !important;
+    width: 100% !important;
+    max-width: 100% !important;
     min-width: 0 !important;
     overflow: hidden !important;
   }
 
   html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills {
-    flex: 1 1 auto !important;
-    width: auto !important;
+    grid-area: pills !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    flex: unset !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
   }
 
-  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row {
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills::-webkit-scrollbar {
+    display: none !important;
+    height: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+    grid-area: resume !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
     display: flex !important;
-    flex: 0 0 auto !important;
-    margin-inline-start: auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .action-buttons-group,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .action-buttons-group.w-100,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .top-card-session-cluster,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .top-card-session-cluster.w-100,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .top-card-session-actions,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .top-card-session-actions.w-100 {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    grid-area: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .session-primary-action,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .session-primary-action[style],
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .session-primary-action.w-100 {
     width: auto !important;
+    max-width: none !important;
+    min-width: 12.75rem !important;
+    flex: 0 0 auto !important;
+  }
+
+  html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "copy icons"
+      "pills pills"
+      "resume resume" !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row {
+    display: block !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row > .top-card-icon-controls,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .top-card-icon-controls {
+    display: inline-flex !important;
+    flex-flow: row nowrap !important;
+    flex: 0 0 auto !important;
+    grid-area: icons !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    width: max-content !important;
+    margin: 0 !important;
+    order: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row > .top-card-session-hr,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-head-utility-row > .top-card-session-hr {
+    display: none !important;
   }
 
   html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-progress-pills {
     display: none !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) {
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    grid-template-areas:
+      "copy icons"
+      "resume resume" !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 0.55rem !important;
+    row-gap: 0.55rem !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+    grid-area: resume !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed .workspace-shell-head-utility-row > .top-card-icon-controls {
+    grid-area: icons !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+}
+
+/* Latin · Arabic surah title: one row, tighter spacing, no ellipsis — scale type to fit. */
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.mutqin-surah-bilingual,
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
+html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
+  --surah-title-gap: 0.28rem;
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  flex-wrap: nowrap !important;
+  align-items: baseline !important;
+  column-gap: var(--surah-title-gap) !important;
+  row-gap: 0 !important;
+  gap: 0 var(--surah-title-gap) !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  text-wrap: nowrap !important;
+  text-overflow: clip !important;
+  font-size: clamp(1rem, 0.86rem + 0.9vw, 1.28rem) !important;
+  letter-spacing: 0.01em !important;
+}
+
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
+html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding-inline: 0 !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+  font-size: 1em !important;
+  padding-inline-end: 0.12em !important;
+}
+
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+  font-size: 1.02em !important;
+  padding-inline-start: 0.08em !important;
+}
+
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
+  flex: 0 0 auto !important;
+  margin-inline: 0.05em !important;
+  opacity: 0.42 !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+  min-width: 0 !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.mutqin-surah-bilingual {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
+  html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
+    --surah-title-gap: 0.24rem;
+    font-size: clamp(0.92rem, 2.1vw + 0.68rem, 1.12rem) !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Keep title paint inside its grid cell so it never covers pills/actions. */
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-copy,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .workspace-shell-main-title.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .workspace-shell-overview-toggle.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) .workspace-shell-overview-toggle__text {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.mutqin-surah-bilingual {
+    overflow: hidden !important;
+  }
+}
+
+@media (max-width: 420px) {
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.mutqin-surah-bilingual,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text {
+    --surah-title-gap: 0.2rem;
+    font-size: clamp(0.86rem, 2.4vw + 0.58rem, 1rem) !important;
   }
 }

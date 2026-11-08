@@ -45,6 +45,22 @@ export function describeMediaError(audio = null) {
   }
 }
 
+export function createSessionAudioSupersededError(kind = 'wait') {
+  const message = kind === 'play' ? 'Audio play superseded' : 'Audio wait superseded'
+  const error = new Error(message)
+  error.name = 'AbortError'
+  error.code = 'AUDIO_SUPERSEDED'
+  error.mutqinBenign = true
+  return error
+}
+
+export function isSessionAudioSupersededError(error) {
+  if (!error) return false
+  if (error?.code === 'AUDIO_SUPERSEDED' || error?.mutqinBenign === true) return true
+  const message = String(error?.message || error || '')
+  return /Audio (wait|play) superseded/i.test(message)
+}
+
 export function normalizeComparableAudioUrl(url) {
   if (!url || typeof url !== 'string') return ''
   const trimmed = url.trim()
@@ -93,7 +109,23 @@ export class SessionAudioPlayer {
     this.ignorePauseEvent = false
     this._handlers = null
     this._waitToken = 0
+    this._activeWait = null
     this.options = options
+  }
+
+  _cancelActiveWait() {
+    const pending = this._activeWait
+    this._activeWait = null
+    if (!pending || pending.settled) return
+    pending.settled = true
+    try {
+      pending.cleanup?.()
+    } catch { /* ignore */ }
+    try {
+      // Resolve, do not reject. Callers often fire attachSource() without
+      // awaiting it; a rejection there becomes an unhandledrejection.
+      pending.resolve?.({ superseded: true })
+    } catch { /* ignore */ }
   }
 
   get audio() {
@@ -121,6 +153,7 @@ export class SessionAudioPlayer {
   bumpGeneration() {
     this.generation += 1
     this._waitToken += 1
+    this._cancelActiveWait()
     return this.generation
   }
 
@@ -173,7 +206,7 @@ export class SessionAudioPlayer {
       ? Number(options.generation)
       : this.generation
     if (!this.isCurrent(generation)) {
-      throw new Error('Audio wait superseded')
+      return { sameSource: false, generation, superseded: true }
     }
 
     const activeSrc = this.currentSrc()
@@ -193,14 +226,20 @@ export class SessionAudioPlayer {
         this._setState(SESSION_AUDIO_STATES.ERROR, { error })
         throw error
       }
-      await this.waitUntilReady({ generation, timeoutMs: options.timeoutMs })
+      const ready = await this.waitUntilReady({ generation, timeoutMs: options.timeoutMs })
+      if (ready?.superseded || !this.isCurrent(generation)) {
+        return { sameSource: false, generation, superseded: true }
+      }
     } else if (!this.isReady() && Number(audio.readyState || 0) < 1) {
       this._setState(SESSION_AUDIO_STATES.LOADING)
-      await this.waitUntilReady({ generation, timeoutMs: options.timeoutMs })
+      const ready = await this.waitUntilReady({ generation, timeoutMs: options.timeoutMs })
+      if (ready?.superseded || !this.isCurrent(generation)) {
+        return { sameSource: false, generation, superseded: true }
+      }
     }
 
     if (!this.isCurrent(generation)) {
-      throw new Error('Audio wait superseded')
+      return { sameSource: false, generation, superseded: true }
     }
 
     if (this.state === SESSION_AUDIO_STATES.LOADING) {
@@ -214,7 +253,7 @@ export class SessionAudioPlayer {
     const audio = this.element
     if (!audio) return Promise.reject(new Error('No audio element'))
     if (!this.isCurrent(generation)) {
-      return Promise.reject(new Error('Audio wait superseded'))
+      return Promise.resolve({ superseded: true })
     }
 
     const isReadyEnough = () => Number(audio.readyState || 0) >= 1
@@ -223,15 +262,28 @@ export class SessionAudioPlayer {
     const hasSource = !!(audio.currentSrc || audio.getAttribute('src'))
     if (!hasSource) return Promise.reject(new Error('Audio source missing'))
 
+    // Cancel any in-flight wait before starting a new one so it never leaks as
+    // an unhandledrejection when ayah/source races supersede each other.
+    this._cancelActiveWait()
     const waitToken = ++this._waitToken
 
-    return new Promise((resolve, reject) => {
+    const waitPromise = new Promise((resolve, reject) => {
       let settled = false
       let poll = null
+      const waitRecord = {
+        token: waitToken,
+        settled: false,
+        resolve,
+        reject,
+        cleanup: null,
+      }
+      this._activeWait = waitRecord
 
       const finish = (fn, value) => {
-        if (settled) return
+        if (settled || waitRecord.settled) return
         settled = true
+        waitRecord.settled = true
+        if (this._activeWait === waitRecord) this._activeWait = null
         cleanup()
         fn(value)
       }
@@ -243,7 +295,7 @@ export class SessionAudioPlayer {
 
       const onReady = () => {
         if (stale()) {
-          finish(reject, new Error('Audio wait superseded'))
+          finish(resolve, { superseded: true })
           return
         }
         if (isReadyEnough()) finish(resolve)
@@ -251,7 +303,7 @@ export class SessionAudioPlayer {
 
       const onError = () => {
         if (stale()) {
-          finish(reject, new Error('Audio wait superseded'))
+          finish(resolve, { superseded: true })
           return
         }
         if (isBenignMediaError(audio)) {
@@ -293,6 +345,7 @@ export class SessionAudioPlayer {
         audio.removeEventListener('canplaythrough', onReady)
         audio.removeEventListener('error', onError)
       }
+      waitRecord.cleanup = cleanup
 
       audio.addEventListener('loadedmetadata', onReady)
       audio.addEventListener('loadeddata', onReady)
@@ -302,12 +355,14 @@ export class SessionAudioPlayer {
       poll = setInterval(onReady, 200)
       if (isReadyEnough()) finish(resolve)
     })
+
+    return waitPromise
   }
 
   async play({ generation = this.generation, rewindIfEnded = true } = {}) {
     const audio = this.element
     if (!audio) throw new Error('Audio player is unavailable')
-    if (!this.isCurrent(generation)) throw new Error('Audio play superseded')
+    if (!this.isCurrent(generation)) return false
 
     if (rewindIfEnded) {
       try {
@@ -326,12 +381,13 @@ export class SessionAudioPlayer {
       }
       if (!this.isCurrent(generation)) {
         try { audio.pause() } catch { /* ignore */ }
-        throw new Error('Audio play superseded')
+        return false
       }
       this._setState(SESSION_AUDIO_STATES.PLAYING)
       return true
     } catch (error) {
-      if (!this.isCurrent(generation)) throw new Error('Audio play superseded')
+      if (isSessionAudioSupersededError(error)) return false
+      if (!this.isCurrent(generation)) return false
       // NotPlayingError / AbortError from superseding loads — treat as aborted.
       const name = String(error?.name || '')
       if (name === 'AbortError') {

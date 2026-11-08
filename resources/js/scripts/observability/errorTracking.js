@@ -80,6 +80,16 @@ function markReported(error) {
 function isBenignBrowserErrorMessage(message) {
   const text = String(message || '')
   return text.includes('ResizeObserver loop completed with undelivered notifications')
+    || /Audio (wait|play) superseded/i.test(text)
+}
+
+function isBenignUnhandledRejection(reason) {
+  if (!reason) return false
+  if (reason?.mutqinBenign === true || reason?.code === 'AUDIO_SUPERSEDED') return true
+  if (reason?.name === 'AbortError' && /Audio (wait|play) superseded/i.test(String(reason?.message || ''))) {
+    return true
+  }
+  return isBenignBrowserErrorMessage(reason?.message || reason)
 }
 
 function alreadyReported(error) {
@@ -243,6 +253,10 @@ export function installErrorTracking(app) {
 
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event?.reason
+    if (isBenignUnhandledRejection(reason)) {
+      try { event?.preventDefault?.() } catch (_) { /* ignore */ }
+      return
+    }
     if (alreadyReported(reason)) return
     reportError(reason, {
       kind: 'unhandledrejection',

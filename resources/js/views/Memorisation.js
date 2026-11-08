@@ -456,6 +456,7 @@ import {
   SESSION_AUDIO_STATES,
   describeMediaError as describeSessionMediaError,
   isBenignMediaError as isSessionBenignMediaError,
+  isSessionAudioSupersededError,
 } from '../scripts/audio/sessionAudioPlayer'
 import {
   ayahUrlMatchesGlobalNumber,
@@ -37221,11 +37222,20 @@ export default {
       }
 
       if (action === PRIMARY_SESSION_ACTION.PAUSE_SESSION) {
+        // Apply on the tap itself. The persist path awaits a lock first, and a
+        // late pause never stops audio that is already playing.
+        this.applyLocalPausedSessionState()
+        this.softPausePlayback()
+        this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
         this.pauseSessionFromPrimaryAction()
         return
       }
 
       if (action === PRIMARY_SESSION_ACTION.RESUME_SESSION) {
+        // play() must run in this turn, before any await. Leave sessionPaused
+        // set so the persist path still takes the in-place soft resume.
+        this.primeAudioPlaybackUnlock()
+        this.playHeaderResumeAudio()
         this.resumeSessionFromPrimaryAction()
         return
       }
@@ -37293,6 +37303,43 @@ export default {
     },
 
     /**
+     * Start playback in the same turn as the Resume tap.
+     * Returns the play promise without awaiting, so iOS still counts the gesture.
+     */
+    playHeaderResumeAudio() {
+      const audio = this.audioElement
+      const src = String(audio?.currentSrc || audio?.getAttribute?.('src') || '').trim()
+      const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
+      if (!audio || !hasSrc || audio.ended || Number(audio.readyState || 0) < 2) return null
+      const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+      try {
+        audio.defaultPlaybackRate = safeSpeed
+        audio.playbackRate = safeSpeed
+      } catch { /* ignore rate */ }
+      let playPromise = null
+      try {
+        playPromise = audio.play()
+      } catch {
+        return null
+      }
+      this.isPlaying = true
+      this.playbackAwaitingGesture = false
+      this.playerVisible = true
+      Promise.resolve(playPromise).then(() => {
+        if (audio.paused) return
+        this.isPlaying = true
+        this.playbackAwaitingGesture = false
+        this.syncSessionControlsWithPlayback(true)
+      }).catch((err) => {
+        if (String(err?.name || '') === 'AbortError') return
+        this.isPlaying = false
+        this.playbackAwaitingGesture = true
+        if (String(err?.name || '') === 'NotAllowedError') this.promptTapToPlay()
+      })
+      return playPromise
+    },
+
+    /**
      * Resume audio from the paused media time without countdown or verse restart.
      */
     async resumePausedPlaybackImmediately() {
@@ -37326,12 +37373,20 @@ export default {
 
         const player = this.ensureSessionAudioPlayer?.()
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-        const playGeneration = this.beginPlaybackGeneration()
+        // Keep the current generation. Bumping here aborts the tap's play()
+        // and player.play() then pauses the element, so Resume does nothing.
+        const playGeneration = this.playGeneration
         try {
           if (player) player.setPlaybackRate(safeSpeed)
           else {
             audio.defaultPlaybackRate = safeSpeed
             audio.playbackRate = safeSpeed
+          }
+          if (!audio.paused) {
+            this.isPlaying = true
+            this.playbackAwaitingGesture = false
+            this.syncSessionControlsWithPlayback(true)
+            return true
           }
           const playPromise = player
             ? player.play({ generation: playGeneration, rewindIfEnded: false })
@@ -37938,7 +37993,7 @@ export default {
       const hasSource = !!(audio.currentSrc || audio.getAttribute('src'))
       if (!hasSource) return Promise.reject(new Error('Audio source missing'))
 
-      return new Promise((resolve, reject) => {
+      const waitPromise = new Promise((resolve, reject) => {
         let settled = false
         let poll = null
         const finish = (fn, value) => {
@@ -37950,7 +38005,7 @@ export default {
 
         const onReady = () => {
           if (isSuperseded()) {
-            finish(reject, new Error('Audio wait superseded'))
+            finish(resolve, { superseded: true })
             return
           }
           if (isReady()) finish(resolve)
@@ -37958,7 +38013,7 @@ export default {
 
         const onError = () => {
           if (isSuperseded()) {
-            finish(reject, new Error('Audio wait superseded'))
+            finish(resolve, { superseded: true })
             return
           }
           if (this.isAudioLoadAbortError(audio)) return
@@ -38009,6 +38064,7 @@ export default {
 
         if (isReady()) finish(resolve)
       })
+      return waitPromise
     },
 
     async attemptMutedAutoplayRecovery() {
@@ -41838,11 +41894,10 @@ export default {
       const restoredSpeed = this.normalizePlaybackSpeed(state.speed || this.speed || 1)
       const showPlayer = options.playerVisible ?? state.playerVisible ?? true
 
-      try {
-        this.attachMainAudioSource(resolvedUrl, playGeneration)
-      } catch {
+      this.attachMainAudioSource(resolvedUrl, playGeneration).catch((error) => {
+        if (isSessionAudioSupersededError(error)) return
         this.preloadQueueEntryAudio(entry || { verse }, { playerVisible: false })
-      }
+      })
 
       this.speed = restoredSpeed
       this.applySpeed()
@@ -42076,12 +42131,13 @@ export default {
       // Cancel in-flight playVerse / attach work so a late play() cannot revive UI.
       this.beginPlaybackGeneration()
       this.playRequestLocked = false
-      if (this.sessionAudioPlayer) {
-        this.sessionAudioPlayer.pause({ bump: false })
-      } else if (this.audioElement) {
+      if (this.audioElement) {
         try {
           this.audioElement.pause()
         } catch {}
+      }
+      if (this.sessionAudioPlayer) {
+        this.sessionAudioPlayer.pause({ bump: false })
       }
       this.isPlaying = false
       this.advanceLocked = false
@@ -46921,7 +46977,7 @@ export default {
           generation: playGeneration,
           timeoutMs: 15000,
         })
-        if (playGeneration !== this.playGeneration) throw new Error('Audio wait superseded')
+        if (playGeneration !== this.playGeneration || result?.superseded) return false
         this.syncAudioUiState(
           Number(player.element?.currentTime || 0),
           Number(player.element?.duration || 0),
@@ -47019,6 +47075,8 @@ export default {
       return this.buildFallbackAyahAudioUrl(global)
     },
     ensureLiveSessionAudioAttached() {
+      const liveAudio = this.audioElement
+      if (liveAudio && !liveAudio.paused && this.isPlaying) return true
       const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
       const verse = entry?.verse || entry || this.activeVerseRef
       const url = this.ensureVerseAudioUrl(verse)
@@ -50028,6 +50086,7 @@ export default {
           this.markPlaybackStart()
           return
         } catch (error) {
+          if (isSessionAudioSupersededError(error)) return
           console.warn('Word audio playback failed:', error)
           this.isPlaying = false
           this.promptAudioPlaybackRetry(this.t('toasts.unableToPlayThisWordRight'))

@@ -9683,6 +9683,11 @@ html {
   max-width: 100%;
 }
 
+.workspace-shell-main-title.mutqin-surah-bilingual {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
 html body .app .workspace-shell-surah-setup-trigger {
   border: 0;
   background: transparent;
@@ -30866,6 +30871,13 @@ ayah cards and the mushaf scale from phone to desktop without any
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
+}
+
+.workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
+.workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title.mutqin-surah-bilingual {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
 }
 
 .workspace-shell-actions {
@@ -61821,28 +61833,33 @@ html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-p
   direction: ltr;
   unicode-bidi: isolate;
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-flow: row nowrap;
+  flex-wrap: nowrap;
   align-items: baseline;
-  gap: 0.2em 0.55em;
+  gap: 0 0.28rem;
   max-width: 100%;
   min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
   text-align: left;
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-main-title.mutqin-surah-bilingual,
 .workspace-shell .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
 html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
-  display: flex !important;
-  flex-wrap: wrap !important;
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  flex-wrap: nowrap !important;
   justify-content: flex-start !important;
   align-items: baseline !important;
-  column-gap: 0.55rem !important;
-  row-gap: 0.1rem !important;
-  gap: 0.1rem 0.55rem !important;
+  column-gap: 0.28rem !important;
+  row-gap: 0 !important;
+  gap: 0 0.28rem !important;
   width: auto !important;
   max-width: 100% !important;
   min-width: 0 !important;
   overflow: visible !important;
+  white-space: nowrap !important;
   text-overflow: clip !important;
 }
 
@@ -61851,9 +61868,9 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
   display: inline-block !important;
   position: static !important;
-  flex: 0 1 auto !important;
+  flex: 0 0 auto !important;
   min-width: 0 !important;
-  max-width: 100% !important;
+  max-width: none !important;
   white-space: nowrap !important;
   overflow: visible !important;
   text-overflow: clip !important;
@@ -61862,11 +61879,13 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
-  padding-inline-end: 0.15em;
+  padding-inline-end: 0.1em;
+  font-size: 1em;
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-  padding-inline-start: 0.15em;
+  padding-inline-start: 0.06em;
+  font-size: 1.02em;
 }
 
 .workspace-shell .workspace-shell-main-title,
@@ -61874,9 +61893,10 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
 html body .app .workspace-shell-main-title {
   position: relative !important;
   display: inline-flex !important;
-  flex-wrap: wrap !important;
+  flex-flow: row nowrap !important;
+  flex-wrap: nowrap !important;
   align-items: baseline !important;
-  gap: 0.2em 0.55em !important;
+  gap: 0 0.28rem !important;
   width: fit-content !important;
   max-width: 100% !important;
   min-width: 0 !important;
@@ -61891,11 +61911,19 @@ html body .app .workspace-shell-main-title {
   letter-spacing: 0.01em !important;
   line-height: 1.45 !important;
   unicode-bidi: isolate;
-  text-wrap: wrap;
+  text-wrap: nowrap;
   overflow-wrap: normal;
-  white-space: normal;
+  white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+}
+
+.workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
+.workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: clamp(1rem, 0.86rem + 0.9vw, 1.28rem) !important;
+  letter-spacing: 0.01em !important;
 }
 
 .workspace-shell-surah-ar {

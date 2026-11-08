@@ -4,8 +4,10 @@ import { readFileSync } from 'node:fs'
 import {
   SessionAudioPlayer,
   SESSION_AUDIO_STATES,
+  createSessionAudioSupersededError,
   describeMediaError,
   isBenignMediaError,
+  isSessionAudioSupersededError,
   normalizeComparableAudioUrl,
 } from '../../resources/js/scripts/audio/sessionAudioPlayer.js'
 
@@ -128,8 +130,37 @@ describe('SessionAudioPlayer', () => {
     const first = player.bumpGeneration()
     const playPromise = player.play({ generation: first })
     player.bumpGeneration()
-    await assert.rejects(playPromise, /superseded/)
+    assert.equal(await playPromise, false)
     assert.equal(audio.paused, true)
+  })
+
+  it('settles superseded waits immediately without leaving them hanging', async () => {
+    const audio = createFakeAudio({
+      src: 'https://cdn.example/a.mp3',
+      currentSrc: 'https://cdn.example/a.mp3',
+      readyState: 0,
+      duration: NaN,
+    })
+    const player = new SessionAudioPlayer()
+    player.bind(audio)
+    const first = player.bumpGeneration()
+    const firstWait = player.waitUntilReady({ generation: first, timeoutMs: 5000 })
+    const second = player.bumpGeneration()
+    const cancelled = await firstWait
+    assert.equal(cancelled?.superseded, true)
+    audio.readyState = 4
+    audio.duration = 8
+    await player.waitUntilReady({ generation: second, timeoutMs: 5000 })
+  })
+
+  it('marks superseded errors as benign AbortErrors', () => {
+    const waitError = createSessionAudioSupersededError('wait')
+    const playError = createSessionAudioSupersededError('play')
+    assert.equal(waitError.name, 'AbortError')
+    assert.equal(playError.code, 'AUDIO_SUPERSEDED')
+    assert.equal(isSessionAudioSupersededError(waitError), true)
+    assert.equal(isSessionAudioSupersededError(new Error('Audio play superseded')), true)
+    assert.equal(isSessionAudioSupersededError(new Error('Audio load timeout')), false)
   })
 
   it('never leaves playing state after play() rejection', async () => {
