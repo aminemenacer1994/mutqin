@@ -611,9 +611,8 @@ includesAll('ai recitation speechmatics stability', [
   /class="verse-inline-action-btn verse-inline-play-btn"/,
 ])
 
-// Per-ayah download icon hidden in UI; server helper remains for any future entry points.
 assert.match(source, /downloadVerseAudio\(/)
-assert.doesNotMatch(memorisationVueSource, /verse-inline-download-btn/)
+assert.match(memorisationVueSource, /verse-inline-download-btn/)
 
 includesAll('ai recitation full-session recording', [
   /getActiveSessionQueueForCheck\(\)/,

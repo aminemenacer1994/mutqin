@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -27,8 +28,11 @@ class AyahAudioController extends Controller
 
         // Stay on the requested reciter. A missing Sudais file must not be
         // replaced with Mishary, or the session label and the voice disagree.
+        // 128 kbps is the default in the UI; some reciters (e.g. Sudais) only allow 64/192.
         return array_values(array_unique([
             "https://cdn.islamic.network/quran/audio/128/{$id}/{$ayah}.mp3",
+            "https://cdn.islamic.network/quran/audio/64/{$id}/{$ayah}.mp3",
+            "https://cdn.islamic.network/quran/audio/192/{$id}/{$ayah}.mp3",
             "https://cdn.alquran.cloud/media/audio/ayah/{$id}/{$ayah}",
         ]));
     }
@@ -72,7 +76,14 @@ class AyahAudioController extends Controller
                 continue;
             }
 
-            $response = Http::timeout(20)->get($url);
+            try {
+                $response = Http::timeout(20)->get($url);
+            } catch (ConnectionException) {
+                $lastStatus = 502;
+
+                continue;
+            }
+
             if ($response->successful()) {
                 $body = $response->body();
                 if (is_string($body) && $body !== '') {

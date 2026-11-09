@@ -1646,6 +1646,13 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
+                    <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
+                      @click.stop="downloadVerseAudio(verse)"
+                      :disabled="!ensureVerseAudioUrl(verse)"
+                      :title="t('memorisation.offlineDownload.buttonHint')"
+                      :aria-label="t('memorisation.offlineDownload.buttonHint')">
+                      <i class="bi bi-download" aria-hidden="true"></i>
+                    </button>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
                       @click.stop="playAyahCardAudio(verse)"
                       :disabled="!ensureVerseAudioUrl(verse)"

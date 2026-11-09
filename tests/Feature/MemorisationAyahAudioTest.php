@@ -61,6 +61,8 @@ class MemorisationAyahAudioTest extends TestCase
 
         Http::fake([
             'https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3' => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/64/ar.abdurrahmaansudais/1.mp3' => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/192/ar.abdurrahmaansudais/1.mp3' => Http::response('missing', 404),
             'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3' => Http::response('wrong-reciter', 200, [
                 'Content-Type' => 'audio/mpeg',
             ]),
@@ -75,10 +77,26 @@ class MemorisationAyahAudioTest extends TestCase
             ->assertDontSee('wrong-reciter', false);
     }
 
+    public function test_islamic_network_tries_other_bitrates_when_128_is_forbidden(): void
+    {
+        Http::fake([
+            'https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/8.mp3' => Http::response('forbidden', 403),
+            'https://cdn.islamic.network/quran/audio/64/ar.abdurrahmaansudais/8.mp3' => Http::response('sudais-64k', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $this->get('/audio/ayah/ar.abdurrahmaansudais/8.mp3')
+            ->assertOk()
+            ->assertSee('sudais-64k', false);
+    }
+
     public function test_bundled_ayah_audio_falls_back_to_alquran_cloud(): void
     {
         Http::fake([
             self::PRIMARY => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/64/ar.alafasy/1.mp3' => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/192/ar.alafasy/1.mp3' => Http::response('missing', 404),
             self::FALLBACK => Http::response('fallback-audio-bytes', 200, [
                 'Content-Type' => 'audio/mpeg',
             ]),
@@ -109,5 +127,22 @@ class MemorisationAyahAudioTest extends TestCase
     {
         $this->get('/audio/ayah/ar.alafasy/0.mp3')
             ->assertNotFound();
+    }
+
+    public function test_cdn_connection_failure_returns_bad_gateway_not_server_error(): void
+    {
+        Http::fake([
+            self::PRIMARY => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/64/ar.alafasy/1.mp3' => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/192/ar.alafasy/1.mp3' => Http::response('missing', 404),
+            self::FALLBACK => function () {
+                throw new \Illuminate\Http\Client\ConnectionException(
+                    'cURL error 6: Could not resolve host: cdn.alquran.cloud'
+                );
+            },
+        ]);
+
+        $this->get('/audio/ayah/ar.alafasy/1.mp3')
+            ->assertStatus(502);
     }
 }

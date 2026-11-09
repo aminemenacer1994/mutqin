@@ -81,6 +81,8 @@ export function orderAyahAudioCandidateUrls({
   }
   if (Number.isFinite(global) && global > 0) {
     push(`https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`)
+    push(`https://cdn.islamic.network/quran/audio/64/${reciter}/${global}.mp3`)
+    push(`https://cdn.islamic.network/quran/audio/192/${reciter}/${global}.mp3`)
     push(`https://cdn.alquran.cloud/media/audio/ayah/${reciter}/${global}`)
   }
   return urls

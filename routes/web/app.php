@@ -255,9 +255,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $response = null;
         $lastStatus = 502;
         foreach ($candidates as $candidate) {
-            $attempt = Http::timeout(20)
-                ->withOptions(['stream' => $mode !== 'play'])
-                ->get($candidate);
+            try {
+                $attempt = Http::timeout(20)
+                    ->withOptions(['stream' => $mode !== 'play'])
+                    ->get($candidate);
+            } catch (\Illuminate\Http\Client\ConnectionException) {
+                $lastStatus = 502;
+
+                continue;
+            }
+
             if ($attempt->successful()) {
                 $response = $attempt;
                 break;

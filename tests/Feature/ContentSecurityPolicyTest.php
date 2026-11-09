@@ -54,6 +54,9 @@ class ContentSecurityPolicyTest extends TestCase
         $policy = SetMutqinContentSecurityPolicy::buildPolicy();
 
         $this->assertStringContainsString("form-action 'self'", $policy);
+        $this->assertStringContainsString('https://checkout.stripe.com', $policy);
+        $this->assertStringContainsString('https://billing.stripe.com', $policy);
+        $this->assertStringContainsString('https://accounts.google.com', $policy);
     }
 
     public function test_build_policy_allows_app_url_forms_in_local_when_hosts_differ(): void

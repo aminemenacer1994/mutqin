@@ -80,7 +80,7 @@
                 v-else
                 id="pricing-checkout-form"
                 method="POST"
-                action="/checkout"
+                :action="checkoutFormAction"
                 @submit="onBillingSubmit"
               >
                 <input type="hidden" name="_token" :value="csrfToken">
@@ -139,6 +139,13 @@ export default {
     const isAuthenticated = ref(!!window.mutqinAuthCheck);
     const currentTheme = ref(getSavedTheme());
     const billingBusy = ref(false);
+    const checkoutFormAction = computed(() => {
+      if (typeof window === 'undefined') {
+        return '/checkout';
+      }
+
+      return new URL('/checkout', window.location.href).href;
+    });
     let revealObserver = null;
     const subscriptionTier = computed(() => String(window.mutqinSubscriptionTier || 'free').toLowerCase());
     const hasPaidAccess = computed(() => !!window.mutqinHasPaidAccess);
@@ -173,7 +180,7 @@ export default {
     }
 
     function onBillingSubmit(event) {
-      if (event?.target?.getAttribute('action') === '/checkout') {
+      if (event?.target?.getAttribute('action')?.endsWith('/checkout')) {
         trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
       }
       if (billingBusy.value) {
@@ -329,6 +336,7 @@ export default {
       lifetimeEnabled,
       showBillingSwitch,
       billingCycle,
+      checkoutFormAction,
       csrfToken,
       billingBusy,
       currentTheme,

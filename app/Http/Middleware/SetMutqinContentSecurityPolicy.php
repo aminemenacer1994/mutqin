@@ -41,6 +41,10 @@ class SetMutqinContentSecurityPolicy
             return true;
         }
 
+        if (app()->environment('local', 'testing')) {
+            return true;
+        }
+
         if (str_contains($existing, "script-src 'none'")) {
             return true;
         }
@@ -95,11 +99,24 @@ class SetMutqinContentSecurityPolicy
 
         if (! app()->environment('local', 'testing')) {
             $candidates[] = rtrim(MutqinDomains::marketingUrl(''), '/');
+        } elseif ($request instanceof Request) {
+            $scheme = $request->getScheme() ?: 'http';
+            $port = (int) $request->getPort();
+            $portSuffix = ($port > 0 && ! in_array($port, [80, 443], true)) ? ":{$port}" : '';
+            foreach (['localhost', '127.0.0.1', '[::1]'] as $host) {
+                $candidates[] = "{$scheme}://{$host}{$portSuffix}";
+            }
+            foreach ([8000, 8001, 3000, 5173] as $devPort) {
+                if ($devPort !== $port) {
+                    $candidates[] = "http://localhost:{$devPort}";
+                    $candidates[] = "http://127.0.0.1:{$devPort}";
+                    $candidates[] = "http://[::1]:{$devPort}";
+                }
+            }
         } else {
             $candidates[] = 'http://localhost:8000';
             $candidates[] = 'http://127.0.0.1:8000';
-            $candidates[] = 'http://localhost';
-            $candidates[] = 'http://127.0.0.1';
+            $candidates[] = 'http://[::1]:8000';
         }
 
         foreach ($candidates as $origin) {
@@ -109,6 +126,17 @@ class SetMutqinContentSecurityPolicy
             if (preg_match('#\Ahttps?://#i', $origin) === 1) {
                 $sources[] = $origin;
             }
+        }
+
+        // Chrome applies form-action to the whole redirect chain after a POST, but the
+        // console cites the form's own action. Checkout and the billing portal 302 to Stripe;
+        // Google sign-in 302s to accounts.google.com.
+        foreach ([
+            'https://checkout.stripe.com',
+            'https://billing.stripe.com',
+            'https://accounts.google.com',
+        ] as $redirectHost) {
+            $sources[] = $redirectHost;
         }
 
         return implode(' ', $sources);

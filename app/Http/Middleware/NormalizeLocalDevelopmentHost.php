@@ -20,10 +20,6 @@ class NormalizeLocalDevelopmentHost
             return $next($request);
         }
 
-        if (! in_array($request->method(), ['GET', 'HEAD'], true)) {
-            return $next($request);
-        }
-
         $currentHost = strtolower((string) $request->getHost());
         if (! in_array($currentHost, self::LOCAL_HOSTS, true)) {
             return $next($request);
