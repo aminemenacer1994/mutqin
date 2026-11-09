@@ -793,7 +793,16 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?"
+      "feedbackPrompt": "How was this session?",
+      "practiceStage": {
+        "label": "This session",
+        "listen": "Listen",
+        "follow": "Follow",
+        "memorise": "Memorise",
+        "ai": "AI Recite",
+        "next": "Next: {stage}",
+        "current": "Now: {stage}"
+      }
     },
     "workspaceEmpty": {
       "kicker": "بسم الله",
@@ -5412,6 +5421,8 @@
       "heard": "سمعنا",
       "unknownSurah": "لم نتعرف على هذه السورة. أعد اسمها.",
       "unknownReciter": "هذا القارئ غير متاح. اختر قارئًا من متقن.",
+      "lowConfidence": "ربما لم أسمع الاسم جيدًا. يُرجى التأكيد.",
+      "needsSession": "افتح جلسة أولًا، أو اذكر اسم سورة للبدء.",
       "ambiguousReciter": "أي قارئ تقصد؟",
       "ambiguousSurah": "أي سورة تقصد؟",
       "reversedRange": "من الآية {start} إلى الآية {end} ترتيب عكسي. هل تقصد من الآية {suggestedStart} إلى {suggestedEnd}؟",
@@ -5429,7 +5440,9 @@
       "modeMemorise": "حفظ",
       "modeRevise": "مراجعة",
       "modeTest": "اختبار التلاوة"
-    }
+    },
+    "revision_aside_label": "Revision",
+    "revision_aside_cta": "Revise"
   },
   "admin": {
     "loading": "جارٍ التحميل…",

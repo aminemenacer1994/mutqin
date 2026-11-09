@@ -54,7 +54,7 @@ assert.doesNotMatch(homepage, /homepage\.footer\.(?:featurePages|articles|ourMis
 assert.match(homepage, /mutqinRestrictMarketingHost/)
 assert.doesNotMatch(homepage, /href="#how-it-works" class="btn btn--secondary"/)
 assert.match(en, /"startFirstSession": "Start 10-minute session"/)
-assert.match(en, /"startFree": "Create free account"/)
+assert.match(en, /"startFree": "Start Memorising — Free"/)
 assert.match(en, /"title": "Qur’an memorisation, revision, and AI recitation"/)
 assert.match(en, /90 days of free access/)
 assert.match(en, /"problemText": "A disrupted rhythm can make it hard to know where to restart\."/)

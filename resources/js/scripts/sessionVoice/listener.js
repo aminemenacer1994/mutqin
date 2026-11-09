@@ -1,4 +1,4 @@
-import { appendHeardPayload, createHeardStream, heardStreamText } from '../askMutqin/heardStream.js'
+import { appendHeardPayload, createHeardStream, heardStreamText, isFinalHeardPayload } from '../askMutqin/heardStream.js'
 import { createAskMutqinVoiceSession } from '../askMutqin/voiceSession.js'
 import { classifyMicrophoneAccessError, MICROPHONE_ACCESS_KIND } from '../audio/microphonePermissionHelp.js'
 import { idleWaveformBarLevels, sampleWaveformBarLevels } from '../audio/voiceNoteLiveAnalyser.js'
@@ -91,6 +91,7 @@ export function createSessionVoiceListener(options = {}) {
   let meter = null
   let pollTimer = 0
   let heard = createHeardStream()
+  let finalWords = []
   let browserTranscript = ''
   let transcriptSeed = ''
   let lastTranscriptAt = 0
@@ -98,6 +99,7 @@ export function createSessionVoiceListener(options = {}) {
   let settled = false
   let cancelled = false
   let recoveries = 0
+  let providerName = 'speechmatics'
   const tracker = createSilenceTracker({ silenceMs })
 
   const transcript = () => {
@@ -105,12 +107,30 @@ export function createSessionVoiceListener(options = {}) {
     return [transcriptSeed, providerText].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
   }
 
+  const displayInterim = () => (heard.interim || []).length > 0
+
   const publish = (extra = {}) => {
     onUpdate({
       transcript: transcript(),
+      interim: displayInterim(),
       speechSeen: tracker.speechSeen(),
       bars: meter?.bars?.() || idleWaveformBarLevels(BAR_COUNT),
       ...extra,
+    })
+  }
+
+  const rememberFinalWords = (beforeCount, payload) => {
+    if (!isFinalHeardPayload(payload)) return
+    const committed = heard.committed || []
+    const added = committed.slice(beforeCount)
+    const detailed = Array.isArray(payload?.words) ? payload.words : []
+    added.forEach((word, offset) => {
+      const source = detailed[detailed.length - added.length + offset] || {}
+      const confidence = Number(source?.confidence)
+      finalWords.push({
+        text: word,
+        confidence: Number.isFinite(confidence) ? confidence : null,
+      })
     })
   }
 
@@ -125,17 +145,53 @@ export function createSessionVoiceListener(options = {}) {
     session = null
   }
 
-  const finish = (reason) => {
+  const fail = (errorKind) => {
     if (settled || cancelled) return
     settled = true
-    const text = transcript()
-    const limitReached = reason === 'limit'
+    const metrics = session?.metrics?.() || null
+    cleanup()
+    onFinish({
+      transcript: '',
+      reason: 'error',
+      errorKind,
+      metrics: metrics ? { ...metrics, provider: providerName, outcome: 'error' } : { provider: providerName, outcome: 'error', duration_ms: startedAt ? Date.now() - startedAt : 0 },
+    })
+  }
+
+  const complete = async (reason) => {
+    if (pollTimer) window.clearInterval(pollTimer)
+    pollTimer = 0
+    try { await session?.finishUtterance?.() } catch { /* finals may already be in */ }
+    const deadline = Date.now() + 800
+    while (!cancelled && Date.now() < deadline) {
+      if (!(heard.interim || []).length && (heard.committed || []).length) break
+      await new Promise((resolve) => window.setTimeout(resolve, 80))
+    }
+    if (cancelled) {
+      cleanup()
+      return
+    }
+    const committed = (heard.committed || []).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+    const text = committed || transcript()
+    const metrics = session?.metrics?.() || {
+      provider: providerName,
+      duration_ms: startedAt ? Date.now() - startedAt : 0,
+      language,
+    }
     cleanup()
     onFinish({
       transcript: text,
+      words: finalWords.map((word) => ({ text: word.text, confidence: word.confidence })),
       reason,
-      limitReached,
+      limitReached: reason === 'limit',
+      metrics: { ...metrics, provider: providerName, outcome: text ? reason : 'empty' },
     })
+  }
+
+  const finish = (reason) => {
+    if (settled || cancelled) return
+    settled = true
+    void complete(reason)
   }
 
   const noteTranscript = () => {
@@ -165,6 +221,7 @@ export function createSessionVoiceListener(options = {}) {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!Recognition) return false
     meter = createLevelMeter(stream)
+    providerName = 'webspeech'
     recognition = new Recognition()
     recognition.continuous = true
     recognition.interimResults = true
@@ -244,19 +301,33 @@ export function createSessionVoiceListener(options = {}) {
       if (settled) return
       cancelled = false
       startedAt = Date.now()
+      providerName = 'speechmatics'
       session = createAskMutqinVoiceSession({
         phraseHints: options.phraseHints,
+        commandMode: true,
+        gateInactiveAudio: true,
         onTranscript: (payload) => {
+          const before = (heard.committed || []).length
           heard = appendHeardPayload(heard, payload)
+          rememberFinalWords(before, payload)
           if (heardStreamText(heard)) noteTranscript()
+          publish({ phase: tracker.speechSeen() ? 'speaking' : 'waiting', interim: displayInterim() })
         },
         onError: () => {
-          if (settled || cancelled || recoveries >= 2) return
+          if (settled || cancelled) return
+          if (recoveries >= 1) {
+            if (transcript()) finish('silence')
+            else fail('network')
+            return
+          }
           recoveries += 1
           const active = session
           window.setTimeout(() => {
             if (settled || cancelled || active !== session) return
-            void active.recover?.()
+            void active.recover?.().then((ok) => {
+              if (settled || cancelled || active !== session) return
+              if (!ok && !transcript()) fail('network')
+            })
           }, 250)
         },
       })
@@ -271,29 +342,24 @@ export function createSessionVoiceListener(options = {}) {
       } catch (error) {
         const kind = permissionError(error)
         if (kind) {
-          settled = true
-          cleanup()
-          onFinish({ transcript: '', reason: 'error', errorKind: kind })
+          fail(kind)
           return
         }
         try { session?.stop?.() } catch { /* ignore */ }
         session = null
         transcriptSeed = transcript()
         heard = createHeardStream()
+        finalWords = []
         let fallback = false
         try {
           fallback = await startBrowserFallback()
         } catch (fallbackError) {
           const fallbackKind = permissionError(fallbackError) || classifyMicrophoneAccessError(fallbackError)
-          settled = true
-          cleanup()
-          onFinish({ transcript: '', reason: 'error', errorKind: fallbackKind })
+          fail(fallbackKind)
           return
         }
         if (!fallback) {
-          settled = true
-          cleanup()
-          onFinish({ transcript: '', reason: 'error', errorKind: 'transcription' })
+          fail('transcription')
           return
         }
       }

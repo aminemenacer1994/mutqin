@@ -77,6 +77,7 @@ class LoginController extends Controller
         $request->session()->put('mutqin_login_method', 'email');
         // Put (not flash): Welcome Back is consumed on first /memorisation visit.
         $request->session()->put('mutqin_just_logged_in', true);
+        $request->session()->forget('mutqin_start_first_session');
 
         $intended = $request->session()->pull('url.intended');
         $follow = $user instanceof User

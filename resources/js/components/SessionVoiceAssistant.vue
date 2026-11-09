@@ -119,6 +119,15 @@
               @click="choose({ speed: option })"
             >{{ option }}×</button>
           </div>
+          <div v-else-if="lowConfidenceOptions.length" class="session-voice__choices">
+            <button
+              v-for="option in lowConfidenceOptions"
+              :key="`${option.id}`"
+              type="button"
+              class="btn btn-outline-secondary session-voice__choice"
+              @click="confirmLowConfidence(option)"
+            >{{ option.name || option.name_ar }}</button>
+          </div>
           <div v-else-if="canConfirmRange" class="session-voice__choices">
             <button type="button" class="btn btn-primary session-voice__choice" @click="confirmRange">
               {{ t('dashboard.voice.useRange', { start: clarification.suggested_start, end: clarification.suggested_end }) }}
@@ -147,6 +156,7 @@
 <script>
 import { createSessionVoiceListener } from '../scripts/sessionVoice/listener.js'
 import { interpretSessionVoiceCommand } from '../scripts/sessionVoice/interpret.js'
+import { reportSessionVoiceMetrics } from '../scripts/sessionVoice/metrics.js'
 import { buildSessionVoiceHref } from '../scripts/sessionVoice/href.js'
 import { idleWaveformBarLevels } from '../scripts/audio/voiceNoteLiveAnalyser.js'
 import { MICROPHONE_ACCESS_KIND } from '../scripts/audio/microphonePermissionHelp.js'
@@ -159,8 +169,9 @@ export default {
     memorisationUrl: { type: String, default: '/memorisation' },
     theme: { type: String, default: 'light' },
     phraseHints: { type: Array, default: () => [] },
+    workspaceControls: { type: Boolean, default: false },
   },
-  emits: ['close'],
+  emits: ['close', 'control'],
   data() {
     const lang = typeof document !== 'undefined' ? String(document.documentElement.lang || 'en') : 'en'
     return {
@@ -168,6 +179,7 @@ export default {
       startTimer: 0,
       language: lang.startsWith('ar') ? 'ar' : 'en',
       transcript: '',
+      heardWords: [],
       interim: false,
       bars: idleWaveformBarLevels(12),
       speechSeen: false,
@@ -227,6 +239,9 @@ export default {
     speedOptions() {
       return this.result?.reason === 'unsupported_speed' ? (this.clarification.supported || []) : []
     },
+    lowConfidenceOptions() {
+      return this.result?.reason === 'low_confidence' ? (this.clarification.options || []) : []
+    },
     canConfirmRange() {
       return this.result?.reason === 'reversed_range'
         && this.clarification.suggested_start
@@ -252,6 +267,8 @@ export default {
       if (reason === 'ambiguous_surah') return this.t('dashboard.voice.ambiguousSurah')
       if (reason === 'unknown_surah') return this.t('dashboard.voice.unknownSurah')
       if (reason === 'unknown_reciter') return this.t('dashboard.voice.unknownReciter')
+      if (reason === 'low_confidence') return this.t('dashboard.voice.lowConfidence')
+      if (reason === 'needs_session') return this.t('dashboard.voice.needsSession')
       if (reason === 'unsupported_speed') return this.t('dashboard.voice.unsupportedSpeed')
       if (reason === 'unsupported_repetitions') {
         return this.t('dashboard.voice.unsupportedRepetitions', {
@@ -270,7 +287,7 @@ export default {
       if (this.errorKind === MICROPHONE_ACCESS_KIND.NOT_READABLE) return this.t('dashboard.voice.micBusy')
       if (this.errorKind === MICROPHONE_ACCESS_KIND.UNSUPPORTED) return this.t('dashboard.voice.unsupported')
       if (this.errorKind === 'auth') return this.t('dashboard.voice.authRequired')
-      if (this.errorKind === 'transcription') return this.t('dashboard.voice.transcriptionFailed')
+      if (this.errorKind === 'transcription' || this.errorKind === 'network') return this.t('dashboard.voice.transcriptionFailed')
       return this.t('dashboard.voice.genericError')
     },
   },
@@ -300,6 +317,7 @@ export default {
       const generation = ++this.generation
       this.phase = 'listening'
       this.transcript = ''
+      this.heardWords = []
       this.preview = null
       this.previewText = ''
       this.speechSeen = false
@@ -332,6 +350,8 @@ export default {
       this.listener = null
       this.limitReached = !!state.limitReached
       this.transcript = state.transcript || this.transcript
+      this.heardWords = Array.isArray(state.words) ? state.words : []
+      if (state.metrics) reportSessionVoiceMetrics({ ...state.metrics, language: this.language })
       if (state.reason === 'error') {
         this.phase = 'error'
         this.errorKind = state.errorKind || 'unknown'
@@ -352,9 +372,19 @@ export default {
         const result = await interpretSessionVoiceCommand({
           transcript: this.transcript,
           overrides: this.overrides,
+          words: this.heardWords,
         })
         if (generation !== this.generation) return
         this.result = result
+        if (result?.ok && result.command?.control) {
+          if (this.workspaceControls) {
+            this.$emit('control', result.command)
+            return
+          }
+          this.result = { ok: false, reason: 'needs_session', command: result.command }
+          this.phase = 'clarify'
+          return
+        }
         if (result?.ok && result.command?.surah) {
           this.phase = 'ready'
           const generation = this.generation
@@ -375,6 +405,13 @@ export default {
     async choose(patch) {
       this.overrides = { ...this.overrides, ...patch }
       await this.interpret()
+    },
+    confirmLowConfidence(option) {
+      if (this.clarification.field === 'reciter') {
+        void this.choose({ reciter: option.id })
+        return
+      }
+      void this.choose({ surah: option.id })
     },
     async confirmRange() {
       await this.choose({

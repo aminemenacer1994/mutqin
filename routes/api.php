@@ -267,6 +267,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/memorisation/ask-mutqin/interpret-session', [AskMutqinCommandController::class, 'interpretSession'])
             ->middleware('throttle:ask-mutqin-interpret')
             ->name('memorisation.ask-mutqin.interpret-session');
+        Route::post('/memorisation/ask-mutqin/voice-metrics', [AskMutqinCommandController::class, 'recordVoiceMetrics'])
+            ->middleware('throttle:ask-mutqin-interpret')
+            ->name('memorisation.ask-mutqin.voice-metrics');
 
         Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
             ->middleware(['throttle:20,1'])

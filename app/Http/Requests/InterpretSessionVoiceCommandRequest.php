@@ -30,6 +30,9 @@ class InterpretSessionVoiceCommandRequest extends FormRequest
             'overrides.reciter' => ['nullable', 'string', 'max:80'],
             'overrides.speed' => ['nullable', 'numeric', 'min:0.1', 'max:3'],
             'overrides.repetitions' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'words' => ['nullable', 'array', 'max:80'],
+            'words.*.text' => ['required', 'string', 'max:80'],
+            'words.*.confidence' => ['nullable', 'numeric', 'min:0', 'max:1'],
         ];
     }
 }

@@ -793,7 +793,16 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?"
+      "feedbackPrompt": "How was this session?",
+      "practiceStage": {
+        "label": "This session",
+        "listen": "Listen",
+        "follow": "Follow",
+        "memorise": "Memorise",
+        "ai": "AI Recite",
+        "next": "Next: {stage}",
+        "current": "Now: {stage}"
+      }
     },
     "workspaceEmpty": {
       "kicker": "Ready to begin",
@@ -5412,6 +5421,8 @@
       "heard": "Duyulan",
       "unknownSurah": "Bu sure tanınmadı. Sure adını yeniden söyle.",
       "unknownReciter": "Bu kari yok. Mutqin karilerinden birini seç.",
+      "lowConfidence": "Bu ismi yanlış duymuş olabilirim. Lütfen onayla.",
+      "needsSession": "Önce bir oturum açın veya başlamak için bir sure söyleyin.",
       "ambiguousReciter": "Hangi kariyi istedin?",
       "ambiguousSurah": "Hangi sureyi istedin?",
       "reversedRange": "{start}. ayetten {end}. ayete gidiş ters. {suggestedStart}. ayetten {suggestedEnd}. ayete mi demek istedin?",
@@ -5429,7 +5440,9 @@
       "modeMemorise": "Ezber",
       "modeRevise": "Murâcaa",
       "modeTest": "Tilaveti sına"
-    }
+    },
+    "revision_aside_label": "Revision",
+    "revision_aside_cta": "Revise"
   },
   "admin": {
     "loading": "yükleniyor…",

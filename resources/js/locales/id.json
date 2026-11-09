@@ -793,7 +793,16 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?"
+      "feedbackPrompt": "How was this session?",
+      "practiceStage": {
+        "label": "This session",
+        "listen": "Listen",
+        "follow": "Follow",
+        "memorise": "Memorise",
+        "ai": "AI Recite",
+        "next": "Next: {stage}",
+        "current": "Now: {stage}"
+      }
     },
     "workspaceEmpty": {
       "kicker": "Siap memulai",
@@ -5412,6 +5421,8 @@
       "heard": "Terdengar",
       "unknownSurah": "Surah itu tidak dikenali. Ucapkan namanya lagi.",
       "unknownReciter": "Qari itu tidak tersedia. Pilih qari Mutqin.",
+      "lowConfidence": "Nama itu mungkin terdengar kurang jelas. Mohon dikonfirmasi.",
+      "needsSession": "Buka sesi dulu, atau sebutkan surah untuk memulai.",
       "ambiguousReciter": "Qari yang mana yang kamu maksud?",
       "ambiguousSurah": "Surah yang mana yang kamu maksud?",
       "reversedRange": "Ayat {start} sampai {end} terbalik. Apakah maksudmu ayat {suggestedStart} sampai {suggestedEnd}?",
@@ -5429,7 +5440,9 @@
       "modeMemorise": "Menghafal",
       "modeRevise": "Murajaah",
       "modeTest": "Uji bacaan"
-    }
+    },
+    "revision_aside_label": "Revision",
+    "revision_aside_cta": "Revise"
   },
   "admin": {
     "loading": "memuat…",

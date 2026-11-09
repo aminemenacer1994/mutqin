@@ -5187,7 +5187,9 @@
         v-if="auth.session_voice_enabled && sessionVoiceOpen"
         :theme="theme"
         :phrase-hints="auth.session_voice_hints || []"
+        :workspace-controls="hasVerses"
         @close="closeSessionVoice"
+        @control="applySessionVoiceControl"
       />
     </Teleport>
 
@@ -5991,4 +5993,5 @@
   border-color: #d4af6e !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, #d4af6e 28%, transparent) !important;
 }
+
 </style>

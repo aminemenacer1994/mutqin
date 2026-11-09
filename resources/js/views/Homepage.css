@@ -523,9 +523,12 @@
 }
 
 .hero__actions .btn--secondary {
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
-  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 72%, transparent);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   font-weight: 620;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .hero__visual {

@@ -319,7 +319,7 @@ class SessionVoiceInterpreterTest extends TestCase
 
     public function test_recognition_vocabulary_hints_arabic_names(): void
     {
-        $vocab = $this->interpreter->recognitionVocabulary();
+        $vocab = $this->interpreter->recognitionVocabulary('ar');
         $kafirun = null;
         $sudais = null;
         foreach ($vocab as $row) {
@@ -364,6 +364,7 @@ class SessionVoiceInterpreterTest extends TestCase
             'Play Surah Al-Fatiha at 3x speed.' => ['ok' => false, 'reason' => 'unsupported_speed'],
             'Play Surah Al-Fatiha with Husary.' => ['ok' => false, 'reason' => 'ambiguous_reciter'],
             'Continue where I left off.' => ['ok' => true, 'resume' => true],
+            'Continue my previous session.' => ['ok' => true, 'resume' => true],
             'Play Al Kawthar with Sudays.' => ['ok' => true, 'surah' => 108, 'reciter' => 'ar.abdurrahmaansudais'],
             'I said three times, actually make it one, Surah Al-Asr.' => ['ok' => true, 'surah' => 103, 'repetitions' => 1],
         ];
@@ -382,5 +383,79 @@ class SessionVoiceInterpreterTest extends TestCase
                 $this->assertSame($value, $result['command'][$key] ?? null, $phrase.' '.$key);
             }
         }
+    }
+
+    public function test_english_speechmatics_vocabulary_uses_canonical_names(): void
+    {
+        $vocab = $this->interpreter->recognitionVocabulary('en');
+        $byContent = [];
+        foreach ($vocab as $row) {
+            $byContent[$row['content']] = $row;
+        }
+
+        $this->assertSame('surah', $byContent['Al-Fatihah']['kind']);
+        $this->assertContains('fatiha', $byContent['Al-Fatihah']['sounds_like']);
+        $this->assertSame('surah', $byContent['Al-Baqarah']['kind']);
+        $this->assertContains('baqarah', $byContent['Al-Baqarah']['sounds_like']);
+        $this->assertSame('reciter', $byContent['Al-Sudais']['kind']);
+        $this->assertContains('sudais', $byContent['Al-Sudais']['sounds_like']);
+        $this->assertSame('reciter', $byContent['Mishary Alafasy']['kind']);
+        $this->assertContains('alafasy', $byContent['Mishary Alafasy']['sounds_like']);
+        $this->assertLessThanOrEqual(4, count($byContent['Al-Fatihah']['sounds_like']));
+    }
+
+    public function test_in_session_controls_do_not_start_al_fatiha(): void
+    {
+        $pause = $this->interpreter->interpret('Pause the recitation.');
+        $this->assertTrue($pause['ok']);
+        $this->assertSame('pause', $pause['command']['control']);
+
+        $ayah = $this->interpreter->interpret('Go to ayah five.');
+        $this->assertTrue($ayah['ok']);
+        $this->assertSame('go_to_ayah', $ayah['command']['control']);
+        $this->assertSame(5, $ayah['command']['ayah']);
+
+        $speed = $this->interpreter->interpret('Play at half speed.');
+        $this->assertTrue($speed['ok']);
+        $this->assertSame('set_speed', $speed['command']['control']);
+        $this->assertSame(0.5, $speed['command']['speed']);
+
+        $reciter = $this->interpreter->interpret('Change to Mishary.');
+        $this->assertTrue($reciter['ok']);
+        $this->assertSame('set_reciter', $reciter['command']['control']);
+        $this->assertSame('ar.alafasy', $reciter['command']['reciter']);
+
+        $repeat = $this->interpreter->interpret('Repeat this ayah.');
+        $this->assertTrue($repeat['ok']);
+        $this->assertSame('repeat_ayah', $repeat['command']['control']);
+
+        $session = $this->interpreter->interpret('Play Al-Fatiha with Sudais three times.');
+        $this->assertTrue($session['ok']);
+        $this->assertSame(1, $session['command']['surah']);
+        $this->assertSame('ar.abdurrahmaansudais', $session['command']['reciter']);
+        $this->assertSame(3, $session['command']['repetitions']);
+        $this->assertArrayNotHasKey('control', $session['command']);
+    }
+
+    public function test_low_confidence_name_asks_for_confirmation(): void
+    {
+        $result = $this->interpreter->interpret('Play Al-Fatiha with Sudais.', [], [
+            ['text' => 'Play', 'confidence' => 0.92],
+            ['text' => 'Al-Fatiha', 'confidence' => 0.21],
+            ['text' => 'with', 'confidence' => 0.88],
+            ['text' => 'Sudais', 'confidence' => 0.9],
+        ]);
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('low_confidence', $result['reason']);
+        $this->assertSame(1, $result['clarification']['options'][0]['id']);
+
+        $confirmed = $this->interpreter->interpret('Play Al-Fatiha with Sudais.', ['surah' => 1], [
+            ['text' => 'Al-Fatiha', 'confidence' => 0.21],
+            ['text' => 'Sudais', 'confidence' => 0.9],
+        ]);
+        $this->assertTrue($confirmed['ok'], json_encode($confirmed));
+        $this->assertSame(1, $confirmed['command']['surah']);
+        $this->assertSame('Al-Fatihah', $confirmed['command']['surah_name']);
     }
 }

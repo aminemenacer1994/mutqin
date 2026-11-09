@@ -6,6 +6,12 @@
  *
  * Never send audio, transcripts, names, emails, or other personal data.
  * Failures are swallowed so measurement cannot break a learner action.
+ *
+ * Mark these as GA4 key events (Admin → Events → Mark as key event):
+ * sign_up, login, memorisation_started, memorisation_completed,
+ * revision_started, revision_completed, ai_recitation_started,
+ * ai_recitation_completed, session_resumed.
+ * Do not mark page_view, session_abandoned, or onboarding_complete.
  */
 
 export const ACQUISITION_KEY = 'mutqin_acq_attr'
@@ -15,11 +21,17 @@ export const PRODUCT_EVENTS = Object.freeze({
   LOGIN: 'login',
   ONBOARDING_COMPLETE: 'onboarding_complete',
   SESSION_STARTED: 'session_started',
+  MEMORISATION_STARTED: 'memorisation_started',
   SESSION_COMPLETED: 'session_completed',
+  MEMORISATION_COMPLETED: 'memorisation_completed',
   SESSION_ABANDONED: 'session_abandoned',
   REVISION_STARTED: 'revision_started',
+  REVISION_COMPLETED: 'revision_completed',
+  SESSION_RESUMED: 'session_resumed',
   RECITATION_STARTED: 'recitation_started',
+  AI_RECITATION_STARTED: 'ai_recitation_started',
   AI_ASSESSMENT_COMPLETED: 'ai_assessment_completed',
+  AI_RECITATION_COMPLETED: 'ai_recitation_completed',
   PAGE_VIEW: 'page_view',
 })
 

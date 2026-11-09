@@ -37,7 +37,7 @@
         <header class="auth-greeting">
             <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.auth_register_arabic') }}</p>
             <h1 class="auth-heading">{{ __('ui.auth_register_heading') }}</h1>
-            <p class="auth-lede">{{ __('ui.auth_register_subtitle') }}</p>
+            <p class="auth-lede">{{ old('intent', request('intent')) === 'first' ? __('ui.auth_register_subtitle_first') : __('ui.auth_register_subtitle') }}</p>
         </header>
 
         @include('partials.ios-pwa-install')
@@ -56,6 +56,9 @@
             data-organisation-catalog='@json($organisationOptions ?? [])'
         >
             @csrf
+            @if (old('intent', request('intent')) === 'first')
+                <input type="hidden" name="intent" value="first">
+            @endif
             <button type="submit" class="auth-implicit-submit" hidden tabindex="-1" aria-hidden="true"></button>
 
             @if (config('mutqin.teacher_features_enabled'))

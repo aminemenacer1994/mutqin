@@ -47,6 +47,12 @@ class GoogleAuthController extends Controller
 
         RegistrationIntent::store($data);
 
+        if ($request->input('intent') === 'first') {
+            $request->session()->put('mutqin_start_first_session', true);
+        } else {
+            $request->session()->forget('mutqin_start_first_session');
+        }
+
         return $this->redirect();
     }
 
@@ -162,6 +168,7 @@ class GoogleAuthController extends Controller
             request()->session()->put('mutqin_just_logged_in', true);
             request()->session()->put('mutqin_login_method', 'google');
             request()->session()->forget('mutqin_just_registered');
+            request()->session()->forget('mutqin_start_first_session');
             $theme = Theme::normalizePreference($user->theme ?: Theme::DEFAULT_PREFERENCE);
             request()->session()->put('mutqin_theme', $theme);
             cookie()->queue(cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));

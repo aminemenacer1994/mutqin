@@ -12,7 +12,9 @@
             'is_admin' => $memorisationUser?->showsAdminNavigation() ?? false,
             'session_voice_enabled' => \App\Support\SessionVoiceAccess::visible($memorisationUser),
             'session_voice_hints' => \App\Support\SessionVoiceAccess::visible($memorisationUser)
-                ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary()
+                ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary(
+                    str_starts_with((string) app()->getLocale(), 'ar') ? 'ar' : 'en'
+                )
                 : [],
             'admin_dashboard_url' => route('admin.dashboard'),
             'subscription_tier' => Auth::user()?->effectiveSubscriptionTier() ?? 'free',

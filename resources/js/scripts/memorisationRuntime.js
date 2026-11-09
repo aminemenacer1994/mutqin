@@ -12,6 +12,7 @@ import {
 } from '../utils/mutqinStorageKeys'
 import { DEFAULT_TAJWEED_ENABLED } from './session/sessionDefaults'
 import { buildSpeechmaticsRecitationConfig } from './speechmatics/quranVocabulary'
+import { buildSpeechmaticsCommandConfig } from './sessionVoice/speechmaticsConfig'
 
 export { MODE_STORAGE_KEYS, SESSION_STORAGE_KEYS, CENTRAL_SESSION_STORAGE_KEY }
 
@@ -912,11 +913,16 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 sample_rate: sampleRate
               },
               transcription_config: {
-                ...buildSpeechmaticsRecitationConfig({
-                  language: options.language,
-                  amdLive: options.amdLive,
-                  additionalVocab: options.additionalVocab,
-                }),
+                ...(options.commandMode
+                  ? buildSpeechmaticsCommandConfig({
+                    language: options.language,
+                    additionalVocab: options.additionalVocab,
+                  })
+                  : buildSpeechmaticsRecitationConfig({
+                    language: options.language,
+                    amdLive: options.amdLive,
+                    additionalVocab: options.additionalVocab,
+                  })),
                 max_delay: appliedMaxDelay,
                 max_delay_mode: 'fixed',
                 conversation_config: delayUpdate.transcription_config.conversation_config,

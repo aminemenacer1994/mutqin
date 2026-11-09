@@ -45,7 +45,9 @@ class DashboardController extends Controller
                     'is_admin' => $user->isAdmin(),
                     'session_voice_enabled' => \App\Support\SessionVoiceAccess::visible($user),
                     'session_voice_hints' => \App\Support\SessionVoiceAccess::visible($user)
-                        ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary()
+                        ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary(
+                            str_starts_with((string) app()->getLocale(), 'ar') ? 'ar' : 'en'
+                        )
                         : [],
                     'teacher_features_enabled' => TeacherFeatures::enabled(),
                     'learner_teacher_section_enabled' => TeacherFeatures::learnerSectionEnabled(),

@@ -111,10 +111,12 @@ Route::get('/memorisation', function (Request $request) {
     $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
     // Consumed here (not on /dashboard) so Welcome Back survives post-login overview.
     $justLoggedIn = (bool) $request->session()->pull('mutqin_just_logged_in', false);
+    $startFirstSession = (bool) $request->session()->pull('mutqin_start_first_session', false);
 
     return view('memorisation', [
         'justRegistered' => $justRegistered,
         'justLoggedIn' => $justLoggedIn,
+        'startFirstSession' => $startFirstSession,
     ]);
 })->middleware(['auth', 'verified'])->name('memorisation');
 

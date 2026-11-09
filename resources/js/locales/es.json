@@ -793,7 +793,16 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?"
+      "feedbackPrompt": "How was this session?",
+      "practiceStage": {
+        "label": "This session",
+        "listen": "Listen",
+        "follow": "Follow",
+        "memorise": "Memorise",
+        "ai": "AI Recite",
+        "next": "Next: {stage}",
+        "current": "Now: {stage}"
+      }
     },
     "workspaceEmpty": {
       "kicker": "Prêt à commencer",
@@ -5399,6 +5408,8 @@
       "heard": "Oído",
       "unknownSurah": "No reconocimos esa sura. Di el nombre otra vez.",
       "unknownReciter": "Ese recitador no está disponible. Elige uno de Mutqin.",
+      "lowConfidence": "Puede que no haya oído bien ese nombre. Confírmalo.",
+      "needsSession": "Abre primero una sesión, o di una sura para empezar.",
       "ambiguousReciter": "¿Qué recitador querías?",
       "ambiguousSurah": "¿Qué sura querías?",
       "reversedRange": "Del versículo {start} al {end} va al revés. ¿Querías del {suggestedStart} al {suggestedEnd}?",
@@ -5416,7 +5427,9 @@
       "modeMemorise": "Memorizar",
       "modeRevise": "Repasar",
       "modeTest": "Probar la recitación"
-    }
+    },
+    "revision_aside_label": "Revision",
+    "revision_aside_cta": "Revise"
   },
   "admin": {
     "loading": "cargando…",

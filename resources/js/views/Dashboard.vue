@@ -77,6 +77,16 @@
                 {{ primaryContinueAction.cta }}
               </span>
             </a>
+            <a
+              v-if="secondaryRevisionAction"
+              class="dash-continue-aside"
+              :href="secondaryRevisionAction.href"
+              :aria-label="`${t('dashboard.revision_aside_label')}. ${secondaryRevisionAction.title}. ${t('dashboard.revision_aside_cta')}`"
+            >
+              <span>{{ t('dashboard.revision_aside_label') }}</span>
+              <strong>{{ secondaryRevisionAction.title }}</strong>
+              <em>{{ t('dashboard.revision_aside_cta') }}</em>
+            </a>
             <button
               v-if="auth.session_voice_enabled"
               type="button"
@@ -910,7 +920,7 @@ const SessionAnalysisModal = defineAsyncComponent(() => import(
 ))
 
 const SessionVoiceAssistant = defineAsyncComponent(() => import(
-  /* webpackChunkName: "session-voice-open" */
+  /* webpackChunkName: "session-voice-rt" */
   '../components/SessionVoiceAssistant.vue'
 ))
 
@@ -1300,6 +1310,14 @@ export default {
       const suggestion = this.optionalReviewSuggestion
       if (!suggestion?.href) return false
       return suggestion.href !== this.primaryContinueAction?.href
+    },
+    secondaryRevisionAction() {
+      const primary = this.primaryContinueAction
+      if (!primary || primary.kind === 'revise' || primary.kind === 'fresh') return null
+      const review = this.revisionPrimaryTarget
+      if (!review?.href || !review?.title) return null
+      if (review.href === primary.href) return null
+      return review
     },
     primaryContinueAction() {
       const journey = this.journeyMemorisationAction

@@ -106,12 +106,101 @@ final class SessionVoiceInterpreter
     public function __construct(private readonly CommandValidator $validator) {}
 
     /**
-     * Arabic names for Speechmatics, with Latin pronunciations the English model can hear.
-     * Used only by the session assistant, not by recitation transcription.
+     * Custom dictionary for the session assistant only, never recitation transcription.
+     * English sessions ask Speechmatics to write canonical Latin names.
+     * Arabic sessions keep Arabic spellings, with Latin pronunciations beside them.
      *
-     * @return list<array{content: string, sounds_like: list<string>}>
+     * @return list<array{kind: string, content: string, sounds_like: list<string>}>
      */
-    public function recognitionVocabulary(): array
+    public function recognitionVocabulary(string $language = 'en'): array
+    {
+        return str_starts_with(strtolower($language), 'ar')
+            ? $this->arabicRecognitionVocabulary()
+            : $this->englishRecognitionVocabulary();
+    }
+
+    /**
+     * @return list<array{kind: string, content: string, sounds_like: list<string>}>
+     */
+    private function englishRecognitionVocabulary(): array
+    {
+        $rows = [];
+        foreach (QuranMetadata::NAMES as $index => $name) {
+            $id = $index + 1;
+            $sounds = [];
+            foreach (self::EXTRA_LATIN[$id] ?? [] as $sound) {
+                $this->pushSound($sounds, (string) $sound);
+            }
+            $folded = strtolower(str_replace(['-', '’', "'"], ' ', (string) $name));
+            $stripped = trim((string) preg_replace('/^(al|ar|as|ash|at|an|ad|adh|az)\s+/', '', $folded));
+            if ($stripped !== '' && $stripped !== $folded) {
+                $this->pushSound($sounds, $stripped);
+                $this->pushSound($sounds, str_replace(' ', '', $stripped));
+            }
+            if ($sounds === []) {
+                continue;
+            }
+            $rows[] = ['kind' => 'surah', 'content' => (string) $name, 'sounds_like' => $sounds];
+        }
+        foreach ($this->reciterSpeechHints() as $id => $hint) {
+            if (! isset(CommandValidator::RECITERS[$id])) {
+                continue;
+            }
+            $rows[] = [
+                'kind' => 'reciter',
+                'content' => $hint['content'],
+                'sounds_like' => $hint['sounds'],
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return array<string, array{content: string, sounds: list<string>}>
+     */
+    private function reciterSpeechHints(): array
+    {
+        return [
+            'ar.alafasy' => ['content' => 'Mishary Alafasy', 'sounds' => ['mishary', 'mishari', 'alafasy', 'al afasy']],
+            'ar.abdurrahmaansudais' => ['content' => 'Al-Sudais', 'sounds' => ['sudais', 'sudays', 'as sudais', 'sudice']],
+            'ar.abdulbasitmurattal' => ['content' => 'Abdul Basit', 'sounds' => ['abdul basit', 'abdulbasit', 'basit']],
+            'ar.husary' => ['content' => 'Al-Husary', 'sounds' => ['husary', 'hussary', 'al husary']],
+            'ar.minshawi' => ['content' => 'Al-Minshawi', 'sounds' => ['minshawi', 'minshawy', 'al minshawi']],
+            'ar.saoodshuraym' => ['content' => 'Al-Shuraym', 'sounds' => ['shuraym', 'shuraim', 'al shuraym']],
+            'ar.mahermuaiqly' => ['content' => 'Maher Al Muaiqly', 'sounds' => ['muaiqly', 'maher', 'al muaiqly']],
+            'ar.hudhaify' => ['content' => 'Al-Hudhaify', 'sounds' => ['hudhaify', 'huthaify', 'al hudhaify']],
+            'ar.shaatree' => ['content' => 'Al-Shatri', 'sounds' => ['shatri', 'shaatree', 'ash shatri']],
+            'ar.hanirifai' => ['content' => 'Hani ar-Rifai', 'sounds' => ['rifai', 'rifaee', 'hani']],
+            'ar.abdullahbasfar' => ['content' => 'Abdullah Basfar', 'sounds' => ['basfar']],
+            'ar.muhammadayyoub' => ['content' => 'Muhammad Ayyoub', 'sounds' => ['ayyoub', 'ayyub']],
+            'ar.muhammadjibreel' => ['content' => 'Muhammad Jibreel', 'sounds' => ['jibreel', 'jibril']],
+            'ar.ahmedajamy' => ['content' => 'Ahmed al-Ajamy', 'sounds' => ['ajamy', 'ajmi']],
+            'ar.husarymujawwad' => ['content' => 'Husary Mujawwad', 'sounds' => ['husary mujawwad']],
+            'ar.minshawimujawwad' => ['content' => 'Minshawi Mujawwad', 'sounds' => ['minshawi mujawwad']],
+            'ar.abdulsamad' => ['content' => 'Abdul Basit Mujawwad', 'sounds' => ['abdul basit mujawwad', 'mujawwad']],
+            'ar.ibrahimakhbar' => ['content' => 'Ibrahim Akhdar', 'sounds' => ['akhdar', 'al akhdar']],
+            'ar.parhizgar' => ['content' => 'Shahriar Parhizgar', 'sounds' => ['parhizgar']],
+            'ar.aymanswoaid' => ['content' => 'Ayman Sowaid', 'sounds' => ['sowaid', 'suwaid']],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $sounds
+     */
+    private function pushSound(array &$sounds, string $sound): void
+    {
+        $sound = trim(strtolower($sound));
+        if ($sound === '' || strlen($sound) > 48 || in_array($sound, $sounds, true) || count($sounds) >= 4) {
+            return;
+        }
+        $sounds[] = $sound;
+    }
+
+    /**
+     * @return list<array{kind: string, content: string, sounds_like: list<string>}>
+     */
+    private function arabicRecognitionVocabulary(): array
     {
         $extra = [
             109 => ['cafrune', 'kafiroun'],
@@ -178,7 +267,7 @@ final class SessionVoiceInterpreter
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
-    public function interpret(string $transcript, array $overrides = []): array
+    public function interpret(string $transcript, array $overrides = [], array $words = []): array
     {
         $normalized = $this->normalize($transcript);
         $latin = $this->stripFillers($this->foldLatin($normalized));
@@ -187,10 +276,148 @@ final class SessionVoiceInterpreter
             return ['ok' => false, 'reason' => 'empty'];
         }
 
+        if ($overrides === []) {
+            $control = $this->parseControl($this->replaceNumberWords($latin, $arabic)['latin']);
+            if ($control !== null) {
+                return ['ok' => true, 'command' => $control];
+            }
+        }
+
         $draft = $this->parse($latin, $arabic);
+        $draft['words'] = $this->normalizeWords($words);
         $draft = $this->applyOverrides($draft, $overrides);
 
         return $this->finalize($draft);
+    }
+
+    /**
+     * In-session controls. A named surah stays a session request.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function parseControl(string $latin): ?array
+    {
+        $surah = $this->findSurah($latin, '');
+        if (($surah['status'] ?? '') === 'match') {
+            return null;
+        }
+
+        if (preg_match('/\b(?:pause|stop)\b/', $latin)
+            && preg_match('/\b(?:recitation|playback|audio|playing)\b|\bpause\b/', $latin)
+            && ! preg_match('/\b(?:play|memorise|memorize|revise|recite|surah)\b/', $latin)) {
+            return ['control' => 'pause'];
+        }
+        if (preg_match('/\brepeat (?:this|the|that) (?:ayah|verse)\b/', $latin)) {
+            return ['control' => 'repeat_ayah'];
+        }
+        if (preg_match('/\b(?:go|jump|skip) to (?:ayah|verse) (\d{1,3})\b/', $latin, $match)) {
+            $ayah = (int) $match[1];
+            if ($ayah >= 1 && $ayah <= 286) {
+                return ['control' => 'go_to_ayah', 'ayah' => $ayah];
+            }
+        }
+        if (preg_match('/\b(?:change|switch)(?:\s+the\s+reciter)?\s+to\b/', $latin)) {
+            $reciters = $this->findReciters($latin, '');
+            if (count($reciters) === 1) {
+                return [
+                    'control' => 'set_reciter',
+                    'reciter' => $reciters[0]['id'],
+                    'reciter_label' => $reciters[0]['name'],
+                ];
+            }
+        }
+        if (preg_match('/\bhalf(?:\s+|-)?speed\b/', $latin)
+            && ! preg_match('/\b(?:surah|ayah|verse|times|repeat)\b/', $latin)) {
+            return ['control' => 'set_speed', 'speed' => 0.5];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $words
+     * @return list<array{text: string, confidence: float|null}>
+     */
+    private function normalizeWords(array $words): array
+    {
+        $normalized = [];
+        foreach (array_slice($words, 0, 80) as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            $text = trim((string) ($word['text'] ?? $word['word'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $confidence = $word['confidence'] ?? null;
+            $normalized[] = [
+                'text' => $text,
+                'confidence' => is_numeric($confidence) ? (float) $confidence : null,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Lowest Speechmatics confidence among words that named this surah or reciter.
+     * Missing confidences do not block a match.
+     *
+     * @param  list<array{text: string, confidence: float|null}>  $words
+     */
+    private function mentionConfidence(int|string $id, array $words, string $kind): ?float
+    {
+        if ($words === []) {
+            return null;
+        }
+        $phrases = [];
+        if ($kind === 'surah') {
+            foreach ($this->latinSurahPhrases() as $row) {
+                if ((int) $row['id'] === (int) $id) {
+                    $phrases[] = $row['phrase'];
+                }
+            }
+        } else {
+            foreach ($this->reciterPhrases() as $row) {
+                if ($row['id'] === $id && $row['script'] === 'latin') {
+                    $phrases[] = $row['phrase'];
+                }
+            }
+        }
+        $phrases = array_values(array_filter($phrases, fn (string $phrase) => strlen($phrase) >= 4));
+        if ($phrases === []) {
+            return null;
+        }
+
+        $lowest = null;
+        foreach ($words as $word) {
+            if (! is_numeric($word['confidence'] ?? null)) {
+                continue;
+            }
+            $text = $this->foldLatin((string) $word['text']);
+            if ($text === '') {
+                continue;
+            }
+            $matched = false;
+            foreach (preg_split('/\s+/', $text) ?: [] as $token) {
+                if (strlen((string) $token) < 4) {
+                    continue;
+                }
+                foreach ($phrases as $phrase) {
+                    if ($token === $phrase || str_contains($phrase, (string) $token) || str_contains((string) $token, $phrase)) {
+                        $matched = true;
+                        break 2;
+                    }
+                }
+            }
+            if (! $matched) {
+                continue;
+            }
+            $confidence = (float) $word['confidence'];
+            $lowest = $lowest === null ? $confidence : min($lowest, $confidence);
+        }
+
+        return $lowest;
     }
 
     /**
@@ -354,6 +581,32 @@ final class SessionVoiceInterpreter
 
         $mode = (string) ($draft['mode'] ?? 'memorise');
         $reciter = $reciters[0] ?? null;
+        $words = is_array($draft['words'] ?? null) ? $draft['words'] : [];
+
+        if (empty($draft['locks']['surah'])) {
+            $surahConfidence = $this->mentionConfidence($surahId, $words, 'surah');
+            if ($surahConfidence !== null && $surahConfidence < 0.42) {
+                return $this->failure('low_confidence', 'surah', $draft, [
+                    'options' => [[
+                        'id' => $surahId,
+                        'name' => (string) QuranMetadata::name($surahId),
+                        'name_ar' => self::ARABIC_SURAHS[$surahId] ?? null,
+                    ]],
+                ], $surahId, $range);
+            }
+        }
+        if ($reciter && empty($draft['locks']['reciter'])) {
+            $reciterConfidence = $this->mentionConfidence((string) $reciter['id'], $words, 'reciter');
+            if ($reciterConfidence !== null && $reciterConfidence < 0.42) {
+                return $this->failure('low_confidence', 'reciter', $draft, [
+                    'options' => [[
+                        'id' => $reciter['id'],
+                        'name' => $reciter['name'],
+                        'name_ar' => self::RECITER_ARABIC[$reciter['id']] ?? null,
+                    ]],
+                ], $surahId, $range, $speed['value'] ?? null);
+            }
+        }
 
         return [
             'ok' => true,

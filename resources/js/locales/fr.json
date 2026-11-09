@@ -793,7 +793,16 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?"
+      "feedbackPrompt": "How was this session?",
+      "practiceStage": {
+        "label": "This session",
+        "listen": "Listen",
+        "follow": "Follow",
+        "memorise": "Memorise",
+        "ai": "AI Recite",
+        "next": "Next: {stage}",
+        "current": "Now: {stage}"
+      }
     },
     "workspaceEmpty": {
       "kicker": "Prêt à commencer",
@@ -5412,6 +5421,8 @@
       "heard": "Entendu",
       "unknownSurah": "Cette sourate n'a pas été reconnue. Redites son nom.",
       "unknownReciter": "Ce récitateur n'est pas disponible. Choisissez un récitateur de Mutqin.",
+      "lowConfidence": "Je n'ai peut-être pas bien entendu ce nom. Confirmez-le.",
+      "needsSession": "Ouvrez d'abord une session, ou nommez une sourate pour en commencer une.",
       "ambiguousReciter": "Quel récitateur voulez-vous ?",
       "ambiguousSurah": "Quelle sourate voulez-vous ?",
       "reversedRange": "Les versets {start} à {end} sont à l’envers. Vouliez-vous les versets {suggestedStart} à {suggestedEnd} ?",
@@ -5429,7 +5440,9 @@
       "modeMemorise": "Mémoriser",
       "modeRevise": "Réviser",
       "modeTest": "Tester la récitation"
-    }
+    },
+    "revision_aside_label": "Revision",
+    "revision_aside_cta": "Revise"
   },
   "admin": {
     "loading": "Chargement…",

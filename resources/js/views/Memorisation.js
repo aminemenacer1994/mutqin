@@ -11571,7 +11571,16 @@ export default {
         // Demo testers who finished/skipped the tour also count as existing.
         this.markOnboardingCompleted()
       }
-      const dashboardEntryIntent = this.readDashboardEntryIntent()
+      let dashboardEntryIntent = this.readDashboardEntryIntent()
+      if (
+        !dashboardEntryIntent
+        && typeof window !== 'undefined'
+        && window.mutqinStartFirstSession
+        && !hasPreRegistrationGuestResumeEvidence(this._preRegistrationGuestSnapshot)
+      ) {
+        dashboardEntryIntent = { journey: 'ten_minute' }
+      }
+      if (typeof window !== 'undefined') window.mutqinStartFirstSession = false
       const isTenMinuteHeroEntry = dashboardEntryIntent?.journey === 'ten_minute'
         || dashboardEntryIntent?.journey === '10_minute'
       // The explicit Start 10-minute session action takes the learner straight
@@ -12824,7 +12833,7 @@ export default {
         this._workspaceReciteRetryResult = null
         this._workspaceReciteRetryAudioUrl = ''
         this._workspaceReciteRetryAudioBlob = null
-        trackProductEvent('ai_assessment_completed', this.analyticsContext({
+        trackProductEvent('ai_recitation_completed', this.analyticsContext({
           duration_seconds: Number(canonicalResult?.durationSeconds || 0),
         }), { onceKey: String(payload.idempotency_key || '') })
         if (this.workspaceReciteAnalysisOpen) {
@@ -12881,6 +12890,32 @@ export default {
     },
     closeSessionVoice() {
       this.sessionVoiceOpen = false
+    },
+    applySessionVoiceControl(command) {
+      const control = String(command?.control || '')
+      if (!control || !this.hasVerses) {
+        this.closeSessionVoice()
+        return
+      }
+      if (control === 'pause') {
+        if (this.isPlaying) this.togglePlay()
+      } else if (control === 'set_speed') {
+        this.setPlaybackSpeed(command.speed)
+      } else if (control === 'set_reciter' && command.reciter) {
+        this.reciterId = command.reciter
+        const store = this.getModeStore?.(this.currentMode)
+        if (store) store.reciterId = command.reciter
+        this.applyReciterChangeInPlace(this.currentMode)
+      } else if (control === 'repeat_ayah') {
+        const verse = this.activeVerseRef
+        if (verse) void this.playVerse(verse, { force: true })
+      } else if (control === 'go_to_ayah') {
+        const ayah = Number(command.ayah)
+        const store = this.getModeStore?.(this.currentMode)
+        const verse = (store?.verses || []).find((item) => Number(item?.numberInSurah ?? item?.ayah) === ayah)
+        if (verse) void this.playVerse(verse, { force: true })
+      }
+      this.closeSessionVoice()
     },
     openAskMutqin() {
       if (this.amdOpen || this.askMutqinOpen) return
@@ -19737,6 +19772,14 @@ export default {
       if (!alreadyCompleted) {
         trackProductEvent('onboarding_complete', this.analyticsContext(), { onceKey: 'onboarding' })
       }
+    },
+    trackSessionResumed() {
+      const key = String(
+        Number(this.backendSessionSnapshot?.id || this.mutqinState?.sessionState?.backendSessionId || 0)
+        || this.sessionStartedAt
+        || 'resume'
+      )
+      trackProductEvent('session_resumed', this.analyticsContext(), { onceKey: `resume:${key}` })
     },
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
@@ -29081,7 +29124,7 @@ export default {
           this.amdStage = AMD_STAGES.RESULTS
           this.amdBusy = false
           trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
-          trackProductEvent('ai_assessment_completed', this.analyticsContext({
+          trackProductEvent('ai_recitation_completed', this.analyticsContext({
             duration_seconds: Number(result?.durationSeconds || 0),
           }), { onceKey: `guest:${this.recitationCheckStartedAt || 'local'}` })
         }
@@ -29282,7 +29325,7 @@ export default {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
           trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
-          trackProductEvent('ai_assessment_completed', this.analyticsContext({
+          trackProductEvent('ai_recitation_completed', this.analyticsContext({
             duration_seconds: durationSeconds,
           }), { onceKey: idempotencyKey })
         }
@@ -34213,7 +34256,7 @@ export default {
         this._amdAdaptiveDripMs = null
         this.recitationCheckRecording = true
         if (!options.preserveProgress) {
-          trackProductEvent('recitation_started', this.analyticsContext(), {
+          trackProductEvent('ai_recitation_started', this.analyticsContext(), {
             onceKey: String(this.recitationCheckStartedAt || ''),
           })
         }
@@ -37505,6 +37548,7 @@ export default {
             this.softResumePausedSession({ autoplay: !prepareOnly })
             this.sessionLifecycleError = null
             this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
+            if (!prepareOnly) this.trackSessionResumed()
             if (this.learningBackendEnabled()) {
               Promise.resolve().then(async () => {
                 try {
@@ -37620,6 +37664,7 @@ export default {
           )
           this.sessionLifecycleError = null
           this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
+          if (!prepareOnly) this.trackSessionResumed()
           this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
           return true
         } catch (error) {
@@ -42606,7 +42651,11 @@ export default {
       if (sittingStarted && !endedEarly) {
         trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_COMPLETED)
         trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_COMPLETED)
-        trackProductEvent('session_completed', sittingContext, { onceKey: sittingKey })
+        trackProductEvent(
+          sittingContext.session_type === 'revision' ? 'revision_completed' : 'memorisation_completed',
+          sittingContext,
+          { onceKey: sittingKey },
+        )
       } else if (sittingStarted && endedEarly) {
         trackProductEvent('session_abandoned', sittingContext, { onceKey: sittingKey })
       }
@@ -46954,9 +47003,10 @@ export default {
       trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_STARTED)
       const startedContext = this.analyticsContext()
       const startedKey = String(this.sessionStartedAt || '')
-      trackProductEvent('session_started', startedContext, { onceKey: startedKey })
       if (startedContext.session_type === 'revision') {
         trackProductEvent('revision_started', startedContext, { onceKey: startedKey })
+      } else {
+        trackProductEvent('memorisation_started', startedContext, { onceKey: startedKey })
       }
     },
 

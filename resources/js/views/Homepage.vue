@@ -99,31 +99,6 @@
       </div>
     </section>
 
-    <section class="practice-types" aria-labelledby="practice-types-title">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
-          <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
-        </header>
-
-        <div class="practice-types__grid">
-          <article
-            v-for="(mode, idx) in practiceModes"
-            :key="mode.id"
-            class="practice-types__card"
-            data-reveal
-            :style="{ '--delay': `${idx * 60}ms` }"
-          >
-            <span class="practice-types__icon" aria-hidden="true"><i class="bi" :class="mode.icon"></i></span>
-            <h3>{{ mode.title }}</h3>
-            <p>{{ mode.description }}</p>
-            <span class="practice-types__cue">{{ mode.cue }}</span>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <section id="how-it-works" class="how" aria-labelledby="how-title">
       <div class="wrap">
         <header class="section-head" data-reveal>
@@ -217,6 +192,31 @@
               </li>
             </ol>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="practice-types" aria-labelledby="practice-types-title">
+      <div class="wrap">
+        <header class="section-head" data-reveal>
+          <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
+          <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
+        </header>
+
+        <div class="practice-types__grid">
+          <article
+            v-for="(mode, idx) in practiceModes"
+            :key="mode.id"
+            class="practice-types__card"
+            data-reveal
+            :style="{ '--delay': `${idx * 60}ms` }"
+          >
+            <span class="practice-types__icon" aria-hidden="true"><i class="bi" :class="mode.icon"></i></span>
+            <h3>{{ mode.title }}</h3>
+            <p>{{ mode.description }}</p>
+            <span class="practice-types__cue">{{ mode.cue }}</span>
+          </article>
         </div>
       </div>
     </section>
@@ -503,7 +503,7 @@ export default {
         }
         : {
           destination: 'registration',
-          href: publicRegisterHref(),
+          href: publicRegisterHref({ intent: 'first' }),
           label: t('homepage.hero.startFree'),
         };
     });

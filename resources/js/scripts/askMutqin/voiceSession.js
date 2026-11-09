@@ -69,6 +69,13 @@ export function createAskMutqinVoiceSession(options = {}) {
   let tokenPromise = null
   let switching = false
   let generation = 0
+  let startedAt = 0
+  let firstPartialAt = 0
+  let lastFinalAt = 0
+  let finishRequestedAt = 0
+  let lastSpeechAt = 0
+  const commandMode = !!options.commandMode
+  const gateInactiveAudio = options.gateInactiveAudio !== false && commandMode
 
   const isStale = (sessionGeneration) => sessionGeneration !== generation
 
@@ -94,6 +101,16 @@ export function createAskMutqinVoiceSession(options = {}) {
   }
 
   const flushBridge = () => {
+    if (gateInactiveAudio && bridge) {
+      const speaking = !!bridge.getRecentSpeechActivity?.(280, 0.014)
+      const now = Date.now()
+      if (speaking) lastSpeechAt = now
+      const trailing = lastSpeechAt > 0 && now - lastSpeechAt < 3200
+      if (!speaking && !trailing) {
+        bridge.flush?.()
+        return
+      }
+    }
     const pending = bridge?.flush?.()
     if (pending?.byteLength && provider?.isOpen?.()) {
       provider.streamAudioChunk(pending)
@@ -130,19 +147,28 @@ export function createAskMutqinVoiceSession(options = {}) {
   const connectProvider = async (nextLanguage) => {
     disconnectProvider()
     language = nextLanguage || language || 'ar'
-    const delays = resolveAdaptiveSpeechmaticsDelays({ live: true, amdLive: true, paceFactor: 1 })
+    const delays = commandMode
+      ? { maxDelaySeconds: 1, endOfUtteranceSeconds: 1.5 }
+      : resolveAdaptiveSpeechmaticsDelays({ live: true, amdLive: true, paceFactor: 1 })
     provider = createSpeechmaticsRealtimeProvider({
       language,
+      commandMode,
       getAccessToken: getToken,
       getSampleRate: () => Number(bridge?.sampleRate || 16000),
-      amdLive: true,
+      amdLive: !commandMode,
       maxDelaySeconds: delays.maxDelaySeconds,
       endOfUtteranceSeconds: delays.endOfUtteranceSeconds,
       // Token mint + Speechmatics handshake can exceed 4.5s on cold starts.
       handshakeTimeoutMs: 9000,
       additionalVocab: additionalVocabFrom(options.phraseHints),
     })
-    provider.onTranscript(onTranscript)
+    provider.onTranscript((payload) => {
+      const now = Date.now()
+      const final = payload?.type === 'final' || payload?.isFinal || payload?.speechFinal
+      if (!firstPartialAt && payload && !final) firstPartialAt = now
+      if (final) lastFinalAt = now
+      onTranscript(payload)
+    })
     provider.onError((error) => {
       const next = error instanceof Error ? error : new Error(String(error?.message || 'disconnected'))
       if (!next.code) {
@@ -219,6 +245,11 @@ export function createAskMutqinVoiceSession(options = {}) {
         }
         startPump()
         emitAudioQuality(true)
+        startedAt = Date.now()
+        firstPartialAt = 0
+        lastFinalAt = 0
+        finishRequestedAt = 0
+        lastSpeechAt = 0
         active = true
       } catch (error) {
         if (isStale(sessionGeneration)) return
@@ -258,6 +289,27 @@ export function createAskMutqinVoiceSession(options = {}) {
     hasRecentSpeech(windowMs = 350) {
       return !!bridge?.getRecentSpeechActivity?.(windowMs)
     },
+    metrics() {
+      const now = Date.now()
+      return {
+        duration_ms: startedAt ? Math.max(0, now - startedAt) : 0,
+        first_partial_ms: firstPartialAt && startedAt ? Math.max(0, firstPartialAt - startedAt) : null,
+        final_latency_ms: finishRequestedAt && lastFinalAt
+          ? Math.max(0, lastFinalAt - finishRequestedAt)
+          : null,
+        language,
+        provider: 'speechmatics',
+      }
+    },
+    async finishUtterance() {
+      finishRequestedAt = Date.now()
+      stopPump()
+      const pending = bridge?.flush?.()
+      if (pending?.byteLength && provider?.isOpen?.()) {
+        provider.streamAudioChunk(pending)
+      }
+      try { provider?.forceEndOfUtterance?.() } catch { /* the local silence decision still stands */ }
+    },
     async recover() {
       if (!active || !stream || !bridge) return false
       switching = true
@@ -277,7 +329,7 @@ export function createAskMutqinVoiceSession(options = {}) {
       starting = false
       switching = false
       stopPump()
-      flushBridge()
+      if (!finishRequestedAt) flushBridge()
       disconnectProvider()
       stopBridge()
       stopTracks()

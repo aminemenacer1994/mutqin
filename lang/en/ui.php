@@ -94,6 +94,7 @@ return [
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'Create your account',
     'auth_register_subtitle' => 'Begin Qur\'an memorisation, revision, and recitation with a free account.',
+    'auth_register_subtitle_first' => 'Free account. Your first session opens next — Al-Fātiḥah, ready to listen.',
     'auth_access_eyebrow' => 'Mutqin access',
     'auth_resume_title' => 'Resume quickly',
     'auth_resume_desc' => 'Pick up your last session without digging through extra screens.',

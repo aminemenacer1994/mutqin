@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createSilenceTracker, SESSION_VOICE_SILENCE_MS } from '../../resources/js/scripts/sessionVoice/silence.js'
 import { buildSessionVoiceHref } from '../../resources/js/scripts/sessionVoice/href.js'
 import { matchSpokenNames, matchSpokenRequest } from '../../resources/js/scripts/sessionVoice/names.js'
+import { buildSpeechmaticsCommandConfig } from '../../resources/js/scripts/sessionVoice/speechmaticsConfig.js'
 
 const tracker = createSilenceTracker({ silenceMs: SESSION_VOICE_SILENCE_MS })
 
@@ -63,5 +64,22 @@ assert.equal(combined.start, 1)
 assert.equal(combined.end, 6)
 assert.equal(combined.speed, 0.5)
 assert.equal(combined.repetitions, 3)
+
+const commandConfig = buildSpeechmaticsCommandConfig({
+  language: 'en',
+  additionalVocab: [
+    { content: 'Al-Fatihah', sounds_like: ['fatiha', 'fatihah', 'Al-Fatihah'] },
+    { content: 'الفاتحة', sounds_like: ['fatiha'] },
+    { content: 'Al-Sudais', sounds_like: ['sudais', 'sudays'] },
+    { content: 'Mishary Alafasy', sounds_like: ['mishary', 'alafasy'] },
+  ],
+})
+assert.equal(commandConfig.language, 'en')
+assert.equal(commandConfig.operating_point, 'enhanced')
+assert.equal(commandConfig.enable_partials, true)
+assert.equal(commandConfig.additional_vocab.some((row) => row.content === 'الفاتحة'), false)
+assert.equal(commandConfig.additional_vocab.find((row) => row.content === 'Al-Fatihah').sounds_like.includes('fatiha'), true)
+assert.equal(commandConfig.additional_vocab.find((row) => row.content === 'Al-Fatihah').sounds_like.includes('al-fatihah'), false)
+assert.equal('diarization' in commandConfig, false)
 
 console.log('session-voice.test.mjs: ok')

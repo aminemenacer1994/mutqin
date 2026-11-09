@@ -8663,6 +8663,7 @@
         window.mutqinJustLoggedInFlash = @json(!empty($justLoggedIn) || (bool) session('mutqin_just_logged_in', false));
         window.mutqinLoginEventId = @json((string) session('mutqin_login_event_id', ''));
         window.mutqinLoginMethod = @json((string) session('mutqin_login_method', ''));
+        window.mutqinStartFirstSession = @json(!empty($startFirstSession));
         window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
         window.mutqinShowArticles = @json(\App\Support\ArticlesVisibility::enabled());
         window.mutqinShowDonate = @json(\App\Support\DonationVisibility::enabled());
