@@ -793,16 +793,7 @@
       "freshTitle": "Choose a surah",
       "freshHint": "Pick a few ayahs and memorise them. No long-term plan required.",
       "testUnavailable": "Recitation check is not available right now. You can still memorise or revise this range.",
-      "feedbackPrompt": "How was this session?",
-      "practiceStage": {
-        "label": "This session",
-        "listen": "Listen",
-        "follow": "Follow",
-        "memorise": "Memorise",
-        "ai": "AI Recite",
-        "next": "Next: {stage}",
-        "current": "Now: {stage}"
-      }
+      "feedbackPrompt": "How was this session?"
     },
     "workspaceEmpty": {
       "kicker": "Siap memulai",

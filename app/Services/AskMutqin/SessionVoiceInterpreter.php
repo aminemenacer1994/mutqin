@@ -41,6 +41,7 @@ final class SessionVoiceInterpreter
         67 => ['mulk'],
         71 => ['nuh', 'nooh'],
         78 => ['naba', 'nabaa'],
+        109 => ['kafirun', 'kafiroun', 'kafiroon', 'cafrune'],
         112 => ['ikhlas', 'ikhlaas'],
         113 => ['falaq', 'falak'],
         114 => ['nas', 'naas'],
@@ -511,8 +512,19 @@ final class SessionVoiceInterpreter
                 ],
             ];
         }
-        if (($surah['status'] ?? '') === 'unknown') {
+        if (($surah['status'] ?? '') === 'unknown' || ($surah['status'] ?? '') === 'absent') {
             return $this->failure('unknown_surah', 'surah', $draft);
+        }
+        if (($surah['status'] ?? '') === 'uncertain') {
+            $uncertainId = (int) ($surah['id'] ?? 0);
+
+            return $this->failure('low_confidence', 'surah', $draft, [
+                'options' => $surah['options'] ?? [[
+                    'id' => $uncertainId,
+                    'name' => $uncertainId ? (string) QuranMetadata::name($uncertainId) : '',
+                    'name_ar' => self::ARABIC_SURAHS[$uncertainId] ?? null,
+                ]],
+            ], $uncertainId > 0 ? $uncertainId : null);
         }
         if (($surah['status'] ?? '') === 'ambiguous') {
             return $this->failure('ambiguous_surah', 'surah', $draft, [
@@ -520,10 +532,7 @@ final class SessionVoiceInterpreter
             ]);
         }
 
-        $surahId = (int) ($surah['id'] ?? 1);
-        if (($surah['status'] ?? '') === 'absent') {
-            $surahId = 1;
-        }
+        $surahId = (int) ($surah['id'] ?? 0);
         $count = QuranMetadata::ayahCount($surahId);
         if ($count === null) {
             return $this->failure('unknown_surah', 'surah', $draft);
@@ -783,14 +792,22 @@ final class SessionVoiceInterpreter
             }
         }
         $ids = array_map('intval', array_keys($winners));
+        $options = array_map(fn (int $id) => [
+            'id' => $id,
+            'name' => (string) QuranMetadata::name($id),
+            'name_ar' => self::ARABIC_SURAHS[$id] ?? null,
+        ], $ids);
         if (count($ids) > 1) {
             return [
                 'status' => 'ambiguous',
-                'options' => array_map(fn (int $id) => [
-                    'id' => $id,
-                    'name' => (string) QuranMetadata::name($id),
-                    'name_ar' => self::ARABIC_SURAHS[$id] ?? null,
-                ], $ids),
+                'options' => $options,
+            ];
+        }
+        if ($bestScore < 100) {
+            return [
+                'status' => 'uncertain',
+                'id' => $ids[0],
+                'options' => $options,
             ];
         }
 
@@ -959,18 +976,21 @@ final class SessionVoiceInterpreter
         $candidates = [];
         foreach ($this->reciterPhrases() as $row) {
             $text = $row['script'] === 'arabic' ? $arabic : $latin;
-            $found = $row['script'] === 'arabic'
-                ? $this->containsArabic($text, $row['phrase'])
-                : $this->containsLatin($text, $row['phrase']);
-            if (! $found) {
+            $at = $row['script'] === 'arabic'
+                ? $this->lastArabicOffset($text, $row['phrase'])
+                : $this->lastLatinOffset($text, $row['phrase']);
+            if ($at === null) {
                 continue;
             }
-            $current = $candidates[$row['id']]['phrase'] ?? '';
-            if (mb_strlen($row['phrase']) > mb_strlen($current)) {
+            $current = $candidates[$row['id']] ?? null;
+            $longer = $current === null || mb_strlen($row['phrase']) > mb_strlen((string) $current['phrase']);
+            $later = $current !== null && $at > (int) $current['at'];
+            if ($current === null || $later || ($at === (int) $current['at'] && $longer)) {
                 $candidates[$row['id']] = [
                     'id' => $row['id'],
                     'name' => $row['name'],
                     'phrase' => $row['phrase'],
+                    'at' => $at,
                 ];
             }
         }
@@ -983,7 +1003,8 @@ final class SessionVoiceInterpreter
                 if ($other['id'] === $candidate['id']) {
                     continue;
                 }
-                if (mb_strlen($other['phrase']) > mb_strlen($candidate['phrase'])
+                if ((int) $other['at'] === (int) $candidate['at']
+                    && mb_strlen($other['phrase']) > mb_strlen($candidate['phrase'])
                     && str_contains($other['phrase'], $candidate['phrase'])) {
                     $dominated = true;
                     break;
@@ -994,24 +1015,12 @@ final class SessionVoiceInterpreter
             }
         }
 
-        if ($kept === []) {
-            $phonetic = (new SessionVoiceNames())->reciterHits($latin);
-            $latestAt = null;
-            foreach ($phonetic as $hit) {
-                $latestAt = $latestAt === null ? $hit['at'] : max($latestAt, $hit['at']);
-            }
-            $ids = [];
-            foreach ($phonetic as $hit) {
-                if ($hit['at'] !== $latestAt || isset($ids[$hit['id']])) {
-                    continue;
-                }
-                $ids[$hit['id']] = [
-                    'id' => $hit['id'],
-                    'name' => CommandValidator::RECITERS[$hit['id']] ?? $hit['id'],
-                    'phrase' => (string) $hit['id'],
-                ];
-            }
-            $kept = array_values($ids);
+        if (count($kept) > 1) {
+            $latestAt = max(array_map(fn (array $row) => (int) $row['at'], $kept));
+            $kept = array_values(array_filter(
+                $kept,
+                fn (array $row) => (int) $row['at'] === $latestAt
+            ));
         }
 
         return $kept;
@@ -1261,6 +1270,8 @@ final class SessionVoiceInterpreter
             'as sudais' => 'ar.abdurrahmaansudais',
             'al sudais' => 'ar.abdurrahmaansudais',
             'sudays' => 'ar.abdurrahmaansudais',
+            'sudice' => 'ar.abdurrahmaansudais',
+            'sudaisi' => 'ar.abdurrahmaansudais',
             'shatri' => 'ar.shaatree',
             'ash shatri' => 'ar.shaatree',
             'muaiqly' => 'ar.mahermuaiqly',
@@ -1456,21 +1467,39 @@ final class SessionVoiceInterpreter
 
     private function containsLatin(string $text, string $phrase): bool
     {
+        return $this->lastLatinOffset($text, $phrase) !== null;
+    }
+
+    private function lastLatinOffset(string $text, string $phrase): ?int
+    {
         $phrase = trim($phrase);
         if ($phrase === '') {
-            return false;
+            return null;
         }
+        if (! preg_match_all('/(?<![a-z0-9])'.preg_quote($phrase, '/').'(?![a-z0-9])/', $text, $found, PREG_OFFSET_CAPTURE)) {
+            return null;
+        }
+        $last = $found[0][array_key_last($found[0])] ?? null;
 
-        return (bool) preg_match('/(?<![a-z0-9])'.preg_quote($phrase, '/').'(?![a-z0-9])/', $text);
+        return is_array($last) ? (int) $last[1] : null;
     }
 
     private function containsArabic(string $text, string $phrase): bool
     {
+        return $this->lastArabicOffset($text, $phrase) !== null;
+    }
+
+    private function lastArabicOffset(string $text, string $phrase): ?int
+    {
         $phrase = trim($phrase);
         if ($phrase === '') {
-            return false;
+            return null;
         }
+        if (! preg_match_all('/(?<![\p{Arabic}])'.preg_quote($phrase, '/').'(?![\p{Arabic}])/u', $text, $found, PREG_OFFSET_CAPTURE)) {
+            return null;
+        }
+        $last = $found[0][array_key_last($found[0])] ?? null;
 
-        return (bool) preg_match('/(?<![\p{Arabic}])'.preg_quote($phrase, '/').'(?![\p{Arabic}])/u', $text);
+        return is_array($last) ? (int) $last[1] : null;
     }
 }

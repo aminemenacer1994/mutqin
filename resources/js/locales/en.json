@@ -793,15 +793,6 @@
       "chooseAyahs": "Choose ayahs",
       "moreOptions": "More options",
       "startMemorise": "Memorise",
-      "practiceStage": {
-        "label": "This session",
-        "listen": "Listen",
-        "follow": "Follow",
-        "memorise": "Memorise",
-        "ai": "AI Recite",
-        "next": "Next: {stage}",
-        "current": "Now: {stage}"
-      },
       "startRevise": "Revise",
       "startTest": "Test recitation",
       "freshTitle": "Choose a surah",

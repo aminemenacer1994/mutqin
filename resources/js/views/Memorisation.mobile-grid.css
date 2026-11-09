@@ -9099,7 +9099,7 @@ html body .app .workspace-recite-dock__button:hover {
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-basmallah {
-    font-size: min(calc(var(--qpc-word-size, 24px) * 1.05), 28px) !important;
+    font-size: var(--qpc-word-size, 24px) !important;
     max-width: 100% !important;
   }
 }

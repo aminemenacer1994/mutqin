@@ -8246,6 +8246,32 @@
             }
         }
     </style>
+    <style id="mutqin-remove-practice-stage">
+        html body .practice-stage,
+        html body .practice-stage__list,
+        html body .practice-stage__step,
+        html body .practice-stage__next,
+        html body nav.practice-stage {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+        }
+
+        html body .app .qpc-madani-basmallah {
+            display: inline-block !important;
+            font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif !important;
+            font-size: var(--qpc-word-size, 22px) !important;
+            line-height: 1.8 !important;
+            white-space: nowrap !important;
+            word-spacing: normal !important;
+            letter-spacing: normal !important;
+        }
+    </style>
 </head>
 <body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home ' : '' }}{{ request()->routeIs('memorisation', 'memorisation.demo') ? 'memorisation-page ' : '' }}">
     @php
@@ -12620,7 +12646,12 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-basmallah {
-      font-size: min(calc(var(--qpc-word-size, 24px) * 1.05), 28px) !important;
+      font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif !important;
+      font-size: var(--qpc-word-size, 24px) !important;
+      line-height: 1.8 !important;
+      word-spacing: normal !important;
+      letter-spacing: normal !important;
+      white-space: nowrap !important;
       max-width: 100% !important;
     }
 

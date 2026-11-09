@@ -52,7 +52,7 @@
             class="session-voice__transcript"
             :class="{ 'is-interim': interim }"
           >{{ transcript }}</p>
-          <div v-if="sessionBrief" class="session-voice__brief">
+          <div v-if="sessionBrief" class="session-voice__brief" dir="rtl" lang="ar">
             <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
             <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
           </div>
@@ -68,7 +68,7 @@
 
         <div v-else-if="phase === 'ready'" class="session-voice__ready" role="status" aria-live="polite">
           <p class="session-voice__ready-title">{{ t('dashboard.voice.ready') }}</p>
-          <div v-if="sessionBrief" class="session-voice__brief">
+          <div v-if="sessionBrief" class="session-voice__brief" dir="rtl" lang="ar">
             <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
             <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
           </div>
@@ -80,7 +80,7 @@
         <div v-else-if="phase === 'understanding' || phase === 'preparing'" class="session-voice__busy" role="status" aria-live="polite">
           <div class="spinner-border session-voice__spinner" role="presentation"></div>
           <p>{{ phase === 'preparing' ? t('dashboard.voice.starting') : t('dashboard.voice.understanding') }}</p>
-          <div v-if="sessionBrief" class="session-voice__brief">
+          <div v-if="sessionBrief" class="session-voice__brief" dir="rtl" lang="ar">
             <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
             <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
           </div>
@@ -125,8 +125,10 @@
               :key="`${option.id}`"
               type="button"
               class="btn btn-outline-secondary session-voice__choice"
+              dir="rtl"
+              lang="ar"
               @click="confirmLowConfidence(option)"
-            >{{ option.name || option.name_ar }}</button>
+            >{{ option.name_ar || option.name }}</button>
           </div>
           <div v-else-if="canConfirmRange" class="session-voice__choices">
             <button type="button" class="btn btn-primary session-voice__choice" @click="confirmRange">
@@ -212,13 +214,13 @@ export default {
     sessionBrief() {
       const source = this.result?.command
       if (!source?.surah) return null
-      const surah = source.surah_name || source.surah_name_ar || ''
+      const surah = source.surah_name_ar || source.surah_name || ''
       let range = ''
       if (source.start_ayah && source.end_ayah) {
         range = this.t('dashboard.voice.ayahRange', { start: source.start_ayah, end: source.end_ayah })
       }
       const secondary = []
-      const reciter = source.reciter_label || source.reciter_label_ar
+      const reciter = source.reciter_label_ar || source.reciter_label
       if (reciter) secondary.push(reciter)
       if (source.repetitions) secondary.push(this.t('dashboard.voice.summaryRepetitions', { count: source.repetitions }))
       if (source.speed != null) secondary.push(this.t('dashboard.voice.summarySpeed', { speed: source.speed }))

@@ -658,8 +658,11 @@ export default {
         })
         leaf.querySelectorAll('.qpc-madani-basmallah').forEach((node) => {
           if (!(node instanceof HTMLElement)) return
-          node.style.setProperty('font-size', `${Math.round(word * 0.92)}px`, 'important')
-          node.style.setProperty('line-height', '1.15', 'important')
+          node.style.setProperty('font-size', 'var(--qpc-word-size, 22px)', 'important')
+          node.style.setProperty('line-height', '1.8', 'important')
+          node.style.setProperty('word-spacing', 'normal', 'important')
+          node.style.setProperty('letter-spacing', 'normal', 'important')
+          node.style.setProperty('white-space', 'nowrap', 'important')
           node.style.setProperty('display', 'block', 'important')
           node.style.setProperty('max-height', 'none', 'important')
           node.style.setProperty('overflow', 'visible', 'important')

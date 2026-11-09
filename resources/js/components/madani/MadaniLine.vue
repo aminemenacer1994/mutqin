@@ -80,7 +80,7 @@
         lang="ar"
         :style="basmalaStyle"
         aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
-      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
+      >بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
     </template>
 
     <template v-else-if="lineType === 'ayah'">
@@ -244,8 +244,10 @@ export default {
       return this.isIndopakLayout ? this.surahNamesReady : false
     },
     basmalaStyle() {
-      if (!this.isIndopakLayout) return null
-      return { fontFamily: INDOPAK_NASTALEEQ_FONT_STACK }
+      if (this.isIndopakLayout) {
+        return { fontFamily: INDOPAK_NASTALEEQ_FONT_STACK }
+      }
+      return null
     },
   },
   mounted() {
@@ -423,8 +425,8 @@ export default {
   }
 
   .qpc-madani-basmallah {
-    font-size: calc(var(--qpc-word-size, 22px) * 0.96);
-    line-height: 1;
+    font-size: var(--qpc-word-size, 22px);
+    line-height: var(--qpc-line-height, 1.32);
   }
 }
 
@@ -478,12 +480,15 @@ export default {
 }
 
 .qpc-madani-basmallah {
+  display: inline-block;
+  flex: 0 0 auto;
   font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif !important;
-  font-size: calc(var(--qpc-word-size, 22px) * 1.08);
+  font-size: var(--qpc-word-size, 22px);
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.8;
   white-space: nowrap;
-  letter-spacing: 0;
+  word-spacing: normal;
+  letter-spacing: normal;
 }
 
 .qpc-madani-basmallah--indopak {
@@ -499,7 +504,7 @@ export default {
   }
 
   .qpc-madani-basmallah {
-    font-size: min(calc(var(--qpc-word-size, 22px) * 1), 24px) !important;
+    font-size: var(--qpc-word-size, 22px) !important;
     max-width: 100%;
   }
 

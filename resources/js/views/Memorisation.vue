@@ -1387,7 +1387,7 @@
                             lang="ar"
                             :aria-label="t('memorisation.a11y.bismillah')"
                             :style="mushafBasmalaStyle"
-                          >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
+                          >بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
                         </template>
                         <template v-else-if="line.type === 'ayah' || line.type === 'basmala_ayah'">
                           <span

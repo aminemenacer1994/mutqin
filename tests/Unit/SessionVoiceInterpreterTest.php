@@ -240,9 +240,17 @@ class SessionVoiceInterpreterTest extends TestCase
 
     public function test_phonetic_speech_errors_use_canonical_names(): void
     {
+        $unclear = [
+            'Play Fatia with so days.',
+            'Play Alpha Tia with So Days.',
+        ];
+        foreach ($unclear as $phrase) {
+            $result = $this->interpreter->interpret($phrase);
+            $this->assertFalse($result['ok'], $phrase.' '.json_encode($result));
+            $this->assertContains($result['reason'], ['unknown_surah', 'low_confidence', 'ambiguous_surah', 'unknown_reciter', 'ambiguous_reciter'], $phrase);
+        }
+
         $cases = [
-            'Play Fatia with so days.' => [1, 'Al-Fatihah', 'ar.abdurrahmaansudais', 'Abdur-Rahman as-Sudais'],
-            'Play Alpha Tia with So Days.' => [1, 'Al-Fatihah', 'ar.abdurrahmaansudais', 'Abdur-Rahman as-Sudais'],
             'Play Al Bakara from verse 10 to 20 with Mishary Alafasy.' => [2, 'Al-Baqarah', 'ar.alafasy', 'Mishari Rashid al-Afasy'],
             'Play Yaseen from ayah 5 to 15.' => [36, 'Ya-Sin', null, null],
             'Play Ar Rehman slowly twice.' => [55, 'Ar-Rahman', null, null],
@@ -287,11 +295,26 @@ class SessionVoiceInterpreterTest extends TestCase
     {
         $result = $this->interpreter->interpret('Please play slowly three times.');
 
-        $this->assertTrue($result['ok'], json_encode($result));
-        $this->assertSame(1, $result['command']['surah']);
-        $this->assertSame(3, $result['command']['repetitions']);
-        $this->assertSame(0.5, $result['command']['speed']);
-        $this->assertNull($result['command']['reciter']);
+        $this->assertFalse($result['ok'], json_encode($result));
+        $this->assertSame('unknown_surah', $result['reason']);
+    }
+
+    public function test_a_later_name_or_range_replaces_the_earlier_one(): void
+    {
+        $surah = $this->interpreter->interpret('Play Al-Fatiha, actually Surah Al-Ikhlas.');
+        $this->assertTrue($surah['ok'], json_encode($surah));
+        $this->assertSame(112, $surah['command']['surah']);
+        $this->assertSame('الإخلاص', $surah['command']['surah_name_ar']);
+
+        $range = $this->interpreter->interpret('Play Surah Al-Ikhlas from ayah 1 to 2, actually from ayah 2 to 4.');
+        $this->assertTrue($range['ok'], json_encode($range));
+        $this->assertSame(2, $range['command']['start_ayah']);
+        $this->assertSame(4, $range['command']['end_ayah']);
+
+        $reciter = $this->interpreter->interpret('Play Surah Al-Fatiha with Sudais, actually Mishary.');
+        $this->assertTrue($reciter['ok'], json_encode($reciter));
+        $this->assertSame('ar.alafasy', $reciter['command']['reciter']);
+        $this->assertSame('مشاري العفاسي', $reciter['command']['reciter_label_ar']);
     }
 
     public function test_misheard_kafirun_and_sudais_use_arabic_names(): void

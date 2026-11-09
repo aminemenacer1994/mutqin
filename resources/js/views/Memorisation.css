@@ -16732,14 +16732,20 @@ html[data-theme="sepia"] .player-dock-card .player-bar {
   width: 100%;
   box-sizing: border-box;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: var(--mushaf-reading-font, calc((var(--verse-font-percent, 120) / 100) * clamp(2.55rem, 4.6vw, 3.7rem)));
-  line-height: 1.55;
-  color: var(--mushaf-text, #000000);
-  font-weight: 400 !important;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  font-weight: 400;
   text-align: center;
   white-space: normal;
   margin: 0;
   padding: 0;
+}
+
+.madani-basmala .madani-word {
+  cursor: default;
+  pointer-events: none;
+  font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
 }
 
 .madani-word {
@@ -55461,7 +55467,9 @@ contained page (top session card untouched) —— */
   opacity: 0 !important;
 }
 
-.main.mushaf-mode-active .madani-basmala {
+.main.mushaf-mode-active .madani-basmala,
+.main.mushaf-mode-active .madani-basmala .madani-word {
+  font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
   font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
 }
 
@@ -57032,6 +57040,13 @@ compact readable type (never clip) —— */
   font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+}
+
+.app .main.mushaf-mode-active .madani-basmala .madani-word,
+.main.mushaf-mode-active .madani-basmala .madani-word,
+.app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala .madani-word,
+.main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala .madani-word {
+  font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
 }
 
 [data-theme="dark"] .app .main.mushaf-mode-active .madani-basmala,
@@ -69041,7 +69056,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-basmallah {
-    font-size: calc(var(--qpc-word-size, 22px) * 0.96) !important;
+    font-size: var(--qpc-word-size, 22px) !important;
     line-height: 1 !important;
   }
 
