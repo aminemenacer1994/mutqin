@@ -671,10 +671,10 @@
               class="action-btn action-btn-secondary top-card-action-trigger top-card-icon-control top-card-voice-trigger"
               :class="{ 'is-open': sessionVoiceOpen }"
               data-testid="workspace-voice-open"
-              :title="t('dashboard.voice.open')"
+              :title="t('dashboard.voice.ask')"
               :aria-label="t('dashboard.voice.open')"
               :aria-expanded="sessionVoiceOpen ? 'true' : 'false'"
-              @click="sessionVoiceOpen = true"
+              @click.stop="openSessionVoice"
             >
               <i class="bi bi-mic" aria-hidden="true"></i>
             </button>
@@ -698,19 +698,7 @@
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
             </button>
-            <div v-if="dashboardEntryReturnHref" class="top-card-dashboard-wrap">
-              <button
-                type="button"
-                class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
-                data-testid="workspace-return-dashboard"
-                :title="t('memorisation.open_dashboard')"
-                :aria-label="t('memorisation.open_dashboard')"
-                @click="returnToDashboard"
-              >
-                <i class="bi bi-arrow-left" aria-hidden="true"></i>
-              </button>
-            </div>
-            <div v-else-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
+            <div v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
                 role="button"
@@ -5160,12 +5148,14 @@
 
   </div>
 
-    <SessionVoiceAssistant
-      v-if="auth.session_voice_enabled && sessionVoiceOpen"
-      :theme="theme"
-      :phrase-hints="auth.session_voice_hints || []"
-      @close="sessionVoiceOpen = false"
-    />
+    <Teleport to="body">
+      <SessionVoiceAssistant
+        v-if="auth.session_voice_enabled && sessionVoiceOpen"
+        :theme="theme"
+        :phrase-hints="auth.session_voice_hints || []"
+        @close="closeSessionVoice"
+      />
+    </Teleport>
 
     <AskMutqinModal
       v-if="askMutqinOpen"
@@ -5937,7 +5927,6 @@
 <style src="./Memorisation.madani-fs-bar.css"></style>
 <style src="./Memorisation.mobile-grid.css"></style>
 <style src="./Memorisation.amd.css"></style>
-<!-- Must load last: shared mushaf rules use display:contents on .madani-line--glyphs -->
 <style>
 .top-card-icon-controls .top-card-voice-trigger.top-card-icon-control {
   width: 42px !important;

@@ -15,7 +15,7 @@ class MemorisationAyahAudioTest extends TestCase
 
     private const FALLBACK = 'https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/1';
 
-    private const CACHE_KEY = 'ayah-audio:v1:ar.alafasy:1';
+    private const CACHE_KEY = 'ayah-audio:v2:ar.alafasy:1';
 
     protected function setUp(): void
     {
@@ -55,6 +55,26 @@ class MemorisationAyahAudioTest extends TestCase
         $this->assertTrue(Cache::store('file')->has(self::CACHE_KEY));
     }
 
+    public function test_requested_reciter_is_not_replaced_with_alafasy(): void
+    {
+        Cache::store('file')->forget('ayah-audio:v2:ar.abdurrahmaansudais:1');
+
+        Http::fake([
+            'https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3' => Http::response('missing', 404),
+            'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3' => Http::response('wrong-reciter', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+            'https://cdn.alquran.cloud/media/audio/ayah/ar.abdurrahmaansudais/1' => Http::response('sudais-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $this->get('/audio/ayah/ar.abdurrahmaansudais/1.mp3')
+            ->assertOk()
+            ->assertSee('sudais-audio', false)
+            ->assertDontSee('wrong-reciter', false);
+    }
+
     public function test_bundled_ayah_audio_falls_back_to_alquran_cloud(): void
     {
         Http::fake([
@@ -71,7 +91,7 @@ class MemorisationAyahAudioTest extends TestCase
 
     public function test_bundled_ayah_audio_supports_attachment_download(): void
     {
-        Cache::store('file')->forget('ayah-audio:v1:ar.alafasy:5376');
+        Cache::store('file')->forget('ayah-audio:v2:ar.alafasy:5376');
 
         Http::fake([
             'https://cdn.islamic.network/quran/audio/128/ar.alafasy/5376.mp3' => Http::response('surah-70-ayah-1-bytes', 200, [

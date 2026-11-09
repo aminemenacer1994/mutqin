@@ -25,11 +25,11 @@ class AyahAudioController extends Controller
     {
         $id = preg_match('/^[a-z0-9._-]+$/i', $reciter) ? $reciter : 'ar.alafasy';
 
+        // Stay on the requested reciter. A missing Sudais file must not be
+        // replaced with Mishary, or the session label and the voice disagree.
         return array_values(array_unique([
             "https://cdn.islamic.network/quran/audio/128/{$id}/{$ayah}.mp3",
-            "https://cdn.islamic.network/quran/audio/128/ar.alafasy/{$ayah}.mp3",
             "https://cdn.alquran.cloud/media/audio/ayah/{$id}/{$ayah}",
-            "https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/{$ayah}",
         ]));
     }
 
@@ -53,7 +53,7 @@ class AyahAudioController extends Controller
             ]);
         }
 
-        $cacheKey = "ayah-audio:v1:{$reciter}:{$ayah}";
+        $cacheKey = "ayah-audio:v2:{$reciter}:{$ayah}";
         // Binary MP3 must not go through the database cache store (utf8 columns
         // reject \\xFF\\xFB… and the failed SQL dump corrupts laravel.log).
         $audioCache = Cache::store('file');

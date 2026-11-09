@@ -568,9 +568,10 @@ final class SessionVoiceInterpreter
      */
     private function parseRange(string $latin, string $arabic): array
     {
+        $latin = $this->softenRangeSpeech($latin);
         $found = [];
         $latinPatterns = [
-            '/\b(?:from|starting(?:\s+at)?|between)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\s+(?:to|through|until|and|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/',
+            '/\b(?:from|starting(?:\s+at)?|between)\s+(?:ayah\s+)?(\d{1,3})(?:\s+ayah)?\s+(?:to|through|until|and|-)\s+(?:ayah\s+)?(\d{1,3})\b/',
             '/\b(?:ayah|verse|ayat)s?\s+(\d{1,3})\s+(?:to|through|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/',
         ];
         $arabicPatterns = [
@@ -856,8 +857,11 @@ final class SessionVoiceInterpreter
             return ['value' => null];
         }
         $value = (int) $repetitions['requested'];
-        if ($value < self::MIN_REPETITIONS || $value > self::MAX_REPETITIONS) {
-            return ['value' => null, 'reason' => 'unsupported_repetitions', 'requested' => $value];
+        if ($value < self::MIN_REPETITIONS) {
+            $value = self::MIN_REPETITIONS;
+        }
+        if ($value > self::MAX_REPETITIONS) {
+            $value = self::MAX_REPETITIONS;
         }
 
         return ['value' => $value];
@@ -1076,6 +1080,23 @@ final class SessionVoiceInterpreter
     /**
      * @return array{latin: string, arabic: string}
      */
+    private function softenRangeSpeech(string $latin): string
+    {
+        $text = preg_replace('/\b(?:airs?|ayahs?|ayat|verses?|ayas?)\b/', 'ayah', $latin) ?: $latin;
+        $text = preg_replace('/\bin\s+to\b/', 'to', $text) ?: $text;
+        $ordinals = [
+            'first' => '1', 'second' => '2', 'third' => '3', 'fourth' => '4', 'fifth' => '5',
+            'sixth' => '6', 'seventh' => '7', 'eighth' => '8', 'ninth' => '9', 'tenth' => '10',
+        ];
+        foreach ($ordinals as $word => $digit) {
+            $text = preg_replace('/\b'.$word.'\b(?=\s+ayah\b)/', $digit, $text) ?: $text;
+        }
+        $text = preg_replace('/\b(between|from|to|and)\s+(?:the|a)\s+/', '$1 ', $text) ?: $text;
+        $text = preg_replace('/\ba\s+(?=\d)/', '', $text) ?: $text;
+
+        return trim((string) preg_replace('/\s+/', ' ', $text));
+    }
+
     private function replaceNumberWords(string $latin, string $arabic): array
     {
         $words = [

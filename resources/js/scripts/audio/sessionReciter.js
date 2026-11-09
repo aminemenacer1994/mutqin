@@ -54,8 +54,8 @@ export function ayahUrlMatchesGlobalNumber(audioUrl, globalAyahNumber) {
 }
 
 /**
- * Try the selected reciter on every host first. Alafasy is only a last-resort
- * fallback so a failed Sudais CDN hit cannot keep playing Mishary.
+ * Only the selected reciter. A failed Sudais request must not fall through
+ * to Mishary, or the label and the voice will disagree.
  */
 export function orderAyahAudioCandidateUrls({
   reciterId,
@@ -82,10 +82,6 @@ export function orderAyahAudioCandidateUrls({
   if (Number.isFinite(global) && global > 0) {
     push(`https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`)
     push(`https://cdn.alquran.cloud/media/audio/ayah/${reciter}/${global}`)
-    if (reciter !== DEFAULT_SESSION_RECITER_ID) {
-      push(`https://cdn.islamic.network/quran/audio/128/${DEFAULT_SESSION_RECITER_ID}/${global}.mp3`)
-      push(`https://cdn.alquran.cloud/media/audio/ayah/${DEFAULT_SESSION_RECITER_ID}/${global}`)
-    }
   }
   return urls
 }

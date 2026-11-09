@@ -16,6 +16,7 @@ const UNIVERSAL_TERMS = new Set([
   'Alhamdulillah',
   'Bismillah',
   'Mutqin',
+  'Mr. Mutqin',
   'Tajweed',
   'Premium',
   'Qalqalah',

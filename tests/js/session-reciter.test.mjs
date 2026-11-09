@@ -83,13 +83,8 @@ const proxiedUrls = orderAyahAudioCandidateUrls({
 })
 assert.equal(proxiedUrls[0], '/audio/ayah/ar.alafasy/262.mp3')
 assert.ok(
-  sudaisUrls.indexOf('https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3')
-    < sudaisUrls.indexOf('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3'),
-  'Mishary must only be a last-resort fallback after Sudais hosts are tried',
-)
-assert.ok(
-  !sudaisUrls.includes('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3')
-    || sudaisUrls.findIndex((url) => url.includes('ar.abdurrahmaansudais')) === 0,
+  !sudaisUrls.some((url) => url.includes('ar.alafasy')),
+  'Sudais playback must not fall through to Mishary',
 )
 
 assert.match(memorisationJs, /commitSessionReciter\(/)

@@ -77,6 +77,21 @@
                 {{ primaryContinueAction.cta }}
               </span>
             </a>
+            <button
+              v-if="auth.session_voice_enabled"
+              type="button"
+              class="dash-mr-mutqin"
+              data-testid="dashboard-voice-open"
+              :title="t('dashboard.voice.open')"
+              :aria-label="t('dashboard.voice.open')"
+              @click="openSessionVoice"
+            >
+              <span class="dash-mr-mutqin__icon" aria-hidden="true">
+                <i class="bi bi-mic"></i>
+              </span>
+              <span class="dash-mr-mutqin__label">{{ t('dashboard.voice.ask') }}</span>
+              <span class="dash-mr-mutqin__beta">{{ t('dashboard.voice.beta') }}</span>
+            </button>
           </div>
         </header>
 
@@ -840,6 +855,14 @@
         </div>
       </Transition>
     </Teleport>
+
+    <SessionVoiceAssistant
+      v-if="auth.session_voice_enabled && sessionVoiceOpen"
+      :theme="darkTheme ? 'dark' : 'light'"
+      :memorisation-url="auth.memorisation_url || '/memorisation'"
+      :phrase-hints="auth.session_voice_hints || []"
+      @close="closeSessionVoice"
+    />
   </main>
 </template>
 
@@ -884,6 +907,11 @@ const DashboardWeeklyChart = defineAsyncComponent(() => import(
 const SessionAnalysisModal = defineAsyncComponent(() => import(
   /* webpackChunkName: "session-analysis-modal" */
   '../components/SessionAnalysisModal.vue'
+))
+
+const SessionVoiceAssistant = defineAsyncComponent(() => import(
+  /* webpackChunkName: "session-voice-open" */
+  '../components/SessionVoiceAssistant.vue'
 ))
 
 const WorkspaceAiReciteResultModal = defineAsyncComponent(() => import(
@@ -946,6 +974,7 @@ export default {
     DashAnimatedNumber,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
+    SessionVoiceAssistant,
   },
   props: {
     auth: { type: Object, default: () => ({}) },
@@ -997,6 +1026,7 @@ export default {
       aiReciteLoading: false,
       aiReciteError: false,
       aiReciteRequestId: 0,
+      sessionVoiceOpen: false,
       toastMessage: '',
       toastTimer: null,
       support: null,
@@ -1966,6 +1996,13 @@ export default {
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
+    },
+    openSessionVoice() {
+      if (!this.auth?.session_voice_enabled || this.sessionVoiceOpen) return
+      this.sessionVoiceOpen = true
+    },
+    closeSessionVoice() {
+      this.sessionVoiceOpen = false
     },
     continueRangeLabel(source = {}) {
       const surah = String(source?.surah_name || source?.current_surah_name || '').trim()

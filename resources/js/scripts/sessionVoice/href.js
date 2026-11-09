@@ -13,7 +13,6 @@ export function buildSessionVoiceHref(base, command = {}) {
   params.set('from', String(command.start_ayah))
   params.set('to', String(command.end_ayah))
   params.set('goal', String(command.goal || 'memorise'))
-  params.set('return', 'dashboard')
   if (command.reciter) params.set('reciter', String(command.reciter))
   else params.delete('reciter')
   if (command.speed != null && command.speed !== '') params.set('speed', String(command.speed))

@@ -16,6 +16,20 @@ class SessionVoiceInterpreterTest extends TestCase
         $this->interpreter = new SessionVoiceInterpreter(new CommandValidator());
     }
 
+    public function test_messy_fatiha_request_is_lenient(): void
+    {
+        $result = $this->interpreter->interpret(
+            'A place or a الفاتحة With the recital being a عبد الرحمن السديس Repeat it 13 times. And from the range I want it between a one In to a three. I want the range to be between the first air And the third air.'
+        );
+
+        $this->assertTrue($result['ok'], json_encode($result));
+        $this->assertSame(1, $result['command']['surah']);
+        $this->assertSame(1, $result['command']['start_ayah']);
+        $this->assertSame(3, $result['command']['end_ayah']);
+        $this->assertSame('ar.abdurrahmaansudais', $result['command']['reciter']);
+        $this->assertSame(10, $result['command']['repetitions']);
+    }
+
     public function test_full_fatiha_request(): void
     {
         $result = $this->interpreter->interpret(

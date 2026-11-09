@@ -171,12 +171,14 @@ export function createSessionVoiceListener(options = {}) {
     recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US'
     recognition.onresult = (event) => {
       const parts = []
+      let latestInterim = false
       for (let index = 0; index < event.results.length; index += 1) {
         parts.push(event.results[index][0]?.transcript || '')
+        if (index === event.results.length - 1) latestInterim = !event.results[index].isFinal
       }
       browserTranscript = parts.join(' ').replace(/\s+/g, ' ').trim()
       noteTranscript()
-      publish({ phase: tracker.speechSeen() ? 'speaking' : 'waiting' })
+      publish({ phase: tracker.speechSeen() ? 'speaking' : 'waiting', interim: latestInterim })
     }
     recognition.onerror = (event) => {
       const code = String(event?.error || '')

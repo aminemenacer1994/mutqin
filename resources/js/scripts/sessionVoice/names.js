@@ -94,41 +94,52 @@ function matchMode(latin) {
   return ''
 }
 
+function softenRange(value) {
+  const ordinals = { second: '2', third: '3', fourth: '4', fifth: '5', sixth: '6', seventh: '7', eighth: '8', ninth: '9', tenth: '10' }
+  return withNumbers(value)
+    .replace(/\b(?:airs?|ayas?|ayat|verses?)\b/g, 'ayah')
+    .replace(/\bin to\b/g, 'to')
+    .replace(/\b(second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\b(?=\s+ayah\b)/g, (word) => ordinals[word] || word)
+    .replace(/\b(between|from|to|and)\s+(?:the|a)\s+/g, '$1 ')
+    .replace(/\ba\s+(?=\d)/g, '')
+}
+
 function matchRange(latin) {
+  const spoken = softenRange(latin)
   const fromTo = lastMatch(
-    latin,
-    /\b(?:from|starting(?:\s+at)?|between)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\s+(?:to|through|until|and|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/g,
+    spoken,
+    /\b(?:from|starting(?:\s+at)?|between)\s+(?:ayah\s+)?(\d{1,3})(?:\s+ayah)?\s+(?:to|through|until|and|-)\s+(?:ayah\s+)?(\d{1,3})\b/g,
     (match) => ({ start: Number(match[1]), end: Number(match[2]) }),
   )
   if (fromTo) return fromTo
 
   const verses = lastMatch(
-    latin,
+    spoken,
     /\b(?:ayah|verse|ayat)s?\s+(\d{1,3})\s+(?:to|through|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/g,
     (match) => ({ start: Number(match[1]), end: Number(match[2]) }),
   )
   if (verses) return verses
 
   const onwards = lastMatch(
-    latin,
+    spoken,
     /\b(?:from\s+)?(?:ayah|verse|ayat)\s+(\d{1,3})\s+(?:onwards|onward|and\s+on|to\s+the\s+end)\b/g,
     (match) => ({ start: Number(match[1]), end: null, onwards: true }),
   )
   if (onwards) return onwards
 
   const first = lastMatch(
-    latin,
+    spoken,
     /\bfirst\s+(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b|\b(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b/g,
     (match) => ({ start: 1, end: Number(match[1] || match[2]) }),
   )
   if (first) return first
 
-  if (/\b(?:whole|entire|full|complete)\b|\ball of\b|كامل|كلها|كامله/.test(latin)) {
+  if (/\b(?:whole|entire|full|complete)\b|\ball of\b|كامل|كلها|كامله/.test(spoken)) {
     return { start: 1, end: null, full: true }
   }
 
   const single = lastMatch(
-    latin,
+    spoken,
     /\b(?:ayah|verse|ayat)\s+(\d{1,3})\b/g,
     (match) => ({ start: Number(match[1]), end: Number(match[1]) }),
   )
@@ -165,7 +176,8 @@ function matchRepetitions(latin) {
   if (!found.length) return null
   found.sort((left, right) => left.at - right.at)
   const value = found[found.length - 1].value
-  return value >= 1 && value <= 10 ? value : null
+  if (!Number.isFinite(value)) return null
+  return Math.min(10, Math.max(1, value))
 }
 
 /**

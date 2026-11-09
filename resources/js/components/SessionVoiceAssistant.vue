@@ -15,17 +15,24 @@
         tabindex="-1"
       >
         <header class="session-voice__header">
-          <h2 id="session-voice-title">{{ t('dashboard.voice.title') }}</h2>
+          <div class="session-voice__heading">
+            <div class="session-voice__title-row">
+              <h2 id="session-voice-title">{{ t('dashboard.voice.title') }}</h2>
+              <span class="session-voice__beta">{{ t('dashboard.voice.beta') }}</span>
+            </div>
+            <p class="session-voice__lead">{{ t('dashboard.voice.hint') }}</p>
+          </div>
           <button type="button" class="modal-close-btn session-voice__close" :aria-label="t('dashboard.voice.cancel')" @click="cancel">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
 
         <div v-if="phase === 'idle'" class="session-voice__idle">
-          <p class="session-voice__lead">{{ t('dashboard.voice.hint') }}</p>
-          <button type="button" class="session-voice__mic" data-testid="session-voice-start" :aria-label="t('dashboard.voice.open')" @click="begin">
+          <button type="button" class="session-voice__mic" data-testid="session-voice-start" :aria-label="t('dashboard.voice.ask')" @click="begin">
             <i class="bi bi-mic" aria-hidden="true"></i>
           </button>
+          <p class="session-voice__tap">{{ t('dashboard.voice.tap') }}</p>
+          <p class="session-voice__example">{{ t('dashboard.voice.exampleLine') }}</p>
         </div>
 
         <div v-else-if="phase === 'listening'" class="session-voice__listen">
@@ -40,15 +47,15 @@
               :style="{ '--sv-level': level }"
             ></span>
           </div>
-          <section class="session-voice__card" :class="{ 'is-live': hasSummary }">
-            <div class="session-voice__names" :class="{ 'is-pending': !summary.surah && !summary.reciter }" dir="rtl" lang="ar">
-              <p class="session-voice__surah">{{ summary.surah || t('dashboard.voice.pendingSurah') }}</p>
-              <p class="session-voice__reciter">{{ summary.reciter || t('dashboard.voice.pendingReciter') }}</p>
-            </div>
-            <TransitionGroup v-if="chips.length" name="sv-chip" tag="ul" class="session-voice__chips">
-              <li v-for="chip in chips" :key="chip.id" class="session-voice__chip">{{ chip.label }}</li>
-            </TransitionGroup>
-          </section>
+          <p
+            v-if="transcript"
+            class="session-voice__transcript"
+            :class="{ 'is-interim': interim }"
+          >{{ transcript }}</p>
+          <div v-if="sessionBrief" class="session-voice__brief">
+            <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
+            <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
+          </div>
           <div class="session-voice__actions">
             <button type="button" class="btn btn-primary session-voice__done" @click="finishSpeaking">
               {{ t('dashboard.voice.done') }}
@@ -61,15 +68,10 @@
 
         <div v-else-if="phase === 'ready'" class="session-voice__ready" role="status" aria-live="polite">
           <p class="session-voice__ready-title">{{ t('dashboard.voice.ready') }}</p>
-          <section class="session-voice__card is-live">
-            <div class="session-voice__names" :class="{ 'is-pending': !summary.surah && !summary.reciter }" dir="rtl" lang="ar">
-              <p class="session-voice__surah">{{ summary.surah || t('dashboard.voice.pendingSurah') }}</p>
-              <p class="session-voice__reciter">{{ summary.reciter || t('dashboard.voice.pendingReciter') }}</p>
-            </div>
-            <ul v-if="chips.length" class="session-voice__chips">
-              <li v-for="chip in chips" :key="chip.id" class="session-voice__chip">{{ chip.label }}</li>
-            </ul>
-          </section>
+          <div v-if="sessionBrief" class="session-voice__brief">
+            <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
+            <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
+          </div>
           <div class="session-voice__actions">
             <button type="button" class="btn btn-outline-secondary" @click="tryAgain">{{ t('dashboard.voice.tryAgain') }}</button>
           </div>
@@ -78,15 +80,10 @@
         <div v-else-if="phase === 'understanding' || phase === 'preparing'" class="session-voice__busy" role="status" aria-live="polite">
           <div class="spinner-border session-voice__spinner" role="presentation"></div>
           <p>{{ phase === 'preparing' ? t('dashboard.voice.starting') : t('dashboard.voice.understanding') }}</p>
-          <section v-if="hasSummary" class="session-voice__card is-live">
-            <div class="session-voice__names" dir="rtl" lang="ar">
-              <p class="session-voice__surah">{{ summary.surah || t('dashboard.voice.pendingSurah') }}</p>
-              <p class="session-voice__reciter">{{ summary.reciter || t('dashboard.voice.pendingReciter') }}</p>
-            </div>
-            <ul v-if="chips.length" class="session-voice__chips">
-              <li v-for="chip in chips" :key="chip.id" class="session-voice__chip">{{ chip.label }}</li>
-            </ul>
-          </section>
+          <div v-if="sessionBrief" class="session-voice__brief">
+            <p class="session-voice__brief-primary">{{ sessionBrief.primary }}</p>
+            <p v-if="sessionBrief.secondary" class="session-voice__brief-secondary">{{ sessionBrief.secondary }}</p>
+          </div>
         </div>
 
         <div v-else-if="phase === 'clarify'" class="session-voice__clarify" role="status">
@@ -127,6 +124,7 @@
               {{ t('dashboard.voice.useRange', { start: clarification.suggested_start, end: clarification.suggested_end }) }}
             </button>
           </div>
+          <p v-if="phase === 'clarify'" class="session-voice__beta-note">{{ t('dashboard.voice.betaNote') }}</p>
           <div class="session-voice__actions">
             <button type="button" class="btn btn-outline-secondary" @click="tryAgain">{{ t('dashboard.voice.tryAgain') }}</button>
             <button type="button" class="btn btn-outline-secondary" @click="cancel">{{ t('dashboard.voice.cancel') }}</button>
@@ -150,12 +148,13 @@
 import { createSessionVoiceListener } from '../scripts/sessionVoice/listener.js'
 import { interpretSessionVoiceCommand } from '../scripts/sessionVoice/interpret.js'
 import { buildSessionVoiceHref } from '../scripts/sessionVoice/href.js'
-import { matchSpokenRequest } from '../scripts/sessionVoice/names.js'
 import { idleWaveformBarLevels } from '../scripts/audio/voiceNoteLiveAnalyser.js'
 import { MICROPHONE_ACCESS_KIND } from '../scripts/audio/microphonePermissionHelp.js'
+import { i18nMixin } from '../mixins/i18nMixin.js'
 
 export default {
   name: 'SessionVoiceAssistant',
+  mixins: [i18nMixin],
   props: {
     memorisationUrl: { type: String, default: '/memorisation' },
     theme: { type: String, default: 'light' },
@@ -169,6 +168,7 @@ export default {
       startTimer: 0,
       language: lang.startsWith('ar') ? 'ar' : 'en',
       transcript: '',
+      interim: false,
       bars: idleWaveformBarLevels(12),
       speechSeen: false,
       limitReached: false,
@@ -197,42 +197,23 @@ export default {
         return Math.round(Math.max(0.22, Math.min(1, shape * lift)) * 100) / 100
       })
     },
-    liveRequest() {
-      return matchSpokenRequest(this.transcript, this.phraseHints)
-    },
-    commandSource() {
-      return this.result?.command || this.preview?.command || this.preview?.partial || this.result?.partial || {}
-    },
-    summary() {
-      const live = this.liveRequest
-      const source = this.commandSource
-      const listening = this.phase === 'listening'
-      return {
-        surah: source.surah_name_ar || live.surah || '',
-        reciter: source.reciter_label_ar || live.reciter || '',
-        mode: live.mode || source.mode || '',
-        start: live.start ?? (listening ? null : source.start_ayah),
-        end: live.end ?? (listening ? null : source.end_ayah),
-        full: listening ? live.full : false,
-        onwards: listening ? live.onwards : false,
-        speed: live.speed ?? (listening ? null : source.speed),
-        repetitions: live.repetitions ?? (listening ? null : source.repetitions),
+    sessionBrief() {
+      const source = this.result?.command || this.preview?.command
+      if (!source?.surah) return null
+      const surah = source.surah_name || source.surah_name_ar || ''
+      let range = ''
+      if (source.start_ayah && source.end_ayah) {
+        range = this.t('dashboard.voice.ayahRange', { start: source.start_ayah, end: source.end_ayah })
       }
-    },
-    hasSummary() {
-      const row = this.summary
-      return Boolean(row.surah || row.reciter || row.mode || row.start || row.speed || row.repetitions || row.full)
-    },
-    chips() {
-      const row = this.summary
-      const items = []
-      if (row.mode) items.push({ id: 'mode', label: this.modeLabel(row.mode) })
-      if (row.full) items.push({ id: 'range', label: this.t('dashboard.voice.wholeSurah') })
-      else if (row.onwards && row.start) items.push({ id: 'range', label: this.t('dashboard.voice.ayahFrom', { start: row.start }) })
-      else if (row.start && row.end) items.push({ id: 'range', label: this.t('dashboard.voice.ayahRange', { start: row.start, end: row.end }) })
-      if (row.repetitions) items.push({ id: 'reps', label: this.t('dashboard.voice.repetitions', { count: row.repetitions }) })
-      if (row.speed != null) items.push({ id: 'speed', label: `${row.speed}×` })
-      return items
+      const secondary = []
+      const reciter = source.reciter_label || source.reciter_label_ar
+      if (reciter) secondary.push(reciter)
+      if (source.repetitions) secondary.push(this.t('dashboard.voice.summaryRepetitions', { count: source.repetitions }))
+      if (source.speed != null) secondary.push(this.t('dashboard.voice.summarySpeed', { speed: source.speed }))
+      return {
+        primary: [surah, range].filter(Boolean).join(' · '),
+        secondary: secondary.join(' · '),
+      }
     },
     clarification() {
       return this.result?.clarification || {}
@@ -304,12 +285,6 @@ export default {
     this.listener = null
   },
   methods: {
-    modeLabel(mode) {
-      if (mode === 'revise') return this.t('dashboard.voice.modeRevise')
-      if (mode === 'test') return this.t('dashboard.voice.modeTest')
-      if (mode === 'recite') return this.t('dashboard.voice.modeRecite')
-      return this.t('dashboard.voice.modeMemorise')
-    },
     clearStartTimer() {
       if (this.startTimer) window.clearTimeout(this.startTimer)
       this.startTimer = 0
@@ -358,6 +333,7 @@ export default {
         onUpdate: (state) => {
           if (generation !== this.generation || this.phase !== 'listening') return
           this.transcript = state.transcript || ''
+          this.interim = !!state.interim
           this.bars = state.bars || this.bars
           this.speechSeen = !!state.speechSeen
           if (this.transcript) this.schedulePreview()

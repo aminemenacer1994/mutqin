@@ -2236,7 +2236,7 @@
   /* Shared overlay shells use one scroll owner and grid-composed internals.
      Delete confirm stays separately centered; ayah notes joins the inset shell.
      Ask Mutqin keeps its own centered sheet (excluded below). */
-  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay),
+  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay):not(.session-voice-overlay),
 .welcome-back-modal-wrap,
 .session-exit-modal-wrap,
 .onboarding-post-session-modal-wrap {
@@ -2249,7 +2249,7 @@
 
   .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog):not(.ask-mutqin-dialog),
 .mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog):not(.ask-mutqin-dialog),
-.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay) > .mutqin-modal-dialog:not(.session-exit-dialog):not(.ask-mutqin-dialog),
+.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay):not(.session-voice-overlay) > .mutqin-modal-dialog:not(.session-exit-dialog):not(.ask-mutqin-dialog),
 .mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog):not(.ask-mutqin-dialog),
 .welcome-back-modal-wrap .modal-dialog,
 .onboarding-post-session-modal-wrap .modal-dialog,

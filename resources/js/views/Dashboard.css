@@ -700,6 +700,59 @@ html[data-theme="dark"] .user-dashboard,
   gap: 0.65rem;
 }
 
+.dash-mr-mutqin {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.85rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 45%, var(--dash-border));
+  border-radius: var(--dash-radius-sm);
+  background: color-mix(in srgb, var(--dash-accent-light) 42%, var(--dash-surface));
+  color: var(--dash-ink);
+  font-size: 0.92rem;
+  cursor: pointer;
+  text-align: start;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dash-accent) 10%, transparent);
+}
+
+.dash-mr-mutqin__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.35rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--dash-accent) 55%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 70%, #fff);
+  color: var(--dash-accent);
+  font-size: 1.05rem;
+}
+
+.dash-mr-mutqin__label {
+  flex: 1 1 auto;
+  font-weight: 650;
+}
+
+.dash-mr-mutqin:hover,
+.dash-mr-mutqin:focus-visible {
+  border-color: var(--dash-accent);
+  outline: none;
+}
+
+.dash-mr-mutqin__beta {
+  padding: 0.05rem 0.38rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent) 16%, transparent);
+  color: var(--dash-accent);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* ── Primary Continue CTA ── */
 
 .dash-continue-card {

@@ -634,9 +634,13 @@ const AskMutqinModal = lazyWorkspaceChunk(
   () => preloadAskMutqinModal(),
   'ask-mutqin-modal'
 )
+const preloadSessionVoiceAssistant = () => wrapChunkImport(
+  () => import(/* webpackChunkName: "session-voice-open" */ '../components/SessionVoiceAssistant.vue'),
+  { feature: 'session-voice-open' },
+)
 const SessionVoiceAssistant = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "session-voice-card" */ '../components/SessionVoiceAssistant.vue'),
-  'session-voice'
+  () => preloadSessionVoiceAssistant(),
+  'session-voice-open'
 )
 const MutashabihatCompareModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "mutashabihat-compare" */ '../components/MutashabihatCompareModal.vue'),
@@ -12869,6 +12873,14 @@ export default {
         return
       }
       await this.openWorkspaceAiRecite()
+    },
+    openSessionVoice() {
+      if (!this.auth?.session_voice_enabled || this.sessionVoiceOpen) return
+      void preloadSessionVoiceAssistant().catch(() => {})
+      this.sessionVoiceOpen = true
+    },
+    closeSessionVoice() {
+      this.sessionVoiceOpen = false
     },
     openAskMutqin() {
       if (this.amdOpen || this.askMutqinOpen) return
@@ -46983,7 +46995,7 @@ export default {
       // from the dashboard does not depend on a browser being allowed to load
       // third-party media directly. The CDN candidates remain as fallbacks.
       if (!Number.isInteger(n) || n < 1 || n > 6236 || !/^[a-z0-9._-]+$/i.test(id)) return ''
-      return `/audio/ayah/${encodeURIComponent(id)}/${n}.mp3`
+      return `/audio/ayah/${encodeURIComponent(id)}/${n}.mp3?v=2`
     },
     listAyahAudioCandidates(verse = {}) {
       const reciter = String(this.reciterId || verse.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER

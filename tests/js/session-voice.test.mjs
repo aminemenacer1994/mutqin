@@ -32,7 +32,7 @@ assert.equal(params.get('goal'), 'memorise')
 assert.equal(params.get('reciter'), 'ar.abdurrahmaansudais')
 assert.equal(params.get('repetitions'), '3')
 assert.equal(params.get('speed'), '0.5')
-assert.equal(params.get('return'), 'dashboard')
+assert.equal(params.get('return'), null)
 
 const defaults = buildSessionVoiceHref('/memorisation?setup=1', {
   surah: 67,
