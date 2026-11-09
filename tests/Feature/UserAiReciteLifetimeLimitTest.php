@@ -61,15 +61,20 @@ class UserAiReciteLifetimeLimitTest extends TestCase
             ->assertJsonPath('user.ai_recite_lifetime_limit', 50);
     }
 
-    public function test_daily_limit_blocks_transcription_token_after_ten_checks_today(): void
+    public function test_pro_daily_allowance_is_not_capped_at_the_free_limit(): void
     {
         config()->set('mutqin.ai_recite.default_daily_limit', 10);
+        config([
+            'services.speechmatics.api_key' => '',
+            'services.speechmatics.region' => 'eu',
+        ]);
 
         $user = User::factory()->create([
             'email' => 'learner-daily@example.com',
             'email_verified_at' => now(),
             'subscription_status' => 'active',
             'subscription_tier' => 'pro',
+            'subscription_plan' => 'pro_monthly',
         ]);
 
         for ($i = 0; $i < 10; $i++) {
@@ -78,8 +83,8 @@ class UserAiReciteLifetimeLimitTest extends TestCase
 
         $this->actingAs($user)
             ->postJson(route('memorisation.transcription-token'))
-            ->assertStatus(429)
-            ->assertJsonPath('reason', UserAiReciteUsageService::REASON_DAILY);
+            ->assertOk()
+            ->assertJsonPath('reason', 'unavailable');
     }
 
     public function test_daily_limit_does_not_apply_to_exempt_operator_account(): void

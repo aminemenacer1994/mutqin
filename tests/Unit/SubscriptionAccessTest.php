@@ -20,14 +20,15 @@ class SubscriptionAccessTest extends TestCase
         $this->assertSame('free', $user->effectiveSubscriptionTier());
     }
 
-    public function test_premium_subscriber_does_not_get_pro(): void
+    public function test_premium_subscriber_is_treated_as_pro(): void
     {
         $user = User::factory()->premium()->create();
 
         $this->assertTrue($user->hasPaidAccess());
         $this->assertTrue($user->hasPremiumAccess());
-        $this->assertFalse($user->hasProAccess());
-        $this->assertSame('premium', $user->effectiveSubscriptionTier());
+        $this->assertTrue($user->hasProAccess());
+        $this->assertSame('pro', $user->effectiveSubscriptionTier());
+        $this->assertSame('pro', $user->billingSubscriptionTier());
     }
 
     public function test_pro_subscriber_gets_premium_and_pro(): void
@@ -38,6 +39,16 @@ class SubscriptionAccessTest extends TestCase
         $this->assertTrue($user->hasPremiumAccess());
         $this->assertTrue($user->hasProAccess());
         $this->assertSame('pro', $user->effectiveSubscriptionTier());
+    }
+
+    public function test_lifetime_pro_never_expires(): void
+    {
+        $user = User::factory()->lifetime()->create();
+
+        $this->assertTrue($user->hasPaidAccess());
+        $this->assertTrue($user->hasProAccess());
+        $this->assertSame('pro', $user->billingSubscriptionTier());
+        $this->assertNull($user->subscription_current_period_ends_at);
     }
 
     public function test_canceled_premium_is_treated_as_free(): void

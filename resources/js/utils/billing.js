@@ -30,7 +30,7 @@ export function resolveSubscriptionTier(auth = {}) {
   const tier = String(auth?.subscription_tier || 'free').toLowerCase()
 
   if ((tier === 'pro' || tier === 'premium') && isPaid(auth)) {
-    return tier
+    return 'pro'
   }
 
   return 'free'
@@ -65,13 +65,9 @@ export function maxSavedSessionsForTier(auth = {}) {
 
   const tier = resolveSubscriptionTier(auth)
 
-  if (tier === 'pro') {
+  if (tier === 'pro' || tier === 'premium') {
     return Number.POSITIVE_INFINITY
   }
 
-  if (tier === 'premium') {
-    return 5
-  }
-
-  return 3
+  return Number.POSITIVE_INFINITY
 }

@@ -269,10 +269,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('memorisation.ask-mutqin.interpret-session');
 
         Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
-            ->middleware(['plan:pro', 'throttle:20,1'])
+            ->middleware(['throttle:20,1'])
             ->name('api.memorisation.assessments.store');
         Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
-            ->middleware(['plan:pro', 'throttle:20,1'])
+            ->middleware(['throttle:20,1'])
             ->name('api.memorisation.assessments.failed');
         Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
             ->name('api.memorisation.assessments.index');

@@ -15,34 +15,30 @@ class StripeProvisionLiveCommand extends Command
     protected $description = 'Create Live Stripe prices + webhook for Mutqin billing (requires sk_live_ in .env).';
 
     /**
-     * @return array<string, array{product: string, amount: int, interval: string, env: string}>
+     * @return array<string, array{product: string, amount: int, interval?: string, type: string, env: string}>
      */
     private function planCatalog(): array
     {
         return [
             'pro_monthly' => [
                 'product' => 'Mutqin Pro',
-                'amount' => 599,
+                'amount' => 299,
                 'interval' => 'month',
+                'type' => 'recurring',
                 'env' => 'STRIPE_PRICE_PRO_MONTHLY',
             ],
             'pro_yearly' => [
                 'product' => 'Mutqin Pro',
-                'amount' => 5391,
+                'amount' => 2691,
                 'interval' => 'year',
+                'type' => 'recurring',
                 'env' => 'STRIPE_PRICE_PRO_YEARLY',
             ],
-            'premium_monthly' => [
-                'product' => 'Mutqin Premium',
-                'amount' => 999,
-                'interval' => 'month',
-                'env' => 'STRIPE_PRICE_PREMIUM_MONTHLY',
-            ],
-            'premium_yearly' => [
-                'product' => 'Mutqin Premium',
-                'amount' => 1799,
-                'interval' => 'year',
-                'env' => 'STRIPE_PRICE_PREMIUM_YEARLY',
+            'pro_lifetime' => [
+                'product' => 'Mutqin Pro',
+                'amount' => 5382,
+                'type' => 'one_time',
+                'env' => 'STRIPE_PRICE_PRO_LIFETIME',
             ],
         ];
     }
@@ -79,7 +75,8 @@ class StripeProvisionLiveCommand extends Command
 
         foreach ($this->planCatalog() as $planKey => $plan) {
             if ($dryRun) {
-                $this->line("[dry-run] Would ensure price for {$planKey} ({$plan['amount']} gbp / {$plan['interval']})");
+                $interval = $plan['interval'] ?? 'once';
+                $this->line("[dry-run] Would ensure price for {$planKey} ({$plan['amount']} gbp / {$interval})");
                 continue;
             }
 
@@ -124,11 +121,11 @@ class StripeProvisionLiveCommand extends Command
     }
 
     /**
-     * @param  array{product: string, amount: int, interval: string, env: string}  $plan
+     * @param  array{product: string, amount: int, interval?: string, type: string, env: string}  $plan
      */
     private function ensurePrice(string $secret, string $planKey, array $plan): ?string
     {
-        $existing = $this->findPriceByMetadata($secret, $planKey);
+        $existing = $this->findPriceByMetadata($secret, $planKey, (int) $plan['amount'], $plan['type'] ?? 'recurring');
         if ($existing !== null) {
             $this->line("Reusing existing price for {$planKey}: {$existing}");
 
@@ -140,13 +137,18 @@ class StripeProvisionLiveCommand extends Command
             return null;
         }
 
-        $response = $this->stripePost($secret, 'prices', [
+        $payload = [
             'currency' => 'gbp',
             'unit_amount' => $plan['amount'],
-            'recurring[interval]' => $plan['interval'],
             'product' => $productId,
+            'nickname' => $planKey,
             'metadata[mutqin_plan]' => $planKey,
-        ]);
+        ];
+        if (($plan['type'] ?? 'recurring') === 'recurring') {
+            $payload['recurring[interval]'] = $plan['interval'] ?? 'month';
+        }
+
+        $response = $this->stripePost($secret, 'prices', $payload);
 
         $priceId = (string) ($response['id'] ?? '');
         if ($priceId === '') {
@@ -177,16 +179,24 @@ class StripeProvisionLiveCommand extends Command
         return $id !== '' ? $id : null;
     }
 
-    private function findPriceByMetadata(string $secret, string $planKey): ?string
+    private function findPriceByMetadata(string $secret, string $planKey, int $amount, string $type): ?string
     {
         $prices = $this->stripeGet($secret, 'prices', ['active' => 'true', 'limit' => 100]);
         foreach ($prices['data'] ?? [] as $price) {
             if (! is_array($price)) {
                 continue;
             }
-            if (($price['metadata']['mutqin_plan'] ?? '') === $planKey) {
-                return (string) ($price['id'] ?? '');
+            if (($price['metadata']['mutqin_plan'] ?? '') !== $planKey) {
+                continue;
             }
+            if ((int) ($price['unit_amount'] ?? 0) !== $amount) {
+                continue;
+            }
+            if (($price['type'] ?? '') !== $type) {
+                continue;
+            }
+
+            return (string) ($price['id'] ?? '');
         }
 
         return null;

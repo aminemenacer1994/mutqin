@@ -8,6 +8,8 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Services\NextSessionRecommendationService;
+use App\Services\Billing\AiAssessmentQuotaExceeded;
+use App\Services\Billing\SubscriptionEntitlement;
 use App\Support\ReciteFocus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -186,6 +188,10 @@ class RecitationAssessmentService
             $lifecycle,
             $recommendationPlanEnabled,
         ) {
+            if (! app(SubscriptionEntitlement::class)->consumeAiAssessment($user)) {
+                throw new AiAssessmentQuotaExceeded();
+            }
+
             $now = now();
 
             $assessment = MemorisationAssessment::query()->create([

@@ -129,8 +129,9 @@ class DeployPreflightCommand extends Command
         $stripeSecret = trim((string) config('services.stripe.secret_key'));
         $proMonthly = trim((string) (config('billing.plans.pro_monthly.price_id') ?? ''));
         $proYearly = trim((string) (config('billing.plans.pro_yearly.price_id') ?? ''));
+        $proLifetime = trim((string) (config('billing.plans.pro_lifetime.price_id') ?? ''));
         $stripeLive = str_starts_with($stripeSecret, 'sk_live_');
-        $stripeOk = ! $protected || ($stripeSecret !== '' && $proMonthly !== '' && $proYearly !== '' && $stripeLive);
+        $stripeOk = ! $protected || ($stripeSecret !== '' && $proMonthly !== '' && $proYearly !== '' && $proLifetime !== '' && $stripeLive);
         $checks[] = $this->check(
             'stripe_billing',
             $stripeOk,
@@ -138,7 +139,7 @@ class DeployPreflightCommand extends Command
                 ? 'STRIPE_SECRET_KEY is empty.'
                 : (! $stripeLive && $protected
                     ? 'STRIPE_SECRET_KEY is still test mode (sk_test_). Use Live keys from Stripe Dashboard.'
-                    : (($proMonthly === '' || $proYearly === '')
+                    : (($proMonthly === '' || $proYearly === '' || $proLifetime === '')
                         ? 'Stripe secret is set, but Pro price ids are missing.'
                         : 'Stripe live secret and Pro price ids are set.')),
             $stripeOk

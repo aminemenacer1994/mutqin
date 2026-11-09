@@ -16,8 +16,13 @@ class BillingIntentTest extends TestCase
     {
         $this->assertSame('pro_monthly', BillingIntent::normalize('pro_monthly'));
         $this->assertSame('pro_yearly', BillingIntent::normalize('PRO_YEARLY'));
+        $this->assertSame('pro_lifetime', BillingIntent::normalize('pro_lifetime'));
+        $this->assertNull(BillingIntent::normalize('premium_monthly'));
         $this->assertNull(BillingIntent::normalize('free'));
         $this->assertNull(BillingIntent::normalize('not-a-plan'));
+
+        config(['billing.plans.pro_yearly.purchasable' => false]);
+        $this->assertNull(BillingIntent::normalize('pro_yearly'));
     }
 
     public function test_verified_user_with_billing_intent_goes_to_pricing_checkout(): void

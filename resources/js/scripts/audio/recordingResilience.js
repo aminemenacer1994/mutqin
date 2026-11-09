@@ -232,6 +232,13 @@ export function classifyRecitationFailure(error, options = {}) {
   ).trim()
   const combined = `${name} ${message} ${reason}`.toLowerCase()
 
+  if (reason === 'daily_limit') {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('mutqin:upgrade-required', { detail: { reason } }))
+    }
+    return buildClassification(RECITATION_FAILURE_KIND.USAGE_CAP, false, error, options)
+  }
+
   if (reason === 'usage_cap' || /voice-check limit|usage_cap/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.USAGE_CAP, false, error, options)
   }

@@ -92,7 +92,7 @@ class BillingWebhookTest extends TestCase
             ->assertSee('OK');
 
         $user->refresh();
-        $this->assertSame('premium', $user->subscription_tier);
+        $this->assertSame('pro', $user->subscription_tier);
 
         $this->postJson(route('stripe.webhook'), $payload)
             ->assertOk()

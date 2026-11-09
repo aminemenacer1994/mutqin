@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\StripeWebhookEvent;
+use App\Services\Billing\StripeSubscriptionSync;
 use App\Support\BillingIntent;
 use App\Support\MutqinDomains;
 use App\Support\MutqinLog;
@@ -37,13 +38,22 @@ class BillingController extends Controller
         }
 
         $planKey = $request->validate([
-            'plan' => ['required', 'string', Rule::in(array_keys($this->paidPlans()))],
+            'plan' => ['required', 'string', Rule::in(array_keys($this->purchasablePlans()))],
         ])['plan'];
 
         BillingIntent::remember($planKey);
 
         if (! $user->hasVerifiedEmail()) {
             return redirect()->route('verification.notice');
+        }
+
+        if ($this->hasOpenPaidPlan($user)) {
+            if ($user->hasBillableStripeCustomer()) {
+                return $this->portal($request);
+            }
+
+            return redirect()->to(route('profile.show').'#subscription')
+                ->with('billing_error', __('billing.already_subscribed'));
         }
 
         $plan = config("billing.plans.$planKey");
@@ -53,34 +63,51 @@ class BillingController extends Controller
             return $this->redirectStripeFailure();
         }
 
+        $checkoutMode = (string) ($plan['checkout_mode'] ?? 'subscription');
+        $isLifetime = $checkoutMode === 'payment';
         $trialDays = (int) ($plan['trial_days'] ?? 0);
-        $offerTrial = $trialDays > 0 && blank($user->stripe_subscription_id);
+        $offerTrial = ! $isLifetime && $trialDays > 0 && blank($user->stripe_subscription_id);
 
         $checkoutData = [
-            'mode' => 'subscription',
+            'mode' => $isLifetime ? 'payment' : 'subscription',
             'success_url' => $this->stripeReturnUrl('/billing/success').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => $this->stripeReturnUrl('/pricing').'?plan='.rawurlencode($planKey),
             'locale' => $this->stripeLocale(),
             'metadata[plan]' => $planKey,
-            'subscription_data[metadata][plan]' => $planKey,
-            'payment_method_collection' => 'always',
             'line_items[0][quantity]' => 1,
             'line_items[0][price]' => $priceId,
         ];
+
+        if ($isLifetime) {
+            $checkoutData['metadata[type]'] = 'lifetime';
+            $checkoutData['metadata[price_id]'] = (string) $priceId;
+        } else {
+            $checkoutData['subscription_data[metadata][plan]'] = $planKey;
+            $checkoutData['payment_method_collection'] = 'always';
+        }
 
         if ($offerTrial) {
             $checkoutData['subscription_data[trial_period_days]'] = $trialDays;
         }
 
         try {
+            $this->assertConfiguredPrice($planKey, (string) $priceId);
             $checkoutData['customer'] = $this->ensureStripeCustomer($user);
             $checkoutData['client_reference_id'] = (string) $user->id;
             $checkoutData['metadata[user_id]'] = (string) $user->id;
-            $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
-            $checkoutData['subscription_data[description]'] = __('billing.stripe_subscription_description');
             $checkoutData['custom_text[submit][message]'] = __('billing.stripe_checkout_note');
+            if ($isLifetime) {
+                $checkoutData['payment_intent_data[metadata][plan]'] = $planKey;
+                $checkoutData['payment_intent_data[metadata][user_id]'] = (string) $user->id;
+                $checkoutData['payment_intent_data[description]'] = __('billing.stripe_lifetime_description');
+            } else {
+                $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+                $checkoutData['subscription_data[description]'] = __('billing.stripe_subscription_description');
+            }
 
-            $session = $this->stripePost('checkout/sessions', $checkoutData);
+            $session = $this->stripePost('checkout/sessions', $checkoutData, [
+                'Idempotency-Key' => 'mutqin-checkout-'.$user->id.'-'.$planKey.'-'.now('UTC')->format('YmdHi'),
+            ]);
         } catch (\Throwable $e) {
             MutqinLog::warning('billing.checkout.failed', [
                 'user_id' => $user->id,
@@ -88,6 +115,10 @@ class BillingController extends Controller
                 'status' => $e instanceof HttpException ? $e->getStatusCode() : 502,
                 'message' => $e->getMessage(),
             ]);
+
+            if ($e instanceof HttpException && $e->getStatusCode() === 409) {
+                return redirect()->route('pricing')->with('billing_error', __('billing.price_mismatch'));
+            }
 
             return $this->redirectStripeFailure();
         }
@@ -101,18 +132,36 @@ class BillingController extends Controller
     {
         $sessionId = (string) $request->query('session_id', '');
 
-        if ($sessionId !== '') {
-            $session = $this->stripeGet("checkout/sessions/$sessionId");
+        $user = $request->user();
 
-            $user = $request->user();
-
-            if ($user && ($session['client_reference_id'] ?? null) === (string) $user->id) {
-                $this->syncSubscriptionFromStripe((string) ($session['subscription'] ?? ''));
+        if ($sessionId !== '' && $user) {
+            try {
+                $session = $this->stripeGet("checkout/sessions/$sessionId");
+                $ownsSession = ($session['client_reference_id'] ?? null) === (string) $user->id
+                    || ($session['metadata']['user_id'] ?? null) === (string) $user->id;
+                if ($ownsSession) {
+                    if (app(StripeSubscriptionSync::class)->isLifetimeCheckout($session)
+                        && ($session['payment_status'] ?? '') === 'paid') {
+                        app(StripeSubscriptionSync::class)->applyLifetime($user, $session, time());
+                    } else {
+                        $this->syncSubscriptionFromStripe((string) ($session['subscription'] ?? ''));
+                    }
+                    $user->refresh();
+                }
+            } catch (\Throwable $e) {
+                MutqinLog::warning('billing.success.verify_failed', [
+                    'user_id' => $user->id,
+                    'message' => $e->getMessage(),
+                ]);
             }
         }
 
-        if ($request->user()) {
-            return redirect()->to(route('profile.show') . '#subscription')->with('billing_status', __('billing.activating'));
+        if ($user) {
+            $message = $user->hasPaidAccess()
+                ? __('billing.active')
+                : __('billing.activating');
+
+            return redirect()->to(route('profile.show').'#subscription')->with('billing_status', $message);
         }
 
         return redirect()->route('login')->with('status', __('billing.checkout_complete_guest'));
@@ -241,10 +290,16 @@ class BillingController extends Controller
         }
 
         try {
-            $session = $this->stripePost('billing_portal/sessions', [
+            $portalData = [
                 'customer' => $user->stripe_customer_id,
                 'return_url' => $this->stripeReturnUrl('/profile').'#subscription',
-            ]);
+            ];
+            $portalConfiguration = trim((string) config('services.stripe.portal_configuration'));
+            if ($portalConfiguration !== '') {
+                $portalData['configuration'] = $portalConfiguration;
+            }
+
+            $session = $this->stripePost('billing_portal/sessions', $portalData);
         } catch (\Throwable $e) {
             MutqinLog::warning('billing.portal.failed', [
                 'user_id' => $user->id,
@@ -311,10 +366,22 @@ class BillingController extends Controller
             // Perform any Stripe HTTP outside the DB transaction so locks are not held
             // across network I/O. Persist idempotency + local user updates together.
             $subscriptionPayload = null;
-            if ($eventType === 'checkout.session.completed') {
+            $lifetimeSession = null;
+            $authoritative = false;
+            $donation = ($object['metadata']['type'] ?? '') === 'donation';
+            $lifetimeCheckout = ! $donation
+                && in_array($eventType, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)
+                && app(StripeSubscriptionSync::class)->isLifetimeCheckout($object);
+
+            if ($donation) {
+                $subscriptionPayload = null;
+            } elseif ($lifetimeCheckout && ($object['payment_status'] ?? '') === 'paid') {
+                $lifetimeSession = $object;
+            } elseif ($eventType === 'checkout.session.completed') {
                 $subscriptionId = (string) ($object['subscription'] ?? '');
                 if ($subscriptionId !== '') {
                     $subscriptionPayload = $this->stripeGet("subscriptions/$subscriptionId");
+                    $authoritative = true;
                 }
             } elseif (in_array($eventType, [
                 'customer.subscription.created',
@@ -322,13 +389,22 @@ class BillingController extends Controller
                 'customer.subscription.deleted',
             ], true)) {
                 $subscriptionPayload = $object;
+            } elseif (in_array($eventType, ['invoice.paid', 'invoice.payment_failed'], true)) {
+                $subscriptionId = (string) ($object['subscription'] ?? '');
+                if ($subscriptionId !== '') {
+                    $subscriptionPayload = $this->stripeGet("subscriptions/$subscriptionId");
+                    $authoritative = true;
+                }
             }
 
-            $user = is_array($subscriptionPayload)
-                ? $this->resolveUserForSubscription($subscriptionPayload)
-                : null;
+            $eventCreated = isset($event['created']) ? (int) $event['created'] : null;
+            $user = is_array($lifetimeSession)
+                ? $this->resolveUserForCheckoutSession($lifetimeSession)
+                : (is_array($subscriptionPayload)
+                    ? $this->resolveUserForSubscription($subscriptionPayload)
+                    : null);
 
-            DB::transaction(function () use ($eventId, $eventType, $subscriptionPayload, $user): void {
+            DB::transaction(function () use ($eventId, $eventType, $subscriptionPayload, $lifetimeSession, $user, $eventCreated, $authoritative): void {
                 if ($eventId !== '') {
                     StripeWebhookEvent::create([
                         'stripe_event_id' => $eventId,
@@ -337,8 +413,10 @@ class BillingController extends Controller
                     ]);
                 }
 
-                if ($user && is_array($subscriptionPayload)) {
-                    $this->applySubscriptionToUser($user, $subscriptionPayload);
+                if ($user && is_array($lifetimeSession)) {
+                    app(StripeSubscriptionSync::class)->applyLifetime($user, $lifetimeSession, $eventCreated);
+                } elseif ($user && is_array($subscriptionPayload)) {
+                    $this->applySubscriptionToUser($user, $subscriptionPayload, $eventCreated, $authoritative);
                 }
             });
         } catch (UniqueConstraintViolationException) {
@@ -351,9 +429,83 @@ class BillingController extends Controller
         return response('OK');
     }
 
-    private function paidPlans(): array
+    private function purchasablePlans(): array
     {
-        return array_filter(config('billing.plans'), fn (array $plan) => isset($plan['price_id']));
+        return array_filter(
+            config('billing.plans'),
+            fn ($plan) => is_array($plan) && ! empty($plan['purchasable'])
+        );
+    }
+
+    private function hasOpenPaidPlan(User $user): bool
+    {
+        if ($this->hasLifetimeAccess($user)) {
+            return true;
+        }
+
+        if (blank($user->stripe_subscription_id)) {
+            return false;
+        }
+
+        return in_array(strtolower((string) $user->subscription_status), [
+            'active',
+            'trialing',
+            'past_due',
+            'incomplete',
+            'paused',
+        ], true);
+    }
+
+    private function hasLifetimeAccess(User $user): bool
+    {
+        return strtolower((string) $user->subscription_plan) === 'pro_lifetime'
+            && $user->hasPaidAccess();
+    }
+
+    private function assertConfiguredPrice(string $planKey, string $priceId): void
+    {
+        if (! config('billing.verify_price_on_checkout')) {
+            return;
+        }
+
+        $plan = config("billing.plans.$planKey");
+        $price = $this->stripeGet('prices/'.$priceId);
+        $amount = (int) ($price['unit_amount'] ?? -1);
+        $currency = strtolower((string) ($price['currency'] ?? ''));
+        $interval = (string) ($price['recurring']['interval'] ?? '');
+        $expectedAmount = (int) ($plan['expected_unit_amount'] ?? -1);
+        $expectedCurrency = strtolower((string) ($plan['expected_currency'] ?? 'gbp'));
+        $expectedType = (string) ($plan['price_type'] ?? 'recurring');
+        $expectedInterval = (string) ($plan['interval'] ?? '');
+        $livemode = (bool) ($price['livemode'] ?? false);
+        $secretIsLive = (bool) config('services.stripe.livemode');
+        $intervalMatches = $expectedType === 'one_time'
+            ? $interval === ''
+            : $interval === $expectedInterval;
+
+        $matches = ($price['active'] ?? false) === true
+            && $amount === $expectedAmount
+            && $currency === $expectedCurrency
+            && $intervalMatches
+            && $livemode === $secretIsLive
+            && ($price['type'] ?? '') === $expectedType;
+
+        if ($matches) {
+            return;
+        }
+
+        MutqinLog::warning('billing.price.mismatch', [
+            'plan' => $planKey,
+            'currency' => $currency,
+            'unit_amount' => $amount,
+            'interval' => $interval,
+            'livemode' => $livemode,
+            'active' => (bool) ($price['active'] ?? false),
+            'expected_unit_amount' => $expectedAmount,
+            'expected_interval' => $expectedInterval,
+        ]);
+
+        abort(409, 'Stripe price does not match the public plan.');
     }
 
     private function stripeLocale(): string
@@ -377,6 +529,20 @@ class BillingController extends Controller
             }
         }
 
+        $listed = $this->stripeTryGet('customers?email='.rawurlencode((string) $user->email).'&limit=5');
+        foreach ($listed['data'] ?? [] as $existingCustomer) {
+            if (! is_array($existingCustomer) || empty($existingCustomer['id'])) {
+                continue;
+            }
+            $metaUser = (string) ($existingCustomer['metadata']['user_id'] ?? '');
+            if ($metaUser !== '' && $metaUser !== (string) $user->id) {
+                continue;
+            }
+            $user->forceFill(['stripe_customer_id' => $existingCustomer['id']])->save();
+
+            return (string) $existingCustomer['id'];
+        }
+
         $customer = $this->stripePost('customers', [
             'email' => $user->email,
             'name' => $user->name,
@@ -397,7 +563,7 @@ class BillingController extends Controller
         $subscription = $this->stripeGet("subscriptions/$subscriptionId");
         $user = $this->resolveUserForSubscription($subscription);
         if ($user) {
-            $this->applySubscriptionToUser($user, $subscription);
+            $this->applySubscriptionToUser($user, $subscription, time(), true);
         }
     }
 
@@ -407,6 +573,23 @@ class BillingController extends Controller
         if ($user) {
             $this->applySubscriptionToUser($user, $subscription);
         }
+    }
+
+    /**
+     * Resolve the Mutqin user for a Stripe Checkout session (lifetime / payment).
+     * May call Stripe HTTP — never invoke inside an open DB transaction.
+     *
+     * @param  array<string, mixed>  $session
+     */
+    private function resolveUserForCheckoutSession(array $session): ?User
+    {
+        $userId = $session['metadata']['user_id'] ?? $session['client_reference_id'] ?? null;
+        $user = $userId ? User::find($userId) : null;
+        if ($user) {
+            return $user;
+        }
+
+        return $this->resolveUserForSubscription($session);
     }
 
     /**
@@ -427,23 +610,9 @@ class BillingController extends Controller
         return $user;
     }
 
-    private function applySubscriptionToUser(User $user, array $subscription): void
+    private function applySubscriptionToUser(User $user, array $subscription, ?int $eventCreated = null, bool $authoritative = false): void
     {
-        $customerId = $subscription['customer'] ?? null;
-        $planKey = $subscription['metadata']['plan'] ?? $user->subscription_plan;
-        $plan = $planKey ? config("billing.plans.$planKey") : null;
-        $status = (string) ($subscription['status'] ?? 'incomplete');
-        $active = in_array($status, ['trialing', 'active'], true);
-
-        $user->forceFill([
-            'stripe_customer_id' => $customerId ?: $user->stripe_customer_id,
-            'stripe_subscription_id' => $subscription['id'] ?? $user->stripe_subscription_id,
-            'subscription_plan' => $planKey,
-            'subscription_tier' => $active && $plan ? $plan['tier'] : 'free',
-            'subscription_status' => $status,
-            'subscription_trial_ends_at' => $this->timestamp($subscription['trial_end'] ?? null),
-            'subscription_current_period_ends_at' => $this->timestamp($subscription['current_period_end'] ?? null),
-        ])->save();
+        app(StripeSubscriptionSync::class)->apply($user, $subscription, $eventCreated, $authoritative);
     }
 
     private function resolveUserByStripeCustomerId(string $customerId): ?User
@@ -481,22 +650,27 @@ class BillingController extends Controller
         return $this->stripeRequest('get', $path, abortOnFailure: false);
     }
 
-    private function stripePost(string $path, array $data): array
+    private function stripePost(string $path, array $data, array $headers = []): array
     {
-        return $this->stripeRequest('post', $path, $data);
+        return $this->stripeRequest('post', $path, $data, true, $headers);
     }
 
-    private function stripeRequest(string $method, string $path, array $data = [], bool $abortOnFailure = true): array
+    private function stripeRequest(string $method, string $path, array $data = [], bool $abortOnFailure = true, array $headers = []): array
     {
         $secret = config('services.stripe.secret_key');
 
         abort_unless($secret, 500, 'Stripe secret key is not configured.');
 
-        $response = Http::asForm()
+        $pending = Http::asForm()
             ->timeout(20)
             ->withToken($secret)
-            ->acceptJson()
-            ->{$method}("https://api.stripe.com/v1/$path", $data);
+            ->acceptJson();
+
+        if ($headers !== []) {
+            $pending = $pending->withHeaders($headers);
+        }
+
+        $response = $pending->{$method}("https://api.stripe.com/v1/$path", $data);
 
         if (! $response->successful()) {
             $message = $response->json('error.message') ?? 'Stripe request failed.';

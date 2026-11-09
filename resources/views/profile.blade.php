@@ -83,6 +83,50 @@
             <div class="profile-layout">
                 <section class="profile-account" aria-label="{{ __('profile.account_settings') }}">
                     <div class="profile-grid">
+                        <article class="profile-card profile-pane" id="subscription">
+                            <div class="profile-card-head profile-card-head--inline">
+                                <div>
+                                    <h2>{{ __('profile.subscription') }}</h2>
+                                    <p>{{ __('profile.subscription_desc') }}</p>
+                                </div>
+                            </div>
+                            <div class="profile-subscription-grid">
+                                <div class="profile-subscription-item">
+                                    <span>{{ __('profile.current_plan') }}</span>
+                                    <strong>{{ $subscriptionSummary['plan_label'] }}</strong>
+                                </div>
+                                <div class="profile-subscription-item">
+                                    <span>{{ __('profile.status') }}</span>
+                                    <strong>{{ $subscriptionSummary['status_label'] }}</strong>
+                                </div>
+                                <div class="profile-subscription-item">
+                                    <span>{{ __('profile.price') }}</span>
+                                    <strong>{{ $subscriptionSummary['price_label'] }}</strong>
+                                </div>
+                                <div class="profile-subscription-item">
+                                    <span>{{ __('profile.billing_frequency') }}</span>
+                                    <strong>{{ $subscriptionSummary['frequency_label'] }}</strong>
+                                </div>
+                                <div class="profile-subscription-item">
+                                    <span>{{ __('profile.renewal') }}</span>
+                                    <strong>{{ $subscriptionSummary['renewal_label'] }}</strong>
+                                </div>
+                            </div>
+                            <p class="profile-subscription-note">{{ __('profile.invoice_note') }}</p>
+                            <div class="profile-subscription-actions">
+                                @if ($subscriptionSummary['can_upgrade'])
+                                    <a class="billing-primary-btn profile-action-btn" href="{{ route('pricing') }}">{{ __('profile.upgrade_to_pro') }}</a>
+                                @else
+                                    <span class="profile-inline-badge">{{ __('billing.current_plan') }}</span>
+                                @endif
+                                @if ($subscriptionSummary['can_manage'])
+                                    <form method="POST" action="{{ route('billing.portal') }}">
+                                        @csrf
+                                        <button type="submit" class="billing-secondary-btn profile-action-btn">{{ __('billing.manage_billing') }}</button>
+                                    </form>
+                                @endif
+                            </div>
+                        </article>
                         <article class="profile-card profile-pane profile-card--details" data-profile-details id="personal-details">
                             <div class="profile-card-head">
                                 <h2>{{ __('profile.personal_details') }}</h2>

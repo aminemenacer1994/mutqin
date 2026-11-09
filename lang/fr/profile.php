@@ -86,6 +86,7 @@ return [
     'plan_premium_yearly' => 'Premium annuel',
     'plan_pro_monthly' => 'Pro mensuel',
     'plan_pro_yearly' => 'Pro annuel',
+    'plan_pro_lifetime' => 'Pro à vie',
     'set_password' => 'Définir un mot de passe',
     'change_password' => 'Changer le mot de passe',
     'set_password_desc' => 'Ajoutez un mot de passe pour la connexion par e-mail.',
@@ -166,4 +167,8 @@ return [
     'tier_free' => 'Gratuit',
     'tier_premium' => 'Premium',
     'tier_pro' => 'Pro',
+    'status_lifetime' => 'À vie',
+    'renewal_lifetime' => 'Accès à vie. Ne se renouvelle pas',
+    'lifetime' => 'À vie',
+    'once' => ' une fois',
 ];

@@ -69,4 +69,14 @@ class UserFactory extends Factory
             'subscription_plan' => 'pro_monthly',
         ]);
     }
+
+    public function lifetime(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'subscription_tier' => 'pro',
+            'subscription_status' => 'lifetime',
+            'subscription_plan' => 'pro_lifetime',
+            'subscription_current_period_ends_at' => null,
+        ]);
+    }
 }

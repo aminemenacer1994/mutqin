@@ -22,6 +22,7 @@ use App\Http\Controllers\Seo\SeoArticleController;
 use App\Http\Controllers\Seo\SeoGuidesController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardPageController;
 use App\Http\Controllers\WaitingListController;
+use App\Services\Billing\SubscriptionEntitlement;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Services\UserAiReciteUsageService;
@@ -304,6 +305,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $userId = $user instanceof User ? (int) $user->id : null;
 
         if ($user instanceof User) {
+            $entitlement = app(SubscriptionEntitlement::class);
+            if (! $entitlement->canStartAiAssessment($user)) {
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'plan_required',
+                    'message' => __('billing.plan_required', ['tier' => 'pro']),
+                    'tier' => 'pro',
+                ], 403);
+            }
+
             $lifetime = $lifetimeUsage->inspect($user);
             if (! $lifetime['allowed']) {
                 $reason = $lifetime['reason'] ?? UserAiReciteUsageService::REASON;
@@ -440,7 +451,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ]);
         });
     })
-        ->middleware(['plan:pro', 'throttle:'.SpeechmaticsRateLimit::NAME])
+        ->middleware(['throttle:'.SpeechmaticsRateLimit::NAME])
         ->name('memorisation.transcription-token');
 });
 

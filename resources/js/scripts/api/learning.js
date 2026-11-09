@@ -97,6 +97,9 @@ http.interceptors.response.use(
   async (error) => {
     const config = error?.config
     const status = error?.response?.status
+    if (status === 429 && error?.response?.data?.reason === 'daily_limit' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('mutqin:upgrade-required', { detail: error.response.data }))
+    }
     if (status === 419 && config && !config.__csrfRetried) {
       config.__csrfRetried = true
       await ensureCsrfCookie({ force: true })

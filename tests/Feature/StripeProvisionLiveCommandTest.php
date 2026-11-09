@@ -64,8 +64,7 @@ class StripeProvisionLiveCommandTest extends TestCase
                 $ids = [
                     1 => 'price_pro_m',
                     2 => 'price_pro_y',
-                    3 => 'price_pre_m',
-                    4 => 'price_pre_y',
+                    3 => 'price_pro_l',
                 ];
 
                 return Http::response(['id' => $ids[$priceCreates] ?? 'price_x'], 200);
@@ -77,6 +76,8 @@ class StripeProvisionLiveCommandTest extends TestCase
         $this->artisan('mutqin:stripe-provision-live')
             ->expectsOutputToContain('Webhook URL: https://mutqin.ai/api/stripe/webhook')
             ->expectsOutputToContain('STRIPE_PRICE_PRO_MONTHLY=price_pro_m')
+            ->expectsOutputToContain('STRIPE_PRICE_PRO_YEARLY=price_pro_y')
+            ->expectsOutputToContain('STRIPE_PRICE_PRO_LIFETIME=price_pro_l')
             ->expectsOutputToContain('STRIPE_WEBHOOK_SECRET=whsec_live_test')
             ->assertSuccessful();
     }

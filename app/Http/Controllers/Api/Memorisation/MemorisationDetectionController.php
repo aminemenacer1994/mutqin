@@ -15,7 +15,8 @@ use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
 use App\Services\Teacher\TeacherAssignmentService;
-use App\Services\UserAiReciteUsageService;
+use App\Services\Billing\AiAssessmentQuotaExceeded;
+use App\Services\Billing\SubscriptionEntitlement;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,17 +42,22 @@ class MemorisationDetectionController extends Controller
             return null;
         }
 
-        $usage = app(UserAiReciteUsageService::class)->inspect($user);
+        $entitlement = app(SubscriptionEntitlement::class);
+        if (! $entitlement->canStartAiAssessment($user)) {
+            return response()->json([
+                'available' => false,
+                'reason' => 'plan_required',
+                'message' => __('billing.plan_required', ['tier' => 'pro']),
+                'tier' => 'pro',
+            ], 403);
+        }
+
+        $usage = $entitlement->getRemainingUsage($user, SubscriptionEntitlement::AI_ASSESSMENT);
         if ($usage['allowed']) {
             return null;
         }
 
-        $reason = $usage['reason'] ?? UserAiReciteUsageService::REASON;
-
-        return response()->json([
-            'message' => app(UserAiReciteUsageService::class)->learnerMessageForReason($reason),
-            'reason' => $reason,
-        ], 429);
+        return response()->json($entitlement->quotaPayload($user), 429);
     }
 
     public function storeAssessment(
@@ -85,6 +91,11 @@ class MemorisationDetectionController extends Controller
 
         try {
             $result = $service->create($request->user(), $payload);
+        } catch (AiAssessmentQuotaExceeded) {
+            return response()->json(
+                app(SubscriptionEntitlement::class)->quotaPayload($request->user()),
+                429
+            );
         } catch (\Throwable $exception) {
             MutqinLog::error('memorisation.assessment.failed', [
                 'exception' => $exception::class,

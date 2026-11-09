@@ -6,6 +6,7 @@ use App\Enums\AccountRole;
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
 use App\Support\AdminEmails;
+use App\Support\Billing\SubscriptionAccess;
 use App\Support\EmailVerification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -72,11 +73,15 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'password_set_at',
         'stripe_customer_id',
         'stripe_subscription_id',
+        'stripe_price_id',
         'subscription_tier',
         'subscription_plan',
         'subscription_status',
+        'subscription_cancel_at_period_end',
         'subscription_trial_ends_at',
+        'subscription_current_period_starts_at',
         'subscription_current_period_ends_at',
+        'subscription_state_at',
         'locale',
         'theme',
         'ai_audio_consent_status',
@@ -111,8 +116,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'password_set_at' => 'datetime',
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'subscription_cancel_at_period_end' => 'boolean',
             'subscription_trial_ends_at' => 'datetime',
+            'subscription_current_period_starts_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
+            'subscription_state_at' => 'integer',
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
@@ -281,7 +289,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasPaidAccess(): bool
     {
-        return in_array($this->subscription_status, ['trialing', 'active'], true);
+        return SubscriptionAccess::grantsPaidAccess($this);
     }
 
     /**
@@ -307,7 +315,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
         $tier = strtolower((string) ($this->subscription_tier ?? 'free'));
 
-        return in_array($tier, ['premium', 'pro'], true) ? $tier : 'free';
+        if (in_array($tier, ['premium', 'pro'], true)) {
+            return 'pro';
+        }
+
+        return 'free';
     }
 
     public function effectiveSubscriptionTier(): string

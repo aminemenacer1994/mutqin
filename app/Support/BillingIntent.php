@@ -55,8 +55,8 @@ final class BillingIntent
             return null;
         }
 
-        $plans = config('billing.plans', []);
+        $plan = config("billing.plans.$key");
 
-        return is_array($plans) && array_key_exists($key, $plans) ? $key : null;
+        return is_array($plan) && ! empty($plan['purchasable']) ? $key : null;
     }
 }

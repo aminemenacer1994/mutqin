@@ -272,10 +272,11 @@ class ProfileController extends Controller
     {
         return [
             'free' => __('profile.free_access'),
-            'premium_monthly' => __('profile.plan_premium_monthly'),
-            'premium_yearly' => __('profile.plan_premium_yearly'),
+            'premium_monthly' => __('profile.plan_pro_monthly'),
+            'premium_yearly' => __('profile.plan_pro_yearly'),
             'pro_monthly' => __('profile.plan_pro_monthly'),
             'pro_yearly' => __('profile.plan_pro_yearly'),
+            'pro_lifetime' => __('profile.plan_pro_lifetime'),
         ];
     }
 
@@ -287,6 +288,9 @@ class ProfileController extends Controller
      *     tier_label: string,
      *     renewal_label: string,
      *     trial_label: string|null,
+     *     price_label: string,
+     *     frequency_label: string,
+     *     cancellation_label: string|null,
      *     can_manage: bool,
      *     can_upgrade: bool
      * }
@@ -317,19 +321,45 @@ class ProfileController extends Controller
 
         $renewalLabel = __('profile.renewal_free_never');
         $trialLabel = null;
+        $cancellationLabel = null;
         $periodEnd = $user->subscription_current_period_ends_at;
         $trialEnd = $user->subscription_trial_ends_at;
+        $periodDate = $periodEnd
+            ? $periodEnd->timezone(config('app.timezone'))->format('j M Y')
+            : null;
 
         if ($trialEnd && $status === 'trialing') {
             $trialLabel = __('profile.trial_ends', ['date' => $trialEnd->timezone(config('app.timezone'))->format('j M Y')]);
             $renewalLabel = $trialLabel;
+        } elseif ($user->subscription_cancel_at_period_end && $periodDate) {
+            $cancellationLabel = __('profile.cancels_on', ['date' => $periodDate]);
+            $renewalLabel = $cancellationLabel;
+        } elseif ($planKey === 'pro_lifetime' && $paid) {
+            $renewalLabel = __('profile.renewal_lifetime');
         } elseif ($periodEnd && $paid) {
-            $renewalLabel = __('profile.renewal_on', ['date' => $periodEnd->timezone(config('app.timezone'))->format('j M Y')]);
+            $renewalLabel = __('profile.renewal_on', ['date' => $periodDate]);
         } elseif ($paid) {
             $renewalLabel = __('profile.renewal_not_scheduled');
         }
 
         $verified = $user->hasVerifiedEmail();
+        $plan = is_array(config('billing.plans.'.$planKey)) ? config('billing.plans.'.$planKey) : [];
+        $interval = (string) ($plan['interval'] ?? 'month');
+        $frequencyLabel = match ($interval) {
+            'year' => __('profile.yearly'),
+            'lifetime' => __('profile.lifetime'),
+            default => __('profile.monthly'),
+        };
+        if (! $paid) {
+            $priceLabel = __('profile.price_free');
+            $frequencyLabel = __('profile.monthly');
+        } elseif (isset($plan['audited_unit_amount'])) {
+            $priceLabel = config('billing.currency_symbol', '£').number_format(((int) $plan['audited_unit_amount']) / 100, 2, '.', '').$this->priceSuffix($interval);
+        } elseif (filled($plan['display_amount'] ?? null)) {
+            $priceLabel = config('billing.currency_symbol', '£').$plan['display_amount'].$this->priceSuffix($interval);
+        } else {
+            $priceLabel = __('profile.billed_in_stripe');
+        }
 
         return [
             'plan_label' => $planLabel,
@@ -337,8 +367,20 @@ class ProfileController extends Controller
             'tier_label' => $tierLabel,
             'renewal_label' => $renewalLabel,
             'trial_label' => $trialLabel,
+            'price_label' => $priceLabel,
+            'frequency_label' => $frequencyLabel,
+            'cancellation_label' => $cancellationLabel,
             'can_manage' => $verified && $user->hasBillableStripeCustomer(),
-            'can_upgrade' => ! $paid || $tier !== 'pro',
+            'can_upgrade' => $verified && (! $paid || $tier !== 'pro'),
         ];
+    }
+
+    private function priceSuffix(string $interval): string
+    {
+        return match ($interval) {
+            'year' => __('profile.per_year'),
+            'lifetime' => __('profile.once'),
+            default => __('profile.per_month'),
+        };
     }
 }

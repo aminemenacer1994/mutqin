@@ -86,6 +86,7 @@ return [
     'plan_premium_yearly' => 'بريميوم سنوي',
     'plan_pro_monthly' => 'برو شهري',
     'plan_pro_yearly' => 'برو سنوي',
+    'plan_pro_lifetime' => 'برو مدى الحياة',
     'set_password' => 'تعيين كلمة مرور',
     'change_password' => 'تغيير كلمة المرور',
     'set_password_desc' => 'أضف كلمة مرور لتسجيل الدخول بالبريد.',
@@ -166,4 +167,8 @@ return [
     'tier_free' => 'مجاني',
     'tier_premium' => 'بريميوم',
     'tier_pro' => 'برو',
+    'status_lifetime' => 'مدى الحياة',
+    'renewal_lifetime' => 'وصول مدى الحياة. لا يتجدد',
+    'lifetime' => 'مدى الحياة',
+    'once' => ' مرة واحدة',
 ];

@@ -56,6 +56,10 @@
         <env name="SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO" value="false"/>
         <env name="SHOW_DEMO_ACCOUNTS" value="false"/>
         <env name="MUTQIN_UNRESTRICTED_SUBSCRIPTION" value="false"/>
+        <env name="BILLING_VERIFY_PRICE_ON_CHECKOUT" value="false"/>
+        <env name="STRIPE_SECRET_KEY" value="sk_test_phpunit" force="true"/>
+        <env name="STRIPE_WEBHOOK_SECRET" value="" force="true"/>
+        <env name="STRIPE_PUBLISHABLE_KEY" value="pk_test_phpunit" force="true"/>
         <env name="MUTQIN_TEACHER_FEATURES_ENABLED" value="false"/>
     </php>
 </phpunit>

@@ -10,7 +10,7 @@ class SubscriptionTierEnforcementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_free_user_cannot_create_memorisation_assessment(): void
+    public function test_free_user_can_create_a_memorisation_assessment_within_the_daily_allowance(): void
     {
         $user = User::factory()->create();
 
@@ -32,7 +32,32 @@ class SubscriptionTierEnforcementTest extends TestCase
                     ['word' => 'الله', 'confidence' => 0.94],
                 ],
             ])
-            ->assertForbidden();
+            ->assertCreated();
+    }
+
+    public function test_premium_user_can_create_memorisation_assessment_as_pro(): void
+    {
+        $user = User::factory()->premium()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/memorisation/assessments', [
+                'surah_number' => 1,
+                'surah_name' => 'Al-Fatihah',
+                'start_ayah' => 1,
+                'end_ayah' => 1,
+                'duration_ms' => 1000,
+                'provider' => 'test',
+                'ayahs' => [[
+                    'ayah_number' => 1,
+                    'surah_number' => 1,
+                    'words' => ['بسم', 'الله'],
+                ]],
+                'recognition_words' => [
+                    ['word' => 'بسم', 'confidence' => 0.95],
+                    ['word' => 'الله', 'confidence' => 0.94],
+                ],
+            ])
+            ->assertCreated();
     }
 
     public function test_pro_user_can_create_memorisation_assessment(): void
@@ -60,15 +85,35 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_free_user_cannot_request_transcription_token(): void
+    public function test_free_user_can_request_transcription_token_within_the_daily_allowance(): void
     {
         $user = User::factory()->create();
 
+        config([
+            'services.speechmatics.api_key' => '',
+            'services.speechmatics.region' => 'eu',
+        ]);
+
         $this->actingAs($user)
             ->postJson(route('memorisation.transcription-token'))
-            ->assertForbidden()
-            ->assertJsonPath('reason', 'plan_required')
-            ->assertJsonPath('available', false);
+            ->assertOk()
+            ->assertJsonPath('available', false)
+            ->assertJsonPath('reason', 'unavailable');
+    }
+
+    public function test_premium_user_can_request_transcription_token_as_pro(): void
+    {
+        $user = User::factory()->premium()->create();
+
+        config([
+            'services.speechmatics.api_key' => '',
+            'services.speechmatics.region' => 'eu',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJsonPath('reason', 'unavailable');
     }
 
     public function test_free_user_can_request_transcription_token_when_demo_accounts_are_enabled(): void

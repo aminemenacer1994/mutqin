@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\FeatureUsageCounter;
 use App\Models\MemorisationAssessment;
 use App\Models\User;
+use App\Services\Billing\SubscriptionEntitlement;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,7 +19,7 @@ class UserAiReciteUsageService
 
     public const LEARNER_MESSAGE = 'You have reached your AI voice-check limit. Contact support if you need more checks.';
 
-    public const LEARNER_DAILY_MESSAGE = 'You have reached today\'s limit of 10 AI recite checks. Please try again tomorrow.';
+    public const LEARNER_DAILY_MESSAGE = 'You have reached today\'s free AI recitation assessment limit. Please try again tomorrow.';
 
     public function lifetimeCheckCount(User $user): int
     {
@@ -29,7 +31,27 @@ class UserAiReciteUsageService
 
     public function dailyCheckCount(User $user, ?Carbon $day = null): int
     {
-        $day = ($day ?? Carbon::now('UTC'))->copy()->startOfDay();
+        $period = ($day ?? Carbon::now('UTC'))->copy()->utc()->toDateString();
+        $consumed = FeatureUsageCounter::query()
+            ->where('user_id', $user->id)
+            ->where('feature', SubscriptionEntitlement::AI_ASSESSMENT)
+            ->whereDate('period_on', $period)
+            ->value('consumed');
+
+        if ($consumed !== null) {
+            return (int) $consumed;
+        }
+
+        return $this->storedDailyAssessmentCount($user, $day);
+    }
+
+    /**
+     * Completed scored checks for the UTC day. Failures and retries that did
+     * not create a new scored row are not included.
+     */
+    public function storedDailyAssessmentCount(User $user, ?Carbon $day = null): int
+    {
+        $day = ($day ?? Carbon::now('UTC'))->copy()->utc()->startOfDay();
         $end = $day->copy()->endOfDay();
 
         return (int) MemorisationAssessment::query()
@@ -78,19 +100,26 @@ class UserAiReciteUsageService
 
     public function resolvedDailyLimit(User $user): ?int
     {
-        if ($this->isDailyLimitExempt($user)) {
+        if ($this->isDailyLimitExempt($user) || $user->hasProAccess()) {
             return null;
         }
 
-        $default = (int) config('mutqin.ai_recite.default_daily_limit', 10);
+        $default = config('billing.limits.free.ai_assessments_per_day');
+        if ($default === null || $default === '') {
+            $default = config('mutqin.ai_recite.default_daily_limit', 5);
+        }
 
-        return $default > 0 ? $default : null;
+        $value = (int) $default;
+
+        return $value > 0 ? $value : null;
     }
 
     public function learnerMessageForReason(?string $reason): string
     {
         return match ($reason) {
-            self::REASON_DAILY => self::LEARNER_DAILY_MESSAGE,
+            self::REASON_DAILY => __('billing.daily_limit', [
+                'limit' => (int) config('billing.limits.free.ai_assessments_per_day', 5),
+            ]),
             default => self::LEARNER_MESSAGE,
         };
     }

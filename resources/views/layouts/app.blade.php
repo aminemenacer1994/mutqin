@@ -51,11 +51,22 @@
     $mutqinBillingDisplay = [
         'currency' => config('billing.currency', 'GBP'),
         'currencySymbol' => config('billing.currency_symbol', '£'),
-        'proMonthly' => (string) config('billing.plans.pro_monthly.display_amount', '5.99'),
-        'proYearlyMonthly' => (string) config('billing.plans.pro_yearly.display_monthly_equivalent', '4.49'),
-        'proYearlyTotal' => (string) config('billing.plans.pro_yearly.display_amount', '53.91'),
+        'proMonthly' => (string) config('billing.plans.pro_monthly.display_amount', '2.99'),
+        'proYearlyMonthly' => (string) config('billing.plans.pro_yearly.display_monthly_equivalent', '2.24'),
+        'proYearlyTotal' => (string) config('billing.plans.pro_yearly.display_amount', '26.91'),
+        'proLifetime' => (string) config('billing.plans.pro_lifetime.display_amount', '53.82'),
         'annualDiscountPercent' => (int) config('billing.plans.pro_yearly.annual_discount_percent', 25),
+        'lifetimeDiscountPercent' => (int) config('billing.plans.pro_lifetime.lifetime_discount_percent', 50),
+        'annualEnabled' => (bool) config('billing.annual_billing_enabled'),
+        'lifetimeEnabled' => (bool) config('billing.lifetime_billing_enabled'),
+        'freeAiAssessmentsPerDay' => (int) config('billing.limits.free.ai_assessments_per_day', 5),
     ];
+    $showAiAllowance = $navUser
+        && ! $navUser->hasProAccess()
+        && request()->routeIs('dashboard', 'progress.dashboard', 'profile.show');
+    $aiAllowance = $showAiAllowance
+        ? app(\App\Services\Billing\SubscriptionEntitlement::class)->getRemainingUsage($navUser, \App\Services\Billing\SubscriptionEntitlement::AI_ASSESSMENT)
+        : null;
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
@@ -4678,6 +4689,63 @@
             background: var(--accent-light);
         }
 
+        .plan-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+            color: var(--text);
+            background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+        }
+
+        .plan-pill--pro {
+            color: var(--accent-strong, var(--accent));
+        }
+
+        .upgrade-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1080;
+            display: grid;
+            place-items: end center;
+            padding: 1rem;
+            background: color-mix(in srgb, var(--text) 28%, transparent);
+        }
+
+        .upgrade-modal[hidden] {
+            display: none;
+        }
+
+        .upgrade-modal__panel {
+            width: min(28rem, 100%);
+            margin-bottom: env(safe-area-inset-bottom, 0px);
+            padding: 1.25rem 1.25rem 1.1rem;
+            border-radius: 1rem;
+            background: var(--surface-strong, var(--surface));
+            color: var(--text);
+            box-shadow: 0 24px 48px -28px color-mix(in srgb, var(--text) 45%, transparent);
+        }
+
+        .upgrade-modal__panel h2 {
+            margin: 0 0 0.4rem;
+            font-size: 1.15rem;
+        }
+
+        .upgrade-modal__panel p {
+            margin: 0 0 1rem;
+            color: var(--text-muted, var(--text));
+        }
+
+        .upgrade-modal__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
         .app-user-toggle > span:last-of-type {
             max-width: 10rem;
             overflow: hidden;
@@ -8428,6 +8496,7 @@
                         <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
                             <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
                             <span class="d-none d-lg-inline">{{ Auth::user()->name ?? __('ui.user') }}</span>
+                            <span class="plan-pill {{ $navUser->billingSubscriptionTier() === 'pro' ? 'plan-pill--pro' : '' }}">{{ __("profile.tier_{$navUser->billingSubscriptionTier()}") }}</span>
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
@@ -8456,10 +8525,26 @@
                             </li>
                             @endif
                             <li>
-                                <a class="dropdown-item" href="{{ route('profile.show') }}" role="menuitem">
+                                <a class="dropdown-item" href="{{ route('profile.show') }}#subscription" role="menuitem">
                                     <i class="bi bi-person" aria-hidden="true"></i> <span>{{ __('ui.profile') }}</span>
                                 </a>
                             </li>
+                            @if (! $navUser->hasProAccess())
+                            <li>
+                                <a class="dropdown-item" href="{{ route('pricing') }}" role="menuitem">
+                                    <i class="bi bi-arrow-up-circle" aria-hidden="true"></i>
+                                    <span>{{ __('profile.upgrade_to_pro') }}</span>
+                                </a>
+                            </li>
+                            @endif
+                            @if (is_array($aiAllowance) && $aiAllowance['limit'] !== null)
+                            <li>
+                                <span class="dropdown-item" style="cursor: default;">
+                                    <i class="bi bi-mic" aria-hidden="true"></i>
+                                    <span>{{ __('profile.ai_remaining', ['count' => (int) ($aiAllowance['remaining'] ?? 0)]) }}</span>
+                                </span>
+                            </li>
+                            @endif
                             <li>
                                 <button
                                     type="button"
@@ -14755,5 +14840,35 @@ body.session-analysis-modal-open {
   }
 </style>
 @endif
+    <div class="upgrade-modal" id="mutqin-upgrade-modal" hidden>
+        <div class="upgrade-modal__panel" role="dialog" aria-modal="true" aria-labelledby="mutqin-upgrade-title">
+            <h2 id="mutqin-upgrade-title">{{ __('billing.upgrade_limit_title') }}</h2>
+            <p>{{ __('billing.upgrade_limit_body') }}</p>
+            <div class="upgrade-modal__actions">
+                <a class="btn btn-primary" href="{{ route('pricing') }}">{{ __('billing.upgrade_now') }}</a>
+                <button type="button" class="btn btn-outline-secondary" id="mutqin-upgrade-later">{{ __('billing.upgrade_later') }}</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var modal = document.getElementById('mutqin-upgrade-modal');
+            var later = document.getElementById('mutqin-upgrade-later');
+            if (!modal || !later) return;
+            var storageKey = 'mutqin-upgrade-dismissed';
+            function today() {
+                return new Date().toISOString().slice(0, 10);
+            }
+            function openModal() {
+                if (window.sessionStorage && sessionStorage.getItem(storageKey) === today()) return;
+                modal.hidden = false;
+            }
+            later.addEventListener('click', function () {
+                modal.hidden = true;
+                try { sessionStorage.setItem(storageKey, today()); } catch (e) {}
+            });
+            window.addEventListener('mutqin:upgrade-required', openModal);
+        })();
+    </script>
 </body>
 </html>
