@@ -350,4 +350,37 @@ class SessionVoiceInterpreterTest extends TestCase
         $this->assertSame(1, $result['command']['start_ayah']);
         $this->assertSame(4, $result['command']['end_ayah']);
     }
+
+    public function test_more_spoken_requests_resolve_without_guessing(): void
+    {
+        $cases = [
+            'Play the last three ayahs of Al-Ikhlas.' => ['ok' => true, 'surah' => 112, 'start_ayah' => 2, 'end_ayah' => 4],
+            'Listen to the entire Surah Al-Ikhlas with Sudais.' => ['ok' => true, 'surah' => 112, 'start_ayah' => 1, 'end_ayah' => 4, 'reciter' => 'ar.abdurrahmaansudais'],
+            'Test me on Surah Al-Fatiha.' => ['ok' => true, 'surah' => 1, 'mode' => 'test', 'goal' => 'test'],
+            'Memorise Surah Al-Nas from ayah 2 onwards at normal speed.' => ['ok' => true, 'surah' => 114, 'start_ayah' => 2, 'end_ayah' => 6, 'speed' => 1.0],
+            'Revise Al-Falaq twice, fast.' => ['ok' => true, 'surah' => 113, 'repetitions' => 2, 'speed' => 1.5],
+            'Play Surah Al-Fatiha from ayah 5 to ayah 2.' => ['ok' => false, 'reason' => 'reversed_range'],
+            'Play Surah Al-Ikhlas from ayah 1 to ayah 9.' => ['ok' => false, 'reason' => 'invalid_range'],
+            'Play Surah Al-Fatiha at 3x speed.' => ['ok' => false, 'reason' => 'unsupported_speed'],
+            'Play Surah Al-Fatiha with Husary.' => ['ok' => false, 'reason' => 'ambiguous_reciter'],
+            'Continue where I left off.' => ['ok' => true, 'resume' => true],
+            'Play Al Kawthar with Sudays.' => ['ok' => true, 'surah' => 108, 'reciter' => 'ar.abdurrahmaansudais'],
+            'I said three times, actually make it one, Surah Al-Asr.' => ['ok' => true, 'surah' => 103, 'repetitions' => 1],
+        ];
+
+        foreach ($cases as $phrase => $expected) {
+            $result = $this->interpreter->interpret($phrase);
+            $this->assertSame($expected['ok'], $result['ok'], $phrase.' '.json_encode($result));
+            if (! $expected['ok']) {
+                $this->assertSame($expected['reason'], $result['reason'], $phrase);
+                continue;
+            }
+            foreach ($expected as $key => $value) {
+                if ($key === 'ok') {
+                    continue;
+                }
+                $this->assertSame($value, $result['command'][$key] ?? null, $phrase.' '.$key);
+            }
+        }
+    }
 }

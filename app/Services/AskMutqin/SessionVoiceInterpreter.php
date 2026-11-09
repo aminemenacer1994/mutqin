@@ -202,6 +202,7 @@ final class SessionVoiceInterpreter
         $reciterLatin = $this->withoutSurahNames($latin, $arabic);
         $draft = [
             'mode' => $this->parseMode($latin, $arabic),
+            'resume' => $this->wantsResume($latin),
             'surah' => $this->findSurah($latin, $arabic),
             'range' => $this->parseRange($spoken['latin'], $spoken['arabic']),
             'reciters' => $this->findReciters($reciterLatin, $arabic),
@@ -273,6 +274,16 @@ final class SessionVoiceInterpreter
     private function finalize(array $draft): array
     {
         $surah = $draft['surah'];
+        if (! empty($draft['resume']) && ($surah['status'] ?? '') === 'absent') {
+            return [
+                'ok' => true,
+                'command' => [
+                    'resume' => true,
+                    'mode' => $draft['mode'] ?? 'memorise',
+                    'goal' => $this->goalFor($draft['mode'] ?? 'memorise'),
+                ],
+            ];
+        }
         if (($surah['status'] ?? '') === 'unknown') {
             return $this->failure('unknown_surah', 'surah', $draft);
         }
@@ -402,6 +413,11 @@ final class SessionVoiceInterpreter
             'test' => 'test',
             default => 'memorise',
         };
+    }
+
+    private function wantsResume(string $latin): bool
+    {
+        return (bool) preg_match('/\b(?:continue|resume|pick up)\b.{0,24}\b(?:left off|session|memorising|memorizing|revising)\b|\bwhere i left off\b/', $latin);
     }
 
     private function parseMode(string $latin, string $arabic): string
@@ -551,6 +567,15 @@ final class SessionVoiceInterpreter
             return ['start' => 1, 'end' => $count];
         }
 
+        if (! empty($range['last'])) {
+            $length = (int) $range['last'];
+            if ($length < 1 || $length > $count) {
+                return ['start' => 1, 'end' => $length, 'reason' => 'invalid_range'];
+            }
+
+            return ['start' => $count - $length + 1, 'end' => $count];
+        }
+
         if (! empty($range['from_onwards'])) {
             $start = (int) $range['from_onwards'];
             if ($start < 1 || $start > $count) {
@@ -606,6 +631,15 @@ final class SessionVoiceInterpreter
                     'at' => (int) $match[1],
                     'len' => strlen((string) $match[0]),
                     'range' => ['explicit' => false, 'from_onwards' => (int) $matches[1][$index][0]],
+                ];
+            }
+        }
+        if (preg_match_all('/\blast\s+(\d{1,3})\s+ayah\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $found[] = [
+                    'at' => (int) $match[1],
+                    'len' => strlen((string) $match[0]),
+                    'range' => ['explicit' => false, 'last' => (int) $matches[1][$index][0]],
                 ];
             }
         }

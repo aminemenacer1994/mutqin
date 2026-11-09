@@ -17,8 +17,8 @@ html body .session-voice-overlay.mutqin-modal-overlay {
 }
 
 html body .session-voice-overlay .session-voice-dialog.mutqin-modal-dialog {
-  width: min(34rem, calc(100vw - 1.75rem)) !important;
-  max-width: min(34rem, calc(100vw - 1.75rem)) !important;
+  width: min(44rem, calc(100vw - 2rem)) !important;
+  max-width: min(44rem, calc(100vw - 2rem)) !important;
   max-height: min(88dvh, 40rem) !important;
   margin: 0 auto !important;
   animation: session-voice-rise 240ms cubic-bezier(0.22, 1, 0.36, 1);

@@ -198,7 +198,7 @@ export default {
       })
     },
     sessionBrief() {
-      const source = this.result?.command || this.preview?.command
+      const source = this.result?.command
       if (!source?.surah) return null
       const surah = source.surah_name || source.surah_name_ar || ''
       let range = ''
@@ -294,26 +294,6 @@ export default {
       this.previewTimer = 0
       this.previewToken += 1
     },
-    schedulePreview() {
-      if (this.previewTimer) window.clearTimeout(this.previewTimer)
-      this.previewTimer = window.setTimeout(() => {
-        this.previewTimer = 0
-        void this.refreshPreview()
-      }, 280)
-    },
-    async refreshPreview() {
-      const text = String(this.transcript || '').trim()
-      if (this.phase !== 'listening' || text.length < 6 || text === this.previewText) return
-      const token = ++this.previewToken
-      try {
-        const result = await interpretSessionVoiceCommand({ transcript: text })
-        if (token !== this.previewToken || this.phase !== 'listening') return
-        this.preview = result
-        this.previewText = text
-      } catch {
-        // Listening continues. The final request still runs after silence.
-      }
-    },
     async begin() {
       this.clearStartTimer()
       this.clearPreview()
@@ -336,7 +316,6 @@ export default {
           this.interim = !!state.interim
           this.bars = state.bars || this.bars
           this.speechSeen = !!state.speechSeen
-          if (this.transcript) this.schedulePreview()
         },
         onFinish: (state) => {
           if (generation !== this.generation) return
@@ -367,12 +346,14 @@ export default {
       await this.interpret()
     },
     async interpret() {
+      const generation = this.generation
       this.phase = 'understanding'
       try {
         const result = await interpretSessionVoiceCommand({
           transcript: this.transcript,
           overrides: this.overrides,
         })
+        if (generation !== this.generation) return
         this.result = result
         if (result?.ok && result.command?.surah) {
           this.phase = 'ready'
@@ -386,6 +367,7 @@ export default {
         }
         this.phase = 'clarify'
       } catch (error) {
+        if (generation !== this.generation) return
         this.phase = 'error'
         this.errorKind = error?.response?.status === 401 ? 'auth' : 'transcription'
       }
@@ -402,12 +384,16 @@ export default {
     },
     startSession() {
       const command = this.result?.command
-      if (!command?.surah || this.phase === 'preparing') return
+      if (this.phase === 'preparing') return
+      if (!command?.surah && !command?.resume) return
       this.clearStartTimer()
       this.generation += 1
       this.phase = 'preparing'
       try {
-        window.location.assign(buildSessionVoiceHref(this.memorisationUrl, command))
+        const href = command.resume && !command.surah
+          ? `${String(this.memorisationUrl || '/memorisation').split('?')[0]}?resume=1`
+          : buildSessionVoiceHref(this.memorisationUrl, command)
+        window.location.assign(href)
       } catch {
         this.phase = 'error'
         this.errorKind = 'unknown'
