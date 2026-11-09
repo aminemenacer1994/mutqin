@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createSilenceTracker, SESSION_VOICE_SILENCE_MS } from '../../resources/js/scripts/sessionVoice/silence.js'
 import { buildSessionVoiceHref } from '../../resources/js/scripts/sessionVoice/href.js'
+import { matchSpokenNames, matchSpokenRequest } from '../../resources/js/scripts/sessionVoice/names.js'
 
 const tracker = createSilenceTracker({ silenceMs: SESSION_VOICE_SILENCE_MS })
 
@@ -44,5 +45,23 @@ assert.equal(defaultParams.get('goal'), 'revise')
 assert.equal(defaultParams.get('reciter'), null)
 assert.equal(defaultParams.get('speed'), null)
 assert.equal(defaultParams.get('setup'), '1')
+
+const spoken = matchSpokenNames(
+  'I want to recite Sora till Cafrune . And I want the reciter to be . A Sudice .'
+)
+assert.equal(spoken.surah, 'الكافرون')
+assert.equal(spoken.reciter, 'عبد الرحمن السديس')
+assert.deepEqual(matchSpokenNames('Play Al-Fatiha'), { surah: '', reciter: '' })
+
+const combined = matchSpokenRequest(
+  'I want to recite Sora till Cafrune from verse 1 to 6 at half speed three times. And I want the reciter to be A Sudice.'
+)
+assert.equal(combined.surah, 'الكافرون')
+assert.equal(combined.reciter, 'عبد الرحمن السديس')
+assert.equal(combined.mode, 'recite')
+assert.equal(combined.start, 1)
+assert.equal(combined.end, 6)
+assert.equal(combined.speed, 0.5)
+assert.equal(combined.repetitions, 3)
 
 console.log('session-voice.test.mjs: ok')

@@ -669,6 +669,7 @@
               v-if="auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible"
               type="button"
               class="action-btn action-btn-secondary top-card-action-trigger top-card-icon-control top-card-voice-trigger"
+              :class="{ 'is-open': sessionVoiceOpen }"
               data-testid="workspace-voice-open"
               :title="t('dashboard.voice.open')"
               :aria-label="t('dashboard.voice.open')"
@@ -5162,6 +5163,7 @@
     <SessionVoiceAssistant
       v-if="auth.session_voice_enabled && sessionVoiceOpen"
       :theme="theme"
+      :phrase-hints="auth.session_voice_hints || []"
       @close="sessionVoiceOpen = false"
     />
 
@@ -5936,3 +5938,34 @@
 <style src="./Memorisation.mobile-grid.css"></style>
 <style src="./Memorisation.amd.css"></style>
 <!-- Must load last: shared mushaf rules use display:contents on .madani-line--glyphs -->
+<style>
+.top-card-icon-controls .top-card-voice-trigger.top-card-icon-control {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
+  flex: 0 0 42px !important;
+  color: var(--accent-strong, #8a5a2b) !important;
+  background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #fff) !important;
+  border: 1.5px solid var(--accent, #c48a4a) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #c48a4a) 24%, transparent) !important;
+}
+
+.top-card-icon-controls .top-card-voice-trigger.top-card-icon-control:hover,
+.top-card-icon-controls .top-card-voice-trigger.top-card-icon-control:focus-visible,
+.top-card-icon-controls .top-card-voice-trigger.top-card-icon-control.is-open {
+  background: color-mix(in srgb, var(--accent, #c48a4a) 18%, #fff) !important;
+  border-color: var(--accent-strong, #8a5a2b) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #c48a4a) 34%, transparent) !important;
+  outline: none;
+}
+
+[data-theme="dark"] .top-card-icon-controls .top-card-voice-trigger.top-card-icon-control {
+  color: #f7efdf !important;
+  background: color-mix(in srgb, #d4af6e 16%, #18181b) !important;
+  border-color: #d4af6e !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #d4af6e 28%, transparent) !important;
+}
+</style>

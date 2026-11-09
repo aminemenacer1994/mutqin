@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { validateRecordingEnvironment } from '../audio/recordingResilience.js'
 import {
+  ALQURAN_RECITER_OPTIONS,
   createSpeechmaticsRealtimeProvider,
   createTranscriptionAudioBridge,
 } from '../memorisationRuntime.js'
@@ -32,6 +33,25 @@ async function fetchTranscriptionAccessToken() {
   } catch (error) {
     throw normalizeTranscriptionTokenError(error)
   }
+}
+
+function additionalVocabFrom(phraseHints) {
+  if (Array.isArray(phraseHints)) {
+    const rows = phraseHints.map((row) => {
+      const content = String(row?.content || '').trim()
+      if (!content) return null
+      const sounds = Array.isArray(row.sounds_like)
+        ? row.sounds_like.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 4)
+        : []
+      return sounds.length ? { content, sounds_like: sounds } : { content }
+    }).filter(Boolean)
+    return rows.length ? rows : undefined
+  }
+  if (!phraseHints) return undefined
+  const rows = ALQURAN_RECITER_OPTIONS
+    .map((reciter) => ({ content: reciter.name }))
+    .filter((row) => row.content)
+  return rows.length ? rows : undefined
 }
 
 export function createAskMutqinVoiceSession(options = {}) {
@@ -120,6 +140,7 @@ export function createAskMutqinVoiceSession(options = {}) {
       endOfUtteranceSeconds: delays.endOfUtteranceSeconds,
       // Token mint + Speechmatics handshake can exceed 4.5s on cold starts.
       handshakeTimeoutMs: 9000,
+      additionalVocab: additionalVocabFrom(options.phraseHints),
     })
     provider.onTranscript(onTranscript)
     provider.onError((error) => {

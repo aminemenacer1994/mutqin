@@ -243,6 +243,7 @@ export function createSessionVoiceListener(options = {}) {
       cancelled = false
       startedAt = Date.now()
       session = createAskMutqinVoiceSession({
+        phraseHints: options.phraseHints,
         onTranscript: (payload) => {
           heard = appendHeardPayload(heard, payload)
           if (heardStreamText(heard)) noteTranscript()

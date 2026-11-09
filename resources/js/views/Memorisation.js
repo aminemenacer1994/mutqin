@@ -635,7 +635,7 @@ const AskMutqinModal = lazyWorkspaceChunk(
   'ask-mutqin-modal'
 )
 const SessionVoiceAssistant = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "session-voice" */ '../components/SessionVoiceAssistant.vue'),
+  () => import(/* webpackChunkName: "session-voice-card" */ '../components/SessionVoiceAssistant.vue'),
   'session-voice'
 )
 const MutashabihatCompareModal = lazyWorkspaceChunk(

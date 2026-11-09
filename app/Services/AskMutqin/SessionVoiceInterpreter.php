@@ -75,7 +75,104 @@ final class SessionVoiceInterpreter
         111 => 'المسد', 112 => 'الإخلاص', 113 => 'الفلق', 114 => 'الناس',
     ];
 
+    /**
+     * Arabic display names for the reciters already offered in the workspace.
+     *
+     * @var array<string, string>
+     */
+    private const RECITER_ARABIC = [
+        'ar.alafasy' => 'مشاري العفاسي',
+        'ar.abdulbasitmurattal' => 'عبد الباسط',
+        'ar.abdurrahmaansudais' => 'عبد الرحمن السديس',
+        'ar.hanirifai' => 'هاني الرفاعي',
+        'ar.husary' => 'محمود الحصري',
+        'ar.minshawi' => 'محمد المنشاوي',
+        'ar.saoodshuraym' => 'سعود الشريم',
+        'ar.shaatree' => 'أبو بكر الشاطري',
+        'ar.mahermuaiqly' => 'ماهر المعيقلي',
+        'ar.hudhaify' => 'علي الحذيفي',
+        'ar.abdullahbasfar' => 'عبد الله بصفر',
+        'ar.muhammadayyoub' => 'محمد أيوب',
+        'ar.muhammadjibreel' => 'محمد جبريل',
+        'ar.ahmedajamy' => 'أحمد العجمي',
+        'ar.husarymujawwad' => 'محمود الحصري مجود',
+        'ar.minshawimujawwad' => 'محمد المنشاوي مجود',
+        'ar.abdulsamad' => 'عبد الباسط مجود',
+        'ar.ibrahimakhbar' => 'إبراهيم الأخضر',
+        'ar.parhizgar' => 'شهريار برهيزكار',
+        'ar.aymanswoaid' => 'أيمن سويد',
+    ];
+
     public function __construct(private readonly CommandValidator $validator) {}
+
+    /**
+     * Arabic names for Speechmatics, with Latin pronunciations the English model can hear.
+     * Used only by the session assistant, not by recitation transcription.
+     *
+     * @return list<array{content: string, sounds_like: list<string>}>
+     */
+    public function recognitionVocabulary(): array
+    {
+        $extra = [
+            109 => ['cafrune', 'kafiroun'],
+            'ar.abdurrahmaansudais' => ['sudice', 'sudaisi'],
+        ];
+        $rows = [];
+        foreach (self::ARABIC_SURAHS as $id => $arabic) {
+            $rows[] = [
+                'kind' => 'surah',
+                'content' => $arabic,
+                'sounds_like' => $this->soundsFor((string) QuranMetadata::name($id), $extra[$id] ?? []),
+            ];
+        }
+        foreach (self::RECITER_ARABIC as $id => $arabic) {
+            if (! isset(CommandValidator::RECITERS[$id])) {
+                continue;
+            }
+            $plain = trim((string) preg_replace('/\s*\([^)]*\)/', '', CommandValidator::RECITERS[$id]));
+            $rows[] = [
+                'kind' => 'reciter',
+                'content' => $arabic,
+                'sounds_like' => $this->soundsFor($plain, $extra[$id] ?? []),
+            ];
+        }
+
+        return array_values(array_filter(
+            $rows,
+            fn (array $row) => $row['content'] !== '' && $row['sounds_like'] !== []
+        ));
+    }
+
+    /**
+     * @param  list<string>  $extra
+     * @return list<string>
+     */
+    private function soundsFor(string $label, array $extra): array
+    {
+        $plain = strtolower($label);
+        $plain = str_replace(['ʿ', 'ʾ', "'", '’', '‘', '`', '-', '–', '(', ')'], ' ', $plain);
+        $plain = trim((string) preg_replace('/[^a-z\s]+/', ' ', $plain));
+        $plain = trim((string) preg_replace('/\s+/', ' ', $plain));
+        $tokens = $plain === '' ? [] : (preg_split('/\s+/', $plain) ?: []);
+        $last = $tokens === [] ? '' : (string) $tokens[array_key_last($tokens)];
+        $sounds = [];
+        $push = function (string $sound) use (&$sounds): void {
+            $sound = trim(strtolower($sound));
+            if ($sound === '' || strlen($sound) > 48 || in_array($sound, $sounds, true) || count($sounds) >= 4) {
+                return;
+            }
+            $sounds[] = $sound;
+        };
+        if (strlen($last) >= 4 && $last !== $plain) {
+            $push($last);
+        }
+        foreach ($extra as $sound) {
+            $push($sound);
+        }
+        $push($plain);
+
+        return $sounds;
+    }
 
     /**
      * @param  array<string, mixed>  $overrides
@@ -83,8 +180,9 @@ final class SessionVoiceInterpreter
      */
     public function interpret(string $transcript, array $overrides = []): array
     {
-        $latin = $this->foldLatin($this->normalize($transcript));
-        $arabic = $this->normalizeArabic($this->normalize($transcript));
+        $normalized = $this->normalize($transcript);
+        $latin = $this->stripFillers($this->foldLatin($normalized));
+        $arabic = $this->normalizeArabic($normalized);
         if ($latin === '' && $arabic === '') {
             return ['ok' => false, 'reason' => 'empty'];
         }
@@ -215,7 +313,11 @@ final class SessionVoiceInterpreter
         $reciters = $draft['reciters'] ?? [];
         if (count($reciters) > 1) {
             return $this->failure('ambiguous_reciter', 'reciter', $draft, [
-                'options' => array_map(fn (array $row) => ['id' => $row['id'], 'name' => $row['name']], $reciters),
+                'options' => array_map(fn (array $row) => [
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'name_ar' => self::RECITER_ARABIC[$row['id']] ?? null,
+                ], $reciters),
             ], $surahId, $range);
         }
         if (count($reciters) === 0 && ($draft['reciter_cue'] || $draft['with_tail'])) {
@@ -249,10 +351,12 @@ final class SessionVoiceInterpreter
                 'goal' => $this->goalFor($mode),
                 'surah' => $surahId,
                 'surah_name' => QuranMetadata::name($surahId),
+                'surah_name_ar' => self::ARABIC_SURAHS[$surahId] ?? null,
                 'start_ayah' => $range['start'],
                 'end_ayah' => $range['end'],
                 'reciter' => $reciter['id'] ?? null,
                 'reciter_label' => $reciter['name'] ?? null,
+                'reciter_label_ar' => isset($reciter['id']) ? (self::RECITER_ARABIC[$reciter['id']] ?? null) : null,
                 'repetitions' => $repetitions['value'],
                 'speed' => $speed['value'],
             ],
@@ -283,6 +387,7 @@ final class SessionVoiceInterpreter
                 'goal' => $this->goalFor((string) ($draft['mode'] ?? 'memorise')),
                 'surah' => $surahId,
                 'surah_name' => $surahId ? QuranMetadata::name($surahId) : null,
+                'surah_name_ar' => $surahId ? (self::ARABIC_SURAHS[$surahId] ?? null) : null,
                 'start_ayah' => $range['start'] ?? null,
                 'end_ayah' => $range['end'] ?? null,
                 'speed' => $speed,
@@ -335,18 +440,20 @@ final class SessionVoiceInterpreter
             return ['status' => 'match', 'id' => $id];
         }
 
-        $scores = [];
+        $hits = [];
         foreach ($this->latinSurahPhrases() as $row) {
-            if (! $this->containsLatin($latin, $row['phrase'])) {
-                continue;
-            }
             if ($row['needs_cue'] && ! $this->hasSurahCueBefore($latin, $row['phrase'])) {
                 continue;
             }
             if ($this->blockedByReciterContext($latin, $row['phrase'])) {
                 continue;
             }
-            $scores[$row['id']] = max($scores[$row['id']] ?? 0, mb_strlen($row['phrase']));
+            if (! preg_match_all('/(?<![a-z0-9])'.preg_quote($row['phrase'], '/').'(?![a-z0-9])/', $latin, $found, PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+            foreach ($found[0] as $match) {
+                $hits[] = ['id' => $row['id'], 'at' => (int) $match[1], 'score' => 100 + mb_strlen($row['phrase'])];
+            }
         }
 
         foreach (self::ARABIC_SURAHS as $id => $name) {
@@ -365,28 +472,60 @@ final class SessionVoiceInterpreter
                     continue;
                 }
                 if ($short || $this->containsArabic($arabic, $phrase)) {
-                    $scores[$id] = max($scores[$id] ?? 0, mb_strlen($phrase));
+                    $hits[] = ['id' => $id, 'at' => 0, 'score' => 100 + mb_strlen($phrase)];
                 }
             }
         }
 
-        if ($scores === []) {
+        if ($hits === []) {
+            foreach ((new SessionVoiceNames())->surahHits($latin) as $hit) {
+                $spoken = $this->foldLatin((string) QuranMetadata::name((int) $hit['id']));
+                $stripped = (string) preg_replace('/^(al|ar|as|ash|at|an|ad|adh|az|the)\s+/', '', $spoken);
+                if ($this->blockedByReciterContext($latin, $spoken) || $this->blockedByReciterContext($latin, $stripped)) {
+                    continue;
+                }
+                $hits[] = ['id' => (int) $hit['id'], 'at' => $hit['at'], 'score' => 80];
+            }
+        }
+
+        return $this->chooseSurahHits($hits, $cue);
+    }
+
+    /**
+     * The latest clear mention wins, so a correction later in the sentence
+     * replaces an earlier Surah. Two names in the same spot stay ambiguous.
+     *
+     * @param  list<array{id: int, at: int, score: int}>  $hits
+     * @return array{status: string, id?: int, options?: list<array{id: int, name: string}>}
+     */
+    private function chooseSurahHits(array $hits, bool $cue): array
+    {
+        if ($hits === []) {
             return ['status' => $cue ? 'unknown' : 'absent'];
         }
 
-        $best = max($scores);
-        $ids = array_keys(array_filter($scores, fn (int $score) => $score === $best));
+        $bestAt = max(array_column($hits, 'at'));
+        $latest = array_values(array_filter($hits, fn (array $hit) => $hit['at'] === $bestAt));
+        $bestScore = max(array_column($latest, 'score'));
+        $winners = [];
+        foreach ($latest as $hit) {
+            if ($hit['score'] === $bestScore) {
+                $winners[$hit['id']] = true;
+            }
+        }
+        $ids = array_map('intval', array_keys($winners));
         if (count($ids) > 1) {
             return [
                 'status' => 'ambiguous',
                 'options' => array_map(fn (int $id) => [
                     'id' => $id,
                     'name' => (string) QuranMetadata::name($id),
+                    'name_ar' => self::ARABIC_SURAHS[$id] ?? null,
                 ], $ids),
             ];
         }
 
-        return ['status' => 'match', 'id' => (int) $ids[0]];
+        return ['status' => 'match', 'id' => $ids[0]];
     }
 
     /**
@@ -412,6 +551,15 @@ final class SessionVoiceInterpreter
             return ['start' => 1, 'end' => $count];
         }
 
+        if (! empty($range['from_onwards'])) {
+            $start = (int) $range['from_onwards'];
+            if ($start < 1 || $start > $count) {
+                return ['start' => $start, 'end' => $count, 'reason' => 'invalid_range'];
+            }
+
+            return ['start' => $start, 'end' => $count];
+        }
+
         return ['start' => 1, 'end' => min(self::DEFAULT_RANGE_END, $count)];
     }
 
@@ -420,6 +568,7 @@ final class SessionVoiceInterpreter
      */
     private function parseRange(string $latin, string $arabic): array
     {
+        $found = [];
         $latinPatterns = [
             '/\b(?:from|starting(?:\s+at)?|between)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\s+(?:to|through|until|and|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/',
             '/\b(?:ayah|verse|ayat)s?\s+(\d{1,3})\s+(?:to|through|-)\s+(?:ayah|verse|ayat)?\s*(\d{1,3})\b/',
@@ -429,38 +578,89 @@ final class SessionVoiceInterpreter
             '/من\s+(\d{1,3})\s+ال[ىي]\s+(\d{1,3})/u',
         ];
         foreach ($latinPatterns as $pattern) {
-            if (preg_match($pattern, $latin, $match)) {
-                return ['explicit' => true, 'start' => (int) $match[1], 'end' => (int) $match[2]];
+            if (preg_match_all($pattern, $latin, $matches, PREG_OFFSET_CAPTURE)) {
+                foreach ($matches[0] as $index => $match) {
+                    $found[] = [
+                        'at' => (int) $match[1],
+                        'len' => strlen((string) $match[0]),
+                        'range' => ['explicit' => true, 'start' => (int) $matches[1][$index][0], 'end' => (int) $matches[2][$index][0]],
+                    ];
+                }
             }
         }
         foreach ($arabicPatterns as $pattern) {
-            if (preg_match($pattern, $arabic, $match)) {
-                return ['explicit' => true, 'start' => (int) $match[1], 'end' => (int) $match[2]];
+            if (preg_match_all($pattern, $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+                foreach ($matches[0] as $index => $match) {
+                    $found[] = [
+                        'at' => (int) $match[1],
+                        'len' => strlen((string) $match[0]),
+                        'range' => ['explicit' => true, 'start' => (int) $matches[1][$index][0], 'end' => (int) $matches[2][$index][0]],
+                    ];
+                }
+            }
+        }
+        if (preg_match_all('/\b(?:from\s+)?(?:ayah|verse|ayat)\s+(\d{1,3})\s+(?:onwards|onward|and\s+on|to\s+the\s+end)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $found[] = [
+                    'at' => (int) $match[1],
+                    'len' => strlen((string) $match[0]),
+                    'range' => ['explicit' => false, 'from_onwards' => (int) $matches[1][$index][0]],
+                ];
+            }
+        }
+        if (preg_match_all('/\bfirst\s+(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/اول\s+(\d{1,3})\s+ايات/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $found[] = [
+                    'at' => (int) $match[1],
+                    'len' => strlen((string) $match[0]),
+                    'range' => ['explicit' => true, 'start' => 1, 'end' => (int) $matches[1][$index][0]],
+                ];
+            }
+        }
+        if (preg_match_all('/\b(?:whole|entire|full|complete)\b|\ball of\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/كامل|كلها|كامله/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $found[] = ['at' => (int) $match[1], 'len' => strlen((string) $match[0]), 'range' => ['explicit' => false, 'full' => true]];
+            }
+        }
+        if (preg_match_all('/\b(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/(\d{1,3})\s+ايات/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $found[] = [
+                    'at' => (int) $match[1],
+                    'len' => strlen((string) $match[0]),
+                    'range' => ['explicit' => true, 'start' => 1, 'end' => (int) $matches[1][$index][0]],
+                ];
+            }
+        }
+        if (preg_match_all('/\b(?:ayah|verse|ayat)\s+(\d{1,3})\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $ayah = (int) $matches[1][$index][0];
+                $found[] = ['at' => (int) $match[1], 'len' => strlen((string) $match[0]), 'range' => ['explicit' => true, 'start' => $ayah, 'end' => $ayah]];
             }
         }
 
-        if (preg_match('/\bfirst\s+(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b/', $latin, $match)
-            || preg_match('/اول\s+(\d{1,3})\s+ايات/u', $arabic, $match)) {
-            return ['explicit' => true, 'start' => 1, 'end' => (int) $match[1]];
+        $found = array_values(array_filter($found, function (array $hit) use ($found) {
+            foreach ($found as $other) {
+                if ($other['at'] === $hit['at'] && $other['len'] === $hit['len']) {
+                    continue;
+                }
+                $startsInside = $hit['at'] >= $other['at'] && $hit['at'] < $other['at'] + $other['len'];
+                if ($startsInside && $other['len'] > $hit['len']) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
+
+        if ($found === []) {
+            return ['explicit' => false];
         }
+        usort($found, fn (array $left, array $right) => $left['at'] <=> $right['at']);
 
-        if (preg_match('/\b(?:whole|entire|full|complete)\b|\ball of\b/', $latin)
-            || preg_match('/كامل|كلها|كامله/u', $arabic)) {
-            return ['explicit' => false, 'full' => true];
-        }
-
-        if (preg_match('/\b(\d{1,3})\s+(?:ayahs?|verses?|ayat)\b/', $latin, $match)
-            || preg_match('/(\d{1,3})\s+ايات/u', $arabic, $match)) {
-            return ['explicit' => true, 'start' => 1, 'end' => (int) $match[1]];
-        }
-
-        if (preg_match('/\b(?:ayah|verse|ayat)\s+(\d{1,3})\b/', $latin, $match)) {
-            $ayah = (int) $match[1];
-
-            return ['explicit' => true, 'start' => $ayah, 'end' => $ayah];
-        }
-
-        return ['explicit' => false];
+        return $found[array_key_last($found)]['range'];
     }
 
     /**
@@ -506,6 +706,26 @@ final class SessionVoiceInterpreter
             }
         }
 
+        if ($kept === []) {
+            $phonetic = (new SessionVoiceNames())->reciterHits($latin);
+            $latestAt = null;
+            foreach ($phonetic as $hit) {
+                $latestAt = $latestAt === null ? $hit['at'] : max($latestAt, $hit['at']);
+            }
+            $ids = [];
+            foreach ($phonetic as $hit) {
+                if ($hit['at'] !== $latestAt || isset($ids[$hit['id']])) {
+                    continue;
+                }
+                $ids[$hit['id']] = [
+                    'id' => $hit['id'],
+                    'name' => CommandValidator::RECITERS[$hit['id']] ?? $hit['id'],
+                    'phrase' => (string) $hit['id'],
+                ];
+            }
+            $kept = array_values($ids);
+        }
+
         return $kept;
     }
 
@@ -514,24 +734,45 @@ final class SessionVoiceInterpreter
      */
     private function parseSpeed(string $latin, string $arabic): ?array
     {
-        if (preg_match('/(?<![\d])(\d+\.\d+)\s*x\b/', $latin, $match)
-            || preg_match('/\b(?:at|speed|playback)\s+(\d+(?:\.\d+)?)\s*x\b/', $latin, $match)) {
-            return ['requested' => (float) $match[1], 'source' => 'number'];
+        $found = [];
+        $record = function (int $at, float $value, string $source) use (&$found) {
+            $found[] = ['at' => $at, 'requested' => $value, 'source' => $source];
+        };
+        if (preg_match_all('/(?<![\d.])(\d+(?:\.\d+)?)\s*(?:x|speed)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $record((int) $match[1], (float) $matches[1][$index][0], 'number');
+            }
         }
-        if (preg_match('/\b(?:very\s+fast|fastest)\b/', $latin)) {
-            return ['requested' => 2.0, 'source' => 'word'];
+        if (preg_match_all('/\b(?:very\s+fast|fastest)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $record((int) $match[1], 2.0, 'word');
+            }
         }
-        if (preg_match('/\b(?:slow|slowly|half speed)\b/', $latin) || preg_match('/بطيء|بطيئ|ببطء|بطيئه/u', $arabic)) {
-            return ['requested' => 0.5, 'source' => 'word'];
+        if (preg_match_all('/\b(?:half(?:\s+|-)?speed|slow|slowly)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/بطيء|بطيئ|ببطء|بطيئه/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $record((int) $match[1], 0.5, 'word');
+            }
         }
-        if (preg_match('/\b(?:normal|regular)\b/', $latin) || preg_match('/عادي/u', $arabic)) {
-            return ['requested' => 1.0, 'source' => 'word'];
+        if (preg_match_all('/\b(?:normal|regular)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/عادي/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $record((int) $match[1], 1.0, 'word');
+            }
         }
-        if (preg_match('/\b(?:fast|quickly)\b/', $latin) || preg_match('/سريع/u', $arabic)) {
-            return ['requested' => 1.5, 'source' => 'word'];
+        if (preg_match_all('/(?<!very\s)\b(?:fast|quickly)\b/', $latin, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/سريع/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $record((int) $match[1], 1.5, 'word');
+            }
         }
+        if ($found === []) {
+            return null;
+        }
+        usort($found, fn (array $left, array $right) => $left['at'] <=> $right['at']);
+        $last = $found[array_key_last($found)];
 
-        return null;
+        return ['requested' => $last['requested'], 'source' => $last['source']];
     }
 
     /**
@@ -557,20 +798,52 @@ final class SessionVoiceInterpreter
      */
     private function parseRepetitions(string $latin, string $arabic): ?array
     {
-        if (preg_match('/\btwice\b/', $latin) || preg_match('/مرتين/u', $arabic)) {
-            return ['requested' => 2];
+        $found = [];
+        $add = function (int $at, int $value) use (&$found) {
+            $found[] = ['at' => $at, 'requested' => $value];
+        };
+        if (preg_match_all('/\btwice\b/', $latin, $matches, PREG_OFFSET_CAPTURE) || preg_match_all('/مرتين/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $add((int) $match[1], 2);
+            }
         }
-        if (preg_match('/\bonce\b/', $latin)) {
-            return ['requested' => 1];
+        if (preg_match_all('/\bonce\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                $add((int) $match[1], 1);
+            }
         }
-        if (preg_match('/\brepeat(?:ed|s|ing)?\s+(\d{1,2})\b/', $latin, $match)
-            || preg_match('/(?<![\d.])(\d{1,2})\s*(?:times|repetitions)\b/', $latin, $match)
-            || preg_match('/كرر(?:ها)?\s*(\d{1,2})/u', $arabic, $match)
-            || preg_match('/(\d{1,2})\s*مرات/u', $arabic, $match)) {
-            return ['requested' => (int) $match[1]];
+        $counted = [
+            '/\brepeat(?:ed|s|ing)?\s+(\d{1,2})\b/',
+            '/(?<![\d.])(\d{1,2})\s*(?:times|repetitions)\b/',
+        ];
+        foreach ($counted as $pattern) {
+            if (! preg_match_all($pattern, $latin, $matches, PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+            foreach ($matches[0] as $index => $match) {
+                $add((int) $match[1], (int) $matches[1][$index][0]);
+            }
         }
+        if (preg_match_all('/كرر(?:ها)?\s*(\d{1,2})/u', $arabic, $matches, PREG_OFFSET_CAPTURE)
+            || preg_match_all('/(\d{1,2})\s*مرات/u', $arabic, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $index => $match) {
+                $add((int) $match[1], (int) $matches[1][$index][0]);
+            }
+        }
+        if ($found !== [] && preg_match_all('/\b(?:actually|make it)\s+(?<![\d.])(\d{1,2})\b/', $latin, $matches, PREG_OFFSET_CAPTURE)) {
+            $first = min(array_column($found, 'at'));
+            foreach ($matches[0] as $index => $match) {
+                if ((int) $match[1] > $first) {
+                    $add((int) $match[1], (int) $matches[1][$index][0]);
+                }
+            }
+        }
+        if ($found === []) {
+            return null;
+        }
+        usort($found, fn (array $left, array $right) => $left['at'] <=> $right['at']);
 
-        return null;
+        return ['requested' => $found[array_key_last($found)]['requested']];
     }
 
     /**
@@ -830,6 +1103,13 @@ final class SessionVoiceInterpreter
         }
 
         return ['latin' => $latin, 'arabic' => $arabic];
+    }
+
+    private function stripFillers(string $latin): string
+    {
+        $text = (string) preg_replace('/\b(?:um+|uh+|erm|er|please|you know|kind of|sort of)\b/', ' ', $latin);
+
+        return trim((string) preg_replace('/\s+/', ' ', $text));
     }
 
     private function normalize(string $transcript): string

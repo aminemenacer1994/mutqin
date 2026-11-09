@@ -11,7 +11,8 @@ export function getSpeechmaticsQuranVocabulary() {
 }
 
 export function buildSpeechmaticsRecitationConfig(options = {}) {
-  const additionalVocab = getSpeechmaticsQuranVocabulary()
+  const extra = Array.isArray(options.additionalVocab) ? options.additionalVocab : []
+  const additionalVocab = [...getSpeechmaticsQuranVocabulary(), ...extra]
   const config = {
     language: String(options.language || 'ar').trim() || 'ar',
     model: 'enhanced',

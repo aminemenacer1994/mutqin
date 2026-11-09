@@ -915,6 +915,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 ...buildSpeechmaticsRecitationConfig({
                   language: options.language,
                   amdLive: options.amdLive,
+                  additionalVocab: options.additionalVocab,
                 }),
                 max_delay: appliedMaxDelay,
                 max_delay_mode: 'fixed',
