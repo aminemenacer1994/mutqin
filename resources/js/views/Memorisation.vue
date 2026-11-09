@@ -1222,7 +1222,34 @@
                 <header class="plan-choice-head">
                   <h2>{{ t('memorisation.sessionGoal.label') }}</h2>
                   <p class="plan-choice-head__intro">{{ t('memorisation.sessionGoal.planChooserIntro') }}</p>
+                  <button
+                    v-if="auth.session_voice_enabled"
+                    type="button"
+                    class="plan-voice-entry"
+                    data-testid="empty-voice-open"
+                    :aria-label="t('dashboard.voice.open')"
+                    @click="openSessionVoice"
+                  >
+                    <span class="plan-voice-entry__mic" aria-hidden="true">
+                      <i class="bi bi-mic"></i>
+                    </span>
+                    <span class="plan-voice-entry__copy">
+                      <span class="plan-voice-entry__title-row">
+                        <span class="plan-voice-entry__title">{{ t('dashboard.voice.ask') }}</span>
+                        <span class="plan-voice-entry__beta">{{ t('dashboard.voice.beta') }}</span>
+                      </span>
+                      <span class="plan-voice-entry__tap">{{ t('dashboard.voice.tap') }}</span>
+                    </span>
+                  </button>
                 </header>
+                <div
+                  v-if="auth.session_voice_enabled"
+                  class="plan-voice-divider"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <span class="plan-voice-divider__label">{{ t('memorisation.sessionGoal.planVoiceOr') }}</span>
+                </div>
                 <div class="plan-choice-grid" role="group" :aria-label="t('memorisation.sessionGoal.label')">
                   <button
                     v-for="goal in sessionGoalOptions"

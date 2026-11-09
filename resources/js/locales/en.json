@@ -786,6 +786,7 @@
       "planDescRevise": "Repeat ayahs you already know.",
       "planDescTest": "Recite your set and check with AI.",
       "planChooserIntro": "Pick a surah and a few ayahs for this session. No long-term plan required.",
+      "planVoiceOr": "or choose manually",
       "ayahsLabel": "Ayahs",
       "first3": "First 3",
       "first5": "First 5",
