@@ -11,14 +11,14 @@
         </div>
         <div class="footer__links">
           <h3>{{ t('homepage.footer.product') }}</h3>
-          <a href="/#how-it-works">{{ t('homepage.footer.howItWorks') }}</a>
+          <a href="/features">{{ t('homepage.footer.howItWorks') }}</a>
           <a href="/#features">{{ t('homepage.footer.features') }}</a>
           <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
         </div>
         <div class="footer__links">
           <h3>{{ t('homepage.footer.resources') }}</h3>
           <a v-if="showArticles" href="/articles">{{ t('homepage.footer.articles') }}</a>
-          <a href="/#purpose">{{ t('homepage.footer.explanation') }}</a>
+          <a href="/about">{{ t('homepage.footer.explanation') }}</a>
         </div>
         <div class="footer__links">
           <h3>{{ t('homepage.footer.company') }}</h3>

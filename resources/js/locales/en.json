@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "See Mutqin in practice",
+      "subtitle": "Short videos for memorising, revising and reading the Mushaf. Watch a step, then try it yourself.",
+      "watchAll": "Watch all tutorials",
+      "modalKicker": "Tutorial",
+      "regionLabel": "Mutqin tutorial videos",
+      "previous": "Previous tutorials",
+      "next": "Next tutorials",
+      "watch": "Watch",
+      "unavailable": "This tutorial is not available right now."
+    },
+    "testimonials": {
+      "title": "Words from Our Community",
+      "subtitle": "A few words from those memorising and revising the Qur'an with Mutqin.",
+      "regionLabel": "Community testimonials",
+      "previous": "Previous testimonials",
+      "next": "Next testimonials"
+    },
     "practiceTypes": {
       "kicker": "Choose the right practice",
       "title": "Memorise, revise, and recite",
@@ -527,33 +545,6 @@
     "name": "Name",
     "focused_quran_memorisation_tools_for_recitation_ch": "A Qur’an memorisation companion for listening, reciting, revising and returning.",
     "all_rights_reserved": "All rights reserved.",
-    "testimonials": {
-      "kicker": "Students and teachers",
-      "title": "What people say",
-      "items": {
-        "abdullah": {
-          "quote": "Mutqin helped me fix my ض after years of struggle. Alhamdulillah.",
-          "proof": "Letter practice",
-          "author": "Abdullah Khan",
-          "role": "12 juz memorised",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "Daily review keeps my hifdh from slipping. I use it every day.",
-          "proof": "Daily review",
-          "author": "Fatima El-Sayed",
-          "role": "Hafidha in progress",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "I use Mutqin to see where my students need more work.",
-          "proof": "Teacher use",
-          "author": "Ustadh Hisham",
-          "role": "Tajweed teacher",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "Pricing",
       "title": "Simple pricing",

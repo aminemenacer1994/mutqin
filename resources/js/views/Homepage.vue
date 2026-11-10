@@ -42,10 +42,10 @@
               </a>
               <a
                 v-if="showStartMemorisationCta"
-                href="#first-session"
+                href="/features"
                 class="btn btn--secondary"
               >
-                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
                 {{ t('homepage.hero.seeFirstSession') }}
               </a>
             </div>
@@ -99,102 +99,7 @@
       </div>
     </section>
 
-    <section id="how-it-works" class="how" aria-labelledby="how-title">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.how.kicker') }}</p>
-          <h2 id="how-title" class="section-title">{{ t('homepage.how.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.how.subtitle') }}</p>
-        </header>
-
-        <div id="first-session" class="session-brief" data-reveal>
-          <div class="session-brief__item">
-            <i class="bi bi-clock-history" aria-hidden="true"></i>
-            <div>
-              <strong>{{ t('homepage.firstSession.durationLabel') }}</strong>
-              <span>{{ t('homepage.firstSession.duration') }}</span>
-            </div>
-          </div>
-          <div class="session-brief__item">
-            <i class="bi bi-book" aria-hidden="true"></i>
-            <div>
-              <strong>{{ t('homepage.firstSession.startLabel') }}</strong>
-              <span>{{ t('homepage.firstSession.start') }}</span>
-            </div>
-          </div>
-          <div class="session-brief__item session-brief__item--outcome">
-            <i class="bi bi-check2-circle" aria-hidden="true"></i>
-            <div>
-              <strong>{{ t('homepage.firstSession.leaveLabel') }}</strong>
-              <span>{{ t('homepage.firstSession.leave') }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="how__stage demo__stage" data-reveal>
-          <div class="demo__phone">
-            <div class="device device--demo">
-              <div class="device__island" aria-hidden="true"></div>
-              <div class="device__screen">
-                <Transition name="demo-fade" mode="out-in">
-                  <img
-                    :key="demoSteps[demoActiveIndex]?.id"
-                    class="shot demo__shot"
-                    :src="demoSteps[demoActiveIndex]?.image"
-                    :alt="demoSteps[demoActiveIndex]?.label || ''"
-                    width="706"
-                    height="1432"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </Transition>
-              </div>
-            </div>
-          </div>
-
-          <div class="demo__story">
-            <p class="demo__phase">
-              {{ t('homepage.pipelineDemo.stepOf', { current: demoActiveIndex + 1, total: demoSteps.length }) }}
-            </p>
-            <h3 class="demo__headline">{{ demoSteps[demoActiveIndex]?.label }}</h3>
-            <p class="demo__body">{{ demoSteps[demoActiveIndex]?.text }}</p>
-
-            <div class="demo__chrome">
-              <button
-                type="button"
-                class="demo__toggle"
-                :aria-label="demoPlaying ? t('homepage.pipelineDemo.pause') : t('homepage.pipelineDemo.play')"
-                @click="toggleDemoPlayback"
-              >
-                <i class="bi" :class="demoPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-              </button>
-              <div class="demo__progress" aria-hidden="true">
-                <span class="demo__progress-bar" :style="{ width: `${demoProgress}%` }"></span>
-              </div>
-            </div>
-
-            <ol class="demo__rail" :aria-label="t('homepage.pipelineDemo.pipelineLabel')">
-              <li
-                v-for="(step, idx) in demoSteps"
-                :key="step.id"
-                class="demo__rail-item"
-                :class="{ 'is-active': idx === demoActiveIndex, 'is-done': idx < demoActiveIndex }"
-              >
-                <button
-                  type="button"
-                  class="demo__rail-btn"
-                  :aria-current="idx === demoActiveIndex ? 'step' : undefined"
-                  @click="seekDemoStep(idx)"
-                >
-                  <span class="demo__rail-num" aria-hidden="true">{{ idx + 1 }}</span>
-                  <span class="demo__rail-label">{{ step.label }}</span>
-                </button>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </section>
+    <tutorial-carousel />
 
     <section class="practice-types" aria-labelledby="practice-types-title">
       <div class="wrap">
@@ -312,30 +217,10 @@
           <p>{{ activeFeature.description }}</p>
         </div>
 
-        <div v-if="showStartMemorisationCta" class="cta-band" data-reveal>
-          <p class="cta-band__offer">{{ t('homepage.access.available.detail') }}</p>
-          <a
-            :href="primaryCta.href"
-            class="btn btn--primary"
-            data-public-register="1"
-            @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
-          >
-            <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
-            {{ primaryCta.label }}
-          </a>
-        </div>
       </div>
     </section>
 
-    <section id="purpose" class="purpose" aria-labelledby="purpose-title">
-      <div class="wrap wrap--tight">
-        <div class="purpose__card" data-reveal>
-          <p class="section-kicker">{{ t('homepage.purpose.kicker') }}</p>
-          <h2 id="purpose-title" class="section-title">{{ t('homepage.purpose.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.purpose.text') }}</p>
-        </div>
-      </div>
-    </section>
+    <testimonials-carousel />
 
     <section id="faq" class="faq">
       <div class="wrap">
@@ -437,14 +322,14 @@
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
-            <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
+            <a href="/features">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.resources') }}</h4>
             <a v-if="showArticles" href="/articles">{{ t('homepage.footer.articles') }}</a>
-            <a href="/#purpose">{{ t('homepage.footer.explanation') }}</a>
+            <a href="/about">{{ t('homepage.footer.explanation') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
@@ -479,6 +364,8 @@
 <script>
 import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import TutorialCarousel from '../components/TutorialCarousel.vue';
+import TestimonialsCarousel from '../components/TestimonialsCarousel.vue';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
 import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
@@ -486,6 +373,7 @@ import { isInAppBrowser, publicRegisterHref } from '../scripts/analytics/registe
 
 export default {
   name: 'Homepage',
+  components: { TutorialCarousel, TestimonialsCarousel },
   setup() {
     const { t, locale } = useI18n();
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;

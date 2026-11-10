@@ -26,11 +26,12 @@
                                             src="{{ $item['image'] }}"
                                             alt="{{ $item['image_alt'] ?? $item['label'] }}"
                                             width="800"
-                                            height="500"
+                                            height="450"
                                             loading="lazy"
                                             decoding="async"
                                         >
                                     @endif
+                                    <p class="walkthrough-card__step">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</p>
                                 </div>
                                 <div class="walkthrough-card__body">
                                     @if (! empty($item['category']))
@@ -38,7 +39,9 @@
                                     @endif
                                     <h2 class="walkthrough-card__title">{{ $item['label'] }}</h2>
                                     <p class="walkthrough-card__excerpt">{{ $item['summary'] }}</p>
-                                    <p class="walkthrough-card__action">Watch video</p>
+                                    @if (! empty($item['detail']))
+                                        <p class="walkthrough-card__detail">{{ $item['detail'] }}</p>
+                                    @endif
                                 </div>
                             </button>
                         </article>

@@ -16,9 +16,12 @@
           <walkthrough-card
             v-for="(item, index) in showcase"
             :key="item.href"
+            :index="index + 1"
+            :kicker="page.kicker"
             :title="item.label"
             :summary="item.summary"
-            :category="item.category || page.kicker"
+            :detail="item.detail || ''"
+            :category="item.category || ''"
             :youtube-id="item.youtube_id || ''"
             :youtube-watch="item.youtube_watch || ''"
             :image="item.image || ''"

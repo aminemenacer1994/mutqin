@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "Lihat Mutqin dalam latihan",
+      "subtitle": "Video singkat untuk menghafal, mengulang, dan membaca Mushaf. Tonton satu langkah, lalu coba sendiri.",
+      "watchAll": "Tonton semua tutorial",
+      "modalKicker": "Tutorial",
+      "regionLabel": "Video tutorial Mutqin",
+      "previous": "Tutorial sebelumnya",
+      "next": "Tutorial berikutnya",
+      "watch": "Tonton",
+      "unavailable": "Tutorial ini belum tersedia saat ini."
+    },
+    "testimonials": {
+      "title": "Kata dari Komunitas Kami",
+      "subtitle": "Beberapa kata dari mereka yang menghafal dan mengulang Al-Qur'an bersama Mutqin.",
+      "regionLabel": "Testimoni komunitas",
+      "previous": "Testimoni sebelumnya",
+      "next": "Testimoni berikutnya"
+    },
     "practiceTypes": {
       "kicker": "Pilih latihan yang tepat",
       "title": "Hafal, murajaah, dan tilawah",
@@ -527,33 +545,6 @@
     "name": "Nama",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© Hak Cipta Dilindungi",
-    "testimonials": {
-      "kicker": "Students dan teachers",
-      "title": "Apa people say",
-      "items": {
-        "abdullah": {
-          "quote": "Mutqin helped me fix my ض after years of struggle. Sesi selesai.",
-          "proof": "« Letter practice»",
-          "author": "« Abdullah Khan»",
-          "role": "12 juz dihafal",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "Daily review keeps my hifdh dari slipping. I Gunakan it every hari.",
-          "proof": "« Daily review»",
-          "author": "« Fatima El-Sayed»",
-          "role": "Hafidha in kemajuan",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "I Gunakan Mutqin ke see where my students perlu more work.",
-          "proof": "guru Gunakan",
-          "author": "« Ustadh Hisham»",
-          "role": "Tajwid teacher",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "Harga",
       "title": "« Simple pricing»",

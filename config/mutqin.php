@@ -112,10 +112,7 @@ return [
     ),
 
     'show_how_it_works' => filter_var(
-        env(
-            'MUTQIN_SHOW_HOW_IT_WORKS',
-            env('APP_ENV', 'production') === 'local' ? 'true' : 'false'
-        ),
+        env('MUTQIN_SHOW_HOW_IT_WORKS', 'true'),
         FILTER_VALIDATE_BOOL
     ),
 

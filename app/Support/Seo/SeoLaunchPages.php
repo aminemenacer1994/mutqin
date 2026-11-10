@@ -107,9 +107,9 @@ final class SeoLaunchPages
             kind: 'hub',
             kicker: 'How it works',
             title: 'How Mutqin Works | Quran Memorization Walkthroughs',
-            description: 'See how Mutqin supports Hifz: AI Recite, Mutashābihāt, Mushaf practice, revision, progress, and Find an ayah. Short walkthroughs of the same workspace.',
+            description: 'Watch every Mutqin tutorial: Listen & Repeat, Gradual Blurring, Tajweed Colours, Translation, Saved Sessions, Dark Mode, Mushaf Modes, and Mustahabbat.',
             h1: 'See how Mutqin works',
-            lede: 'Each tool below is part of the same workspace. Watch a short walkthrough, then open it for practice between lessons, without replacing a teacher.',
+            lede: 'Eight short tutorials, in the order you meet them while memorising. Watch a step, then try it on the Mushaf.',
             sections: [],
             links: [
                 ['href' => '/memorisation', 'label' => 'Open memorisation'],
@@ -122,56 +122,7 @@ final class SeoLaunchPages
             sitemapPriority: '0.8',
             ctaPrimary: ['href' => '/memorisation', 'label' => 'Open memorisation'],
             ctaSecondary: ['href' => '/register', 'label' => 'Create a free account'],
-            showcase: self::hydrateShowcaseVideos([
-                [
-                    'href' => '/features/ai-recite',
-                    'label' => 'AI Recite',
-                    'category' => 'Practice & checking',
-                    'summary' => 'Recite from memory and see which words and ayahs need another return.',
-                    'image' => '/images/landing/2026-11-recite-active.jpg',
-                    'image_alt' => 'Recitation check in Mutqin',
-                ],
-                [
-                    'href' => '/features/mushaf',
-                    'label' => 'Mushaf',
-                    'category' => 'Mushaf',
-                    'summary' => 'Practise on a familiar page, then gradually hide the text as recall improves.',
-                    'image' => '/images/landing/2026-11-hero-mushaf.jpg',
-                    'image_alt' => 'Mushaf memorisation in Mutqin',
-                ],
-                [
-                    'href' => '/features/mutashabihat',
-                    'label' => 'Mutashābihāt',
-                    'category' => 'Similar ayahs',
-                    'summary' => 'Compare similar ayahs and practise the wording that distinguishes them.',
-                    'image' => '/images/landing/2026-11-hero-mushaf.jpg',
-                    'image_alt' => 'Similar ayah practice',
-                ],
-                [
-                    'href' => '/features/find-an-ayah',
-                    'label' => 'Find an ayah',
-                    'category' => 'Find a place',
-                    'summary' => 'Recite a few words to open the right place in your session.',
-                    'image' => '/images/landing/2026-11-recite-active.jpg',
-                    'image_alt' => 'Find an ayah in Mutqin',
-                ],
-                [
-                    'href' => '/features/quran-revision',
-                    'label' => 'Revision',
-                    'category' => 'Muraja\'ah',
-                    'summary' => 'Return to weak ayahs in the same workspace you used to memorise them.',
-                    'image' => '/images/landing/2026-11-hero-dashboard.jpg',
-                    'image_alt' => 'Revision and progress in Mutqin',
-                ],
-                [
-                    'href' => '/features/hifz-plan',
-                    'label' => 'Hifz plan',
-                    'category' => 'Planning',
-                    'summary' => 'Keep a range you can finish, then take the next suggested return.',
-                    'image' => '/images/landing/2026-11-hero-dashboard.jpg',
-                    'image_alt' => 'Hifz plan in Mutqin',
-                ],
-            ]),
+            showcase: self::hydrateShowcaseVideos(self::tutorialShowcase()),
         );
     }
 
@@ -1510,13 +1461,56 @@ final class SeoLaunchPages
      * @param  list<array{href: string, label: string, summary: string, youtube_id?: ?string, youtube_watch?: ?string}>  $showcase
      * @return array<string, mixed>
      */
+    /**
+     * The published tutorial films, in the same order as the homepage carousel.
+     *
+     * @return list<array{href: string, label: string, summary: string, youtube_id: string, image: string, image_alt: string}>
+     */
+    private static function tutorialShowcase(): array
+    {
+        $tutorials = [
+            ['ecSmacClOSw', 'listen-and-repeat', 'Listen & Repeat', 'Listen, then repeat each ayah at your own pace.', 'Practise by listening to a reciter and repeating ayahs on the Mushaf.'],
+            ['ZWi0qKw7y7E', 'gradual-blurring', 'Gradual Blurring', 'Hide the text a little more as recall gets stronger.', 'Move from reading to recalling by gradually hiding the Arabic.'],
+            ['VpIf9YexD0E', 'tajweed-colours', 'Tajweed Colours', 'Follow colour-coded rules while you read.', 'Turn on Tajweed colours and open the rules beside the Mushaf.'],
+            ['sEIK13nKxEw', 'translation', 'Translation', 'Read the meaning, or follow a transliteration.', 'Show a translation or transliteration while you read the Mushaf.'],
+            ['8xrNze6_3Ms', 'saved-sessions', 'Saved Sessions', 'Leave, then resume from the same place.', 'Save a memorisation or revision session and continue it later.'],
+            ['u9B3FyKnqn4', 'dark-mode', 'Dark Mode', 'Switch the theme for quieter reading.', 'Enable dark mode and see how the Mushaf appearance changes.'],
+            ['NwUUi9SnTIo', 'mushaf-modes', 'Mushaf Modes', 'Choose a page layout for reading and practice.', 'Switch between the traditional Mushaf and the stacked layout.'],
+            ['cQwJUCY7IVE', 'mustahabbat', 'Mustahabbat', 'Open recommended guidance while you read.', 'Find Mustahabbat and read the guidance shown on the Mushaf.'],
+        ];
+
+        return array_map(static function (array $tutorial): array {
+            [$id, $slug, $label, $summary, $detail] = $tutorial;
+
+            return [
+                'href' => '/features#'.$slug,
+                'label' => $label,
+                'summary' => $summary,
+                'detail' => $detail,
+                'youtube_id' => $id,
+                'image' => 'https://i.ytimg.com/vi/'.$id.'/hqdefault.jpg',
+                'image_alt' => $label,
+            ];
+        }, $tutorials);
+    }
+
     private static function hydrateShowcaseVideos(array $showcase): array
     {
         return array_map(static function (array $item): array {
+            $explicitId = self::extractYoutubeVideoId($item['youtube_id'] ?? null);
+            if ($explicitId) {
+                $item['youtube_id'] = $explicitId;
+                $item['youtube_watch'] = 'https://www.youtube.com/watch?v='.$explicitId;
+                if (empty($item['image'])) {
+                    $item['image'] = 'https://i.ytimg.com/vi/'.$explicitId.'/hqdefault.jpg';
+                }
+
+                return $item;
+            }
+
             $slug = trim(str_replace('/features/', '', (string) ($item['href'] ?? '')), '/');
             $item['youtube_watch'] = self::howItWorksWatchUrl($slug);
-            $item['youtube_id'] = self::extractYoutubeVideoId($item['youtube_id'] ?? null)
-                ?? self::extractYoutubeVideoId($item['youtube_watch'] ?? null);
+            $item['youtube_id'] = self::extractYoutubeVideoId($item['youtube_watch'] ?? null);
 
             return $item;
         }, $showcase);

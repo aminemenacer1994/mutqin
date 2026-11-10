@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "Mutqin'i uygulamada görün",
+      "subtitle": "Ezber, tekrar ve Mushaf okuması için kısa videolar. Bir adımı izleyin, sonra kendiniz deneyin.",
+      "watchAll": "Tüm eğitimleri izle",
+      "modalKicker": "Eğitim",
+      "regionLabel": "Mutqin eğitim videoları",
+      "previous": "Önceki eğitimler",
+      "next": "Sonraki eğitimler",
+      "watch": "İzle",
+      "unavailable": "Bu eğitim şu anda kullanılamıyor."
+    },
+    "testimonials": {
+      "title": "Topluluğumuzdan Sözler",
+      "subtitle": "Kur'an'ı Mutqin ile ezberleyen ve tekrar edenlerden birkaç söz.",
+      "regionLabel": "Topluluk görüşleri",
+      "previous": "Önceki görüşler",
+      "next": "Sonraki görüşler"
+    },
     "practiceTypes": {
       "kicker": "Doğru çalışmayı seç",
       "title": "Ezberle, tekrar et, oku",
@@ -527,33 +545,6 @@
     "name": "« Name»",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© All Rights Reserved",
-    "testimonials": {
-      "kicker": "Students ve teachers",
-      "title": "Ne people say",
-      "items": {
-        "abdullah": {
-          "quote": "Mutqin helped me fix my ض after years of struggle. Elhamdülillah.",
-          "proof": "« Letter practice»",
-          "author": "« Abdullah Khan»",
-          "role": "12 juz ezberlenmiş",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "Daily review keeps my hifdh from slipping. I Kullan it every gün.",
-          "proof": "« Daily review»",
-          "author": "« Fatima El-Sayed»",
-          "role": "Hafidha in ilerleme",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "I Kullan Mutqin to see where my students ihtiyaç duyar more work.",
-          "proof": "öğretmen Kullan",
-          "author": "« Ustadh Hisham»",
-          "role": "Tecvid teacher",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "« Pricing»",
       "title": "« Simple pricing»",

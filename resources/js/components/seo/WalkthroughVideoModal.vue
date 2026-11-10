@@ -17,7 +17,11 @@
           @keydown="onKeydown"
         >
           <header class="walkthrough-video-dialog__head">
-            <h2 :id="titleId" class="walkthrough-video-dialog__title">{{ title }}</h2>
+            <div class="walkthrough-video-dialog__heading">
+              <p v-if="kicker" class="walkthrough-video-dialog__kicker">{{ kicker }}</p>
+              <h2 :id="titleId" class="walkthrough-video-dialog__title">{{ title }}</h2>
+              <p v-if="lead" class="walkthrough-video-dialog__lead">{{ lead }}</p>
+            </div>
             <button
               type="button"
               class="walkthrough-video-dialog__close"
@@ -41,6 +45,7 @@
             <p v-else class="walkthrough-video-dialog__empty" role="status">
               {{ t('howItWorksPage.videoUnavailable') }}
             </p>
+            <p v-if="detail && embedSrc" class="walkthrough-video-dialog__detail">{{ detail }}</p>
           </div>
         </div>
       </div>
@@ -57,7 +62,10 @@ export default {
   name: 'WalkthroughVideoModal',
   props: {
     open: { type: Boolean, default: false },
+    kicker: { type: String, default: '' },
     title: { type: String, default: '' },
+    lead: { type: String, default: '' },
+    detail: { type: String, default: '' },
     videoId: { type: String, default: '' },
   },
   emits: ['close'],
@@ -65,7 +73,11 @@ export default {
     const { t } = useI18n()
     const dialogRef = ref(null)
     const titleId = `walkthrough-video-title-${Math.random().toString(36).slice(2, 9)}`
-    const embedSrc = computed(() => (props.open ? youtubeNoCookieEmbedSrc(props.videoId) : ''))
+    const embedSrc = computed(() => {
+      const base = props.open ? youtubeNoCookieEmbedSrc(props.videoId) : ''
+      if (!base) return ''
+      return `${base}&modestbranding=1&iv_load_policy=3&playsinline=1&color=white`
+    })
 
     const close = () => emit('close')
 

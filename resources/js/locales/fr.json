@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "Mutqin en pratique",
+      "subtitle": "De courtes vidéos pour mémoriser, réviser et lire le Mushaf. Regardez une étape, puis essayez-la.",
+      "watchAll": "Voir tous les tutoriels",
+      "modalKicker": "Tutoriel",
+      "regionLabel": "Tutoriels vidéo Mutqin",
+      "previous": "Tutoriels précédents",
+      "next": "Tutoriels suivants",
+      "watch": "Regarder",
+      "unavailable": "Ce tutoriel n’est pas disponible pour le moment."
+    },
+    "testimonials": {
+      "title": "Quelques mots de notre communauté",
+      "subtitle": "Quelques mots de celles et ceux qui mémorisent et révisent le Coran avec Mutqin.",
+      "regionLabel": "Témoignages de la communauté",
+      "previous": "Témoignages précédents",
+      "next": "Témoignages suivants"
+    },
     "practiceTypes": {
       "kicker": "Choisissez la bonne pratique",
       "title": "Mémoriser, réviser et réciter",
@@ -527,33 +545,6 @@
     "name": "Nom",
     "focused_quran_memorisation_tools_for_recitation_ch": "Un compagnon calme pour pratiquer le Coran, contrôler le rappel et retrouver votre place.",
     "all_rights_reserved": "© Tous droits réservés",
-    "testimonials": {
-      "kicker": "Élèves et enseignants",
-      "title": "Ce que disent les gens",
-      "items": {
-        "abdullah": {
-          "quote": "Mutqin m’a aidé à corriger mon ض après des années de difficulté. Alhamdulillah.",
-          "proof": "Pratique des lettres",
-          "author": "« Abdullah Khan»",
-          "role": "12 juz mémorisés",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "La révision quotidienne empêche mon hifdh de glisser. Je l’utilise chaque jour.",
-          "proof": "Révision quotidienne",
-          "author": "« Fatima El-Sayed»",
-          "role": "Hafidha en cours",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "J’utilise Mutqin pour voir où mes élèves ont besoin de plus de travail.",
-          "proof": "Usage enseignant",
-          "author": "« Ustadh Hisham»",
-          "role": "Enseignant de tajwid",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "Tarifs",
       "title": "Tarification simple",

@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "Mutqin en la práctica",
+      "subtitle": "Vídeos breves para memorizar, repasar y leer el Mushaf. Mira un paso y pruébalo tú mismo.",
+      "watchAll": "Ver todos los tutoriales",
+      "modalKicker": "Tutorial",
+      "regionLabel": "Videos tutoriales de Mutqin",
+      "previous": "Tutoriales anteriores",
+      "next": "Tutoriales siguientes",
+      "watch": "Ver",
+      "unavailable": "Este tutorial no está disponible en este momento."
+    },
+    "testimonials": {
+      "title": "Palabras de nuestra comunidad",
+      "subtitle": "Algunas palabras de quienes memorizan y repasan el Corán con Mutqin.",
+      "regionLabel": "Testimonios de la comunidad",
+      "previous": "Testimonios anteriores",
+      "next": "Testimonios siguientes"
+    },
     "practiceTypes": {
       "kicker": "Elige la práctica adecuada",
       "title": "Memoriza, revisa y recita",
@@ -527,33 +545,6 @@
     "name": "Nom",
     "focused_quran_memorisation_tools_for_recitation_ch": "Un compañero sereno para practicar el Corán, controlar el recuerdo y volver a tu lugar.",
     "all_rights_reserved": "Todos los derechos reservados.",
-    "testimonials": {
-      "kicker": "Élèves y enseignants",
-      "title": "Lo que dicen",
-      "items": {
-        "abdullah": {
-          "quote": "Mutqin me ayudó a corregir mi ض después de años de dificultad. Alhamdulillah.",
-          "proof": "Práctica lettres",
-          "author": "« Abdullah Khan»",
-          "role": "12 juz memorizados",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "El repaso diario evita que mi Hifz se debilite. Lo uso cada día.",
-          "proof": "Revisión quotidienne",
-          "author": "« Fatima El-Sayed»",
-          "role": "Hafidha en cours",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "Uso Mutqin para ver dónde mis alumnos necesitan más trabajo.",
-          "proof": "Usage enseignant",
-          "author": "« Ustadh Hisham»",
-          "role": "Profesor de Tajweed",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "Tarifs",
       "title": "Tarification simple",

@@ -13,7 +13,7 @@
           :src="image"
           :alt="imageAlt || title"
           width="800"
-          height="500"
+          height="450"
           :loading="eager ? 'eager' : 'lazy'"
           :fetchpriority="eager ? 'high' : 'auto'"
           decoding="async"
@@ -23,6 +23,7 @@
           <i class="bi bi-play-btn"></i>
         </div>
         <span class="walkthrough-card__scrim" aria-hidden="true"></span>
+        <span v-if="stepLabel" class="walkthrough-card__step">{{ stepLabel }}</span>
         <span class="walkthrough-card__play" aria-hidden="true">
           <i class="bi bi-play-fill"></i>
         </span>
@@ -30,13 +31,16 @@
       <div class="walkthrough-card__body">
         <p v-if="category" class="walkthrough-card__category">{{ category }}</p>
         <h2 class="walkthrough-card__title">{{ title }}</h2>
-        <p class="walkthrough-card__excerpt">{{ summary }}</p>
-        <p class="walkthrough-card__action">{{ t('howItWorksPage.watchVideo') }}</p>
+        <p v-if="summary" class="walkthrough-card__excerpt">{{ summary }}</p>
+        <p v-if="detail" class="walkthrough-card__detail">{{ detail }}</p>
       </div>
     </button>
     <walkthrough-video-modal
       :open="modalOpen"
+      :kicker="kicker"
       :title="title"
+      :lead="summary"
+      :detail="detail"
       :video-id="resolvedVideoId"
       @close="modalOpen = false"
     />
@@ -55,6 +59,9 @@ export default {
   props: {
     title: { type: String, required: true },
     summary: { type: String, required: true },
+    detail: { type: String, default: '' },
+    kicker: { type: String, default: '' },
+    index: { type: Number, default: 0 },
     category: { type: String, default: '' },
     youtubeId: { type: String, default: '' },
     youtubeWatch: { type: String, default: '' },
@@ -70,6 +77,9 @@ export default {
       extractYoutubeVideoId(props.youtubeId)
       || extractYoutubeVideoId(props.youtubeWatch)
     ))
+    const stepLabel = computed(() => (
+      props.index > 0 ? String(props.index).padStart(2, '0') : ''
+    ))
     const openModal = () => {
       modalOpen.value = true
     }
@@ -78,6 +88,7 @@ export default {
       imageFailed,
       modalOpen,
       resolvedVideoId,
+      stepLabel,
       openModal,
     }
   },

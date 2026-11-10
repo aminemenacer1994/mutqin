@@ -873,7 +873,7 @@ export default {
   }
 }
 
-:global(html[data-theme="dark"]) .waiting-list-page {
+:global(html[data-theme="dark"] .waiting-list-page) {
   --wl-cta-fg: #1c140e;
 }
 

@@ -3,7 +3,8 @@
 namespace App\Support;
 
 /**
- * The /features hub (How it works) stays local until walkthrough videos are ready.
+ * The /features hub (How it works) is public by default, including production.
+ * Set MUTQIN_SHOW_HOW_IT_WORKS=false to hide the page, nav link, and sitemap entry.
  */
 final class HowItWorksVisibility
 {

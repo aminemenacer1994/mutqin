@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "متقن کو مشق میں دیکھیں",
+      "subtitle": "حفظ، مراجعت اور مصحف کی تلاوت کے مختصر ویڈیوز۔ ایک قدم دیکھیں، پھر خود آزمائیں۔",
+      "watchAll": "تمام سبق دیکھیں",
+      "modalKicker": "سبق",
+      "regionLabel": "متقن کی تعلیمی ویڈیوز",
+      "previous": "پچھلے سبق",
+      "next": "اگلے سبق",
+      "watch": "دیکھیں",
+      "unavailable": "یہ سبق اس وقت دستیاب نہیں۔"
+    },
+    "testimonials": {
+      "title": "ہماری کمیونٹی کے الفاظ",
+      "subtitle": "ان لوگوں کے چند الفاظ جو متقن کے ساتھ قرآن حفظ اور مراجعت کر رہے ہیں۔",
+      "regionLabel": "کمیونٹی کے تاثرات",
+      "previous": "پچھلے تاثرات",
+      "next": "اگلے تاثرات"
+    },
     "practiceTypes": {
       "kicker": "درست مشق منتخب کریں",
       "title": "حفظ، مراجعت، اور تلاوت",
@@ -527,33 +545,6 @@
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© جميع الحقوق محفوظة",
-    "testimonials": {
-      "kicker": "طلاب ومعلّمون",
-      "title": "ماذا يقول الناس",
-      "items": {
-        "abdullah": {
-          "quote": "ساعدني متقن على إصلاح حرف الضاد بعد سنوات من المعاناة. الحمد لله.",
-          "proof": "تمرين على الحروف",
-          "author": "عبد الله خان",
-          "role": "12 جزءاً محفوظاً",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "المراجعة اليومية تحفظ حفظي من التراجع. أستخدمه كل يوم.",
-          "proof": "مراجعة يومية",
-          "author": "فاطمة السيد",
-          "role": "حافظة قيد التقدم",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "أستخدم متقن لمعرفة مواضع حاجة طلابي إلى مزيد من العمل.",
-          "proof": "استخدام المعلّم",
-          "author": "الأستاذ هشام",
-          "role": "معلّم تجويد",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "الأسعار",
       "title": "أسعار بسيطة",

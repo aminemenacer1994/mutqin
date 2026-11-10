@@ -360,6 +360,24 @@
         }
       }
     },
+    "tutorials": {
+      "title": "شاهد متقن في الممارسة",
+      "subtitle": "مقاطع قصيرة للحفظ والمراجعة وقراءة المصحف. شاهد خطوة، ثم جرّبها بنفسك.",
+      "watchAll": "شاهد كل الدروس",
+      "modalKicker": "درس",
+      "regionLabel": "دروس متقن المرئية",
+      "previous": "الدروس السابقة",
+      "next": "الدروس التالية",
+      "watch": "شاهد",
+      "unavailable": "هذا الدرس غير متاح حاليًا."
+    },
+    "testimonials": {
+      "title": "كلمات من مجتمعنا",
+      "subtitle": "كلمات ممن يحفظون القرآن ويراجعونه مع متقن.",
+      "regionLabel": "شهادات المجتمع",
+      "previous": "الشهادات السابقة",
+      "next": "الشهادات التالية"
+    },
     "practiceTypes": {
       "kicker": "اختر التدريب المناسب",
       "title": "احفظ، راجع، واتلُ",
@@ -527,33 +545,6 @@
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© جميع الحقوق محفوظة",
-    "testimonials": {
-      "kicker": "طلاب ومعلّمون",
-      "title": "ماذا يقول الناس",
-      "items": {
-        "abdullah": {
-          "quote": "ساعدني متقن على إصلاح حرف الضاد بعد سنوات من المعاناة. الحمد لله.",
-          "proof": "تمرين على الحروف",
-          "author": "عبد الله خان",
-          "role": "12 جزءاً محفوظاً",
-          "initials": "AK"
-        },
-        "fatima": {
-          "quote": "المراجعة اليومية تحفظ حفظي من التراجع. أستخدمه كل يوم.",
-          "proof": "مراجعة يومية",
-          "author": "فاطمة السيد",
-          "role": "حافظة قيد التقدم",
-          "initials": "FE"
-        },
-        "hisham": {
-          "quote": "أستخدم متقن لمعرفة مواضع حاجة طلابي إلى مزيد من العمل.",
-          "proof": "استخدام المعلّم",
-          "author": "الأستاذ هشام",
-          "role": "معلّم تجويد",
-          "initials": "UH"
-        }
-      }
-    },
     "pricing": {
       "kicker": "الأسعار",
       "title": "أسعار بسيطة",

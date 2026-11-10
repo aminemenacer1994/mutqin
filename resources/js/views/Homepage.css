@@ -4,7 +4,7 @@
 .homepage {
   --hp-display: "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
   --hp-text: "Nunito", "Avenir Next", "Segoe UI", "Noto Naskh Arabic", system-ui, sans-serif;
-  --section-y: clamp(2.4rem, 5.5vw, 4.2rem);
+  --section-y: clamp(2.75rem, 6vw, 4.6rem);
 
   --hp-muted: color-mix(in srgb, var(--text-muted) 88%, var(--text));
   --hp-heading: color-mix(in srgb, var(--text) 96%, var(--text-on-accent));
@@ -225,9 +225,9 @@
 }
 
 .wrap {
-  width: min(1080px, 100%);
+  width: min(1120px, 100%);
   margin-inline: auto;
-  padding: clamp(1.35rem, 2.8vw, 2.2rem) clamp(1rem, 3.5vw, 1.75rem);
+  padding: clamp(2.5rem, 5.2vw, 4rem) clamp(1.1rem, 3.6vw, 1.9rem);
 }
 
 .wrap--tight {
@@ -236,7 +236,7 @@
 
 .section-head {
   text-align: center;
-  margin-bottom: clamp(1.15rem, 2.4vw, 1.55rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.15rem);
 }
 
 .section-kicker {
@@ -852,14 +852,22 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 }
 
 .practice-types {
-  border-block: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
-  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  border: 0;
+  background: color-mix(in srgb, var(--accent-light) 42%, var(--bg));
+}
+
+.homepage[data-theme="dark"] .practice-types {
+  background: #1b1714;
+}
+
+.homepage[data-theme="sepia"] .practice-types {
+  background: #f3e6d0;
 }
 
 .practice-types__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
+  gap: 1rem;
 }
 
 .cta-band {
@@ -890,12 +898,12 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 .practice-types__card {
   display: grid;
   align-content: start;
-  gap: 0.48rem;
+  gap: 0.55rem;
   min-width: 0;
-  padding: 1rem 0.9rem 0.95rem;
+  padding: 1.2rem 1.1rem 1.15rem;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--bg) 78%, var(--accent-light));
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
 }
 
 .practice-types__icon {
@@ -995,10 +1003,28 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 }
 
 /* Features */
+.features {
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+}
+
+.homepage[data-theme="dark"] .features {
+  background: #161310;
+}
+
+.homepage[data-theme="dark"] .features__item {
+  background: #241f1b;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.homepage[data-theme="sepia"] .features {
+  background: #f7edd9;
+}
+
 .features__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.1rem;
 }
 
 .features__item {
@@ -1157,7 +1183,7 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 
 /* Steps / Your path */
 .steps {
-  border-block: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border: 0;
   background: color-mix(in srgb, var(--accent-light) 10%, transparent);
 }
 
@@ -1555,9 +1581,13 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 /* Footer — slim */
 .footer {
   margin-top: auto;
-  padding: 1.5rem 1rem 1.15rem;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  padding: 2rem 1.15rem 1.35rem;
+  border-top: 0;
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--bg));
+}
+
+.homepage[data-theme="dark"] .footer {
+  background: #100e0c;
 }
 
 .footer__inner {

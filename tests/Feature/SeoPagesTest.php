@@ -227,18 +227,27 @@ class SeoPagesTest extends TestCase
             ->assertSee('class="articles-grid"', false)
             ->assertSee('class="articles-title"', false)
             ->assertSee('class="walkthrough-card"', false)
-            ->assertSee('Watch video', false)
+            ->assertSee('Watch video:', false)
+            ->assertDontSee('walkthrough-card__action', false)
+            ->assertSee('Turn on Tajweed colours and open the rules beside the Mushaf.', false)
             ->assertSee('type="button"', false)
             ->assertDontSee('target="_blank"', false)
             ->assertDontSee('youtube.com/@Mutqin-w7h', false)
-            ->assertSee('Practice &amp; checking', false)
+            ->assertSee('Listen &amp; Repeat', false)
+            ->assertSee('Gradual Blurring', false)
+            ->assertSee('Tajweed Colours', false)
+            ->assertSee('Saved Sessions', false)
+            ->assertSee('Mushaf Modes', false)
+            ->assertSee('Mustahabbat', false)
+            ->assertSee('i.ytimg.com/vi/ecSmacClOSw/hqdefault.jpg', false)
+            ->assertSee('i.ytimg.com/vi/cQwJUCY7IVE/hqdefault.jpg', false)
+            ->assertDontSee('Practice &amp; checking', false)
             ->assertDontSee('article-card__arrow', false)
             ->assertDontSee('Open guide', false)
             ->assertDontSee('class="nav-link nav-link-about', false)
             ->getContent();
 
-        $this->assertStringContainsString('images/landing/2026-11-hero-mushaf.jpg', $html);
-        $this->assertStringNotContainsString('Practice and checking', $html);
+        $this->assertSame(8, substr_count($html, 'class="walkthrough-card"'));
     }
 
     public function test_how_it_works_and_donate_stay_hidden_when_disabled(): void
