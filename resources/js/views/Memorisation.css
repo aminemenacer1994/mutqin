@@ -7317,9 +7317,33 @@ html {
   transition: all 0.2s ease;
 }
 
-.main.focus-mode-active .verse-card:not(.active) {
-  opacity: var(--focus-dim-opacity, 0.54);
+.main.focus-mode-active .verse-card.is-focus-dim {
+  opacity: var(--focus-dim-opacity, 0.45);
   filter: saturate(0.72);
+}
+
+.main.focus-mode-active .verse-card.is-focus-current,
+.main.focus-mode-active .verse-card.active {
+  opacity: 1;
+  filter: none;
+}
+
+.focus-lock-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent, #9a6738) 10%, var(--surface, #fff));
+  color: var(--text, #3c2f24);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.focus-lock-note i {
+  margin-top: 0.12rem;
+  color: var(--accent, #9a6738);
 }
 
 .main.focus-mode-active .workspace-fab-live,
@@ -16781,8 +16805,15 @@ html[data-theme="sepia"] .player-dock-card .player-bar {
 }
 
 .main.focus-mode-active .madani-word.is-focus-dim {
-  opacity: var(--focus-dim-opacity, 0.54);
+  opacity: var(--focus-dim-opacity, 0.45);
   filter: saturate(0.78);
+}
+
+.main.focus-mode-active .madani-word.is-focus-hidden,
+.main.focus-mode-active.mushaf-mode-active .madani-word.is-focus-hidden {
+  opacity: 0 !important;
+  filter: none !important;
+  user-select: none;
 }
 
 .main.focus-mode-active .madani-word.active,
@@ -55683,8 +55714,13 @@ html body .madani-word.is-chain-dim:not(.active):not(.highlighted):not(.anchor-h
 }
 
 .main.focus-mode-active.mushaf-mode-active .madani-word.is-focus-dim {
-  opacity: var(--focus-dim-opacity, 0.54) !important;
+  opacity: var(--focus-dim-opacity, 0.45) !important;
   filter: saturate(0.78);
+}
+
+.main.focus-mode-active.mushaf-mode-active .madani-word.is-focus-hidden {
+  opacity: 0 !important;
+  filter: none !important;
 }
 
 .main.focus-mode-active.mushaf-mode-active .madani-word.active,

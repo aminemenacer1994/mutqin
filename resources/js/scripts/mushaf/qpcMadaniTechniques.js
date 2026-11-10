@@ -1,4 +1,4 @@
-import { ayahKeyFromWord, isAyahInCanonicalRange } from './qpcMadaniSelection.js'
+import { ayahKeyFromWord, compareAyahKeys, isAyahInCanonicalRange } from './qpcMadaniSelection.js'
 import { resolveQpcWordAudioIndex } from './qpcMadaniAudioDom.js'
 import { isWordHidden } from '../memorisationDetection/hiddenWords.js'
 import { resolveAnchorIndices } from '../techniques/anchorWords.js'
@@ -179,15 +179,44 @@ export function isAyahPeekRevealed(ayahKey, snapshot = {}) {
   return key === String(snapshot.hoverPeekAyah || '') || key === String(snapshot.touchPeekAyah || '')
 }
 
+/** Higher focus strength hides more of the non-active ayah. Returns an opacity. */
+export function focusDimOpacity(percent, fallback = 54) {
+  const raw = Number(percent)
+  const strength = Number.isFinite(raw) ? raw : Number(fallback)
+  const clamped = Math.max(0, Math.min(100, strength))
+  return Math.max(0.18, Math.min(0.82, 1 - (clamped / 100)))
+}
+
+function focusLockAyahKey(snapshot = {}) {
+  return String(snapshot.effectiveActiveAyah || snapshot.playbackAyahKey || '').trim()
+}
+
+function isFocusExemptAyah(ayahKey, snapshot = {}) {
+  const key = String(ayahKey || '').trim()
+  const active = focusLockAyahKey(snapshot)
+  if (!key || !active || key === active) return true
+  if (!isAyahInSessionScope(key, snapshot)) return true
+  if (ayahMatchesSnapshotKey(key, snapshot.playbackAyahKey)) return true
+  if (ayahMatchesSnapshotKey(key, snapshot.highlightedAyahKey)) return true
+  if (isAyahInActiveChain(key, snapshot)) return true
+  return false
+}
+
+/**
+ * Ayahs after the one being learned stay unreadable until that ayah is finished
+ * and becomes the active ayah. Already-practised ayahs are dimmed, not hidden.
+ */
+export function isAyahFocusHidden(ayahKey, snapshot = {}) {
+  if (!snapshot.focusModeEnabled) return false
+  if (isFocusExemptAyah(ayahKey, snapshot)) return false
+  return compareAyahKeys(ayahKey, focusLockAyahKey(snapshot)) > 0
+}
+
 export function isAyahFocusDimmed(ayahKey, snapshot = {}) {
-  if (!snapshot.focusModeEnabled || !snapshot.hasSessionStarted) return false
-  const key = String(ayahKey || '')
-  if (!key) return false
-  if (!isAyahInSessionScope(key, snapshot)) return false
-  if (key === String(snapshot.effectiveActiveAyah || '')) return false
-  if (ayahMatchesSnapshotKey(key, snapshot.playbackAyahKey)) return false
-  if (ayahMatchesSnapshotKey(key, snapshot.highlightedAyahKey)) return false
-  return true
+  if (!snapshot.focusModeEnabled) return false
+  if (isFocusExemptAyah(ayahKey, snapshot)) return false
+  if (isAyahFocusHidden(ayahKey, snapshot)) return false
+  return compareAyahKeys(ayahKey, focusLockAyahKey(snapshot)) < 0
 }
 
 function chainAyahKeySet(snapshot = {}) {
@@ -310,6 +339,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     blurUpcoming: blur,
     peekRevealed: peek,
     focusDimmed: isAyahFocusDimmed(ayahKey, snapshot) && !peek,
+    focusHidden: isAyahFocusHidden(ayahKey, snapshot) && !peek,
     isChainMember: isAyahInActiveChain(ayahKey, snapshot),
     isChainDimmed: isAyahChainDimmed(ayahKey, snapshot),
     isTalqinListen: isAyahTalqinListen(ayahKey, snapshot),
@@ -327,6 +357,7 @@ export function madaniQpcWordTechniqueClass(state = {}) {
     'blur-upcoming': !!state.blurUpcoming,
     'peek-revealed': !!state.peekRevealed,
     'is-focus-dim': !!state.focusDimmed,
+    'is-focus-hidden': !!state.focusHidden,
     'is-word-masked': !!state.masked,
     'word-hidden': !!state.masked,
     'word-revealed': !!state.hiddenRevealRevealed && !state.hiddenRevealCurrent,

@@ -1276,6 +1276,10 @@
               class="workspace-reading-surface"
               :class="`workspace-reading-surface--${readingViewMode}`"
             >
+            <p v-if="focusLockNoteVisible" class="focus-lock-note" role="status">
+              <i class="bi bi-lock-fill" aria-hidden="true"></i>
+              <span>{{ t('memorisation.activePracticeSetup.explanations.focus') }}</span>
+            </p>
             <div v-if="readingViewMode === 'mushaf' && (mushafPages.length || madaniPagesError)" class="mushaf-workspace">
               <div class="container-fluid mushaf-workspace__fluid">
               <section
@@ -1641,8 +1645,8 @@
                   }"
                 ></div>
               </div>
-              <div v-for="verse in verses" :key="verse.key" v-show="!isVerseFoldedIntoChainingJoin(verse.key)" :data-verse-key="verse.key" class="verse-card" :class="{
-                active: isVerseVisuallyActive(verse.key),
+              <div v-for="verse in verses" :key="verse.key" v-show="!isVerseFoldedIntoChainingJoin(verse.key) && !isFocusHiddenAyah(verse.key)" :data-verse-key="verse.key" class="verse-card" :class="{
+                active: isVerseVisuallyActive(verse.key) || isFocusCurrentAyah(verse.key),
                 'serious-training': false,
                 'hifz-ayah-new': isNewHifzAyah(verse.key),
                 'hifz-ayah-due': isDueHifzAyah(verse.key),
@@ -1650,6 +1654,8 @@
                 'hifz-ayah-mastered': isMasteredAyah(verse.key),
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                 'peek-revealed': isVersePeekRevealed(verse.key),
+                'is-focus-current': isFocusCurrentAyah(verse.key),
+                'is-focus-dim': isFocusDimmedAyah(verse.key),
                 'is-chain-member': chainingEnabled && isVerseInActiveChain(verse.key),
                 'is-chain-dim': chainingEnabled && isVerseInSessionScope(verse.key) && !isVerseInActiveChain(verse.key),
                 'is-talqin-listen': talqinModeEnabled && !talqinRecitationTurnActive && isVerseVisuallyActive(verse.key),

@@ -431,8 +431,19 @@ export default {
 </style>
 
 <style>
-.main.focus-mode-active .qpc-madani-word.is-focus-dim:not(.is-ayah-active):not(.highlighted):not(.peek-revealed):not(.is-playing-ayah) {
-  opacity: var(--focus-dim-opacity, 0.46);
+.main.focus-mode-active .qpc-madani-word.is-focus-dim {
+  opacity: var(--focus-dim-opacity, 0.45) !important;
+}
+
+.main.focus-mode-active .qpc-madani-word.is-focus-hidden {
+  opacity: 0 !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.main.focus-mode-active .qpc-madani-word.is-playing-ayah:not(.is-focus-hidden),
+.main.focus-mode-active .qpc-madani-word.highlighted:not(.is-focus-hidden):not(.is-focus-dim) {
+  opacity: 1 !important;
 }
 
 .main.blur-mode-active .qpc-madani-word.blur-upcoming:not(.peek-revealed):not(.is-ayah-active):not(.highlighted):not(.is-playing-ayah) {

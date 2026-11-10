@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import {
   isAyahBlurred,
   isAyahFocusDimmed,
+  isAyahFocusHidden,
   isAyahInActiveChain,
   madaniQpcWordTechniqueClass,
   resolveCheckerHiddenWordState,
@@ -50,13 +51,15 @@ assert.equal(activeClasses['anchor-highlight'], true)
 assert.equal(activeClasses['user-word-highlight'], false)
 assert.equal(activeClasses['is-word-masked'], false)
 
-assert.equal(upcoming.focusDimmed, true)
+assert.equal(upcoming.focusDimmed, false)
+assert.equal(upcoming.focusHidden, false)
 assert.equal(upcoming.blurUpcoming, true)
 assert.equal(upcoming.isAnchor, false)
 assert.equal(upcoming.isChainMember, true)
 assert.equal(upcoming.masked, true)
 assert.equal(upcoming.checkerMasked, true)
-assert.equal(upcomingClasses['is-focus-dim'], true)
+assert.equal(upcomingClasses['is-focus-dim'], false)
+assert.equal(upcomingClasses['is-focus-hidden'], false)
 assert.equal(upcomingClasses['blur-upcoming'], true)
 assert.equal(upcomingClasses['anchor-highlight'], false)
 assert.equal(upcomingClasses['is-chain-member'], true)
@@ -66,10 +69,11 @@ const blurOff = resolveQpcMadaniWordTechniqueState(nextWord, {
   blurModeEnabled: false,
 })
 assert.equal(blurOff.blurUpcoming, false)
-assert.equal(blurOff.focusDimmed, true)
+assert.equal(blurOff.focusDimmed, false)
+assert.equal(blurOff.focusHidden, false)
 assert.equal(blurOff.masked, true)
 assert.equal(madaniQpcWordTechniqueClass(blurOff)['blur-upcoming'], false)
-assert.equal(madaniQpcWordTechniqueClass(blurOff)['is-focus-dim'], true)
+assert.equal(madaniQpcWordTechniqueClass(blurOff)['is-focus-dim'], false)
 
 const focusOff = resolveQpcMadaniWordTechniqueState(nextWord, {
   ...combined,
@@ -85,12 +89,16 @@ const chainOff = resolveQpcMadaniWordTechniqueState(nextWord, {
 assert.equal(chainOff.isChainMember, false)
 assert.equal(isAyahInActiveChain('2:31', { ...combined, chainingEnabled: false }), false)
 assert.equal(chainOff.blurUpcoming, true)
+assert.equal(chainOff.focusHidden, true)
+assert.equal(chainOff.focusDimmed, false)
+assert.equal(isAyahFocusHidden('2:31', { ...combined, chainingEnabled: false }), true)
 
 const outside = resolveQpcMadaniWordTechniqueState(
   { location: '2:40:1', surah: '2', ayah: '40', word: '1', text: 'x' },
   combined,
 )
 assert.equal(outside.focusDimmed, false)
+assert.equal(outside.focusHidden, false)
 assert.equal(outside.blurUpcoming, false)
 assert.equal(outside.isAnchor, false)
 assert.equal(outside.masked, false)

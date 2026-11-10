@@ -384,7 +384,13 @@ import {
   resolveChainingVisualAyahKeys,
   shouldRenderChainingJoinedFlow,
 } from '../scripts/techniques/chainingVisual.js'
-import { buildQpcMadaniAnchorIndexesByAyah, buildSpokenWordCountByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
+import {
+  buildQpcMadaniAnchorIndexesByAyah,
+  buildSpokenWordCountByAyah,
+  focusDimOpacity,
+  isAyahFocusDimmed,
+  isAyahFocusHidden,
+} from '../scripts/mushaf/qpcMadaniTechniques'
 import {
   REVIEW_AUDIO_STATES,
   bindAudioSource,
@@ -7842,7 +7848,7 @@ export default {
         '--en-scale': this.enScale,
         '--text-scale': this.fontScale,
         '--recall-blur': `${this.blurIntensity}px`,
-        '--focus-dim-opacity': `${Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100))}`,
+        '--focus-dim-opacity': String(focusDimOpacity(this.focusDimPercent)),
         '--fixed-player-height': this.playbackShellActive
           ? 'calc(96px + env(safe-area-inset-bottom, 0px))'
           : '0px'
@@ -10444,6 +10450,9 @@ export default {
     },
 
     qpcMadaniSelectionActiveAyah() {
+      if (this.focusModeEnabled) {
+        return String(this.effectiveActiveVerseKey || this.qpcMadaniSessionStartAyah || '').trim()
+      }
       return String(this.hoveredMushafVerseKey || '').trim()
     },
 
@@ -10530,7 +10539,12 @@ export default {
         blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
         hoverPeekAyah: String(this.hoverPeekVerseKey || ''),
         touchPeekAyah: String(this.touchPeekVerseKey || ''),
-        effectiveActiveAyah: String(this.effectiveActiveVerseKey || ''),
+        effectiveActiveAyah: String(
+          this.effectiveActiveVerseKey
+          || this.activeVerseKey
+          || this.qpcMadaniSessionStartAyah
+          || ''
+        ),
         playbackAyahKey,
         highlightedAyahKey: String(this.currentHighlightedVerseKey || ''),
         highlightedWordIndex: Number.isFinite(Number(this.currentWordIndex))
@@ -10567,6 +10581,11 @@ export default {
         checkerPeekActive: false,
         checkerPeekAyah: '',
       })
+    },
+
+    focusLockNoteVisible() {
+      if (!this.focusModeEnabled) return false
+      return (this.verses || []).some((verse) => isAyahFocusHidden(verse?.key, this.qpcMadaniTechniqueSnapshot))
     },
 
     qpcMadaniProgressSnapshot() {
@@ -12307,7 +12326,7 @@ export default {
     },
     focusModeEnabled(newVal) {
       if (this._techniqueConflictSilenced) {
-        this.persistUiState()
+        this.persistControlState()
         return
       }
       if (newVal && this.blurModeEnabled) {
@@ -12316,12 +12335,12 @@ export default {
         this._techniqueConflictSilenced = false
         this.showBanner(this.t('toasts.focusModeOnBlurModeOff'), 'info', 2000)
       }
-      this.persistUiState()
+      this.persistControlState()
     },
 
     blurModeEnabled(newVal) {
       if (this._techniqueConflictSilenced) {
-        this.persistUiState()
+        this.persistControlState()
         return
       }
       if (newVal && this.focusModeEnabled) {
@@ -12336,7 +12355,7 @@ export default {
         this._techniqueConflictSilenced = false
         this.showBanner(this.t('toasts.blurModeOnChainingOffBlur'), 'warning', 3000)
       }
-      this.persistUiState()
+      this.persistControlState()
     },
 
     chainingEnabled(newVal) {
@@ -12618,8 +12637,6 @@ export default {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
     },
 
-    focusModeEnabled: 'persistControlState',
-    blurModeEnabled: 'persistControlState',
     blurIntensity: 'persistControlState',
     defaultFontSize: 'persistUiState'
   },
@@ -36272,6 +36289,26 @@ export default {
       if (activeNumber === null || verseNumber === null) return false
       return verseNumber > activeNumber
     },
+    isFocusCurrentAyah(verseKey) {
+      if (!this.focusModeEnabled) return false
+      const active = String(this.qpcMadaniTechniqueSnapshot?.effectiveActiveAyah || '')
+      return !!active && String(verseKey || '') === active
+    },
+    isFocusDimmedAyah(verseKey) {
+      return isAyahFocusDimmed(verseKey, this.qpcMadaniTechniqueSnapshot)
+    },
+    isFocusHiddenAyah(verseKey) {
+      return isAyahFocusHidden(verseKey, this.qpcMadaniTechniqueSnapshot)
+    },
+    rejectFocusLockedAyah(verseKey) {
+      if (!this.isFocusHiddenAyah(verseKey)) return false
+      this.showBanner(
+        this.t('memorisation.activePracticeSetup.explanations.focus'),
+        'info',
+        2400,
+      )
+      return true
+    },
     isVersePeekRevealed(verseKey) {
       if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return false
       return this.blurPeekHoldingSpace || this.hoverPeekVerseKey === verseKey || this.touchPeekVerseKey === verseKey
@@ -38678,6 +38715,7 @@ export default {
     },
     onVerseCardClick(verse) {
       if (!verse?.key) return
+      if (this.rejectFocusLockedAyah(verse.key)) return
       if (this.suppressNextVerseClick) {
         this.suppressNextVerseClick = false
         return
@@ -38691,6 +38729,7 @@ export default {
     },
     onMushafAyahClick(verse) {
       if (!verse?.key) return
+      if (this.rejectFocusLockedAyah(verse.key)) return
       if (this.suppressNextVerseClick) {
         this.suppressNextVerseClick = false
         return
@@ -39857,6 +39896,7 @@ export default {
     onQpcMadaniWordSelect(location) {
       const verseKey = verseKeyFromQpcLocation(location)
       if (!verseKey || !this.isQpcMadaniAyahSelectable(verseKey)) return
+      if (this.rejectFocusLockedAyah(verseKey)) return
       const verse = this.resolveVerseFromMadaniKey(verseKey)
       if (!verse?.key) {
         this.focusLinkedAyah(verseKey, { scroll: false })
@@ -40361,6 +40401,7 @@ export default {
         'anchor-pulse': !!word.isAnchor,
         'user-word-highlight': !!word.isUserHighlight,
         'is-focus-dim': !!word.isFocusDimmed,
+        'is-focus-hidden': !!word.isFocusHidden,
         'practice-focus-word': !!word.isPracticeFocus,
         'practice-focus-word--emphasis': !!word.isPracticeFocusEmphasis,
         'practice-focus-word--active': !!word.isPracticeFocusActive,
@@ -40393,7 +40434,6 @@ export default {
       const anchorIndexCache = new Map()
       const highlightVerseKey = this.currentHighlightedVerseKey
       const highlightWordIndex = Number(this.currentWordIndex)
-      const focusOn = !!this.focusModeEnabled
       const anchorOn = !!this.anchorModeEnabled
       const showMeanings = !!this.showWordByWord
       const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
@@ -40484,7 +40524,8 @@ export default {
             isPracticeFocusEmphasis: !!emphasizeWeak,
             isPracticeFocusActive: isPracticeFocus && isHighlighted,
             recitationStatus,
-            isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
+            isFocusDimmed: isAyahFocusDimmed(verseKey, this.qpcMadaniTechniqueSnapshot),
+            isFocusHidden: isAyahFocusHidden(verseKey, this.qpcMadaniTechniqueSnapshot),
             meaningLabel,
             isNew: inSession && this.isNewHifzAyah(verseKey),
             isDue: inSession && this.isDueHifzAyah(verseKey),
@@ -41345,6 +41386,7 @@ export default {
 
       const verse = this.verses[nextIndex]
       if (!verse) return
+      if (direction > 0 && this.rejectFocusLockedAyah(verse.key)) return
       this.setActiveVerse(verse.key)
     },
     jumpToVerseIndex(index) {
@@ -41353,6 +41395,7 @@ export default {
       const targetIndex = Math.max(0, Math.min(collection.length - 1, Number(index || 0)))
       const verse = collection[targetIndex]
       if (!verse) return
+      if (this.rejectFocusLockedAyah(verse.key)) return
       this.setActiveVerse(verse.key)
     },
 

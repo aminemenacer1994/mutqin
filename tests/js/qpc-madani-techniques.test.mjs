@@ -6,9 +6,11 @@ import {
   buildMadaniAmdHiddenIndexesByAyah,
   buildQpcMadaniAnchorIndexesByAyah,
   collectQpcMadaniDomManagedClasses,
+  focusDimOpacity,
   isAyahBlurred,
   isAyahChainDimmed,
   isAyahFocusDimmed,
+  isAyahFocusHidden,
   isAyahInActiveChain,
   isAyahInSessionScope,
   isAyahPeekRevealed,
@@ -50,11 +52,31 @@ assert.equal(isAyahBlurred('2:31', blurSnap), true)
 assert.equal(isAyahBlurred('2:30', blurSnap), false)
 assert.equal(isAyahPeekRevealed('2:31', { ...blurSnap, hoverPeekAyah: '2:31' }), true)
 assert.equal(isAyahBlurred('2:31', { ...blurSnap, playbackAyahKey: '2:31' }), false)
-assert.equal(isAyahFocusDimmed('2:31', {
+assert.equal(isAyahFocusHidden('2:31', {
   focusModeEnabled: true,
-  hasSessionStarted: true,
   effectiveActiveAyah: '2:30',
 }), true)
+assert.equal(isAyahFocusDimmed('2:31', {
+  focusModeEnabled: true,
+  effectiveActiveAyah: '2:30',
+}), false)
+assert.equal(isAyahFocusDimmed('2:29', {
+  focusModeEnabled: true,
+  effectiveActiveAyah: '2:30',
+  sessionAyahKeys: ['2:29', '2:30', '2:31'],
+}), true)
+assert.equal(isAyahFocusHidden('2:29', {
+  focusModeEnabled: true,
+  effectiveActiveAyah: '2:30',
+  sessionAyahKeys: ['2:29', '2:30', '2:31'],
+}), false)
+assert.equal(isAyahFocusHidden('2:31', {
+  focusModeEnabled: true,
+  effectiveActiveAyah: '2:30',
+  playbackAyahKey: '2:31',
+}), false)
+assert.ok(focusDimOpacity(75) < focusDimOpacity(55))
+assert.ok(focusDimOpacity(55) < focusDimOpacity(30))
 assert.equal(isAyahFocusDimmed('2:31', {
   focusModeEnabled: true,
   hasSessionStarted: true,
@@ -129,7 +151,8 @@ const focusTechnique = resolveQpcMadaniWordTechniqueState(word, {
   focusModeEnabled: true,
   hasSessionStarted: true,
 })
-assert.equal(focusTechnique.focusDimmed, true)
+assert.equal(focusTechnique.focusDimmed, false)
+assert.equal(focusTechnique.focusHidden, true)
 
 const anchorTechnique = resolveQpcMadaniWordTechniqueState(
   { location: '2:30:1', surah: '2', ayah: '30', word: '1', text: 'x' },
