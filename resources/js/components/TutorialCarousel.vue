@@ -1,5 +1,5 @@
 <template>
-  <section id="tutorials" class="tutorials" aria-labelledby="tutorials-title" @keydown="onKeydown">
+  <section id="tutorials" class="tutorials" aria-labelledby="tutorials-title">
     <div class="wrap">
       <header class="tutorials__head" data-reveal>
         <div class="tutorials__intro">
@@ -12,82 +12,48 @@
         </a>
       </header>
 
-      <div class="tutorials__stage">
-        <button
-          type="button"
-          class="tutorials__arrow tutorials__arrow--prev"
-          :disabled="atStart"
-          :aria-label="t('homepage.tutorials.previous')"
-          aria-controls="tutorial-carousel-track"
-          @click="step(-1)"
+      <div
+        class="tutorials__grid"
+        role="list"
+        :aria-label="t('homepage.tutorials.regionLabel')"
+      >
+        <article
+          v-for="video in videos"
+          :key="video.id"
+          class="tutorials__card"
+          role="listitem"
+          data-tutorial-card
         >
-          <i class="bi" :class="isRtl ? 'bi-chevron-right' : 'bi-chevron-left'" aria-hidden="true"></i>
-        </button>
-
-        <div
-          id="tutorial-carousel-track"
-          ref="trackRef"
-          class="tutorials__track"
-          :class="{ 'is-dragging': dragging }"
-          role="region"
-          tabindex="0"
-          :aria-label="t('homepage.tutorials.regionLabel')"
-          aria-roledescription="carousel"
-          @scroll.passive="onScroll"
-          @pointerdown="onPointerDown"
-          @pointermove="onPointerMove"
-          @pointerup="onPointerUp"
-          @pointercancel="onPointerUp"
-          @click.capture="onTrackClick"
-        >
-          <article
-            v-for="video in videos"
-            :key="video.id"
-            class="tutorials__card"
-            data-tutorial-card
-          >
-            <h3 class="tutorials__heading">
-              <button type="button" class="tutorials__open" @click="openVideo(video, $event)">
-                <span class="visually-hidden">{{ t('homepage.tutorials.watch') }}</span>
-                <span class="tutorials__media">
-                  <img
-                    v-if="thumbSrc(video)"
-                    class="tutorials__thumb"
-                    :src="thumbSrc(video)"
-                    :alt="video.feature"
-                    width="640"
-                    height="360"
-                    loading="lazy"
-                    decoding="async"
-                    draggable="false"
-                    @error="onThumbError(video.id)"
-                  >
-                  <span v-else class="tutorials__fallback" aria-hidden="true">
-                    <i class="bi bi-play-btn"></i>
-                  </span>
-                  <span class="tutorials__play" aria-hidden="true">
-                    <i class="bi bi-play-fill"></i>
-                  </span>
+          <h3 class="tutorials__heading">
+            <button type="button" class="tutorials__open" @click="openVideo(video, $event)">
+              <span class="visually-hidden">{{ t('homepage.tutorials.watch') }}</span>
+              <span class="tutorials__media">
+                <img
+                  v-if="thumbSrc(video)"
+                  class="tutorials__thumb"
+                  :src="thumbSrc(video)"
+                  :alt="video.feature"
+                  width="640"
+                  height="360"
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                  @error="onThumbError(video.id)"
+                >
+                <span v-else class="tutorials__fallback" aria-hidden="true">
+                  <i class="bi bi-play-btn"></i>
                 </span>
-                <span class="tutorials__body">
-                  <span class="tutorials__feature" lang="en">{{ video.feature }}</span>
-                  <span class="tutorials__tagline" lang="en">{{ video.tagline }}</span>
+                <span class="tutorials__play" aria-hidden="true">
+                  <i class="bi bi-play-fill"></i>
                 </span>
-              </button>
-            </h3>
-          </article>
-        </div>
-
-        <button
-          type="button"
-          class="tutorials__arrow tutorials__arrow--next"
-          :disabled="atEnd"
-          :aria-label="t('homepage.tutorials.next')"
-          aria-controls="tutorial-carousel-track"
-          @click="step(1)"
-        >
-          <i class="bi" :class="isRtl ? 'bi-chevron-left' : 'bi-chevron-right'" aria-hidden="true"></i>
-        </button>
+              </span>
+              <span class="tutorials__body">
+                <span class="tutorials__feature" lang="en">{{ video.feature }}</span>
+                <span class="tutorials__tagline" lang="en">{{ video.tagline }}</span>
+              </span>
+            </button>
+          </h3>
+        </article>
       </div>
     </div>
 
@@ -141,52 +107,31 @@
 </template>
 
 <script>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from 'bootstrap/js/dist/modal'
-import { RTL_LOCALES } from '../i18n.js'
 import {
   TUTORIALS_PAGE_PATH,
+  homepageTutorialVideos,
   tutorialThumbnailUrl,
-  tutorialVideosInOrder,
 } from '../config/tutorialVideos.js'
 import { youtubeNoCookieEmbedSrc } from '../scripts/seo/youtubeEmbed.js'
-
-const DRAG_THRESHOLD = 6
-const EDGE_EPSILON = 8
 
 export default {
   name: 'TutorialCarousel',
   setup() {
-    const { t, locale } = useI18n()
-    const videos = tutorialVideosInOrder()
+    const { t } = useI18n()
+    const videos = homepageTutorialVideos()
     const tutorialsPath = TUTORIALS_PAGE_PATH
     const titleId = 'tutorial-video-title'
-    const trackRef = ref(null)
     const modalRef = ref(null)
-    const atStart = ref(true)
-    const atEnd = ref(false)
-    const dragging = ref(false)
     const activeVideo = ref(null)
     const playerSrc = ref('')
     const playable = ref(true)
     const failedThumbs = ref({})
 
-    const isRtl = computed(() => RTL_LOCALES.includes(locale.value))
-
     let modal = null
     let opener = null
-    let pointer = null
-    let blockClick = false
-    let reduceMotionQuery = null
-    let resizeObserver = null
-    let scrollFrame = 0
-    let scrollEndTimer = 0
-    let animating = false
-    let plannedIndex = 0
-
-    const prefersReducedMotion = () => reduceMotionQuery?.matches === true
-    const scrollBehavior = () => (prefersReducedMotion() ? 'auto' : 'smooth')
 
     const thumbSrc = (video) => (
       failedThumbs.value[video.id] ? '' : tutorialThumbnailUrl(video.id)
@@ -196,157 +141,7 @@ export default {
       failedThumbs.value = { ...failedThumbs.value, [id]: true }
     }
 
-    const cards = () => [...(trackRef.value?.querySelectorAll('[data-tutorial-card]') || [])]
-
-    const updateBounds = () => {
-      const track = trackRef.value
-      const items = cards()
-      if (!track || !items.length) {
-        atStart.value = true
-        atEnd.value = true
-        return
-      }
-      const view = track.getBoundingClientRect()
-      const first = items[0].getBoundingClientRect()
-      const last = items[items.length - 1].getBoundingClientRect()
-      if (isRtl.value) {
-        atStart.value = Math.abs(first.right - view.right) <= EDGE_EPSILON
-        atEnd.value = last.left >= view.left - EDGE_EPSILON
-      } else {
-        atStart.value = Math.abs(first.left - view.left) <= EDGE_EPSILON
-        atEnd.value = last.right <= view.right + EDGE_EPSILON
-      }
-    }
-
-    const nearestCardIndex = () => {
-      const track = trackRef.value
-      const items = cards()
-      if (!track || !items.length) return 0
-      const view = track.getBoundingClientRect()
-      const rtl = isRtl.value
-      let best = 0
-      let bestDist = Number.POSITIVE_INFINITY
-      items.forEach((card, index) => {
-        const rect = card.getBoundingClientRect()
-        const dist = rtl
-          ? Math.abs(view.right - rect.right)
-          : Math.abs(rect.left - view.left)
-        if (dist < bestDist) {
-          best = index
-          bestDist = dist
-        }
-      })
-      return best
-    }
-
-    const scrollToCard = (index) => {
-      const track = trackRef.value
-      const items = cards()
-      const card = items[Math.max(0, Math.min(index, items.length - 1))]
-      if (!track || !card) return
-      const view = track.getBoundingClientRect()
-      const rect = card.getBoundingClientRect()
-      const delta = isRtl.value ? rect.right - view.right : rect.left - view.left
-      const left = isRtl.value ? track.scrollLeft - delta : track.scrollLeft + delta
-      track.scrollTo({ left, behavior: scrollBehavior() })
-    }
-
-    const settlePlannedIndex = () => {
-      animating = false
-      plannedIndex = nearestCardIndex()
-      updateBounds()
-    }
-
-    const step = (direction) => {
-      const count = cards().length
-      if (!count) return
-      const base = animating ? plannedIndex : nearestCardIndex()
-      plannedIndex = Math.max(0, Math.min(count - 1, base + direction))
-      animating = true
-      scrollToCard(plannedIndex)
-    }
-
-    const onScroll = () => {
-      if (scrollFrame) return
-      scrollFrame = window.requestAnimationFrame(() => {
-        scrollFrame = 0
-        updateBounds()
-      })
-      window.clearTimeout(scrollEndTimer)
-      scrollEndTimer = window.setTimeout(settlePlannedIndex, 140)
-    }
-
-    const onKeydown = (event) => {
-      if (event.altKey || event.metaKey || event.ctrlKey) return
-      const target = event.target
-      if (target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
-      if (event.key === 'ArrowRight') {
-        event.preventDefault()
-        step(isRtl.value ? -1 : 1)
-      } else if (event.key === 'ArrowLeft') {
-        event.preventDefault()
-        step(isRtl.value ? 1 : -1)
-      } else if (event.key === 'Home') {
-        event.preventDefault()
-        scrollToCard(0)
-      } else if (event.key === 'End') {
-        event.preventDefault()
-        scrollToCard(videos.length - 1)
-      }
-    }
-
-    const onPointerDown = (event) => {
-      if (event.pointerType !== 'mouse' || event.button !== 0) return
-      const track = trackRef.value
-      if (!track) return
-      pointer = {
-        id: event.pointerId,
-        x: event.clientX,
-        scroll: track.scrollLeft,
-        moved: false,
-      }
-    }
-
-    const onPointerMove = (event) => {
-      if (!pointer || event.pointerId !== pointer.id) return
-      const dx = event.clientX - pointer.x
-      if (!pointer.moved && Math.abs(dx) < DRAG_THRESHOLD) return
-      const track = trackRef.value
-      if (!track) return
-      if (!pointer.moved) {
-        pointer.moved = true
-        dragging.value = true
-        track.setPointerCapture?.(event.pointerId)
-      }
-      event.preventDefault()
-      track.scrollLeft = pointer.scroll + (isRtl.value ? dx : -dx)
-    }
-
-    const onPointerUp = (event) => {
-      if (!pointer || event.pointerId !== pointer.id) return
-      const moved = pointer.moved
-      const index = nearestCardIndex()
-      pointer = null
-      dragging.value = false
-      if (!moved) return
-      blockClick = true
-      animating = false
-      plannedIndex = index
-      scrollToCard(index)
-      window.setTimeout(() => {
-        blockClick = false
-      }, 80)
-    }
-
-    const onTrackClick = (event) => {
-      if (!blockClick) return
-      event.preventDefault()
-      event.stopPropagation()
-      blockClick = false
-    }
-
     const openVideo = (video, event) => {
-      if (blockClick) return
       const src = youtubeNoCookieEmbedSrc(video.id)
       activeVideo.value = video
       playable.value = Boolean(src)
@@ -373,14 +168,7 @@ export default {
       })
     }
 
-    const onMotionChange = () => {
-      updateBounds()
-    }
-
     onMounted(() => {
-      reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-      reduceMotionQuery.addEventListener?.('change', onMotionChange)
-
       const el = modalRef.value
       if (el) {
         modal = Modal.getOrCreateInstance(el, {
@@ -392,20 +180,9 @@ export default {
         el.addEventListener('hidden.bs.modal', onModalHidden)
         el.addEventListener('shown.bs.modal', onModalShown)
       }
-
-      const track = trackRef.value
-      if (track && 'ResizeObserver' in window) {
-        resizeObserver = new ResizeObserver(() => updateBounds())
-        resizeObserver.observe(track)
-      }
-      updateBounds()
     })
 
     onBeforeUnmount(() => {
-      reduceMotionQuery?.removeEventListener?.('change', onMotionChange)
-      if (scrollFrame) window.cancelAnimationFrame(scrollFrame)
-      window.clearTimeout(scrollEndTimer)
-      resizeObserver?.disconnect()
       const el = modalRef.value
       el?.removeEventListener('hide.bs.modal', onModalHide)
       el?.removeEventListener('hidden.bs.modal', onModalHidden)
@@ -415,35 +192,18 @@ export default {
       document.querySelectorAll('.tutorials-modal-backdrop').forEach((node) => node.remove())
     })
 
-    watch(locale, async () => {
-      await nextTick()
-      updateBounds()
-    })
-
     return {
       t,
       videos,
       tutorialsPath,
       titleId,
-      trackRef,
       modalRef,
-      atStart,
-      atEnd,
-      dragging,
       activeVideo,
       playerSrc,
       playable,
-      isRtl,
       thumbSrc,
       onThumbError,
-      onScroll,
-      onKeydown,
-      onPointerDown,
-      onPointerMove,
-      onPointerUp,
-      onTrackClick,
       openVideo,
-      step,
     }
   },
 }
@@ -452,11 +212,14 @@ export default {
 <style scoped>
 .tutorials {
   --tutorial-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  background: #f3efe8;
+  border-block: 1px solid color-mix(in srgb, var(--accent) 11%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 24%, var(--bg));
 }
 
 .wrap {
   width: min(1240px, 100%);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 1.5rem);
   padding-block: clamp(2.6rem, 5.4vw, 4.25rem);
 }
 
@@ -471,6 +234,7 @@ export default {
 
 .tutorials__intro {
   min-width: 0;
+  max-width: 40rem;
 }
 
 .tutorials__intro .section-title {
@@ -480,6 +244,7 @@ export default {
 
 .tutorials__intro .section-sub {
   max-width: 38rem;
+  margin-inline: auto;
   font-size: clamp(1rem, 1.4vw, 1.08rem);
   line-height: 1.65;
 }
@@ -513,48 +278,23 @@ export default {
   font-size: 0.95rem;
 }
 
-.tutorials__stage {
+.tutorials__grid {
+  --tutorial-gap: clamp(0.85rem, 2vw, 1rem);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "prev track next";
-  align-items: center;
-  gap: 0.55rem;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tutorial-gap);
 }
 
-.tutorials__arrow--prev { grid-area: prev; }
-.tutorials__arrow--next { grid-area: next; }
-
-.tutorials__arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  flex: 0 0 auto;
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.25s var(--ease, ease), color 0.25s var(--ease, ease), background 0.25s ease;
+@media (min-width: 640px) {
+  .tutorials__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.tutorials__arrow:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--accent-light) 55%, var(--surface-strong));
-  color: var(--accent-strong);
-}
-
-.tutorials__arrow:disabled {
-  opacity: 0.38;
-  cursor: default;
-}
-
-.tutorials__arrow:focus-visible,
-.tutorials__track:focus-visible {
-  outline: 2px solid var(--focus-ring-color, var(--accent));
-  outline-offset: 3px;
+@media (min-width: 768px) {
+  .tutorials__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .tutorials__open:focus-visible {
@@ -562,40 +302,8 @@ export default {
   outline-offset: -3px;
 }
 
-.tutorials__track {
-  --tutorial-gap: 0.9rem;
-  grid-area: track;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 100%;
-  gap: var(--tutorial-gap);
-  min-width: 0;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  border-radius: 0.4rem;
-}
-
-.tutorials__track::-webkit-scrollbar {
-  display: none;
-}
-
-.tutorials__track.is-dragging {
-  scroll-snap-type: none;
-  scroll-behavior: auto;
-  cursor: grabbing;
-}
-
-.tutorials__track.is-dragging .tutorials__open {
-  cursor: grabbing;
-}
-
 .tutorials__card {
   min-width: 0;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .tutorials__heading {
@@ -742,51 +450,6 @@ export default {
   -webkit-box-orient: vertical;
 }
 
-@media (min-width: 768px) {
-  .tutorials__head {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.25rem;
-    text-align: start;
-  }
-
-  .tutorials__intro {
-    max-width: 40rem;
-  }
-
-  .tutorials__intro .section-sub {
-    margin-inline: 0;
-  }
-
-  .tutorials__all {
-    margin-top: 0.4rem;
-  }
-
-  .tutorials__track {
-    grid-auto-columns: calc((100% - (2 * var(--tutorial-gap))) / 3);
-  }
-}
-
-@media (min-width: 1200px) {
-  .tutorials__track {
-    grid-auto-columns: calc((100% - (2 * var(--tutorial-gap))) / 3);
-  }
-}
-
-@media (max-width: 767.98px) {
-  .tutorials__stage {
-    grid-template-columns: auto auto;
-    grid-template-areas:
-      "track track"
-      "prev next";
-    justify-content: center;
-    column-gap: 0.65rem;
-    row-gap: 0.75rem;
-  }
-}
-
-
 @media (max-width: 767.98px) {
   .wrap {
     padding-block: 2.15rem 2.35rem;
@@ -803,7 +466,6 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tutorials__arrow,
   .tutorials__open,
   .tutorials__play,
   .tutorials__thumb,
@@ -1085,7 +747,8 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
 
 .homepage[data-theme="light"] .tutorials,
 .homepage:not([data-theme]) .tutorials {
-  background: #f3efe8;
+  border-block-color: rgba(78, 58, 38, 0.1);
+  background: #ebe4d8;
 }
 
 .homepage[data-theme="light"] .tutorials__open,
@@ -1105,8 +768,6 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   color: #5c534c;
 }
 
-.homepage[data-theme="light"] .tutorials__arrow,
-.homepage:not([data-theme]) .tutorials__arrow,
 .homepage[data-theme="light"] .tutorials__all,
 .homepage:not([data-theme]) .tutorials__all {
   background: #fff;
@@ -1115,7 +776,8 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
 }
 
 .homepage[data-theme="sepia"] .tutorials {
-  background: #efe4cc;
+  border-block-color: #d9cbb0;
+  background: #e8dcc4;
 }
 
 .homepage[data-theme="sepia"] .tutorials__open {
@@ -1137,7 +799,6 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   color: #6b5b45;
 }
 
-.homepage[data-theme="sepia"] .tutorials__arrow,
 .homepage[data-theme="sepia"] .tutorials__all {
   background: #fbf6ea;
   border-color: #d9cbb0;
@@ -1149,7 +810,8 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
 }
 
 .homepage[data-theme="dark"] .tutorials {
-  background: #14110f;
+  border-block-color: rgba(232, 191, 143, 0.14);
+  background: #181412;
 }
 
 .homepage[data-theme="dark"] .tutorials__open {
@@ -1171,8 +833,7 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   color: rgba(255, 255, 255, 0.72);
 }
 
-.homepage[data-theme="dark"] .tutorials__all,
-.homepage[data-theme="dark"] .tutorials__arrow {
+.homepage[data-theme="dark"] .tutorials__all {
   background: #221e1a;
   border-color: rgba(232, 191, 143, 0.32);
   color: #e8bf8f;

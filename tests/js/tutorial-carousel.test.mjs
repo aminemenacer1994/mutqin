@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  HOMEPAGE_TUTORIAL_VISIBLE_COUNT,
   TUTORIALS_PAGE_PATH,
   TUTORIAL_VIDEOS,
+  homepageTutorialVideos,
   tutorialThumbnailUrl,
   tutorialVideosInOrder,
 } from '../../resources/js/config/tutorialVideos.js'
@@ -31,6 +33,13 @@ assert.equal(new Set(ordered.map((video) => video.id)).size, ids.length)
 assert.deepEqual(ordered.map((video) => video.order), [1, 2, 3, 4, 5, 6, 7, 8])
 assert.equal(TUTORIALS_PAGE_PATH, '/features')
 assert.equal(TUTORIAL_VIDEOS.length, 8)
+assert.equal(HOMEPAGE_TUTORIAL_VISIBLE_COUNT, 6)
+assert.equal(homepageTutorialVideos().length, 6)
+assert.deepEqual(
+  homepageTutorialVideos().map((video) => video.id),
+  ids.slice(0, 6),
+)
+assert.match(component, /homepageTutorialVideos/)
 
 for (const video of ordered) {
   assert.match(video.feature, /\S/)
@@ -64,15 +73,13 @@ assert.match(component, /loading="lazy"/)
 assert.match(component, /aspect-ratio: 16 \/ 9/)
 assert.match(component, /prefers-reduced-motion: reduce/)
 assert.match(component, /TUTORIALS_PAGE_PATH/)
-assert.match(component, /:disabled="atStart"/)
-assert.match(component, /:disabled="atEnd"/)
-assert.match(component, /pointerType !== 'mouse'/)
-assert.match(component, /min-width: 768px/)
-assert.match(component, /min-width: 1200px/)
-assert.match(component, /max-width: 767\.98px/)
-assert.match(component, /grid-auto-columns: 100%/)
-assert.match(component, /\/ 3\)/)
-assert.doesNotMatch(component, /\/ 2\)/)
+assert.match(component, /tutorials__grid/)
+assert.match(component, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/)
+assert.match(component, /text-align: center/)
+assert.match(component, /border-block:/)
+assert.doesNotMatch(component, /tutorials__arrow/)
+assert.doesNotMatch(component, /aria-roledescription="carousel"/)
+assert.doesNotMatch(component, /grid-auto-columns/)
 assert.doesNotMatch(component, /setInterval|data-bs-ride|data-bs-interval/)
 assert.match(component, /v-if="playerSrc"/)
 assert.match(component, /import Modal from 'bootstrap\/js\/dist\/modal'/)

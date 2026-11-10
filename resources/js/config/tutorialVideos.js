@@ -3,11 +3,14 @@
  *
  * Feature names, taglines and descriptions are taken from each video's
  * published YouTube title and description (oEmbed + watch page, November 2026).
- * Edit this list to change the carousel. Do not infer a feature from the id alone.
+ * Edit this list to change the homepage tutorial grid. Do not infer a feature from the id alone.
  *
  * `youtubeTitle` is the exact YouTube title, kept here so the mapping stays checkable.
  */
 export const TUTORIALS_PAGE_PATH = '/features'
+
+/** Homepage shows two rows of three tutorial cards (six videos). */
+export const HOMEPAGE_TUTORIAL_VISIBLE_COUNT = 6
 
 export const TUTORIAL_VIDEOS = Object.freeze([
   {
@@ -78,6 +81,10 @@ export const TUTORIAL_VIDEOS = Object.freeze([
 
 export function tutorialVideosInOrder() {
   return [...TUTORIAL_VIDEOS].sort((a, b) => a.order - b.order)
+}
+
+export function homepageTutorialVideos() {
+  return tutorialVideosInOrder().slice(0, HOMEPAGE_TUTORIAL_VISIBLE_COUNT)
 }
 
 export function tutorialThumbnailUrl(videoId) {
