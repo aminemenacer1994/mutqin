@@ -383,6 +383,16 @@ includesAll('top card dashboard visibility', [
     /MutqinHideQuranCircles',\s*'UthmanicHafs'/,
     'blade must not force UthmanicHafs after MutqinHideQuranCircles'
   )
+  assert.doesNotMatch(
+    blade,
+    /html body \.app \.verse-arabic \[class\*="tajweed-"\]/,
+    'circle-hide font must not restyle QCF tajweed glyphs (they render as hex boxes)'
+  )
+  assert.match(
+    blade,
+    /\.verse-arabic \.qpc-madani-word\[style\*="--qpc-page-font"\]\s*\{[^}]*font-family:\s*var\(--qpc-page-font\)\s*!important/,
+    'stacked QCF words must keep their page face when tajweed is on'
+  )
 
   // Mobile stack: toolbar (title + CTAs + icons) on row 1, progress pills on row 2
   assert.match(

@@ -8831,6 +8831,14 @@ html body .app .tools-body .sheet-toggle--practice .technique-label-wrap {
   overflow-wrap: break-word !important;
   word-break: normal !important;
   line-height: 1.3 !important;
+  text-align: start !important;
+}
+
+html body .app .tools-body .sheet-toggle.sheet-toggle--mutashabihat .st-right-group {
+  min-width: 0 !important;
+  width: auto !important;
+  grid-template-columns: auto !important;
+  justify-content: flex-end !important;
 }
 
 html body .app .tools-body .sheet-toggle--practice .st-right-group {
@@ -9551,6 +9559,36 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
 
   html body .app .tools .saved-sheet {
     gap: 20px !important;
+  }
+
+  html body .app .tools .saved-sheet__card--current {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.55rem 0.75rem !important;
+    padding: 14px 16px !important;
+    background: var(--controls-card) !important;
+  }
+
+  html body .app .tools .saved-sheet__current-main {
+    align-items: flex-start !important;
+    text-align: start !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .tools .saved-sheet__current-title {
+    justify-content: flex-start !important;
+    text-align: start !important;
+  }
+
+  html body .app .tools .saved-sheet__save-btn {
+    width: auto !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid color-mix(in srgb, var(--controls-accent) 34%, var(--controls-border)) !important;
+    background: color-mix(in srgb, var(--controls-accent) 12%, var(--controls-card)) !important;
+    color: var(--controls-accent) !important;
   }
 
   html body .app .tools .saved-sheet__header,

@@ -113,6 +113,7 @@
   font-weight: 650;
   letter-spacing: 0.01em;
   text-align: start;
+  margin-inline-end: auto;
 }
 
 .mutashabihat-compare__toggle .bi {
@@ -126,9 +127,13 @@
   align-items: center;
   gap: 0.05rem;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .mutashabihat-compare__icon-btn {
+  position: relative;
+  z-index: 2;
   border: 0;
   background: transparent;
   color: var(--mutashabihat-accent);
@@ -136,6 +141,7 @@
   min-width: 34px;
   border-radius: 8px;
   cursor: pointer;
+  pointer-events: auto;
   transition: background 0.16s ease;
 }
 

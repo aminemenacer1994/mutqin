@@ -568,7 +568,6 @@ import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import {
   buildMutashabihatCompareView,
   detectDriftForWorkspaceRecite,
-  countMutashabihatCardRows,
   hydrateMutashabihatAyahs,
   hydrateMutashabihatPanelRows,
   listMutashabihatCardRows,
@@ -582,6 +581,7 @@ import MutashabihatPairCard from '../components/MutashabihatPairCard.vue'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
+
 
 const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
   loader: () => wrapChunkImport(importer, { feature }).catch((error) => {
@@ -1669,11 +1669,14 @@ export default {
       sessionVoiceOpen: false,
       mutashabihatCompareOpen: false,
       mutashabihatCompareView: null,
+      mutashabihatCompareReciterId: '',
+      mutashabihatComparePlayingKey: '',
+      mutashabihatCompareAudioState: 'idle',
       showTajweedColourGuide: false,
       mutashabihatProgressRows: [],
       mutashabihatPendingDrift: null,
-      mutashabihatVisibleLimit: 3,
       mutashabihatAyahByKey: {},
+      mutashabihatVisibleLimit: 8,
       mutashabihatAyahRevision: 0,
       mutashabihatPanelReady: false,
       mutashabihatHydrating: false,
@@ -7066,34 +7069,22 @@ export default {
     },
     mutashabihatVisibleRows() {
       void this.mutashabihatAyahRevision
-      return listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit })
+      return listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit || 8 })
     },
     mutashabihatPanelInitialLoading() {
       if (this.mutashabihatVisibleRows.length) return false
+      if (listMutashabihatRankedPairs(this).length && this.mutashabihatPanelReady) return false
       return !!this.mutashabihatHydrating
     },
-    mutashabihatHasMore() {
-      void this.mutashabihatAyahRevision
-      const limit = this.mutashabihatVisibleLimit
-      return countMutashabihatCardRows(this, { moreThan: limit }) > limit
-    },
     mutashabihatCompareAudioVerseKey() {
-      if (!this.mutashabihatCompareOpen || !this.manualOnlyPlayback) return ''
-      return String(this.activeKey || '').trim()
+      if (!this.mutashabihatCompareOpen) return ''
+      return String(this.mutashabihatComparePlayingKey || '').trim()
     },
     mutashabihatCompareAudioPlaying() {
-      const key = this.mutashabihatCompareAudioVerseKey
-      if (!key) return false
-      const audio = this.audioElement
-      return !!this.isPlaying && !!audio && !audio.paused
+      return this.mutashabihatCompareAudioState === 'playing' && !!this.mutashabihatCompareAudioVerseKey
     },
     mutashabihatCompareAudioPaused() {
-      const key = this.mutashabihatCompareAudioVerseKey
-      if (!key) return false
-      const audio = this.audioElement
-      const src = String(audio?.currentSrc || audio?.src || '').trim()
-      if (!audio || !src || src === 'about:blank') return false
-      return !!audio.paused
+      return this.mutashabihatCompareAudioState === 'paused' && !!this.mutashabihatCompareAudioVerseKey
     },
     postSessionAdaptivePrimaryActionLabel() {
       const key = this.postSessionAdaptiveResultView?.primaryActionLabelKey || 'continue'
@@ -11944,19 +11935,19 @@ export default {
       void this.hydratePostSessionMadaniGlyphs()
     },
     isDataReady(ready) {
-      if (!ready) return
+      if (!ready || !this.sectionOpen?.mutashabihat) return
       if (this.mutashabihatPanelReady) return
       void this.ensureMutashabihatProgressLoaded?.()
     },
     'sectionOpen.mutashabihat'(open) {
       if (!open) return
-      if (this.mutashabihatVisibleRows.length && this.mutashabihatPanelReady) return
       void this.ensureMutashabihatProgressLoaded?.()
     },
     chapterId(nextId, prevId) {
       if (Number(nextId || 0) === Number(prevId || 0)) return
-      this.mutashabihatVisibleLimit = 3
+      this.mutashabihatVisibleLimit = 8
       this.mutashabihatPanelReady = false
+      if (!this.sectionOpen?.mutashabihat) return
       void this.ensureMutashabihatProgressLoaded?.()
     },
     showMadaniFullscreenTopBar() {
@@ -12939,30 +12930,90 @@ export default {
       this.mutashabihatCompareView = null
     },
     stopMutashabihatCompareAudio() {
-      this.stopWordHighlighting()
-      this.manualOnlyPlayback = false
-      this.isPlaying = false
-      this.playRequestLocked = false
-      if (this.sessionAudioPlayer) {
+      const audio = this._mutashabihatCompareAudio
+      this._mutashabihatComparePlayToken = Number(this._mutashabihatComparePlayToken || 0) + 1
+      this._mutashabihatCompareCandidates = []
+      this._mutashabihatCompareCandidateIndex = 0
+      if (audio) {
         try {
-          this.sessionAudioPlayer.pause({ bump: false })
-          if (typeof this.sessionAudioPlayer.seek === 'function') this.sessionAudioPlayer.seek(0)
+          audio.pause()
+          audio.currentTime = 0
         } catch (_) { /* ignore */ }
       }
-      if (this.audioElement) {
-        try {
-          this.audioElement.pause()
-          this.audioElement.currentTime = 0
-        } catch (_) { /* ignore */ }
-      }
+      this.mutashabihatComparePlayingKey = ''
+      this.mutashabihatCompareAudioState = 'idle'
     },
-    async loadMoreMutashabihatPairs() {
-      this.mutashabihatVisibleLimit += 4
-      this.mutashabihatHydrating = true
-      try {
-        await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
-      } finally {
-        this.mutashabihatHydrating = false
+    lockMutashabihatCompareReciter() {
+      const reciter = String(this.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER
+      this.mutashabihatCompareReciterId = reciter
+      return reciter
+    },
+    ensureMutashabihatComparePlayer() {
+      if (this._mutashabihatCompareAudio) return this._mutashabihatCompareAudio
+      const audio = new Audio()
+      audio.preload = 'none'
+      audio.addEventListener('playing', () => {
+        this._mutashabihatCompareIgnorePause = false
+        if (this.mutashabihatCompareAudioState === 'idle') return
+        this.mutashabihatCompareAudioState = 'playing'
+      })
+      audio.addEventListener('pause', () => {
+        if (this._mutashabihatCompareIgnorePause) return
+        if (this.mutashabihatCompareAudioState === 'idle') return
+        this.mutashabihatCompareAudioState = 'paused'
+      })
+      this._mutashabihatCompareAudio = audio
+      return audio
+    },
+    mutashabihatCompareAudioUrls(verseKey) {
+      const verse = this.buildMutashabihatVerse(verseKey)
+      if (!verse) return []
+      const reciter = String(this.mutashabihatCompareReciterId || this.lockMutashabihatCompareReciter()).trim()
+      const chapterId = Number(verse.chapterId || verse.surah || 0)
+      const number = Number(verse.numberInSurah || verse.number || 0)
+      const global = this.resolveGlobalAyahNumber({
+        chapterId,
+        surah: chapterId,
+        numberInSurah: number,
+        number,
+      })
+      return orderAyahAudioCandidateUrls({
+        reciterId: reciter,
+        globalAyahNumber: global,
+        bundledUrl: this.bundledAyahAudioUrl(reciter, global),
+      }).map((url) => this.normalizeAudioUrl(url)).filter(Boolean)
+    },
+    startMutashabihatCompareSource(index) {
+      const urls = this._mutashabihatCompareCandidates || []
+      const audio = this.ensureMutashabihatComparePlayer()
+      const url = urls[index]
+      if (!url) {
+        this.mutashabihatCompareAudioState = 'paused'
+        this.showBanner?.(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
+        return
+      }
+      const token = Number(this._mutashabihatComparePlayToken || 0) + 1
+      this._mutashabihatComparePlayToken = token
+      this._mutashabihatCompareCandidateIndex = index
+      this._mutashabihatCompareIgnorePause = true
+      audio.muted = false
+      audio.volume = 1
+      audio.src = url
+      const attempt = audio.play()
+      if (attempt?.then) {
+        attempt.then(() => {
+          if (this._mutashabihatComparePlayToken !== token) return
+          this.mutashabihatCompareAudioState = 'playing'
+        }).catch((error) => {
+          if (this._mutashabihatComparePlayToken !== token) return
+          this._mutashabihatCompareIgnorePause = false
+          if (String(error?.name || '') === 'NotAllowedError') {
+            this.mutashabihatCompareAudioState = 'paused'
+            this.showBanner?.(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
+            return
+          }
+          this.startMutashabihatCompareSource(index + 1)
+        })
       }
     },
     async openMutashabihatCompareFromPayload(payload = {}) {
@@ -12983,6 +13034,7 @@ export default {
         this.showBanner?.(this.t('memorisation.mutashabihat.ayahUnavailable'), 'info', 2800)
         return
       }
+      this.lockMutashabihatCompareReciter()
       this.mutashabihatCompareView = view
       this.mutashabihatCompareOpen = true
     },
@@ -13006,17 +13058,14 @@ export default {
         return
       }
       if (action === 'pause') {
-        if (verseKey === this.activeKey && this.mutashabihatCompareAudioPlaying) {
-          this.togglePlay()
+        if (verseKey === this.mutashabihatComparePlayingKey && this.mutashabihatCompareAudioPlaying) {
+          try { this._mutashabihatCompareAudio?.pause() } catch (_) { /* ignore */ }
+          this.mutashabihatCompareAudioState = 'paused'
         }
         return
       }
       if (action === 'play') {
-        if (verseKey === this.activeKey && this.mutashabihatCompareAudioPaused) {
-          this.togglePlay()
-          return
-        }
-        void this.playMutashabihatVerseAudio(verseKey)
+        this.playMutashabihatVerseAudio(verseKey)
       }
     },
     buildMutashabihatVerse(verseKey) {
@@ -13026,39 +13075,66 @@ export default {
       const chapterId = Number(surahPart)
       const number = Number(ayahPart)
       if (!(chapterId > 0 && number > 0)) return null
+      const sessionReciter = String(this.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER
       const arabic = resolveArabicFromSearchIndex(this, key)
       const loaded = (this.verses || []).find((verse) => verse?.key === key)
         || (this.mushafDisplayVerses || []).find((verse) => verse?.key === key)
-      return loaded || {
-        key,
-        number,
-        numberInSurah: number,
-        surah: chapterId,
-        chapterId,
-        arabic,
-        chapterName: this.getChapterLatinName(chapterId) || `Surah ${chapterId}`,
+      const base = loaded
+        ? {
+          ...loaded,
+          key,
+          number: Number(loaded.numberInSurah || loaded.number || number),
+          numberInSurah: Number(loaded.numberInSurah || loaded.number || number),
+          chapterId: Number(loaded.chapterId || loaded.surah || chapterId),
+          surah: Number(loaded.surah || loaded.chapterId || chapterId),
+        }
+        : {
+          key,
+          number,
+          numberInSurah: number,
+          surah: chapterId,
+          chapterId,
+          arabic,
+          chapterName: this.getChapterLatinName(chapterId) || `Surah ${chapterId}`,
+        }
+      if (!base.arabic) base.arabic = arabic
+      const clean = this.stripVerseAudioFields(base)
+      delete clean.globalNumber
+      // Both panels must share the locked compare reciter — never a stale per-ayah URL.
+      return {
+        ...clean,
+        reciterId: sessionReciter,
       }
     },
-    async playMutashabihatVerseAudio(verseKey) {
+    playMutashabihatVerseAudio(verseKey) {
       const key = String(verseKey || '').trim()
       if (!key) return
-      await this.ensureQuranSearchIndex?.().catch(() => {})
-      const verse = this.buildMutashabihatVerse(key)
-      if (!verse) return
-      this.ensureWordAudioHighlighting()
-      this.wordByWordAudioEnabled = true
-      this.primeAudioPlaybackUnlock?.(this.audioElement)
-      try {
-        await this.playVerse(verse, {
-          force: true,
-          primePlayback: true,
-          manualOnly: true,
-          allowDuringCountdown: true,
-        })
-      } catch (error) {
-        console.error('Mutashabihat ayah audio failed', error)
+      if (!this.mutashabihatCompareReciterId) this.lockMutashabihatCompareReciter()
+      const urls = this.mutashabihatCompareAudioUrls(key)
+      if (!urls.length) {
         this.showBanner?.(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
+        return
       }
+      const audio = this.ensureMutashabihatComparePlayer()
+      try { this.audioElement?.pause() } catch (_) { /* keep compare audio exclusive */ }
+      if (
+        this.mutashabihatComparePlayingKey === key
+        && this.mutashabihatCompareAudioState === 'paused'
+        && audio.src
+      ) {
+        this.mutashabihatCompareAudioState = 'playing'
+        const resume = audio.play()
+        if (resume?.catch) {
+          resume.catch(() => {
+            this.mutashabihatCompareAudioState = 'paused'
+          })
+        }
+        return
+      }
+      this.mutashabihatComparePlayingKey = key
+      this.mutashabihatCompareAudioState = 'playing'
+      this._mutashabihatCompareCandidates = urls
+      this.startMutashabihatCompareSource(0)
     },
     onWorkspaceReciteMutashabihatCompare() {
       const drift = this.mutashabihatPendingDrift
@@ -13079,22 +13155,34 @@ export default {
         this._mutashabihatEnsureInflight = null
       }
     },
+    onMutashabihatListScroll(event) {
+      const el = event?.target
+      if (!el || this.mutashabihatHydrating) return
+      const remaining = el.scrollHeight - el.scrollTop - el.clientHeight
+      if (remaining > 280) return
+      const total = listMutashabihatRankedPairs(this).length
+      const limit = Number(this.mutashabihatVisibleLimit) || 8
+      if (limit >= total) return
+      this.mutashabihatVisibleLimit = Math.min(total, limit + 8)
+      void this.ensureMutashabihatProgressLoaded()
+    },
     async _ensureMutashabihatProgressLoadedCore() {
+      const target = Math.max(8, Number(this.mutashabihatVisibleLimit) || 8)
+      const rankedCount = listMutashabihatRankedPairs(this).length
+      if (!rankedCount) {
+        this.mutashabihatPanelReady = true
+        return
+      }
+      if ((this._mutashabihatHydratedTarget || 0) >= target && this.mutashabihatVisibleRows.length) return
+
       this.mutashabihatHydrating = true
       try {
-        await refreshMutashabihatProgress(this)
-        await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
-        void this.ensureQuranSearchIndex?.().catch(() => {})
-        let readyCount = listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit }).length
-        if (readyCount < this.mutashabihatVisibleLimit) {
-          await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
-          readyCount = listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit }).length
+        if (!this._mutashabihatProgressLoaded) {
+          await refreshMutashabihatProgress(this)
+          this._mutashabihatProgressLoaded = true
         }
-        if (!readyCount && listMutashabihatRankedPairs(this).length) {
-          const deeperTarget = Math.min(12, listMutashabihatRankedPairs(this).length)
-          await hydrateMutashabihatPanelRows(this, { target: deeperTarget })
-        }
-        this.mutashabihatAyahRevision = Number(this.mutashabihatAyahRevision || 0) + 1
+        await hydrateMutashabihatPanelRows(this, { target, arabicOnly: true })
+        this._mutashabihatHydratedTarget = target
       } catch (error) {
         console.warn('Mutashabihat panel hydrate failed', error)
       } finally {
@@ -39169,7 +39257,7 @@ export default {
 
         if (isEnd) {
           const fontFamily = ink.fontFamily || ''
-          const style = fontFamily ? ` style="font-family:'${this.escapeHtml(fontFamily)}'"` : ''
+          const style = fontFamily ? ` style="--qpc-page-font:'${this.escapeHtml(fontFamily)}';font-family:'${this.escapeHtml(fontFamily)}'"` : ''
           const glyphClass = ink.tajweedGlyph ? ' qpc-madani-word--tajweed-glyph' : ''
           parts.push(
             `<span class="qpc-madani-word qpc-madani-word--ornament${glyphClass}"${style} data-verse-key="${this.escapeHtml(verseKey)}" data-page="${page || ''}">${this.escapeHtml(displayText)}</span>`,
@@ -39202,7 +39290,7 @@ export default {
         const glyphClass = ink.tajweedGlyph ? ' qpc-madani-word--tajweed-glyph' : ''
         const activeClass = isActive ? ' highlighted phrase-highlighted is-ayah-active' : ''
         const memoryClass = this.memoryWordClass(verseKey, audioWordIndex, spokenCount)
-        const style = fontFamily ? ` style="font-family:'${this.escapeHtml(fontFamily)}'"` : ''
+        const style = fontFamily ? ` style="--qpc-page-font:'${this.escapeHtml(fontFamily)}';font-family:'${this.escapeHtml(fontFamily)}'"` : ''
 
         parts.push(
           `<span class="qpc-madani-word${glyphClass}${activeClass}${memoryClass}${weakClass}${recitationClass}"${style}`
@@ -41334,6 +41422,9 @@ export default {
       }
       if (this.isMobileViewport?.()) {
         this.mainCardCollapsed = !DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED
+      }
+      if (this.sectionOpen && typeof this.sectionOpen === 'object') {
+        this.sectionOpen.mutashabihat = false
       }
     },
 
@@ -45857,16 +45948,27 @@ export default {
       if (!timingWords.length) {
         timingWords = tokenizeArabicText(verse.arabic || verse.arabic_uthmani || '')
       }
-      const authoritativeTrack = this.wordByWordAudioEnabled && timingWords.length
+      // Compare playback must reach audio.play() in the click turn. A word-track
+      // fetch before that loses the user gesture and the ayah never starts.
+      const sessionReciterOnly = !!options.sessionReciterOnly
+      const authoritativeTrack = (!options.deferWordTrack && !sessionReciterOnly && this.wordByWordAudioEnabled && timingWords.length)
         ? await this.getAuthoritativeWordTrack(verse, timingWords.length)
         : null
+      const verseForAudio = sessionReciterOnly
+        ? {
+          ...this.stripVerseAudioFields(verse),
+          reciterId: String(this.reciterId || verse.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER,
+        }
+        : verse
       // Timing segments only describe the exact Quran.com ayah file returned
       // with them. Prefer that paired file; using the CDN fallback here would
       // reintroduce the offset this track is intended to remove.
-      const sourceCandidates = [
-        authoritativeTrack?.audioUrl,
-        ...this.listAyahAudioCandidates(verse),
-      ].filter(Boolean)
+      const sourceCandidates = sessionReciterOnly
+        ? this.listAyahAudioCandidates(verseForAudio)
+        : [
+          authoritativeTrack?.audioUrl,
+          ...this.listAyahAudioCandidates(verse),
+        ].filter(Boolean)
       if (!sourceCandidates.length) {
         this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse.number }), 'info', 2000)
         this.playRequestLocked = false

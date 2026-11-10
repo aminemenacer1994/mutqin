@@ -598,7 +598,8 @@
       html body .app .verse-arabic word,
       html body .app .verse-arabic .word-arabic-text,
       html body .app .verse-arabic .tajweed-mark,
-      html body .app .verse-arabic [class*="tajweed-"],
+      html body .app .verse-arabic .wbw-word [class*="tajweed-"],
+      html body .app .verse-arabic .word-arabic-text [class*="tajweed-"],
       html body .app .mushaf-ayah-text,
       html body .app .amd-mushaf-stream,
       html body .app .self-check-modal-ayah,
@@ -606,6 +607,11 @@
       html body .app .session-evaluation-ayah,
       html body .app .recitation-review-ayah {
         font-family: 'MutqinHideQuranCircles', var(--quran-font, 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif) !important;
+      }
+      /* Do not let the circle-hide stack match .qpc-madani-word--tajweed-glyph.
+         Those spans are QCF page codes; Uthmanic paints them as hex boxes. */
+      html body .app .verse-arabic .qpc-madani-word[style*="--qpc-page-font"] {
+        font-family: var(--qpc-page-font) !important;
       }
       /* WBW + tajweed: keep each Arabic chip on one horizontal line */
       html body .app .verse-arabic.word-by-word-meanings .word-arabic-text,

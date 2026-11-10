@@ -7,10 +7,10 @@ import { HAFS_AYAH_COUNTS_PER_SURAH } from './hafsAyahCounts.js'
 export const MUTASHABIHAT_ARABIC_EDITION = 'quran-simple'
 
 /** Minimum shared normalised tokens for a pair to appear in practice UI. */
-export const MIN_MUTASHABIHAT_SHARED_TOKENS = 10
+export const MIN_MUTASHABIHAT_SHARED_TOKENS = 8
 
 /** Minimum share of aligned tokens that must match (filters phrase-only / thematic pairs). */
-export const MIN_MUTASHABIHAT_SHARED_RATIO = 0.22
+export const MIN_MUTASHABIHAT_SHARED_RATIO = 0.4
 
 /** Ayahs must be similar length (full-ayah diff, not one line vs a paragraph). */
 export const MIN_MUTASHABIHAT_LENGTH_RATIO = 0.45

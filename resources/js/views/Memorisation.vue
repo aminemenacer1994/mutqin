@@ -2623,18 +2623,37 @@
             </section>
 
             <section class="sheet-section sheet-section--practice">
-              <button class="sheet-toggle sheet-toggle--practice" @click="toggleSection('mutashabihat')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-shuffle"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.mutashabihat.title') }}</span>
-                    <span class="st-sub">{{ t('memorisation.mutashabihat.summary') }}</span>
+              <div
+                class="sheet-toggle sheet-toggle--practice sheet-toggle--mutashabihat"
+                :class="{ 'is-expanded': sectionOpen.mutashabihat }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-expanded="sectionOpen.mutashabihat ? 'true' : 'false'"
+                  @click="toggleSection('mutashabihat')"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-shuffle"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title">{{ t('memorisation.mutashabihat.title') }}</span>
+                      <span class="st-sub">{{ t('memorisation.mutashabihat.summary') }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
-                  <span class="st-chev" :class="{ open: sectionOpen.mutashabihat }"><i class="bi bi-chevron-down"></i></span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.mutashabihat }"
+                    :aria-expanded="sectionOpen.mutashabihat ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('mutashabihat')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.mutashabihat">
                 <div class="field-stack">
                   <div class="field">
@@ -2650,31 +2669,30 @@
                     {{ t('common.loading') }}
                   </p>
                   <template v-else>
-                    <ul v-if="mutashabihatVisibleRows.length" class="mutashabihat-pair-list">
-                      <li
-                        v-for="row in mutashabihatVisibleRows"
-                        :key="row.key"
-                        class="mutashabihat-pair-list__item"
-                      >
-                        <MutashabihatPairCard
-                          :row="row"
-                          :quran-font-family="quranFontFamily"
-                          :compare-label="t('memorisation.mutashabihat.compare')"
-                          :left-heading="row.leftCompareLabel || row.leftLabel"
-                          :right-heading="row.rightCompareLabel || row.rightLabel"
-                          @compare="openMutashabihatCompareFromPayload({ row, pair: row.pair, anchorVerseKey: row.leftVerseKey })"
-                        />
-                      </li>
-                    </ul>
-                    <button
-                      v-if="mutashabihatHasMore"
-                      type="button"
-                      class="mutashabihat-load-more"
-                      :disabled="mutashabihatHydrating"
-                      @click="loadMoreMutashabihatPairs"
+                    <div
+                      v-if="mutashabihatVisibleRows.length"
+                      class="mutashabihat-pair-list-scroll"
+                      tabindex="0"
+                      :aria-label="t('memorisation.mutashabihat.title')"
+                      @scroll.passive="onMutashabihatListScroll"
                     >
-                      {{ mutashabihatHydrating ? t('common.loading') : t('memorisation.mutashabihat.loadMore') }}
-                    </button>
+                      <ul class="mutashabihat-pair-list">
+                        <li
+                          v-for="row in mutashabihatVisibleRows"
+                          :key="row.key"
+                          class="mutashabihat-pair-list__item"
+                        >
+                          <MutashabihatPairCard
+                            :row="row"
+                            :quran-font-family="quranFontFamily"
+                            :compare-label="t('memorisation.mutashabihat.compare')"
+                            :left-heading="row.leftCompareLabel || row.leftLabel"
+                            :right-heading="row.rightCompareLabel || row.rightLabel"
+                            @compare="openMutashabihatCompareFromPayload({ row, pair: row.pair, anchorVerseKey: row.leftVerseKey })"
+                          />
+                        </li>
+                      </ul>
+                    </div>
                   </template>
                 </div>
               </div>
@@ -2796,12 +2814,38 @@
             </section>
 
             <section v-else class="saved-sheet__card saved-sheet__card--current" :aria-label="t('memorisation.a11y.currentSession')">
-              <div class="saved-sheet__current-copy">
+              <div class="saved-sheet__current-main">
                 <span class="saved-sheet__eyebrow">{{ t('memorisation.current_session') }}</span>
-                <strong>{{ getChapterDisplayName(currentChapter) || t('memorisation.no_surah_selected') }}</strong>
-                <small>{{ rangeStart }}–{{ rangeEnd }}</small>
+                <div class="saved-sheet__current-title mutqin-surah-bilingual">
+                  <template v-if="getChapterLatinName(currentChapter || chapterId) || getChapterArabicName(currentChapter || chapterId)">
+                    <span
+                      v-if="getChapterLatinName(currentChapter || chapterId)"
+                      class="saved-sheet__surah-en"
+                      lang="en"
+                      dir="ltr"
+                    >{{ getChapterLatinName(currentChapter || chapterId) }}</span>
+                    <span
+                      v-if="getChapterLatinName(currentChapter || chapterId) && getChapterArabicName(currentChapter || chapterId) && getChapterLatinName(currentChapter || chapterId) !== getChapterArabicName(currentChapter || chapterId)"
+                      class="saved-sheet__surah-sep"
+                      aria-hidden="true"
+                    >·</span>
+                    <span
+                      v-if="getChapterArabicName(currentChapter || chapterId)"
+                      class="saved-sheet__surah-ar"
+                      dir="rtl"
+                      lang="ar"
+                    >{{ getChapterArabicName(currentChapter || chapterId) }}</span>
+                  </template>
+                  <span v-else class="saved-sheet__surah-en">{{ t('memorisation.no_surah_selected') }}</span>
+                </div>
+                <small class="saved-sheet__range">{{ rangeStart }}–{{ rangeEnd }}</small>
               </div>
-              <button class="saved-sheet__save-btn" @click="saveCurrentSessionWithName()" type="button">
+              <button
+                class="saved-sheet__save-btn"
+                type="button"
+                :aria-label="t('memorisation.save_session')"
+                @click="saveCurrentSessionWithName()"
+              >
                 <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
                 <span>{{ t('common.save') }}</span>
               </button>

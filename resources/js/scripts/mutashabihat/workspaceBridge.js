@@ -126,7 +126,7 @@ export function listMutashabihatCardRows(ctx, { limit = 0, status = 'all', query
   const rows = []
   for (const item of ranked) {
     const row = buildMutashabihatCardRow(ctx, item)
-    if (!row || !rowPreviewsReady(row)) continue
+    if (!row?.leftLabel || !row?.rightLabel) continue
     rows.push(row)
     if (limit > 0 && rows.length >= limit) break
   }
@@ -146,24 +146,26 @@ export function countMutashabihatCardRows(ctx, { moreThan = 0, status = 'all', q
   return count
 }
 
-/** Fetch ayah text until visible rows can render without empty previews. */
-export async function hydrateMutashabihatPanelRows(ctx, { target = 0 } = {}) {
-  const want = Math.max(1, Number(target || ctx.mutashabihatVisibleLimit || 3))
+/** Fetch ayah text for the pairs currently in the panel window. */
+export async function hydrateMutashabihatPanelRows(ctx, { target = 8, arabicOnly = true } = {}) {
   const ranked = listMutashabihatRankedPairs(ctx)
   if (!ranked.length) return []
 
-  const maxPairs = Math.min(ranked.length, 64)
-  let scan = Math.min(Math.max(want, 6), maxPairs)
-  let best = []
-  while (scan <= maxPairs) {
-    await hydrateMutashabihatAyahs(ctx, { limit: scan })
-    best = listMutashabihatCardRows(ctx, { limit: want })
-    if (best.length >= want || scan >= maxPairs) break
-    scan = Math.min(scan + 8, maxPairs)
-  }
-
+  const want = Math.max(1, Math.min(ranked.length, Number(target) > 0 ? Number(target) : 8))
+  await hydrateMutashabihatAyahs(ctx, { limit: want, arabicOnly })
   ctx.mutashabihatAyahRevision = Number(ctx.mutashabihatAyahRevision || 0) + 1
-  return best
+  return listMutashabihatCardRows(ctx, { limit: want })
+}
+
+async function mapWithLimit(items, limit, worker) {
+  const queue = [...items]
+  const size = Math.max(1, Math.min(limit, queue.length))
+  await Promise.all(Array.from({ length: size }, async () => {
+    while (queue.length) {
+      const item = queue.shift()
+      await worker(item)
+    }
+  }))
 }
 
 function pairVerseKeys(item) {
@@ -173,13 +175,13 @@ function pairVerseKeys(item) {
   return [left, right].filter((key) => /^\d{1,3}:\d{1,3}$/.test(String(key)))
 }
 
-export async function hydrateMutashabihatAyahs(ctx, { keys = [], limit = 0 } = {}) {
+export async function hydrateMutashabihatAyahs(ctx, { keys = [], limit = 0, arabicOnly = false } = {}) {
   if (!ctx) return false
+  const ranked = (!Array.isArray(keys) || !keys.length) ? listMutashabihatRankedPairs(ctx) : []
+  const windowSize = Number(limit) > 0 ? Number(limit) : 8
   const verseKeys = (Array.isArray(keys) && keys.length)
     ? keys
-    : listMutashabihatRankedPairs(ctx)
-      .slice(0, Math.max(1, Number(limit || ctx.mutashabihatVisibleLimit || 3)))
-      .flatMap(pairVerseKeys)
+    : ranked.slice(0, Math.min(ranked.length, windowSize)).flatMap(pairVerseKeys)
   const uniqueKeys = [...new Set(verseKeys.map((key) => String(key || '').trim()).filter(Boolean))]
   if (!uniqueKeys.length) return false
 
@@ -206,16 +208,17 @@ export async function hydrateMutashabihatAyahs(ctx, { keys = [], limit = 0 } = {
   const translationEdition = ctx.translationEditionId || 'en.sahih'
   const next = { ...(ctx.mutashabihatAyahByKey || {}) }
 
-  await Promise.all([...rangesBySurah.entries()].map(async ([surah, range]) => {
+  await mapWithLimit([...rangesBySurah.entries()], 2, async ([surah, range]) => {
     try {
-      const [arabicRes, translationRes] = await Promise.all([
-        withTimeout(
-          getSurahEdition(surah, MUTASHABIHAT_ARABIC_EDITION),
-          12000,
-          'mutashabihat-surah-arabic',
-        ),
-        withTimeout(getSurahEdition(surah, translationEdition), 12000, 'mutashabihat-surah-translation').catch(() => null),
-      ])
+      const arabicPromise = withTimeout(
+        getSurahEdition(surah, MUTASHABIHAT_ARABIC_EDITION),
+        12000,
+        'mutashabihat-surah-arabic',
+      )
+      const translationPromise = arabicOnly
+        ? Promise.resolve(null)
+        : withTimeout(getSurahEdition(surah, translationEdition), 12000, 'mutashabihat-surah-translation').catch(() => null)
+      const [arabicRes, translationRes] = await Promise.all([arabicPromise, translationPromise])
       const ayahs = arabicRes?.data?.data?.ayahs || []
       const translations = translationRes?.data?.data?.ayahs || []
       const tMap = new Map(translations.map((ayah) => [Number(ayah.numberInSurah), String(ayah.text || '').trim()]))
@@ -234,7 +237,7 @@ export async function hydrateMutashabihatAyahs(ctx, { keys = [], limit = 0 } = {
     } catch {
       // Non-blocking: cards still render refs until the full index arrives.
     }
-  }))
+  })
 
   ctx.mutashabihatAyahByKey = next
   ctx.mutashabihatAyahRevision = Number(ctx.mutashabihatAyahRevision || 0) + 1

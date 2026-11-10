@@ -67,7 +67,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn"
                         :aria-label="playLeftLabel"
-                        @click="emitAudioControl(leftVerseKey, 'play')"
+                        @click.stop="emitAudioControl(leftVerseKey, 'play')"
                       >
                         <i class="bi bi-play-fill" aria-hidden="true"></i>
                       </button>
@@ -76,7 +76,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn"
                         :aria-label="pauseLabel"
-                        @click="emitAudioControl(leftVerseKey, 'pause')"
+                        @click.stop="emitAudioControl(leftVerseKey, 'pause')"
                       >
                         <i class="bi bi-pause-fill" aria-hidden="true"></i>
                       </button>
@@ -85,7 +85,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn mutashabihat-compare__icon-btn--stop"
                         :aria-label="stopLabel"
-                        @click="emitAudioControl(leftVerseKey, 'stop')"
+                        @click.stop="emitAudioControl(leftVerseKey, 'stop')"
                       >
                         <i class="bi bi-stop-fill" aria-hidden="true"></i>
                       </button>
@@ -121,7 +121,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn"
                         :aria-label="playRightLabel"
-                        @click="emitAudioControl(rightVerseKey, 'play')"
+                        @click.stop="emitAudioControl(rightVerseKey, 'play')"
                       >
                         <i class="bi bi-play-fill" aria-hidden="true"></i>
                       </button>
@@ -130,7 +130,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn"
                         :aria-label="pauseLabel"
-                        @click="emitAudioControl(rightVerseKey, 'pause')"
+                        @click.stop="emitAudioControl(rightVerseKey, 'pause')"
                       >
                         <i class="bi bi-pause-fill" aria-hidden="true"></i>
                       </button>
@@ -139,7 +139,7 @@
                         type="button"
                         class="mutashabihat-compare__icon-btn mutashabihat-compare__icon-btn--stop"
                         :aria-label="stopLabel"
-                        @click="emitAudioControl(rightVerseKey, 'stop')"
+                        @click.stop="emitAudioControl(rightVerseKey, 'stop')"
                       >
                         <i class="bi bi-stop-fill" aria-hidden="true"></i>
                       </button>

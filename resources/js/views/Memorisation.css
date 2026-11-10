@@ -39809,6 +39809,23 @@ html[data-theme="dark"] body.memorisation-page .tools .tools-title__hint {
   font-size: 0.84rem;
   font-weight: 620;
   letter-spacing: -0.015em;
+  text-align: start;
+}
+
+.sheet-toggle--mutashabihat .sheet-toggle__body,
+.sheet-toggle--mutashabihat .st-txt,
+.sheet-toggle--mutashabihat .st-title,
+.sheet-toggle--mutashabihat .st-sub {
+  text-align: start;
+}
+
+.sheet-toggle--mutashabihat .st-txt {
+  align-items: flex-start;
+}
+
+.sheet-toggle--mutashabihat .st-right-group {
+  min-width: 0;
+  width: auto;
 }
 
 .sheet-toggle--practice .st-sub {
@@ -42139,20 +42156,58 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
 }
 
 .saved-sheet__card--current {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem 0.75rem;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 0.9rem;
-  background: linear-gradient(180deg, var(--saved-card-strong), var(--saved-card));
+  padding: 0.8rem 0.85rem;
+  background: var(--saved-card-strong);
 }
 
+.saved-sheet__current-main,
 .saved-sheet__current-copy {
-  display: grid;
-  gap: 0.12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.18rem;
   min-width: 0;
-  flex: 1 1 12rem;
+  text-align: start;
+}
+
+.saved-sheet__current-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 0.15rem 0.32rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.saved-sheet__surah-en {
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--saved-text);
+}
+
+.saved-sheet__surah-ar {
+  font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--saved-text);
+}
+
+.saved-sheet__surah-sep {
+  color: color-mix(in srgb, var(--saved-muted) 88%, transparent);
+  font-weight: 500;
+}
+
+.saved-sheet__range {
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: var(--saved-muted);
 }
 
 .saved-sheet__eyebrow {
@@ -42163,33 +42218,35 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
   color: var(--saved-accent);
 }
 
-.saved-sheet__current-copy strong {
-  font-size: 0.92rem;
-  font-weight: 650;
-  color: var(--saved-text);
-}
-
-.saved-sheet__current-copy small {
-  font-size: 0.76rem;
-  color: var(--saved-muted);
-}
-
 .saved-sheet__save-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-height: 2.35rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--saved-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--saved-accent) 12%, var(--saved-card-strong));
+  min-height: 2.5rem;
+  min-width: 5.25rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--saved-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--saved-accent) 14%, var(--saved-card));
   color: var(--saved-accent-strong);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 650;
   cursor: pointer;
   white-space: nowrap;
-  flex: 0 0 auto;
+  align-self: center;
+  justify-self: end;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.saved-sheet__save-btn:hover {
+  background: color-mix(in srgb, var(--saved-accent) 20%, var(--saved-card));
+  border-color: color-mix(in srgb, var(--saved-accent) 48%, transparent);
+}
+
+.saved-sheet__save-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--saved-accent) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .saved-sheet__section {
@@ -42488,11 +42545,13 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
 
 @media (max-width: 560px) {
   .saved-sheet__card--current {
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 
   .saved-sheet__save-btn {
-    width: 100%;
+    min-width: 0;
+    padding-inline: 0.75rem;
   }
 
   .saved-sheet__row {
@@ -59669,7 +59728,7 @@ then let rule spans use currentColor.
 }
 
 .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled span.tajweed-mark,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled span[class*="tajweed-"] {
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled span[class*="tajweed-"]:not(.qpc-madani-word) {
   -webkit-text-fill-color: currentColor !important;
 }
 
@@ -61135,7 +61194,7 @@ html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-p
 .verse-arabic .wbw-word,
 .verse-arabic word,
 .verse-arabic .tajweed-mark,
-.verse-arabic [class*="tajweed-"] {
+.verse-arabic [class*="tajweed-"]:not(.qpc-madani-word) {
   font-family: inherit;
 }
 
@@ -69826,6 +69885,23 @@ html body .app .workspace-shell-overview-toggle.mutqin-surah-bilingual {
   color: color-mix(in srgb, var(--text) 72%, transparent);
 }
 
+.mutashabihat-pair-list-scroll {
+  margin-top: 0.35rem;
+  max-height: min(70vh, 42rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 0.2rem;
+  scrollbar-gutter: stable;
+}
+
+.mutashabihat-pair-list-scroll:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong, #8a6230) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
 .mutashabihat-pair-list {
   list-style: none;
   margin: 0;
@@ -69836,6 +69912,8 @@ html body .app .workspace-shell-overview-toggle.mutqin-surah-bilingual {
 
 .mutashabihat-pair-list__item {
   min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 168px;
   animation: mutashabihat-card-in 0.32s ease both;
 }
 
@@ -69855,16 +69933,20 @@ html body .app .workspace-shell-overview-toggle.mutqin-surah-bilingual {
   }
 }
 
-.mutashabihat-load-more {
+.mutashabihat-load-more,
+html body .app .tools .mutashabihat-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 40px;
-  margin-top: 0.15rem;
-  border: 1px dashed color-mix(in srgb, var(--accent-strong, #8a6230) 28%, transparent);
+  min-height: 44px;
+  margin-top: 0.35rem;
+  border: 1px dashed color-mix(in srgb, var(--accent-strong, #8a6230) 45%, transparent);
   border-radius: 12px;
-  background: transparent;
+  background: color-mix(in srgb, var(--accent-strong, #8a6230) 8%, transparent);
   color: var(--accent-strong, #8a6230);
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-size: 0.84rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
