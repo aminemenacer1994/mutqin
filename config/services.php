@@ -80,7 +80,10 @@ return [
          * Admin/demo bypass is OFF unless explicitly enabled.
          */
         'rate_limit' => [
-            'enabled' => env('SPEECHMATICS_RATE_LIMIT_ENABLED', true),
+            'enabled' => env(
+                'SPEECHMATICS_RATE_LIMIT_ENABLED',
+                env('APP_ENV') !== 'local'
+            ),
             'per_user_per_minute' => env('SPEECHMATICS_RATE_LIMIT_PER_USER_PER_MINUTE', 10),
             'per_ip_per_minute' => env('SPEECHMATICS_RATE_LIMIT_PER_IP_PER_MINUTE', 30),
             'burst_per_user' => env('SPEECHMATICS_RATE_LIMIT_BURST_PER_USER', 3),
