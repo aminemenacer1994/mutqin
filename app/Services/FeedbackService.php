@@ -64,7 +64,7 @@ class FeedbackService
             ]);
         }
 
-        $context = $this->buildSafeContext($user, $clientContext);
+        $context = $this->normaliseCommunityTestimonial($user, $type, $this->buildSafeContext($user, $clientContext));
 
         if ($type === Feedback::TYPE_AI_RECITATION && $aiCheckId !== null) {
             $duplicate = Feedback::query()
@@ -342,6 +342,70 @@ class FeedbackService
         UserFilesDisk::disk()->put($filename, file_get_contents($file->getRealPath()));
 
         return $filename;
+    }
+
+    /**
+     * Community quotes stay unpublished. The homepage reads a reviewed list,
+     * never this table.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
+    private function normaliseCommunityTestimonial(User $user, string $type, array $context): array
+    {
+        $intent = (string) ($context['intent'] ?? '');
+        if ($intent !== 'community_testimonial') {
+            unset(
+                $context['intent'],
+                $context['display_name'],
+                $context['publication_consent'],
+                $context['moderation_status'],
+                $context['published']
+            );
+
+            return $context;
+        }
+
+        if ($type !== Feedback::TYPE_OTHER) {
+            throw ValidationException::withMessages([
+                'type' => [__('feedback.type_invalid')],
+            ]);
+        }
+
+        $name = trim((string) preg_replace('/\s+/', ' ', (string) ($context['display_name'] ?? '')));
+        if (mb_strlen($name) > 40) {
+            $name = mb_substr($name, 0, 40);
+        }
+        $email = mb_strtolower(trim((string) $user->email));
+        if ($name !== '' && (str_contains($name, '@') || mb_strtolower($name) === $email)) {
+            throw ValidationException::withMessages([
+                'context.display_name' => [__('feedback.display_name_invalid')],
+            ]);
+        }
+
+        $consent = filter_var($context['publication_consent'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        if ($consent && $name === '') {
+            throw ValidationException::withMessages([
+                'context.display_name' => [__('feedback.display_name_required')],
+            ]);
+        }
+
+        $role = trim((string) preg_replace('/\s+/', ' ', (string) ($context['role'] ?? '')));
+        if (str_contains($role, '@')) {
+            $role = '';
+        }
+        if (mb_strlen($role) > 48) {
+            $role = mb_substr($role, 0, 48);
+        }
+
+        $context['intent'] = 'community_testimonial';
+        $context['display_name'] = $name;
+        $context['role'] = $role;
+        $context['publication_consent'] = $consent;
+        $context['moderation_status'] = 'pending';
+        $context['published'] = false;
+
+        return $context;
     }
 
     /**

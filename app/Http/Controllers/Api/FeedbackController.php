@@ -31,6 +31,12 @@ class FeedbackController extends Controller
             'context.theme' => ['nullable', 'string', 'max:32'],
             'context.mushaf_layout' => ['nullable', 'string', 'max:64'],
             'context.recommendation_id' => ['nullable', 'integer', 'min:1'],
+            'context.intent' => ['nullable', 'string', Rule::in(['community_testimonial'])],
+            'context.display_name' => ['nullable', 'string', 'max:40'],
+            'context.role' => ['nullable', 'string', 'max:48'],
+            'context.publication_consent' => ['nullable', 'boolean'],
+            'context.moderation_status' => ['prohibited'],
+            'context.published' => ['prohibited'],
             'screenshot' => ['nullable', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp,gif'],
             // Reject forged ownership / status fields.
             'user_id' => ['prohibited'],

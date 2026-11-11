@@ -24,6 +24,11 @@ import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
+import { attributeTutorialRegistration } from './scripts/analytics/tutorialAnalytics.js';
+import {
+    attributeTestimonialRegistration,
+    bindTestimonialConsent,
+} from './scripts/analytics/testimonialAnalytics.js';
 import { initWaitingListAttribution } from './scripts/analytics/waitingListAttribution.js';
 import {
     captureAcquisitionAttribution,
@@ -42,6 +47,13 @@ try {
         path: typeof window !== 'undefined' ? window.location.pathname : '',
         justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
         registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
+    });
+    attributeTutorialRegistration({
+        justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
+    });
+    bindTestimonialConsent();
+    attributeTestimonialRegistration({
+        justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
     });
     initPublicRegisterLinks();
 } catch {
@@ -428,6 +440,8 @@ function scheduleDeferredShellWork() {
             justRegistered,
             registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
         });
+        attributeTutorialRegistration({ justRegistered });
+        attributeTestimonialRegistration({ justRegistered });
 
         try {
             const { initAckee, trackEvent: trackAckeeEvent, ACKEE_EVENTS } = await import(

@@ -91,6 +91,8 @@ class ContentSecurityPolicyTest extends TestCase
             "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
             $policy
         );
+        $this->assertStringContainsString('https://www.youtube.com', $policy);
+        $this->assertStringContainsString('https://s.ytimg.com', $policy);
     }
 
     public function test_middleware_replaces_script_src_none_policy(): void

@@ -54,6 +54,72 @@ class FeedbackTest extends TestCase
         ]);
     }
 
+    public function test_community_testimonial_stays_unpublished(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Account Name',
+            'email' => 'learner@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'other',
+                'message' => 'Revision feels calmer when I open one session.',
+                'context' => [
+                    'intent' => 'community_testimonial',
+                    'display_name' => 'Amina',
+                    'role' => 'Hifz student',
+                    'publication_consent' => true,
+                    'route' => '/',
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'new');
+
+        $feedback = Feedback::query()->where('user_id', $user->id)->first();
+        $this->assertNotNull($feedback);
+        $this->assertSame('new', $feedback->status);
+        $this->assertSame('pending', $feedback->context['moderation_status']);
+        $this->assertFalse($feedback->context['published']);
+        $this->assertTrue($feedback->context['publication_consent']);
+        $this->assertSame('Amina', $feedback->context['display_name']);
+        $this->assertSame('Hifz student', $feedback->context['role']);
+        $this->assertArrayNotHasKey('email', $feedback->context);
+    }
+
+    public function test_community_testimonial_rejects_email_name_and_publish_flags(): void
+    {
+        $user = User::factory()->create(['email' => 'learner@example.com']);
+
+        $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'other',
+                'message' => 'A private note about revision.',
+                'context' => [
+                    'intent' => 'community_testimonial',
+                    'display_name' => 'learner@example.com',
+                    'publication_consent' => true,
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['context.display_name']);
+
+        $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'other',
+                'message' => 'Please keep this off the homepage.',
+                'context' => [
+                    'intent' => 'community_testimonial',
+                    'display_name' => 'Amina',
+                    'publication_consent' => true,
+                    'published' => true,
+                    'moderation_status' => 'approved',
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['context.published', 'context.moderation_status']);
+    }
+
     public function test_user_can_submit_bug_report_with_screenshot(): void
     {
         Storage::fake('local');

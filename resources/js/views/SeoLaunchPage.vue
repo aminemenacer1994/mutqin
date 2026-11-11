@@ -12,6 +12,18 @@
 
     <section class="articles-grid-section" :aria-label="t('howItWorksPage.listLabel')">
       <div class="wrap">
+        <walkthrough-card
+          v-if="featured"
+          featured
+          :kicker="page.kicker"
+          :title="featured.feature"
+          :summary="featured.tagline"
+          :detail="featured.description || ''"
+          :feature-id="featured.featureId"
+          :youtube-id="featured.id"
+          :image="featuredThumb"
+          :image-alt="featured.feature"
+        />
         <div class="articles-grid">
           <walkthrough-card
             v-for="(item, index) in showcase"
@@ -22,6 +34,8 @@
             :summary="item.summary"
             :detail="item.detail || ''"
             :category="item.category || ''"
+            :feature-id="item.feature_id || ''"
+            :duration-label="item.duration_label || ''"
             :youtube-id="item.youtube_id || ''"
             :youtube-watch="item.youtube_watch || ''"
             :image="item.image || ''"
@@ -225,6 +239,7 @@
 <script>
 import { defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { featuredTutorial, tutorialThumbnailUrl } from '../config/tutorialVideos.js'
 import { seoProseHtml } from '../scripts/seoTools/prose.js'
 import {
   rememberSeoTool,
@@ -236,7 +251,12 @@ export default {
   name: 'SeoLaunchPage',
   setup() {
     const { t } = useI18n()
-    return { t }
+    const featured = featuredTutorial()
+    return {
+      t,
+      featured,
+      featuredThumb: featured ? tutorialThumbnailUrl(featured.id) : '',
+    }
   },
   components: {
     WalkthroughCard: defineAsyncComponent(() => import(

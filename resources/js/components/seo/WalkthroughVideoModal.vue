@@ -32,20 +32,13 @@
             </button>
           </header>
           <div class="walkthrough-video-dialog__body">
-            <div v-if="embedSrc" class="walkthrough-video-dialog__frame-wrap">
-              <iframe
-                class="walkthrough-video-dialog__frame"
-                :src="embedSrc"
-                :title="title"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                referrerpolicy="strict-origin-when-cross-origin"
-              ></iframe>
+            <div v-if="open && videoId" class="walkthrough-video-dialog__frame-wrap">
+              <div ref="playerMount" class="walkthrough-video-dialog__frame"></div>
             </div>
             <p v-else class="walkthrough-video-dialog__empty" role="status">
               {{ t('howItWorksPage.videoUnavailable') }}
             </p>
-            <p v-if="detail && embedSrc" class="walkthrough-video-dialog__detail">{{ detail }}</p>
+            <p v-if="detail && playable" class="walkthrough-video-dialog__detail">{{ detail }}</p>
           </div>
         </div>
       </div>
@@ -54,8 +47,14 @@
 </template>
 
 <script>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import {
+  noteTutorialPlaybackTime,
+  trackTutorialComplete,
+  trackTutorialPlay,
+} from '../../scripts/analytics/tutorialAnalytics.js'
+import { mountTutorialPlayback } from '../../scripts/tutorials/youtubePlayer.js'
 import { youtubeNoCookieEmbedSrc } from '../../scripts/seo/youtubeEmbed.js'
 
 export default {
@@ -67,17 +66,32 @@ export default {
     lead: { type: String, default: '' },
     detail: { type: String, default: '' },
     videoId: { type: String, default: '' },
+    featureId: { type: String, default: '' },
   },
-  emits: ['close'],
+  emits: ['close', 'duration'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const dialogRef = ref(null)
+    const playerMount = ref(null)
     const titleId = `walkthrough-video-title-${Math.random().toString(36).slice(2, 9)}`
-    const embedSrc = computed(() => {
-      const base = props.open ? youtubeNoCookieEmbedSrc(props.videoId) : ''
-      if (!base) return ''
-      return `${base}&modestbranding=1&iv_load_policy=3&playsinline=1&color=white`
+    let playback = null
+    let playbackToken = 0
+
+    const playable = computed(() => Boolean(props.open && youtubeNoCookieEmbedSrc(props.videoId)))
+    const analyticsVideo = () => ({
+      id: props.videoId,
+      featureId: props.featureId,
+      feature: props.title,
     })
+
+    const stopPlayback = () => {
+      try {
+        playback?.destroy?.()
+      } catch {
+        /* ignore */
+      }
+      playback = null
+    }
 
     const close = () => emit('close')
 
@@ -85,6 +99,29 @@ export default {
       if (event.key === 'Escape') {
         event.preventDefault()
         close()
+      }
+    }
+
+    const startPlayback = async () => {
+      const mount = playerMount.value
+      const token = playbackToken
+      if (!mount || !playable.value) return
+      const video = analyticsVideo()
+      try {
+        const handle = await mountTutorialPlayback(mount, props.videoId, {
+          origin: window.location.origin,
+          onPlay: () => trackTutorialPlay(video, token),
+          onTime: (current, duration) => noteTutorialPlaybackTime(video, token, current, duration),
+          onComplete: () => trackTutorialComplete(video, token),
+          onDuration: (seconds) => emit('duration', seconds),
+        })
+        if (token !== playbackToken) {
+          handle?.destroy?.()
+          return
+        }
+        playback = handle
+      } catch {
+        /* fallback iframe stays inside the player helper */
       }
     }
 
@@ -96,18 +133,30 @@ export default {
         }
         document.body.style.overflow = isOpen ? 'hidden' : ''
         if (!isOpen) {
+          playbackToken += 1
+          stopPlayback()
           return
         }
+        playbackToken += 1
         await nextTick()
         dialogRef.value?.focus()
+        startPlayback()
       },
     )
+
+    onBeforeUnmount(() => {
+      stopPlayback()
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+      }
+    })
 
     return {
       t,
       dialogRef,
+      playerMount,
       titleId,
-      embedSrc,
+      playable,
       close,
       onKeydown,
     }

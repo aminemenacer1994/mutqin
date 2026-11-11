@@ -31,6 +31,8 @@ return [
     'ai_reason_invalid' => 'Ce motif rapide n’est pas pris en charge.',
     'duplicate_ai_complaint' => 'Vous avez déjà signalé ce résultat IA. Notre équipe l’examine.',
     'status_invalid' => 'Ce statut n’est pas pris en charge.',
+    'display_name_invalid' => 'Indiquez un nom d’affichage, pas une adresse e-mail.',
+    'display_name_required' => 'Ajoutez le nom que vous souhaitez afficher publiquement.',
     'types' => [
         'suggestion' => 'Suggestion',
         'bug' => 'Quelque chose ne fonctionne pas',

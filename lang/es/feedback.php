@@ -31,6 +31,8 @@ return [
     'ai_reason_invalid' => 'Ese motivo rápido no está admitido.',
     'duplicate_ai_complaint' => 'Ya has informado de este resultado de IA. Nuestro equipo lo está revisando.',
     'status_invalid' => 'Ese estado no está admitido.',
+    'display_name_invalid' => 'Usa un nombre para mostrar, no un correo electrónico.',
+    'display_name_required' => 'Añade el nombre que quieres mostrar públicamente.',
     'types' => [
         'suggestion' => 'Sugerencia',
         'bug' => 'Algo no funciona',

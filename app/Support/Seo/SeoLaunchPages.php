@@ -107,7 +107,7 @@ final class SeoLaunchPages
             kind: 'hub',
             kicker: 'How it works',
             title: 'How Mutqin Works | Quran Memorization Walkthroughs',
-            description: 'Watch every Mutqin tutorial: Listen & Repeat, Gradual Blurring, Tajweed Colours, Translation, Saved Sessions, Dark Mode, Mushaf Modes, and Mustahabbat.',
+            description: 'Watch every Mutqin tutorial: Progressive Hiding, Listen & Repeat, Tajweed Colours, Saved Sessions, Translation, Dark Mode, Mushaf Modes, and Mustahabbat.',
             h1: 'See how Mutqin works',
             lede: 'Eight short tutorials, in the order you meet them while memorising. Watch a step, then try it on the Mushaf.',
             sections: [],
@@ -1466,15 +1466,93 @@ final class SeoLaunchPages
      *
      * @return list<array{href: string, label: string, summary: string, youtube_id: string, image: string, image_alt: string}>
      */
+    /**
+     * Seconds from YouTube player metadata (2026-11-11). Same values as
+     * TUTORIAL_DURATION_SECONDS in resources/js/config/tutorialVideos.js.
+     *
+     * @return array<string, int>
+     */
+    private static function tutorialDurationSeconds(): array
+    {
+        return [
+            'ZWi0qKw7y7E' => 76,
+            'ecSmacClOSw' => 67,
+            'VpIf9YexD0E' => 27,
+            '8xrNze6_3Ms' => 52,
+            'sEIK13nKxEw' => 41,
+            'u9B3FyKnqn4' => 48,
+            'NwUUi9SnTIo' => 42,
+            'cQwJUCY7IVE' => 65,
+        ];
+    }
+
+    private static function formatTutorialDuration(int $seconds): string
+    {
+        if ($seconds <= 0) {
+            return '';
+        }
+
+        return intdiv($seconds, 60).':'.str_pad((string) ($seconds % 60), 2, '0', STR_PAD_LEFT);
+    }
+
+    private static function tutorialTryHref(): string
+    {
+        return auth()->check() ? '/memorisation' : '/register?intent=first';
+    }
+
+    /**
+     * Featured journey film. Hidden until FEATURED_TUTORIAL_URL is a real YouTube id.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function featuredTutorial(): ?array
+    {
+        $id = self::featuredTutorialUrl();
+        if ($id === '') {
+            return null;
+        }
+
+        $summary = 'From choosing your verses to practising, testing and revising — see how Mutqin helps you build a consistent routine.';
+        $seconds = self::tutorialDurationSeconds()[$id] ?? 0;
+
+        return [
+            'youtube_id' => $id,
+            'feature_id' => 'memorisation-journey',
+            'label' => 'Your memorisation journey with Mutqin',
+            'summary' => $summary,
+            'detail' => $summary,
+            'duration_label' => self::formatTutorialDuration($seconds),
+            'try_href' => self::tutorialTryHref(),
+            'try_label' => 'Start memorising',
+            'image' => 'https://i.ytimg.com/vi/'.$id.'/hqdefault.jpg',
+            'image_alt' => 'Your memorisation journey with Mutqin',
+        ];
+    }
+
+    public static function featuredTutorialUrl(): string
+    {
+        $path = resource_path('js/config/tutorialVideos.js');
+        if (! is_file($path)) {
+            return '';
+        }
+
+        $source = (string) file_get_contents($path);
+        if (preg_match("/export const FEATURED_TUTORIAL_URL = '([^']*)'/", $source, $matches) !== 1) {
+            return '';
+        }
+
+        return self::extractYoutubeVideoId($matches[1]) ?? '';
+    }
+
     private static function tutorialShowcase(): array
     {
         $tutorials = [
-            ['ecSmacClOSw', 'listen-and-repeat', 'Listen & Repeat', 'Listen, then repeat each ayah at your own pace.', 'Practise by listening to a reciter and repeating ayahs on the Mushaf.'],
-            ['ZWi0qKw7y7E', 'gradual-blurring', 'Gradual Blurring', 'Hide the text a little more as recall gets stronger.', 'Move from reading to recalling by gradually hiding the Arabic.'],
-            ['VpIf9YexD0E', 'tajweed-colours', 'Tajweed Colours', 'Follow colour-coded rules while you read.', 'Turn on Tajweed colours and open the rules beside the Mushaf.'],
-            ['sEIK13nKxEw', 'translation', 'Translation', 'Read the meaning, or follow a transliteration.', 'Show a translation or transliteration while you read the Mushaf.'],
-            ['8xrNze6_3Ms', 'saved-sessions', 'Saved Sessions', 'Leave, then resume from the same place.', 'Save a memorisation or revision session and continue it later.'],
-            ['u9B3FyKnqn4', 'dark-mode', 'Dark Mode', 'Switch the theme for quieter reading.', 'Enable dark mode and see how the Mushaf appearance changes.'],
+            ['ZWi0qKw7y7E', 'progressive-hiding', 'Progressive Hiding', 'Gradually hide words to strengthen memorisation.', 'Hide a little more of the text as recall gets stronger.'],
+            ['ecSmacClOSw', 'listen-and-repeat', 'Listen & Repeat', 'Listen to individual ayahs and repeat them.', 'Practise by listening to a reciter and repeating ayahs on the Mushaf.'],
+            ['VpIf9YexD0E', 'tajweed-colours', 'Tajweed Colours', 'Follow colour-coded Tajweed rules.', 'Turn on Tajweed colours and open the rules beside the Mushaf.'],
+            ['8xrNze6_3Ms', 'saved-sessions', 'Saved Sessions', 'Continue memorising from where you left off.', 'Save a memorisation or revision session and continue it later.'],
+            ['sEIK13nKxEw', 'translation', 'Translation', 'Explore meanings and transliteration.', 'Show a translation or transliteration while you read the Mushaf.'],
+            ['u9B3FyKnqn4', 'dark-mode', 'Dark Mode', 'Enjoy a comfortable reading experience.', 'Enable dark mode and see how the Mushaf appearance changes.'],
             ['NwUUi9SnTIo', 'mushaf-modes', 'Mushaf Modes', 'Choose a page layout for reading and practice.', 'Switch between the traditional Mushaf and the stacked layout.'],
             ['cQwJUCY7IVE', 'mustahabbat', 'Mustahabbat', 'Open recommended guidance while you read.', 'Find Mustahabbat and read the guidance shown on the Mushaf.'],
         ];
@@ -1482,12 +1560,18 @@ final class SeoLaunchPages
         return array_map(static function (array $tutorial): array {
             [$id, $slug, $label, $summary, $detail] = $tutorial;
 
+            $seconds = self::tutorialDurationSeconds()[$id] ?? 0;
+
             return [
                 'href' => '/features#'.$slug,
+                'feature_id' => $slug,
                 'label' => $label,
                 'summary' => $summary,
                 'detail' => $detail,
                 'youtube_id' => $id,
+                'duration_seconds' => $seconds,
+                'duration_label' => self::formatTutorialDuration($seconds),
+                'try_href' => self::tutorialTryHref(),
                 'image' => 'https://i.ytimg.com/vi/'.$id.'/hqdefault.jpg',
                 'image_alt' => $label,
             ];

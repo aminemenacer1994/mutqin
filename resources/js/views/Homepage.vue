@@ -220,7 +220,7 @@
       </div>
     </section>
 
-    <testimonials-carousel />
+    <testimonials-carousel v-if="showTestimonialsSection" />
 
     <section id="faq" class="faq">
       <div class="wrap">
@@ -366,6 +366,7 @@ import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TutorialCarousel from '../components/TutorialCarousel.vue';
 import TestimonialsCarousel from '../components/TestimonialsCarousel.vue';
+import { TESTIMONIALS_SECTION_ENABLED } from '../config/testimonials.js';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
 import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
@@ -376,6 +377,7 @@ export default {
   components: { TutorialCarousel, TestimonialsCarousel },
   setup() {
     const { t, locale } = useI18n();
+    const showTestimonialsSection = TESTIMONIALS_SECTION_ENABLED;
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
     const showArticles = typeof window !== 'undefined' && window.mutqinShowArticles === true;
     const showDonate = typeof window !== 'undefined' && window.mutqinShowDonate === true;
@@ -761,6 +763,7 @@ export default {
 
     return {
       t,
+      showTestimonialsSection,
       showStartMemorisationCta,
       showArticles,
       showDonate,

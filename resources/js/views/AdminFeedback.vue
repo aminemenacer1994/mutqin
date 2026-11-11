@@ -233,6 +233,28 @@
               <p class="afb-modal__message">{{ detail.message }}</p>
             </section>
 
+            <section v-if="isCommunityTestimonial" class="afb-modal__block">
+              <h3>{{ t('admin.feedback.communityTitle') }}</h3>
+              <dl class="afb-modal__meta">
+                <div>
+                  <dt>{{ t('admin.feedback.displayName') }}</dt>
+                  <dd>{{ communityDisplayName || '—' }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('admin.feedback.communityRole') }}</dt>
+                  <dd>{{ communityRole || '—' }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('admin.feedback.publicationConsent') }}</dt>
+                  <dd>{{ communityConsent ? t('admin.feedback.consentYes') : t('admin.feedback.consentNo') }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('admin.feedback.moderationLabel') }}</dt>
+                  <dd>{{ t('admin.feedback.moderationPending') }}</dd>
+                </div>
+              </dl>
+            </section>
+
             <dl class="afb-modal__meta">
               <div>
                 <dt>{{ t('admin.feedback.colArea') }}</dt>
@@ -387,6 +409,18 @@ export default {
       const rate = this.metrics?.complaint_rate_percent;
       if (rate == null || Number.isNaN(Number(rate))) return '—';
       return `${Number(Number(rate).toFixed(1))}%`;
+    },
+    isCommunityTestimonial() {
+      return this.detail?.context?.intent === 'community_testimonial';
+    },
+    communityDisplayName() {
+      return String(this.detail?.context?.display_name || '').trim();
+    },
+    communityRole() {
+      return String(this.detail?.context?.role || '').trim();
+    },
+    communityConsent() {
+      return this.detail?.context?.publication_consent === true;
     },
   },
   mounted() {

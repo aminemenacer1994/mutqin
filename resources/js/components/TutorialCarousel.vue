@@ -12,6 +12,47 @@
         </a>
       </header>
 
+      <article
+        v-if="featured"
+        class="tutorials__featured"
+        data-tutorial-card
+        :data-video-id="featured.id"
+      >
+        <h3 class="tutorials__heading">
+          <button type="button" class="tutorials__open" @click="openVideo(featured, $event)">
+            <span class="visually-hidden">{{ t('homepage.tutorials.watch') }}</span>
+            <span class="tutorials__media">
+              <img
+                v-if="thumbSrc(featured)"
+                class="tutorials__thumb"
+                :src="thumbSrc(featured)"
+                :alt="featured.feature"
+                width="1280"
+                height="720"
+                loading="lazy"
+                decoding="async"
+                draggable="false"
+                @error="onThumbError(featured.id)"
+              >
+              <span v-else class="tutorials__fallback" aria-hidden="true">
+                <i class="bi bi-play-btn"></i>
+              </span>
+              <span class="tutorials__play" aria-hidden="true">
+                <i class="bi bi-play-fill"></i>
+              </span>
+              <span v-if="durationOf(featured)" class="tutorials__duration">
+                <span class="visually-hidden">{{ t('homepage.tutorials.duration', { time: durationOf(featured) }) }}</span>
+                <span aria-hidden="true">{{ durationOf(featured) }}</span>
+              </span>
+            </span>
+            <span class="tutorials__body">
+              <span class="tutorials__feature" lang="en">{{ featured.feature }}</span>
+              <span class="tutorials__tagline" lang="en">{{ featured.tagline }}</span>
+            </span>
+            </button>
+        </h3>
+      </article>
+
       <div
         class="tutorials__grid"
         role="list"
@@ -23,6 +64,7 @@
           class="tutorials__card"
           role="listitem"
           data-tutorial-card
+          :data-video-id="video.id"
         >
           <h3 class="tutorials__heading">
             <button type="button" class="tutorials__open" @click="openVideo(video, $event)">
@@ -45,6 +87,10 @@
                 </span>
                 <span class="tutorials__play" aria-hidden="true">
                   <i class="bi bi-play-fill"></i>
+                </span>
+                <span v-if="durationOf(video)" class="tutorials__duration">
+                  <span class="visually-hidden">{{ t('homepage.tutorials.duration', { time: durationOf(video) }) }}</span>
+                  <span aria-hidden="true">{{ durationOf(video) }}</span>
                 </span>
               </span>
               <span class="tutorials__body">
@@ -82,15 +128,9 @@
             </div>
             <div class="modal-body">
               <div class="tutorials-modal__stage">
-                <iframe
-                  v-if="playerSrc"
-                  class="tutorials-modal__frame"
-                  :src="playerSrc"
-                  :title="activeVideo?.feature || t('homepage.tutorials.watch')"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                  referrerpolicy="strict-origin-when-cross-origin"
-                ></iframe>
+                <div v-if="playerSrc" class="tutorials-modal__mount">
+                  <div ref="playerMount" class="tutorials-modal__frame"></div>
+                </div>
                 <p v-else-if="activeVideo && !playable" class="tutorials-modal__empty" role="status">
                   {{ t('homepage.tutorials.unavailable') }}
                 </p>
@@ -107,12 +147,22 @@
 </template>
 
 <script>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from 'bootstrap/js/dist/modal'
 import {
+  noteTutorialPlaybackTime,
+  trackTutorialComplete,
+  trackTutorialImpression,
+  trackTutorialPlay,
+} from '../scripts/analytics/tutorialAnalytics.js'
+import { mountTutorialPlayback } from '../scripts/tutorials/youtubePlayer.js'
+import {
   TUTORIALS_PAGE_PATH,
+  featuredTutorial,
+  formatTutorialDuration,
   homepageTutorialVideos,
+  tutorialDurationLabel,
   tutorialThumbnailUrl,
 } from '../config/tutorialVideos.js'
 import { youtubeNoCookieEmbedSrc } from '../scripts/seo/youtubeEmbed.js'
@@ -122,27 +172,50 @@ export default {
   setup() {
     const { t } = useI18n()
     const videos = homepageTutorialVideos()
+    const featured = featuredTutorial()
     const tutorialsPath = TUTORIALS_PAGE_PATH
     const titleId = 'tutorial-video-title'
     const modalRef = ref(null)
+    const playerMount = ref(null)
     const activeVideo = ref(null)
     const playerSrc = ref('')
     const playable = ref(true)
     const failedThumbs = ref({})
+    const liveDurations = ref({})
 
     let modal = null
     let opener = null
+    let playback = null
+    let playbackToken = 0
+    let impressionObserver = null
+
+    const catalog = computed(() => (featured ? [featured, ...videos] : videos))
 
     const thumbSrc = (video) => (
       failedThumbs.value[video.id] ? '' : tutorialThumbnailUrl(video.id)
+    )
+
+    const durationOf = (video) => (
+      tutorialDurationLabel(video.id) || formatTutorialDuration(liveDurations.value[video.id])
     )
 
     const onThumbError = (id) => {
       failedThumbs.value = { ...failedThumbs.value, [id]: true }
     }
 
+    const stopPlayback = () => {
+      try {
+        playback?.destroy?.()
+      } catch {
+        /* ignore */
+      }
+      playback = null
+    }
+
     const openVideo = (video, event) => {
       const src = youtubeNoCookieEmbedSrc(video.id)
+      stopPlayback()
+      playbackToken += 1
       activeVideo.value = video
       playable.value = Boolean(src)
       playerSrc.value = src
@@ -151,6 +224,7 @@ export default {
     }
 
     const onModalHide = () => {
+      stopPlayback()
       playerSrc.value = ''
     }
 
@@ -166,6 +240,47 @@ export default {
       document.querySelectorAll('.modal-backdrop').forEach((node) => {
         node.classList.add('tutorials-modal-backdrop')
       })
+      const video = activeVideo.value
+      const mount = playerMount.value
+      const token = playbackToken
+      if (!video || !mount || !playerSrc.value) return
+      mountTutorialPlayback(mount, video.id, {
+        origin: window.location.origin,
+        onPlay: () => trackTutorialPlay(video, token),
+        onTime: (current, duration) => noteTutorialPlaybackTime(video, token, current, duration),
+        onComplete: () => trackTutorialComplete(video, token),
+        onDuration: (seconds) => {
+          if (tutorialDurationLabel(video.id) || !(seconds > 0)) return
+          liveDurations.value = { ...liveDurations.value, [video.id]: Math.round(seconds) }
+        },
+      }).then((handle) => {
+        if (token !== playbackToken) {
+          handle?.destroy?.()
+          return
+        }
+        playback = handle
+      }).catch(() => {
+        /* fallback iframe is mounted inside the player helper */
+      })
+    }
+
+    const observeImpressions = () => {
+      const root = modalRef.value?.closest?.('section') || document.getElementById('tutorials')
+      if (!root || typeof IntersectionObserver === 'undefined') return
+      const byId = new Map(catalog.value.map((video) => [video.id, video]))
+      impressionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.5) return
+          const id = entry.target.getAttribute('data-video-id')
+          const video = byId.get(id)
+          if (!video) return
+          trackTutorialImpression(video)
+          impressionObserver?.unobserve(entry.target)
+        })
+      }, { threshold: 0.5 })
+      root.querySelectorAll('[data-tutorial-card]').forEach((card) => {
+        impressionObserver.observe(card)
+      })
     }
 
     onMounted(() => {
@@ -180,9 +295,12 @@ export default {
         el.addEventListener('hidden.bs.modal', onModalHidden)
         el.addEventListener('shown.bs.modal', onModalShown)
       }
+      observeImpressions()
     })
 
     onBeforeUnmount(() => {
+      stopPlayback()
+      impressionObserver?.disconnect()
       const el = modalRef.value
       el?.removeEventListener('hide.bs.modal', onModalHide)
       el?.removeEventListener('hidden.bs.modal', onModalHidden)
@@ -195,13 +313,16 @@ export default {
     return {
       t,
       videos,
+      featured,
       tutorialsPath,
       titleId,
       modalRef,
+      playerMount,
       activeVideo,
       playerSrc,
       playable,
       thumbSrc,
+      durationOf,
       onThumbError,
       openVideo,
     }
@@ -302,12 +423,35 @@ export default {
   outline-offset: -3px;
 }
 
-.tutorials__card {
+.tutorials__card,
+.tutorials__featured {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(78, 58, 38, 0.12);
+  border-radius: 1.05rem;
+  background: #fff;
+  box-shadow: 0 10px 24px -20px rgba(45, 32, 20, 0.35);
+  transition:
+    border-color 0.18s var(--tutorial-ease),
+    transform 0.18s var(--tutorial-ease),
+    box-shadow 0.18s var(--tutorial-ease);
+}
+
+.tutorials__featured {
+  width: min(860px, 100%);
+  margin: 0 auto clamp(1.15rem, 2.4vw, 1.6rem);
+}
+
+.tutorials__card:hover,
+.tutorials__featured:hover {
+  border-color: rgba(139, 94, 60, 0.38);
+  transform: translateY(-6px);
+  box-shadow: 0 22px 36px -22px rgba(45, 32, 20, 0.4);
 }
 
 .tutorials__heading {
-  height: 100%;
   margin: 0;
   font: inherit;
 }
@@ -318,30 +462,21 @@ export default {
   align-items: stretch;
   gap: 0;
   width: 100%;
-  height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(78, 58, 38, 0.12);
-  border-radius: 1.05rem;
-  background: #fff;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
-  box-shadow: 0 10px 24px -20px rgba(45, 32, 20, 0.35);
-  transition:
-    border-color 0.4s var(--tutorial-ease),
-    background 0.4s var(--tutorial-ease),
-    transform 0.45s var(--tutorial-ease),
-    box-shadow 0.45s var(--tutorial-ease);
+  box-shadow: none;
 }
 
 .tutorials__open:hover {
-  border-color: rgba(139, 94, 60, 0.38);
-  background: #fff;
-  transform: translateY(-6px);
-  box-shadow: 0 22px 36px -22px rgba(45, 32, 20, 0.4);
+  background: transparent;
 }
 
 .tutorials__body {
@@ -429,6 +564,21 @@ export default {
   pointer-events: none;
 }
 
+.tutorials__duration {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  z-index: 1;
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.35rem;
+  background: rgba(20, 16, 12, 0.72);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
 .tutorials__play .bi {
   margin-inline-start: 0.12rem;
 }
@@ -466,6 +616,8 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tutorials__card,
+  .tutorials__featured,
   .tutorials__open,
   .tutorials__play,
   .tutorials__thumb,
@@ -480,6 +632,8 @@ export default {
     transform: translate(-50%, -50%);
   }
 
+  .tutorials__card:hover,
+  .tutorials__featured:hover,
   .tutorials__open:hover {
     transform: none;
   }
@@ -608,7 +762,9 @@ html[data-theme="dark"] .tutorials-modal .btn-close {
   background: #14110f;
 }
 
-.tutorials-modal__frame {
+.tutorials-modal__mount,
+.tutorials-modal__frame,
+.tutorials-modal__stage iframe {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -751,8 +907,10 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   background: #ebe4d8;
 }
 
-.homepage[data-theme="light"] .tutorials__open,
-.homepage:not([data-theme]) .tutorials__open {
+.homepage[data-theme="light"] .tutorials__card,
+.homepage[data-theme="light"] .tutorials__featured,
+.homepage:not([data-theme]) .tutorials__card,
+.homepage:not([data-theme]) .tutorials__featured {
   background: #fff;
   border-color: rgba(78, 58, 38, 0.12);
   color: #1f1a17;
@@ -780,13 +938,15 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   background: #e8dcc4;
 }
 
-.homepage[data-theme="sepia"] .tutorials__open {
+.homepage[data-theme="sepia"] .tutorials__card,
+.homepage[data-theme="sepia"] .tutorials__featured {
   background: #fbf6ea;
   border-color: #d9cbb0;
   box-shadow: 0 12px 24px -20px rgba(80, 56, 28, 0.35);
 }
 
-.homepage[data-theme="sepia"] .tutorials__open:hover {
+.homepage[data-theme="sepia"] .tutorials__card:hover,
+.homepage[data-theme="sepia"] .tutorials__featured:hover {
   background: #fffaf0;
   border-color: #c4ad8c;
 }
@@ -814,15 +974,22 @@ html[data-theme="dark"] .tutorials-modal.modal .modal-content {
   background: #181412;
 }
 
-.homepage[data-theme="dark"] .tutorials__open {
+.homepage[data-theme="dark"] .tutorials__card,
+.homepage[data-theme="dark"] .tutorials__featured {
   background: #221e1a;
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 16px 28px -22px rgba(0, 0, 0, 0.7);
 }
 
-.homepage[data-theme="dark"] .tutorials__open:hover {
+.homepage[data-theme="dark"] .tutorials__card:hover,
+.homepage[data-theme="dark"] .tutorials__featured:hover {
   background: #2a241f;
   border-color: rgba(232, 191, 143, 0.45);
+}
+
+.homepage[data-theme="dark"] .tutorials__duration {
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
 }
 
 .homepage[data-theme="dark"] .tutorials__feature {

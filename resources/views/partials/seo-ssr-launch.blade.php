@@ -15,6 +15,33 @@
         </section>
         <section class="articles-grid-section" aria-label="Mutqin walkthroughs">
             <div class="wrap">
+                @php
+                    $featuredTutorial = \App\Support\Seo\SeoLaunchPages::featuredTutorial();
+                @endphp
+                @if (is_array($featuredTutorial))
+                    <article class="walkthrough-card walkthrough-card--featured">
+                        <button type="button" class="walkthrough-card__hit" aria-label="Watch video: {{ $featuredTutorial['label'] }}">
+                            <div class="walkthrough-card__media">
+                                <img
+                                    class="walkthrough-card__image"
+                                    src="{{ $featuredTutorial['image'] }}"
+                                    alt="{{ $featuredTutorial['image_alt'] }}"
+                                    width="1280"
+                                    height="720"
+                                    loading="lazy"
+                                    decoding="async"
+                                >
+                                @if (! empty($featuredTutorial['duration_label']))
+                                    <p class="walkthrough-card__duration">{{ $featuredTutorial['duration_label'] }}</p>
+                                @endif
+                            </div>
+                            <div class="walkthrough-card__body">
+                                <h2 class="walkthrough-card__title">{{ $featuredTutorial['label'] }}</h2>
+                                <p class="walkthrough-card__excerpt">{{ $featuredTutorial['summary'] }}</p>
+                            </div>
+                        </button>
+                    </article>
+                @endif
                 <div class="articles-grid">
                     @foreach ($seoPage['showcase'] as $item)
                         <article class="walkthrough-card">
@@ -31,7 +58,9 @@
                                             decoding="async"
                                         >
                                     @endif
-                                    <p class="walkthrough-card__step">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</p>
+                                    @if (! empty($item['duration_label']))
+                                        <p class="walkthrough-card__duration">{{ $item['duration_label'] }}</p>
+                                    @endif
                                 </div>
                                 <div class="walkthrough-card__body">
                                     @if (! empty($item['category']))
@@ -39,9 +68,6 @@
                                     @endif
                                     <h2 class="walkthrough-card__title">{{ $item['label'] }}</h2>
                                     <p class="walkthrough-card__excerpt">{{ $item['summary'] }}</p>
-                                    @if (! empty($item['detail']))
-                                        <p class="walkthrough-card__detail">{{ $item['detail'] }}</p>
-                                    @endif
                                 </div>
                             </button>
                         </article>

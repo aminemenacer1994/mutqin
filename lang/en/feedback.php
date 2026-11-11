@@ -31,6 +31,8 @@ return [
     'ai_reason_invalid' => 'That quick reason is not supported.',
     'duplicate_ai_complaint' => 'You already reported this AI result. Our team is reviewing it.',
     'status_invalid' => 'That status is not supported.',
+    'display_name_invalid' => 'Use a display name, not an email address.',
+    'display_name_required' => 'Add the name you want shown publicly.',
     'types' => [
         'suggestion' => 'Suggestion',
         'bug' => 'Something isn\'t working',
