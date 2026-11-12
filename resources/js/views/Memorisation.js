@@ -2688,42 +2688,27 @@ export default {
       return this.t('memorisation.sessionGoal.startMemorise')
     },
     sessionGoalOptions() {
-      const firstRun = this.isFirstRunFlowActive
       return [
         {
           id: 'memorise',
           icon: 'bi-journal-bookmark',
-          title: firstRun
-            ? (this.t('memorisation.firstRun.goalMemorise') || 'Memorise something new')
-            : this.t('memorisation.sessionGoal.memorise'),
+          title: this.t('memorisation.sessionGoal.memorise'),
           hint: this.t('memorisation.sessionGoal.memoriseHint'),
-          description: firstRun
-            ? (this.t('memorisation.firstRun.goalMemoriseDesc') || 'Continue learning new ayahs.')
-            : this.t('memorisation.sessionGoal.planDescMemorise'),
+          description: this.t('memorisation.sessionGoal.planDescMemorise'),
         },
         {
           id: 'revise',
           icon: 'bi-arrow-repeat',
-          title: firstRun
-            ? (this.t('memorisation.firstRun.goalRevise') || 'Revise memorised ayahs')
-            : this.t('memorisation.sessionGoal.revise'),
+          title: this.t('memorisation.sessionGoal.revise'),
           hint: this.t('memorisation.sessionGoal.reviseHint'),
-          description: firstRun
-            ? (this.t('memorisation.firstRun.goalReviseDesc') || 'Strengthen what you already know.')
-            : this.t('memorisation.sessionGoal.planDescRevise'),
+          description: this.t('memorisation.sessionGoal.planDescRevise'),
         },
         {
           id: 'test',
           icon: 'bi-mic',
-          title: firstRun
-            ? (this.t('memorisation.firstRun.goalTest') || 'Test my recitation')
-            : this.t('memorisation.sessionGoal.test'),
-          hint: firstRun
-            ? (this.t('memorisation.firstRun.goalTestHint') || 'Recite and check')
-            : this.t('memorisation.sessionGoal.testHint'),
-          description: firstRun
-            ? (this.t('memorisation.firstRun.goalTestDesc') || 'Recite and check your accuracy.')
-            : this.t('memorisation.sessionGoal.planDescTest'),
+          title: this.t('memorisation.sessionGoal.test'),
+          hint: this.t('memorisation.sessionGoal.testHint'),
+          description: this.t('memorisation.sessionGoal.planDescTest'),
         },
       ]
     },
@@ -38107,11 +38092,23 @@ export default {
     },
     openSetupForGoal(goalId) {
       const goal = normaliseSessionGoal(goalId)
-      this.setSessionStartGoal(goal)
       this.firstRunMoreWaysOpen = false
       this.returningMoreWaysOpen = false
-      // Each intention opens the existing setup. Test starts AI assessment
-      // from that setup's start action, without a listen-and-repeat sitting.
+      // Goal → structured surah/ayah setup. Test starts AI assessment from
+      // that setup's start action, without a listen-and-repeat sitting.
+      if (this.isFirstRunFlowActive) {
+        this.trackFirstRunStepCompleted('goal', {
+          session_type: goal === 'revise' ? 'revision' : 'new',
+        })
+        this.persistFirstRunStep('passage')
+        this.trackFirstRunStepViewed('passage')
+        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
+        this.setSessionStartGoal(goal)
+        try { this.applyAyahWindow?.('first_5', { adjust: true }) } catch (_) { /* ignore */ }
+        this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+        return
+      }
+      this.setSessionStartGoal(goal)
       this.openNewSessionSetup()
     },
     /**

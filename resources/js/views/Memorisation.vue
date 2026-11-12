@@ -1243,150 +1243,71 @@
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div
                 v-if="showReturningContinueCard"
-                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--return guide-card"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--return"
                 data-testid="returning-continue-card"
               >
-                <template v-if="!returningMoreWaysOpen">
-                  <p class="guide-card__kicker">{{ resumeGuide.kicker }}</p>
-                  <h2 class="guide-card__title">{{ resumeGuide.title }}</h2>
-                  <p class="guide-card__body">{{ resumeGuide.body }}</p>
-                  <button
-                    type="button"
-                    class="guide-card__action first-run-hero__cta returning-resume-cta"
-                    data-testid="returning-continue"
-                    :aria-label="resumePracticeAriaLabel"
-                    @click="welcomeBackContinueSession"
-                  >
-                    <span class="first-run-hero__lead">{{ resumeGuide.action }}</span>
-                  </button>
-                </template>
-                <template v-else>
-                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
-                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
-                  <button
-                    v-for="goal in firstRunKnownAyahOptions"
-                    :key="'return-' + goal.id"
-                    type="button"
-                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
-                    :data-plan="goal.id"
-                    :aria-label="`${goal.title}. ${goal.description}`"
-                    @click="openSetupForGoal(goal.id)"
-                  >
-                    <span class="first-run-hero__lead">{{ goal.title }}</span>
-                  </button>
-                </template>
+                <header class="plan-choice-head plan-choice-head--progress">
+                  <h2>{{ resumeGuide.title }}</h2>
+                  <p class="plan-choice-head__intro">{{ resumeGuide.body }}</p>
+                </header>
                 <button
                   type="button"
-                  class="guide-card__quiet guide-card__back"
-                  data-testid="returning-more-ways"
-                  :aria-expanded="returningMoreWaysOpen ? 'true' : 'false'"
-                  @click="returningMoreWaysOpen = !returningMoreWaysOpen"
+                  class="plan-choice plan-choice--primary returning-resume-cta"
+                  data-testid="returning-continue"
+                  :aria-label="resumePracticeAriaLabel"
+                  @click="welcomeBackContinueSession"
                 >
-                  {{ returningMoreWaysOpen
-                    ? (t('common.back') || 'Back')
-                    : (t('memorisation.firstRun.differentSet') || 'Use a different set') }}
+                  <span class="plan-choice__icon" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                  <span class="plan-choice__copy">
+                    <strong>{{ resumeGuide.action }}</strong>
+                    <span class="plan-choice__desc plan-choice__desc--long">{{ resumePracticeSummary || resumeGuide.body }}</span>
+                    <span class="plan-choice__desc plan-choice__desc--short">{{ resumePracticeSummary || resumeGuide.action }}</span>
+                  </span>
+                  <span class="plan-choice__go" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                 </button>
               </div>
               <div
-                v-if="showDailyMutqinEntryCard"
-                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--daily-mutqin guide-card"
+                v-else-if="showDailyMutqinEntryCard"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--daily-mutqin"
                 data-testid="daily-mutqin-entry"
               >
-                <template v-if="!returningMoreWaysOpen">
-                  <p class="guide-card__kicker">{{ nextPracticePreview.kicker }}</p>
-                  <h2 class="guide-card__title">{{ nextPracticePreview.title }}</h2>
-                  <p class="guide-card__body">{{ nextPracticePreview.body }}</p>
-                  <button
-                    type="button"
-                    class="guide-card__action first-run-hero__cta"
-                    data-testid="daily-mutqin-start"
-                    :aria-label="`${nextPracticePreview.lead}. ${nextPracticePreview.body}`"
-                    @click="startDailyMutqinFromEmptyState"
-                  >
-                    <span class="first-run-hero__lead">{{ nextPracticePreview.lead }}</span>
-                  </button>
-                </template>
-                <template v-else>
-                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
-                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
-                  <button
-                    v-for="goal in firstRunKnownAyahOptions"
-                    :key="'next-' + goal.id"
-                    type="button"
-                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
-                    :data-plan="goal.id"
-                    :aria-label="`${goal.title}. ${goal.description}`"
-                    @click="openSetupForGoal(goal.id)"
-                  >
-                    <span class="first-run-hero__lead">{{ goal.title }}</span>
-                  </button>
-                </template>
+                <header class="plan-choice-head plan-choice-head--progress">
+                  <h2>{{ nextPracticePreview.title }}</h2>
+                  <p class="plan-choice-head__intro">{{ nextPracticePreview.body }}</p>
+                </header>
                 <button
                   type="button"
-                  class="guide-card__quiet guide-card__back"
-                  data-testid="empty-more-ways"
-                  :aria-expanded="returningMoreWaysOpen ? 'true' : 'false'"
-                  @click="returningMoreWaysOpen = !returningMoreWaysOpen"
+                  class="plan-choice plan-choice--primary"
+                  data-testid="daily-mutqin-start"
+                  :aria-label="`${nextPracticePreview.lead}. ${nextPracticePreview.body}`"
+                  @click="startDailyMutqinFromEmptyState"
                 >
-                  {{ returningMoreWaysOpen
-                    ? (t('common.back') || 'Back')
-                    : (t('memorisation.firstRun.differentSet') || 'Use a different set') }}
+                  <span class="plan-choice__icon" aria-hidden="true"><i class="bi bi-book-half"></i></span>
+                  <span class="plan-choice__copy">
+                    <strong>{{ nextPracticePreview.lead }}</strong>
+                    <span class="plan-choice__desc plan-choice__desc--long">{{ nextPracticePreview.body }}</span>
+                    <span class="plan-choice__desc plan-choice__desc--short">{{ nextPracticePreview.lead }}</span>
+                  </span>
+                  <span class="plan-choice__go" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                 </button>
               </div>
               <div
-                v-if="isFirstRunFlowActive"
-                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--first-run guide-card"
-              >
-                <template v-if="!firstRunMoreWaysOpen">
-                  <p class="guide-card__kicker">{{ firstRunGuide.kicker }}</p>
-                  <h2 class="guide-card__title">{{ firstRunGuide.title }}</h2>
-                  <p class="guide-card__body">{{ firstRunGuide.body }}</p>
-                  <button
-                    type="button"
-                    class="guide-card__action first-run-hero__cta"
-                    data-testid="first-run-hero-start"
-                    :aria-label="`${firstRunGuide.action}. ${firstRunPracticePreview.rangeLine}. ${firstRunPracticePreview.settingsLine}`"
-                    @click="startFirstRunHeroPractice"
-                  >
-                    <span class="first-run-hero__lead">{{ firstRunGuide.action }}</span>
-                  </button>
-                </template>
-                <template v-else>
-                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
-                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
-                  <button
-                    v-for="goal in firstRunKnownAyahOptions"
-                    :key="goal.id"
-                    type="button"
-                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
-                    :data-plan="goal.id"
-                    :aria-label="`${goal.title}. ${goal.description}`"
-                    @click="openSetupForGoal(goal.id)"
-                  >
-                    <span class="first-run-hero__lead">{{ goal.title }}</span>
-                  </button>
-                </template>
-                <button
-                  type="button"
-                  class="guide-card__quiet guide-card__back"
-                  data-testid="first-run-more-ways"
-                  :aria-expanded="firstRunMoreWaysOpen ? 'true' : 'false'"
-                  @click="firstRunMoreWaysOpen = !firstRunMoreWaysOpen"
-                >
-                  {{ firstRunMoreWaysOpen
-                    ? (t('common.back') || 'Back')
-                    : (t('memorisation.firstRun.moreWays') || 'I already know some ayahs') }}
-                </button>
-              </div>
-              <div
-                v-else-if="!showReturningContinueCard && !showDailyMutqinEntryCard"
                 class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans"
+                :class="{ 'workspace-empty-card--first-run': isFirstRunFlowActive }"
               >
                 <header class="plan-choice-head">
-                  <h2>{{ t('memorisation.sessionGoal.label') }}</h2>
-                  <p class="plan-choice-head__intro">{{ t('memorisation.sessionGoal.planChooserIntro') }}</p>
+                  <h2>
+                    {{ isFirstRunFlowActive
+                      ? (t('memorisation.firstRun.whatWouldYouLike') || t('memorisation.sessionGoal.label'))
+                      : t('memorisation.sessionGoal.label') }}
+                  </h2>
+                  <p class="plan-choice-head__intro">
+                    {{ isFirstRunFlowActive
+                      ? (t('memorisation.firstRun.intro') || t('memorisation.sessionGoal.planChooserIntro'))
+                      : t('memorisation.sessionGoal.planChooserIntro') }}
+                  </p>
                   <button
-                    v-if="auth.session_voice_enabled && !isFirstRunFlowActive"
+                    v-if="auth.session_voice_enabled"
                     type="button"
                     class="plan-voice-entry"
                     data-testid="empty-voice-open"
@@ -1406,7 +1327,7 @@
                   </button>
                 </header>
                 <div
-                  v-if="auth.session_voice_enabled && !isFirstRunFlowActive"
+                  v-if="auth.session_voice_enabled"
                   class="plan-voice-divider"
                   role="presentation"
                   aria-hidden="true"
@@ -1420,6 +1341,7 @@
                     type="button"
                     class="plan-choice"
                     :data-plan="goal.id"
+                    :data-testid="isFirstRunFlowActive && goal.id === 'memorise' ? 'first-run-hero-start' : null"
                     :aria-label="`${goal.title}. ${goal.description}`"
                     @click="openSetupForGoal(goal.id)"
                   >
@@ -2148,8 +2070,7 @@
                     @click="selectAyahWindow(option.id)"
                   >{{ option.label }}</button>
                 </div>
-                <p v-if="ayahWindowSelection !== 'choose'" class="session-ayah-summary">{{ sessionAyahSummary }}</p>
-                <div v-else class="session-range-block">
+                <div v-if="ayahWindowSelection === 'choose'" class="session-range-block">
                   <div class="range range-single session-range-inputs">
                     <input
                       type="number"
@@ -3196,18 +3117,7 @@
 
         </div>
 
-        <div class="tools-footer" :class="isFirstRunFlowActive ? 'tools-footer--first-run' : 'tools-footer--single'">
-          <button
-            v-if="isFirstRunFlowActive"
-            type="button"
-            class="tools-btn btn btn-ghost first-run-skip__btn first-run-skip__btn--footer"
-            data-testid="first-run-skip-passage"
-            :disabled="toolsStartBusy"
-            @click="skipFirstRunToPractice"
-          >
-            <span class="first-run-skip__lead">{{ t('memorisation.firstRun.skipToPracticeLead') || 'Quick start' }}</span>
-            <span class="first-run-skip__range" lang="en">{{ t('memorisation.firstRun.skipToPracticeRange') || 'Al-Fatiha 1–5' }}</span>
-          </button>
+        <div class="tools-footer tools-footer--single">
           <button
             type="button"
             class="tools-btn btn btn-primary session-primary-action"
