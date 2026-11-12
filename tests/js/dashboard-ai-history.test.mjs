@@ -14,6 +14,6 @@ assert.match(dashboard, /drawerAiBandFilter/, 'AI history drawer supports band f
 assert.match(dashboard, /aiCheckTitle/, 'AI history avoids misleading Not begun labels')
 assert.match(dashboard, /sortMurajaahByUrgency/, 'Revision list sorts by urgency')
 assert.match(dashboard, /revision_priority_start/, 'Fragile items show start-here cue')
-assert.equal(en.dashboard.ai_check_unknown_surah, 'Surah not recorded')
+assert.equal(en.dashboard.ai_check_unknown_surah, "Surah name wasn't saved")
 
 console.log('dashboard-ai-history.test.mjs: ok')

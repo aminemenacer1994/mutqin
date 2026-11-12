@@ -72,6 +72,7 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       const ayahLabel = t('dashboard.ayah_n', { n: item.ayah })
       return {
         key: `${item.surah_number}:${item.ayah}:${index}`,
+        surah_number: asNumber(item.surah_number),
         surah_name: surahName,
         ayah: asNumber(item.ayah),
         ayah_label: ayahLabel,

@@ -45,7 +45,7 @@ assert.match(
 assert.match(dashboard, /weakHistoryLine/, 'progress page keeps weak ayah history in the review drawer')
 assert.match(dashboard, /data-testid="dash-weak-history"/, 'weak ayah history is marked for tests')
 assert.match(dashboardCss, /\.dash-murajaah-row__history/, 'weak ayah history has compact row styles')
-assert.equal(en.dashboard.weak_history_attempts, '{n} checks')
+assert.equal(en.dashboard.weak_history_attempts, 'Checked {n} times')
 assert.match(
   dashboardCss,
   /min-width:\s*1024px[\s\S]*?\.user-dashboard__review-row[\s\S]*?grid-column:\s*1 \/ -1[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(0,\s*1fr\)/,
