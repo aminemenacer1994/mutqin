@@ -7846,10 +7846,6 @@ export default {
       const step = String(this.firstRunStepId || '').trim()
       return step === 'passage' ? 'passage' : 'goal'
     },
-    firstRunSuggestedPassageLabel() {
-      return this.t('memorisation.firstRun.suggestedPassage')
-        || 'Suggested start: Al-Fatiha, ayahs 1–5'
-    },
     firstRunPracticePreview() {
       const config = this.resolveFirstRunPracticeConfig()
       const chapter = (this.chapters || []).find(item => Number(item.id) === Number(config.chapterId))

@@ -9983,15 +9983,14 @@ html body .app .workspace-recite-dock__button:hover {
   .workspace-empty-state:has(.workspace-empty-card--return),
   .workspace-empty-state:has(.workspace-empty-card--daily-mutqin) {
     min-height: 0 !important;
-    padding-top: 0.25rem !important;
+    padding-top: 0.35rem !important;
     place-items: start center !important;
   }
 
-  .workspace-empty-card--first-run {
-    width: min(100%, 28rem) !important;
+  .workspace-empty-card--first-run,
+  .workspace-empty-card--plans {
+    width: 100% !important;
     max-width: 100% !important;
-    padding: 1rem 0.9rem 0.85rem !important;
-    gap: 0 !important;
   }
 
   html body .app .workspace-shell-head > .workspace-shell-progress-pills {
@@ -10002,5 +10001,15 @@ html body .app .workspace-recite-dock__button:hover {
 
   html body .app .workspace-shell-progress-pill {
     max-inline-size: 100% !important;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .workspace-empty-card--first-run {
+    padding: 1.05rem 0.9rem 0.95rem !important;
+  }
+
+  .plan-choice-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }

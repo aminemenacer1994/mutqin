@@ -2036,14 +2036,6 @@
               </div>
             </section>
             <section class="setup-plan setup-plan--passage">
-            <p
-              v-if="isFirstRunFlowActive"
-              class="first-run-suggested-passage"
-              role="note"
-              data-testid="first-run-suggested-passage"
-            >
-              {{ firstRunSuggestedPassageLabel }}
-            </p>
             <div class="session-essentials" data-tour="setup-sheet">
               <div class="field setup-field-row" data-tour="setup-surah">
                 <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>

@@ -171,7 +171,7 @@ function sliceMethod(source, name) {
   assert.match(tenMinute, /_pendingTenMinuteHeroStart = false/)
 
   assert.match(memorisationVue, /isFirstRunFlowActive/)
-  assert.match(memorisationVue, /first-run-suggested-passage/)
+  assert.doesNotMatch(memorisationVue, /first-run-suggested-passage/)
   assert.match(memorisationVue, /first-run-hero-start/)
   assert.match(memorisationVue, /plan-choice-grid/)
   assert.match(memorisationVue, /plan-voice-entry/)
