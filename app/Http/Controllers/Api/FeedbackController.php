@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Feedback;
+use App\Services\Analytics\ProductEventRecorder;
 use App\Services\FeedbackService;
+use App\Support\Analytics\ProductEventName;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -60,6 +62,14 @@ class FeedbackController extends Controller
             $request->user(),
             $validated,
             $request->file('screenshot')
+        );
+
+        app(ProductEventRecorder::class)->recordQuietly(
+            ProductEventName::FEEDBACK_SUBMITTED,
+            $request->user(),
+            null,
+            'feedback:'.$feedback->id,
+            ['feedback_id' => (int) $feedback->id],
         );
 
         return response()->json([

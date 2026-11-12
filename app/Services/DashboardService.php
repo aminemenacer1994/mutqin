@@ -17,6 +17,7 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Services\Learning\ProgressOverviewService;
 use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\QuranMetadata;
@@ -46,10 +47,13 @@ class DashboardService
     public static function forgetForUser(User $user): void
     {
         try {
-            Cache::forget('dashboard:v1:'.$user->id.':7');
-            Cache::forget('dashboard:v1:'.$user->id.':30');
+            foreach (['v1', 'v2'] as $version) {
+                Cache::forget('dashboard:'.$version.':'.$user->id.':7');
+                Cache::forget('dashboard:'.$version.':'.$user->id.':30');
+            }
             foreach ([25, 50, 100, 200] as $limit) {
                 Cache::forget('dashboard:activity:v1:'.$user->id.':'.$limit);
+                Cache::forget('dashboard:activity:v2:'.$user->id.':'.$limit);
             }
         } catch (\Throwable $e) {
             report($e);
@@ -67,7 +71,7 @@ class DashboardService
             return $this->buildFresh($user, $chartDays);
         }
 
-        $cacheKey = 'dashboard:v1:'.$user->id.':'.$chartDays;
+        $cacheKey = 'dashboard:v2:'.$user->id.':'.$chartDays;
 
         return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $chartDays) {
             return $this->utf8Safe($this->buildFresh($user, $chartDays));
@@ -123,6 +127,7 @@ class DashboardService
                 'recommended_practice' => null,
             ],
             'ai_recite_stats' => $this->emptyAiReciteStats(),
+            'learning' => ProgressOverviewService::empty($chartDays),
             'journey' => $this->emptyJourney(),
             'snapshot' => [
                 'completed_sessions' => ['value' => 0, 'change_7d' => 0, 'label' => 'Completed sessions', 'context' => 'Fully finished ranges only'],
@@ -243,6 +248,12 @@ class DashboardService
         $dailyRevision = $this->buildDailyRevision($user, $recommendedNext);
         $journey = $this->buildJourney($user, $main, $continue, $retention, $weaknesses);
         $aiReciteStats = $this->sessionAnalysis->dashboardStats($user);
+        try {
+            $learning = (new ProgressOverviewService())->build($user, $chartDays, $weaknesses, $dailyRevision);
+        } catch (\Throwable $e) {
+            report($e);
+            $learning = ProgressOverviewService::empty($chartDays);
+        }
 
         return [
             'meta' => [
@@ -260,6 +271,7 @@ class DashboardService
             'recommended_next' => $recommendedNext,
             'daily_revision' => $dailyRevision,
             'ai_recite_stats' => $aiReciteStats,
+            'learning' => $learning,
             'journey' => $journey,
             'snapshot' => $snapshot,
             'progress' => $progress,
@@ -309,7 +321,7 @@ class DashboardService
             return $this->buildActivityLog($user, $limit);
         }
 
-        $cacheKey = 'dashboard:activity:v1:'.$user->id.':'.$limit;
+        $cacheKey = 'dashboard:activity:v2:'.$user->id.':'.$limit;
 
         return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $limit) {
             return $this->utf8Safe($this->buildActivityLog($user, $limit));
@@ -339,6 +351,7 @@ class DashboardService
                 'status',
                 'surah_number',
                 'ayah_number',
+                'memorisation_mode',
                 'metadata',
                 'ended_at',
                 'paused_at',
@@ -355,6 +368,10 @@ class DashboardService
                     $start = (int) $session->ayah_number;
                     $end = $start;
                 }
+                $practiceMode = strtolower(trim((string) (
+                    $session->memorisation_mode
+                    ?: ($config['sessionMode'] ?? $config['mode'] ?? ($meta['session_mode'] ?? ''))
+                )));
 
                 [$outcomeKey, $at] = match (true) {
                     $status === UserSessionStatus::Completed => [
@@ -386,6 +403,7 @@ class DashboardService
                     'surah_name' => $surah ? QuranMetadata::name($surah) : null,
                     'ayah_start' => $start > 0 ? $start : null,
                     'ayah_end' => $end > 0 ? $end : null,
+                    'practice_mode' => $practiceMode,
                     'outcome_key' => $outcomeKey,
                     'occurred_at' => Carbon::parse($at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
@@ -464,6 +482,36 @@ class DashboardService
                 ]));
             });
 
+        MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['memorised', 'mastered'])
+            ->orderByDesc('completed_at')
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get(['id', 'surah_number', 'ayah_number', 'status', 'completed_at', 'updated_at'])
+            ->each(function (MemorisationProgress $row) use ($events) {
+                $at = $row->completed_at ?? $row->updated_at;
+                if (! $at) {
+                    return;
+                }
+                $events->push($this->activityEvent([
+                    'id' => 'progress-'.$row->id,
+                    'type' => 'ayah_memorised',
+                    'surah_number' => (int) $row->surah_number ?: null,
+                    'surah_name' => QuranMetadata::name((int) $row->surah_number),
+                    'ayah_start' => (int) $row->ayah_number ?: null,
+                    'ayah_end' => (int) $row->ayah_number ?: null,
+                    'practice_mode' => 'memorisation',
+                    'outcome_key' => 'ayah_memorised',
+                    'occurred_at' => Carbon::parse($at)->toIso8601String(),
+                    'href' => $this->memorisationHref([
+                        'surah' => (int) $row->surah_number,
+                        'from' => (int) $row->ayah_number,
+                        'to' => (int) $row->ayah_number,
+                    ]),
+                ]));
+            });
+
         $events = $events
             ->filter(fn ($event) => ! empty($event['occurred_at']))
             ->sortByDesc('occurred_at')
@@ -513,8 +561,38 @@ class DashboardService
         // English fallbacks kept for older clients / debugging.
         $event['title'] = $event['title'] ?? $this->activityTitleFallback($event);
         $event['outcome'] = $event['outcome'] ?? $this->activityOutcomeFallback($event);
+        $event['practice_kind'] = $this->practiceKind(
+            (string) ($event['type'] ?? ''),
+            (string) ($event['practice_mode'] ?? '')
+        );
 
         return $event;
+    }
+
+    private function practiceKind(string $type, string $mode): string
+    {
+        $type = strtolower(trim($type));
+        $mode = strtolower(trim($mode));
+        if (in_array($type, ['ai_check', 'ai_recite', 'assessment'], true)) {
+            return 'recitation';
+        }
+        if ($type === 'note') {
+            return 'note';
+        }
+        if (in_array($type, ['ayah_memorised', 'memorised', 'progress'], true)) {
+            return 'memorisation';
+        }
+        if ($mode === 'revision') {
+            return 'revision';
+        }
+        if (in_array($mode, ['beginner', 'advanced', 'planner', 'new_learning', 'memorise', 'memorisation', 'hifz'], true)) {
+            return 'memorisation';
+        }
+        if (in_array($mode, ['test', 'ai_recite', 'recite'], true)) {
+            return 'recitation';
+        }
+
+        return 'unspecified';
     }
 
     /**

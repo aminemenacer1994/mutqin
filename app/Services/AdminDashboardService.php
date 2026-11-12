@@ -16,6 +16,7 @@ use App\Models\UserSession;
 use App\Models\WaitingListEntry;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\UserAiReciteUsageService;
+use App\Support\Analytics\RegisteredUsers;
 use App\Support\QuranMetadata;
 use App\Support\WaitingListDatabase;
 use Illuminate\Support\Carbon;
@@ -879,7 +880,7 @@ class AdminDashboardService
         $now = now();
         $currentStart = $now->copy()->subDays($days);
         $previousStart = $now->copy()->subDays($days * 2);
-        $usersAgg = User::query()
+        $usersAgg = RegisteredUsers::query()
             ->selectRaw(
                 'COUNT(*) as total,
                  SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as new_7d,

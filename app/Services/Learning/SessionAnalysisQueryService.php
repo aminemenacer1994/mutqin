@@ -13,6 +13,7 @@ use App\Models\UserSession;
 use App\Services\Memorisation\RecitationAssessmentService;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\QuranMetadata;
+use App\Support\RecitationAlignmentStatus;
 use Illuminate\Support\Collection;
 
 class SessionAnalysisQueryService
@@ -217,7 +218,9 @@ class SessionAnalysisQueryService
     {
         $attemptColumns = [
             'id',
+            'memorisation_assessment_id',
             'accuracy_percent',
+            'band',
             'ayah_range',
             'weak_words',
             'word_statuses',
@@ -231,6 +234,7 @@ class SessionAnalysisQueryService
             // includes checks launched from either supported UI entry point.
             ->whereNotNull('memorisation_assessment_id')
             ->validScored()
+            ->with(['assessment:id,model_version,algorithm_version'])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(200)
@@ -388,9 +392,11 @@ class SessionAnalysisQueryService
             'missed_words' => $missed,
             'recent_attempts' => $attempts->take(12)->map(function (AiReciteAttempt $attempt) {
                 $range = $this->attemptRange($attempt);
+                $words = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
 
                 return [
                     'id' => $attempt->id,
+                    'assessment_id' => $attempt->memorisation_assessment_id ? (int) $attempt->memorisation_assessment_id : null,
                     'surah_number' => $range['surah_number'],
                     'surah_name' => $range['surah_name'],
                     'ayah_start' => $range['ayah_start'],
@@ -402,6 +408,10 @@ class SessionAnalysisQueryService
                     'has_analysis' => true,
                     'has_audio' => $this->audio->hasPlayableAudio($attempt),
                     'audio_duration_ms' => $attempt->audio_duration_ms ? (int) $attempt->audio_duration_ms : null,
+                    'has_word_alignment' => $words !== [],
+                    'flagged_word_count' => $words === [] ? null : RecitationAlignmentStatus::flaggedCount($words),
+                    'model_version' => $attempt->assessment?->model_version,
+                    'algorithm_version' => $attempt->assessment?->algorithm_version,
                     'weak_words' => collect(is_array($attempt->weak_words) ? $attempt->weak_words : [])
                         ->filter(fn ($word) => is_array($word) && trim((string) ($word['text'] ?? $word['word'] ?? $word['target_word'] ?? '')) !== '')
                         ->take(3)

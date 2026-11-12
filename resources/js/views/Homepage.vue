@@ -388,7 +388,7 @@ export default {
       return isAuthenticated
         ? {
           destination: 'memorisation',
-          href: '/memorisation?journey=ten_minute',
+          href: '/memorisation?journey=daily',
           label: t('homepage.hero.startFirstSession'),
         }
         : {

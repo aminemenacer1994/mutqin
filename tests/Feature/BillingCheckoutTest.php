@@ -51,6 +51,7 @@ class BillingCheckoutTest extends TestCase
         config([
             'services.stripe.secret_key' => 'sk_test',
             'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.pro_monthly.trial_days' => 7,
         ]);
 
         Http::fake([
@@ -72,7 +73,7 @@ class BillingCheckoutTest extends TestCase
                 && $request['line_items[0][price]'] === 'price_pro_monthly'
                 && $request['metadata[plan]'] === 'pro_monthly'
                 && $request['metadata[user_id]'] === (string) $user->id
-                && ! array_key_exists('subscription_data[trial_period_days]', $request->data())
+                && (string) $request['subscription_data[trial_period_days]'] === '7'
                 && $request['payment_method_collection'] === 'always'
                 && $request['custom_text[submit][message]'] === __('billing.stripe_checkout_note')
                 && $request['subscription_data[description]'] === __('billing.stripe_subscription_description')
@@ -102,6 +103,7 @@ class BillingCheckoutTest extends TestCase
             'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
             'billing.plans.pro_yearly.purchasable' => true,
             'billing.annual_billing_enabled' => true,
+            'billing.plans.pro_yearly.trial_days' => 7,
         ]);
 
         Http::fake([
@@ -122,7 +124,7 @@ class BillingCheckoutTest extends TestCase
             return str_contains($request->url(), 'checkout/sessions')
                 && $request['line_items[0][price]'] === 'price_pro_yearly'
                 && $request['metadata[plan]'] === 'pro_yearly'
-                && ! array_key_exists('subscription_data[trial_period_days]', $request->data())
+                && (string) $request['subscription_data[trial_period_days]'] === '7'
                 && $request['payment_method_collection'] === 'always';
         });
     }
@@ -157,6 +159,7 @@ class BillingCheckoutTest extends TestCase
                 && $request['metadata[type]'] === 'lifetime'
                 && $request['metadata[user_id]'] === (string) $user->id
                 && ! array_key_exists('subscription_data[metadata][plan]', $request->data())
+                && ! array_key_exists('subscription_data[trial_period_days]', $request->data())
                 && $request['payment_intent_data[description]'] === __('billing.stripe_lifetime_description');
         });
     }
@@ -187,6 +190,7 @@ class BillingCheckoutTest extends TestCase
         config([
             'services.stripe.secret_key' => 'sk_test',
             'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.pro_monthly.trial_days' => 7,
         ]);
 
         Http::fake([

@@ -1768,6 +1768,32 @@
   font-weight: 450;
 }
 
+.amd-ai-recite-note {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0.45rem 0 0;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, #f59e0b 8%, var(--surface, #fff));
+  border: 1px solid color-mix(in srgb, #d97706 22%, transparent);
+  color: color-mix(in srgb, var(--text, #1c1917) 74%, #92400e 26%);
+  font-size: 0.74rem;
+  line-height: 1.42;
+  font-weight: 450;
+  white-space: normal;
+}
+
+.amd-ai-recite-note--header {
+  flex: 0 0 auto;
+  align-self: stretch;
+  margin: 0.5rem 0 0;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
 /* Visible disclaimer under the AMD title — full width, wrap fully (no ellipsis / clamp). */
 .amd-disclaimer--row {
   display: block;
@@ -9842,15 +9868,6 @@ html body .app .tools .sheet--setup .session-goal__option.is-selected span {
   color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, var(--controls-text, var(--text))) !important;
 }
 
-html body .app .tools .sheet--setup .session-goal__help {
-  margin: 0 !important;
-  padding: 0.65rem 0 0 !important;
-  border-top: 1px solid var(--controls-border, var(--border)) !important;
-  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
-  font-size: 0.84rem !important;
-  line-height: 1.4 !important;
-}
-
 html body .app .tools .sheet--setup .session-essentials {
   gap: 0.85rem !important;
   margin: 0 !important;
@@ -10160,7 +10177,7 @@ html[data-theme="dark"] body .app .workspace-shell-progress-pill span {
     grid-row: 2 !important;
     display: flex !important;
     flex: unset !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: center !important;
     gap: 0.3rem !important;
     width: 100% !important;
@@ -10168,10 +10185,7 @@ html[data-theme="dark"] body .app .workspace-shell-progress-pill span {
     min-width: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
+    overflow: visible !important;
   }
 
   html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills::-webkit-scrollbar {
@@ -10383,5 +10397,22 @@ html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-tog
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text {
     --surah-title-gap: 0.2rem;
     font-size: clamp(0.86rem, 2.4vw + 0.58rem, 1rem) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head > .workspace-shell-progress-pills,
+  html body .app .workspace-shell-progress-pills,
+  html body .app .workspace-shell-head-toolbar:has(> .workspace-shell-progress-pills) > .workspace-shell-progress-pills {
+    flex-flow: row wrap !important;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  html body .app .badge.workspace-shell-progress-pill,
+  html body .app .workspace-shell-progress-pill {
+    max-inline-size: 100% !important;
+    white-space: normal !important;
   }
 }

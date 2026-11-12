@@ -31,6 +31,7 @@ class DashboardController extends Controller
                     'contact_inbox_url' => route('admin.contact-messages.index'),
                     'waiting_list_url' => route('admin.waiting-list.index'),
                     'feedback_inbox_url' => route('admin.feedback.index'),
+                    'growth_url' => route('admin.growth'),
                     'login_url' => route('login'),
                 ],
             ])

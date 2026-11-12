@@ -228,6 +228,22 @@ assert.ok(state.sessionState.queue.some(item => item.phase === 'Retention'))
 assert.equal(new Set(state.sessionState.queue.map(item => `${item.phase}:${item.ayahId}:${item.chainStage || ''}:${item.repeatCount || ''}`)).size, state.sessionState.queue.length)
 moveMutqinSession(state, 1)
 assert.equal(state.sessionState.current_index, 1)
+state.sessionState.active = false
+state.sessionState.paused = true
+state.sessionState.verse_play_counts = { '110:1': 2 }
+startMutqinSession(state, {
+  mode: 'advanced',
+  queue: [
+    { phase: 'Planner', ayahId: '110:1' },
+    ...plan.queue,
+    ...plan.queue
+  ],
+  config: { chapterId: 110, rangeStart: 1, rangeEnd: 4 },
+  planner: { ETA: plan.ETA }
+})
+assert.equal(state.sessionState.current_index, 1, 'a paused sitting must not restart on the planner step')
+assert.equal(state.sessionState.verse_play_counts['110:1'], 2)
+state.sessionState.active = true
 completeMutqinSession(state)
 assert.equal(state.sessionState.active, false)
 assert.equal(state.stats.sessions_completed, 1)

@@ -4,6 +4,8 @@ import {
   activeAyahRepeatProgress,
   appendRepeatedSessionEntries,
   countCompletedSessionRepeats,
+  nextUnfinishedRepeatIndex,
+  resolvePausedResumeIndex,
   resolveSessionAyahRepeatCount,
 } from '../../resources/js/scripts/session/sessionRepeatQueue.js'
 import { selectCompleteSessionVerseRange } from '../../resources/js/scripts/session/sessionRecitationTargets.js'
@@ -74,6 +76,35 @@ const keys = (rows) => rows.map((row) => row.key)
   }), 3, 'manual skips are not counted as completed ayah plays')
 }
 
+// A 3× ayah that already played twice must resume on the third pass, not replay
+// the finished file from the first slot. A mid-ayah pause stays where it is.
+{
+  const queue = []
+  appendRepeatedSessionEntries(queue, [{ verse: verse(103, 1) }], 3)
+  assert.equal(nextUnfinishedRepeatIndex(queue, { '103:1': 2 }), 2)
+  assert.equal(nextUnfinishedRepeatIndex(queue, { '103:1': 3 }), 3)
+  assert.deepEqual(resolvePausedResumeIndex({
+    queue,
+    queueIndex: 0,
+    versePlayCounts: { '103:1': 2 },
+    audioFinished: true,
+    currentTime: 0,
+  }), { index: 2, complete: false, changed: true })
+  assert.deepEqual(resolvePausedResumeIndex({
+    queue,
+    queueIndex: 1,
+    versePlayCounts: { '103:1': 2 },
+    audioFinished: false,
+    currentTime: 1.4,
+  }), { index: 1, complete: false, changed: false })
+  assert.equal(resolvePausedResumeIndex({
+    queue,
+    queueIndex: 0,
+    versePlayCounts: { '103:1': 3 },
+    audioFinished: true,
+  }).complete, true)
+}
+
 // Linking groups repeat as complete passes; the second pass starts at ayah 1.
 {
   const queue = appendRepeatedSessionEntries([], [
@@ -130,6 +161,8 @@ const keys = (rows) => rows.map((row) => row.key)
   assert.match(source, /const repeatValue = `\$\{repeatTotal\}x`/)
   assert.match(source, /activeAyahRepeatProgress\(\{/)
   assert.match(source, /countCompletedSessionRepeats\(\{/)
+  assert.match(source, /resolvePausedResumeIndex\(\{/)
+  assert.match(source, /if \(this\._headerResumePlayActive\)/)
   assert.doesNotMatch(source, /Math\.max\(\s*numbers\[numbers\.length - 1\]/)
 }
 

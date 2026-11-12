@@ -44,6 +44,7 @@
             <p class="admin-supporting">{{ t('admin.supporting_message') }}</p>
           </div>
           <div class="admin-console__top-actions">
+            <a class="admin-btn admin-btn--ghost admin-btn--sm" :href="growthUrl">Growth</a>
             <div class="admin-range" role="group" :aria-label="t('admin.days_range')">
               <button
                 type="button"
@@ -2018,6 +2019,9 @@ export default {
     },
     contactInboxUrl() {
       return this.auth?.contact_inbox_url || this.data?.contacts?.view_all_href || '/admin/contact-messages'
+    },
+    growthUrl() {
+      return this.auth?.growth_url || '/admin/growth'
     },
     canManageWaitlistLaunchEmail() {
       return this.data?.meta?.capabilities?.waitlist_launch_email === true

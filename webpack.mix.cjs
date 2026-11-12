@@ -2,6 +2,23 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const mix = require('laravel-mix');
+const webpack = require('webpack');
+
+function readEnvValue(name) {
+    if (process.env[name]) return process.env[name];
+    try {
+        const text = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+        const match = text.match(new RegExp(`^${name}=(.*)$`, 'm'));
+        if (!match) return '';
+        let value = match[1].trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+        return value;
+    } catch {
+        return '';
+    }
+}
 
 const manifestPath = path.join(__dirname, 'public/mix-manifest.json');
 const publicDir = path.join(__dirname, 'public');
@@ -359,6 +376,12 @@ mix.js('resources/js/app.js', 'public/js')
                : 'js/[name].js'
        },
        plugins: [
+           new webpack.DefinePlugin({
+               'process.env.VITE_POSTHOG_KEY': JSON.stringify(String(readEnvValue('VITE_POSTHOG_KEY') || readEnvValue('POSTHOG_KEY') || '').trim()),
+               'process.env.VITE_POSTHOG_HOST': JSON.stringify(String(readEnvValue('VITE_POSTHOG_HOST') || readEnvValue('POSTHOG_HOST') || 'https://eu.i.posthog.com').trim()),
+               'process.env.POSTHOG_KEY': JSON.stringify(String(readEnvValue('POSTHOG_KEY') || readEnvValue('VITE_POSTHOG_KEY') || '').trim()),
+               'process.env.POSTHOG_HOST': JSON.stringify(String(readEnvValue('POSTHOG_HOST') || readEnvValue('VITE_POSTHOG_HOST') || 'https://eu.i.posthog.com').trim()),
+           }),
            new PruneMissingManifestEntriesPlugin(),
            new RewriteMissingWatchChunksPlugin(),
        ]

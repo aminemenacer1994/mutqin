@@ -59,6 +59,11 @@
             @if (old('intent', request('intent')) === 'first')
                 <input type="hidden" name="intent" value="first">
             @endif
+            <input type="hidden" name="utm_source" value="{{ old('utm_source') }}">
+            <input type="hidden" name="utm_medium" value="{{ old('utm_medium') }}">
+            <input type="hidden" name="utm_campaign" value="{{ old('utm_campaign') }}">
+            <input type="hidden" name="ref" value="{{ old('ref') }}">
+            <input type="hidden" name="analytics_anonymous_id" value="{{ old('analytics_anonymous_id') }}">
             <button type="submit" class="auth-implicit-submit" hidden tabindex="-1" aria-hidden="true"></button>
 
             @if (config('mutqin.teacher_features_enabled'))

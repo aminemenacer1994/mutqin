@@ -14,7 +14,7 @@ import {
   rememberSessionFeedbackPrompt,
   shouldOfferSessionFeedback,
 } from '../scripts/feedback/sessionPrompt'
-import { memorisationGoalHref, normaliseSessionGoal } from '../scripts/session/sessionGoal'
+import { memorisationGoalHref, normaliseSessionGoal, revisionSessionAdjustments } from '../scripts/session/sessionGoal'
 import {
   ACTIVE_SESSION_SNAPSHOT_KEY,
   clearSharedMutqinBrowserResidue,
@@ -177,6 +177,7 @@ import {
   activeAyahRepeatProgress,
   appendRepeatedSessionEntries,
   countCompletedSessionRepeats,
+  resolvePausedResumeIndex,
   resolveSessionAyahRepeatCount,
 } from '../scripts/session/sessionRepeatQueue'
 import {
@@ -221,6 +222,7 @@ import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js'
 import { contextFromWorkspace, trackProductEvent } from '../scripts/analytics/productEvents.js'
+import { capturePostHogProductEvent } from '../scripts/analytics/posthog.js'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import {
   RECOMMENDATION_TYPES,
@@ -363,6 +365,7 @@ import {
   normaliseWeakWordRecords,
   weakWordReasonLabel,
 } from '../scripts/session/sessionPracticeCoach'
+import { readPreviousAiCheck } from '../scripts/dashboard/progressView'
 import {
   getTechniqueDescription,
   getTechniqueSummary,
@@ -683,14 +686,24 @@ import {
   TRANSLATION_DEFAULT_REVISION,
   DEFAULT_SHOW_TRANSLATION,
   resolveStoredShowTranslation,
+  buildDailyMutqinSessionConfig,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   buildFullFatihahMushafSessionConfig,
   buildTenMinuteHeroSessionConfig,
+  DAILY_MUTQIN_REPETITIONS,
+  DAILY_MUTQIN_SUGGESTED_SECONDS,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
   resolveStoredTajweedEnabled,
 } from '../scripts/session/sessionDefaults'
+import {
+  DAILY_MUTQIN_STEPS,
+  dailyMutqinElapsedProgress,
+  dailyMutqinStepIndex,
+  nextDailyMutqinStep,
+  normaliseDailyMutqinStep,
+} from '../scripts/session/dailyMutqin'
 import { readStoredAutoFollowEnabled } from '../scripts/memorisationDetection/liveAutoFollow'
 import {
   AMD_STAGES,
@@ -990,6 +1003,7 @@ export default {
       hasContinueSession: false,
       startingFreshSessionSelection: false,
       sessionStartGoal: 'memorise',
+      revisionProfileSnapshot: null,
       ayahWindowPreset: null,
       sessionMoreOptionsOpen: false,
       sessionFeedbackPromptLatched: false,
@@ -1002,6 +1016,8 @@ export default {
       _preRegistrationGuestSnapshot: null,
       _freshSignupIsolation: false,
       pendingMainJourney: false,
+      previousAiCheckNotice: '',
+      reviewFollowUp: null,
       learnerJourney: null,
       learnerProgress: null,
       learnerDashboardContinue: null,
@@ -1009,12 +1025,14 @@ export default {
       learnerDashboardWeekSummary: null,
       learnerDashboardWeaknesses: null,
       dashboardEntryReturnHref: null,
+      leavingDashboardEntry: false,
       // Present only while a teacher-task deep link is being consumed. The API
       // validates the recipient, task kind, and exact ayah range independently.
       teacherAssignmentRecipientId: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
       learnerStreakDays: 0,
+      learnerRetention: null,
       pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
       hifzPlanExists: false,
@@ -1339,6 +1357,17 @@ export default {
       postSessionOffcanvasOpen: false,
       postSessionStatsExpanded: false,
       postSessionEmotionalContext: null,
+      postSessionIsFirstCompletion: false,
+      firstRunStepId: 'goal',
+      firstRunMoreWaysOpen: false,
+      returningMoreWaysOpen: false,
+      quietBeginnerChrome: false,
+      dailyMutqinActive: false,
+      dailyMutqinStep: 'listen',
+      dailyMutqinCollapsed: false,
+      dailyMutqinSuggestedSeconds: DAILY_MUTQIN_SUGGESTED_SECONDS,
+      _pendingDailyMutqinStart: false,
+      _pendingDailyMutqinOpenAi: false,
       postSessionAutoSaved: false,
       // Named auto-save permanently removed from the end-session modal.
       autoSaveSessionsEnabled: false,
@@ -2263,6 +2292,18 @@ export default {
       if (this.hasCompletedOnboarding()) return true
       return this.hasPostOnboardingPracticeEvidence()
     },
+    /** Real learning data only. Registration and an empty account do not count. */
+    hasMeaningfulLearningProgress() {
+      if (this.journeyMemorisedCount > 0) return true
+      if (Number(this.learnerStreakDays || 0) > 0) return true
+      const progress = this.learnerProgress || {}
+      if (Number(progress.memorised_ayah_count || 0) > 0) return true
+      if (Number(progress.learning_ayah_count || 0) > 0) return true
+      if (this.journeyHasStarted || this.journeyReview) return true
+      const stats = this.mutqinState?.stats || {}
+      if (Number(stats.sessions_completed || 0) > 0) return true
+      return false
+    },
     journeyHasStarted() {
       return !!this.learnerJourney?.has_started
     },
@@ -2598,6 +2639,26 @@ export default {
         templates: this.recommendedSessionTemplates,
       })
     },
+    postSessionChoiceNextLabel() {
+      const template = this.postSessionRepeatTemplate
+      const mode = String(template?.sessionMode || '').toLowerCase()
+      if (mode.includes('revis')) {
+        return this.t('memorisation.sessionGoal.startRevise') || 'Revise these ayahs'
+      }
+      if (template?.chapterName) {
+        return this.t('memorisation.firstRun.heroCta') || 'Start practising'
+      }
+      return this.t('memorisation.postSessionChoice.repeatRecommended')
+    },
+    postSessionChoiceSummary() {
+      const template = this.postSessionRepeatTemplate
+      const surah = String(template?.chapterName || '').trim()
+      const start = Number(template?.rangeStart || 0)
+      const end = Number(template?.rangeEnd || start || 0)
+      if (!surah || start <= 0) return ''
+      return this.t('memorisation.firstRun.heroRange', { surah, start, end })
+        || `${surah} · Ayahs ${start}–${end}`
+    },
     productSessionStatus() {
       return resolveProductSessionStatus({
         showPostSessionChoice: !!this.isPostSessionChoiceVisible
@@ -2627,35 +2688,67 @@ export default {
       return this.t('memorisation.sessionGoal.startMemorise')
     },
     sessionGoalOptions() {
+      const firstRun = this.isFirstRunFlowActive
       return [
         {
           id: 'memorise',
           icon: 'bi-journal-bookmark',
-          title: this.t('memorisation.sessionGoal.memorise'),
+          title: firstRun
+            ? (this.t('memorisation.firstRun.goalMemorise') || 'Memorise something new')
+            : this.t('memorisation.sessionGoal.memorise'),
           hint: this.t('memorisation.sessionGoal.memoriseHint'),
-          description: this.t('memorisation.sessionGoal.planDescMemorise'),
+          description: firstRun
+            ? (this.t('memorisation.firstRun.goalMemoriseDesc') || 'Continue learning new ayahs.')
+            : this.t('memorisation.sessionGoal.planDescMemorise'),
         },
         {
           id: 'revise',
           icon: 'bi-arrow-repeat',
-          title: this.t('memorisation.sessionGoal.revise'),
+          title: firstRun
+            ? (this.t('memorisation.firstRun.goalRevise') || 'Revise memorised ayahs')
+            : this.t('memorisation.sessionGoal.revise'),
           hint: this.t('memorisation.sessionGoal.reviseHint'),
-          description: this.t('memorisation.sessionGoal.planDescRevise'),
+          description: firstRun
+            ? (this.t('memorisation.firstRun.goalReviseDesc') || 'Strengthen what you already know.')
+            : this.t('memorisation.sessionGoal.planDescRevise'),
         },
         {
           id: 'test',
           icon: 'bi-mic',
-          title: this.t('memorisation.sessionGoal.test'),
-          hint: this.t('memorisation.sessionGoal.testHint'),
-          description: this.t('memorisation.sessionGoal.planDescTest'),
+          title: firstRun
+            ? (this.t('memorisation.firstRun.goalTest') || 'Test my recitation')
+            : this.t('memorisation.sessionGoal.test'),
+          hint: firstRun
+            ? (this.t('memorisation.firstRun.goalTestHint') || 'Recite and check')
+            : this.t('memorisation.sessionGoal.testHint'),
+          description: firstRun
+            ? (this.t('memorisation.firstRun.goalTestDesc') || 'Recite and check your accuracy.')
+            : this.t('memorisation.sessionGoal.planDescTest'),
         },
       ]
     },
-    sessionGoalHelp() {
-      const goal = normaliseSessionGoal(this.sessionStartGoal)
-      if (goal === 'revise') return this.t('memorisation.sessionGoal.helpRevise')
-      if (goal === 'test') return this.t('memorisation.sessionGoal.helpTest')
-      return this.t('memorisation.sessionGoal.helpMemorise')
+    /** Known-ayah choices: revise, then test, then new memorisation. */
+    firstRunKnownAyahOptions() {
+      return [
+        {
+          id: 'revise',
+          icon: 'bi-arrow-repeat',
+          title: this.t('memorisation.firstRun.goalRevise') || 'Revise memorised ayahs',
+          description: this.t('memorisation.firstRun.goalReviseDesc') || 'Strengthen what you already know.',
+        },
+        {
+          id: 'test',
+          icon: 'bi-mic',
+          title: this.t('memorisation.firstRun.goalTest') || 'Test my recitation',
+          description: this.t('memorisation.firstRun.goalTestDesc') || 'Recite and check your accuracy.',
+        },
+        {
+          id: 'memorise',
+          icon: 'bi-journal-bookmark',
+          title: this.t('memorisation.firstRun.goalMemorise') || 'Memorise something new',
+          description: this.t('memorisation.firstRun.goalMemoriseDesc') || 'Continue learning new ayahs.',
+        },
+      ]
     },
     ayahWindowOptions() {
       return [
@@ -2814,6 +2907,9 @@ export default {
         return true
       }
       return false
+    },
+    showDashboardReturn() {
+      return !!(this.dashboardEntryReturnHref || this.dashboardAiCheckReturnTo)
     },
     progressPageUrl() {
       return '/progress'
@@ -4012,6 +4108,69 @@ export default {
         number: ayahNumber
       })
     },
+    resumePracticeSummary() {
+      if (!this.canResumePreviousSession) return ''
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const surah = String(chapter?.name_simple || '').trim()
+      if (!surah) return ''
+      const start = Math.max(1, Number(config.rangeStart || 1))
+      const end = Math.max(start, Number(config.rangeEnd || start))
+      const total = Math.max(1, end - start + 1)
+      const activeRaw = payload.activeVerseKey
+        ? Number(String(payload.activeVerseKey).split(':')[1])
+        : start
+      const current = Number.isFinite(activeRaw) ? activeRaw : start
+      const position = Math.max(1, Math.min(total, current - start + 1))
+      const covered = this.hasResumePlaybackPosition(payload)
+        ? Math.max(0, Math.min(total, position - 1))
+        : 0
+      return this.t('memorisation.firstRun.resumeSummary', { surah, covered, total })
+    },
+    resumePracticeSettingsLine() {
+      if (!this.canResumePreviousSession) return ''
+      const config = this.continueSessionPayload?.config || {}
+      const count = Math.max(1, Number(config.repetitionsPerStep || config.selectedLoopCount || DAILY_MUTQIN_REPETITIONS))
+      const reciter = (this.reciters || []).find(item => String(item.id) === String(config.reciterId || this.reciterId || ''))
+      const reciterName = reciter?.name || reciter?.englishName || ''
+      if (!reciterName) return ''
+      return this.t('memorisation.firstRun.heroSettings', { reciter: reciterName, count })
+        || `${reciterName} · ${count}× repeats`
+    },
+    resumePracticeAriaLabel() {
+      const guide = this.resumeGuide
+      return [guide.action, guide.body].filter(Boolean).join('. ')
+    },
+    resumeGuide() {
+      const place = this.resumePracticeSummary || this.welcomeBackResumePlaceLabel
+      const settings = this.resumePracticeSettingsLine
+      const kicker = this.t('memorisation.firstRun.returnKicker') || 'Welcome back'
+      const title = this.t('memorisation.firstRun.resumeTitle') || 'Pick up where you left off'
+      const action = this.t('memorisation.firstRun.resumePractising') || 'Resume practising'
+      let body = this.t('memorisation.firstRun.resumeBodyEmpty')
+        || 'Your last sitting is saved. Resume it and carry on from the same ayah. You can pause again whenever you like.'
+      if (place && settings) {
+        body = this.t('memorisation.firstRun.resumeBody', { place, settings })
+          || `Your place is saved. ${place}. Continue with ${settings}. You do not need to choose a new set.`
+      } else if (place) {
+        body = this.t('memorisation.firstRun.resumeBodyPlain', { place })
+          || `Your place is saved. ${place}. Continue the same set. You can pause again whenever you like.`
+      }
+      return { kicker, title, body, action }
+    },
+    firstRunGuide() {
+      const preview = this.firstRunPracticePreview
+      return {
+        kicker: this.t('memorisation.firstRun.cardKicker') || 'Your first sitting',
+        title: this.t('memorisation.firstRun.heroTitle') || 'Start with Al-Fatihah',
+        body: this.t('memorisation.firstRun.guideBody', {
+          range: preview.rangeLine,
+          settings: preview.settingsLine,
+        }) || `You will hear ${preview.rangeLine}. ${preview.settingsLine}. Listen, then repeat each ayah when it is your turn. This is a short sitting, and you can pause whenever you like.`,
+        action: this.t('memorisation.firstRun.heroCta') || 'Start practising',
+      }
+    },
     welcomeBackDisplayName() {
       const full = String(this.auth?.name || '').trim()
       if (!full) return ''
@@ -4032,11 +4191,9 @@ export default {
     },
     welcomeBackModalSubtitle() {
       if (this.canResumePreviousSession) {
-        const place = this.welcomeBackResumePlaceLabel
-        if (place) {
-          return this.t('memorisation.welcomeBack.resumeSubtitleAtPlace', { place })
-        }
-        return this.t('memorisation.welcomeBack.resumeSubtitle')
+        return this.resumePracticeSummary
+          || this.welcomeBackResumePlaceLabel
+          || this.t('memorisation.welcomeBack.resumeSubtitle')
       }
       return this.t('memorisation.welcomeBack.freshSubtitle')
     },
@@ -6663,24 +6820,38 @@ export default {
       })
     },
     postSessionCtaButtons() {
-      if (!this.showRecommendationPlanFeature) {
+      const returnToMushaf = {
+        id: 'post-session-return-to-mushaf',
+        action: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
+        dataAction: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
+        variant: 'secondary',
+        label: this.t('memorisation.postSession.actions.returnToWorkspace'),
+        icon: 'bi bi-arrow-right',
+      }
+      const reciteFromMemory = {
+        id: 'post-session-ai-check',
+        action: POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION,
+        dataAction: POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION,
+        variant: 'ai',
+        label: this.postSessionTestWithAiLabel,
+        icon: 'bi bi-mic',
+      }
+      // First completion: Done / Mushaf primary; AI check stays available secondary.
+      if (this.postSessionIsFirstCompletion && !this.onboardingSampleSessionActive) {
         return [
           {
-            id: 'post-session-ai-check',
-            action: POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION,
-            dataAction: POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION,
-            variant: 'ai',
-            label: this.postSessionTestWithAiLabel,
-            icon: 'bi bi-mic',
+            ...returnToMushaf,
+            variant: 'success',
+            label: this.t('memorisation.firstRun.donePrimary')
+              || this.t('memorisation.postSession.actions.returnToWorkspace'),
           },
-          {
-            id: 'post-session-return-to-mushaf',
-            action: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
-            dataAction: POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
-            variant: 'secondary',
-            label: this.t('memorisation.postSession.actions.returnToWorkspace'),
-            icon: 'bi bi-arrow-right',
-          },
+          reciteFromMemory,
+        ]
+      }
+      if (!this.showRecommendationPlanFeature) {
+        return [
+          reciteFromMemory,
+          returnToMushaf,
         ]
       }
       const state = this.postSessionCtaState
@@ -7260,6 +7431,18 @@ export default {
       if (this.onboardingSampleSessionActive) return ''
       if (this.postSessionHasAiCheck) return ''
       if (this.postSessionRecommendationStep === 'memorisation_check_nudge') return ''
+      if (this.postSessionIsFirstCompletion) {
+        const encouragement = String(this.postSessionEncouragement || '').trim()
+        const j = this.postSessionJustFinishedSummary || {}
+        const latin = String(j.surahLatin || j.surah || '').trim()
+        const range = String(j.range || '').trim()
+        const progress = [latin, range].filter(Boolean).join(' · ')
+        if (encouragement && progress) return `${encouragement} ${progress}`
+        if (encouragement) return encouragement
+        if (progress) return progress
+        return this.t('memorisation.firstRun.firstSessionAck')
+          || 'A solid start. Keep this short set warm.'
+      }
       if (
         this.postSessionCtaState !== POST_SESSION_CTA_STATES.AWAITING_CHECK
         || this.postSessionRecommendationStep === 'confirm'
@@ -7419,18 +7602,325 @@ export default {
       return null
     },
     isOnboardingExperienceActive() {
+      // Legacy modal overlay stays off; first-time uses empty state + setup sheet.
       return false
     },
     isRtlLocale() {
       return RTL_LOCALES.includes(this.activeLocale)
     },
     requiresFirstTimeOnboarding() {
-      // Onboarding is hidden. A new registration must not enter it.
-      return false
+      if (!this.learningBackendEnabled()) return false
+      if (this.hasCompletedOnboarding()) return false
+      if (this.hasPostOnboardingPracticeEvidence()) return false
+      return true
     },
     shouldAutoOpenOnboarding() {
-      // Onboarding stays closed. Registration must not seed or reopen it.
-      return false
+      if (!this.requiresFirstTimeOnboarding) return false
+      if (this.backendUnfinishedSession || this.hasValidatedResumableSession) return false
+      return true
+    },
+    isFirstRunFlowActive() {
+      return !!(this.learningBackendEnabled() && this.requiresFirstTimeOnboarding)
+    },
+    showDailyMutqinEntryCard() {
+      return !!(
+        this.learningBackendEnabled()
+        && !this.isFirstRunFlowActive
+        && !this.showReturningContinueCard
+        && this.shouldShowWorkspaceEmptyState
+      )
+    },
+    showReturningContinueCard() {
+      return !!(
+        this.shouldShowWorkspaceEmptyState
+        && !this.isFirstRunFlowActive
+        && this.canResumePreviousSession
+      )
+    },
+    returningAfterQuietSpell() {
+      if (!this.hasMeaningfulLearningProgress) return false
+      const retention = this.learnerRetention || {}
+      if (retention.streak_broken && retention.streak_has_history) return true
+      const last = Date.parse(retention.last_activity_at || '')
+      if (!Number.isFinite(last)) return false
+      return (Date.now() - last) > (3 * 24 * 60 * 60 * 1000)
+    },
+    nextPracticePreview() {
+      const preview = this.firstRunPracticePreview
+      const settingsLine = preview.settingsLine
+      const kicker = this.returningAfterQuietSpell
+        ? (this.t('memorisation.firstRun.returnKicker') || 'Welcome back')
+        : (this.t('memorisation.firstRun.nextSittingKicker') || 'Your next sitting')
+      const row = this.journeyContinue
+      const remembered = Number(row?.remembered_count)
+      const total = Number(row?.range_ayah_count)
+      const stillLearning = Number.isFinite(remembered)
+        && Number.isFinite(total)
+        && total > 0
+        && remembered < total
+      const review = this.journeyReview
+      if (stillLearning && row?.surah_name) {
+        const place = this.t('memorisation.firstRun.resumeSummary', {
+          surah: row.surah_name,
+          covered: remembered,
+          total,
+        }) || `${row.surah_name} · ${remembered}/${total} ayahs completed`
+        return {
+          kind: 'continue',
+          kicker,
+          title: this.t('memorisation.firstRun.continueTitle') || 'Carry on with this set',
+          lead: this.t('memorisation.firstRun.continueMemorising') || 'Continue memorising',
+          body: this.t('memorisation.firstRun.continueBody', { place, settings: settingsLine })
+            || `You were in the middle of this set. ${place}. Continue there, with ${settingsLine}. You do not need to choose a new surah.`,
+          rangeLine: place,
+          settingsLine,
+        }
+      }
+      if (review?.surah_name || ((this.journeyHasStarted || this.hasMeaningfulLearningProgress) && row?.surah_name)) {
+        const source = review?.surah_name ? review : row
+        const start = Number(source.ayah_start || source.ayah_number || 1)
+        const end = Math.max(start, Number(source.ayah_end || start))
+        const place = this.t('memorisation.firstRun.heroRange', {
+          surah: source.surah_name,
+          start,
+          end,
+        })
+        return {
+          kind: 'revise',
+          kicker,
+          title: this.t('memorisation.firstRun.reviseTitle') || 'Keep this set firm',
+          lead: this.t('memorisation.firstRun.reviseLearnt') || 'Revise what you learnt',
+          body: this.t('memorisation.firstRun.reviseBody', { place, settings: settingsLine })
+            || `You have already worked through this set. ${place}. A short revision will keep it firm, with ${settingsLine}.`,
+          rangeLine: place,
+          settingsLine,
+        }
+      }
+      return {
+        kind: 'start',
+        kicker: this.hasMeaningfulLearningProgress ? kicker : (this.t('memorisation.firstRun.cardKicker') || 'Your first sitting'),
+        title: this.hasMeaningfulLearningProgress
+          ? (this.t('memorisation.firstRun.returnStartTitle') || 'A short set is ready')
+          : (this.t('memorisation.firstRun.heroTitle') || 'Start with Al-Fatihah'),
+        lead: this.t('memorisation.firstRun.heroCta') || 'Start practising',
+        body: this.hasMeaningfulLearningProgress
+          ? (this.t('memorisation.firstRun.returnStartBody', {
+            range: preview.rangeLine,
+            settings: settingsLine,
+          }) || `You can begin straight away. ${preview.rangeLine}. ${settingsLine}. Listen, then repeat. You can pause whenever you like.`)
+          : (this.t('memorisation.firstRun.guideBody', {
+            range: preview.rangeLine,
+            settings: settingsLine,
+          }) || `You will hear ${preview.rangeLine}. ${settingsLine}. Listen, then repeat each ayah when it is your turn.`),
+        rangeLine: preview.rangeLine,
+        settingsLine,
+      }
+    },
+    dailyMutqinGuideVisible() {
+      return !!(this.dailyMutqinActive && !this.dailyMutqinCollapsed && !this.showPostSessionModal)
+    },
+    /** Hide the extra “your turn” banner only before playback has started. */
+    dailyMutqinSuppressTalqinPrompt() {
+      return !!(
+        this.dailyMutqinGuideVisible
+        && this.dailyMutqinStepId === 'listen'
+        && !this.hasSessionStarted
+        && !this.isSessionLive
+      )
+    },
+    dailyMutqinRepetitionCue() {
+      const count = Math.max(1, Number(this.repetitionsPerStep) || 2)
+      if (count === 1) {
+        return this.t('memorisation.dailyMutqin.cueRepetitionsOne')
+          || 'The reciter plays each ayah once.'
+      }
+      return this.t('memorisation.dailyMutqin.cueRepetitions', { count })
+        || `The reciter plays each ayah ${count} times.`
+    },
+    dailyMutqinBeginnerCue() {
+      if (this.blurModeEnabled) {
+        return this.t('memorisation.dailyMutqin.cueHide')
+          || 'Some ayahs are hidden. Recite what you remember.'
+      }
+      if (this.talqinRecitationTurnActive) {
+        return this.t('memorisation.dailyMutqin.cueYourTurn')
+          || 'Your turn. Repeat this ayah.'
+      }
+      return this.t('memorisation.dailyMutqin.cueListening')
+        || 'Listen, then repeat when it is your turn.'
+    },
+    /**
+     * Full-width session instruction. Hidden during revision and AI testing,
+     * where listen-and-repeat copy would be the wrong next step.
+     */
+    sessionPracticeInstruction() {
+      if (!this.dailyMutqinActive || this.showPostSessionModal) return null
+      if (this.amdOpen || this.recitationCheckPanelOpen || this.recitationCheckRecording) return null
+      const goal = normaliseSessionGoal(this.sessionStartGoal)
+      if (goal === 'test' || goal === 'revise') return null
+      const step = this.dailyMutqinStepId
+      if (step === 'recite' || step === 'finish') return null
+      if (step === 'hide' || this.blurModeEnabled) {
+        return {
+          title: this.t('memorisation.dailyMutqin.stepHide') || 'Hide',
+          body: this.dailyMutqinBeginnerCue,
+        }
+      }
+      if (this.talqinRecitationTurnActive) {
+        return {
+          title: this.t('memorisation.firstRun.listenRepeatTitle') || 'Listen and repeat',
+          body: this.t('memorisation.dailyMutqin.cueYourTurn') || 'Your turn. Repeat this ayah.',
+        }
+      }
+      const repeatLine = this.dailyMutqinRepetitionCue
+      const turnLine = this.dailyMutqinBeginnerCue
+      return {
+        title: this.t('memorisation.firstRun.listenRepeatTitle') || 'Listen and repeat',
+        body: [repeatLine, turnLine].filter(Boolean).join(' '),
+        aside: this.t('memorisation.firstRun.pauseLater') || 'Pause whenever you like. You can continue later.',
+      }
+    },
+    dailyMutqinStepId() {
+      return normaliseDailyMutqinStep(this.dailyMutqinStep)
+    },
+    dailyMutqinStepNumber() {
+      return dailyMutqinStepIndex(this.dailyMutqinStepId) + 1
+    },
+    dailyMutqinStepTotal() {
+      return DAILY_MUTQIN_STEPS.length
+    },
+    /** UI phases: Listen → Practise → Wrap (5 internal steps, 3 quiet dots). */
+    dailyMutqinPhaseIndex() {
+      const step = this.dailyMutqinStepId
+      if (step === 'listen') return 0
+      if (step === 'repeat' || step === 'hide') return 1
+      return 2
+    },
+    dailyMutqinPhaseLabel() {
+      const phase = this.dailyMutqinPhaseIndex
+      if (phase === 0) {
+        return this.t('memorisation.dailyMutqin.phaseListen') || 'Listen'
+      }
+      if (phase === 1) {
+        return this.t('memorisation.dailyMutqin.phasePractise') || 'Practise'
+      }
+      return this.t('memorisation.dailyMutqin.phaseWrap') || 'Wrap up'
+    },
+    dailyMutqinSoftProgress() {
+      return dailyMutqinElapsedProgress(
+        this.sessionStartedAt,
+        this.dailyMutqinSuggestedSeconds,
+        this.statsTick || Date.now(),
+      )
+    },
+    dailyMutqinStepCopy() {
+      const step = this.dailyMutqinStepId
+      const map = {
+        listen: {
+          title: this.t('memorisation.dailyMutqin.stepListen') || 'Listen',
+          short: this.t('memorisation.dailyMutqin.stepListenShort') || 'Hear today’s ayahs',
+          body: this.t('memorisation.dailyMutqin.stepListenBody') || 'Hear today’s ayahs with your reciter.',
+          cta: this.t('memorisation.dailyMutqin.stepListenCtaShort')
+            || this.t('memorisation.dailyMutqin.stepListenCta')
+            || 'Start',
+        },
+        repeat: {
+          title: this.t('memorisation.dailyMutqin.stepRepeat') || 'Repeat',
+          short: this.t('memorisation.dailyMutqin.stepRepeatShort') || 'Recite with the audio',
+          body: this.t('memorisation.dailyMutqin.stepRepeatBody') || 'Recite with the reciter after each ayah.',
+          cta: this.t('memorisation.dailyMutqin.stepRepeatCta') || 'Continue',
+        },
+        hide: {
+          title: this.t('memorisation.dailyMutqin.stepHide') || 'Hide',
+          short: this.t('memorisation.dailyMutqin.stepHideShort') || 'Hide upcoming ayahs',
+          body: this.t('memorisation.dailyMutqin.stepHideBody') || 'Gradually hide upcoming ayahs to practise recall.',
+          cta: this.t('memorisation.dailyMutqin.stepHideCtaShort')
+            || this.t('memorisation.dailyMutqin.stepHideCta')
+            || 'Hide',
+        },
+        recite: {
+          title: this.t('memorisation.dailyMutqin.stepRecite') || 'Check (optional)',
+          short: this.t('memorisation.dailyMutqin.stepReciteShort') || 'Optional AI check',
+          body: this.t('memorisation.dailyMutqin.stepReciteBody') || 'Test with AI Recite, or skip to finish.',
+          cta: this.t('memorisation.dailyMutqin.stepReciteCtaShort')
+            || this.t('memorisation.dailyMutqin.stepReciteCta')
+            || 'Test',
+        },
+        finish: {
+          title: this.t('memorisation.dailyMutqin.stepFinish') || 'Finish',
+          short: this.t('memorisation.dailyMutqin.stepFinishShort') || 'End this sitting',
+          body: this.t('memorisation.dailyMutqin.stepFinishBody') || 'End this sitting and see your practice summary.',
+          cta: this.t('memorisation.dailyMutqin.stepFinishCtaShort')
+            || this.t('memorisation.dailyMutqin.stepFinishCta')
+            || 'Finish',
+        },
+      }
+      return map[step] || map.listen
+    },
+    firstRunStep() {
+      const step = String(this.firstRunStepId || '').trim()
+      return step === 'passage' ? 'passage' : 'goal'
+    },
+    firstRunSuggestedPassageLabel() {
+      return this.t('memorisation.firstRun.suggestedPassage')
+        || 'Suggested start: Al-Fatiha, ayahs 1–5'
+    },
+    firstRunPracticePreview() {
+      const config = this.resolveFirstRunPracticeConfig()
+      const chapter = (this.chapters || []).find(item => Number(item.id) === Number(config.chapterId))
+      const surah = chapter?.name_simple || 'Al-Fatihah'
+      const reciter = (this.reciters || []).find(item => String(item.id) === String(config.reciterId || ''))
+      const reciterName = reciter?.name || reciter?.englishName || 'Alafasy'
+      return {
+        rangeLine: this.t('memorisation.firstRun.heroRange', {
+          surah,
+          start: config.rangeStart,
+          end: config.rangeEnd,
+        }),
+        settingsLine: this.t('memorisation.firstRun.heroSettings', {
+          reciter: reciterName,
+          count: config.repetitionsPerStep,
+        }),
+      }
+    },
+    postSessionFirstRunReturnHint() {
+      if (!this.postSessionIsFirstCompletion || this.onboardingSampleSessionActive) return ''
+      const snap = this.postSessionSnapshot || {}
+      const snapSurah = Number(snap.chapterId || 0)
+      const snapFrom = Number(snap.rangeStart || 0)
+      const snapTo = Number(snap.rangeEnd || snapFrom || 0)
+      const rec = this.postSessionRecommendation
+      if (rec && this.postSessionRecommendationActionable) {
+        const from = Number(rec?.ayah_range?.from || 0)
+        const to = Number(rec?.ayah_range?.to || from)
+        const recSurah = Number(
+          rec?.surah?.id
+          || rec?.surah_number
+          || snapSurah
+          || 0,
+        )
+        const sameAsFinished = snapSurah > 0
+          && recSurah === snapSurah
+          && from === snapFrom
+          && to === snapTo
+        if (!sameAsFinished && from > 0) {
+          const name = this.postSessionRecommendationDisplaySurahName
+            || this.resolveRecommendationSurahName?.(rec)
+            || ''
+          if (name) {
+            const range = from === to ? String(from) : `${from}–${to}`
+            return this.t('memorisation.firstRun.returnSuggestionNamed', { surah: name, range })
+              || `Next time: continue ${name} ${range}.`
+          }
+        }
+      }
+      return this.t('memorisation.firstRun.returnSuggestion')
+        || 'Come back soon and continue this short set.'
+    },
+    workspaceAiReciteOptionalLabel() {
+      return this.t('memorisation.firstRun.checkAnytimeOptional')
+        || this.t('memorisation.dailyMutqin.checkAnytimeOptional')
+        || 'Check anytime (optional)'
     },
     isExistingUserLogin() {
       // Welcome Back is for returning learners after their first-time tour.
@@ -8417,7 +8907,7 @@ export default {
       return this.t?.('memorisation.amd.title') || 'Check your memorisation'
     },
     amdRangeLabel() {
-      const surah = this.getChapterDisplayName(this.currentChapter || this.chapterId)
+      const surah = this.getChapterLatinName(this.currentChapter || this.chapterId)
         || this.currentChapter?.name_simple
         || this.activeChapterName
         || `Surah ${this.chapterId || ''}`.trim()
@@ -8426,7 +8916,7 @@ export default {
       const start = numbers[0] || Number(this.rangeStart || 0)
       const end = numbers[numbers.length - 1] || Number(this.rangeEnd || start)
       if (!start) return surah
-      return start === end ? `${surah} · Ayah ${start}` : `${surah} · Ayahs ${start}–${end}`
+      return formatSurahAyahLabel(surah, { start, end }, this.t.bind(this)) || surah
     },
     amdDifficultyOptions() {
       return DIFFICULTY_PERCENTS.slice()
@@ -8702,8 +9192,10 @@ export default {
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
         betaBadge: this.t?.('memorisation.amd.betaBadge') || 'Beta',
+        disclaimerShort: this.t?.('memorisation.amd.disclaimerShort')
+          || 'AI can miss or mishear words. Check with your teacher.',
         disclaimer: this.t?.('memorisation.amd.disclaimer')
-          || 'Audio recitation is in beta. AI can make mistakes — always verify with a qualified teacher.',
+          || 'Audio recitation is in beta. AI can make mistakes. Always verify with a qualified teacher.',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
@@ -9400,7 +9892,16 @@ export default {
       return []
     },
     reviewPriorityLabel() {
-      return ''
+      return this.previousAiCheckNotice || ''
+    },
+    compatibleFollowUpAssessmentId(range) {
+      const link = this.reviewFollowUp
+      if (!link?.assessmentId) return null
+      if (Number(range?.surah_number) !== Number(link.surah)) return null
+      const start = Number(range?.start_ayah || 0)
+      const end = Number(range?.end_ayah || start)
+      if (Number(link.ayah) < start || Number(link.ayah) > end) return null
+      return link.assessmentId
     },
     feedbackCounts() {
       const ayahs = Object.values(this.mutqinState?.ayahs || {})
@@ -9498,6 +9999,7 @@ export default {
       return this.translateOrFallback('memorisation.talqin.yourTurn', 'Your turn to recite')
     },
     practiceTurnCalloutVisible() {
+      if (this.dailyMutqinSuppressTalqinPrompt) return false
       return this.talqinRecitationTurnActive || this.reciterFollowModeActive
     },
     practiceTurnCalloutMessage() {
@@ -9890,7 +10392,7 @@ export default {
         const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
         const sessionCovered = Math.max(0, Math.min(sessionTotal, Number(this.currentPosition || 0)))
         if (sessionTotal > 0) {
-          return this.t('memorisation.workspaceProgress.coveredShort', {
+          return this.t('memorisation.workspaceProgress.coveredSlash', {
             covered: sessionCovered,
             total: sessionTotal
           })
@@ -11243,6 +11745,7 @@ export default {
   },
 
   async mounted() {
+    this.restoreProgressReturn()
     this.migrateLegacyReadingViewMode()
     this.syncWorkspaceIsMobileViewport()
     let clearBootstrapWatchdog = null
@@ -11593,15 +12096,13 @@ export default {
       if (typeof window !== 'undefined') window.mutqinStartFirstSession = false
       const isTenMinuteHeroEntry = dashboardEntryIntent?.journey === 'ten_minute'
         || dashboardEntryIntent?.journey === '10_minute'
-      // The explicit Start 10-minute session action takes the learner straight
-      // into practice, including on their first visit to the workspace.
-      if (isTenMinuteHeroEntry && this.requiresFirstTimeOnboarding) {
-        this.markOnboardingCompleted()
-      }
+      const isDailyMutqinEntry = dashboardEntryIntent?.journey === 'daily'
+        || dashboardEntryIntent?.journey === 'daily_mutqin'
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
       const shouldAutoOpenOnboarding = authenticatedWorkspace && this.shouldAutoOpenOnboarding
-      // Fresh returning login: Welcome Back is the resume gate. Do not let
-      // dashboard ?resume=1 / ?setup=1 deep-links skip it.
+      this.hydrateFirstRunStep()
+      // A fresh login used to open a choice modal. The page now shows the
+      // next action, so resume/setup links must not auto-start over it.
       const preferRegistrationResume = !!(
         this.isLoggedIn
         && this._freshSignupIsolation
@@ -11619,6 +12120,7 @@ export default {
         this.isLoggedIn
         && !needsFirstTimeOnboarding
         && !isTenMinuteHeroEntry
+        && !isDailyMutqinEntry
         && !preferRegistrationResume
         && this.isExistingUserLogin
         && !this.shouldSuppressWelcomeBackModal()
@@ -11626,7 +12128,7 @@ export default {
         && !isMurajaahReviewEntry
       )
 
-      if (preferRegistrationResume && !isTenMinuteHeroEntry) {
+      if (preferRegistrationResume && !isTenMinuteHeroEntry && !isDailyMutqinEntry) {
         this.maybeShowRegistrationResumeModal()
       } else if (preferWelcomeBackOnLogin) {
         this.maybeShowWelcomeBackModal()
@@ -11635,11 +12137,14 @@ export default {
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
       } else if (shouldAutoOpenOnboarding) {
-        this.onboardingStepIndex = this.readOnboardingStepIndex()
-        this.applyPersistedOnboardingPreferences()
-        // Seed Al-Fatihah 1–5 for new accounts (same window as onboarding practice).
-        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
+        // firstRunLandsOnHero: registration and a saved passage step both
+        // land on one Start button. Setup stays available after they ask for it.
         this.markOnboardingAutoPresented()
+        this.tab = 'tools'
+        this.clearWorkspaceForFirstRunGoalStep()
+        this.showTools = false
+        this.persistFirstRunStep('goal')
+        this.trackFirstRunSurfacePresented('goal')
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
         this.currentMode = 'advanced'
@@ -11659,14 +12164,24 @@ export default {
 
       if (
         dashboardEntryIntent
-        && !needsFirstTimeOnboarding
-        && (!preferWelcomeBackOnLogin || isMurajaahReviewEntry || isTenMinuteHeroEntry)
+        && (!needsFirstTimeOnboarding || isTenMinuteHeroEntry || isDailyMutqinEntry || isMurajaahReviewEntry)
+        && (!preferWelcomeBackOnLogin || isMurajaahReviewEntry || isTenMinuteHeroEntry || isDailyMutqinEntry)
       ) {
         if (isMurajaahReviewEntry) {
           this._suppressEmptyWorkspaceTools = true
           this.showTools = false
         }
-        await this.consumeDashboardEntryIntent(dashboardEntryIntent)
+        // First-time ten_minute / intent=first is already presented as Step 2 above.
+        // Daily Mutqin waits until first-run is done (or learner already has practice).
+        if (needsFirstTimeOnboarding && isTenMinuteHeroEntry) {
+          this.clearDashboardEntryIntentFromUrl()
+          this.markDashboardEntryIntentConsumed()
+        } else if (needsFirstTimeOnboarding && isDailyMutqinEntry) {
+          this.clearDashboardEntryIntentFromUrl()
+          this.markDashboardEntryIntentConsumed()
+        } else {
+          await this.consumeDashboardEntryIntent(dashboardEntryIntent)
+        }
       } else if (dashboardEntryIntent && preferWelcomeBackOnLogin) {
         // Drop stashed/URL resume intent so it cannot steal the gate later.
         this.clearDashboardEntryIntentFromUrl()
@@ -11713,7 +12228,13 @@ export default {
         this.initGuestDemoWorkspace()
       }
       const bootstrapChapterId = Number(this.chapterId || 0)
-      if (bootstrapChapterId > 0 && !this.hasVerses) {
+      // First-time goal step must stay empty (no verse preload hiding the chooser).
+      // Passage step / open setup may load verses so Start is ready.
+      if (
+        bootstrapChapterId > 0
+        && !this.hasVerses
+        && !(this.isFirstRunFlowActive && this.firstRunStep === 'goal' && !this.showTools)
+      ) {
         void this.loadVerses(this.currentMode)
       }
       // No active session means setup is the page's primary task. Open the
@@ -11721,7 +12242,8 @@ export default {
       this.ensureEmptyWorkspaceEntrySurface()
       this.applyMemorisationPageLoadDefaults()
       this.resetPageScrollAfterReload({ immediate: true, delayed: true })
-      if (this._pendingTenMinuteHeroStart) {
+      // First-time learners never auto-start from intent=first / ten_minute.
+      if (this._pendingTenMinuteHeroStart && !this.isFirstRunFlowActive) {
         this._pendingTenMinuteHeroStart = false
         this.$nextTick(async () => {
           if (!await this.commitManualSessionSelection()) return
@@ -11731,6 +12253,18 @@ export default {
             this.skipCountdownToPlay()
           }
         })
+      } else {
+        this._pendingTenMinuteHeroStart = false
+      }
+      if (this._pendingDailyMutqinStart && !this.isFirstRunFlowActive && this.dailyMutqinActive) {
+        // Returning Daily Mutqin deep-link: start once hydration finishes.
+        this._pendingDailyMutqinStart = false
+        this.$nextTick(async () => {
+          await this.beginDailyMutqinSittingFromPending()
+        })
+      } else if (!(this.dailyMutqinActive && this._pendingDailyMutqinStart)) {
+        // Keep first-run / guided Listen pending until “Start listening”.
+        this._pendingDailyMutqinStart = false
       }
     }
 
@@ -12706,8 +13240,62 @@ export default {
     setSessionStartGoal(goal) {
       const next = normaliseSessionGoal(goal)
       if (this.sessionStartGoal === next) return
+      const previous = normaliseSessionGoal(this.sessionStartGoal)
+      if (!this.isSessionLive) {
+        if (previous === 'revise' && next !== 'revise') {
+          this.restoreRevisionSessionProfile()
+        }
+        if (next === 'revise') {
+          this.applyRevisionSessionProfile()
+          this.sessionMoreOptionsOpen = false
+        }
+      }
       this.sessionStartGoal = next
       this.persistUiState()
+    },
+    captureRevisionProfileSnapshot() {
+      if (this.revisionProfileSnapshot) return
+      this.revisionProfileSnapshot = {
+        speed: this.speed,
+        repetitionsPerStep: this.repetitionsPerStep,
+        selectedLoopCount: this.selectedLoopCount,
+        talqinModeEnabled: !!this.talqinModeEnabled,
+        focusModeEnabled: !!this.focusModeEnabled,
+        blurModeEnabled: !!this.blurModeEnabled,
+        chainingEnabled: !!this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        anchorModeEnabled: !!this.anchorModeEnabled,
+      }
+    },
+    applyRevisionSessionProfile() {
+      this.captureRevisionProfileSnapshot()
+      const next = revisionSessionAdjustments({ speed: this.speed })
+      if (Number(this.speed) !== Number(next.speed)) {
+        this.setPlaybackSpeed(next.speed, { silent: true })
+      }
+      this.repetitionsPerStep = next.repetitionsPerStep
+      this.selectedLoopCount = next.selectedLoopCount
+      this.talqinModeEnabled = false
+      this.focusModeEnabled = false
+      this.blurModeEnabled = false
+      this.chainingEnabled = false
+      this.anchorModeEnabled = false
+    },
+    restoreRevisionSessionProfile() {
+      const snap = this.revisionProfileSnapshot
+      this.revisionProfileSnapshot = null
+      if (!snap) return
+      this.repetitionsPerStep = snap.repetitionsPerStep
+      this.selectedLoopCount = snap.selectedLoopCount
+      this.talqinModeEnabled = snap.talqinModeEnabled
+      this.focusModeEnabled = snap.focusModeEnabled
+      this.blurModeEnabled = snap.blurModeEnabled
+      this.chainingEnabled = snap.chainingEnabled
+      this.chainingMethod = snap.chainingMethod
+      this.anchorModeEnabled = snap.anchorModeEnabled
+      if (Number(this.speed) !== Number(snap.speed)) {
+        this.setPlaybackSpeed(snap.speed, { silent: true })
+      }
     },
     closeWorkspaceReciteAnalysis() {
       const shouldReturnToDashboard = !!this.postSessionDashboardAfterRecite
@@ -12937,6 +13525,7 @@ export default {
         .catch(() => {})
       void this.ensureQuranSearchIndex?.().catch(() => {})
       this.askMutqinOpen = true
+      this.noteFeature('mr_mutqin_used')
     },
     closeAskMutqin() {
       this.askMutqinOpen = false
@@ -13966,6 +14555,7 @@ export default {
         const journey = String(params.get('journey') || '').trim().toLowerCase()
         const view = String(params.get('view') || params.get('layout') || '').trim()
         const weak = String(params.get('weak') || '').trim()
+        const priorAssessment = Number(params.get('prior_assessment') || 0)
         const goal = normaliseSessionGoal(params.get('goal') || '')
         const hasGoal = params.has('goal')
         const reciterParam = String(params.get('reciter') || '').trim()
@@ -14004,6 +14594,7 @@ export default {
             to: to > 0 ? to : 0,
             view: view || null,
             weak: weak || null,
+            priorAssessment: priorAssessment > 0 ? priorAssessment : null,
             goal: hasGoal ? goal : null,
             reciter: voiceReciter,
             speed: voiceSpeed,
@@ -14021,7 +14612,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14039,6 +14630,9 @@ export default {
       this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
         ? (this.learnerDashboardUrl || '/dashboard')
         : null
+      if (entry.returnTo === 'dashboard') {
+        this.rememberProgressReturn(this.dashboardEntryReturnHref)
+      }
       const dashboardContext = preserveDashboardMadaniContext(entry)
 
       // Persist before clearing the URL so refresh keeps the intended destination.
@@ -14065,8 +14659,26 @@ export default {
       if (entry.goal) this.setSessionStartGoal(entry.goal)
 
       try {
+        if (entry.journey === 'daily' || entry.journey === 'daily_mutqin') {
+          await this.activateDailyMutqinFromEntry(entry)
+          this.finishDashboardMadaniEntry(entry)
+          this.markDashboardEntryIntentConsumed()
+          return true
+        }
+
         if (entry.journey === 'ten_minute' || entry.journey === '10_minute') {
           this.prepareManualSessionSelection()
+          if (this.requiresFirstTimeOnboarding) {
+            // First-time: the hero starts Al-Fatiha. Do not open Setup.
+            this.showTools = false
+            this.clearWorkspaceForFirstRunGoalStep()
+            this.persistFirstRunStep('goal')
+            this.trackFirstRunSurfacePresented('goal')
+            this.finishDashboardMadaniEntry(entry)
+            this._pendingTenMinuteHeroStart = false
+            this.markDashboardEntryIntentConsumed()
+            return true
+          }
           this.applyTenMinuteHeroSessionPreset({ openSetup: false, silent: true })
           if (this.chapterId) {
             await this.loadChapter(this.currentMode)
@@ -14082,6 +14694,14 @@ export default {
         }
 
         if (entry.aiCheck && entry.surah > 0 && entry.from > 0) {
+          if (entry.priorAssessment) {
+            this.reviewFollowUp = {
+              assessmentId: entry.priorAssessment,
+              surah: entry.surah,
+              ayah: entry.from,
+              to: entry.to || entry.from,
+            }
+          }
           await this.openDashboardAiMemoryCheck({
             surah: entry.surah,
             ayah: entry.from,
@@ -14104,13 +14724,41 @@ export default {
           this._suppressEmptyWorkspaceTools = true
           this.showTools = false
           const rangeEnd = Math.max(entry.from, entry.to || entry.from)
+          const voiceSettings = {}
+          if (entry.reciter) voiceSettings.reciter = entry.reciter
+          if (entry.speed != null) voiceSettings.playback_speed = entry.speed
+          if (entry.repetitions != null) voiceSettings.repetitions = entry.repetitions
+          const stashed = readPreviousAiCheck(typeof sessionStorage === 'undefined' ? null : sessionStorage)
+          if (stashed && Number(stashed.surah) === entry.surah && Number(stashed.ayah) === entry.from) {
+            this.practiceFocusWeakWords = normaliseWeakWordRecords(stashed.words || [], {
+              surahId: entry.surah,
+              ayahNumber: entry.from,
+            })
+            this.previousAiCheckNotice = this.t('dashboard.revisit_previous_check')
+          } else if (entry.weak || entry.priorAssessment) {
+            this.previousAiCheckNotice = this.t('dashboard.revisit_previous_check')
+          }
+          if (entry.priorAssessment) {
+            this.reviewFollowUp = {
+              assessmentId: entry.priorAssessment,
+              surah: entry.surah,
+              ayah: entry.from,
+              to: rangeEnd,
+            }
+          }
           await this.startSessionFromRecommendationPayload({
             chapterId: entry.surah,
             rangeStart: entry.from,
             rangeEnd,
             sessionMode: 'revision',
+            settings: Object.keys(voiceSettings).length ? voiceSettings : null,
             autoStart: true,
           })
+          if (dashboardContext.readingViewMode) {
+            this.readingViewMode = dashboardContext.readingViewMode
+            this.applyLayoutFontSize?.(dashboardContext.readingViewMode)
+            if (dashboardContext.readingViewMode === 'madani_mushaf') void this.bootstrapQpcMadaniViewer()
+          }
           this.showTools = false
           this.finishDashboardMadaniEntry(entry)
           this.markDashboardEntryIntentConsumed()
@@ -14250,9 +14898,7 @@ export default {
       if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
-      // Paused/unfinished work must NOT block Welcome Back — that modal is the
-      // Continue vs new-session gate for exactly that state. Only skip when a
-      // live session is already running in this tab.
+      // A live session already answers what to do next. Do not cover it.
       if (
         this.showPostLoginOnboarding
         || this.isOnboardingExperienceActive
@@ -14266,7 +14912,8 @@ export default {
         || this.isSessionLive
       ) return
       this.markWelcomeBackModalShownForCurrentLogin()
-      this.openWelcomeBackModal()
+      // Resume, continue, and revise already live on the page. Covering them
+      // with a login choice modal adds a step before the next action.
     },
 
     shouldDeferRegistrationFirstRunPrompts() {
@@ -17648,6 +18295,11 @@ export default {
                 teacher_assignment_recipient_id: Number(this.teacherAssignmentRecipientId || 0) || undefined,
                 metadata: {
                   is_main_journey: !!this.pendingMainJourney,
+                  daily_mutqin: !!this.dailyMutqinActive,
+                  daily_mutqin_step: this.dailyMutqinActive ? this.dailyMutqinStepId : undefined,
+                  suggested_duration_seconds: this.dailyMutqinActive
+                    ? Number(this.dailyMutqinSuggestedSeconds || DAILY_MUTQIN_SUGGESTED_SECONDS)
+                    : undefined,
                   config: {
                     chapterId: Number(this.chapterId || this.currentChapter?.id || 0) || null,
                     rangeStart: Number(this.rangeStart || 0) || null,
@@ -17774,7 +18426,12 @@ export default {
           ? 'revise'
           : normaliseSessionGoal(options.sessionGoal || this.sessionStartGoal)
         if (goal === 'test') {
-          await this.closeToolsPanel()
+          this._firstRunPracticeStarting = true
+          try {
+            await this.closeToolsPanel()
+          } finally {
+            this._firstRunPracticeStarting = false
+          }
           this.clearToolsStartInFlight()
           if (!this.aiTestModalsEnabled) {
             this.showBanner(
@@ -17784,13 +18441,24 @@ export default {
             )
             return
           }
+          this.completeFirstRunOnPracticeStart()
           await this.openAiMemorisationDetection({ scope: 'session', fromSessionGoal: true })
           return
         }
-        await this.closeToolsPanel()
+        this._firstRunPracticeStarting = true
+        try {
+          await this.closeToolsPanel()
+        } finally {
+          this._firstRunPracticeStarting = false
+        }
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
         await this.$nextTick()
         if (goal === 'revise') {
+          if (!this.isSessionLive) {
+            this.sessionStartGoal = 'revise'
+            this.applyRevisionSessionProfile()
+            this.persistUiState()
+          }
           this.markCurrentSessionAsRecommended({ sessionMode: 'revision' })
         }
         this.primeSessionAudioForCountdown()
@@ -17798,6 +18466,8 @@ export default {
         if (!started) {
           this.openToolsForSetupFailure()
           this.clearToolsStartInFlight()
+        } else {
+          this.completeFirstRunOnPracticeStart()
         }
       } catch (error) {
         console.error(error)
@@ -18313,6 +18983,7 @@ export default {
           bannerText: this.t('toasts.sessionLoaded', { name: session.name }),
           forcePlayback: !!this.workspaceIsMobileViewport,
         })
+        this.noteFeature('saved_session_resumed', {}, `saved:${sessionId}`)
         this.showTools = false
         this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.SAVED_SESSION)
 
@@ -18923,6 +19594,7 @@ export default {
       this.startWorkspaceTour(0)
     },
     async startWorkspaceTour(stepIndex = 0) {
+      const starting = !this.workspaceTourActive && Number(stepIndex || 0) === 0
       this.workspaceTourReturnFocusEl = captureReturnFocus()
       this.workspaceTourActive = true
       this.workspaceTourStepIndex = Math.max(0, Number(stepIndex) || 0)
@@ -18936,6 +19608,9 @@ export default {
       await this.applyWorkspaceTourPracticePreview()
       await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
       this.bindWorkspaceTourListeners()
+      if (starting) {
+        trackProductEvent('onboarding_started', this.analyticsContext(), { onceKey: 'onboarding-start' })
+      }
       this.$nextTick(() => {
         const tour = document.querySelector('[data-workspace-tour]')
         focusInitialElement(tour, '.workspace-tour__title')
@@ -19860,6 +20535,8 @@ export default {
         this.deleteWorkspaceStateValue('onboardingAutoPresented')
         this.deleteWorkspaceStateValue('onboardingDismissed')
         this.deleteWorkspaceStateValue('onboardingStepIndex')
+        this.deleteWorkspaceStateValue('firstRunStep')
+        this.firstRunStepId = 'goal'
         // Drop legacy unscoped flag so it cannot leak across accounts.
         if (workspaceKey !== 'onboardingCompleted') {
           this.deleteWorkspaceStateValue('onboardingCompleted')
@@ -19885,6 +20562,16 @@ export default {
         || 'resume'
       )
       trackProductEvent('session_resumed', this.analyticsContext(), { onceKey: `resume:${key}` })
+    },
+    noteFeature(eventName, extra = {}, onceKey = '') {
+      try {
+        capturePostHogProductEvent(eventName, {
+          ...(typeof this.analyticsContext === 'function' ? this.analyticsContext() : {}),
+          ...extra,
+        }, { onceKey })
+      } catch {
+        /* analytics never blocks practice */
+      }
     },
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
@@ -20118,6 +20805,23 @@ export default {
         seed: `${this.auth?.id || 'guest'}:${this.postSessionSnapshot.chapterName || ''}:${this.sessionCompletedAt || Date.now()}`,
         t: this.t.bind(this)
       })
+      {
+        const completedCount = Math.max(
+          Number(this.mutqinState?.stats?.sessions_completed || 0),
+          Number(this.analytics?.sessionsCompleted || 0),
+        )
+        this.postSessionIsFirstCompletion = !this.onboardingSampleSessionActive
+          && completedCount <= 1
+      }
+      if (this.dailyMutqinActive || this.postSessionIsFirstCompletion) {
+        if (this.dailyMutqinActive) {
+          this.trackDailyMutqinCompleted()
+          this.dailyMutqinCollapsed = true
+        }
+        this.$nextTick?.(() => {
+          try { this.loadPostSessionRecommendation?.() } catch (_) { /* ignore */ }
+        })
+      }
       this.postSessionStatsExpanded = false
       const preservedRecommendation = this.postSessionRecommendation
       const preservedStatus = this.postSessionRecommendationStatus
@@ -20735,6 +21439,38 @@ export default {
       this.completedSessionWasRecommended = false
       // An unfinished session is still resumable if setup is cancelled.
       if (this.manualSessionDraftOrigin.backendUnfinished || this.isSessionLive || this.sessionPaused) return
+
+      const draftConfig = this.manualSessionDraftOrigin?.config || {}
+      const preserveGuidedRange = (
+        (this.isFirstRunFlowActive && this.firstRunStep === 'passage')
+        || this.dailyMutqinActive
+      )
+      const preserveChapterId = Number(this.chapterId || draftConfig.chapterId || 0)
+      if (preserveGuidedRange && preserveChapterId > 0) {
+        const rangeStart = Math.max(1, Number(this.rangeStart || draftConfig.rangeStart || 1))
+        const rangeEnd = Math.max(
+          rangeStart,
+          Number(this.rangeEnd || draftConfig.rangeEnd || FIRST_ONBOARDING_RANGE_END),
+        )
+        this.chapterId = preserveChapterId
+        this.rangeStart = rangeStart
+        this.rangeEnd = rangeEnd
+        this.sessionRangePreset = 'custom'
+        this.currentChapter = this.chapters.find(
+          (chapter) => Number(chapter.id) === preserveChapterId,
+        ) || this.currentChapter
+        if (
+          preserveChapterId === 1
+          && rangeStart === 1
+          && rangeEnd === FIRST_ONBOARDING_RANGE_END
+        ) {
+          try { this.applyAyahWindow?.('first_5', { adjust: false }) } catch (_) { /* ignore */ }
+        }
+        this.persistModeState(this.currentMode)
+        this.persistUiState()
+        return
+      }
+
       this.chapterId = 0
       this.rangeStart = 1
       this.rangeEnd = 1
@@ -23973,6 +24709,7 @@ export default {
       // Reuse the backend session created by acceptAndStart — never open a duplicate.
       if (sessionPayload?.id) {
         this.applyBackendStartResult({ session: sessionPayload, unfinished: true })
+        this.noteFeature('revision_recommendation_accepted', {}, `rec:${sessionPayload.id}`)
       }
       const recommendationForPlan = {
         settings: settings && typeof settings === 'object' ? settings : null,
@@ -27292,6 +28029,7 @@ export default {
       if (!(chapterId > 0 && ayahNumber > 0) || !this.aiTestModalsEnabled) return false
 
       this.dashboardAiCheckReturnTo = returnTo === 'dashboard' ? '/dashboard' : null
+      if (returnTo === 'dashboard') this.rememberProgressReturn(this.dashboardAiCheckReturnTo)
       this.teacherAssignmentRecipientId = Number(assignmentRecipientId || 0) || null
       let rangeSurah = chapterId
       let rangeFrom = ayahNumber
@@ -29370,7 +30108,9 @@ export default {
         speechmatics_model: provider === 'speechmatics' ? 'enhanced' : undefined,
         alignment_lifecycle: 'final',
         ...amdForeignKeys,
-        previous_assessment_id: this.amdPreviousAssessmentId || undefined,
+        previous_assessment_id: this.reviewFollowUp
+          ? (this.compatibleFollowUpAssessmentId(taskRange) || undefined)
+          : (this.amdPreviousAssessmentId || undefined),
         tajweed_practice_check: tajweedPracticeCheck || undefined,
         idempotency_key: idempotencyKey,
       }
@@ -33327,6 +34067,7 @@ export default {
     },
     closePostSessionRecommendationModal() {
       if (this.showSessionFeedbackPrompt) this.noteSessionFeedbackPromptSeen()
+      if (this.dailyMutqinActive) this.clearDailyMutqinGuide()
       if (!this.showRecommendationPlanFeature && !this.onboardingSampleSessionActive) {
         void this.returnToMemorisationWorkspace()
         return
@@ -36730,6 +37471,11 @@ export default {
 
     async closeToolsPanel() {
       if (!this.showTools) return
+      const abandoningFirstRunPassage = this.isFirstRunFlowActive
+        && this.firstRunStep === 'passage'
+        && !this._firstRunPracticeStarting
+        && !this.hasSessionStarted
+        && !this.isSessionLive
       if (this.manualSessionDraftOrigin) {
         this.restoreManualSessionSelection()
       } else {
@@ -36748,6 +37494,11 @@ export default {
         this.postSessionChoiceOffcanvasOpen = false
         this.postSessionChoiceAction = null
         this.startingFreshSessionSelection = false
+      }
+      if (abandoningFirstRunPassage) {
+        this.trackFirstRunAbandoned('passage', 'abandoned')
+        this.persistFirstRunStep('goal')
+        this.clearWorkspaceForFirstRunGoalStep()
       }
       this.persistUiState()
       this.restoreToolsFocus()
@@ -37337,6 +38088,7 @@ export default {
     },
     openChangeSession() {
       // Reopen the existing Setup sheet on the current surah, range, and mode.
+      this.quietBeginnerChrome = false
       this._suppressEmptyWorkspaceTools = false
       this.openToolsPanel({ tab: 'tools' })
     },
@@ -37354,10 +38106,618 @@ export default {
       // Auto-opening the panel here left a blank page after the user closed it.
     },
     openSetupForGoal(goalId) {
-      this.setSessionStartGoal(goalId)
+      const goal = normaliseSessionGoal(goalId)
+      this.setSessionStartGoal(goal)
+      this.firstRunMoreWaysOpen = false
+      this.returningMoreWaysOpen = false
+      // Each intention opens the existing setup. Test starts AI assessment
+      // from that setup's start action, without a listen-and-repeat sitting.
       this.openNewSessionSetup()
     },
+    /**
+     * What the first-run primary button promises, and what Start applies.
+     * A cleared workspace keeps Al-Fatihah 1–5 and the 2× Daily Mutqin default.
+     * A chosen reciter or repetition count is kept.
+     */
+    resolveFirstRunPracticeConfig() {
+      const guided = buildDailyMutqinSessionConfig()
+      const chapterId = Number(this.chapterId) > 0 ? Number(this.chapterId) : guided.chapterId
+      const rangeStart = Math.max(1, Number(this.rangeStart) || guided.rangeStart)
+      const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd) || guided.rangeEnd)
+      const reciterId = this.reciterId || guided.reciterId
+      const chosen = Number(this.repetitionsPerStep)
+      const untouchedDefault = chapterId === guided.chapterId
+        && rangeStart === guided.rangeStart
+        && rangeEnd === guided.rangeEnd
+        && (!Number.isFinite(chosen) || chosen === DEFAULT_SESSION_REPETITIONS)
+      const repetitionsPerStep = untouchedDefault
+        ? guided.repetitionsPerStep
+        : Math.max(1, chosen || guided.repetitionsPerStep)
+      return {
+        chapterId,
+        rangeStart,
+        rangeEnd,
+        reciterId,
+        repetitionsPerStep,
+        selectedLoopCount: repetitionsPerStep,
+      }
+    },
+    async startFirstRunHeroPractice() {
+      if (!this.isFirstRunFlowActive) return false
+      this.firstRunMoreWaysOpen = false
+      return this.startFirstRunGuidedPractice('memorise')
+    },
+    async startFirstRunGuidedPractice(goalId = 'memorise') {
+      if (!this.isFirstRunFlowActive) return false
+      const goal = normaliseSessionGoal(goalId || this.sessionStartGoal || 'memorise')
+      this.setSessionStartGoal(goal)
+      this.trackFirstRunStepCompleted('goal', {
+        session_type: goal === 'revise' ? 'revision' : 'new',
+      })
+      this.persistFirstRunStep('passage')
+      this.trackFirstRunStepViewed('passage')
+
+      this.activateDailyMutqinGuideForSitting()
+      const practice = this.resolveFirstRunPracticeConfig()
+      this.applyDailyMutqinSessionConfig({
+        openSetup: false,
+        silent: true,
+        overrides: practice,
+      })
+      this.showTools = false
+      this._suppressEmptyWorkspaceTools = true
+      this._pendingDailyMutqinOpenAi = false
+
+      if (this.chapterId) {
+        await this.loadChapter?.(this.currentMode)
+      }
+      await this.$nextTick?.()
+      this.captureAppliedPracticeSetup?.()
+      this.trackDailyMutqinStarted()
+      const started = await this.beginDailyMutqinSittingFromPending()
+      if (started) {
+        this.quietBeginnerChrome = true
+        this.setDailyMutqinStep('repeat')
+      } else {
+        this.quietBeginnerChrome = false
+        this.setDailyMutqinStep('listen')
+      }
+      return true
+    },
+    activateDailyMutqinGuideForSitting() {
+      this.dailyMutqinActive = true
+      this.dailyMutqinCollapsed = false
+      this.dailyMutqinStep = 'listen'
+      this.dailyMutqinSuggestedSeconds = DAILY_MUTQIN_SUGGESTED_SECONDS
+    },
+    startDailyMutqinFromEmptyState() {
+      const kind = this.nextPracticePreview?.kind || 'start'
+      if (kind === 'revise') {
+        const review = this.journeyReview
+        const row = review?.surah_name ? review : this.journeyContinue
+        const surah = Number(row?.surah_number || 0)
+        const from = Number(row?.ayah_start || row?.ayah_number || 0)
+        const to = Number(row?.ayah_end || from || 0)
+        if (surah > 0 && from > 0) {
+          void this.activateDailyMutqinFromEntry({
+            surah,
+            from,
+            to: to || from,
+            goal: 'revise',
+            review: true,
+          })
+          return
+        }
+      }
+      if (kind === 'continue') {
+        const row = this.journeyContinue
+        const surah = Number(row?.surah_number || 0)
+        const from = Number(row?.ayah_start || 0)
+        const to = Number(row?.ayah_end || from || 0)
+        if (surah > 0 && from > 0) {
+          void this.activateDailyMutqinFromEntry({
+            surah,
+            from,
+            to: to || from,
+            goal: 'memorise',
+          })
+          return
+        }
+      }
+      void this.activateDailyMutqinFromEntry({ journey: 'daily' })
+    },
+    applyDailyMutqinSessionConfig(options = {}) {
+      const { openSetup = false, silent = true, overrides = {} } = options
+      this.sessionRangePreset = 'custom'
+      this.applyDefaultWorkspaceSessionConfig({
+        openSetup,
+        silent,
+        config: buildDailyMutqinSessionConfig(overrides),
+      })
+    },
+    async activateDailyMutqinFromEntry(entry = {}) {
+      this.prepareManualSessionSelection()
+      this.dailyMutqinActive = true
+      this.dailyMutqinCollapsed = false
+      this.dailyMutqinStep = 'listen'
+      this.dailyMutqinSuggestedSeconds = DAILY_MUTQIN_SUGGESTED_SECONDS
+      this.showTools = false
+      this._suppressEmptyWorkspaceTools = true
+
+      if (entry.resume || entry.sessionId) {
+        const preferredSessionId = Number(entry.sessionId || 0) || null
+        if (preferredSessionId && this.learningBackendEnabled()) {
+          try {
+            await this.validateSessionLifecycleAgainstBackend({ preferredSessionId })
+          } catch (_) { /* local resume remains */ }
+        }
+        const resumed = await this.resumeUnfinishedSessionFromDailyMutqin?.(preferredSessionId)
+        if (resumed) {
+          this.setDailyMutqinStep('listen')
+          this.trackDailyMutqinStarted()
+          return true
+        }
+      }
+
+      if (entry.recommendationId && this.learningBackendEnabled()) {
+        try {
+          const result = await learningApi.startRecommendedSession(entry.recommendationId)
+          const config = result?.session?.metadata?.config || {}
+          const chapterId = Number(config.chapterId || entry.surah || 0)
+          const rangeStart = Number(config.rangeStart || entry.from || 0)
+          const rangeEnd = Number(config.rangeEnd || entry.to || rangeStart || 0)
+          if (chapterId > 0 && rangeStart > 0 && rangeEnd >= rangeStart) {
+            const mode = String(result?.recommendation?.session_mode || '').toLowerCase()
+            const isRevision = mode === 'revision' || mode.includes('revis')
+            await this.startSessionFromRecommendationPayload({
+              chapterId,
+              rangeStart,
+              rangeEnd,
+              sessionMode: isRevision ? 'revision' : 'new_learning',
+              techniqueId: config.technique || result?.recommendation?.settings?.technique || null,
+              settings: {
+                ...(result?.recommendation?.settings || {}),
+                talqinModeEnabled: true,
+                blurModeEnabled: false,
+              },
+              sessionPayload: result?.session || null,
+              autoStart: false,
+            })
+            this.setSessionStartGoal(isRevision ? 'revise' : 'memorise')
+            this.talqinModeEnabled = true
+            this.blurModeEnabled = false
+            this._pendingDailyMutqinStart = true
+            this.setDailyMutqinStep('listen')
+            this.trackDailyMutqinStarted()
+            return true
+          }
+        } catch (error) {
+          console.warn('Daily Mutqin recommendation start failed', error)
+        }
+      }
+
+      if (Number(entry.surah || 0) > 0 && Number(entry.from || 0) > 0) {
+        const rangeEnd = Math.max(Number(entry.from), Number(entry.to || entry.from))
+        const goal = normaliseSessionGoal(entry.goal || (entry.review ? 'revise' : 'memorise'))
+        await this.startSessionFromRecommendationPayload({
+          chapterId: Number(entry.surah),
+          rangeStart: Number(entry.from),
+          rangeEnd,
+          sessionMode: goal === 'revise' ? 'revision' : 'new_learning',
+          settings: {
+            talqinModeEnabled: true,
+            blurModeEnabled: false,
+            repetitions: 2,
+          },
+          autoStart: false,
+        })
+        this.setSessionStartGoal(goal)
+        this.talqinModeEnabled = true
+        this.blurModeEnabled = false
+        this._pendingDailyMutqinStart = true
+        this.setDailyMutqinStep('listen')
+        this.trackDailyMutqinStarted()
+        return true
+      }
+
+      const review = this.journeyReview
+      const reviewSurah = Number(review?.surah_number || 0)
+      const reviewFrom = Number(review?.ayah_start || review?.from || 0)
+      const reviewTo = Number(review?.ayah_end || review?.to || reviewFrom || 0)
+      if (reviewSurah > 0 && reviewFrom > 0) {
+        return this.activateDailyMutqinFromEntry({
+          ...entry,
+          surah: reviewSurah,
+          from: reviewFrom,
+          to: reviewTo || reviewFrom,
+          goal: 'revise',
+          review: true,
+        })
+      }
+
+      const cont = this.journeyContinue
+      const contSurah = Number(cont?.surah_number || 0)
+      const contFrom = Number(cont?.ayah_start || cont?.from || 0)
+      const contTo = Number(cont?.ayah_end || cont?.to || contFrom || 0)
+      if (contSurah > 0 && contFrom > 0) {
+        return this.activateDailyMutqinFromEntry({
+          ...entry,
+          surah: contSurah,
+          from: contFrom,
+          to: contTo || contFrom,
+          goal: 'memorise',
+        })
+      }
+
+      if (this.learningBackendEnabled()) {
+        try {
+          const next = await learningApi.getNextRecommendation({})
+          const recommendation = next?.recommendation || next
+          const id = Number(recommendation?.id || 0)
+          const chapterId = Number(
+            recommendation?.surah_number
+            || recommendation?.surah?.id
+            || recommendation?.payload?.surah_number
+            || recommendation?.config?.chapterId
+            || recommendation?.ayah_range?.surah
+            || 0,
+          )
+          const rangeStart = Number(
+            recommendation?.ayah_start
+            || recommendation?.ayah_range?.from
+            || recommendation?.payload?.ayah_start
+            || recommendation?.config?.rangeStart
+            || 0,
+          )
+          const rangeEnd = Number(
+            recommendation?.ayah_end
+            || recommendation?.ayah_range?.to
+            || recommendation?.payload?.ayah_end
+            || recommendation?.config?.rangeEnd
+            || rangeStart
+            || 0,
+          )
+          const mode = String(recommendation?.session_mode || recommendation?.type || '').toLowerCase()
+          const isRevision = mode === 'revision'
+            || mode.includes('revis')
+            || mode.includes('repeat')
+          if (id > 0) {
+            return this.activateDailyMutqinFromEntry({
+              ...entry,
+              recommendationId: id,
+              surah: chapterId,
+              from: rangeStart,
+              to: rangeEnd,
+              goal: isRevision ? 'revise' : 'memorise',
+              review: isRevision || undefined,
+            })
+          }
+          if (chapterId > 0 && rangeStart > 0) {
+            return this.activateDailyMutqinFromEntry({
+              ...entry,
+              surah: chapterId,
+              from: rangeStart,
+              to: rangeEnd,
+              goal: isRevision ? 'revise' : 'memorise',
+              review: isRevision || undefined,
+            })
+          }
+        } catch (error) {
+          console.warn('Daily Mutqin next recommendation failed', error)
+        }
+      }
+
+      this.setSessionStartGoal('memorise')
+      this.applyDailyMutqinSessionConfig({ openSetup: false, silent: true })
+      if (this.chapterId) {
+        await this.loadChapter?.(this.currentMode)
+      }
+      await this.$nextTick?.()
+      this.captureAppliedPracticeSetup?.()
+      this._pendingDailyMutqinStart = true
+      this.setDailyMutqinStep('listen')
+      this.trackDailyMutqinStarted()
+      return true
+    },
+    async resumeUnfinishedSessionFromDailyMutqin(preferredSessionId = null) {
+      try {
+        if (this.hasValidatedResumableSession || this.backendUnfinishedSession) {
+          await this.welcomeBackContinueSession({ preferredSessionId: preferredSessionId || undefined })
+          return true
+        }
+      } catch (error) {
+        console.warn('Daily Mutqin resume failed', error)
+      }
+      return false
+    },
+    async beginDailyMutqinSittingFromPending() {
+      if (!this.dailyMutqinActive) return false
+      if (!await this.commitManualSessionSelection?.()) return false
+      this.prepareRangeRestart?.()
+      this.transitionSessionLifecycle?.(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+      this.talqinModeEnabled = true
+      this.blurModeEnabled = false
+      const goal = normaliseSessionGoal(this.sessionStartGoal)
+      if (goal === 'revise' && !this.isSessionLive) {
+        this.applyRevisionSessionProfile?.()
+      }
+      this.persistUiState?.()
+      const started = !!this.startSessionWithCountdown?.({ skipPrime: true })
+      if (started) {
+        this.skipCountdownToPlay?.()
+        this._pendingDailyMutqinStart = false
+        this.completeFirstRunOnPracticeStart?.()
+        return true
+      }
+      return false
+    },
+    setDailyMutqinStep(step) {
+      const next = normaliseDailyMutqinStep(step)
+      this.dailyMutqinStep = next
+      this.trackDailyMutqinStepViewed(next)
+      this.persistDailyMutqinMetadata()
+    },
+    persistDailyMutqinMetadata() {
+      if (!this.dailyMutqinActive) return
+      try {
+        const meta = {
+          ...(this.centralSession?.metadata || this.mutqinState?.sessionState?.metadata || {}),
+          daily_mutqin: true,
+          daily_mutqin_step: this.dailyMutqinStepId,
+          suggested_duration_seconds: Number(this.dailyMutqinSuggestedSeconds || DAILY_MUTQIN_SUGGESTED_SECONDS),
+        }
+        if (this.centralSession && typeof this.centralSession === 'object') {
+          this.centralSession.metadata = {
+            ...(this.centralSession.metadata || {}),
+            ...meta,
+          }
+        }
+        this.persistCentralSessionState?.()
+      } catch (_) { /* ignore */ }
+    },
+    trackDailyMutqinStarted() {
+      trackProductEvent('daily_mutqin_started', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: 'daily-mutqin',
+      }, { onceKey: 'daily-mutqin-start' })
+    },
+    trackDailyMutqinStepViewed(step) {
+      const feature = normaliseDailyMutqinStep(step)
+      trackProductEvent('daily_mutqin_step_viewed', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: feature,
+      }, { onceKey: `daily-mutqin-step:${feature}` })
+    },
+    trackDailyMutqinCompleted() {
+      trackProductEvent('daily_mutqin_completed', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: 'daily-mutqin',
+      }, { onceKey: `daily-mutqin-complete:${this.auth?.id || 'guest'}:${this.sessionCompletedAt || Date.now()}` })
+    },
+    async advanceDailyMutqinPrimary() {
+      const step = this.dailyMutqinStepId
+      if (step === 'listen') {
+        if (!this.hasSessionStarted && !this.isSessionLive) {
+          const started = await this.beginDailyMutqinSittingFromPending()
+          if (!started && !this.hasSessionStarted && !this.isSessionLive) return
+        }
+        this.setDailyMutqinStep('repeat')
+        return
+      }
+      if (step === 'repeat') {
+        this.setDailyMutqinStep('hide')
+        return
+      }
+      if (step === 'hide') {
+        if (!this.blurModeEnabled) {
+          this.toggleBlurModeRadio?.()
+        } else {
+          this.blurModeEnabled = true
+          this.persistUiState?.()
+        }
+        this.setDailyMutqinStep('finish')
+        return
+      }
+      if (step === 'recite' || step === 'finish') {
+        await this.finishDailyMutqinSitting()
+      }
+    },
+    skipDailyMutqinStep() {
+      const step = this.dailyMutqinStepId
+      if (step === 'recite') {
+        this.setDailyMutqinStep('finish')
+        return
+      }
+      if (step === 'finish') {
+        void this.finishDailyMutqinSitting()
+        return
+      }
+      this.setDailyMutqinStep(nextDailyMutqinStep(step))
+    },
+    openDailyMutqinRangeSetup() {
+      this.openNewSessionSetup()
+    },
+    collapseDailyMutqinGuide() {
+      this.dailyMutqinCollapsed = true
+    },
+    expandDailyMutqinGuide() {
+      this.dailyMutqinCollapsed = false
+    },
+    async finishDailyMutqinSitting() {
+      this.setDailyMutqinStep('finish')
+      if (typeof this.confirmSessionExit === 'function') {
+        await this.confirmSessionExit({ showSummary: false, openCompletion: true })
+      }
+    },
+    clearDailyMutqinGuide() {
+      this.dailyMutqinActive = false
+      this.dailyMutqinCollapsed = false
+      this.dailyMutqinStep = 'listen'
+      this.quietBeginnerChrome = false
+      this._pendingDailyMutqinStart = false
+      this._pendingDailyMutqinOpenAi = false
+      this._suppressEmptyWorkspaceTools = false
+    },
+    hydrateFirstRunStep() {
+      const stored = String(this.readWorkspaceStateValue('firstRunStep', '') || '').trim()
+      this.firstRunStepId = stored === 'passage' ? 'passage' : 'goal'
+    },
+    persistFirstRunStep(step) {
+      const next = step === 'passage' ? 'passage' : 'goal'
+      this.firstRunStepId = next
+      this.writeWorkspaceStateValue('firstRunStep', next)
+      this.persistMutqinStateLocally?.()
+    },
+    clearWorkspaceForFirstRunGoalStep() {
+      try {
+        this.clearWorkspaceForConfigChange(this.currentMode)
+      } catch { /* ignore */ }
+      const store = this.getModeStore?.(this.currentMode)
+      if (store) {
+        store.chapterId = 0
+        store.rangeStart = 1
+        store.rangeEnd = FIRST_ONBOARDING_RANGE_END
+      }
+      this.chapterId = 0
+      this.rangeStart = 1
+      this.rangeEnd = FIRST_ONBOARDING_RANGE_END
+      this.isDataReady = true
+    },
+    trackFirstRunSurfacePresented(step) {
+      if (!this.isFirstRunFlowActive) return
+      trackProductEvent('onboarding_started', this.analyticsContext?.() || {}, { onceKey: 'onboarding-start' })
+      this.trackFirstRunStepViewed(step)
+    },
+    trackFirstRunStepViewed(step) {
+      const feature = step === 'passage' ? 'passage' : 'goal'
+      trackProductEvent('onboarding_step_viewed', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: feature,
+      }, { onceKey: `onboarding-step-view:${feature}` })
+    },
+    trackFirstRunStepCompleted(step, extra = {}) {
+      const feature = step === 'passage' ? 'passage' : 'goal'
+      trackProductEvent('onboarding_step_completed', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: feature,
+        ...extra,
+      }, { onceKey: `onboarding-step-done:${feature}` })
+    },
+    trackFirstRunAbandoned(step, stage = 'discarded') {
+      const feature = step === 'passage' ? 'passage' : 'goal'
+      trackProductEvent('onboarding_abandoned', {
+        ...(this.analyticsContext?.() || {}),
+        feature_id: feature,
+        stage: stage === 'abandoned' ? 'abandoned' : 'discarded',
+      }, { onceKey: `onboarding-abandon:${feature}` })
+    },
+    completeFirstRunOnPracticeStart() {
+      if (!this.isFirstRunFlowActive) return
+      this.trackFirstRunStepCompleted('passage', {
+        session_type: normaliseSessionGoal(this.sessionStartGoal) === 'revise' ? 'revision' : 'new',
+      })
+      this.markOnboardingCompleted()
+      this.deleteWorkspaceStateValue?.('firstRunStep')
+      this.firstRunStepId = 'goal'
+    },
+    async skipFirstRunToPractice() {
+      if (!this.isFirstRunFlowActive) return
+      this.trackFirstRunAbandoned(this.firstRunStep, 'discarded')
+      await this.startFirstRunGuidedPractice('memorise')
+    },
+    rememberProgressReturn(href) {
+      const value = String(href || '').trim()
+      if (!value) return
+      this.dashboardEntryReturnHref = value
+      try { sessionStorage.setItem('mutqin.progressReturn', value) } catch (_) { /* ignore */ }
+    },
+    restoreProgressReturn() {
+      const intent = this.readDashboardEntryIntent?.()
+      if (intent?.returnTo === 'dashboard') {
+        this.rememberProgressReturn(this.learnerDashboardUrl || '/dashboard')
+        return
+      }
+      let stored = ''
+      try { stored = sessionStorage.getItem('mutqin.progressReturn') || '' } catch (_) { stored = '' }
+      const nav = (typeof performance !== 'undefined' && performance.getEntriesByType)
+        ? performance.getEntriesByType('navigation')[0]
+        : null
+      if (stored && nav?.type === 'reload') {
+        this.dashboardEntryReturnHref = stored
+        return
+      }
+      if (stored && nav && nav.type !== 'reload') {
+        try { sessionStorage.removeItem('mutqin.progressReturn') } catch (_) { /* ignore */ }
+      }
+    },
+    dashboardEntrySessionIsOpen() {
+      if (this.isSessionLive || this.sessionPaused || this.mutqinState?.sessionState?.active) return true
+      const status = String(this.backendSessionSnapshot?.status || '').toLowerCase()
+      return ['in_progress', 'active', 'paused', 'interrupted'].includes(status)
+    },
+    async leaveDashboardEntry(event) {
+      if (event?.preventDefault) event.preventDefault()
+      if (this.leavingDashboardEntry) return
+      this.leavingDashboardEntry = true
+      const href = this.dashboardEntryReturnHref
+        || this.dashboardAiCheckReturnTo
+        || this.progressPageUrl
+        || '/progress'
+      this.workspaceReciteAnalysisOpen = false
+      this.workspaceReciteAnalysisLoading = false
+      this.workspaceReciteAnalysisError = false
+      this.workspaceReciteAnalysisView = null
+      this._workspaceReciteAnalysisSourceView = null
+      this.postSessionDashboardAfterRecite = false
+      this.postSessionCompletionAfterRecite = false
+      this.showTools = false
+      this.startingFreshSessionSelection = false
+      if (this.sectionOpen && typeof this.sectionOpen === 'object') {
+        this.sectionOpen = { ...this.sectionOpen, advanced_setup: false }
+      }
+      if (this.amdOpen) {
+        try { this.closeAmdModal({ returnToCompletion: false }) } catch (_) { /* ignore */ }
+      }
+      try { this.stopSessionMediaResources?.() } catch (_) { /* ignore */ }
+      if (this.dashboardEntrySessionIsOpen() && this.learningBackendEnabled?.()) {
+        const backendSessionId = this.backendSessionSnapshot?.id
+          || this.mutqinState?.sessionState?.backendSessionId
+          || null
+        try {
+          await Promise.race([
+            learningApi.endSession({
+              session_id: Number(backendSessionId || 0) || undefined,
+              range_complete: false,
+              idempotency_key: `dashboard-return-${backendSessionId || 'current'}`,
+              metadata: {
+                active: false,
+                paused: false,
+                completed: false,
+                ended_early: true,
+                ended_manually: true,
+              },
+            }),
+            new Promise((resolve) => { setTimeout(resolve, 4000) }),
+          ])
+        } catch (error) {
+          console.warn('Could not end the memorisation setup before returning', error)
+        }
+      }
+      try { this.clearContinueSessionQuietly?.() } catch (_) { /* ignore */ }
+      try { this.clearActiveSessionSnapshot?.() } catch (_) { /* ignore */ }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.ended_early = true
+      }
+      this.sessionPaused = false
+      try { sessionStorage.removeItem('mutqin.progressReturn') } catch (_) { /* ignore */ }
+      window.location.assign(href)
+    },
     openDashboardView() {
+      if (this.showDashboardReturn) {
+        void this.leaveDashboardEntry()
+        return
+      }
       try {
         this.persistContinueSession?.()
         this.markActiveSessionSnapshot?.()
@@ -37368,34 +38728,15 @@ export default {
       window.location.assign(this.learnerDashboardUrl)
     },
     returnToDashboard() {
+      if (this.showDashboardReturn) {
+        void this.leaveDashboardEntry()
+        return
+      }
       const href = this.dashboardEntryReturnHref || this.learnerDashboardUrl || '/dashboard'
       window.location.assign(href)
     },
     exitToProgressPage(event) {
-      if (event?.preventDefault) event.preventDefault()
-      if (this.workspaceReciteAnalysisOpen) {
-        this.workspaceReciteAnalysisOpen = false
-        this.workspaceReciteAnalysisLoading = false
-        this.workspaceReciteAnalysisError = false
-        this.workspaceReciteAnalysisView = null
-        this._workspaceReciteAnalysisSourceView = null
-        this.postSessionDashboardAfterRecite = false
-        this.postSessionCompletionAfterRecite = false
-      }
-      try {
-        this.persistContinueSession?.()
-        this.markActiveSessionSnapshot?.()
-      } catch (error) {
-        console.error('Failed to snapshot session before progress:', error)
-      }
-      if (this.amdOpen && this.isAmdEntryActive(this.amdEntrySource)) {
-        this.closeAmdModal({ returnToCompletion: false })
-      }
-      const href = this.dashboardEntryReturnHref
-        || this.dashboardAiCheckReturnTo
-        || this.progressPageUrl
-        || '/progress'
-      window.location.assign(href)
+      void this.leaveDashboardEntry(event)
     },
     handleHeaderSessionAction() {
       if (this.workspaceTourFreshStartPending) {
@@ -37513,15 +38854,124 @@ export default {
       this.resumePausedPlaybackImmediately()
     },
 
+    noteFreshResumePlay(verseKey) {
+      if (!this._resumeCountsAsPlay) return
+      this._resumeCountsAsPlay = false
+      if (verseKey) this.incrementVersePlayCount(verseKey)
+    },
+
+    resumeVersePlayCounts() {
+      const local = this.mutqinState?.sessionState?.verse_play_counts
+      if (local && typeof local === 'object' && Object.keys(local).length) return local
+      const remote = this.backendSessionSnapshot?.metadata?.verse_play_counts
+      return remote && typeof remote === 'object' ? remote : {}
+    },
+
     /**
      * Start playback in the same turn as the Resume tap.
+     * A paused sitting whose file already ended (or never loaded) must not
+     * sit on that dead element — continue the next unplayed repeat from 0.
      * Returns the play promise without awaiting, so iOS still counts the gesture.
      */
     playHeaderResumeAudio() {
+      this.advanceLocked = false
+      this.playRequestLocked = false
+      this._resumeShouldComplete = false
+      this._headerResumePlayActive = false
+      this._resumeCountsAsPlay = false
+      this.clearPlaybackAdvanceTimer({ unlock: true })
+      if (!this.audioElement) this.initAudio()
+      this.ensureSessionAudioPlayer?.()
       const audio = this.audioElement
-      const src = String(audio?.currentSrc || audio?.getAttribute?.('src') || '').trim()
+      if (!audio) return null
+
+      const ready = this.isMainAudioReady(audio)
+      const liveTime = ready ? Number(audio.currentTime || 0) : 0
+      const duration = ready ? Number(audio.duration || 0) : 0
+      const atEnd = !!audio.ended || (duration > 0.2 && liveTime >= duration - 0.08)
+      const src = String(audio.currentSrc || audio.getAttribute?.('src') || '').trim()
       const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
-      if (!audio || !hasSrc || audio.ended || Number(audio.readyState || 0) < 2) return null
+      const decision = resolvePausedResumeIndex({
+        queue: this.queue,
+        queueIndex: this.queueIndex,
+        versePlayCounts: this.resumeVersePlayCounts(),
+        audioFinished: atEnd,
+        currentTime: liveTime,
+      })
+
+      if (decision.complete) {
+        this._resumeShouldComplete = true
+        return null
+      }
+
+      if (decision.changed) {
+        this.queueIndex = decision.index
+        const store = this.getModeStore?.(this.currentMode)
+        if (store) store.queueIndex = decision.index
+        const entry = this.queue?.[decision.index]
+        const verseKey = entry?.verse?.key || entry?.key
+        if (verseKey) this.setActiveVerse(verseKey, { queueIndex: decision.index, scroll: false })
+        moveMutqinSession(this.mutqinState, decision.index + 1)
+      }
+
+      // Mid-ayah: the file is already loaded and not finished. Continue it.
+      if (!decision.changed && !atEnd && hasSrc && ready && Number(audio.readyState || 0) >= 2) {
+        return this.playLoadedHeaderAudio(audio)
+      }
+
+      const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+      const verse = entry?.verse || entry
+      if (!verse) return null
+      const url = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(verse))
+      if (!url) return null
+
+      const token = (Number(this._resumePlayToken) || 0) + 1
+      this._resumePlayToken = token
+      try {
+        audio.muted = false
+        audio.volume = 1
+        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+        audio.defaultPlaybackRate = safeSpeed
+        audio.playbackRate = safeSpeed
+        const current = this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
+        const sameSource = current === this.normalizeAudioUrl(url)
+        if (!sameSource) audio.src = url
+        else {
+          try { audio.currentTime = 0 } catch { /* ignore seek */ }
+        }
+      } catch { /* ignore setup */ }
+
+      let playPromise = null
+      try {
+        playPromise = audio.play()
+      } catch {
+        return null
+      }
+      this._headerResumePlayActive = true
+      this._resumeCountsAsPlay = true
+      this.isPlaying = true
+      this.playbackAwaitingGesture = false
+      this.playerVisible = true
+      this.playerDismissed = false
+      Promise.resolve(playPromise).then(() => {
+        if (this._resumePlayToken !== token) return
+        if (audio.paused) return
+        this.isPlaying = true
+        this.playbackAwaitingGesture = false
+        this.syncSessionControlsWithPlayback(true)
+        this.noteFreshResumePlay(verse?.key)
+      }).catch((err) => {
+        if (this._resumePlayToken !== token) return
+        if (String(err?.name || '') === 'AbortError') return
+        this._headerResumePlayActive = false
+        this.isPlaying = false
+        this.playbackAwaitingGesture = true
+        if (String(err?.name || '') === 'NotAllowedError') this.promptTapToPlay()
+      })
+      return playPromise
+    },
+
+    playLoadedHeaderAudio(audio) {
       const safeSpeed = this.normalizePlaybackSpeed(this.speed)
       try {
         audio.defaultPlaybackRate = safeSpeed
@@ -37533,9 +38983,11 @@ export default {
       } catch {
         return null
       }
+      this._headerResumePlayActive = true
       this.isPlaying = true
       this.playbackAwaitingGesture = false
       this.playerVisible = true
+      this.playerDismissed = false
       Promise.resolve(playPromise).then(() => {
         if (audio.paused) return
         this.isPlaying = true
@@ -37543,6 +38995,7 @@ export default {
         this.syncSessionControlsWithPlayback(true)
       }).catch((err) => {
         if (String(err?.name || '') === 'AbortError') return
+        this._headerResumePlayActive = false
         this.isPlaying = false
         this.playbackAwaitingGesture = true
         if (String(err?.name || '') === 'NotAllowedError') this.promptTapToPlay()
@@ -37556,6 +39009,28 @@ export default {
     async resumePausedPlaybackImmediately() {
       this.primeAudioPlaybackUnlock()
       this.playerVisible = true
+      if (this._resumeShouldComplete) {
+        this._resumeShouldComplete = false
+        this._headerResumePlayActive = false
+        this.handleSessionComplete()
+        return true
+      }
+      if (this._headerResumePlayActive) {
+        // The tap already called play() on this element. Reloading or
+        // soft-pausing here aborts that gesture and Resume stays stuck.
+        const armed = this.audioElement
+        this._headerResumePlayActive = false
+        this.playerVisible = true
+        this.playerDismissed = false
+        this.playbackAwaitingGesture = !armed || armed.paused
+        this.isPlaying = !!armed && !armed.paused
+        if (this.isPlaying) {
+          this.syncSessionControlsWithPlayback(true)
+          const playing = this.queue?.[this.queueIndex]
+          this.noteFreshResumePlay(playing?.verse?.key || playing?.key)
+        }
+        return true
+      }
       const pauseTime = Math.max(0, Number(this.audioElement?.currentTime || this.currentTime || 0))
       this.currentTime = pauseTime
       this.restoredAudioState = {
@@ -38346,8 +39821,14 @@ export default {
       this.openNewSessionSetup()
     },
     openNewSessionSetup() {
+      const preserveGuidedRange = (
+        (this.isFirstRunFlowActive && this.firstRunStep === 'passage')
+        || this.dailyMutqinActive
+      ) && Number(this.chapterId || 0) > 0
       this.prepareManualSessionSelection()
-      this.resetRepetitionsForFreshSession()
+      if (!preserveGuidedRange) {
+        this.resetRepetitionsForFreshSession()
+      }
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
     async startJourneyFromBeginning() {
@@ -38413,6 +39894,9 @@ export default {
           ? payload.weaknesses
           : { items: [], all_items: [], total: 0 }
         this.learnerStreakDays = Number(payload?.retention?.streak_days || 0)
+        this.learnerRetention = payload?.retention && typeof payload.retention === 'object'
+          ? payload.retention
+          : null
       } catch (error) {
         console.warn('Learner journey fetch failed', error)
         if (!this.learnerJourney) {
@@ -39788,6 +41272,7 @@ export default {
       ).trim()
 
       this.mushafLayoutId = next
+      this.noteFeature('mushaf_layout_changed', { layout: next })
       this.qpcMadaniPinnedPage = null
       this.qpcVersePageIndex = null
       this.qpcVersePageIndexLayoutId = null
@@ -42131,11 +43616,15 @@ export default {
         if (playGeneration !== this.playGeneration) return
         try {
           const duration = Number(this.audioElement?.duration || 0)
-          const seekTime = duration > 0
+          let seekTime = duration > 0
             ? Math.min(restoredTime, Math.max(0, duration - 0.05))
             : restoredTime
+          // Restoring the end of a finished ayah plays a blip and then freezes.
+          if (duration > 0.2 && seekTime >= duration - 0.08) seekTime = 0
           if (seekTime > 0) {
             this.audioElement.currentTime = seekTime
+          } else if (this.audioElement.ended || Number(this.audioElement.currentTime || 0) > 0) {
+            try { this.audioElement.currentTime = 0 } catch { /* ignore seek */ }
           }
           this.syncAudioUiState(seekTime, duration)
           if (autoplay) {
@@ -43188,7 +44677,9 @@ export default {
           }
         }
       })
-      return !!(locked?.ok && locked.result)
+      const paused = !!(locked?.ok && locked.result)
+      if (paused) this.noteFeature('session_paused')
+      return paused
     },
 
     applyLocalPausedSessionState() {
@@ -43709,6 +45200,7 @@ export default {
       const next = !!enabled
       if (this.tajweedEnabled === next) return
       this.tajweedEnabled = next
+      this.noteFeature('tajweed_colours_toggled', { enabled: next })
       // QCF tajweed colours require the Uthmani page fonts.
       if (next && this.readingViewMode === 'mushaf' && this.quranFont !== 'uthmanic') {
         this.quranFont = 'uthmanic'
@@ -46095,7 +47587,12 @@ export default {
               const segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
               this.segmentEndTime = segmentEnd
               player.seek(segmentStart)
-            } else if (sameAudioSource) {
+            } else if (
+              sameAudioSource
+              || this.audioElement.ended
+              || (Number(this.audioElement.duration) > 0
+                && Number(this.audioElement.currentTime) >= Number(this.audioElement.duration) - 0.08)
+            ) {
               // Same-ayah repeats reuse the URL; without a rewind, play() stays at EOF and freezes.
               player.seek(0)
             }
@@ -46770,12 +48267,15 @@ export default {
         appendRepeatedSessionEntries(q, entries, repetitions)
       }
 
+      const revising = normaliseSessionGoal(this.sessionStartGoal) === 'revise'
+        || this.currentSessionRecommendationMeta?.sessionMode === 'revision'
+
       if (!chainingEnabled) {
         // Simple sequential order without chaining
         verses.forEach(verse => {
           pushQueueEntry({
             verse,
-            phase: 'Memorise',
+            phase: revising ? 'Revise' : 'Memorise',
             chainKey: null,
             sequencePosition: 1,
             sequenceTotal: 1
@@ -46917,6 +48417,11 @@ export default {
       this.blurModeEnabled = !this.blurModeEnabled
       this.syncPracticeToolSectionOpen('blur_mode', this.blurModeEnabled)
       this.persistUiState()
+      if (this.blurModeEnabled && this.sessionStartedAt) {
+        trackProductEvent('progressive_hiding_used', this.analyticsContext(), {
+          onceKey: `blur:${this.sessionStartedAt}`,
+        })
+      }
     },
     toggleChainingRadio() {
       const nextEnabled = !this.chainingEnabled
@@ -47133,7 +48638,11 @@ export default {
       const chainingStatus = this.chainingEnabled
         ? `${this.chainingMethod} chaining (${this.chainingRepetitions}x)`
         : 'no chaining'
-      const sessionStartedMessage = this.playMode === 'follow'
+      const revising = normaliseSessionGoal(this.sessionStartGoal) === 'revise'
+        || this.currentSessionRecommendationMeta?.sessionMode === 'revision'
+      const sessionStartedMessage = revising
+        ? this.t('memorisation.sessionGoal.reviseStarted')
+        : this.playMode === 'follow'
         ? `Session started with ${builtQueue.length} guided repetitions. Listen to the reciter, then use your recitation window before the next ayah begins.`
         : mode === 'planner'
           ? `Hifz session started. Follow the highlighted words and move one ayah at a time.`
@@ -47152,6 +48661,12 @@ export default {
         trackProductEvent('revision_started', startedContext, { onceKey: startedKey })
       } else {
         trackProductEvent('memorisation_started', startedContext, { onceKey: startedKey })
+      }
+      if (this.blurModeEnabled) {
+        trackProductEvent('progressive_hiding_used', startedContext, { onceKey: `blur:${startedKey}` })
+      }
+      if (this.chainingEnabled || Number(this.chainingRepetitions) > 1) {
+        this.noteFeature('audio_repetition_used', {}, `audio:${startedKey}`)
       }
     },
 
@@ -47964,6 +49479,8 @@ export default {
       } else {
         return
       }
+      if (kind === 'translation') this.noteFeature('translation_toggled', { enabled: nextState })
+      if (kind === 'transliteration') this.noteFeature('transliteration_toggled', { enabled: nextState })
       if ((kind === 'translation' || kind === 'transliteration') && nextState) {
         void this.refreshVerseEditionText(kind, this.currentMode)
       }

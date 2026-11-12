@@ -81,7 +81,7 @@ return [
             'legacy_price_ids' => array_values(array_filter([
                 'price_1UY4m0GnjnR8GCMXlzedCo7N',
             ])),
-            'trial_days' => max(0, (int) env('BILLING_PRO_TRIAL_DAYS', 0)),
+            'trial_days' => max(0, (int) env('BILLING_PRO_TRIAL_DAYS', 7)),
             'display_amount' => number_format($monthlyPence / 100, 2, '.', ''),
             'expected_unit_amount' => $monthlyPence,
             'audited_unit_amount' => $monthlyPence,
@@ -103,7 +103,7 @@ return [
             'legacy_price_ids' => array_values(array_filter([
                 'price_1UY4m1GnjnR8GCMXeNk1veNH',
             ])),
-            'trial_days' => 0,
+            'trial_days' => max(0, (int) env('BILLING_PRO_TRIAL_DAYS', 7)),
             'display_amount' => number_format($yearlyPence / 100, 2, '.', ''),
             'display_monthly_equivalent' => number_format($yearlyPence / 12 / 100, 2, '.', ''),
             'annual_discount_percent' => $yearlyDiscountPercent,

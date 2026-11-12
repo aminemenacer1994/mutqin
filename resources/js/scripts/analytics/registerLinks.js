@@ -206,8 +206,33 @@ export function decoratePublicRegisterLinks(root = typeof document === 'undefine
 function applyPublicRegisterLinks() {
   captureAcquisitionAttribution()
   decoratePublicRegisterLinks(document)
+  stampRegistrationAttribution(document)
   concealTrackingQuery()
   if (isInAppBrowser()) document.documentElement.dataset.mutqinInapp = '1'
+}
+
+function stampRegistrationAttribution(root) {
+  if (!analyticsMeasurementAllowed() || !root?.getElementById) return
+  const form = root.getElementById('register-form')
+  if (!form) return
+  const utms = getRegistrationUtms()
+  const referral = getAcquisitionAttribution().referral_code || ''
+  let anonymous = ''
+  try {
+    anonymous = window.sessionStorage?.getItem('mutqin_anon_id') || ''
+  } catch {
+    anonymous = ''
+  }
+  setNamedValue(form, 'utm_source', utms.utm_source || '')
+  setNamedValue(form, 'utm_medium', utms.utm_medium || '')
+  setNamedValue(form, 'utm_campaign', utms.utm_campaign || '')
+  setNamedValue(form, 'ref', referral)
+  if (/^[0-9a-f-]{36}$/i.test(anonymous)) setNamedValue(form, 'analytics_anonymous_id', anonymous)
+}
+
+function setNamedValue(form, name, value) {
+  const field = form.querySelector(`[name="${name}"]`)
+  if (field && 'value' in field && !field.value) field.value = value
 }
 
 export function initPublicRegisterLinks() {

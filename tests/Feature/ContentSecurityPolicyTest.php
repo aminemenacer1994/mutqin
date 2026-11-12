@@ -93,6 +93,8 @@ class ContentSecurityPolicyTest extends TestCase
         );
         $this->assertStringContainsString('https://www.youtube.com', $policy);
         $this->assertStringContainsString('https://s.ytimg.com', $policy);
+        $this->assertStringContainsString('https://eu.i.posthog.com', $policy);
+        $this->assertStringContainsString('https://eu-assets.i.posthog.com', $policy);
     }
 
     public function test_middleware_replaces_script_src_none_policy(): void

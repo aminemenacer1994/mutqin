@@ -33,8 +33,10 @@ import { initWaitingListAttribution } from './scripts/analytics/waitingListAttri
 import {
     captureAcquisitionAttribution,
     initSpaPageViews,
+    trackLandingAndSignupSurface,
     trackLoginFromFlash,
 } from './scripts/analytics/productEvents.js';
+import { initPostHog, resetPostHogOnLogout } from './scripts/analytics/posthog.js';
 import { initPublicRegisterLinks } from './scripts/analytics/registerLinks.js';
 import { bootstrapThemeFromStore, initThemeStorageSync } from './utils/theme';
 
@@ -42,6 +44,7 @@ initWaitingListAttribution();
 try {
     captureAcquisitionAttribution();
     initSpaPageViews();
+    trackLandingAndSignupSurface();
     trackLoginFromFlash();
     initSeoConversionTracking({
         path: typeof window !== 'undefined' ? window.location.pathname : '',
@@ -56,6 +59,7 @@ try {
         justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
     });
     initPublicRegisterLinks();
+    initPostHog();
 } catch {
     /* analytics must never block boot */
 }
@@ -91,6 +95,7 @@ function bindLogoutStorageCleanup() {
         if (!(form instanceof HTMLFormElement)) return;
         const action = String(form.getAttribute('action') || '');
         if (!action.includes('/logout')) return;
+        resetPostHogOnLogout();
         clearResidue();
     }, true);
 }
@@ -252,6 +257,10 @@ const AdminDashboard = lazyPage(
     () => import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue'),
     { feature: 'admin-dashboard' }
 );
+const AdminGrowth = lazyPage(
+    () => import(/* webpackChunkName: "admin-growth" */ './views/AdminGrowth.vue'),
+    { feature: 'admin-growth' }
+);
 const AdminFeedback = lazyPage(
     () => import(/* webpackChunkName: "admin-feedback" */ './views/AdminFeedback.vue'),
     { feature: 'admin-feedback' }
@@ -386,6 +395,7 @@ async function bootstrapApp() {
         'user-dashboard': UserDashboard,
         'teacher-dashboard': TeacherDashboardComponent,
         'admin-dashboard': AdminDashboard,
+        'admin-growth': AdminGrowth,
         'admin-feedback': AdminFeedback,
         about: About,
         'about-us-page': AboutUsPage,

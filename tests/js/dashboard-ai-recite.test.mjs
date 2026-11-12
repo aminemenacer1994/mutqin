@@ -39,8 +39,8 @@ assert.match(dashboard, /item.has_audio/, 'recent attempts expose a listen affor
 assert.match(dashboard, /dashboard\.ai_recite\.listen/, 'listen copy is used on saved checks')
 assert.match(
   dashboardCss,
-  /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
-  'mobile progress page shows Muraja’ah + AI Recite above Days with the Qur’an',
+  /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-history[\s\S]*?order:\s*3/,
+  'mobile progress page orders revisit, AI recite, then learning history',
 )
 assert.match(dashboard, /weakHistoryLine/, 'progress page keeps weak ayah history in the review drawer')
 assert.match(dashboard, /data-testid="dash-weak-history"/, 'weak ayah history is marked for tests')

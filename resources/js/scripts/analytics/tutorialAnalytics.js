@@ -6,7 +6,7 @@
  * as proof that the tutorial caused the signup.
  */
 
-import { analyticsMeasurementAllowed } from './productEvents.js'
+import { analyticsMeasurementAllowed, trackProductEvent } from './productEvents.js'
 
 export const TUTORIAL_EVENTS = Object.freeze({
   IMPRESSION: 'tutorial_impression',
@@ -142,6 +142,7 @@ export function trackTutorialPlay(video, playbackId) {
     if (!params) return false
     return once(`${playbackId}:play`, () => {
       rememberInteraction(video, 'play')
+      trackProductEvent('tutorial_played', params, { onceKey: `tutorial-play:${playbackId}` })
       return send(TUTORIAL_EVENTS.PLAY, params)
     })
   } catch {
@@ -170,6 +171,7 @@ export function trackTutorialComplete(video, playbackId) {
     if (!params) return false
     return once(`${playbackId}:complete`, () => {
       rememberInteraction(video, 'complete')
+      trackProductEvent('tutorial_completed', params, { onceKey: `tutorial-complete:${playbackId}` })
       return send(TUTORIAL_EVENTS.COMPLETE, params)
     })
   } catch {

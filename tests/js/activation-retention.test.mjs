@@ -6,6 +6,8 @@ import { pickDashboardPrimaryKind } from '../../resources/js/scripts/dashboard/p
 import {
   memorisationGoalHref,
   normaliseSessionGoal,
+  revisionSessionAdjustments,
+  REVISION_PLAYBACK_SPEED,
   sessionGoalToMode,
 } from '../../resources/js/scripts/session/sessionGoal.js'
 import { resumeFieldsFromBackendSession } from '../../resources/js/scripts/session/sessionLifecycle.js'
@@ -24,6 +26,15 @@ assert.equal(normaliseSessionGoal('recite'), 'test')
 assert.equal(normaliseSessionGoal(''), 'memorise')
 assert.equal(sessionGoalToMode('revise'), 'revision')
 assert.equal(sessionGoalToMode('test'), 'new_learning')
+const reviseFromLesson = revisionSessionAdjustments({ speed: 0.75 })
+assert.equal(reviseFromLesson.speed, REVISION_PLAYBACK_SPEED)
+assert.equal(reviseFromLesson.repetitionsPerStep, 1)
+assert.equal(reviseFromLesson.talqinModeEnabled, false)
+assert.equal(reviseFromLesson.focusModeEnabled, false)
+assert.equal(reviseFromLesson.chainingEnabled, false)
+assert.equal(revisionSessionAdjustments({ speed: 1.5 }).speed, 1.5)
+assert.doesNotMatch(memorisationVue, /session-goal__steps/)
+assert.doesNotMatch(memorisationVue, /session-goal__help/)
 assert.equal(memorisationGoalHref('/memorisation', 'test'), '/memorisation?setup=1&goal=test')
 assert.equal(
   memorisationGoalHref('/memorisation?panel=saved', 'revise'),
@@ -89,5 +100,14 @@ assert.doesNotMatch(memorisationVue, /data-testid="revise-current-range"/)
 assert.match(dashboardVue, /pickDashboardPrimaryKind/)
 assert.match(dashboardVue, /testRecitationHref/)
 assert.match(dashboardVue, /open_practice/)
+assert.match(dashboardVue, /dailyMutqinEntryHref/)
+assert.match(dashboardVue, /journey=daily|dailyMutqinHref/)
+assert.match(dashboardVue, /data-testid="dashboard-primary-continue"/)
+assert.match(dashboardVue, /dash-continue-card--daily-mutqin/)
+{
+  const heroIdx = dashboardVue.indexOf('dash-hero__stack')
+  const historyIdx = dashboardVue.indexOf('dash-history-heading')
+  assert.ok(heroIdx >= 0 && historyIdx > heroIdx, 'Daily Mutqin primary continue must sit above learning history')
+}
 
 console.log('activation-retention passed')

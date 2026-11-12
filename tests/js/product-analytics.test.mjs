@@ -206,6 +206,15 @@ assert.deepEqual(sanitiseProductParams({
   assert.equal(trackProductEvent('memorisation_started', { session_type: 'new', surah_id: 1 }, { onceKey: 'new-1' }), true)
   assert.equal(trackProductEvent('memorisation_started', { session_type: 'new', surah_id: 1 }, { onceKey: 'new-1' }), false)
   assert.equal(trackProductEvent('session_resumed', { session_type: 'new', surah_id: 1 }, { onceKey: 'resume-1' }), true)
+  assert.match(memorisation, /requiresFirstTimeOnboarding\(\) \{/)
+  assert.doesNotMatch(memorisation, /this\.requiresFirstTimeOnboarding\(\)/)
+  assert.doesNotMatch(memorisation, /this\.shouldAutoOpenOnboarding\(\)/)
+  assert.match(memorisation, /trackProductEvent\('progressive_hiding_used'/)
+  assert.match(memorisation, /trackProductEvent\('onboarding_started'/)
+  assert.match(memorisation, /trackProductEvent\('onboarding_step_viewed'/)
+  assert.match(memorisation, /trackProductEvent\('onboarding_step_completed'/)
+  assert.match(memorisation, /trackProductEvent\('onboarding_abandoned'/)
+  assert.match(readFileSync(join(root, 'resources/js/scripts/analytics/productEvents.js'), 'utf8'), /ONBOARDING_STEP_VIEWED/)
 }
 
 console.log('product-analytics.test.mjs: ok')

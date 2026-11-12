@@ -21,6 +21,15 @@
     // already-open workspace fetches the updated chunk map after a deploy.
     $appScriptUrl = \App\Support\MixAssetUrl::withManifestBuild('js/app.js', $mixManifestPath);
     $appStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/app.css', $mixManifestPath);
+    $mutqinPosthogKey = trim((string) config('services.posthog.key', ''));
+    $mutqinPosthogHost = rtrim(trim((string) config('services.posthog.host', 'https://eu.i.posthog.com')), '/');
+    if ($mutqinPosthogHost !== 'https://eu.i.posthog.com') {
+        $mutqinPosthogHost = 'https://eu.i.posthog.com';
+    }
+    $mutqinPosthogEnabled = preg_match('/\Aphc_[A-Za-z0-9]{8,180}\z/', $mutqinPosthogKey) === 1;
+    $mutqinPosthogEnvironment = app()->environment('production')
+        ? 'production'
+        : (app()->environment('testing') ? 'testing' : (app()->environment('local') ? 'local' : 'other'));
     // Vue component CSS is emitted outside Mix's manifest. Version it directly
     // so an already-open workspace cannot keep a stale modal/reader stylesheet
     // after a frontend build.
@@ -8673,6 +8682,11 @@
     </script>
     @endauth
 
+    @if ($mutqinPosthogEnabled)
+    <script>
+        window.mutqinPosthog = @json(['key' => $mutqinPosthogKey, 'host' => $mutqinPosthogHost, 'environment' => $mutqinPosthogEnvironment]);
+    </script>
+    @endif
     <script src="{{ $appScriptUrl }}" defer></script>
 
     @if (request()->is('waiting-list'))

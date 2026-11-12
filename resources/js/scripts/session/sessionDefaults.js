@@ -130,3 +130,25 @@ export function buildTenMinuteHeroSessionConfig(overrides = {}) {
     ...overrides,
   })
 }
+
+/** Soft Daily Mutqin target (~3–5 minutes). Never enforced as a hard stop. */
+export const DAILY_MUTQIN_SUGGESTED_SECONDS = 240
+export const DAILY_MUTQIN_REPETITIONS = 2
+
+/**
+ * Short guided sitting: Al-Fatiha 1–5, talqin listen/repeat, blur off until Hide step.
+ * Reciter / mushaf / tajweed come from the learner’s saved prefs when applied in the workspace.
+ */
+export function buildDailyMutqinSessionConfig(overrides = {}) {
+  return buildFirstOnboardingSessionConfig({
+    repetitionsPerStep: DAILY_MUTQIN_REPETITIONS,
+    selectedLoopCount: DAILY_MUTQIN_REPETITIONS,
+    talqinModeEnabled: true,
+    blurModeEnabled: false,
+    focusModeEnabled: false,
+    chainingEnabled: false,
+    // Shorter turn window so a 5-ayah sitting does not sit in silence.
+    recitationWindowSeconds: 5,
+    ...overrides,
+  })
+}

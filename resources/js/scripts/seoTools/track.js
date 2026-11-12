@@ -11,6 +11,7 @@ import {
   captureAcquisitionAttribution,
   getAcquisitionAttribution,
 } from '../analytics/productEvents.js'
+import { capturePostHogProductEvent } from '../analytics/posthog.js'
 
 const TOOL_ATTR_KEY = 'mutqin_seo_tool'
 const ATTR_KEY = 'mutqin_seo_attr'
@@ -366,6 +367,11 @@ export function trackRegistrationComplete({ method = 'email' } = {}) {
   captureSeoAttribution()
   const tool = peekSeoTool()
   const methodLabel = String(method || 'email').slice(0, 20)
+  try {
+    capturePostHogProductEvent('sign_up', { method: methodLabel }, { onceKey: 'signup' })
+  } catch {
+    /* registration must not wait on analytics */
+  }
   // Mark the signup sent only after GA4 accepts it, so a refused or missing
   // tag does not swallow the one registration event.
   const sent = emit('sign_up', {

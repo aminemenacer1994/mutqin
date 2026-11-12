@@ -10,7 +10,9 @@ use App\Http\Requests\Learning\SubmitRecommendationAdaptiveAssessmentRequest;
 use App\Http\Requests\Learning\SubmitRecommendationAiAssessmentRequest;
 use App\Http\Requests\Learning\SubmitRecommendationConfidenceRequest;
 use App\Models\SessionRecommendation;
+use App\Services\Analytics\ProductEventRecorder;
 use App\Services\NextSessionRecommendationService;
+use App\Support\Analytics\ProductEventName;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,6 +58,14 @@ class RecommendationController extends Controller
         $overrides = $request->validated('settings') ?? [];
 
         $result = $service->acceptAndStart($request->user(), $recommendation, is_array($overrides) ? $overrides : []);
+
+        app(ProductEventRecorder::class)->recordQuietly(
+            ProductEventName::RECOMMENDATION_FOLLOWED,
+            $request->user(),
+            null,
+            'recommendation:'.$recommendation->id.':followed',
+            ['recommendation_id' => (int) $recommendation->id],
+        );
 
         return response()->json([
             'started' => true,

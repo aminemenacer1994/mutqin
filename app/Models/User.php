@@ -90,6 +90,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'ai_session_settings',
         'ai_recite_lifetime_limit',
         'marketing_unsubscribed_at',
+        'signup_utm_source',
+        'signup_utm_medium',
+        'signup_utm_campaign',
+        'signup_referral_code',
     ];
 
     /**
@@ -101,6 +105,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'password',
         'remember_token',
         'marketing_unsubscribed_at',
+        'signup_utm_source',
+        'signup_utm_medium',
+        'signup_utm_campaign',
+        'signup_referral_code',
     ];
 
     /**

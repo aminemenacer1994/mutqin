@@ -84,7 +84,12 @@ export function startMutqinSession(state, { mode = 'beginner', queue = [], confi
       config: draft.sessionState?.config || null
     })
     const nextSignature = sessionSignature({ mode, queue: normalisedQueue, config })
-    if (draft.sessionState?.active && currentSignature === nextSignature) {
+    const playProgress = Object.values(draft.sessionState?.verse_play_counts || {})
+      .some((count) => Number(count) > 0)
+    const sameUnfinishedSitting = currentSignature === nextSignature
+      && !draft.sessionState?.completed
+      && (draft.sessionState?.active || draft.sessionState?.paused || playProgress)
+    if (sameUnfinishedSitting) {
       draft.sessionState.queue = normalisedQueue
       draft.sessionState.config = config
       draft.sessionState.planner = planner

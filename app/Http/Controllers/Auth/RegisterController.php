@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AdminDashboardService;
+use App\Services\Analytics\SignupAnalytics;
 use App\Services\Organisations\AccountRegistrationService;
 use App\Support\AdminEmails;
+use App\Support\Analytics\Acquisition;
 use App\Support\AuthRedirect;
 use App\Support\BillingIntent;
 use App\Support\EmailVerification;
@@ -59,6 +61,7 @@ class RegisterController extends Controller
     public function showRegistrationForm(): View
     {
         BillingIntent::rememberFromRequest(request());
+        Acquisition::remember(request());
 
         return view('auth.register', [
             'organisationOptions' => OrganisationRegistrationCatalog::options(),
@@ -129,6 +132,7 @@ class RegisterController extends Controller
         if ($user instanceof User) {
             $user->touchLastLogin();
             AdminDashboardService::invalidateCaches();
+            app(SignupAnalytics::class)->capture($user, $request, 'email');
         }
 
         // Match login/Google: login event id powers Welcome Back vs onboarding,

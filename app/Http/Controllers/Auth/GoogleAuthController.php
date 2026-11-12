@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AdminDashboardService;
+use App\Services\Analytics\SignupAnalytics;
 use App\Services\Auth\GoogleSignInService;
+use App\Support\Analytics\Acquisition;
 use App\Support\AuthRedirect;
 use App\Support\GoogleOAuthRedirect;
 use App\Support\ProductionDatabaseEnv;
@@ -46,6 +48,7 @@ class GoogleAuthController extends Controller
         );
 
         RegistrationIntent::store($data);
+        Acquisition::remember($request);
 
         if ($request->input('intent') === 'first') {
             $request->session()->put('mutqin_start_first_session', true);
@@ -75,6 +78,7 @@ class GoogleAuthController extends Controller
             request()->session()->put('google_link_intent', true);
         } else {
             request()->session()->forget('google_link_intent');
+            Acquisition::remember(request());
         }
 
         return $this->googleProvider()->redirect();
@@ -153,6 +157,7 @@ class GoogleAuthController extends Controller
         if ($created) {
             request()->session()->put('mutqin_just_registered', true);
             request()->session()->put('mutqin_register_method', 'google');
+            app(SignupAnalytics::class)->capture($user, request(), 'google');
             // Existing-user Welcome Back must not win over first-run onboarding.
             request()->session()->forget('mutqin_just_logged_in');
             request()->session()->forget('mutqin_login_method');

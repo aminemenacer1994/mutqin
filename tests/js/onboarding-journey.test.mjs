@@ -142,6 +142,111 @@ function sliceMethod(source, name) {
 }
 
 {
+  const requires = sliceMethod(memorisationJs, 'requiresFirstTimeOnboarding')
+  assert.match(requires, /return true/)
+  assert.match(requires, /hasCompletedOnboarding\(\)/)
+  assert.match(requires, /hasPostOnboardingPracticeEvidence\(\)/)
+  assert.doesNotMatch(memorisationJs, /this\.requiresFirstTimeOnboarding\(\)/)
+  assert.doesNotMatch(memorisationJs, /this\.shouldAutoOpenOnboarding\(\)/)
+
+  const auto = sliceMethod(memorisationJs, 'shouldAutoOpenOnboarding')
+  assert.match(auto, /requiresFirstTimeOnboarding/)
+  assert.match(auto, /backendUnfinishedSession/)
+
+  assert.match(memorisationJs, /persistFirstRunStep\(/)
+  assert.match(memorisationJs, /trackFirstRunSurfacePresented\(/)
+  assert.match(memorisationJs, /skipFirstRunToPractice\(/)
+  assert.match(memorisationJs, /completeFirstRunOnPracticeStart\(/)
+  assert.match(memorisationJs, /clearWorkspaceForFirstRunGoalStep\(/)
+  assert.match(memorisationJs, /_pendingTenMinuteHeroStart && !this\.isFirstRunFlowActive/)
+  assert.doesNotMatch(
+    memorisationJs,
+    /isTenMinuteHeroEntry && this\.requiresFirstTimeOnboarding[\s\S]{0,80}markOnboardingCompleted\(\)/,
+  )
+
+  const tenMinute = sliceMethod(memorisationJs, 'consumeDashboardEntryIntent')
+  assert.match(tenMinute, /requiresFirstTimeOnboarding/)
+  assert.match(tenMinute, /persistFirstRunStep\('goal'\)/)
+  assert.doesNotMatch(tenMinute, /applyFirstOnboardingSessionConfig\(\{ openSetup: true/)
+  assert.match(tenMinute, /_pendingTenMinuteHeroStart = false/)
+
+  assert.match(memorisationVue, /isFirstRunFlowActive/)
+  assert.match(memorisationVue, /first-run-suggested-passage/)
+  assert.match(memorisationVue, /skipFirstRunToPractice/)
+  assert.match(memorisationVue, /first-run-hero-start/)
+  assert.match(memorisationVue, /startFirstRunHeroPractice/)
+  assert.match(memorisationVue, /quietBeginnerChrome/)
+  assert.match(memorisationVue, /firstRunPracticePreview/)
+  assert.match(memorisationVue, /firstRunKnownAyahOptions/)
+  assert.match(memorisationVue, /hasMeaningfulLearningProgress/)
+  assert.match(memorisationVue, /sessionPracticeInstruction/)
+  assert.doesNotMatch(memorisationVue, /workspace-open-progress/)
+  assert.doesNotMatch(memorisationVue, /top-card-progress-link/)
+  assert.doesNotMatch(memorisationVue, /moreWaysHint/)
+  assert.match(memorisationVue, /returning-continue-card/)
+  assert.match(memorisationJs, /dailyMutqinRepetitionCue\(/)
+  assert.match(memorisationVue, /first-session-return-hint/)
+  assert.match(memorisationVue, /v-if="!isFirstRunFlowActive"/)
+  assert.match(memorisationJs, /firstRunLandsOnHero/)
+  assert.doesNotMatch(memorisationJs, /const resumePassage = this\.firstRunStep === 'passage'/)
+
+  const openGoal = sliceMethod(memorisationJs, 'openSetupForGoal')
+  assert.match(openGoal, /openNewSessionSetup/)
+  assert.match(openGoal, /setSessionStartGoal/)
+  assert.doesNotMatch(openGoal, /startFirstRunGuidedPractice/)
+
+  const known = sliceMethod(memorisationJs, 'firstRunKnownAyahOptions')
+  assert.ok(known.indexOf("id: 'revise'") < known.indexOf("id: 'test'"))
+  assert.ok(known.indexOf("id: 'test'") < known.indexOf("id: 'memorise'"))
+  assert.match(known, /Strengthen what you already know/)
+  assert.match(known, /Recite and check your accuracy/)
+  assert.match(known, /Continue learning new ayahs/)
+
+  const guided = sliceMethod(memorisationJs, 'startFirstRunGuidedPractice')
+  assert.match(guided, /activateDailyMutqinGuideForSitting|dailyMutqinActive = true/)
+  assert.match(guided, /applyDailyMutqinSessionConfig/)
+  assert.match(guided, /beginDailyMutqinSittingFromPending/)
+  assert.doesNotMatch(guided, /_pendingDailyMutqinStart = true/)
+  assert.doesNotMatch(guided, /openNewSessionSetup/)
+
+  const hero = sliceMethod(memorisationJs, 'startFirstRunHeroPractice')
+  assert.match(hero, /startFirstRunGuidedPractice\('memorise'\)/)
+
+  const skip = sliceMethod(memorisationJs, 'skipFirstRunToPractice')
+  assert.match(skip, /startFirstRunGuidedPractice/)
+
+  const beginPending = sliceMethod(memorisationJs, 'beginDailyMutqinSittingFromPending')
+  assert.match(beginPending, /completeFirstRunOnPracticeStart/)
+
+  const advanceListen = sliceMethod(memorisationJs, 'advanceDailyMutqinPrimary')
+  assert.match(advanceListen, /beginDailyMutqinSittingFromPending/)
+  assert.match(advanceListen, /setDailyMutqinStep\('repeat'\)/)
+  assert.match(memorisationJs, /dailyMutqinSuppressTalqinPrompt/)
+
+  const prepare = sliceMethod(memorisationJs, 'prepareManualSessionSelection')
+  assert.match(prepare, /preserveGuidedRange|dailyMutqinActive/)
+  assert.match(prepare, /FIRST_ONBOARDING_RANGE_END/)
+  assert.match(prepare, /applyAyahWindow/)
+
+  const ctas = sliceMethod(memorisationJs, 'postSessionCtaButtons')
+  assert.match(ctas, /postSessionIsFirstCompletion/)
+  const firstCtaIdx = ctas.indexOf('postSessionIsFirstCompletion')
+  const firstBlock = ctas.slice(firstCtaIdx, firstCtaIdx + 500)
+  assert.ok(
+    firstBlock.indexOf('RETURN_TO_WORKSPACE') < firstBlock.indexOf('CHECK_MEMORISATION')
+      || (
+        firstBlock.indexOf('returnToMushaf') >= 0
+        && firstBlock.indexOf('returnToMushaf') < firstBlock.indexOf('reciteFromMemory')
+      ),
+    'first completion must put return/mushaf before AI check',
+  )
+
+  const hint = sliceMethod(memorisationJs, 'postSessionFirstRunReturnHint')
+  assert.match(hint, /sameAsFinished|returnSuggestion/)
+  assert.match(hint, /memorisation\.firstRun\.returnSuggestion/)
+}
+
+{
   const load = sliceMethod(memorisationJs, 'loadPostSessionRecommendation')
   assert.match(load, /useBackendRecommendations/)
   assert.match(load, /applyResult\(fallback, fallbackReady \? 'ready' : 'error'\)/)

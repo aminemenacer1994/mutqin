@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\Analytics\SessionProductEvents;
 use App\Services\DashboardService;
 use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\MainMemorisationPositionService;
@@ -131,6 +132,15 @@ class SessionController extends Controller
             $this->authorize('update', $session);
         }
 
+        if (in_array($action, ['start', 'end'], true) && $session) {
+            $analytics = app(SessionProductEvents::class);
+            if ($action === 'start') {
+                $analytics->started($request->user(), $session);
+            } else {
+                $analytics->ended($request->user(), $session);
+            }
+        }
+
         if (in_array($action, ['start', 'end'], true)) {
             MutqinLog::fromRequest($request, 'learning.session.'.$action, [
                 'session_id' => $session?->id,
@@ -194,6 +204,7 @@ class SessionController extends Controller
             'surah_number' => $session->surah_number,
         ]);
         app(MainMemorisationPositionService::class)->syncFromSessionPayload($request->user(), $session, $data);
+        app(SessionProductEvents::class)->started($request->user(), $session);
         DashboardService::forgetForUser($request->user());
 
         $unfinished = $this->lifecycle->isUnfinished($session);
@@ -281,6 +292,7 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->end($request->user(), $data);
         $this->authorize('update', $session);
+        app(SessionProductEvents::class)->ended($request->user(), $session);
 
         $recommendation = null;
         $recommendationError = false;

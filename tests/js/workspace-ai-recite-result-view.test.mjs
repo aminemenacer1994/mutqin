@@ -139,6 +139,8 @@ const insufficient = buildWorkspaceAiReciteResultView({
 assert.equal(insufficient.presentationMode, 'insufficient_audio', 'silence maps to insufficient audio')
 assert.equal(insufficient.outcomeStatChips.length, 0, 'insufficient audio hides stat chips')
 
+assert.match(modal, /post-session-simple__ai-disclaimer/, 'modal shows AI accuracy disclaimer')
+assert.match(modal, /workspace-recite-ai-disclaimer/, 'modal disclaimer has test id')
 assert.match(modal, /post-session-simple__ai-review--guided/, 'modal uses guided AI review layout')
 assert.match(modal, /post-session-simple__outcome--hero/, 'modal uses outcome hero block')
 assert.match(modal, /post-session-simple__weak-spots/, 'modal includes weak spots')

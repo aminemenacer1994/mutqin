@@ -100,6 +100,29 @@ class NextSessionRecommendationTest extends TestCase
         ]);
     }
 
+    public function test_next_recommendation_persists_when_recommendation_plan_flag_is_off(): void
+    {
+        config()->set('mutqin.show_recommendation_plan', false);
+
+        $user = User::factory()->create();
+        $session = $this->seedCompletedSession($user, 2, 1, 4);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/recommendations/next?source_session_id='.$session->id);
+
+        $response->assertOk()
+            ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
+            ->assertJsonPath('recommendation.ayah_range.from', 5);
+
+        $this->assertDatabaseHas('session_recommendations', [
+            'user_id' => $user->id,
+            'source_session_id' => $session->id,
+            'surah_number' => 2,
+            'ayah_start' => 5,
+            'idempotency_key' => 'complete-'.$session->id,
+        ]);
+    }
+
     public function test_recommends_fewer_ayat_when_reaching_end_of_surah(): void
     {
         $user = User::factory()->create();

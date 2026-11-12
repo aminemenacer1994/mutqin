@@ -239,16 +239,16 @@ includesAll('welcome back continue session flow', [
   assert.match(welcomeBlock, /@click="closeWelcomeBackModal"/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-backdrop"[^>]*welcomeBackStartNewSession/)
   assert.match(en, /"freshSubtitle": "Begin a new set when you are ready\."/)
-  assert.match(en, /"resumeSubtitleAtPlace": "You left \{place\}\. May Allah make your return light\."/)
+  assert.match(en, /"resumeSubtitleAtPlace": "Continue \{place\}\."/)
   assert.match(en, /"resumePlaceBeginning": "\{chapter\}, from the start"/)
   assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
   assert.match(welcomeBlock, /container-fluid welcome-back-fluid/)
-  assert.match(welcomeBlock, /welcomeBackMetaChips/)
+  assert.match(welcomeBlock, /welcome-back-progress/)
   assert.match(welcomeBlock, /welcome-back-salam/)
-  assert.match(welcomeBlock, /welcome-back-meta-line/)
-  assert.match(welcomeBlock, /welcome-back-meta-chip/)
+  assert.doesNotMatch(welcomeBlock, /welcome-back-meta-line/)
+  assert.doesNotMatch(welcomeBlock, /welcome-back-intention/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
-  assert.match(en, /"continuePreviousSession": "Return to your place"/)
+  assert.match(en, /"continuePreviousSession": "Continue"/)
   assert.match(
     welcomeBlock,
     /v-if="canResumePreviousSession"/,

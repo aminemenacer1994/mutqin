@@ -147,6 +147,11 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       occurred_at: asText(item.occurred_at),
       has_audio: !!item.has_audio,
       audio_duration_ms: item.audio_duration_ms == null ? null : asNumber(item.audio_duration_ms),
+      has_word_alignment: !!item.has_word_alignment,
+      flagged_word_count: item.flagged_word_count == null ? null : asNumber(item.flagged_word_count),
+      assessment_id: asNumber(item.assessment_id) || null,
+      model_version: asText(item.model_version),
+      algorithm_version: asText(item.algorithm_version),
       weak_words: Array.isArray(item.weak_words) ? item.weak_words : [],
       madani_preview: Array.isArray(item.madani_preview) ? item.madani_preview : [],
     })).filter((item) => item.id > 0)

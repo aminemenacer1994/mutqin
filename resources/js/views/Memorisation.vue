@@ -442,6 +442,17 @@
       :data-session-signature="mushafSessionSignature || null"
     >
       <div class="content">
+        <button
+          v-if="showDashboardReturn"
+          type="button"
+          class="workspace-dashboard-back"
+          data-testid="workspace-dashboard-back"
+          :disabled="leavingDashboardEntry"
+          @click="leaveDashboardEntry"
+        >
+          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          <span>{{ t('memorisation.back_to_progress') }}</span>
+        </button>
         <!-- Verses Grid -->
         <div class="workspace">
         <section
@@ -521,7 +532,7 @@
             </div>
           </div>
           <div
-            v-if="(mobileProgressPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isPostSessionChoiceVisible && !askMutqinOpen"
+            v-if="(mobileProgressPills.length || (isDataReady && practiceTechniqueStatusVisible)) && !isPostSessionChoiceVisible && !askMutqinOpen && !quietBeginnerChrome"
             class="workspace-shell-progress-pills"
             :aria-label="t('memorisation.a11y.sessionMetadata')"
           >
@@ -571,7 +582,7 @@
                   @click="repeatRecommendedSessionFromChoice"
                 >
                   <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
+                  <span>{{ postSessionChoiceNextLabel }}</span>
                 </button>
                 <button
                   type="button"
@@ -586,6 +597,7 @@
                   <i class="bi bi-sliders" aria-hidden="true"></i>
                   <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
                 </button>
+                <p v-if="postSessionChoiceSummary" class="post-session-choice-summary">{{ postSessionChoiceSummary }}</p>
               </div>
               <div
                 v-else
@@ -654,7 +666,7 @@
           />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
-              v-if="hasVerses && !isPostSessionChoiceVisible"
+              v-if="hasVerses && !isPostSessionChoiceVisible && !quietBeginnerChrome"
               type="button"
               class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control top-card-setup-trigger"
               data-testid="workspace-change-session"
@@ -666,7 +678,7 @@
               <i class="bi bi-sliders" aria-hidden="true"></i>
             </button>
             <button
-              v-if="auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible"
+              v-if="auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible && !quietBeginnerChrome"
               type="button"
               class="action-btn action-btn-secondary top-card-action-trigger top-card-icon-control top-card-voice-trigger"
               :class="{ 'is-open': sessionVoiceOpen }"
@@ -679,6 +691,7 @@
               <i class="bi bi-mic" aria-hidden="true"></i>
             </button>
             <button
+              v-if="!quietBeginnerChrome"
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -698,7 +711,7 @@
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
             </button>
-            <div v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
+            <div v-else-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
                 role="button"
@@ -1139,6 +1152,16 @@
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
+        <p
+          v-if="sessionPracticeInstruction"
+          class="daily-mutqin-guide session-instruction"
+          data-testid="daily-mutqin-guide"
+          role="status"
+        >
+          <span class="daily-mutqin-guide__plan">{{ sessionPracticeInstruction.title }}</span>
+          <span class="daily-mutqin-guide__now">{{ sessionPracticeInstruction.body || dailyMutqinBeginnerCue }}</span>
+          <span v-if="sessionPracticeInstruction.aside" class="daily-mutqin-guide__aside">{{ sessionPracticeInstruction.aside }}</span>
+        </p>
 
 </section>
         <div
@@ -1218,12 +1241,152 @@
             -->
             <!-- Mobile recite dock lives after the reading surface (see bottom of workspace-main). -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
-              <div class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans">
+              <div
+                v-if="showReturningContinueCard"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--return guide-card"
+                data-testid="returning-continue-card"
+              >
+                <template v-if="!returningMoreWaysOpen">
+                  <p class="guide-card__kicker">{{ resumeGuide.kicker }}</p>
+                  <h2 class="guide-card__title">{{ resumeGuide.title }}</h2>
+                  <p class="guide-card__body">{{ resumeGuide.body }}</p>
+                  <button
+                    type="button"
+                    class="guide-card__action first-run-hero__cta returning-resume-cta"
+                    data-testid="returning-continue"
+                    :aria-label="resumePracticeAriaLabel"
+                    @click="welcomeBackContinueSession"
+                  >
+                    <span class="first-run-hero__lead">{{ resumeGuide.action }}</span>
+                  </button>
+                </template>
+                <template v-else>
+                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
+                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
+                  <button
+                    v-for="goal in firstRunKnownAyahOptions"
+                    :key="'return-' + goal.id"
+                    type="button"
+                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
+                    :data-plan="goal.id"
+                    :aria-label="`${goal.title}. ${goal.description}`"
+                    @click="openSetupForGoal(goal.id)"
+                  >
+                    <span class="first-run-hero__lead">{{ goal.title }}</span>
+                  </button>
+                </template>
+                <button
+                  type="button"
+                  class="guide-card__quiet guide-card__back"
+                  data-testid="returning-more-ways"
+                  :aria-expanded="returningMoreWaysOpen ? 'true' : 'false'"
+                  @click="returningMoreWaysOpen = !returningMoreWaysOpen"
+                >
+                  {{ returningMoreWaysOpen
+                    ? (t('common.back') || 'Back')
+                    : (t('memorisation.firstRun.differentSet') || 'Use a different set') }}
+                </button>
+              </div>
+              <div
+                v-if="showDailyMutqinEntryCard"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--next workspace-empty-card--daily-mutqin guide-card"
+                data-testid="daily-mutqin-entry"
+              >
+                <template v-if="!returningMoreWaysOpen">
+                  <p class="guide-card__kicker">{{ nextPracticePreview.kicker }}</p>
+                  <h2 class="guide-card__title">{{ nextPracticePreview.title }}</h2>
+                  <p class="guide-card__body">{{ nextPracticePreview.body }}</p>
+                  <button
+                    type="button"
+                    class="guide-card__action first-run-hero__cta"
+                    data-testid="daily-mutqin-start"
+                    :aria-label="`${nextPracticePreview.lead}. ${nextPracticePreview.body}`"
+                    @click="startDailyMutqinFromEmptyState"
+                  >
+                    <span class="first-run-hero__lead">{{ nextPracticePreview.lead }}</span>
+                  </button>
+                </template>
+                <template v-else>
+                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
+                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
+                  <button
+                    v-for="goal in firstRunKnownAyahOptions"
+                    :key="'next-' + goal.id"
+                    type="button"
+                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
+                    :data-plan="goal.id"
+                    :aria-label="`${goal.title}. ${goal.description}`"
+                    @click="openSetupForGoal(goal.id)"
+                  >
+                    <span class="first-run-hero__lead">{{ goal.title }}</span>
+                  </button>
+                </template>
+                <button
+                  type="button"
+                  class="guide-card__quiet guide-card__back"
+                  data-testid="empty-more-ways"
+                  :aria-expanded="returningMoreWaysOpen ? 'true' : 'false'"
+                  @click="returningMoreWaysOpen = !returningMoreWaysOpen"
+                >
+                  {{ returningMoreWaysOpen
+                    ? (t('common.back') || 'Back')
+                    : (t('memorisation.firstRun.differentSet') || 'Use a different set') }}
+                </button>
+              </div>
+              <div
+                v-if="isFirstRunFlowActive"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans workspace-empty-card--first-run guide-card"
+              >
+                <template v-if="!firstRunMoreWaysOpen">
+                  <p class="guide-card__kicker">{{ firstRunGuide.kicker }}</p>
+                  <h2 class="guide-card__title">{{ firstRunGuide.title }}</h2>
+                  <p class="guide-card__body">{{ firstRunGuide.body }}</p>
+                  <button
+                    type="button"
+                    class="guide-card__action first-run-hero__cta"
+                    data-testid="first-run-hero-start"
+                    :aria-label="`${firstRunGuide.action}. ${firstRunPracticePreview.rangeLine}. ${firstRunPracticePreview.settingsLine}`"
+                    @click="startFirstRunHeroPractice"
+                  >
+                    <span class="first-run-hero__lead">{{ firstRunGuide.action }}</span>
+                  </button>
+                </template>
+                <template v-else>
+                  <h2 class="guide-card__title">{{ t('memorisation.firstRun.knownTitle') || 'Revise what you already know' }}</h2>
+                  <p class="guide-card__body">{{ t('memorisation.firstRun.knownBody') || 'That is the right next step if these ayahs are already familiar. Testing your recitation, or learning something new, can wait until after.' }}</p>
+                  <button
+                    v-for="goal in firstRunKnownAyahOptions"
+                    :key="goal.id"
+                    type="button"
+                    :class="goal.id === 'revise' ? 'guide-card__action' : 'guide-card__quiet'"
+                    :data-plan="goal.id"
+                    :aria-label="`${goal.title}. ${goal.description}`"
+                    @click="openSetupForGoal(goal.id)"
+                  >
+                    <span class="first-run-hero__lead">{{ goal.title }}</span>
+                  </button>
+                </template>
+                <button
+                  type="button"
+                  class="guide-card__quiet guide-card__back"
+                  data-testid="first-run-more-ways"
+                  :aria-expanded="firstRunMoreWaysOpen ? 'true' : 'false'"
+                  @click="firstRunMoreWaysOpen = !firstRunMoreWaysOpen"
+                >
+                  {{ firstRunMoreWaysOpen
+                    ? (t('common.back') || 'Back')
+                    : (t('memorisation.firstRun.moreWays') || 'I already know some ayahs') }}
+                </button>
+              </div>
+              <div
+                v-else-if="!showReturningContinueCard && !showDailyMutqinEntryCard"
+                class="workspace-empty-card workspace-empty-card--choice workspace-empty-card--plans"
+              >
                 <header class="plan-choice-head">
                   <h2>{{ t('memorisation.sessionGoal.label') }}</h2>
                   <p class="plan-choice-head__intro">{{ t('memorisation.sessionGoal.planChooserIntro') }}</p>
                   <button
-                    v-if="auth.session_voice_enabled"
+                    v-if="auth.session_voice_enabled && !isFirstRunFlowActive"
                     type="button"
                     class="plan-voice-entry"
                     data-testid="empty-voice-open"
@@ -1243,7 +1406,7 @@
                   </button>
                 </header>
                 <div
-                  v-if="auth.session_voice_enabled"
+                  v-if="auth.session_voice_enabled && !isFirstRunFlowActive"
                   class="plan-voice-divider"
                   role="presentation"
                   aria-hidden="true"
@@ -1833,15 +1996,15 @@
                     class="action-btn workspace-ai-recite-cta workspace-recite-dock__button workspace-reading-bottom-bar__recite-btn"
                     :class="{ 'is-animated': workspaceAiReciteAnimated }"
                     data-testid="workspace-ai-recite-mobile"
-                    :title="t('dashboard.ai_recite.cta_label')"
-                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    :title="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
                     @click="openWorkspaceAiRecite"
                   >
                     <span class="workspace-reading-bottom-bar__recite-ring" aria-hidden="true"></span>
                     <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--mid" aria-hidden="true"></span>
                     <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--delayed" aria-hidden="true"></span>
                     <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                    <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
+                    <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}. {{ workspaceAiReciteOptionalLabel }}</span>
                   </button>
                 </div>
 
@@ -1872,6 +2035,17 @@
         @click.stop role="dialog" :aria-modal="showTools ? 'true' : 'false'" aria-labelledby="memorisationToolsTitle"
         :aria-hidden="showTools ? 'false' : 'true'" :inert="showTools ? undefined : true" tabindex="-1" @keydown="onToolsPanelKeydown">
         <div class="tools-top">
+        <button
+          v-if="showDashboardReturn"
+          type="button"
+          class="tools-dashboard-back"
+          data-testid="tools-dashboard-back"
+          :disabled="leavingDashboardEntry"
+          @click="leaveDashboardEntry"
+        >
+          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          <span>{{ t('memorisation.back_to_progress') }}</span>
+        </button>
         <div class="tools-topbar">
           <div class="tools-title">
             <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ controlsPanelTitle }}</h3>
@@ -1913,7 +2087,11 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet sheet--setup">
-            <section class="setup-plan" aria-labelledby="setup-plan-label">
+            <section
+              v-if="!isFirstRunFlowActive"
+              class="setup-plan"
+              aria-labelledby="setup-plan-label"
+            >
               <h4 id="setup-plan-label" class="setup-plan__label">{{ t('memorisation.sessionGoal.label') }}</h4>
               <div
                 class="session-goal"
@@ -1934,9 +2112,16 @@
                   <span>{{ goal.hint }}</span>
                 </button>
               </div>
-              <p class="session-goal__help">{{ sessionGoalHelp }}</p>
             </section>
             <section class="setup-plan setup-plan--passage">
+            <p
+              v-if="isFirstRunFlowActive"
+              class="first-run-suggested-passage"
+              role="note"
+              data-testid="first-run-suggested-passage"
+            >
+              {{ firstRunSuggestedPassageLabel }}
+            </p>
             <div class="session-essentials" data-tour="setup-sheet">
               <div class="field setup-field-row" data-tour="setup-surah">
                 <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
@@ -3011,7 +3196,18 @@
 
         </div>
 
-        <div class="tools-footer tools-footer--single">
+        <div class="tools-footer" :class="isFirstRunFlowActive ? 'tools-footer--first-run' : 'tools-footer--single'">
+          <button
+            v-if="isFirstRunFlowActive"
+            type="button"
+            class="tools-btn btn btn-ghost first-run-skip__btn first-run-skip__btn--footer"
+            data-testid="first-run-skip-passage"
+            :disabled="toolsStartBusy"
+            @click="skipFirstRunToPractice"
+          >
+            <span class="first-run-skip__lead">{{ t('memorisation.firstRun.skipToPracticeLead') || 'Quick start' }}</span>
+            <span class="first-run-skip__range" lang="en">{{ t('memorisation.firstRun.skipToPracticeRange') || 'Al-Fatiha 1–5' }}</span>
+          </button>
           <button
             type="button"
             class="tools-btn btn btn-primary session-primary-action"
@@ -3159,35 +3355,12 @@
                   <p class="welcome-back-message">
                     {{ welcomeBackModalSubtitle }}
                   </p>
-                  <div
-                    v-if="welcomeBackMetaChips.length"
-                    class="welcome-back-meta-line"
-                    :aria-label="t('memorisation.a11y.sessionMetadata')"
-                  >
-                    <span
-                      v-for="chip in welcomeBackMetaChips"
-                      :key="chip.key"
-                      class="welcome-back-meta-chip"
-                    >
-                      <span class="welcome-back-meta-chip__label">{{ chip.label }}</span>
-                      <span class="welcome-back-meta-chip__value">{{ chip.value }}</span>
-                    </span>
-                  </div>
-                  <p
-                    v-if="welcomeBackIslamicContent?.intention"
-                    class="welcome-back-intention"
-                  >
-                    {{ welcomeBackIslamicContent.intention }}
-                  </p>
                 </div>
               </div>
 
               <div class="modal-footer mutqin-modal-footer welcome-back-footer welcome-back-footer--lean">
                 <div
-                  class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2"
-                  :class="canResumePreviousSession
-                    ? 'welcome-back-actions-grid--trio mutqin-modal-actions--3'
-                    : 'welcome-back-actions-grid--duo mutqin-modal-actions--2'"
+                  class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2 welcome-back-actions-grid--duo mutqin-modal-actions--2"
                 >
                   <button
                     v-if="canResumePreviousSession"
@@ -3199,15 +3372,27 @@
                     @click.stop.prevent="welcomeBackContinueSession"
                   >
                     <i class="bi bi-play-fill" aria-hidden="true"></i>
-                    <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
+                    <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.firstRun.resumePractising') || 'Resume practising' }}</span>
                     <span class="welcome-back-continue-label welcome-back-continue-label--short">{{ t('memorisation.welcomeBack.continueSessionShort') }}</span>
                   </button>
                   <button
+                    v-if="hasMeaningfulLearningProgress"
                     type="button"
                     class="mutqin-modal-btn mutqin-btn-animate welcome-back-action"
                     :class="canResumePreviousSession
                       ? 'mutqin-modal-btn--secondary welcome-back-action--secondary'
                       : 'mutqin-modal-btn--primary welcome-back-action--primary'"
+                    data-testid="welcome-back-progress"
+                    :disabled="welcomeBackContinueInFlight"
+                    @click="openDashboardView"
+                  >
+                    <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.welcomeBack.openProgress') || 'My progress' }}</span>
+                  </button>
+                  <button
+                    v-if="!canResumePreviousSession"
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate welcome-back-action welcome-back-action--secondary"
                     data-tour="welcome-start"
                     :disabled="welcomeBackContinueInFlight"
                     @click="welcomeBackStartNewSession"
@@ -3215,16 +3400,17 @@
                     <i class="bi bi-plus-lg" aria-hidden="true"></i>
                     <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-action welcome-back-action--ghost welcome-back-logout"
-                    :disabled="welcomeBackContinueInFlight"
-                    @click="logoutFromWelcomeBack"
-                  >
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    <span>{{ t('common.logout') }}</span>
-                  </button>
                 </div>
+                <button
+                  v-if="canResumePreviousSession"
+                  type="button"
+                  class="first-run-more welcome-back-different-set"
+                  data-testid="welcome-back-different-set"
+                  :disabled="welcomeBackContinueInFlight"
+                  @click="welcomeBackStartNewSession"
+                >
+                  {{ t('memorisation.welcomeBack.startNewSession') }}
+                </button>
               </div>
             </div>
           </div>
@@ -3755,6 +3941,7 @@
       :try-again-label="translateOrFallback('memorisation.amd.tryAgain', translateOrFallback('common.tryAgain', 'Try again'))"
       :your-result-label="translateOrFallback('memorisation.postSession.recommendation.yourResult', 'Your result')"
       :beta-badge-label="translateOrFallback('memorisation.postSession.recommendation.aiRecitationBeta', 'Audio recitation · Beta')"
+      :disclaimer-label="translateOrFallback('memorisation.postSession.recommendation.aiDisclaimer', '')"
       :details-section-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'Details')"
       :view-details-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'View details')"
       :hide-details-label="translateOrFallback('memorisation.postSession.recommendation.hideDetails', 'Hide details')"
@@ -4177,6 +4364,13 @@
               </h2>
               <p v-if="postSessionDialogSubtitle" class="post-session-simple__subtitle">
                 {{ postSessionDialogSubtitle }}
+              </p>
+              <p
+                v-if="postSessionIsFirstCompletion && postSessionFirstRunReturnHint"
+                class="post-session-simple__return-hint"
+                data-testid="first-session-return-hint"
+              >
+                {{ postSessionFirstRunReturnHint }}
               </p>
             </div>
             <button
@@ -4799,23 +4993,23 @@
           class="player-dock-card"
           :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerBarVisible }"
         >
-          <div
-            v-if="talqinRecitationTurnActive"
-            class="player-talqin-strip"
-            role="status"
-            aria-live="polite"
-            :aria-label="talqinRecitationPrompt"
-          >
             <div
-              v-if="talqinCalloutSeconds > 0"
-              :key="talqinCalloutSeconds"
-              class="talqin-callout-number"
-              aria-hidden="true"
+              v-if="talqinRecitationTurnActive && !dailyMutqinSuppressTalqinPrompt"
+              class="player-talqin-strip"
+              role="status"
+              aria-live="polite"
+              :aria-label="t('memorisation.talqin.secondsLeft', { seconds: talqinCalloutSeconds }) || `${talqinCalloutSeconds}s left`"
             >
-              {{ talqinCalloutSeconds }}
+              <div
+                v-if="talqinCalloutSeconds > 0"
+                :key="talqinCalloutSeconds"
+                class="talqin-callout-number"
+                aria-hidden="true"
+              >
+                {{ t('memorisation.talqin.secondsLeft', { seconds: talqinCalloutSeconds }) || `${talqinCalloutSeconds}s left` }}
+              </div>
+              <div class="talqin-callout-text">{{ talqinCalloutHeadline }}</div>
             </div>
-            <div class="talqin-callout-text">{{ talqinCalloutHeadline }}</div>
-          </div>
 
         <div
           v-if="playerBarVisible"
@@ -5040,15 +5234,15 @@
               type="button"
               class="madani-fullscreen-bar__recite"
               data-testid="madani-fullscreen-recite"
-              :title="t('dashboard.ai_recite.cta_label')"
-              :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+              :title="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
+              :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
               @click.stop="openWorkspaceAiRecite"
             >
               <span class="madani-fullscreen-bar__recite-ring" aria-hidden="true"></span>
               <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--mid" aria-hidden="true"></span>
               <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--delayed" aria-hidden="true"></span>
               <i class="bi bi-mic-fill" aria-hidden="true"></i>
-              <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
+              <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}. {{ workspaceAiReciteOptionalLabel }}</span>
             </button>
 
           </div>
@@ -5068,15 +5262,15 @@
           class="workspace-desktop-recite"
           :class="{ 'is-animated': workspaceAiReciteAnimated }"
           data-testid="workspace-ai-recite-desktop"
-          :title="t('dashboard.ai_recite.cta_label')"
-          :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+          :title="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
+          :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${workspaceAiReciteOptionalLabel}`"
           @click.stop="openWorkspaceAiRecite"
         >
           <span class="workspace-desktop-recite__ring" aria-hidden="true"></span>
           <span class="workspace-desktop-recite__ring workspace-desktop-recite__ring--mid" aria-hidden="true"></span>
           <span class="workspace-desktop-recite__ring workspace-desktop-recite__ring--delayed" aria-hidden="true"></span>
           <i class="bi bi-mic-fill" aria-hidden="true"></i>
-          <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
+          <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}. {{ workspaceAiReciteOptionalLabel }}</span>
         </button>
       </div>
     </Teleport>
@@ -5306,6 +5500,7 @@
       :range-label="amdRangeLabel"
       :beta-badge="amdLabels.betaBadge"
       :disclaimer="amdLabels.disclaimer"
+      :disclaimer-note="amdLabels.disclaimerShort"
       :mic-status="amdLearnerMicStatus"
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"

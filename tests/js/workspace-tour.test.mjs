@@ -175,7 +175,8 @@ function sliceMethod(source, name) {
   assert.doesNotMatch(init, /localStorage\.removeItem/)
 
   const firstRun = sliceMethod(memorisationJs, 'requiresFirstTimeOnboarding')
-  assert.match(firstRun, /return false/)
+  assert.match(firstRun, /hasCompletedOnboarding\(\)/)
+  assert.match(firstRun, /hasPostOnboardingPracticeEvidence\(\)/)
   assert.doesNotMatch(firstRun, /just_registered/)
 
   assert.match(memorisationJs, /finalizeRegistrationOnboardingForReturningLogin\(\)/)
@@ -209,6 +210,7 @@ function sliceMethod(source, name) {
     isDemoWorkspaceAccount: () => false,
     isRegistrationSession: () => false,
     isSignupIsolationActive: () => true,
+    learningBackendEnabled: () => true,
   }
   const firstRunCtx = {
     ...existingLogin,
@@ -217,9 +219,13 @@ function sliceMethod(source, name) {
     hasPostOnboardingPracticeEvidence: () => false,
     readWorkspaceStateValue: () => false,
   }
-  // Onboarding stays hidden, including after registration and for demo accounts.
+  // Spotlight tour stays off; first-time goal/setup path is for new authenticated learners.
   assert.equal(run('shouldAutoStartWorkspaceTour', existingLogin), false)
-  assert.equal(run('requiresFirstTimeOnboarding', firstRunCtx), false)
+  assert.equal(run('requiresFirstTimeOnboarding', firstRunCtx), true)
+  assert.equal(run('requiresFirstTimeOnboarding', {
+    ...firstRunCtx,
+    learningBackendEnabled: () => false,
+  }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     isDemoWorkspaceAccount: () => true,
@@ -238,8 +244,7 @@ function sliceMethod(source, name) {
   }), false)
   assert.equal(run('requiresFirstTimeOnboarding', {
     ...firstRunCtx,
-    isDemoWorkspaceAccount: () => true,
-    hasDismissedWorkspaceTour: () => true,
+    hasPostOnboardingPracticeEvidence: () => true,
   }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
@@ -251,6 +256,7 @@ function sliceMethod(source, name) {
     ...firstRunCtx,
     auth: { check: true, just_logged_in: false, just_registered: false },
     isRegistrationSession: () => false,
+    hasCompletedOnboarding: () => true,
     readWorkspaceStateValue: () => true,
   }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
@@ -261,7 +267,7 @@ function sliceMethod(source, name) {
     ...firstRunCtx,
     auth: { check: true, just_logged_in: false, just_registered: true },
     isRegistrationSession: () => true,
-  }), false)
+  }), true)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
     auth: { check: true, just_logged_in: true, just_registered: false },

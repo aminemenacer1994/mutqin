@@ -56,6 +56,58 @@ export function countCompletedSessionRepeats({
   return completed
 }
 
+/**
+ * First playback-queue slot that still needs a play.
+ * Plays are counted per ayah, in queue order, so two finished passes of a
+ * 3× ayah leave the index on the third pass — not back on the first.
+ * Returns `queue.length` when every slot has already been played.
+ */
+export function nextUnfinishedRepeatIndex(queue = [], versePlayCounts = {}) {
+  if (!Array.isArray(queue) || !queue.length) return 0
+  const remaining = {}
+  if (versePlayCounts && typeof versePlayCounts === 'object') {
+    for (const [key, count] of Object.entries(versePlayCounts)) {
+      const plays = Math.max(0, Math.floor(Number(count) || 0))
+      if (key && plays > 0) remaining[key] = plays
+    }
+  }
+  for (let index = 0; index < queue.length; index += 1) {
+    const key = entryVerseKey(queue[index])
+    if (!key) return index
+    if ((remaining[key] || 0) > 0) {
+      remaining[key] -= 1
+      continue
+    }
+    return index
+  }
+  return queue.length
+}
+
+/**
+ * Where Resume should start.
+ * A mid-ayah pause keeps its slot. A finished (or never-positioned) pause
+ * continues at the next unplayed repeat instead of replaying a dead file.
+ */
+export function resolvePausedResumeIndex({
+  queue = [],
+  queueIndex = 0,
+  versePlayCounts = {},
+  audioFinished = false,
+  currentTime = 0,
+} = {}) {
+  const length = Array.isArray(queue) ? queue.length : 0
+  if (!length) return { index: 0, complete: false, changed: false }
+  const index = Math.max(0, Math.min(length - 1, Math.floor(Number(queueIndex) || 0)))
+  const unfinished = nextUnfinishedRepeatIndex(queue, versePlayCounts)
+  const midAyah = !audioFinished && Number(currentTime) > 0.05
+  if (midAyah) return { index, complete: false, changed: false }
+  if (unfinished >= length) {
+    return { index: length - 1, complete: true, changed: false }
+  }
+  const nextIndex = Math.max(index, unfinished)
+  return { index: nextIndex, complete: false, changed: nextIndex !== index }
+}
+
 /** Completed passes for the current ayah (and chaining group). */
 export function activeAyahRepeatProgress({ queue = [], queueIndex = 0, queuePlaybackExhausted = false } = {}) {
   if (!Array.isArray(queue) || !queue.length) return { completed: 0, total: 1 }

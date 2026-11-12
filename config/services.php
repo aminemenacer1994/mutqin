@@ -93,6 +93,18 @@ return [
         ],
     ],
 
+    'posthog' => [
+        // Public project token (phc_…). Empty disables the browser SDK.
+        // POSTHOG_HOST is accepted only when it is the EU ingestion host.
+        'key' => trim((string) env('POSTHOG_KEY', env('VITE_POSTHOG_KEY', ''))),
+        'host' => rtrim(trim((string) env('POSTHOG_HOST', env('VITE_POSTHOG_HOST', 'https://eu.i.posthog.com'))), '/'),
+        // Server-only personal key (phx_…) for the Query API. Never send this to the browser.
+        // Create it in PostHog EU project 347076 with query read access only.
+        'personal_api_key' => trim((string) env('POSTHOG_PERSONAL_API_KEY', '')),
+        'project_id' => trim((string) env('POSTHOG_PROJECT_ID', '347076')),
+        'app_host' => 'https://eu.posthog.com',
+    ],
+
     'google_analytics' => [
         // Public GA4 Measurement ID (not a secret). Empty disables the tag.
         'measurement_id' => trim((string) env('GOOGLE_ANALYTICS_ID', 'G-W4K8J2T0SG')),

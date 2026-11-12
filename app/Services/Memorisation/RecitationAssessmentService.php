@@ -7,9 +7,11 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
 use App\Models\User;
+use App\Services\Analytics\ProductEventRecorder;
 use App\Services\NextSessionRecommendationService;
 use App\Services\Billing\AiAssessmentQuotaExceeded;
 use App\Services\Billing\SubscriptionEntitlement;
+use App\Support\Analytics\ProductEventName;
 use App\Support\ReciteFocus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -171,7 +173,7 @@ class RecitationAssessmentService
             ? $this->resolvePracticeScope($payload, $planData)
             : MemorisationPracticePlan::SCOPE_FULL_RANGE;
 
-        return DB::transaction(function () use (
+        $result = DB::transaction(function () use (
             $user,
             $payload,
             $idempotencyKey,
@@ -368,6 +370,25 @@ class RecitationAssessmentService
                 'improvement' => $improvement,
             ];
         });
+
+        $assessmentId = (int) ($result['assessment']['id'] ?? 0);
+        if ($assessmentId > 0) {
+            $durationMs = (int) ($result['assessment']['duration_ms'] ?? 0);
+            $surah = (int) ($result['assessment']['surah_number'] ?? 0);
+            app(ProductEventRecorder::class)->recordQuietly(
+                ProductEventName::AI_RECITE_COMPLETED,
+                $user,
+                null,
+                'assessment:'.$assessmentId.':ai-recite',
+                array_filter([
+                    'assessment_id' => $assessmentId,
+                    'surah_id' => $surah >= 1 && $surah <= 114 ? $surah : null,
+                    'duration_seconds' => $durationMs > 0 ? (int) round($durationMs / 1000) : null,
+                ], static fn ($value) => $value !== null),
+            );
+        }
+
+        return $result;
     }
 
     /**

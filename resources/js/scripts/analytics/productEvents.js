@@ -1,8 +1,9 @@
 /**
  * Product analytics for acquisition, activation and retention.
  *
- * GA4 (existing gtag.js) receives these events. Meta Pixel stays on the
- * existing opt-in bridge. There is no Firebase Analytics SDK and no Vue Router.
+ * GA4 (existing gtag.js) and PostHog EU receive these events. Meta Pixel stays
+ * on the existing opt-in bridge. There is no Firebase Analytics SDK and no
+ * Vue Router. PostHog page views use the History API hook below.
  *
  * Never send audio, transcripts, names, emails, or other personal data.
  * Failures are swallowed so measurement cannot break a learner action.
@@ -13,6 +14,8 @@
  * ai_recitation_completed, session_resumed.
  * Do not mark page_view, session_abandoned, or onboarding_complete.
  */
+
+import { capturePostHogProductEvent } from './posthog.js'
 
 export const ACQUISITION_KEY = 'mutqin_acq_attr'
 
@@ -33,6 +36,21 @@ export const PRODUCT_EVENTS = Object.freeze({
   AI_ASSESSMENT_COMPLETED: 'ai_assessment_completed',
   AI_RECITATION_COMPLETED: 'ai_recitation_completed',
   PAGE_VIEW: 'page_view',
+  LANDING_PAGE_VIEWED: 'landing_page_viewed',
+  SIGNUP_STARTED: 'signup_started',
+  ONBOARDING_STARTED: 'onboarding_started',
+  ONBOARDING_STEP_VIEWED: 'onboarding_step_viewed',
+  ONBOARDING_STEP_COMPLETED: 'onboarding_step_completed',
+  ONBOARDING_ABANDONED: 'onboarding_abandoned',
+  ONBOARDING_COMPLETED: 'onboarding_completed',
+  PROGRESSIVE_HIDING_USED: 'progressive_hiding_used',
+  AI_RECITE_STARTED: 'ai_recite_started',
+  REFERRAL_LINK_OPENED: 'referral_link_opened',
+  TUTORIAL_PLAYED: 'tutorial_played',
+  TUTORIAL_COMPLETED: 'tutorial_completed',
+  DAILY_MUTQIN_STARTED: 'daily_mutqin_started',
+  DAILY_MUTQIN_STEP_VIEWED: 'daily_mutqin_step_viewed',
+  DAILY_MUTQIN_COMPLETED: 'daily_mutqin_completed',
 })
 
 const ALLOWED_EVENTS = new Set(Object.values(PRODUCT_EVENTS))
@@ -40,6 +58,32 @@ const SESSION_TYPES = new Set(['new', 'revision', 'sample', 'planner'])
 const LEARNING_MODES = new Set(['auto', 'manual', 'follow', 'beginner', 'advanced', 'planner'])
 const METHODS = new Set(['email', 'google', 'demo'])
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign']
+const REFERRAL_KEY = 'referral_code'
+const ANON_KEY = 'mutqin_anon_id'
+
+/** Browser events that are real actions. Account and session completion stay on the server. */
+const CLIENT_INGEST = new Set([
+  PRODUCT_EVENTS.LANDING_PAGE_VIEWED,
+  PRODUCT_EVENTS.SIGNUP_STARTED,
+  PRODUCT_EVENTS.ONBOARDING_STARTED,
+  PRODUCT_EVENTS.ONBOARDING_STEP_VIEWED,
+  PRODUCT_EVENTS.ONBOARDING_STEP_COMPLETED,
+  PRODUCT_EVENTS.ONBOARDING_ABANDONED,
+  PRODUCT_EVENTS.ONBOARDING_COMPLETED,
+  PRODUCT_EVENTS.PROGRESSIVE_HIDING_USED,
+  PRODUCT_EVENTS.AI_RECITE_STARTED,
+  PRODUCT_EVENTS.REFERRAL_LINK_OPENED,
+  PRODUCT_EVENTS.TUTORIAL_PLAYED,
+  PRODUCT_EVENTS.TUTORIAL_COMPLETED,
+  PRODUCT_EVENTS.DAILY_MUTQIN_STARTED,
+  PRODUCT_EVENTS.DAILY_MUTQIN_STEP_VIEWED,
+  PRODUCT_EVENTS.DAILY_MUTQIN_COMPLETED,
+])
+
+const INGEST_ALIAS = Object.freeze({
+  onboarding_complete: PRODUCT_EVENTS.ONBOARDING_COMPLETED,
+  ai_recitation_started: PRODUCT_EVENTS.AI_RECITE_STARTED,
+})
 
 const onceMemory = new Set()
 let pageHooked = false
@@ -132,6 +176,13 @@ export function captureAcquisitionAttribution() {
     next[key] = value
     changed = true
   }
+  if (!next[REFERRAL_KEY]) {
+    const referral = safeToken(params.get('ref') || params.get('referral_code'))
+    if (referral) {
+      next[REFERRAL_KEY] = referral
+      changed = true
+    }
+  }
   if (changed) {
     try {
       storage()?.setItem(ACQUISITION_KEY, JSON.stringify(next))
@@ -150,6 +201,8 @@ export function getAcquisitionAttribution() {
     const value = safeToken(stored[key])
     if (value) safe[key] = value
   }
+  const referral = safeToken(stored[REFERRAL_KEY])
+  if (referral) safe[REFERRAL_KEY] = referral
   return safe
 }
 
@@ -198,6 +251,18 @@ export function sanitiseProductParams(params = {}) {
   if (location) safe.page_location = location
   const tool = safeToken(params.tool, 40)
   if (tool) safe.tool = tool
+  const feature = safeToken(params.feature_id, 40)
+  if (feature && /^[a-z0-9-]{1,40}$/.test(feature)) safe.feature_id = feature
+  const video = String(params.video_id || '')
+  if (/^[A-Za-z0-9_-]{11}$/.test(video)) safe.video_id = video
+  const referral = safeToken(params.referral_code, 40)
+  if (referral) safe.referral_code = referral
+  for (const idKey of ['session_id', 'recommendation_id', 'feedback_id']) {
+    const id = Number(params[idKey])
+    if (Number.isInteger(id) && id > 0) safe[idKey] = id
+  }
+  const stage = String(params.stage || '')
+  if (stage === 'ended_early' || stage === 'abandoned' || stage === 'discarded') safe.stage = stage
   return safe
 }
 
@@ -233,6 +298,66 @@ function sendGtag(eventName, params) {
   return true
 }
 
+function anonymousId() {
+  const store = storage()
+  if (!store) return ''
+  try {
+    const existing = String(store.getItem(ANON_KEY) || '')
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing)) {
+      return existing.toLowerCase()
+    }
+    const id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+      ? crypto.randomUUID()
+      : ''
+    if (!id) return ''
+    store.setItem(ANON_KEY, id)
+    return id
+  } catch {
+    return ''
+  }
+}
+
+function postClientEvent(eventName, params, onceKey) {
+  const canonical = INGEST_ALIAS[eventName] || eventName
+  if (!CLIENT_INGEST.has(canonical)) return false
+  if (typeof window === 'undefined' || typeof window.fetch !== 'function') return false
+  const safe = sanitiseProductParams(params)
+  const acquisition = getAcquisitionAttribution()
+  const anon = anonymousId()
+  const idempotency = String(onceKey || `${canonical}:${anon || 'once'}`)
+    .replace(/\s+/g, '_')
+    .slice(0, 80)
+  if (!/^[A-Za-z0-9:._-]+$/.test(idempotency)) return false
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  }
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (csrf) headers['X-CSRF-TOKEN'] = csrf
+  } catch {
+    /* registration still proceeds */
+  }
+  window.fetch('/api/product-events', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers,
+    keepalive: true,
+    body: JSON.stringify({
+      event: canonical,
+      anonymous_id: anon || undefined,
+      idempotency_key: idempotency,
+      utm_source: acquisition.utm_source,
+      utm_medium: acquisition.utm_medium,
+      utm_campaign: acquisition.utm_campaign,
+      referral_code: safe.referral_code || acquisition.referral_code,
+      properties: safe,
+    }),
+  }).catch(() => {})
+  return true
+}
+
 /**
  * Send one allow-listed GA4 event. Pass onceKey to guarantee a single send
  * for that successful action in this tab. Omit it only for page views, which
@@ -245,8 +370,14 @@ export function trackProductEvent(eventName, params = {}, { onceKey = '' } = {})
     if (!analyticsMeasurementAllowed()) return false
     if (onceKey && alreadySent(eventName, onceKey)) return false
     const sent = sendGtag(eventName, params)
-    if (sent && onceKey) markSent(eventName, onceKey)
-    return sent
+    const posted = postClientEvent(eventName, params, onceKey)
+    try {
+      capturePostHogProductEvent(eventName, params, { onceKey })
+    } catch {
+      /* PostHog must not change the GA4 result */
+    }
+    if ((sent || posted) && onceKey) markSent(eventName, onceKey)
+    return sent || posted
   } catch {
     return false
   }
@@ -272,6 +403,7 @@ function currentPath() {
 function sendPageView(path) {
   if (!path || path === lastPagePath) return
   lastPagePath = path
+  if (path === '/admin' || path.startsWith('/admin/')) return
   let pageLocation = path
   try {
     pageLocation = `${window.location.origin}${path}`
@@ -293,8 +425,11 @@ function onSpaNavigation() {
 }
 
 /**
- * One GA4 page_view per real pathname change after the initial load.
- * The tag's config call already recorded the first view.
+ * One GA4 page_view and one PostHog $pageview per real pathname change after
+ * the initial load. There is no Vue Router; this History API hook is the
+ * navigation integration. PostHog's own pageview capture stays off so the
+ * change is not counted twice. The GA tag's config call already recorded
+ * the first GA4 view. PostHog records that first view itself.
  */
 export function initSpaPageViews() {
   if (typeof window === 'undefined' || pageHooked || !window.history) return
@@ -325,6 +460,35 @@ function bindConsent() {
     })
   } catch {
     consentBound = false
+  }
+}
+
+export function trackLandingAndSignupSurface() {
+  try {
+    const path = currentPath()
+    if (path === '/') {
+      trackProductEvent(PRODUCT_EVENTS.LANDING_PAGE_VIEWED, {}, { onceKey: 'landing' })
+    }
+    if (path === '/register') {
+      trackProductEvent(PRODUCT_EVENTS.SIGNUP_STARTED, {}, { onceKey: 'signup' })
+    }
+    const acquisition = getAcquisitionAttribution()
+    let params
+    try {
+      params = new URLSearchParams(window.location.search || '')
+    } catch {
+      params = new URLSearchParams()
+    }
+    const medium = safeToken(params.get('utm_medium'))
+    const source = safeToken(params.get('utm_source'))
+    const referral = acquisition.referral_code || ''
+    if (referral || medium === 'referral' || source === 'learner') {
+      trackProductEvent(PRODUCT_EVENTS.REFERRAL_LINK_OPENED, {
+        referral_code: referral,
+      }, { onceKey: `ref:${referral || source || medium || 'open'}` })
+    }
+  } catch {
+    /* never block the page */
   }
 }
 

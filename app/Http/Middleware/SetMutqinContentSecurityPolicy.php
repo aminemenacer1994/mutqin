@@ -59,7 +59,7 @@ class SetMutqinContentSecurityPolicy
 
     public static function buildPolicy(?Request $request = null): string
     {
-        $scriptSrc = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.youtube.com https://www.youtube-nocookie.com https://s.ytimg.com";
+        $scriptSrc = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.youtube.com https://www.youtube-nocookie.com https://s.ytimg.com https://eu.i.posthog.com https://eu-assets.i.posthog.com";
         if (! app()->isProduction() || config('app.debug')) {
             // Webpack watch/dev lazy chunks and some tooling still rely on eval.
             $scriptSrc .= " 'unsafe-eval'";

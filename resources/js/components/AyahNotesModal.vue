@@ -2,7 +2,7 @@
   <div
     v-if="visible"
     ref="overlay"
-    class="modal-overlay mutqin-modal-overlay ayah-notes-modal-overlay"
+    class="modal-overlay mutqin-modal-overlay ayah-notes-modal-overlay ph-no-capture"
     @click.self.prevent
     @keydown="onOverlayKeydown"
   >

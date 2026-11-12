@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListCont
 use App\Http\Controllers\Api\ClientErrorController;
 use App\Http\Middleware\ForwardMarketingClientErrors;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
+use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
@@ -29,6 +31,10 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/product-events', [ProductEventController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('api.product-events.store');
 
 Route::post('/client-errors', [ClientErrorController::class, 'store'])
     ->middleware([ForwardMarketingClientErrors::class, 'throttle:20,1'])
@@ -53,6 +59,7 @@ Route::middleware('throttle:120,1')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:access-admin')->group(function () {
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'show'])->name('api.admin.dashboard.show');
+        Route::get('/admin/growth', [AdminGrowthController::class, 'show'])->name('api.admin.growth.show');
         Route::get('/admin/users', [AdminDashboardController::class, 'users'])->name('api.admin.users');
         Route::post('/admin/users', [AdminDashboardController::class, 'userStore'])->name('api.admin.users.store');
         Route::post('/admin/users/bulk', [AdminDashboardController::class, 'usersBulk'])->name('api.admin.users.bulk');

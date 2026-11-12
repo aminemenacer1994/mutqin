@@ -59,6 +59,11 @@
                 </button>
               </div>
             </div>
+            <p
+              v-if="visibleDisclaimerNote"
+              class="amd-ai-recite-note amd-ai-recite-note--header"
+              role="note"
+            >{{ visibleDisclaimerNote }}</p>
           </header>
 
           <div class="amd-body amd-body--premium amd-body--compact amd-body--scroll">
@@ -408,6 +413,7 @@ export default {
     rangeLabel: { type: String, default: '' },
     betaBadge: { type: String, default: 'Beta' },
     disclaimer: { type: String, default: '' },
+    disclaimerNote: { type: String, default: '' },
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },
@@ -515,6 +521,11 @@ export default {
     }
   },
   computed: {
+    visibleDisclaimerNote() {
+      const short = String(this.disclaimerNote || '').trim()
+      if (short) return short
+      return String(this.disclaimer || '').trim()
+    },
     isComplete() {
       return this.stage === 'complete'
     },

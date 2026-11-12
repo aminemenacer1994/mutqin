@@ -67,18 +67,25 @@ function names(events) {
   trackTutorialComplete(video, playback)
   assert.deepEqual(names(env.events), [
     TUTORIAL_EVENTS.IMPRESSION,
+    'tutorial_played',
     TUTORIAL_EVENTS.PLAY,
     TUTORIAL_EVENTS.PROGRESS,
     TUTORIAL_EVENTS.PROGRESS,
     TUTORIAL_EVENTS.PROGRESS,
+    'tutorial_completed',
     TUTORIAL_EVENTS.COMPLETE,
   ])
   const progress = env.events.filter((entry) => entry[1] === TUTORIAL_EVENTS.PROGRESS).map((entry) => entry[2].progress_percent)
   assert.deepEqual(progress, [25, 50, 75])
   assert.equal(env.events.filter((entry) => entry[1] === TUTORIAL_EVENTS.COMPLETE).length, 1)
-  assert.equal(env.events[1][2].video_id, video.id)
-  assert.equal(env.events[1][2].feature_id, video.featureId)
-  assert.equal(env.events[1][2].video_title, 'Dark Mode')
+  const play = env.events.find((entry) => entry[1] === TUTORIAL_EVENTS.PLAY)
+  assert.equal(play[2].video_id, video.id)
+  assert.equal(play[2].feature_id, video.featureId)
+  assert.equal(play[2].video_title, 'Dark Mode')
+  const played = env.events.find((entry) => entry[1] === 'tutorial_played')
+  assert.equal(played[2].video_id, video.id)
+  assert.equal(played[2].feature_id, video.featureId)
+  assert.equal(played[2].video_title, undefined)
 }
 
 {

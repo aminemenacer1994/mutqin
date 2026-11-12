@@ -117,6 +117,14 @@
                     >
                       {{ view.understandingText }}
                     </p>
+                    <p
+                      v-if="disclaimerLabel"
+                      class="post-session-simple__ai-disclaimer"
+                      role="note"
+                      data-testid="workspace-recite-ai-disclaimer"
+                    >
+                      {{ disclaimerLabel }}
+                    </p>
                   </div>
                   <ul
                     v-if="view.outcomeStatChips?.length"
@@ -426,6 +434,7 @@ export default {
     tryAgainLabel: { type: String, default: 'Try again' },
     yourResultLabel: { type: String, default: 'Your result' },
     betaBadgeLabel: { type: String, default: 'Audio recitation · Beta' },
+    disclaimerLabel: { type: String, default: '' },
     detailsSectionLabel: { type: String, default: 'Details' },
     viewDetailsLabel: { type: String, default: 'View details' },
     hideDetailsLabel: { type: String, default: 'Hide details' },
