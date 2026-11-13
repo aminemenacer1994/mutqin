@@ -339,15 +339,10 @@ final class AchievementService
     ): array {
         $id = $definition['id'];
         $tier = (string) ($definition['tier'] ?? $this->catalog->tierForId($id) ?? 'beginner');
-        $previousId = $this->catalog->previousInPath($id);
-        $pathOpen = $previousId === null || in_array($previousId, $earnedIds, true);
 
         if ($earned) {
             $state = 'unlocked';
             $detail = $progress['detail'] ?? null;
-        } elseif (! $pathOpen) {
-            $state = 'locked';
-            $detail = 'path_locked';
         } else {
             $state = (string) ($progress['state'] ?? 'locked');
             $detail = $progress['detail'] ?? null;
@@ -356,11 +351,6 @@ final class AchievementService
         $current = (int) ($progress['current'] ?? 0);
         $target = (int) ($progress['target'] ?? 0);
         $percent = $earned ? 100 : ($progress['percent'] ?? null);
-        // Hide progress for badges that are still closed on the path.
-        if (! $earned && ! $pathOpen) {
-            $current = 0;
-            $percent = 0;
-        }
 
         return [
             'id' => $id,
@@ -369,8 +359,9 @@ final class AchievementService
             'icon' => $definition['icon'],
             'sort' => $definition['sort'],
             'state' => $state,
-            'path_open' => $pathOpen || (bool) $earned,
-            'requires_id' => $pathOpen || $earned ? null : $previousId,
+            // Path/tier gates removed: badges unlock from their own activity criteria.
+            'path_open' => true,
+            'requires_id' => null,
             'current' => $earned ? max($current, $target) : $current,
             'target' => $target,
             'percent' => is_numeric($percent) ? (int) $percent : null,
@@ -412,11 +403,6 @@ final class AchievementService
             }
             $total = count($tierItems);
             $complete = $total > 0 && $unlocked >= $total;
-            $open = true;
-            if ($tiers !== []) {
-                $prev = $tiers[array_key_last($tiers)];
-                $open = ! empty($prev['complete']);
-            }
 
             $tiers[] = [
                 'id' => $tier['id'],
@@ -424,7 +410,8 @@ final class AchievementService
                 'unlocked_count' => $unlocked,
                 'total_count' => $total,
                 'complete' => $complete,
-                'open' => $open,
+                // Tiers organise badges; they do not gate unlocking.
+                'open' => true,
                 'items' => $tierItems,
             ];
         }

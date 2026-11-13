@@ -5,7 +5,15 @@ import {
   paintReferenceWords,
 } from '../dashboard/progressView.js'
 
+/** Reference words that need review (matches RecitationAlignmentStatus::isFlagged). */
 const ATTENTION_STATES = new Set([
+  WORD_STATE.mismatch,
+  WORD_STATE.uncertain,
+  WORD_STATE.skipped,
+])
+
+/** Insertions / extras are listed separately and never counted as confirmed mistakes. */
+const REVIEW_PAIR_STATES = new Set([
   WORD_STATE.mismatch,
   WORD_STATE.uncertain,
   WORD_STATE.skipped,
@@ -48,11 +56,19 @@ export function countWordStatuses(words) {
     if (state !== WORD_STATE.extra && state !== WORD_STATE.unassessed) {
       counts.evaluated += 1
     }
+    // Attention = flagged reference words only (not extras / unassessed).
     if (ATTENTION_STATES.has(state)) {
       counts.attention += 1
     }
   })
   return counts
+}
+
+/** Flagged reference words: uncertain + mismatch + skipped (never extras). */
+export function reviewWordCount(counts) {
+  if (!counts || typeof counts !== 'object') return null
+  if (counts.attention != null) return asNumber(counts.attention)
+  return asNumber(counts.uncertain) + asNumber(counts.mismatch) + asNumber(counts.skipped)
 }
 
 /**
@@ -70,9 +86,10 @@ export function resolveWordCounts(item) {
     const evaluated = direct.evaluated != null
       ? asNumber(direct.evaluated)
       : matched + uncertain + mismatch + skipped
+    // Prefer explicit attention when present, but never invent extras into review totals.
     const attention = direct.attention != null
       ? asNumber(direct.attention)
-      : uncertain + mismatch + skipped + extra
+      : uncertain + mismatch + skipped
     return {
       matched,
       uncertain,
@@ -93,6 +110,9 @@ export function resolveWordCounts(item) {
     const mismatch = asNumber(colors.red)
     const skipped = asNumber(colors.black)
     const evaluated = matched + uncertain + mismatch + skipped
+    if (evaluated <= 0 && matched + uncertain + mismatch + skipped === 0) {
+      return null
+    }
     return {
       matched,
       uncertain,
@@ -107,16 +127,16 @@ export function resolveWordCounts(item) {
   }
 
   if (item?.flagged_word_count != null) {
-    const attention = asNumber(item.flagged_word_count)
+    // Flagged total alone — do not fabricate per-status zeros.
     return {
-      matched: 0,
-      uncertain: 0,
-      mismatch: 0,
-      skipped: 0,
-      extra: 0,
-      unassessed: 0,
-      evaluated: 0,
-      attention,
+      matched: null,
+      uncertain: null,
+      mismatch: null,
+      skipped: null,
+      extra: null,
+      unassessed: null,
+      evaluated: null,
+      attention: asNumber(item.flagged_word_count),
       source: 'flagged_only',
     }
   }
@@ -125,7 +145,9 @@ export function resolveWordCounts(item) {
 }
 
 /**
- * Match % uses stored accuracy_percent when present; otherwise matched/evaluated.
+ * Match % denominator is evaluated reference words only
+ * (matched + uncertain + mismatch + skipped). Extras and unassessed are excluded.
+ * Prefer stored accuracy_percent when present (same metric saved with the attempt).
  */
 export function matchPercent(item, counts = null) {
   const stored = Number(item?.accuracy_percent)
@@ -133,8 +155,10 @@ export function matchPercent(item, counts = null) {
     return Math.max(0, Math.min(100, Math.round(stored)))
   }
   const c = counts || resolveWordCounts(item)
-  if (!c || c.evaluated <= 0) return null
-  return Math.max(0, Math.min(100, Math.round((c.matched / c.evaluated) * 100)))
+  const evaluated = asNumber(c?.evaluated)
+  const matched = asNumber(c?.matched)
+  if (!c || evaluated <= 0 || c.matched == null) return null
+  return Math.max(0, Math.min(100, Math.round((matched / evaluated) * 100)))
 }
 
 /**
@@ -143,16 +167,19 @@ export function matchPercent(item, counts = null) {
 export function feedbackInsightKey(counts, options = {}) {
   const c = counts || { matched: 0, uncertain: 0, mismatch: 0, skipped: 0, unassessed: 0, evaluated: 0, attention: 0 }
   const incompleteHint = options.incomplete === true
-  if (incompleteHint || (c.evaluated <= 0 && c.unassessed > 0)) {
+  const evaluated = c.evaluated == null ? null : asNumber(c.evaluated)
+  const attention = reviewWordCount(c) ?? 0
+  const unassessed = asNumber(c.unassessed)
+  if (incompleteHint || (evaluated != null && evaluated <= 0 && unassessed > 0)) {
     return 'insight_incomplete'
   }
-  if (c.evaluated <= 0) {
+  if (evaluated != null && evaluated <= 0) {
     return 'insight_incomplete'
   }
-  if (c.attention <= 0) {
+  if (attention <= 0) {
     return 'insight_excellent'
   }
-  if (c.attention <= 3) {
+  if (attention <= 3) {
     return 'insight_few'
   }
   return 'insight_review'
@@ -198,7 +225,7 @@ export function reviewWordPairs(storedWords, ayahNumber) {
     .filter((word) => {
       const ayah = Number(word?.ayah ?? word?.ayah_number ?? word?.ayahNumber ?? 0)
       if (ayahNumber && ayah && ayah !== Number(ayahNumber)) return false
-      return ATTENTION_STATES.has(classifyStoredWord(word))
+      return REVIEW_PAIR_STATES.has(classifyStoredWord(word))
     })
     .map((word, index) => {
       const state = classifyStoredWord(word)
@@ -308,14 +335,28 @@ export async function buildAttemptAyahFeedback({
 export function compactAttemptSummary(item, t = (key) => key) {
   const counts = resolveWordCounts(item)
   const percent = matchPercent(item, counts)
+  const hasDetailedCounts = counts?.source === 'word_counts' || counts?.source === 'color_counts'
   const insightKey = feedbackInsightKey(counts, {
-    incomplete: !item?.has_word_alignment && percent == null,
+    incomplete: (!item?.has_word_alignment && percent == null)
+      || (hasDetailedCounts && asNumber(counts?.evaluated) <= 0 && asNumber(counts?.unassessed) > 0),
   })
-  const matched = counts?.matched ?? null
-  const uncertain = counts?.uncertain ?? null
-  // Compact summary keeps three counts; skipped/missing stay in "words to review".
-  const mismatch = counts?.mismatch ?? null
-  const attention = counts?.attention ?? (item?.flagged_word_count != null ? asNumber(item.flagged_word_count) : null)
+  const matched = hasDetailedCounts && counts.matched != null ? asNumber(counts.matched) : null
+  const uncertain = hasDetailedCounts && counts.uncertain != null ? asNumber(counts.uncertain) : null
+  const mismatch = hasDetailedCounts && counts.mismatch != null ? asNumber(counts.mismatch) : null
+  const skipped = hasDetailedCounts && counts.skipped != null ? asNumber(counts.skipped) : null
+  // Review total must equal uncertain + mismatch + skipped when detailed counts exist.
+  const attention = hasDetailedCounts
+    ? asNumber(uncertain) + asNumber(mismatch) + asNumber(skipped)
+    : (counts?.attention != null
+      ? asNumber(counts.attention)
+      : (item?.flagged_word_count != null ? asNumber(item.flagged_word_count) : null))
+
+  let reviewHint = t('dashboard.ai_recite.counts_unavailable')
+  if (attention != null) {
+    reviewHint = attention > 0
+      ? t('dashboard.ai_recite.words_to_review', { n: attention })
+      : t('dashboard.ai_recite.no_words_to_review')
+  }
 
   return {
     percent,
@@ -323,14 +364,14 @@ export function compactAttemptSummary(item, t = (key) => key) {
     matched,
     uncertain,
     mismatch,
+    skipped,
     attention,
+    hasDetailedCounts,
     insightKey: `dashboard.ai_recite.${insightKey}`,
     insight: t(`dashboard.ai_recite.${insightKey}`),
     wordsMatchedLabel: percent == null
       ? null
       : t('dashboard.ai_recite.words_matched_percent', { n: percent }),
-    reviewHint: attention != null && attention > 0
-      ? t('dashboard.ai_recite.words_to_review', { n: attention })
-      : t('dashboard.ai_recite.no_words_to_review'),
+    reviewHint,
   }
 }

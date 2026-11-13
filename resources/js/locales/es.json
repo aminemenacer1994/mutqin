@@ -5410,7 +5410,9 @@
       "expected_word": "Esperado",
       "recognised_word": "Reconocido",
       "recognised_unavailable": "No disponible para esta palabra",
-      "result_label": "Resultado"
+      "result_label": "Resultado",
+      "count_skipped": "faltantes",
+      "counts_unavailable": "Conteos de palabras no disponibles para esta comprobación"
     },
     "hifz_progress_aria": "Progreso del Hifz",
     "voice": {

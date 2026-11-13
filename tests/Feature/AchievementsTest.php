@@ -128,9 +128,10 @@ class AchievementsTest extends TestCase
 
         $this->assertSame(1, $payload['summary']['practice_days']);
         $this->assertSame('unlocked', $first['state']);
-        // Dedicated stays closed until earlier path badges unlock.
-        $this->assertSame('path_locked', $dedicated['detail']);
-        $this->assertSame(0, $dedicated['current']);
+        // Dedicated stays locked by its own threshold, not by path order.
+        $this->assertNotSame('path_locked', $dedicated['detail']);
+        $this->assertTrue($dedicated['path_open']);
+        $this->assertSame(1, $dedicated['current']);
     }
 
     public function test_ten_revision_sessions_unlock_reviser(): void
@@ -225,7 +226,7 @@ class AchievementsTest extends TestCase
         ]);
     }
 
-    public function test_path_blocks_jumping_to_later_badges(): void
+    public function test_activity_unlocks_later_badges_without_path_prerequisites(): void
     {
         $user = User::factory()->create([
             'practice_preferences' => ['timezone' => 'UTC'],
@@ -246,10 +247,15 @@ class AchievementsTest extends TestCase
             ->pluck('id')
             ->all();
 
-        $this->assertSame([AchievementId::FIRST_STEPS], $ids);
+        $this->assertContains(AchievementId::FIRST_STEPS, $ids);
+        $this->assertContains(AchievementId::DEDICATED, $ids);
+        $this->assertContains(AchievementId::STEADFAST, $ids);
+        $this->assertContains(AchievementId::MEMORISER, $ids);
         $steadfast = collect($payload['items'])->firstWhere('id', AchievementId::STEADFAST);
-        $this->assertSame('path_locked', $steadfast['detail']);
-        $this->assertDatabaseMissing('user_achievements', [
+        $this->assertSame('unlocked', $steadfast['state']);
+        $this->assertTrue($steadfast['path_open']);
+        $this->assertNull($steadfast['requires_id']);
+        $this->assertDatabaseHas('user_achievements', [
             'user_id' => $user->id,
             'achievement_id' => AchievementId::STEADFAST,
         ]);
@@ -307,14 +313,7 @@ class AchievementsTest extends TestCase
             'user_id' => $user->id,
             'achievement_id' => AchievementId::EXPLORER,
         ]);
-        // Steadfast is Advanced — cannot jump past Reviser / Growing / Focused.
-        $this->assertDatabaseMissing('user_achievements', [
-            'user_id' => $user->id,
-            'achievement_id' => AchievementId::STEADFAST,
-        ]);
-
-        $this->unlockPrecedingPath($user, AchievementId::STEADFAST);
-        app(AchievementService::class)->evaluateAndPresentNew($user, 'evaluation');
+        // Steadfast unlocks from distinct practice days alone — no path prerequisite.
         $this->assertDatabaseHas('user_achievements', [
             'user_id' => $user->id,
             'achievement_id' => AchievementId::STEADFAST,

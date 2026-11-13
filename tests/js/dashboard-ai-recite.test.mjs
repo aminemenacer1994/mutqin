@@ -48,9 +48,12 @@ assert.match(dashboardCss, /\.dash-fb-card/, 'compact feedback cards have dedica
 assert.match(attemptFeedback, /feedbackInsightKey/, 'attempt feedback insights are deterministic helpers')
 assert.match(
   dashboardCss,
-  /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-history[\s\S]*?order:\s*3/,
-  'mobile progress page orders revisit, AI recite, then learning history',
+  /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-achievements[\s\S]*?order:\s*3[\s\S]*?\.dash-history[\s\S]*?order:\s*4/,
+  'mobile progress page orders revisit/AI recite, achievements, then learning history',
 )
+assert.match(dashboard, /toggleRevisitCard/, 'revisit ayahs expand on demand')
+assert.match(dashboard, /startsWith\('revisit:'\)/, 'revisit ayahs are collapsed by default')
+assert.match(dashboardCss, /dash-learning__metrics--compact/, 'learning metrics use a compact layout')
 assert.match(dashboard, /weakHistoryLine/, 'progress page keeps weak ayah history in the review drawer')
 assert.match(dashboard, /data-testid="dash-weak-history"/, 'weak ayah history is marked for tests')
 assert.match(dashboardCss, /\.dash-murajaah-row__history/, 'weak ayah history has compact row styles')

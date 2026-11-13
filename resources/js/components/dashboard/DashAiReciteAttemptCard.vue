@@ -21,7 +21,7 @@
           </header>
 
           <ul
-            v-if="showCountRow"
+            v-if="summary.hasDetailedCounts"
             class="dash-fb-card__counts"
             :aria-label="t('dashboard.ai_recite.word_counts_label')"
           >
@@ -37,7 +37,14 @@
               <span class="dash-fb-card__count-n">{{ summary.mismatch }}</span>
               {{ t('dashboard.ai_recite.count_mismatch') }}
             </li>
+            <li v-if="summary.skipped != null && summary.skipped > 0" class="is-skipped">
+              <span class="dash-fb-card__count-n">{{ summary.skipped }}</span>
+              {{ t('dashboard.ai_recite.count_skipped') }}
+            </li>
           </ul>
+          <p v-else-if="!summary.hasDetailedCounts && item.has_word_alignment === false" class="dash-fb-card__meta">
+            {{ t('dashboard.ai_recite.counts_unavailable') }}
+          </p>
 
           <p class="dash-fb-card__meta">
             <span>{{ summary.reviewHint }}</span>
@@ -255,10 +262,6 @@ export default {
     },
     summary() {
       return compactAttemptSummary(this.item, this.t.bind(this))
-    },
-    showCountRow() {
-      return this.summary.counts?.source === 'word_counts'
-        || this.summary.counts?.source === 'color_counts'
     },
     attentionAyahs() {
       return (this.detail?.ayahs || []).filter((ayah) => ayah.needsAttention)

@@ -95,10 +95,10 @@ export default {
         map[id].total_count += 1
         if (item.state === 'unlocked') map[id].unlocked_count += 1
       })
-      order.forEach((id, index) => {
+      order.forEach((id) => {
         if (!map[id]) return
         map[id].complete = map[id].unlocked_count >= map[id].total_count && map[id].total_count > 0
-        map[id].open = index === 0 ? true : !!(map[order[index - 1]]?.complete)
+        map[id].open = true
       })
       return order.map((id) => map[id]).filter(Boolean)
     },

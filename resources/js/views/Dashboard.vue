@@ -109,7 +109,7 @@
             </button>
           </div>
           <div v-show="!isSectionCollapsed('learning')" id="dash-learning-body" class="dash-section__body dash-learning__body">
-            <div class="dash-learning__metrics" role="list">
+            <div class="dash-learning__metrics dash-learning__metrics--compact" role="list">
               <button v-for="metric in learningCards" :key="metric.key" type="button" class="dash-learning__metric" role="listitem" @click="onLearningMetric(metric)">
                 <strong>{{ metric.value }}</strong>
                 <span>{{ metric.label }}</span>
@@ -118,30 +118,6 @@
             </div>
           </div>
         </section>
-
-        <DashboardAchievementsWidget
-          v-if="achievementsWidget"
-          :widget="achievementsWidget"
-          :collapsed="isSectionCollapsed('achievements')"
-          :title="t('dashboard.achievements.title')"
-          :subtitle="t('dashboard.achievements.subtitle')"
-          :view-all-label="t('dashboard.achievements.view_all')"
-          :show-more-label="t('dashboard.achievements.show_more')"
-          :show-less-label="t('dashboard.achievements.show_less')"
-          :empty-title="t('dashboard.achievements.empty_title')"
-          :empty-hint="t('dashboard.achievements.empty_hint')"
-          :locale="localeCode"
-          :unlock-prefix="t('dashboard.achievements.unlocked_on')"
-          :name-for="achievementName"
-          :description-for="achievementDescription"
-          :progress-for="achievementProgressLabel"
-          :remaining-for="achievementRemainingLabel"
-          :requirement-for="achievementRequirement"
-          :tier-title-for="achievementTierTitle"
-          :tier-hint-for="achievementTierHint"
-          @toggle="toggleSection('achievements')"
-          @view-all="openAchievementsDrawer"
-        />
 
         <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section
@@ -206,18 +182,37 @@
                       type="button"
                       class="dash-card__collapse"
                       :aria-expanded="isCardCollapsed(`revisit:${item.key}`) ? 'false' : 'true'"
-                      @click="toggleCard(`revisit:${item.key}`)"
+                      @click="toggleRevisitCard(item.key)"
                     >
                       <span class="dash-revisit__head-copy">
                         <h3 class="dash-revisit__title">
                           {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
                         </h3>
-                        <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
-                          {{ revisitStateLabel(item) }}
+                        <span class="dash-revisit__summary">
+                          <span
+                            v-if="item.accuracy_percent != null"
+                            class="dash-revisit__meta dash-revisit__meta--inline"
+                          >
+                            {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
+                          </span>
+                          <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
+                            {{ revisitStateLabel(item) }}
+                          </span>
+                        </span>
+                        <span v-if="murajaahItemHint(item)" class="dash-revisit__reason">
+                          {{ murajaahItemHint(item) }}
                         </span>
                       </span>
                       <i class="bi dash-section__chevron" :class="isCardCollapsed(`revisit:${item.key}`) ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
                     </button>
+                    <a
+                      class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta dash-revisit__cta-inline"
+                      :href="reviewNowHref(item)"
+                      @click="stashReviewContext(item)"
+                    >
+                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                      {{ t('dashboard.revisit_review') }}
+                    </a>
                   </header>
                   <div v-show="!isCardCollapsed(`revisit:${item.key}`)" class="dash-revisit__body">
                     <div class="dash-revisit__ayah">
@@ -241,23 +236,12 @@
                     </div>
                     <footer class="dash-revisit__foot">
                       <div class="dash-revisit__stats">
-                        <p v-if="item.accuracy_percent != null" class="dash-revisit__meta">
-                          {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
-                        </p>
                         <p
                           v-if="weakHistoryLine(item)"
                           class="dash-murajaah-row__history"
                           data-testid="dash-weak-history"
                         >{{ weakHistoryLine(item) }}</p>
                       </div>
-                      <a
-                        class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta"
-                        :href="reviewNowHref(item)"
-                        @click="stashReviewContext(item)"
-                      >
-                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                        {{ t('dashboard.revisit_review') }}
-                      </a>
                     </footer>
                   </div>
                 </article>
@@ -387,6 +371,31 @@
           </div>
         </section>
         </div>
+
+        <DashboardAchievementsWidget
+          v-if="achievementsWidget"
+          :widget="achievementsWidget"
+          :collapsed="isSectionCollapsed('achievements')"
+          :title="t('dashboard.achievements.title')"
+          :subtitle="t('dashboard.achievements.subtitle')"
+          :view-all-label="t('dashboard.achievements.view_all')"
+          :show-more-label="t('dashboard.achievements.show_more')"
+          :show-less-label="t('dashboard.achievements.show_less')"
+          :empty-title="t('dashboard.achievements.empty_title')"
+          :empty-hint="t('dashboard.achievements.empty_hint')"
+          :locale="localeCode"
+          :unlock-prefix="t('dashboard.achievements.unlocked_on')"
+          :name-for="achievementName"
+          :description-for="achievementDescription"
+          :progress-for="achievementProgressLabel"
+          :remaining-for="achievementRemainingLabel"
+          :requirement-for="achievementRequirement"
+          :tier-title-for="achievementTierTitle"
+          :tier-hint-for="achievementTierHint"
+          @toggle="toggleSection('achievements')"
+          @view-all="openAchievementsDrawer"
+        />
+
         <section
           class="dash-section dash-section--flat dash-history"
           :class="{ 'is-collapsed': isSectionCollapsed('history') }"
@@ -2270,13 +2279,38 @@ export default {
       }
     },
     isCardCollapsed(key) {
-      return !!this.collapsedCards?.[key]
+      if (Object.prototype.hasOwnProperty.call(this.collapsedCards || {}, key)) {
+        return !!this.collapsedCards[key]
+      }
+      // Next-to-revisit ayahs start collapsed to keep the page short.
+      return String(key).startsWith('revisit:')
     },
     toggleCard(key) {
+      const currentlyCollapsed = this.isCardCollapsed(key)
       this.collapsedCards = {
         ...this.collapsedCards,
-        [key]: !this.collapsedCards?.[key],
+        [key]: !currentlyCollapsed,
       }
+    },
+    toggleRevisitCard(itemKey) {
+      const key = `revisit:${itemKey}`
+      const currentlyCollapsed = this.isCardCollapsed(key)
+      const next = { ...this.collapsedCards }
+      // Mobile: only one ayah expanded at a time.
+      if (currentlyCollapsed && this.isNarrowViewport()) {
+        ;(this.revisitItems || []).forEach((item) => {
+          next[`revisit:${item.key}`] = true
+        })
+      }
+      next[key] = !currentlyCollapsed
+      this.collapsedCards = next
+      if (currentlyCollapsed) {
+        this.hydrateRevisitAyahs()
+      }
+    },
+    isNarrowViewport() {
+      if (typeof window === 'undefined' || !window.matchMedia) return true
+      return window.matchMedia('(max-width: 767.98px)').matches
     },
     expandHistory() {
       this.historyExpanded = true

@@ -5537,6 +5537,8 @@
       "count_matched": "matched",
       "count_uncertain": "uncertain",
       "count_mismatch": "mismatch",
+      "count_skipped": "missing",
+      "counts_unavailable": "Word counts unavailable for this check",
       "words_to_review": "{n} words to review",
       "no_words_to_review": "No words to review",
       "checked_at": "Checked {when}",

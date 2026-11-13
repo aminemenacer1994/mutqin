@@ -5423,7 +5423,9 @@
       "expected_word": "Attendu",
       "recognised_word": "Reconnu",
       "recognised_unavailable": "Non disponible pour ce mot",
-      "result_label": "Résultat"
+      "result_label": "Résultat",
+      "count_skipped": "manquants",
+      "counts_unavailable": "Comptes de mots indisponibles pour cette vérification"
     },
     "hifz_progress_aria": "Progression du Hifz",
     "voice": {

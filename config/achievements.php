@@ -4,8 +4,8 @@
  * Achievement catalog and thresholds for Mutqin.
  *
  * Stable IDs are storage keys; display names live in locale files.
- * Tiers are sequential: Intermediate stays closed until Beginner is complete,
- * Advanced until Intermediate is complete.
+ * Tiers organise badges (Beginner / Intermediate / Advanced) but do not gate unlocking.
+ * Each achievement unlocks independently from its own activity criteria.
  */
 return [
     'min_meaningful_duration_seconds' => max(0, (int) env('MUTQIN_ACHIEVEMENT_MIN_DURATION', 20)),
@@ -27,7 +27,7 @@ return [
     'weekly_goal_max' => 7,
 
     /*
-     | Ordered learning path. Learners finish a tier before the next opens.
+     | Organisational tiers for display order. Badges unlock independently.
      */
     'tiers' => [
         'beginner' => [

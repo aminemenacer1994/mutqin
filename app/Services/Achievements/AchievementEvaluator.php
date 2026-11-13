@@ -39,20 +39,15 @@ final class AchievementEvaluator
             ->all();
         $earnedSet = array_fill_keys($earned, true);
 
-        // Award only along the path — previous badge must already be unlocked.
+        // Award independently from activity criteria — categories are organisational only.
         foreach ($this->catalog->pathIds() as $achievementId) {
             if (isset($earnedSet[$achievementId])) {
                 continue;
             }
 
-            $previous = $this->catalog->previousInPath($achievementId);
-            if ($previous !== null && ! isset($earnedSet[$previous])) {
-                break;
-            }
-
             $progress = is_array($progressMap[$achievementId] ?? null) ? $progressMap[$achievementId] : [];
             if (($progress['state'] ?? '') !== 'unlocked') {
-                break;
+                continue;
             }
 
             $unlockedAt = $progress['unlock_at'] instanceof Carbon

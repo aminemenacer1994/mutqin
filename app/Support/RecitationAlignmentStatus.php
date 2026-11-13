@@ -148,10 +148,10 @@ final class RecitationAlignmentStatus
             'extra' => $counts[self::EXTRA],
             'unassessed' => $counts[self::UNASSESSED],
             'evaluated' => $evaluated,
+            // Align with flaggedCount(): extras are insertions, not reference words to review.
             'attention' => $counts[self::UNCERTAIN]
                 + $counts[self::MISMATCH]
-                + $counts[self::SKIPPED]
-                + $counts[self::EXTRA],
+                + $counts[self::SKIPPED],
         ];
     }
 

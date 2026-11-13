@@ -5423,7 +5423,9 @@
       "expected_word": "Expected",
       "recognised_word": "Recognised",
       "recognised_unavailable": "Not available for this word",
-      "result_label": "Result"
+      "result_label": "Result",
+      "count_skipped": "missing",
+      "counts_unavailable": "Word counts unavailable for this check"
     },
     "hifz_progress_aria": "hifz kemajuan",
     "voice": {
