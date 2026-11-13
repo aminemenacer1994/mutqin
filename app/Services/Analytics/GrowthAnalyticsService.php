@@ -810,7 +810,7 @@ final class GrowthAnalyticsService
 
     /**
      * @param  Collection<int, User>  $cohort
-     * @return array{link_opens: int, signups: int, rate: float|null}
+     * @return array{link_opens: int, signups: int, rate: float|null, activations: int, activation_rate: float|null}
      */
     private function referral(Collection $cohort, Carbon $fromUtc, Carbon $toUtc): array
     {
@@ -819,11 +819,17 @@ final class GrowthAnalyticsService
             ->whereBetween('occurred_at', [$fromUtc, $toUtc])
             ->count();
         $signups = $cohort->filter(fn (User $user) => trim((string) $user->signup_referral_code) !== '')->count();
+        $activations = ProductEvent::query()
+            ->where('event_name', ProductEventName::REFERRAL_ACTIVATED)
+            ->whereBetween('occurred_at', [$fromUtc, $toUtc])
+            ->count();
 
         return [
             'link_opens' => $opens,
             'signups' => $signups,
             'rate' => $opens > 0 ? round($signups / $opens, 4) : null,
+            'activations' => $activations,
+            'activation_rate' => $signups > 0 ? round($activations / $signups, 4) : null,
         ];
     }
 

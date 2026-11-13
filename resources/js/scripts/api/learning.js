@@ -258,6 +258,11 @@ export const learningApi = {
     return data?.settings && typeof data.settings === 'object' ? data.settings : data
   },
 
+  async completeOnboarding() {
+    const { data } = await http.patch('/profile/onboarding')
+    return data && typeof data === 'object' ? data : {}
+  },
+
   // Session ---------------------------------------------------------------
   async getSession(params = {}) {
     const query = {}

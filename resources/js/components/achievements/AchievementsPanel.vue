@@ -1,6 +1,5 @@
 <template>
   <div class="ach-panel">
-    <p v-if="intro" class="ach-panel__intro">{{ intro }}</p>
     <section
       v-for="tier in visibleTiers"
       :key="tier.id"
@@ -17,13 +16,15 @@
       </header>
       <div class="ach-panel__grid" role="list">
         <AchievementBadgeCard
-          v-for="item in tier.items"
+          v-for="item in sortedItems(tier)"
           :key="item.id"
           role="listitem"
           :item="item"
           :locale="locale"
           :title="nameFor(item)"
           :description="descriptionFor(item)"
+          :meaning="resolveMeaning(item)"
+          :status-label="resolveStatus(item)"
           :progress-label="progressFor(item)"
           :requirement="requirementFor(item)"
           :unlock-prefix="unlockPrefix"
@@ -53,11 +54,12 @@ export default {
     items: { type: Array, default: () => [] },
     tiers: { type: Array, default: () => [] },
     locale: { type: String, default: 'en' },
-    intro: { type: String, default: '' },
     showMoreLabel: { type: String, default: 'Show more' },
     showLessLabel: { type: String, default: 'Show less' },
     nameFor: { type: Function, required: true },
     descriptionFor: { type: Function, required: true },
+    meaningFor: { type: Function, required: true },
+    statusFor: { type: Function, required: true },
     progressFor: { type: Function, required: true },
     requirementFor: { type: Function, required: true },
     tierTitleFor: { type: Function, required: true },
@@ -67,6 +69,7 @@ export default {
   data() {
     return {
       showMore: false,
+      autoExpanded: false,
     }
   },
   computed: {
@@ -105,9 +108,30 @@ export default {
     hasMoreTiers() {
       return this.tierGroups.length > 1
     },
+    beginnerComplete() {
+      const beginner = this.tierGroups.find((tier) => tier.id === 'beginner')
+      return !!beginner?.complete
+    },
+    nextOutsideBeginner() {
+      return this.tierGroups.slice(1).some((tier) =>
+        (tier.items || []).some((item) => item.is_next || item.state === 'in_progress')
+      )
+    },
     visibleTiers() {
       if (this.showMore) return this.tierGroups
       return this.tierGroups.slice(0, 1)
+    },
+  },
+  watch: {
+    tierGroups: {
+      immediate: true,
+      handler() {
+        if (this.autoExpanded) return
+        if (this.beginnerComplete || this.nextOutsideBeginner) {
+          this.showMore = true
+          this.autoExpanded = true
+        }
+      },
     },
   },
   methods: {
@@ -119,6 +143,28 @@ export default {
     },
     tierCount(tier) {
       return `${tier.unlocked_count || 0} / ${tier.total_count || 0}`
+    },
+    sortedItems(tier) {
+      const items = Array.isArray(tier?.items) ? [...tier.items] : []
+      const rank = (item) => {
+        if (item.is_next) return 0
+        if (item.state === 'in_progress') return 1
+        if (item.state === 'unlocked') return 2
+        return 3
+      }
+      items.sort((a, b) => {
+        const ra = rank(a)
+        const rb = rank(b)
+        if (ra !== rb) return ra - rb
+        return (a.sort || 0) - (b.sort || 0)
+      })
+      return items
+    },
+    resolveMeaning(item) {
+      return this.meaningFor(item) || ''
+    },
+    resolveStatus(item) {
+      return this.statusFor(item) || ''
     },
   },
 }

@@ -24,6 +24,7 @@ return [
     'guides' => 'Artikel',
     'features' => 'Cara kerja',
     'profile' => 'Profil',
+    'invite_someone' => 'Undang seseorang',
     'account' => 'Akun',
     'menu' => 'Menu',
     'subscription' => 'Langganan',

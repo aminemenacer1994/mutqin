@@ -2074,14 +2074,14 @@
     "view_recording": "عرض التسجيل",
     "revisitOnboarding": "إعادة جولة التعريف",
     "workspaceTour": {
-      "stepCounter": "الخطوة {current} من {total}",
+      "stepCounter": "{current} من {total}",
       "next": "التالي",
-      "skip": "تخطّ",
-      "finish": "تم",
+      "skip": "تخطّ الجولة",
+      "finish": "ابدأ",
       "steps": {
         "welcome": {
-          "title": "هذه مساحة الحفظ",
-          "body": "هنا تتمرّن على الحفظ. نبدأ بالفاتحة ١–٥ ليبقى الطريق قصيرًا وواضحًا.",
+          "title": "مساحة الحفظ الخاصة بك",
+          "body": "هنا تحفظ وتراجع وتختبر تلاوتك. نبدأ بالفاتحة ١–٥ ليبقى الطريق الأول قصيرًا.",
           "waitHint": ""
         },
         "controls": {
@@ -2090,13 +2090,13 @@
           "waitHint": ""
         },
         "setup": {
-          "title": "الإعداد",
-          "body": "اختر السورة ونطاق الآيات هنا. المراجعة المركّزة تبدأ بالفاتحة ١–٥ مع العفاسي وتكرارين.",
+          "title": "ابدأ جلسة",
+          "body": "اختر السورة ونطاق الآيات هنا. للمتعلمين الجدد نبدأ بالفاتحة ١–٥ مع العفاسي وتكرارين.",
           "waitHint": ""
         },
         "practice": {
-          "title": "أدوات التمرين",
-          "body": "التركيز والضباب والتلقين هنا. استخدم أداة واحدة وأنت تسمع وتعيد.",
+          "title": "أدوات التعلّم",
+          "body": "التركيز، الإخفاء التدريجي، والاستماع والتكرار هنا. استخدم أداة واحدة في كل مرة.",
           "waitHint": ""
         },
         "saved": {
@@ -2105,8 +2105,8 @@
           "waitHint": ""
         },
         "start": {
-          "title": "ابدأ الجلسة",
-          "body": "هنا تبدأ المراجعة المركّزة: الفاتحة ١–٥ مع العفاسي وتكرارين.",
+          "title": "ابدأ التمرين",
+          "body": "يبدأ هذا جلستك لتستمع وتكرر وتراجع الآيات المختارة.",
           "waitHint": ""
         },
         "session": {
@@ -2115,8 +2115,8 @@
           "waitHint": ""
         },
         "ai": {
-          "title": "تحقق بالتلاوة الذكية",
-          "body": "هذا فحص التلاوة الذكية. يستمع ويعلّم كل كلمة. نسبة % هي مقدار النص الظاهر — كلّما قلّت اختفى المزيد لتعتمد على الحفظ.",
+          "title": "التلاوة بالذكاء الاصطناعي",
+          "body": "افحص تلاوتك واحصل على ملاحظات على مستوى الكلمة. يضبط عنصر % مقدار النص الظاهر وأنت تتلو من الذاكرة.",
           "waitHint": ""
         },
         "results": {
@@ -4483,12 +4483,42 @@
   "pricingPage": {
     "title": "اختر خطتك",
     "subtitle": "ابدأ مجانًا. ترقَّ إلى برو عندما تريد متابعة أعمق وسجلًّا أوضح.",
+    "simple": {
+      "getStarted": "ابدأ",
+      "getStartedFree": "ابدأ مجانًا",
+      "unlockPro": "افتح برو",
+      "upgrade": "الترقية إلى برو"
+    },
+    "comparisonRows": {
+      "aiChecks": "فحوصات التلاوة بالذكاء الاصطناعي",
+      "memorisationTools": "أدوات الحفظ",
+      "savedSessions": "الجلسات المحفوظة",
+      "findAyah": "البحث عن آية",
+      "translation": "الترجمة",
+      "transliteration": "النقل الحرفي",
+      "achievements": "الإنجازات",
+      "analytics": "التحليلات",
+      "wordByWord": "ترجمة كلمة بكلمة",
+      "offlineAudio": "تنزيلات الصوت دون اتصال",
+      "weakAyahInsights": "رؤى الآيات الضعيفة"
+    },
+    "comparisonValues": {
+      "perDay": "{count}/يوم",
+      "essential": "أساسية",
+      "advanced": "متقدمة",
+      "included": "مشمولة",
+      "beginner": "مبتدئ",
+      "basic": "أساسية",
+      "allLevels": "كل المستويات",
+      "unlimited": "بلا حد"
+    },
     "billingToggleLabel": "دورة الفوترة",
     "annualSavings": "وفّر 25٪",
     "lifetimeSavings": "وفّر 50٪",
     "yearlyEquivalent": "ما يعادل {symbol}{amount}/شهر",
     "billedOnce": "ادفع مرة واحدة. يبقى لك دائماً.",
-    "freeForever": "مجاني دائمًا",
+    "freeForever": "للأبد",
+    "recommended": "موصى به",
     "freeKicker": "للبداية",
     "proKicker": "للممارسة",
     "freeTagline": "لتجربة متقن",
@@ -7251,5 +7281,39 @@
     "messages_empty_title": "No messages yet",
     "messages_empty": "Reminders for due and overdue tasks will appear here.",
     "messages_soon": "Messaging opens here when a thread is ready."
+  },
+  "referral": {
+    "title": "Invite someone",
+    "lead": "Share Mutqin with people you trust. When they finish their first practice, you earn extra AI Recite checks.",
+    "howTitle": "How it works",
+    "step1": "Share your personal link",
+    "step2": "They create a Mutqin account",
+    "step3": "When they finish their first practice, you get {count} AI Recite checks",
+    "rewardTitle": "Your reward",
+    "rewardBody": "Earn {count} AI Recite checks each time someone you invite finishes their first practice.",
+    "rewardEarned": "{count} AI Recite checks earned",
+    "rewardRemaining": "{count} bonus checks left to use",
+    "thanksBody": "Your invite finished their first practice. You earned {count} AI Recite checks.",
+    "thanksDismiss": "Got it",
+    "yourLink": "Your link",
+    "shareLabel": "Share",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Share",
+    "shareEmail": "Email",
+    "shareTitle": "Join me on Mutqin",
+    "shareMessage": "I use Mutqin for Qur'an memorisation. Join with my link: {url}",
+    "emailSubject": "Join me on Mutqin",
+    "copyLink": "Copy",
+    "copied": "Copied",
+    "shared": "Shared",
+    "statsLabel": "Your invite progress",
+    "statVisits": "Visits",
+    "statSignups": "Sign-ups",
+    "statActivations": "First sessions",
+    "statConversion": "Activated",
+    "statConversionEmpty": "-",
+    "privacyNote": "People who join with your link stay private. You only see counts.",
+    "postSessionInvite": "Invite someone. Earn AI Recite checks when they practise.",
+    "postSessionInviteHint": ""
   }
 }

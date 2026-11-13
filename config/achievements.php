@@ -47,11 +47,16 @@ return [
         ],
     ],
 
+    /*
+     | unit drives live progress copy on the client:
+     | session | streak | day | surah | revision | check | improvement | week
+     */
     'definitions' => [
         'first_steps' => [
             'id' => 'first_steps',
             'tier' => 'beginner',
             'category' => 'practice',
+            'unit' => 'session',
             'icon' => 'book',
             'sort' => 10,
         ],
@@ -59,6 +64,7 @@ return [
             'id' => 'checker',
             'tier' => 'beginner',
             'category' => 'assessment',
+            'unit' => 'check',
             'icon' => 'mic',
             'sort' => 20,
         ],
@@ -66,6 +72,7 @@ return [
             'id' => 'consistent',
             'tier' => 'beginner',
             'category' => 'consistency',
+            'unit' => 'streak',
             'icon' => 'flame',
             'sort' => 30,
         ],
@@ -73,6 +80,7 @@ return [
             'id' => 'memoriser',
             'tier' => 'intermediate',
             'category' => 'practice',
+            'unit' => 'session',
             'icon' => 'stars',
             'sort' => 40,
         ],
@@ -80,6 +88,7 @@ return [
             'id' => 'explorer',
             'tier' => 'intermediate',
             'category' => 'practice',
+            'unit' => 'surah',
             'icon' => 'compass',
             'sort' => 50,
         ],
@@ -87,6 +96,7 @@ return [
             'id' => 'dedicated',
             'tier' => 'intermediate',
             'category' => 'consistency',
+            'unit' => 'day',
             'icon' => 'calendar',
             'sort' => 60,
         ],
@@ -94,6 +104,7 @@ return [
             'id' => 'reviser',
             'tier' => 'advanced',
             'category' => 'revision',
+            'unit' => 'revision',
             'icon' => 'repeat',
             'sort' => 70,
         ],
@@ -101,6 +112,7 @@ return [
             'id' => 'growing',
             'tier' => 'advanced',
             'category' => 'improvement',
+            'unit' => 'improvement',
             'icon' => 'sprout',
             'sort' => 80,
         ],
@@ -108,6 +120,7 @@ return [
             'id' => 'focused',
             'tier' => 'advanced',
             'category' => 'goal',
+            'unit' => 'week',
             'icon' => 'target',
             'sort' => 90,
         ],
@@ -115,6 +128,7 @@ return [
             'id' => 'steadfast',
             'tier' => 'advanced',
             'category' => 'consistency',
+            'unit' => 'day',
             'icon' => 'shield',
             'sort' => 100,
         ],

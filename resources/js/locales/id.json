@@ -2074,10 +2074,10 @@
     "view_recording": "Lihat Rekaman",
     "revisitOnboarding": "Lihat tur lagi",
     "workspaceTour": {
-      "stepCounter": "Langkah {current} dari {total}",
+      "stepCounter": "{current} dari {total}",
       "next": "Berikutnya",
-      "skip": "Lewati",
-      "finish": "Selesai",
+      "skip": "Lewati tur",
+      "finish": "Mulai",
       "steps": {
         "welcome": {
           "title": "Ini adalah Hafalan",
@@ -7251,5 +7251,39 @@
     "messages_empty_title": "No messages yet",
     "messages_empty": "Reminders for due and overdue tasks will appear here.",
     "messages_soon": "Messaging opens here when a thread is ready."
+  },
+  "referral": {
+    "title": "Invite someone",
+    "lead": "Share Mutqin with people you trust. When they finish their first practice, you earn extra AI Recite checks.",
+    "howTitle": "How it works",
+    "step1": "Share your personal link",
+    "step2": "They create a Mutqin account",
+    "step3": "When they finish their first practice, you get {count} AI Recite checks",
+    "rewardTitle": "Your reward",
+    "rewardBody": "Earn {count} AI Recite checks each time someone you invite finishes their first practice.",
+    "rewardEarned": "{count} AI Recite checks earned",
+    "rewardRemaining": "{count} bonus checks left to use",
+    "thanksBody": "Your invite finished their first practice. You earned {count} AI Recite checks.",
+    "thanksDismiss": "Got it",
+    "yourLink": "Your link",
+    "shareLabel": "Share",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Share",
+    "shareEmail": "Email",
+    "shareTitle": "Join me on Mutqin",
+    "shareMessage": "I use Mutqin for Qur'an memorisation. Join with my link: {url}",
+    "emailSubject": "Join me on Mutqin",
+    "copyLink": "Copy",
+    "copied": "Copied",
+    "shared": "Shared",
+    "statsLabel": "Your invite progress",
+    "statVisits": "Visits",
+    "statSignups": "Sign-ups",
+    "statActivations": "First sessions",
+    "statConversion": "Activated",
+    "statConversionEmpty": "-",
+    "privacyNote": "People who join with your link stay private. You only see counts.",
+    "postSessionInvite": "Invite someone. Earn AI Recite checks when they practise.",
+    "postSessionInviteHint": ""
   }
 }

@@ -24,6 +24,7 @@ return [
     'guides' => 'مضامین',
     'features' => 'کیسے کام کرتا ہے',
     'profile' => 'الملف الشخصي',
+    'invite_someone' => 'کسی کو مدعو کریں',
     'account' => 'الحساب',
     'menu' => 'القائمة',
     'subscription' => 'الاشتراك',

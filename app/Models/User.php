@@ -84,17 +84,21 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'subscription_state_at',
         'locale',
         'theme',
+        'onboarding_completed_at',
         'ai_audio_consent_status',
         'ai_audio_consent_version',
         'ai_audio_consent_at',
         'ai_session_settings',
         'practice_preferences',
         'ai_recite_lifetime_limit',
+        'ai_recite_bonus_checks',
         'marketing_unsubscribed_at',
         'signup_utm_source',
         'signup_utm_medium',
         'signup_utm_campaign',
         'signup_referral_code',
+        'referral_code',
+        'referred_by_user_id',
     ];
 
     /**
@@ -110,6 +114,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'signup_utm_medium',
         'signup_utm_campaign',
         'signup_referral_code',
+        'referral_code',
+        'referred_by_user_id',
     ];
 
     /**
@@ -125,6 +131,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'password_set_at' => 'datetime',
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
             'subscription_cancel_at_period_end' => 'boolean',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_starts_at' => 'datetime',
@@ -134,6 +141,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'ai_session_settings' => 'array',
             'practice_preferences' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
+            'ai_recite_bonus_checks' => 'integer',
             'marketing_unsubscribed_at' => 'datetime',
             'account_role' => AccountRole::class,
         ];
@@ -142,6 +150,21 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function achievements(): HasMany
     {
         return $this->hasMany(UserAchievement::class);
+    }
+
+    public function referralsGiven(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_user_id');
+    }
+
+    public function referralReceived(): HasOne
+    {
+        return $this->hasOne(Referral::class, 'referred_user_id');
+    }
+
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
     }
 
     public function organisation(): BelongsTo
@@ -167,6 +190,20 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function touchLastLogin(): void
     {
         $this->forceFill(['last_login_at' => now()])->save();
+    }
+
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarding_completed_at !== null;
+    }
+
+    public function markOnboardingCompleted(): void
+    {
+        if ($this->onboarding_completed_at !== null) {
+            return;
+        }
+
+        $this->forceFill(['onboarding_completed_at' => now()])->save();
     }
 
     public function hasVerifiedEmail(): bool

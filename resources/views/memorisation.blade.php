@@ -33,6 +33,7 @@
                 ? app(\App\Services\Auth\AiSessionSettingsService::class)->snapshot($memorisationUser)
                 : null,
             'created_at' => Auth::user()?->created_at?->toIso8601String(),
+            'onboarding_completed_at' => $memorisationUser?->onboarding_completed_at?->toIso8601String(),
             'login_event_id' => session('mutqin_login_event_id'),
             'just_registered' => !empty($justRegistered),
             'just_logged_in' => !empty($justLoggedIn),

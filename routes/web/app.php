@@ -18,6 +18,7 @@ use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReferralPageController;
 use App\Http\Controllers\QuranProxyController;
 use App\Http\Controllers\Seo\SeoArticleController;
 use App\Http\Controllers\Seo\SeoGuidesController;
@@ -205,6 +206,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/progress', [DashboardController::class, 'index'])->name('progress.dashboard');
+    Route::get('/referrals', [ReferralPageController::class, 'index'])->name('referrals');
     Route::get('/teacher', [TeacherDashboardPageController::class, 'index'])
         ->middleware('teacher.features')
         ->name('teacher.dashboard');
@@ -313,6 +315,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ) {
         $user = request()->user();
         $userId = $user instanceof User ? (int) $user->id : null;
+        $purpose = strtolower(trim((string) request()->input('purpose', '')));
+        $isFindAyah = $purpose === 'find_ayah';
 
         if ($user instanceof User) {
             $entitlement = app(SubscriptionEntitlement::class);
@@ -323,6 +327,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'message' => __('billing.plan_required', ['tier' => 'pro']),
                     'tier' => 'pro',
                 ], 403);
+            }
+
+            if ($isFindAyah && ! $entitlement->canStartFindAyah($user)) {
+                $usage = $entitlement->getRemainingUsage($user, SubscriptionEntitlement::FIND_AYAH);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'usage_cap',
+                    'message' => $entitlement->quotaPayload($user)['message']
+                        ?? __('billing.plan_required', ['tier' => 'pro']),
+                    'remaining' => $usage['remaining'] ?? 0,
+                    'limit' => $usage['limit'] ?? null,
+                    'resets_at' => $usage['resets_at'] ?? null,
+                    'upgrade' => ! $user->hasProAccess(),
+                    'pricing_url' => route('pricing'),
+                    'speechmatics_status' => 429,
+                ], 429);
             }
 
             $lifetime = $lifetimeUsage->inspect($user);
@@ -338,7 +359,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
         }
 
-        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId) {
+        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId, $user, $isFindAyah) {
             $cap = $usageCap->inspect($userId);
             if (! $cap['allowed']) {
                 return response()->json([
@@ -449,6 +470,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                     'speechmatics_status' => 502,
                 ]);
+            }
+
+            if ($isFindAyah && $user instanceof User) {
+                $entitlement = app(SubscriptionEntitlement::class);
+                if (! $entitlement->consumeFindAyah($user)) {
+                    return response()->json([
+                        'available' => false,
+                        'reason' => 'usage_cap',
+                        'message' => __('billing.plan_required', ['tier' => 'pro']),
+                        'upgrade' => ! $user->hasProAccess(),
+                        'pricing_url' => route('pricing'),
+                        'speechmatics_status' => 429,
+                    ], 429);
+                }
             }
 
             $usageCap->recordSuccessfulMint($userId);

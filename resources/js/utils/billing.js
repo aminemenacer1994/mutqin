@@ -58,6 +58,16 @@ export function hasProAccess(auth = {}) {
   return resolveSubscriptionTier(auth) === 'pro'
 }
 
+export function freeSavedSessionsLimit() {
+  if (typeof window === 'undefined') {
+    return 5
+  }
+
+  const configured = Number(window.mutqinBilling?.freeSavedSessions)
+
+  return Number.isFinite(configured) && configured >= 0 ? configured : 5
+}
+
 export function maxSavedSessionsForTier(auth = {}) {
   if (isUnrestricted()) {
     return Number.POSITIVE_INFINITY
@@ -69,5 +79,5 @@ export function maxSavedSessionsForTier(auth = {}) {
     return Number.POSITIVE_INFINITY
   }
 
-  return Number.POSITIVE_INFINITY
+  return freeSavedSessionsLimit()
 }

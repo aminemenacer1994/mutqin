@@ -26,6 +26,14 @@ class SubscriptionEntitlement
 
     public const PRO_TOOLS = 'pro_tools';
 
+    public const WORD_BY_WORD = 'word_by_word';
+
+    public const OFFLINE_AUDIO = 'offline_audio';
+
+    public const WEAK_AYAH_INSIGHTS = 'weak_ayah_insights';
+
+    public const FIND_AYAH = 'find_ayah';
+
     public function __construct(private readonly UserAiReciteUsageService $usage) {}
 
     public function getEffectivePlan(User $user): string
@@ -39,9 +47,34 @@ class SubscriptionEntitlement
             self::MUSHAF, self::MEMORISATION, self::REVISION, self::BASIC_PROGRESS => true,
             self::AI_ASSESSMENT => $this->canStartAiAssessment($user),
             self::PREMIUM_TOOLS => $user->hasPremiumAccess(),
-            self::PRO_TOOLS => $user->hasProAccess(),
+            self::PRO_TOOLS, self::WORD_BY_WORD, self::OFFLINE_AUDIO, self::WEAK_AYAH_INSIGHTS => $user->hasProAccess(),
+            self::FIND_AYAH => $this->canStartFindAyah($user),
             default => false,
         };
+    }
+
+    /**
+     * Free learners get a daily Find an Ayah allowance; Pro is unlimited.
+     */
+    public function canStartFindAyah(User $user): bool
+    {
+        if ($user->hasProAccess()) {
+            return true;
+        }
+
+        $usage = $this->getRemainingUsage($user, self::FIND_AYAH);
+
+        return ($usage['allowed'] ?? false) === true;
+    }
+
+    public function freeFindAyahDailyLimit(): int
+    {
+        return max(0, (int) config('billing.limits.free.find_ayah_per_day', 5));
+    }
+
+    public function freeSavedSessionsLimit(): int
+    {
+        return max(0, (int) config('billing.limits.free.saved_sessions', 5));
     }
 
     /**
@@ -58,6 +91,32 @@ class SubscriptionEntitlement
      */
     public function getRemainingUsage(User $user, string $feature): array
     {
+        if ($feature === self::FIND_AYAH) {
+            if ($user->hasProAccess()) {
+                return [
+                    'limit' => null,
+                    'used' => 0,
+                    'remaining' => null,
+                    'resets_at' => $this->resetsAt()->toIso8601String(),
+                    'allowed' => true,
+                    'reason' => null,
+                ];
+            }
+
+            $limit = $this->freeFindAyahDailyLimit();
+            $used = $this->dailyConsumed($user, self::FIND_AYAH);
+            $remaining = max(0, $limit - $used);
+
+            return [
+                'limit' => $limit,
+                'used' => $used,
+                'remaining' => $remaining,
+                'resets_at' => $this->resetsAt()->toIso8601String(),
+                'allowed' => $remaining > 0,
+                'reason' => $remaining > 0 ? null : UserAiReciteUsageService::REASON_DAILY,
+            ];
+        }
+
         if ($feature !== self::AI_ASSESSMENT) {
             return [
                 'limit' => null,
@@ -85,9 +144,23 @@ class SubscriptionEntitlement
      * Reserve one successful AI assessment. Unlimited plans do not increment.
      * The conditional update is atomic, so concurrent requests cannot pass the cap.
      * Call this inside the assessment transaction so a failed save releases the slot.
+     * Referral bonus checks cover lifetime or daily overages without creating a new cap.
      */
     public function checkAndConsumeUsage(User $user, string $feature): bool
     {
+        if ($feature === self::FIND_AYAH) {
+            if ($user->hasProAccess()) {
+                return true;
+            }
+
+            $limit = $this->freeFindAyahDailyLimit();
+            if ($limit <= 0) {
+                return false;
+            }
+
+            return $this->incrementDaily($user, self::FIND_AYAH, $limit);
+        }
+
         if ($feature !== self::AI_ASSESSMENT) {
             return $this->canAccessFeature($user, $feature);
         }
@@ -97,8 +170,12 @@ class SubscriptionEntitlement
         }
 
         $snapshot = $this->usage->inspect($user);
-        if ($snapshot['reason'] === UserAiReciteUsageService::REASON) {
+        if (! $snapshot['allowed']) {
             return false;
+        }
+
+        if (! ($snapshot['within_normal_limits'] ?? false)) {
+            return $this->usage->consumeBonusCheck($user);
         }
 
         $limit = $snapshot['daily_limit'];
@@ -107,10 +184,28 @@ class SubscriptionEntitlement
         }
 
         if ($snapshot['daily_used'] >= $limit) {
-            return false;
+            return $this->usage->consumeBonusCheck($user);
         }
 
         return $this->incrementDaily($user, $feature, $limit);
+    }
+
+    public function consumeFindAyah(User $user): bool
+    {
+        return $this->checkAndConsumeUsage($user, self::FIND_AYAH);
+    }
+
+    private function dailyConsumed(User $user, string $feature): int
+    {
+        $period = Carbon::now('UTC')->toDateString();
+
+        $row = DB::table('feature_usage_counters')
+            ->where('user_id', $user->id)
+            ->where('feature', $feature)
+            ->where('period_on', $period)
+            ->first();
+
+        return (int) ($row->consumed ?? 0);
     }
 
     public function consumeAiAssessment(User $user): bool

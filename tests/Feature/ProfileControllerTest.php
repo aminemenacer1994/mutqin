@@ -531,4 +531,34 @@ class ProfileControllerTest extends TestCase
             ->assertSee(__('profile.link_google'), false)
             ->assertDontSee(__('profile.link_google_verify_first'), false);
     }
+
+    public function test_user_can_mark_onboarding_completed(): void
+    {
+        $user = User::factory()->create([
+            'onboarding_completed_at' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->patchJson(route('api.profile.onboarding'))
+            ->assertOk()
+            ->assertJsonStructure(['onboarding_completed_at']);
+
+        $user->refresh();
+        $this->assertNotNull($user->onboarding_completed_at);
+        $this->assertTrue($user->hasCompletedOnboarding());
+
+        $firstCompletedAt = $user->onboarding_completed_at->toIso8601String();
+
+        $this->actingAs($user)
+            ->patchJson(route('api.profile.onboarding'))
+            ->assertOk()
+            ->assertJson([
+                'onboarding_completed_at' => $firstCompletedAt,
+            ]);
+
+        $this->assertSame(
+            $firstCompletedAt,
+            $user->fresh()->onboarding_completed_at?->toIso8601String()
+        );
+    }
 }

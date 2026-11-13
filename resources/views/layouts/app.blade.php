@@ -69,6 +69,8 @@
         'annualEnabled' => (bool) config('billing.annual_billing_enabled'),
         'lifetimeEnabled' => (bool) config('billing.lifetime_billing_enabled'),
         'freeAiAssessmentsPerDay' => (int) config('billing.limits.free.ai_assessments_per_day', 5),
+        'freeSavedSessions' => (int) config('billing.limits.free.saved_sessions', 5),
+        'freeFindAyahPerDay' => (int) config('billing.limits.free.find_ayah_per_day', 5),
     ];
     $showAiAllowance = $navUser
         && ! $navUser->hasProAccess()
@@ -8439,6 +8441,13 @@
                                 </span>
                                 <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
                             </a>
+                            <a class="nav-link {{ request()->routeIs('referrals') ? 'active' : '' }}" href="{{ route('referrals') }}">
+                                <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy">
+                                    <strong>{{ __('ui.invite_someone') }}</strong>
+                                </span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
                             <button type="button" class="nav-link mobile-nav-feedback" data-feedback-trigger="menu">
                                 <i class="bi bi-chat-left-text nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong>{{ __('ui.send_feedback') }}</strong></span>
@@ -8568,6 +8577,11 @@
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}#subscription" role="menuitem">
                                     <i class="bi bi-person" aria-hidden="true"></i> <span>{{ __('ui.profile') }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('referrals') }}" role="menuitem">
+                                    <i class="bi bi-people" aria-hidden="true"></i> <span>{{ __('ui.invite_someone') }}</span>
                                 </a>
                             </li>
                             @if (! $navUser->hasProAccess())

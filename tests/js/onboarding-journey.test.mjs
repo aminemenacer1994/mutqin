@@ -113,6 +113,7 @@ function sliceMethod(source, name) {
   assert.match(mark, /deleteWorkspaceStateValue\('onboardingPending'\)/)
   assert.match(mark, /pushLearningState\(true\)/)
   assert.match(mark, /onboardingStepIndex/)
+  assert.match(mark, /syncOnboardingCompletedToAccount\(\)/)
 }
 
 {

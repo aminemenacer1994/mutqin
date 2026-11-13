@@ -134,9 +134,10 @@
                 </div>
               </li>
             </ul>
-            <p v-if="report.acquisition.referral.link_opens || report.acquisition.referral.signups" class="growth__footnote">
+            <p v-if="report.acquisition.referral.link_opens || report.acquisition.referral.signups || report.acquisition.referral.activations" class="growth__footnote">
               Referrals {{ report.acquisition.referral.signups }}
               <template v-if="report.acquisition.referral.link_opens"> · {{ report.acquisition.referral.link_opens }} link opens</template>
+              <template v-if="report.acquisition.referral.activations"> · {{ report.acquisition.referral.activations }} activated</template>
             </p>
           </article>
         </div>

@@ -42266,8 +42266,9 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.55rem 0.75rem;
-  align-items: center;
+  align-items: start;
   padding: 0.8rem 0.85rem;
+  overflow: visible;
   background: var(--saved-card-strong);
 }
 
@@ -42341,7 +42342,7 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
   font-weight: 650;
   cursor: pointer;
   white-space: nowrap;
-  align-self: center;
+  align-self: start;
   justify-self: end;
   transition: background 0.16s ease, border-color 0.16s ease;
 }
@@ -42653,7 +42654,7 @@ body.memorisation-page .tools .sheet-toggle--practice .mode-radio.active::after,
 @media (max-width: 560px) {
   .saved-sheet__card--current {
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+    align-items: start;
   }
 
   .saved-sheet__save-btn {
@@ -64992,10 +64993,19 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border: 0;
   outline: 0;
   border-radius: var(--tour-hole-radius, 16px);
-  box-shadow: 0 0 0 9999px color-mix(in srgb, #0a100d 62%, transparent);
+  box-shadow:
+    0 0 0 9999px color-mix(in srgb, #0a100d 62%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent, #c48a4a) 45%, transparent),
+    0 0 18px color-mix(in srgb, var(--accent, #c48a4a) 28%, transparent);
   pointer-events: auto;
   transition: opacity 160ms ease, border-radius 160ms ease;
   z-index: 32001;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-tour__hole {
+    transition: none;
+  }
 }
 
 .workspace-tour__dashboard {
@@ -71947,6 +71957,11 @@ html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
   text-decoration: underline;
   text-underline-offset: 0.18em;
   cursor: pointer;
+}
+
+a.post-session-simple__referral-invite {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 @media (max-width: 767.98px) {

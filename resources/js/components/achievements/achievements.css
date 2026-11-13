@@ -96,6 +96,11 @@
   background: color-mix(in srgb, var(--ach-accent, var(--accent)) 22%, transparent);
 }
 
+.dash-achievements__status--next {
+  background: color-mix(in srgb, var(--ach-accent, var(--accent)) 28%, transparent);
+  color: var(--ach-accent, var(--dash-text, var(--text)));
+}
+
 .dash-achievements__status--locked {
   opacity: 0.85;
 }
@@ -314,8 +319,18 @@
   background: color-mix(in srgb, var(--ach-accent) 22%, transparent);
 }
 
+.ach-badge__status--next {
+  background: color-mix(in srgb, var(--ach-accent) 30%, transparent);
+  color: var(--ach-accent);
+}
+
 .ach-badge__status--locked {
   opacity: 0.8;
+}
+
+.ach-badge.is-next {
+  border-color: color-mix(in srgb, var(--ach-accent) 72%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ach-accent) 28%, transparent);
 }
 
 .ach-badge__title {

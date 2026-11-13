@@ -5,13 +5,17 @@ namespace App\Services\Analytics;
 use App\Enums\UserSessionStatus;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\Referrals\ReferralService;
 use App\Support\Analytics\ProductEventName;
 use Illuminate\Support\Carbon;
 
 /** Session lifecycle events. No ayah text, audio, or transcripts. */
 final class SessionProductEvents
 {
-    public function __construct(private readonly ProductEventRecorder $events) {}
+    public function __construct(
+        private readonly ProductEventRecorder $events,
+        private readonly ReferralService $referrals,
+    ) {}
 
     public function started(User $user, UserSession $session): void
     {
@@ -80,6 +84,8 @@ final class SessionProductEvents
                     $properties,
                 );
             }
+
+            $this->referrals->activateIfEligible($user, $session);
 
             return;
         }

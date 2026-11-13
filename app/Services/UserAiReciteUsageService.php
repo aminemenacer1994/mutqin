@@ -7,6 +7,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\User;
 use App\Services\Billing\SubscriptionEntitlement;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * AI voice-check usage: only completed, persisted, valid scored checks count.
@@ -114,6 +115,11 @@ class UserAiReciteUsageService
         return $value > 0 ? $value : null;
     }
 
+    public function bonusChecks(User $user): int
+    {
+        return max(0, (int) ($user->ai_recite_bonus_checks ?? 0));
+    }
+
     public function learnerMessageForReason(?string $reason): string
     {
         return match ($reason) {
@@ -132,6 +138,8 @@ class UserAiReciteUsageService
      *     daily_used: int,
      *     daily_limit: int|null,
      *     daily_remaining: int|null,
+     *     bonus_remaining: int,
+     *     within_normal_limits: bool,
      *     allowed: bool,
      *     reason: string|null
      * }
@@ -148,11 +156,13 @@ class UserAiReciteUsageService
         $dailyAllowed = $dailyLimit === null || $dailyUsed < $dailyLimit;
         $dailyRemaining = $dailyLimit === null ? null : max(0, $dailyLimit - $dailyUsed);
 
+        $bonus = $this->bonusChecks($user);
+        $withinNormal = $lifetimeAllowed && $dailyAllowed;
+        $allowed = $withinNormal || $bonus > 0;
+
         $reason = null;
-        if (! $lifetimeAllowed) {
-            $reason = self::REASON;
-        } elseif (! $dailyAllowed) {
-            $reason = self::REASON_DAILY;
+        if (! $allowed) {
+            $reason = ! $lifetimeAllowed ? self::REASON : self::REASON_DAILY;
         }
 
         return [
@@ -162,7 +172,9 @@ class UserAiReciteUsageService
             'daily_used' => $dailyUsed,
             'daily_limit' => $dailyLimit,
             'daily_remaining' => $dailyRemaining,
-            'allowed' => $lifetimeAllowed && $dailyAllowed,
+            'bonus_remaining' => $bonus,
+            'within_normal_limits' => $withinNormal,
+            'allowed' => $allowed,
             'reason' => $reason,
         ];
     }
@@ -170,5 +182,40 @@ class UserAiReciteUsageService
     public function wouldAllowAnotherCheck(User $user): bool
     {
         return $this->inspect($user)['allowed'];
+    }
+
+    /**
+     * Atomically spend one referral/bonus AI check. Returns false if none left.
+     */
+    public function consumeBonusCheck(User $user): bool
+    {
+        $updated = DB::update(
+            'update users set ai_recite_bonus_checks = ai_recite_bonus_checks - 1, updated_at = ? where id = ? and ai_recite_bonus_checks > 0',
+            [now(), $user->id]
+        );
+
+        if ($updated === 1) {
+            $user->refresh();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function grantBonusChecks(User $user, int $amount): int
+    {
+        $amount = max(0, $amount);
+        if ($amount < 1) {
+            return $this->bonusChecks($user);
+        }
+
+        DB::update(
+            'update users set ai_recite_bonus_checks = ai_recite_bonus_checks + ?, updated_at = ? where id = ?',
+            [$amount, now(), $user->id]
+        );
+        $user->refresh();
+
+        return $this->bonusChecks($user);
     }
 }

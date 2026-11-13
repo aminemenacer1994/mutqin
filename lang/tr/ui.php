@@ -24,6 +24,7 @@ return [
     'guides' => 'Yazılar',
     'features' => 'Nasıl çalışır',
     'profile' => 'Profil',
+    'invite_someone' => 'Birini davet et',
     'account' => 'Hesap',
     'menu' => 'Menü',
     'subscription' => 'Abonelik',

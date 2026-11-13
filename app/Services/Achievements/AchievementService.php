@@ -87,6 +87,11 @@ final class AchievementService
             $items[] = $this->mergePresentation($definition, $progress, $earnedRow, $earnedIds);
         }
 
+        $next = $this->pickNextBadge($items);
+        $nextId = is_array($next) ? (string) ($next['id'] ?? '') : null;
+        $items = $this->markNextBadge($items, $nextId);
+        $tiers = $this->markNextInTiers($this->presentTiers($items), $nextId);
+
         $pending = array_values(array_filter(
             $items,
             static fn (array $item) => ($item['state'] ?? '') === 'unlocked' && empty($item['notified_at'])
@@ -94,7 +99,8 @@ final class AchievementService
 
         return [
             'items' => $items,
-            'tiers' => $this->presentTiers($items),
+            'tiers' => $tiers,
+            'next' => $next,
             'path' => $this->catalog->pathIds(),
             'pending_unlocks' => $pending,
             'settings' => $this->preferences->present($user),
@@ -123,12 +129,7 @@ final class AchievementService
         }
 
         $items = $full['items'] ?? [];
-        $byId = [];
-        foreach ($items as $item) {
-            if (isset($item['id'])) {
-                $byId[$item['id']] = $item;
-            }
-        }
+        $summary = is_array($full['summary'] ?? null) ? $full['summary'] : [];
 
         $unlocked = array_values(array_filter(
             $items,
@@ -138,24 +139,16 @@ final class AchievementService
             return strcmp((string) ($b['unlocked_at'] ?? ''), (string) ($a['unlocked_at'] ?? ''));
         });
 
-        // Next badge is the first incomplete step on the ordered path.
-        $next = null;
-        foreach ($this->catalog->pathIds() as $id) {
-            $row = $byId[$id] ?? null;
-            if (! $row) {
-                continue;
-            }
-            if (($row['state'] ?? '') === 'unlocked') {
-                continue;
-            }
-            $next = $row;
-            break;
-        }
+        $next = $this->pickNextBadge($items);
+        $items = $this->markNextBadge($items, is_array($next) ? (string) ($next['id'] ?? '') : null);
 
         $activeTier = is_array($next) ? (string) ($next['tier'] ?? 'beginner') : null;
         if ($activeTier === null && $unlocked !== []) {
             $activeTier = (string) (($unlocked[0]['tier'] ?? null) ?: 'advanced');
         }
+
+        $tiers = $full['tiers'] ?? $this->presentTiers($items);
+        $tiers = $this->markNextInTiers($tiers, is_array($next) ? (string) ($next['id'] ?? '') : null);
 
         return [
             'latest' => $unlocked[0] ?? null,
@@ -165,11 +158,12 @@ final class AchievementService
             'unlocked_count' => count($unlocked),
             'total_count' => count($items),
             'items' => $items,
-            'tiers' => $full['tiers'] ?? $this->presentTiers($items),
+            'tiers' => $tiers,
+            'summary' => $summary,
             'pending_unlocks' => $full['pending_unlocks'] ?? [],
             'settings' => $full['settings'] ?? $this->preferences->present($user),
             'empty' => count($unlocked) === 0 && ! $next,
-            'initial' => count($unlocked) === 0,
+            'initial' => count($unlocked) === 0 && ! $next,
         ];
     }
 
@@ -356,10 +350,11 @@ final class AchievementService
             'id' => $id,
             'tier' => $tier,
             'category' => $definition['category'],
+            'unit' => (string) ($definition['unit'] ?? 'session'),
             'icon' => $definition['icon'],
             'sort' => $definition['sort'],
             'state' => $state,
-            // Path/tier gates removed: badges unlock from their own activity criteria.
+            'is_next' => false,
             'path_open' => true,
             'requires_id' => null,
             'current' => $earned ? max($current, $target) : $current,
@@ -372,6 +367,82 @@ final class AchievementService
             'comparable_attempts' => $progress['comparable_attempts'] ?? null,
             'required_attempts' => $progress['required_attempts'] ?? null,
         ];
+    }
+
+    /**
+     * Suggest the most meaningful incomplete badge: closest to done, else first locked.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return array<string, mixed>|null
+     */
+    private function pickNextBadge(array $items): ?array
+    {
+        $inProgress = array_values(array_filter(
+            $items,
+            static fn (array $item) => ($item['state'] ?? '') === 'in_progress'
+        ));
+        usort($inProgress, static function (array $a, array $b) {
+            $pct = ((int) ($b['percent'] ?? 0)) <=> ((int) ($a['percent'] ?? 0));
+            if ($pct !== 0) {
+                return $pct;
+            }
+
+            return ((int) ($a['sort'] ?? 100)) <=> ((int) ($b['sort'] ?? 100));
+        });
+        if ($inProgress !== []) {
+            return $inProgress[0];
+        }
+
+        foreach ($this->catalog->pathIds() as $id) {
+            foreach ($items as $item) {
+                if (($item['id'] ?? '') !== $id) {
+                    continue;
+                }
+                if (($item['state'] ?? '') === 'unlocked') {
+                    continue;
+                }
+
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function markNextBadge(array $items, ?string $nextId): array
+    {
+        if ($nextId === null || $nextId === '') {
+            return $items;
+        }
+
+        return array_map(static function (array $item) use ($nextId) {
+            $item['is_next'] = ($item['id'] ?? '') === $nextId;
+
+            return $item;
+        }, $items);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tiers
+     * @return list<array<string, mixed>>
+     */
+    private function markNextInTiers(array $tiers, ?string $nextId): array
+    {
+        return array_map(function (array $tier) use ($nextId) {
+            $tier['items'] = $this->markNextBadge(
+                array_values(array_filter(
+                    $tier['items'] ?? [],
+                    static fn ($row) => is_array($row)
+                )),
+                $nextId
+            );
+
+            return $tier;
+        }, $tiers);
     }
 
     /**

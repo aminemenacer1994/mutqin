@@ -27,7 +27,7 @@ assert.equal(hasActiveSubscription({ subscription_status: 'trialing' }), true)
 assert.equal(hasActiveSubscription({ subscription_status: 'free' }), false)
 assert.equal(hasActiveSubscription({ has_paid_access: true }), true)
 
-assert.equal(maxSavedSessionsForTier({ subscription_tier: 'free' }), Number.POSITIVE_INFINITY)
+assert.equal(maxSavedSessionsForTier({ subscription_tier: 'free' }), 5)
 assert.equal(maxSavedSessionsForTier({ subscription_tier: 'premium', subscription_status: 'active' }), Number.POSITIVE_INFINITY)
 assert.equal(maxSavedSessionsForTier({ subscription_tier: 'pro', subscription_status: 'active' }), Number.POSITIVE_INFINITY)
 

@@ -226,6 +226,7 @@ return [
     'contact_subject_required' => 'Veuillez saisir un objet.',
     'contact_message_required' => 'Veuillez saisir un message.',
     'send_feedback' => 'Envoyer un avis',
+    'invite_someone' => 'Inviter quelqu’un',
     'api_payload_too_large' => 'Ce contenu est trop volumineux pour être enregistré.',
     'subscription_upgrade_required' => 'Cette fonctionnalité nécessite un abonnement Mutqin supérieur.',
     'api_hifz_plan_not_ready' => 'Le stockage du plan de hifz n’est pas encore prêt. Exécutez les migrations de base de données.',

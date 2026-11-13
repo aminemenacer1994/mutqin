@@ -125,8 +125,8 @@ class PracticePlanIsolationTest extends TestCase
 
     public function test_history_dashboard_and_weak_spots_stay_scoped_to_the_user(): void
     {
-        $owner = User::factory()->create();
-        $other = User::factory()->create();
+        $owner = User::factory()->pro()->create();
+        $other = User::factory()->pro()->create();
         $assessment = MemorisationAssessment::query()->create([
             'user_id' => $owner->id,
             'surah_number' => 112,

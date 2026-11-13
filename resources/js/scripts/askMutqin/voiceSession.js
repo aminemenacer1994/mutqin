@@ -12,10 +12,11 @@ import { normalizeTranscriptionTokenError } from './transcriptionErrors.js'
 
 export { normalizeTranscriptionTokenError }
 
-async function fetchTranscriptionAccessToken() {
+async function fetchTranscriptionAccessToken(purpose = '') {
   try {
     await ensureCsrfCookie()
-    const response = await withCsrfRetry(() => axios.post('/memorisation/transcription-token', null, {
+    const body = purpose ? { purpose } : {}
+    const response = await withCsrfRetry(() => axios.post('/memorisation/transcription-token', body, {
       withCredentials: true,
       headers: buildCsrfHeaders(),
     }))
@@ -136,7 +137,10 @@ export function createAskMutqinVoiceSession(options = {}) {
 
   const getToken = () => {
     if (!tokenPromise) {
-      tokenPromise = fetchTranscriptionAccessToken().catch((error) => {
+      // Ask Mutqin Find an Ayah uses the shared token mint with a Free daily cap.
+      // Session voice (commandMode) must not consume that Find an Ayah allowance.
+      const purpose = commandMode ? '' : 'find_ayah'
+      tokenPromise = fetchTranscriptionAccessToken(purpose).catch((error) => {
         tokenPromise = null
         throw error
       })

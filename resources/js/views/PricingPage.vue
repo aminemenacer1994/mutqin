@@ -49,8 +49,10 @@
             :class="{ 'pricing-card--featured': plan.featured }"
             data-reveal
           >
-            <h2>{{ plan.name }}</h2>
-            <p class="pricing-card-tagline">{{ plan.tagline }}</p>
+            <div class="pricing-card-top">
+              <h2>{{ plan.name }}</h2>
+              <span v-if="plan.badge" class="pricing-badge">{{ plan.badge }}</span>
+            </div>
             <div class="pricing-price">
               <span class="pricing-price-currency">{{ currencySymbol }}</span>
               <span class="pricing-price-amount">{{ plan.amount }}</span>
@@ -90,9 +92,21 @@
                 </button>
               </form>
             </div>
-            <ul class="pricing-features">
-              <li v-for="(feature, idx) in plan.features" :key="`${plan.id}-${idx}`">
-                <span>{{ feature }}</span>
+            <ul class="pricing-features" :aria-label="plan.name">
+              <li
+                v-for="(feature, idx) in plan.features"
+                :key="`${plan.id}-${idx}`"
+                :class="feature.included ? 'is-included' : 'is-excluded'"
+              >
+                <span class="pricing-feature-main">
+                  <i
+                    class="bi"
+                    :class="feature.included ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="pricing-feature-name">{{ feature.name }}</span>
+                </span>
+                <span v-if="feature.value" class="pricing-feature-value">{{ feature.value }}</span>
               </li>
             </ul>
           </article>
@@ -122,7 +136,13 @@ function readBillingDisplay() {
     annualEnabled: billing.annualEnabled !== false,
     lifetimeEnabled: billing.lifetimeEnabled !== false,
     freeChecks: Number(billing.freeAiAssessmentsPerDay || 5),
+    freeSavedSessions: Number(billing.freeSavedSessions || 5),
+    freeFindAyah: Number(billing.freeFindAyahPerDay || 5),
   };
+}
+
+function featureRow(name, value, included = true) {
+  return { name, value, included: !!included };
 }
 
 export default {
@@ -239,16 +259,37 @@ export default {
 
     const plans = computed(() => {
       const checks = billingDisplay.freeChecks;
+      const saved = billingDisplay.freeSavedSessions;
+      const findAyah = billingDisplay.freeFindAyah;
+      const included = t('pricingPage.comparisonValues.included');
+      const unlimited = t('pricingPage.comparisonValues.unlimited');
+
       const freeFeatures = [
-        t('pricingPage.simple.freeMemorise'),
-        t('pricingPage.simple.freeMushaf'),
-        t('pricingPage.simple.freeProgress'),
-        t('pricingPage.simple.freeChecks', { count: checks }),
+        featureRow(t('pricingPage.comparisonRows.aiChecks'), t('pricingPage.comparisonValues.perDay', { count: checks }), true),
+        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.essential'), true),
+        featureRow(t('pricingPage.comparisonRows.savedSessions'), String(saved), true),
+        featureRow(t('pricingPage.comparisonRows.findAyah'), t('pricingPage.comparisonValues.perDay', { count: findAyah }), true),
+        featureRow(t('pricingPage.comparisonRows.translation'), included, true),
+        featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
+        featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.beginner'), true),
+        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.basic'), true),
+        featureRow(t('pricingPage.comparisonRows.wordByWord'), '', false),
+        featureRow(t('pricingPage.comparisonRows.offlineAudio'), '', false),
+        featureRow(t('pricingPage.comparisonRows.weakAyahInsights'), '', false),
       ];
+
       const proFeatures = [
-        t('pricingPage.simple.proAll'),
-        t('pricingPage.simple.proChecks'),
-        t('pricingPage.simple.proTools'),
+        featureRow(t('pricingPage.comparisonRows.aiChecks'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.advanced'), true),
+        featureRow(t('pricingPage.comparisonRows.savedSessions'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.findAyah'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.translation'), included, true),
+        featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
+        featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.allLevels'), true),
+        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.advanced'), true),
+        featureRow(t('pricingPage.comparisonRows.wordByWord'), included, true),
+        featureRow(t('pricingPage.comparisonRows.offlineAudio'), included, true),
+        featureRow(t('pricingPage.comparisonRows.weakAyahInsights'), included, true),
       ];
 
       return [
@@ -256,8 +297,7 @@ export default {
           id: 'free',
           name: t('homepage.free'),
           amount: '0',
-          period: t('homepage.pricing.perMonth'),
-          tagline: t('pricingPage.simple.freeDescription'),
+          period: t('pricingPage.freeForever'),
           features: freeFeatures,
           featured: false,
           ...(isCurrentFree.value
@@ -265,7 +305,7 @@ export default {
             : {
               ctaType: 'link',
               ctaHref: isAuthenticated.value ? '/memorisation' : publicRegisterHref(),
-              ctaLabel: t('pricingPage.simple.getStarted'),
+              ctaLabel: t('pricingPage.simple.getStartedFree'),
               ctaClass: 'btn--secondary',
             }),
         },
@@ -273,9 +313,9 @@ export default {
           id: 'pro',
           name: t('homepage.pro'),
           ...proPrice(),
-          tagline: t('pricingPage.simple.proDescription'),
           features: proFeatures,
           featured: true,
+          badge: t('pricingPage.recommended'),
           ...proCta(),
         },
       ];
@@ -318,14 +358,14 @@ export default {
         return {
           ctaType: 'link',
           ctaHref: `/register?plan=${checkoutPlan}`,
-          ctaLabel: t('pricingPage.simple.upgrade'),
+          ctaLabel: t('pricingPage.simple.unlockPro'),
           ctaClass: 'btn--primary',
         };
       }
       return {
         ctaType: 'checkout',
         checkoutPlan,
-        ctaLabel: t('pricingPage.simple.upgrade'),
+        ctaLabel: t('pricingPage.simple.unlockPro'),
         ctaClass: 'btn--primary',
       };
     }

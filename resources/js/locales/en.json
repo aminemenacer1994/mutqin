@@ -2193,14 +2193,14 @@
     "view_recording": "View Recording",
     "revisitOnboarding": "Take the tour again",
     "workspaceTour": {
-      "stepCounter": "Step {current} of {total}",
+      "stepCounter": "{current} of {total}",
       "next": "Next",
-      "skip": "Skip",
-      "finish": "Done",
+      "skip": "Skip Tour",
+      "finish": "Get Started",
       "steps": {
         "welcome": {
-          "title": "This is Memorisation",
-          "body": "Your workspace for hifz. We start with Al-Fatiha 1–5 so the path stays short and clear.",
+          "title": "Your memorisation workspace",
+          "body": "This is where you memorise, revise, and test your recitation. We start with Al-Fatiha 1–5 so the first path stays short.",
           "waitHint": ""
         },
         "controls": {
@@ -2209,13 +2209,13 @@
           "waitHint": ""
         },
         "setup": {
-          "title": "Setup",
-          "body": "Pick the surah and ayah range here. Focused review starts at Al-Fatiha 1–5 with Alafasy and 2 repetitions.",
+          "title": "Start a session",
+          "body": "Choose the surah and ayah range here. New learners begin with Al-Fatiha 1–5, Alafasy, and 2 repetitions.",
           "waitHint": ""
         },
         "practice": {
-          "title": "Practice tools",
-          "body": "Focus, Blur, and Talqin live here. Use one tool at a time while you listen and repeat.",
+          "title": "Learning tools",
+          "body": "Focus, progressive hiding (Blur), and listen-and-repeat (Talqin) live here. Use one tool at a time.",
           "waitHint": ""
         },
         "saved": {
@@ -2224,8 +2224,8 @@
           "waitHint": ""
         },
         "start": {
-          "title": "Begin the set",
-          "body": "This starts the focused review: Al-Fatiha 1–5 with Alafasy and 2 repetitions.",
+          "title": "Begin practising",
+          "body": "This starts your session so you can listen, repeat, and revise the selected ayahs.",
           "waitHint": ""
         },
         "session": {
@@ -2234,8 +2234,8 @@
           "waitHint": ""
         },
         "ai": {
-          "title": "Check with AI recitation",
-          "body": "This is the AI recitation check. It listens and marks each word. The % control is how much ayah text stays visible. Lower hides more so you recite from memory.",
+          "title": "AI Recite",
+          "body": "Check your recitation and get word-level feedback. The % control sets how much text stays visible while you recite from memory.",
           "waitHint": ""
         },
         "results": {
@@ -4608,6 +4608,8 @@
       "freeDescription": "Everything you need to begin your Qur'an memorisation journey.",
       "proDescription": "More tools to help you memorise, revise and stay consistent.",
       "getStarted": "Get started",
+      "getStartedFree": "Get started free",
+      "unlockPro": "Unlock Pro",
       "upgrade": "Upgrade to Pro",
       "freeMemorise": "Memorisation and revision sessions",
       "freeMushaf": "Mushaf and standard audio reciters",
@@ -4617,12 +4619,36 @@
       "proChecks": "Unlimited AI recitation assessments",
       "proTools": "Advanced practice tools and full AI features"
     },
+    "comparisonRows": {
+      "aiChecks": "AI recitation checks",
+      "memorisationTools": "Memorisation tools",
+      "savedSessions": "Saved sessions",
+      "findAyah": "Find an Ayah",
+      "translation": "Translation",
+      "transliteration": "Transliteration",
+      "achievements": "Achievements",
+      "analytics": "Analytics",
+      "wordByWord": "Word-by-word translation",
+      "offlineAudio": "Offline audio downloads",
+      "weakAyahInsights": "Weak ayah insights"
+    },
+    "comparisonValues": {
+      "perDay": "{count}/day",
+      "essential": "Essential",
+      "advanced": "Advanced",
+      "included": "Included",
+      "beginner": "Beginner",
+      "basic": "Basic",
+      "allLevels": "All levels",
+      "unlimited": "Unlimited"
+    },
     "billingToggleLabel": "Billing cycle",
     "annualSavings": "Save 25%",
     "lifetimeSavings": "Save 50%",
     "yearlyEquivalent": "{symbol}{amount}/month equivalent",
     "billedOnce": "Pay once. Yours forever.",
-    "freeForever": "Free forever",
+    "freeForever": "forever",
+    "recommended": "Recommended",
     "freeKicker": "Starter",
     "proKicker": "Practice",
     "freeTagline": "Everything you need to begin a steady hifz habit.",
@@ -4692,11 +4718,11 @@
         },
         "difference": {
           "question": "What does Pro add?",
-          "answer": "Everything in the Free plan, plus 20 smart recitation checks, self-assessed audio recitation, download audio to listen offline, adaptive lesson plans, instant feedback on your recitation, advanced progress insights, review of past mistakes and weak ayahs, advanced practice tools, and unlimited saved sessions."
+          "answer": "Unlimited AI recitation checks and Find an Ayah, advanced memorisation tools, unlimited saved sessions, word-by-word translation, offline audio downloads, weak ayah insights, all achievement levels, and advanced analytics."
         },
         "freeTools": {
           "question": "Which tools stay free?",
-          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, 3 saved sessions, and basic insights. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, advanced progress insights, and unlimited saved sessions."
+          "answer": "Free includes 5 AI recitation checks a day, essential memorisation tools, 5 saved sessions, 5 Find an Ayah searches a day, translation, transliteration, beginner achievements, and basic analytics. Word-by-word translation, offline audio, and weak ayah insights are Pro."
         },
         "yearly": {
           "question": "How does yearly billing work?",
@@ -5646,19 +5672,22 @@
     "history_unspecified": "Session",
     "achievements": {
       "title": "Your achievements",
-      "subtitle": "Earn them one by one.",
+      "subtitle": "Badges from real practice.",
+      "subtitle_next": "Next: {name}",
+      "subtitle_done": "{unlocked} of {total} earned",
       "view_all": "View all",
       "show_more": "Show more",
       "show_less": "Show less",
       "drawer_title": "Achievements",
-      "drawer_subtitle": "Finish each stage before the next opens.",
+      "drawer_subtitle": "Each badge tracks something you actually did.",
       "empty_title": "Your first badge awaits",
       "empty_hint": "Finish one practice session to begin.",
       "unlock_kicker": "Achievement unlocked",
-      "unlocked_on": "Unlocked",
-      "status_unlocked": "Unlocked",
+      "unlocked_on": "Earned",
+      "status_next": "Next",
+      "status_unlocked": "Earned",
       "status_in_progress": "In progress",
-      "status_locked": "Locked",
+      "status_locked": "Not started",
       "status_locked_path": "Locked",
       "path_intro": "",
       "path_summary": "{unlocked} of {total} · {tier}",
@@ -5666,7 +5695,15 @@
       "path_locked_after": "Unlock {name} first.",
       "focused_set_goal": "Set a weekly goal in Profile.",
       "progress_generic": "{current} / {target}",
-      "remaining_sessions": "{n} more to go",
+      "progress_session": "{current} of {target} sessions",
+      "progress_streak": "{current} of {target} days in a row",
+      "progress_day": "{current} of {target} practice days",
+      "progress_surah": "{current} of {target} surahs",
+      "progress_revision": "{current} of {target} revision sessions",
+      "progress_check": "{current} of {target} AI checks",
+      "progress_improvement": "+{current} of +{target} points",
+      "progress_week": "{current} of {target} days this week",
+      "remaining_sessions": "{n} more sessions",
       "remaining_days": "{n} more days",
       "remaining_surahs": "{n} more surahs",
       "remaining_attempts": "{n} more checks",
@@ -5674,92 +5711,102 @@
       "tiers": {
         "beginner": {
           "name": "Beginner",
-          "hint": "Start practising and build a short habit.",
+          "hint": "First session, first check, short streak.",
           "locked_hint": "",
           "complete_hint": "Beginner complete."
         },
         "intermediate": {
           "name": "Intermediate",
-          "hint": "Practise more often and across more surahs.",
-          "locked_hint": "Complete Beginner first.",
+          "hint": "More memorisation, more surahs, more days.",
+          "locked_hint": "",
           "complete_hint": "Intermediate complete."
         },
         "advanced": {
           "name": "Advanced",
-          "hint": "Revision, improvement, and longer consistency.",
-          "locked_hint": "Complete Intermediate first.",
-          "complete_hint": "Path complete."
+          "hint": "Revision, improvement, weekly goals, long habits.",
+          "locked_hint": "",
+          "complete_hint": "All stages complete."
         }
       },
       "items": {
         "first_steps": {
           "name": "First Steps",
           "description": "Finish your first practice session",
+          "meaning": "Marks that you started practising for real.",
           "how": "Complete a memorisation or revision session.",
-          "unlock": "Your first practice session is done.",
+          "unlock": "You completed your first practice session.",
           "requirement": "Finish one practice session"
         },
         "checker": {
           "name": "Checker",
-          "description": "Try AI Recite once",
+          "description": "Complete your first AI Recite",
+          "meaning": "You used feedback to hear how you recite.",
           "how": "Run one AI Recite check and save it.",
-          "unlock": "Your first AI Recite is saved.",
+          "unlock": "You saved your first AI Recite check.",
           "requirement": "Complete one AI Recite"
         },
         "consistent": {
           "name": "Consistent",
           "description": "Practise 3 days in a row",
+          "meaning": "A short streak shows practice is becoming a habit.",
           "how": "Come back three days in a row.",
-          "unlock": "Three days in a row.",
+          "unlock": "You practised three days in a row.",
           "requirement": "Practise 3 days in a row"
         },
         "memoriser": {
           "name": "Memoriser",
           "description": "Complete 5 memorisation sessions",
+          "meaning": "Shows repeated work on new memorisation.",
           "how": "Finish five memorisation sessions.",
-          "unlock": "Five memorisation sessions done.",
+          "unlock": "You finished five memorisation sessions.",
           "requirement": "Complete 5 memorisation sessions"
         },
         "explorer": {
           "name": "Explorer",
           "description": "Practise in 3 different surahs",
+          "meaning": "You are widening what you practise, not staying on one surah only.",
           "how": "Practise across three surahs.",
-          "unlock": "Three surahs practised.",
+          "unlock": "You practised across three surahs.",
           "requirement": "Practise in 3 different surahs"
         },
         "dedicated": {
           "name": "Dedicated",
           "description": "Practise on 7 different days",
+          "meaning": "A full week of returning to the Qur’an.",
           "how": "Practise on any seven different days.",
-          "unlock": "Seven practice days.",
+          "unlock": "You practised on seven different days.",
           "requirement": "Practise on 7 different days"
         },
         "reviser": {
           "name": "Reviser",
           "description": "Complete 10 revision sessions",
+          "meaning": "Revision keeps what you memorised from fading.",
           "how": "Finish ten revision sessions.",
-          "unlock": "Ten revision sessions done.",
+          "unlock": "You finished ten revision sessions.",
           "requirement": "Complete 10 revision sessions"
         },
         "growing": {
           "name": "Growing",
-          "description": "Improve with AI Recite",
+          "description": "Improve with AI Recite on the same passage",
+          "meaning": "Your checks show real improvement, not just more attempts.",
           "how": "Score better on the same passage over a few AI Recite checks.",
-          "unlock": "Your AI Recite scores improved.",
+          "unlock": "Your AI Recite scores improved on the same passage.",
           "requirement": "Improve with AI Recite"
         },
         "focused": {
           "name": "Focused",
           "description": "Meet your weekly practice goal",
+          "meaning": "You set a goal and kept it for a week.",
           "how": "Set a weekly goal in Profile, then meet it.",
-          "unlock": "You met your weekly goal.",
+          "unlock": "You met your weekly practice goal.",
           "requirement": "Meet your weekly practice goal"
         },
         "steadfast": {
           "name": "Steadfast",
           "description": "Practise on 14 different days",
+          "meaning": "Two weeks of returning — consistency that lasts.",
           "how": "Practise on fourteen different days.",
-          "unlock": "Fourteen practice days.",
+          "unlock": "You practised on fourteen different days.",
           "requirement": "Practise on 14 different days"
         }
       }
@@ -7593,5 +7640,39 @@
     "messages_empty_title": "No messages yet",
     "messages_empty": "Reminders for due and overdue tasks will appear here.",
     "messages_soon": "Messaging opens here when a thread is ready."
+  },
+  "referral": {
+    "title": "Invite someone",
+    "lead": "Share Mutqin with people you trust. When they finish their first practice, you earn extra AI Recite checks.",
+    "howTitle": "How it works",
+    "step1": "Share your personal link",
+    "step2": "They create a Mutqin account",
+    "step3": "When they finish their first practice, you get {count} AI Recite checks",
+    "rewardTitle": "Your reward",
+    "rewardBody": "Earn {count} AI Recite checks each time someone you invite finishes their first practice.",
+    "rewardEarned": "{count} AI Recite checks earned",
+    "rewardRemaining": "{count} bonus checks left to use",
+    "thanksBody": "Your invite finished their first practice. You earned {count} AI Recite checks.",
+    "thanksDismiss": "Got it",
+    "yourLink": "Your link",
+    "shareLabel": "Share",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Share",
+    "shareEmail": "Email",
+    "shareTitle": "Join me on Mutqin",
+    "shareMessage": "I use Mutqin for Qur'an memorisation. Join with my link: {url}",
+    "emailSubject": "Join me on Mutqin",
+    "copyLink": "Copy",
+    "copied": "Copied",
+    "shared": "Shared",
+    "statsLabel": "Your invite progress",
+    "statVisits": "Visits",
+    "statSignups": "Sign-ups",
+    "statActivations": "First sessions",
+    "statConversion": "Activated",
+    "statConversionEmpty": "-",
+    "privacyNote": "People who join with your link stay private. You only see counts.",
+    "postSessionInvite": "Invite someone. Earn AI Recite checks when they practise.",
+    "postSessionInviteHint": ""
   }
 }

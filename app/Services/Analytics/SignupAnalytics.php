@@ -3,6 +3,7 @@
 namespace App\Services\Analytics;
 
 use App\Models\User;
+use App\Services\Referrals\ReferralService;
 use App\Support\Analytics\Acquisition;
 use App\Support\Analytics\ProductEventName;
 use Illuminate\Http\Request;
@@ -10,7 +11,10 @@ use Illuminate\Http\Request;
 /** Persist first-touch labels and the signup completion event. Does not throw. */
 final class SignupAnalytics
 {
-    public function __construct(private readonly ProductEventRecorder $events) {}
+    public function __construct(
+        private readonly ProductEventRecorder $events,
+        private readonly ReferralService $referrals,
+    ) {}
 
     public function capture(User $user, Request $request, string $method): void
     {
@@ -31,6 +35,8 @@ final class SignupAnalytics
         if ($fill !== []) {
             $user->forceFill($fill)->save();
         }
+
+        $this->referrals->attributeSignup($user, $user->signup_referral_code ?: $acquisition['referral_code']);
 
         $safeMethod = in_array($method, ['email', 'google', 'demo'], true) ? $method : 'email';
         $this->events->recordQuietly(

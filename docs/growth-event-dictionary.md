@@ -45,6 +45,8 @@ Each new account has one primary source, taken from `signup_utm_source`, `signup
 | Label | Stored value |
 | --- | --- |
 | Referrals | A referral code, `utm_medium=referral`, or source `referral`, `learner`, or `invite` |
+
+Referral programme funnel metrics on the growth page: link opens (`referral_link_opened`), referred signups (accounts with `signup_referral_code`), activations (`referral_activated`), open→signup rate, and signup→activation rate. Learner dashboards never expose referred users' names or emails.
 | Direct | The stored source is explicitly direct or none |
 | Organic search | Google, Bing, DuckDuckGo, Yahoo, Ecosia, `organic`, `search`, `seo`, or `seo_tool`, unless the medium is paid |
 | Instagram, Facebook, LinkedIn, WhatsApp | That network's stored source |

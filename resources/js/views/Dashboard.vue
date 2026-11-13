@@ -378,6 +378,7 @@
           :collapsed="isSectionCollapsed('achievements')"
           :title="t('dashboard.achievements.title')"
           :subtitle="t('dashboard.achievements.subtitle')"
+          :subtitle-for="achievementSectionSubtitle"
           :view-all-label="t('dashboard.achievements.view_all')"
           :show-more-label="t('dashboard.achievements.show_more')"
           :show-less-label="t('dashboard.achievements.show_less')"
@@ -387,6 +388,8 @@
           :unlock-prefix="t('dashboard.achievements.unlocked_on')"
           :name-for="achievementName"
           :description-for="achievementDescription"
+          :meaning-for="achievementMeaning"
+          :status-for="achievementStatusLabel"
           :progress-for="achievementProgressLabel"
           :remaining-for="achievementRemainingLabel"
           :requirement-for="achievementRequirement"
@@ -747,6 +750,8 @@
                 :show-less-label="t('dashboard.achievements.show_less')"
                 :name-for="achievementName"
                 :description-for="achievementDescription"
+                :meaning-for="achievementMeaning"
+                :status-for="achievementStatusLabel"
                 :progress-for="achievementProgressLabel"
                 :requirement-for="achievementRequirement"
                 :tier-title-for="achievementTierTitle"
@@ -3547,6 +3552,15 @@ export default {
       const id = item?.id || item
       return this.t(`dashboard.achievements.items.${id}.description`)
     },
+    achievementMeaning(item) {
+      if (!item?.id) return ''
+      if (item.state === 'unlocked') {
+        return this.t(`dashboard.achievements.items.${item.id}.unlock`)
+      }
+      const key = `dashboard.achievements.items.${item.id}.meaning`
+      const value = this.t(key)
+      return value === key ? this.achievementDescription(item) : value
+    },
     achievementHowLabel(item) {
       if (!item?.id) return ''
       const key = `dashboard.achievements.items.${item.id}.how`
@@ -3559,24 +3573,24 @@ export default {
     },
     achievementStatusLabel(item) {
       if (!item) return ''
+      if (item.is_next && item.state !== 'unlocked') return this.t('dashboard.achievements.status_next')
       if (item.state === 'unlocked') return this.t('dashboard.achievements.status_unlocked')
       if (item.state === 'in_progress') return this.t('dashboard.achievements.status_in_progress')
-      if (item.detail === 'path_locked' || item.path_open === false) {
-        return this.t('dashboard.achievements.status_locked_path')
-      }
       return this.t('dashboard.achievements.status_locked')
     },
-    achievementPathSummary(widget) {
-      if (!widget) return ''
+    achievementSectionSubtitle(widget) {
+      if (!widget) return this.t('dashboard.achievements.subtitle')
+      if (widget.next?.id) {
+        return this.t('dashboard.achievements.subtitle_next', {
+          name: this.achievementName(widget.next),
+        })
+      }
       const unlocked = Number(widget.unlocked_count || 0)
       const total = Number(widget.total_count || 0)
-      const tierId = widget.active_tier || widget.next?.tier || 'beginner'
-      const tierName = this.t(`dashboard.achievements.tiers.${tierId}.name`)
-      return this.t('dashboard.achievements.path_summary', {
-        unlocked,
-        total,
-        tier: tierName,
-      })
+      if (unlocked > 0) {
+        return this.t('dashboard.achievements.subtitle_done', { unlocked, total })
+      }
+      return this.t('dashboard.achievements.subtitle')
     },
     achievementTierTitle(tier) {
       const id = tier?.id || 'beginner'
@@ -3584,9 +3598,6 @@ export default {
     },
     achievementTierHint(tier) {
       const id = tier?.id || 'beginner'
-      if (tier && tier.open === false) {
-        return this.t(`dashboard.achievements.tiers.${id}.locked_hint`)
-      }
       if (tier?.complete) {
         return this.t(`dashboard.achievements.tiers.${id}.complete_hint`)
       }
@@ -3594,52 +3605,65 @@ export default {
     },
     achievementProgressLabel(item) {
       if (!item || item.state === 'unlocked') return ''
-      if (item.detail === 'path_locked' || item.path_open === false) return ''
       if ((item.target || 0) <= 0) return ''
-      return this.t('dashboard.achievements.progress_generic', {
-        current: item.current || 0,
-        target: item.target || 0,
-      })
+      const current = item.current || 0
+      const target = item.target || 0
+      const unit = item.unit || this.achievementUnitFor(item.id)
+      const keyMap = {
+        session: 'progress_session',
+        streak: 'progress_streak',
+        day: 'progress_day',
+        surah: 'progress_surah',
+        revision: 'progress_revision',
+        check: 'progress_check',
+        improvement: 'progress_improvement',
+        week: 'progress_week',
+      }
+      const key = keyMap[unit] || 'progress_generic'
+      return this.t(`dashboard.achievements.${key}`, { current, target })
+    },
+    achievementUnitFor(id) {
+      const map = {
+        first_steps: 'session',
+        checker: 'check',
+        consistent: 'streak',
+        memoriser: 'session',
+        explorer: 'surah',
+        dedicated: 'day',
+        reviser: 'revision',
+        growing: 'improvement',
+        focused: 'week',
+        steadfast: 'day',
+      }
+      return map[id] || 'session'
     },
     achievementRemainingLabel(item) {
       if (!item || item.state === 'unlocked') return ''
-      if (item.detail === 'path_locked' || item.path_open === false) {
-        const requiredId = item.requires_id
-        if (requiredId) {
-          return this.t('dashboard.achievements.path_locked_after', {
-            name: this.achievementName(requiredId),
-          })
-        }
-        return this.t('dashboard.achievements.path_locked')
-      }
       if (item.id === 'focused' && item.detail === 'goal_unset') {
         return this.t('dashboard.achievements.focused_set_goal')
       }
       const remaining = Math.max(0, (item.target || 0) - (item.current || 0))
       if (remaining <= 0) return ''
-      if (['reviser', 'memoriser', 'first_steps', 'checker'].includes(item.id)) {
-        return this.t('dashboard.achievements.remaining_sessions', { n: remaining })
-      }
-      if (item.id === 'explorer') {
-        return this.t('dashboard.achievements.remaining_surahs', { n: remaining })
-      }
-      if (item.id === 'growing' && item.detail === 'insufficient_data') {
-        return this.t('dashboard.achievements.remaining_attempts', { n: remaining })
-      }
-      if (item.id === 'growing') {
+      const unit = item.unit || this.achievementUnitFor(item.id)
+      if (unit === 'surah') return this.t('dashboard.achievements.remaining_surahs', { n: remaining })
+      if (unit === 'check') return this.t('dashboard.achievements.remaining_attempts', { n: remaining })
+      if (unit === 'improvement') {
+        if (item.detail === 'insufficient_data') {
+          return this.t('dashboard.achievements.remaining_attempts', { n: remaining })
+        }
         return this.t('dashboard.achievements.remaining_improvement')
       }
-      return this.t('dashboard.achievements.remaining_days', { n: remaining })
+      if (unit === 'streak' || unit === 'day' || unit === 'week') {
+        return this.t('dashboard.achievements.remaining_days', { n: remaining })
+      }
+      return this.t('dashboard.achievements.remaining_sessions', { n: remaining })
     },
     achievementRequirement(item) {
       if (!item || item.state === 'unlocked' || item.state === 'in_progress') return ''
-      if (item.detail === 'path_locked' || item.path_open === false) {
-        return this.achievementRemainingLabel(item)
-      }
       if (item.id === 'focused' && (item.detail === 'goal_unset' || !(item.target > 0))) {
         return this.t('dashboard.achievements.focused_set_goal')
       }
-      return this.t(`dashboard.achievements.items.${item.id}.requirement`)
+      return this.achievementHowLabel(item) || this.t(`dashboard.achievements.items.${item.id}.requirement`)
     },
     isAchievementsDesktopLayout() {
       if (typeof window === 'undefined' || !window.matchMedia) return false

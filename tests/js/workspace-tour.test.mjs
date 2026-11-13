@@ -53,9 +53,12 @@ function sliceMethod(source, name) {
 
 {
   const steps = sliceMethod(memorisationJs, 'workspaceTourSteps')
-  for (const key of ['welcome', 'controls', 'setup', 'practice', 'saved', 'start', 'session', 'ai']) {
+  for (const key of ['welcome', 'setup', 'practice', 'start', 'ai']) {
     assert.match(steps, new RegExp(`key:\\s*'${key}'`))
   }
+  assert.doesNotMatch(steps, /key:\s*'controls'/)
+  assert.doesNotMatch(steps, /key:\s*'saved'/)
+  assert.doesNotMatch(steps, /key:\s*'session'/)
   assert.doesNotMatch(steps, /key:\s*'results'/)
   assert.doesNotMatch(steps, /key:\s*'weak'/)
   assert.doesNotMatch(steps, /key:\s*'plan'/)
@@ -135,6 +138,8 @@ function sliceMethod(source, name) {
 }
 
 {
+  assert.equal(en.memorisation.workspaceTour.skip, 'Skip Tour')
+  assert.equal(en.memorisation.workspaceTour.finish, 'Get Started')
   const tour = en.memorisation.workspaceTour.steps
   assert.ok(tour.ai.title)
   assert.ok(tour.results.title)
@@ -162,8 +167,10 @@ function sliceMethod(source, name) {
 
 {
   const auto = sliceMethod(memorisationJs, 'shouldAutoStartWorkspaceTour')
-  assert.match(auto, /return false/)
-  assert.doesNotMatch(auto, /just_registered/)
+  assert.match(auto, /isRegistrationSession\(\)/)
+  assert.match(auto, /hasCompletedOnboarding\(\)/)
+  assert.match(auto, /hasDismissedWorkspaceTour\(\)/)
+  assert.match(auto, /hasPostOnboardingPracticeEvidence\(\)/)
 
   const schedule = sliceMethod(memorisationJs, 'scheduleWorkspaceTourStart')
   assert.match(schedule, /shouldAutoStartWorkspaceTour\(\)/)
@@ -182,6 +189,8 @@ function sliceMethod(source, name) {
   assert.match(memorisationJs, /finalizeRegistrationOnboardingForReturningLogin\(\)/)
   assert.match(memorisationJs, /markRegistrationSession\(\)/)
   assert.match(memorisationJs, /getRegistrationSessionStorageKey\(\)/)
+  assert.match(memorisationJs, /syncOnboardingCompletedToAccount\(/)
+  assert.match(memorisationJs, /learningApi\.completeOnboarding\(/)
   assert.match(
     sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'),
     /return\s*$/m,
@@ -206,6 +215,7 @@ function sliceMethod(source, name) {
     auth: { check: true, just_logged_in: true, just_registered: false },
     hasDismissedWorkspaceTour: () => false,
     hasCompletedOnboarding: () => false,
+    hasPostOnboardingPracticeEvidence: () => false,
     _signupIsolationFreshlyActivated: false,
     isDemoWorkspaceAccount: () => false,
     isRegistrationSession: () => false,
@@ -219,16 +229,25 @@ function sliceMethod(source, name) {
     hasPostOnboardingPracticeEvidence: () => false,
     readWorkspaceStateValue: () => false,
   }
-  // Spotlight tour stays off; first-time goal/setup path is for new authenticated learners.
+  const registrationCtx = {
+    ...existingLogin,
+    auth: { check: true, just_logged_in: false, just_registered: true },
+    isRegistrationSession: () => true,
+  }
+  // Spotlight tour auto-starts only for unfinished registration sessions.
   assert.equal(run('shouldAutoStartWorkspaceTour', existingLogin), false)
+  assert.equal(run('shouldAutoStartWorkspaceTour', registrationCtx), true)
   assert.equal(run('requiresFirstTimeOnboarding', firstRunCtx), true)
   assert.equal(run('requiresFirstTimeOnboarding', {
     ...firstRunCtx,
     learningBackendEnabled: () => false,
   }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
-    ...existingLogin,
+    ...registrationCtx,
     isDemoWorkspaceAccount: () => true,
+  }), false)
+  assert.equal(run('shouldAutoStartWorkspaceTour', {
+    ...registrationCtx,
     hasCompletedOnboarding: () => true,
   }), false)
   assert.equal(run('requiresFirstTimeOnboarding', {
@@ -238,8 +257,7 @@ function sliceMethod(source, name) {
     hasPostOnboardingPracticeEvidence: () => true,
   }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
-    ...existingLogin,
-    isDemoWorkspaceAccount: () => true,
+    ...registrationCtx,
     hasDismissedWorkspaceTour: () => true,
   }), false)
   assert.equal(run('requiresFirstTimeOnboarding', {
@@ -261,18 +279,21 @@ function sliceMethod(source, name) {
   }), false)
   assert.equal(run('shouldAutoStartWorkspaceTour', {
     ...existingLogin,
-    auth: { check: true, just_logged_in: false, just_registered: true },
+    auth: { check: true, just_logged_in: true, just_registered: false },
+    hasCompletedOnboarding: () => true,
+  }), false)
+  assert.equal(run('shouldAutoOpenOnboarding', {
+    ...firstRunCtx,
+    requiresFirstTimeOnboarding: true,
+    shouldAutoStartWorkspaceTour: () => true,
+    backendUnfinishedSession: false,
+    hasValidatedResumableSession: false,
   }), false)
   assert.equal(run('requiresFirstTimeOnboarding', {
     ...firstRunCtx,
     auth: { check: true, just_logged_in: false, just_registered: true },
     isRegistrationSession: () => true,
   }), true)
-  assert.equal(run('shouldAutoStartWorkspaceTour', {
-    ...existingLogin,
-    auth: { check: true, just_logged_in: true, just_registered: false },
-    hasCompletedOnboarding: () => true,
-  }), false)
 
   const reopen = sliceMethod(memorisationJs, 'openOnboardingFromTopMenu')
   assert.match(reopen, /startWorkspaceTour\(0\)/)

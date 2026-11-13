@@ -2786,6 +2786,12 @@ export default {
         return false
       }
     },
+    showPostSessionReferralInvite() {
+      if (!this.isLoggedIn) return false
+      if (this.onboardingSampleSessionActive || !this.showPostSessionModal) return false
+      // Quiet contextual invite after the first successful sitting — not a blocking popup.
+      return !!this.postSessionIsFirstCompletion
+    },
     toolsStartBusy() {
       return !!this.toolsStartInFlight
         || this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
@@ -2924,10 +2930,10 @@ export default {
       return AI_TEST_MODALS_ENABLED === true
     },
     canUsePremiumTechniques() {
-      return true
+      return hasPremiumAccess(this.auth)
     },
     canUseProFeatures() {
-      return true
+      return hasProAccess(this.auth)
     },
     maxSavedSessionsAllowed() {
       return maxSavedSessionsForTier(this.auth)
@@ -7613,6 +7619,8 @@ export default {
     },
     shouldAutoOpenOnboarding() {
       if (!this.requiresFirstTimeOnboarding) return false
+      // Spotlight tour owns the first authenticated landing for new registrations.
+      if (this.shouldAutoStartWorkspaceTour()) return false
       if (this.backendUnfinishedSession || this.hasValidatedResumableSession) return false
       return true
     },
@@ -8490,14 +8498,12 @@ export default {
       ]
     },
     workspaceTourSteps() {
+      // Keep to 5 essential highlights: workspace → setup → tools → start → AI check.
       return [
         { key: 'welcome', selector: '[data-tour="workspace-welcome"]', pad: 8, radius: 20, placement: 'dock-bottom' },
-        { key: 'controls', selector: '[data-tour="controls"]', pad: 8, radius: 12, placement: 'bottom' },
         { key: 'setup', selector: '[data-tour="setup-sheet"], [data-tour="setup-tab"]', pad: 8, radius: 16, placement: 'left' },
         { key: 'practice', selector: '[data-tour="practice-sheet"], [data-tour="practice-tab"]', pad: 8, radius: 16, placement: 'left' },
-        { key: 'saved', selector: '[data-tour="saved-sheet"], [data-tour="saved-tab"]', pad: 8, radius: 16, placement: 'left' },
         { key: 'start', selector: '[data-tour="start-session"]', pad: 10, radius: 16, placement: 'top' },
-        { key: 'session', selector: '[data-tour="workspace-main"], [data-tour="end-session"]', pad: 8, radius: 14, placement: 'bottom' },
         { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
       ]
     },
@@ -19552,8 +19558,14 @@ export default {
       }
     },
     shouldAutoStartWorkspaceTour() {
-      // Keep the tour available from code, but never open it on registration.
-      return false
+      if (!this.auth?.check) return false
+      if (this.isDemoWorkspaceAccount()) return false
+      if (this.hasCompletedOnboarding()) return false
+      if (this.hasDismissedWorkspaceTour()) return false
+      // Only auto-launch during the registration session — never on later logins.
+      if (!this.isRegistrationSession()) return false
+      if (this.hasPostOnboardingPracticeEvidence()) return false
+      return true
     },
     initTesterStartGuide() {
       this.scheduleWorkspaceTourStart()
@@ -20142,24 +20154,12 @@ export default {
     },
     maybeAdvanceWorkspaceTourFromSession() {
       if (!this.workspaceTourActive) return
-      if (this.workspaceTourStep?.key === 'start' && (this.hasSessionStarted || this.isSessionLive || this.showHeaderEndSessionAction)) {
-        const sessionIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'session')
-        if (sessionIndex >= 0) {
-          this.workspaceTourStepIndex = sessionIndex
-          this.applyWorkspaceTourStep(sessionIndex)
-        }
-        return
-      }
-      if (this.workspaceTourStep?.key === 'session' && this.showPostSessionModal) {
+      if (this.workspaceTourStep?.key === 'start' && (this.hasSessionStarted || this.isSessionLive || this.showHeaderEndSessionAction || this.showPostSessionModal)) {
         const aiIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'ai')
         if (aiIndex >= 0) {
           this.workspaceTourStepIndex = aiIndex
           this.applyWorkspaceTourStep(aiIndex)
         }
-        return
-      }
-      if (this.workspaceTourStep?.key === 'session' && this.showHeaderEndSessionAction) {
-        this.measureWorkspaceTourTarget()
       }
     },
     captureWorkspaceTourConfigSnapshot() {
@@ -20477,34 +20477,63 @@ export default {
       this.talqinModeEnabled = !!prefs.talqinModeEnabled
     },
     hasCompletedOnboarding() {
+      // Account column is the durable source of truth across devices/sessions.
+      if (this.auth?.onboarding_completed_at) return true
+
       const userId = this.auth?.id != null ? String(this.auth.id) : null
+      let completed = false
 
       if (this.learningBackendEnabled() && userId) {
-        if (this.readWorkspaceStateValue(this.getOnboardingWorkspaceKey(), false)) return true
-        try {
-          if (localStorage.getItem(this.getOnboardingStorageKey()) === 'true') {
-            this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
-            return true
-          }
-        } catch { /* ignore */ }
+        if (this.readWorkspaceStateValue(this.getOnboardingWorkspaceKey(), false)) {
+          completed = true
+        } else {
+          try {
+            if (localStorage.getItem(this.getOnboardingStorageKey()) === 'true') {
+              this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
+              completed = true
+            }
+          } catch { /* ignore */ }
+        }
 
         // Pre-scoping installs stored a single shared flag. Adopt it for this
         // account once, but never while signup isolation is active.
-        const legacy = !!this.readWorkspaceStateValue('onboardingCompleted', false)
-        if (legacy && !this.isSignupIsolationActive()) {
-          this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
-          this.deleteWorkspaceStateValue('onboardingCompleted')
-          return true
+        if (!completed) {
+          const legacy = !!this.readWorkspaceStateValue('onboardingCompleted', false)
+          if (legacy && !this.isSignupIsolationActive()) {
+            this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
+            this.deleteWorkspaceStateValue('onboardingCompleted')
+            completed = true
+          }
         }
 
-        if (this.isSignupIsolationActive()) return false
-        return false
+        if (!completed) {
+          if (this.isSignupIsolationActive()) return false
+          return false
+        }
+
+        // Backfill the account flag when older clients only stored local/workspace state.
+        this.syncOnboardingCompletedToAccount()
+        return true
       }
       try {
         return localStorage.getItem(this.getOnboardingStorageKey()) === 'true'
       } catch {
         return false
       }
+    },
+    syncOnboardingCompletedToAccount() {
+      if (!this.auth?.check || !this.learningBackendEnabled()) return
+      if (this.auth.onboarding_completed_at) return
+      if (this._onboardingAccountSyncStarted) return
+      this._onboardingAccountSyncStarted = true
+      learningApi.completeOnboarding()
+        .then((data) => {
+          const stamp = data?.onboarding_completed_at
+          if (stamp && this.auth) this.auth.onboarding_completed_at = stamp
+        })
+        .catch(() => {
+          this._onboardingAccountSyncStarted = false
+        })
     },
     analyticsContext(extra = {}) {
       try {
@@ -20544,6 +20573,7 @@ export default {
       this.persistMutqinStateLocally()
       if (this.learningBackendEnabled()) {
         this.pushLearningState(true).catch(() => { /* best-effort; local gate still holds */ })
+        this.syncOnboardingCompletedToAccount()
       }
       if (!alreadyCompleted) {
         trackProductEvent('onboarding_complete', this.analyticsContext(), { onceKey: 'onboarding' })
@@ -39809,6 +39839,7 @@ export default {
       this.openToolsPanel({ tab: 'stats' })
     },
     openAdvancedMetricsModal() {
+      if (!this.requireProFeatureAccess()) return
       if (this.selectedStatsSessionRecord) {
         this.openSessionAnalyticsModal(this.selectedStatsSessionRecord)
         return
@@ -48351,22 +48382,37 @@ export default {
     },
 
     enforceSubscriptionFeatureLimits() {
-      if (this.canUsePremiumTechniques) return
-      const stripChaining = !!(this.chainingEnabled || this.chainingMethod)
-      const stripAnchor = !!this.anchorModeEnabled
-      if (!stripChaining && !stripAnchor) return
-      this._techniqueConflictSilenced = true
-      if (stripChaining) {
-        this.chainingEnabled = false
-        this.chainingMethod = ''
+      let changed = false
+      if (!this.canUsePremiumTechniques) {
+        const stripChaining = !!(this.chainingEnabled || this.chainingMethod)
+        const stripAnchor = !!this.anchorModeEnabled
+        if (stripChaining || stripAnchor) {
+          this._techniqueConflictSilenced = true
+          if (stripChaining) {
+            this.chainingEnabled = false
+            this.chainingMethod = ''
+            changed = true
+          }
+          if (stripAnchor) {
+            this.anchorModeEnabled = false
+            this.cancelAnchorHighlightFrame?.()
+            this.clearAnchorHighlights?.()
+            changed = true
+          }
+          this._techniqueConflictSilenced = false
+        }
       }
-      if (stripAnchor) {
-        this.anchorModeEnabled = false
-        this.cancelAnchorHighlightFrame?.()
-        this.clearAnchorHighlights?.()
+      // Keep the preference stored, but hide meanings until Pro is restored.
+      if (!this.canUseProFeatures && this.showWordByWord) {
+        this.showWordByWord = false
+        this.clearMushafAyahHtmlCache?.()
+        this.clearDisplayArabicCache?.()
+        changed = true
       }
-      this._techniqueConflictSilenced = false
-      this.persistUiState()
+      if (changed) {
+        this.syncSettingsDraft?.()
+        this.persistUiState()
+      }
     },
     promptPremiumTechniqueUpgrade() {
       this.showBanner(
@@ -49483,6 +49529,7 @@ export default {
         this.showTransliteration = !this.showTransliteration
         nextState = this.showTransliteration
       } else if (kind === 'wbw') {
+        if (!this.showWordByWord && !this.requireProFeatureAccess()) return
         this.showWordByWord = !this.showWordByWord
         nextState = this.showWordByWord
         if (nextState && this.fadingVerseEnabled) {
@@ -49510,6 +49557,7 @@ export default {
       if (kind === 'translation') this.showTranslation = nextState
       else if (kind === 'transliteration') this.showTransliteration = nextState
       else if (kind === 'wbw') {
+        if (nextState && !this.requireProFeatureAccess()) return
         this.showWordByWord = nextState
         if (nextState && this.fadingVerseEnabled) this.fadingVerseEnabled = false
         this.clearMushafAyahHtmlCache()

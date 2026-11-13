@@ -28,6 +28,7 @@ Never stored: microphone audio, transcripts, ayah text, names, emails, passwords
 | `progressive_hiding_used` | A sitting has started with gradual hiding on, or hiding is turned on during that sitting. Once per sitting | The setup switch is toggled before a sitting starts |
 | `ai_recite_started` | Microphone recording has started | The AI Recite button is pressed before recording begins |
 | `referral_link_opened` | The page has `ref`, `utm_medium=referral`, or `utm_source=learner` | A normal visit |
+| `referral_shared` | The learner shares their invite link (`feature_id`: `whatsapp` \| `copy` \| `native` \| `email`) | The referrals page is only opened |
 | `tutorial_played` | A tutorial video starts playback | The carousel is only seen |
 | `tutorial_completed` | Playback passes 90 percent, once per playback | A progress tick below that |
 | `daily_mutqin_started` | Daily Mutqin starts a real sitting (`feature_id`: `daily-mutqin`) | The empty-state card is only shown |
@@ -44,6 +45,7 @@ Never stored: microphone audio, transcripts, ayah text, names, emails, passwords
 | --- | --- | --- |
 | `signup_completed` | Email or Google account creation succeeds | `user:{id}:signup` |
 | `referral_signup_completed` | That account stored a `ref` code | `user:{id}:referral-signup` |
+| `referral_activated` | A referred account completes its first real sitting (range complete). Credited to the referrer | `referral:{id}:activated` |
 | `session_started` | `SessionLifecycleService::start` creates or reasserts a real sitting | `session:{id}:started` |
 | `revision_started` | That sitting is revision (`memorisation_mode` or metadata `sessionMode`) | `session:{id}:revision-started` |
 | `progressive_hiding_used` | That sitting's metadata already has blur enabled | `session:{id}:blur` |

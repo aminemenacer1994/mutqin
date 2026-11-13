@@ -45,6 +45,10 @@ final class ProductEventName
 
     public const REFERRAL_SIGNUP_COMPLETED = 'referral_signup_completed';
 
+    public const REFERRAL_SHARED = 'referral_shared';
+
+    public const REFERRAL_ACTIVATED = 'referral_activated';
+
     public const TUTORIAL_PLAYED = 'tutorial_played';
 
     public const TUTORIAL_COMPLETED = 'tutorial_completed';
@@ -82,6 +86,7 @@ final class ProductEventName
             self::PROGRESSIVE_HIDING_USED,
             self::AI_RECITE_STARTED,
             self::REFERRAL_LINK_OPENED,
+            self::REFERRAL_SHARED,
             self::TUTORIAL_PLAYED,
             self::TUTORIAL_COMPLETED,
             self::DAILY_MUTQIN_STARTED,
@@ -118,6 +123,8 @@ final class ProductEventName
             self::USER_RETURNED,
             self::REFERRAL_LINK_OPENED,
             self::REFERRAL_SIGNUP_COMPLETED,
+            self::REFERRAL_SHARED,
+            self::REFERRAL_ACTIVATED,
             self::TUTORIAL_PLAYED,
             self::TUTORIAL_COMPLETED,
             self::FEEDBACK_SUBMITTED,

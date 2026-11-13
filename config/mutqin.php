@@ -191,6 +191,14 @@ return [
     ],
 
     /*
+     | Learner referral programme. Activation = referred user completes first real sitting.
+     | Reward is bonus AI Recite checks (not cash).
+     */
+    'referrals' => [
+        'reward_ai_checks' => max(0, (int) env('MUTQIN_REFERRAL_REWARD_AI_CHECKS', 3)),
+    ],
+
+    /*
      | User-owned durable files (feedback screenshots). Not AI temp audio.
      | Disk name must exist in config/filesystems.php (local | user_files | s3 | …).
      */

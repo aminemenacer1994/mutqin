@@ -842,13 +842,22 @@
                     <button
                       type="button"
                       class="top-card-menu-row"
-                      :class="{ active: showWordByWord }"
+                      :class="{ active: showWordByWord, 'is-locked': !canUseProFeatures }"
                       :aria-pressed="showWordByWord ? 'true' : 'false'"
                       @click.stop="toggleReadingOption('wbw')"
                     >
                       <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
                       <span>{{ t('memorisation.reading.wordByWord') }}</span>
-                      <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      <i
+                        v-if="showWordByWord"
+                        class="bi bi-check-lg check-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <i
+                        v-else-if="!canUseProFeatures"
+                        class="bi bi-lock check-icon"
+                        aria-hidden="true"
+                      ></i>
                     </button>
                   </div>
                   <div class="top-card-menu-group top-card-menu-group--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
@@ -4829,6 +4838,14 @@
             >
               {{ t('memorisation.sessionGoal.feedbackPrompt') }}
             </button>
+            <a
+              v-if="showPostSessionReferralInvite"
+              class="post-session-simple__feedback post-session-simple__referral-invite"
+              href="/referrals"
+              data-testid="post-session-referral-invite"
+            >
+              {{ t('referral.postSessionInvite') }}
+            </a>
           </footer>
         </div>
       </div>

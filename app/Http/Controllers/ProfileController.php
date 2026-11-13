@@ -147,6 +147,16 @@ class ProfileController extends Controller
             ->cookie(Theme::CHOSEN_COOKIE, '1', 60 * 24 * 365, null, null, false, false, false, 'lax');
     }
 
+    public function updateOnboarding(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->markOnboardingCompleted();
+
+        return response()->json([
+            'onboarding_completed_at' => $user->fresh()?->onboarding_completed_at?->toIso8601String(),
+        ]);
+    }
+
     public function showTheme(Request $request): JsonResponse
     {
         $user = $request->user();

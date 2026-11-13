@@ -19,6 +19,7 @@ final class AchievementCatalog
                 'id' => $id,
                 'tier' => (string) ($row['tier'] ?? $this->tierForId($id) ?? 'beginner'),
                 'category' => (string) ($row['category'] ?? 'practice'),
+                'unit' => (string) ($row['unit'] ?? 'session'),
                 'icon' => (string) ($row['icon'] ?? 'book'),
                 'sort' => (int) ($row['sort'] ?? 100),
             ];

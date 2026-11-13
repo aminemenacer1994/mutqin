@@ -30,6 +30,7 @@ use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
+use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -128,6 +129,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
     Route::get('/profile/theme', [ProfileController::class, 'showTheme'])->name('api.profile.theme.show');
     Route::patch('/profile/theme', [ProfileController::class, 'updateTheme'])->name('api.profile.theme');
+    Route::patch('/profile/onboarding', [ProfileController::class, 'updateOnboarding'])
+        ->name('api.profile.onboarding');
     Route::get('/profile/ai-audio-consent', [ProfileController::class, 'showAiAudioConsent'])
         ->name('api.profile.ai-audio-consent.show');
     Route::patch('/profile/ai-audio-consent', [ProfileController::class, 'updateAiAudioConsent'])
@@ -143,6 +146,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+        Route::get('/referrals', [ReferralController::class, 'show'])->name('api.referrals.show');
+        Route::post('/referrals/acknowledge', [ReferralController::class, 'acknowledge'])
+            ->middleware('throttle:30,1')
+            ->name('api.referrals.acknowledge');
         Route::get('/achievements', [AchievementController::class, 'index'])->name('api.achievements.index');
         Route::post('/achievements/acknowledge', [AchievementController::class, 'acknowledge'])
             ->middleware('throttle:30,1')
@@ -299,6 +306,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/memorisation/sessions/history', [MemorisationHistoryController::class, 'sessionIndex'])
             ->name('api.memorisation.sessions.history');
         Route::get('/memorisation/weak-spots', [MemorisationHistoryController::class, 'weakSpots'])
+            ->middleware('plan:pro')
             ->name('api.memorisation.weak-spots');
         Route::get('/memorisation/practice-plans', [MemorisationHistoryController::class, 'recommendations'])
             ->name('api.memorisation.practice-plans.index');

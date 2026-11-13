@@ -24,6 +24,7 @@ return [
     'guides' => 'المقالات',
     'features' => 'كيف يعمل',
     'profile' => 'الملف الشخصي',
+    'invite_someone' => 'ادعُ شخصًا',
     'account' => 'الحساب',
     'menu' => 'القائمة',
     'subscription' => 'الاشتراك',

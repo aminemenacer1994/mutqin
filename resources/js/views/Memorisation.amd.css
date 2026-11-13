@@ -9334,7 +9334,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
 
   html body .app .tools .sheet-section,
   html body .app .tools .sheet--setup > .sheet-section,
-  html body .app .tools .saved-sheet__card,
+  html body .app .tools .saved-sheet__card:not(.saved-sheet__card--current),
   html body .app .tools .saved-sheet__group {
     overflow: hidden !important;
     border: 1px solid var(--controls-border) !important;
@@ -9590,10 +9590,14 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
   html body .app .tools .saved-sheet__card--current {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
-    align-items: center !important;
+    align-items: start !important;
     gap: 0.55rem 0.75rem !important;
     padding: 14px 16px !important;
+    overflow: visible !important;
+    border: 1px solid var(--controls-border) !important;
+    border-radius: var(--controls-radius) !important;
     background: var(--controls-card) !important;
+    box-shadow: none !important;
   }
 
   html body .app .tools .saved-sheet__current-main {
@@ -9611,6 +9615,7 @@ html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-h
     width: auto !important;
     min-height: 44px !important;
     margin: 0 !important;
+    align-self: start !important;
     border-radius: 12px !important;
     border: 1px solid color-mix(in srgb, var(--controls-accent) 34%, var(--controls-border)) !important;
     background: color-mix(in srgb, var(--controls-accent) 12%, var(--controls-card)) !important;

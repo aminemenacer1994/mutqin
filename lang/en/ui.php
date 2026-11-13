@@ -33,6 +33,7 @@ return [
     'admin_dashboard' => 'Admin',
     'contact_inbox' => 'Contact Inbox',
     'send_feedback' => 'Send Feedback',
+    'invite_someone' => 'Invite someone',
     'open_navigation' => 'Open navigation menu',
     'close_navigation' => 'Close navigation menu',
     'switch_dark' => 'Switch to dark theme',

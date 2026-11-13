@@ -22,7 +22,7 @@
             </span>
             <span class="dash-section__title-copy">
               <h2 id="dash-achievements-heading">{{ title }}</h2>
-              <p v-if="subtitle" class="dash-section__hint">{{ subtitle }}</p>
+              <p v-if="resolvedSubtitle" class="dash-section__hint">{{ resolvedSubtitle }}</p>
             </span>
           </span>
           <i class="bi dash-section__chevron" :class="collapsed ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
@@ -31,7 +31,6 @@
     </div>
 
     <div v-show="!collapsed" id="dash-achievements-body" class="dash-section__body dash-achievements__body">
-      <!-- Mobile: compact next badge + drawer entry -->
       <div class="dash-achievements__mobile">
         <div v-if="initial" class="dash-achievements__empty">
           <p>{{ emptyTitle }}</p>
@@ -41,8 +40,11 @@
           <div class="dash-achievements__focus" :class="`dash-achievements__focus--${tone}`">
             <AchievementBadgeArt :item="focus" size="md" :muted="focus.state === 'locked'" />
             <div class="dash-achievements__focus-copy">
+              <span v-if="focusStatus" class="dash-achievements__status" :class="focusStatusClass">
+                {{ focusStatus }}
+              </span>
               <strong>{{ focusTitle }}</strong>
-              <p v-if="focusDescription">{{ focusDescription }}</p>
+              <p v-if="focusMeaning">{{ focusMeaning }}</p>
               <p v-if="focusProgress">{{ focusProgress }}</p>
               <div v-if="focusPercent != null" class="ach-badge__meter" aria-hidden="true">
                 <span class="ach-badge__meter-fill" :style="{ width: `${focusPercent}%` }"></span>
@@ -59,7 +61,6 @@
         </button>
       </div>
 
-      <!-- Desktop: full grid in the section (no offcanvas) -->
       <div class="dash-achievements__desktop">
         <div v-if="initial" class="dash-achievements__empty">
           <p>{{ emptyTitle }}</p>
@@ -74,6 +75,8 @@
           :show-less-label="showLessLabel"
           :name-for="nameFor"
           :description-for="descriptionFor"
+          :meaning-for="meaningFor"
+          :status-for="statusFor"
           :progress-for="progressFor"
           :requirement-for="requirementFor"
           :tier-title-for="tierTitleFor"
@@ -98,6 +101,7 @@ export default {
     collapsed: { type: Boolean, default: false },
     title: { type: String, required: true },
     subtitle: { type: String, default: '' },
+    subtitleFor: { type: Function, default: null },
     viewAllLabel: { type: String, required: true },
     showMoreLabel: { type: String, default: 'Show more' },
     showLessLabel: { type: String, default: 'Show less' },
@@ -107,6 +111,8 @@ export default {
     unlockPrefix: { type: String, default: '' },
     nameFor: { type: Function, required: true },
     descriptionFor: { type: Function, required: true },
+    meaningFor: { type: Function, required: true },
+    statusFor: { type: Function, required: true },
     progressFor: { type: Function, required: true },
     remainingFor: { type: Function, required: true },
     requirementFor: { type: Function, required: true },
@@ -134,13 +140,26 @@ export default {
     tone() {
       return achievementTone(this.focus?.id)
     },
+    resolvedSubtitle() {
+      if (typeof this.subtitleFor === 'function') {
+        return this.subtitleFor(this.widget) || this.subtitle
+      }
+      return this.subtitle
+    },
     focusTitle() {
       return this.focus ? this.nameFor(this.focus) : ''
     },
-    focusDescription() {
-      if (!this.focus) return ''
-      if (this.focus.state === 'unlocked') return ''
-      return this.descriptionFor(this.focus) || ''
+    focusStatus() {
+      return this.focus ? this.statusFor(this.focus) : ''
+    },
+    focusStatusClass() {
+      if (this.focus?.is_next || this.focus?.state === 'in_progress') return 'dash-achievements__status--next'
+      if (this.focus?.state === 'unlocked') return 'dash-achievements__status--unlocked'
+      return 'dash-achievements__status--locked'
+    },
+    focusMeaning() {
+      if (!this.focus || this.focus.state === 'unlocked') return ''
+      return this.meaningFor(this.focus) || this.descriptionFor(this.focus) || ''
     },
     focusProgress() {
       if (!this.focus || this.focus.state === 'unlocked') return ''

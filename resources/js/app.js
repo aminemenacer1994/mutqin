@@ -261,6 +261,10 @@ const AdminGrowth = lazyPage(
     () => import(/* webpackChunkName: "admin-growth" */ './views/AdminGrowth.vue'),
     { feature: 'admin-growth' }
 );
+const ReferralProgramme = lazyPage(
+    () => import(/* webpackChunkName: "referral-programme" */ './views/ReferralProgramme.vue'),
+    { feature: 'referral-programme' }
+);
 const AdminFeedback = lazyPage(
     () => import(/* webpackChunkName: "admin-feedback" */ './views/AdminFeedback.vue'),
     { feature: 'admin-feedback' }
@@ -397,6 +401,7 @@ async function bootstrapApp() {
         'admin-dashboard': AdminDashboard,
         'admin-growth': AdminGrowth,
         'admin-feedback': AdminFeedback,
+        'referral-programme': ReferralProgramme,
         about: About,
         'about-us-page': AboutUsPage,
         'pricing-page': PricingPage,

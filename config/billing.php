@@ -24,6 +24,8 @@ return [
     'limits' => [
         'free' => [
             'ai_assessments_per_day' => max(0, (int) env('BILLING_FREE_AI_ASSESSMENTS_PER_DAY', 5)),
+            'saved_sessions' => max(0, (int) env('BILLING_FREE_SAVED_SESSIONS', 5)),
+            'find_ayah_per_day' => max(0, (int) env('BILLING_FREE_FIND_AYAH_PER_DAY', 5)),
         ],
     ],
     'plans' => [
@@ -34,10 +36,12 @@ return [
             'display_amount' => '0',
             'interval' => 'month',
             'features' => [
-                'Qur’an memorisation and revision',
-                'Mushaf and standard reciters',
-                'Basic progress',
-                '5 AI recitation assessments a day',
+                '5 AI recitation checks a day',
+                'Essential memorisation tools',
+                '5 saved sessions',
+                '5 Find an Ayah searches a day',
+                'Translation and transliteration',
+                'Beginner achievements and basic analytics',
             ],
         ],
         /*
@@ -87,9 +91,12 @@ return [
             'audited_unit_amount' => $monthlyPence,
             'expected_currency' => 'gbp',
             'features' => [
-                'Everything in Free',
-                'Unlimited AI recitation assessments',
-                'Advanced practice tools already on Pro',
+                'Unlimited AI recitation checks',
+                'Advanced memorisation tools',
+                'Unlimited saved sessions and Find an Ayah',
+                'Word-by-word translation',
+                'Offline audio downloads',
+                'Weak ayah insights',
             ],
         ],
         'pro_yearly' => [
