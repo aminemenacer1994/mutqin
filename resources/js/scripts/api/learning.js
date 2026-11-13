@@ -232,6 +232,32 @@ export const learningApi = {
     return Array.isArray(data?.activity) ? data.activity : []
   },
 
+  async getAchievements() {
+    const { data } = await withRetry(() =>
+      http.get('/achievements', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    return data && typeof data === 'object' ? data : { items: [] }
+  },
+
+  async acknowledgeAchievements(achievementIds = []) {
+    const ids = Array.isArray(achievementIds) ? achievementIds.filter(Boolean) : []
+    if (!ids.length) return { items: [] }
+    const { data } = await http.post('/achievements/acknowledge', {
+      achievement_ids: ids,
+    })
+    return data && typeof data === 'object' ? data : { items: [] }
+  },
+
+  async updateAchievementSettings(payload = {}) {
+    const { data } = await http.patch('/achievements/settings', payload)
+    return data?.settings && typeof data.settings === 'object' ? data.settings : data
+  },
+
   // Session ---------------------------------------------------------------
   async getSession(params = {}) {
     const query = {}

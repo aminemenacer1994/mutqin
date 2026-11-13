@@ -882,6 +882,15 @@
                       <span>{{ t('common.dashboard') }}</span>
                     </a>
                     <a
+                      :href="achievementsDashboardUrl"
+                      class="top-card-menu-link top-card-menu-row"
+                      data-tour="achievements"
+                      @click.stop="topCardMenuOpen = false; openAchievementsView()"
+                    >
+                      <i class="bi bi-award" aria-hidden="true"></i>
+                      <span>{{ t('common.achievements') }}</span>
+                    </a>
+                    <a
                       v-if="isAdmin"
                       :href="adminDashboardUrl"
                       class="top-card-menu-link top-card-menu-row"

@@ -1,6 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
+    <style>
+        .profile-achievements-teaser {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.55rem 0.75rem;
+            margin-top: 0.9rem;
+            padding: 0.75rem 0.9rem;
+            border-radius: 1rem;
+            border: 1px solid color-mix(in srgb, var(--border, #d8d2c8) 80%, transparent);
+            background: color-mix(in srgb, var(--surface, var(--bg, #fff)) 94%, transparent);
+            text-decoration: none;
+            color: inherit;
+        }
+        .profile-achievements-teaser__copy {
+            flex: 1 1 10rem;
+            min-width: 0;
+        }
+        .profile-achievements-teaser__copy strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+        .profile-achievements-teaser__copy span {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+        .profile-achievements-teaser__icons {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .profile-inline-badge--icon {
+            width: 1.85rem;
+            height: 1.85rem;
+            padding: 0;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 999px;
+        }
+        .profile-achievements-teaser__link {
+            margin-inline-start: auto;
+            pointer-events: none;
+        }
+        .profile-weekly-goal {
+            margin-top: 1.1rem;
+            display: grid;
+            gap: 0.35rem;
+            max-width: 18rem;
+        }
+        .profile-field-hint {
+            margin: 0;
+            font-size: 0.84rem;
+            color: var(--muted);
+        }
+    </style>
     @php
         $isAdmin = $isAdmin ?? $user->isAdmin();
         $verificationRequired = $verificationRequired ?? false;
@@ -53,7 +110,52 @@
                         @if (! $isAdmin && $memorisedAyahCount > 0)
                             <span class="profile-inline-badge">{{ __('profile.progress_memorised', ['count' => $memorisedAyahCount]) }}</span>
                         @endif
+                        @if (! $isAdmin && ($achievementUnlockedCount ?? 0) > 0)
+                            <span class="profile-inline-badge">{{ __('profile.achievements_count', ['count' => $achievementUnlockedCount]) }}</span>
+                        @endif
                     </div>
+                    @if (! $isAdmin)
+                        <a class="profile-achievements-teaser" href="{{ route('dashboard') }}#achievements">
+                            <div class="profile-achievements-teaser__copy">
+                                <strong>{{ __('profile.achievements_title') }}</strong>
+                                <span>
+                                    @if (($achievementUnlockedCount ?? 0) > 0)
+                                        {{ __('profile.achievements_count', ['count' => $achievementUnlockedCount]) }}
+                                    @else
+                                        {{ __('profile.achievements_empty') }}
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="profile-achievements-teaser__icons" aria-hidden="true">
+                                @php
+                                    $achievementIcons = [
+                                        'first_steps' => 'bi-journal-bookmark-fill',
+                                        'consistent' => 'bi-fire',
+                                        'reviser' => 'bi-arrow-repeat',
+                                        'dedicated' => 'bi-calendar-check',
+                                        'focused' => 'bi-bullseye',
+                                        'growing' => 'bi-graph-up-arrow',
+                                        'checker' => 'bi-mic-fill',
+                                        'memoriser' => 'bi-stars',
+                                        'explorer' => 'bi-compass',
+                                        'steadfast' => 'bi-shield-check',
+                                    ];
+                                @endphp
+                                @forelse (($recentAchievements ?? collect()) as $badge)
+                                    <span class="profile-inline-badge profile-inline-badge--icon">
+                                        <i class="bi {{ $achievementIcons[$badge->achievement_id] ?? 'bi-award' }}"></i>
+                                    </span>
+                                @empty
+                                    <span class="profile-inline-badge profile-inline-badge--icon">
+                                        <i class="bi bi-award"></i>
+                                    </span>
+                                @endforelse
+                            </div>
+                            <span class="profile-achievements-teaser__link billing-secondary-btn profile-mini-btn">
+                                {{ __('profile.achievements_view') }}
+                            </span>
+                        </a>
+                    @endif
                 </div>
 
             </div>
@@ -371,6 +473,28 @@
                                 @endforeach
                             </div>
                             <p class="profile-field-error" data-theme-error role="alert"></p>
+
+                            @if (! $isAdmin)
+                                <div class="profile-weekly-goal" data-weekly-goal>
+                                    <label class="form-label" for="weeklyPracticeDaysGoal">{{ __('profile.weekly_practice_goal') }}</label>
+                                    <p class="profile-field-hint">{{ __('profile.weekly_practice_goal_desc') }}</p>
+                                    <select
+                                        id="weeklyPracticeDaysGoal"
+                                        class="form-select"
+                                        data-weekly-goal-select
+                                    >
+                                        <option value="" @selected(($weeklyPracticeDaysGoal ?? null) === null)>
+                                            {{ __('profile.weekly_practice_goal_none') }}
+                                        </option>
+                                        @for ($n = 1; $n <= 7; $n++)
+                                            <option value="{{ $n }}" @selected(($weeklyPracticeDaysGoal ?? null) === $n)>
+                                                {{ __('profile.weekly_practice_goal_option', ['n' => $n]) }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                    <p class="profile-field-error" data-weekly-goal-error role="alert"></p>
+                                </div>
+                            @endif
                         </article>
 
                         <article class="profile-card profile-pane profile-card-wide" id="sign-in-methods">
@@ -509,6 +633,8 @@
             const toastEl = document.querySelector('[data-profile-toast]');
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const messages = {
+                weeklyGoalSaved: @json(__('profile.weekly_practice_goal_saved')),
+                weeklyGoalError: @json(__('profile.weekly_practice_goal_error')),
                 nameRequired: @json(__('profile.name_required')),
                 nameMax: @json(__('profile.name_max')),
                 emailRequired: @json(__('profile.email_required')),
@@ -940,6 +1066,37 @@
                 window.addEventListener('mutqin:theme-change', function (event) {
                     const next = event?.detail?.theme;
                     if (next) syncThemeChoices(next);
+                });
+            }
+
+            const weeklyGoalSelect = document.querySelector('[data-weekly-goal-select]');
+            const weeklyGoalError = document.querySelector('[data-weekly-goal-error]');
+            if (weeklyGoalSelect) {
+                weeklyGoalSelect.addEventListener('change', async function () {
+                    if (weeklyGoalSelect.dataset.saving === '1') return;
+                    weeklyGoalSelect.dataset.saving = '1';
+                    weeklyGoalSelect.disabled = true;
+                    const raw = weeklyGoalSelect.value;
+                    const payload = {
+                        weekly_practice_days_goal: raw === '' ? null : Number(raw),
+                    };
+                    try {
+                        const response = await fetch(@json(route('api.achievements.settings')), {
+                            method: 'PATCH',
+                            headers: jsonHeaders(),
+                            credentials: 'same-origin',
+                            body: JSON.stringify(payload),
+                        });
+                        if (!response.ok) throw new Error('weekly-goal');
+                        if (weeklyGoalError) weeklyGoalError.textContent = '';
+                        showToast(messages.weeklyGoalSaved);
+                    } catch (e) {
+                        if (weeklyGoalError) weeklyGoalError.textContent = messages.weeklyGoalError;
+                        showToast(messages.weeklyGoalError);
+                    } finally {
+                        weeklyGoalSelect.disabled = false;
+                        weeklyGoalSelect.dataset.saving = '0';
+                    }
                 });
             }
 

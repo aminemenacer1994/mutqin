@@ -196,6 +196,7 @@ class DashboardService
                 'last_activity_at' => null,
                 'chips' => [],
             ],
+            'achievements' => app(\App\Services\Achievements\AchievementService::class)->emptyWidget(),
         ];
     }
 
@@ -255,6 +256,13 @@ class DashboardService
             $learning = ProgressOverviewService::empty($chartDays);
         }
 
+        try {
+            $achievements = app(\App\Services\Achievements\AchievementService::class)->dashboardWidget($user);
+        } catch (\Throwable $e) {
+            report($e);
+            $achievements = app(\App\Services\Achievements\AchievementService::class)->emptyWidget();
+        }
+
         return [
             'meta' => [
                 'owner_id' => (int) $user->id,
@@ -280,6 +288,7 @@ class DashboardService
             'weaknesses' => $weaknesses,
             'activity' => $activity,
             'retention' => $retention,
+            'achievements' => $achievements,
         ];
     }
 

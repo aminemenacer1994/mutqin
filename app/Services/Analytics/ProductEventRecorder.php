@@ -161,6 +161,28 @@ final class ProductEventRecorder
             $safe['stage'] = $stage;
         }
 
+        $achievementId = trim((string) ($properties['achievement_id'] ?? ''));
+        if (preg_match('/^[a-z][a-z0-9_]{1,62}$/', $achievementId) === 1) {
+            $safe['achievement_id'] = $achievementId;
+        }
+
+        $achievementCategory = trim((string) ($properties['achievement_category'] ?? ''));
+        if (preg_match('/^[a-z][a-z0-9_]{1,40}$/', $achievementCategory) === 1) {
+            $safe['achievement_category'] = $achievementCategory;
+        }
+
+        if (isset($properties['progress_percentage']) && is_numeric($properties['progress_percentage'])) {
+            $percent = (int) $properties['progress_percentage'];
+            if ($percent >= 0 && $percent <= 100) {
+                $safe['progress_percentage'] = $percent;
+            }
+        }
+
+        $unlockSource = trim((string) ($properties['unlock_source'] ?? ''));
+        if (preg_match('/^[a-z][a-z0-9_]{1,40}$/', $unlockSource) === 1) {
+            $safe['unlock_source'] = $unlockSource;
+        }
+
         return $safe;
     }
 }

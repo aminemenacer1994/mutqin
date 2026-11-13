@@ -88,6 +88,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'ai_audio_consent_version',
         'ai_audio_consent_at',
         'ai_session_settings',
+        'practice_preferences',
         'ai_recite_lifetime_limit',
         'marketing_unsubscribed_at',
         'signup_utm_source',
@@ -131,10 +132,16 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'subscription_state_at' => 'integer',
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
+            'practice_preferences' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
             'marketing_unsubscribed_at' => 'datetime',
             'account_role' => AccountRole::class,
         ];
+    }
+
+    public function achievements(): HasMany
+    {
+        return $this->hasMany(UserAchievement::class);
     }
 
     public function organisation(): BelongsTo

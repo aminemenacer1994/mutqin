@@ -308,6 +308,7 @@ includesAll('workspace AI Recite companion', [
   /class="[^"]*workspace-ai-recite-cta/,
   /top-card-session-cluster/,
   /webpackChunkName: "amd-modal"/,
+  /async openAiMemorisationDetection\([\s\S]*?this\.stopWorkspaceAudio\?\.\(\)/,
 ])
 
 includesAll('workspace Ask Mutqin companion', [

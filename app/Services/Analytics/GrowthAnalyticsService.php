@@ -5,6 +5,7 @@ namespace App\Services\Analytics;
 use App\Enums\UserSessionStatus;
 use App\Models\ProductEvent;
 use App\Models\User;
+use App\Models\UserAchievement;
 use App\Models\UserSession;
 use App\Support\Analytics\ProductEventName;
 use App\Support\Analytics\RegisteredUsers;
@@ -139,6 +140,7 @@ final class GrowthAnalyticsService
                     'points' => $this->practiceSeries($activity, $from, $to, $grain),
                 ],
                 'features' => $features,
+                'achievements' => $this->achievements($fromUtc, $toUtc),
             ],
             'retention' => [
                 'definition' => 'Retention uses Europe/London calendar days. A learner is retained on day N when they start a real practice session on the date N days after signup. Only signups old enough to have reached that day are included.',
@@ -644,6 +646,7 @@ final class GrowthAnalyticsService
             ['key' => 'personalised_revision', 'label' => 'Personalised Revision', 'events' => [ProductEventName::RECOMMENDATION_FOLLOWED], 'feature_ids' => null, 'detail' => null],
             ['key' => 'saved_sessions', 'label' => 'Saved Sessions', 'events' => [], 'feature_ids' => null, 'detail' => null],
             ['key' => 'listen_repeat', 'label' => 'Listen & Repeat', 'events' => [ProductEventName::DAILY_MUTQIN_STEP_VIEWED], 'feature_ids' => ['listen', 'repeat'], 'detail' => 'Counted when a Daily Mutqin listen or repeat step is shown.'],
+            ['key' => 'achievements', 'label' => 'Achievements', 'events' => [ProductEventName::ACHIEVEMENT_UNLOCKED, ProductEventName::ACHIEVEMENT_VIEWED, ProductEventName::ACHIEVEMENT_PROGRESS_VIEWED], 'feature_ids' => null, 'detail' => 'Unlocks and views. Correlation with retention is not causation.'],
         ];
 
         $names = [];
@@ -1137,6 +1140,98 @@ final class GrowthAnalyticsService
             'retention' => 'A real session on the London calendar day 1, 7, or 30 after signup. Immature signups are excluded.',
             'sources' => 'One stored source per new account. Missing source stays unattributed.',
             'features' => 'Unique accounts and event counts from product events. Features without events stay uncollected.',
+            'achievements' => 'Unlock and view counts from product events and user_achievements. Practice after unlock is descriptive only — not proof of causation.',
+        ];
+    }
+
+    /**
+     * Admin-only achievement engagement for the existing Growth dashboard.
+     *
+     * @return array<string, mixed>
+     */
+    private function achievements(Carbon $fromUtc, Carbon $toUtc): array
+    {
+        $unlockEvents = ProductEvent::query()
+            ->where('event_name', ProductEventName::ACHIEVEMENT_UNLOCKED)
+            ->whereBetween('occurred_at', [$fromUtc, $toUtc])
+            ->get(['user_id', 'occurred_at', 'properties']);
+
+        $viewEvents = ProductEvent::query()
+            ->whereIn('event_name', [
+                ProductEventName::ACHIEVEMENT_VIEWED,
+                ProductEventName::ACHIEVEMENT_PROGRESS_VIEWED,
+            ])
+            ->whereBetween('occurred_at', [$fromUtc, $toUtc])
+            ->get(['user_id', 'event_name']);
+
+        $earners = $unlockEvents->pluck('user_id')->filter()->unique()->count();
+        $unlocks = $unlockEvents->count();
+        $viewers = $viewEvents->pluck('user_id')->filter()->unique()->count();
+        $views = $viewEvents->count();
+
+        $common = [];
+        foreach ($unlockEvents as $event) {
+            $props = is_array($event->properties) ? $event->properties : [];
+            $id = (string) ($props['achievement_id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+            if (! isset($common[$id])) {
+                $common[$id] = ['achievement_id' => $id, 'unlocks' => 0, 'users' => []];
+            }
+            $common[$id]['unlocks']++;
+            if ($event->user_id) {
+                $common[$id]['users'][$event->user_id] = true;
+            }
+        }
+        $top = array_values(array_map(static function (array $row) {
+            return [
+                'achievement_id' => $row['achievement_id'],
+                'unlocks' => $row['unlocks'],
+                'users' => count($row['users']),
+            ];
+        }, $common));
+        usort($top, static fn (array $a, array $b) => $b['unlocks'] <=> $a['unlocks']);
+        $top = array_slice($top, 0, 8);
+
+        $practiceAfterUnlock = 0;
+        $unlockUserIds = $unlockEvents->pluck('user_id')->filter()->unique()->values();
+        if ($unlockUserIds->isNotEmpty()) {
+            foreach ($unlockUserIds as $userId) {
+                $firstUnlock = $unlockEvents
+                    ->where('user_id', $userId)
+                    ->sortBy('occurred_at')
+                    ->first();
+                if (! $firstUnlock?->occurred_at) {
+                    continue;
+                }
+                $practised = UserSession::query()
+                    ->where('user_id', $userId)
+                    ->where('is_onboarding_example', false)
+                    ->where('status', UserSessionStatus::Completed->value)
+                    ->where('ended_at', '>', $firstUnlock->occurred_at)
+                    ->where('ended_at', '<=', $toUtc)
+                    ->exists();
+                if ($practised) {
+                    $practiceAfterUnlock++;
+                }
+            }
+        }
+
+        $storedUnlocks = UserAchievement::query()
+            ->whereBetween('unlocked_at', [$fromUtc, $toUtc])
+            ->count();
+
+        return [
+            'collected' => $unlocks > 0 || $views > 0 || $storedUnlocks > 0,
+            'users_earning' => $earners,
+            'unlocks' => $unlocks,
+            'stored_unlocks' => $storedUnlocks,
+            'engagement_users' => $viewers,
+            'engagement_views' => $views,
+            'most_common' => $top,
+            'practised_after_unlock' => $practiceAfterUnlock,
+            'disclaimer' => 'Practice after an unlock is descriptive only. It does not prove achievements caused retention.',
         ];
     }
 }

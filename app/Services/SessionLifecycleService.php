@@ -767,6 +767,16 @@ class SessionLifecycleService
 
         AdminDashboardService::invalidateCaches();
 
+        $endedStatus = UserSessionStatus::tryFromMixed($session->status);
+        if ($endedStatus === UserSessionStatus::Completed && ! $session->is_onboarding_example) {
+            try {
+                app(\App\Services\Achievements\AchievementService::class)
+                    ->evaluateQuietly($user, 'session_complete');
+            } catch (\Throwable $error) {
+                report($error);
+            }
+        }
+
         return $session;
     }
 

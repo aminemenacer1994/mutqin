@@ -7,6 +7,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
 use App\Models\User;
+use App\Services\Achievements\AchievementService;
 use App\Services\Analytics\ProductEventRecorder;
 use App\Services\NextSessionRecommendationService;
 use App\Services\Billing\AiAssessmentQuotaExceeded;
@@ -386,6 +387,7 @@ class RecitationAssessmentService
                     'duration_seconds' => $durationMs > 0 ? (int) round($durationMs / 1000) : null,
                 ], static fn ($value) => $value !== null),
             );
+            app(AchievementService::class)->evaluateQuietly($user, 'ai_recite');
         }
 
         return $result;

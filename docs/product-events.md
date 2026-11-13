@@ -10,7 +10,7 @@ Browser events are sent only when the existing measurement gate allows them: not
 
 Server events are written when the account action itself succeeds. They are the same class of record as `user_sessions`: the fact that a sitting started or finished, not what was recited.
 
-Never stored: microphone audio, transcripts, ayah text, names, emails, passwords, `fbclid`, or full referrer URLs. Campaign fields are `utm_source`, `utm_medium`, `utm_campaign`, and a short `ref` code. Properties are an allow-list: `session_type`, `learning_mode`, `method`, `surah_id`, `duration_seconds`, `session_id`, `recommendation_id`, `feedback_id`, `attempt_id`, `assessment_id`, `feature_id`, `video_id`, `stage`.
+Never stored: microphone audio, transcripts, ayah text, names, emails, passwords, `fbclid`, or full referrer URLs. Campaign fields are `utm_source`, `utm_medium`, `utm_campaign`, and a short `ref` code. Properties are an allow-list: `session_type`, `learning_mode`, `method`, `surah_id`, `duration_seconds`, `session_id`, `recommendation_id`, `feedback_id`, `attempt_id`, `assessment_id`, `feature_id`, `video_id`, `stage`, `achievement_id`, `achievement_category`, `progress_percentage`, `unlock_source`.
 
 `POST /api/product-events` accepts only the browser events below. Completion of signup, sessions, AI Recite, recommendations, referrals, and feedback is rejected from the browser and written on the server after the action succeeds. Repeating an idempotency key does not create a second row.
 
@@ -33,6 +33,8 @@ Never stored: microphone audio, transcripts, ayah text, names, emails, passwords
 | `daily_mutqin_started` | Daily Mutqin starts a real sitting (`feature_id`: `daily-mutqin`) | The empty-state card is only shown |
 | `daily_mutqin_step_viewed` | A guide step is shown (`feature_id`: `listen` \| `repeat` \| `hide` \| `recite` \| `finish`) | The guide is collapsed |
 | `daily_mutqin_completed` | A Daily Mutqin sitting ends with the range complete (`feature_id`: `daily-mutqin`). Complements server `session_completed` | The sitting is abandoned early |
+| `achievement_viewed` | The achievements drawer is opened on Progress | Once per tab via idempotency key |
+| `achievement_progress_viewed` | Achievement progress is shown in that drawer | Once per tab via idempotency key |
 
 `onboarding_complete` and `ai_recitation_started` remain the GA4 names. The server stores `onboarding_completed` and `ai_recite_started`.
 
@@ -52,6 +54,9 @@ Never stored: microphone audio, transcripts, ayah text, names, emails, passwords
 | `ai_recite_completed` | A scored assessment is stored. Failed or unusable audio is not a completion | `assessment:{id}:ai-recite` |
 | `recommendation_followed` | `POST /api/recommendations/start` succeeds | `recommendation:{id}:followed` |
 | `feedback_submitted` | `POST /api/feedback` stores a row | `feedback:{id}` |
+| `achievement_unlocked` | A stable achievement id is earned from genuine history | `achievement:{userId}:{achievementId}` |
+
+Achievement properties may include `achievement_id`, `achievement_category`, `progress_percentage`, and `unlock_source`. They never include ayah text, transcripts, or audio.
 
 Signup also copies `utm_source`, `utm_medium`, `utm_campaign`, and `ref` onto `users.signup_utm_*` and `users.signup_referral_code` when the register request or the session captured them. Accounts created before those columns existed stay empty and are shown as unattributed, not as Direct. The anonymous id on the register form attaches earlier browser events from that tab to the new account. It is not an email or a name.
 

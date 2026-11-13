@@ -38,6 +38,7 @@ class DashboardResource extends JsonResource
             'weaknesses' => $payload['weaknesses'] ?? null,
             'activity' => $payload['activity'] ?? [],
             'retention' => $payload['retention'] ?? null,
+            'achievements' => $payload['achievements'] ?? null,
         ];
     }
 }

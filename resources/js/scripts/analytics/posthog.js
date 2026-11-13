@@ -65,6 +65,9 @@ const INPUT_EVENTS = new Set([
   'page_view',
   'landing_page_viewed',
   'signup_started',
+  'achievement_unlocked',
+  'achievement_viewed',
+  'achievement_progress_viewed',
 ])
 
 const OUTPUT_EVENTS = new Set([
@@ -94,6 +97,9 @@ const OUTPUT_EVENTS = new Set([
   'mr_mutqin_used',
   'landing_page_viewed',
   'signup_started',
+  'achievement_unlocked',
+  'achievement_viewed',
+  'achievement_progress_viewed',
 ])
 
 const ALIAS = Object.freeze({
@@ -117,6 +123,9 @@ const ALIAS = Object.freeze({
   ai_assessment_completed: 'ai_recite_completed',
   ai_recitation_completed: 'ai_recite_completed',
   page_view: '$pageview',
+  achievement_unlocked: 'achievement_unlocked',
+  achievement_viewed: 'achievement_viewed',
+  achievement_progress_viewed: 'achievement_progress_viewed',
 })
 
 const SENSITIVE_KEYS = new Set([

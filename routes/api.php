@@ -9,6 +9,7 @@ use App\Http\Middleware\ForwardMarketingClientErrors;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\Learning\AchievementController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
 use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
@@ -142,6 +143,13 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+        Route::get('/achievements', [AchievementController::class, 'index'])->name('api.achievements.index');
+        Route::post('/achievements/acknowledge', [AchievementController::class, 'acknowledge'])
+            ->middleware('throttle:30,1')
+            ->name('api.achievements.acknowledge');
+        Route::patch('/achievements/settings', [AchievementController::class, 'updateSettings'])
+            ->middleware('throttle:20,1')
+            ->name('api.achievements.settings');
         Route::middleware('learner.teacher.section')->group(function () {
             Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');

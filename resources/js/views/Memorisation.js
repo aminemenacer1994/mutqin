@@ -2280,6 +2280,9 @@ export default {
     learnerDashboardUrl() {
       return '/dashboard'
     },
+    achievementsDashboardUrl() {
+      return '/dashboard#achievements'
+    },
     hasMemorisationHistory() {
       if (this.journeyMemorisedCount > 0) return true
       if (this.learnerStreakDays > 0) return true
@@ -28194,12 +28197,9 @@ export default {
       this.amdLiveTajweedCoach = null
       this.amdAssessOnStop = false
       this.resetAmdElapsedTimer()
-      // Pause session reciter while the AI check owns the mic — do not touch WebAudio.
-      try {
-        if (this.audioElement && !this.audioElement.paused) this.audioElement.pause()
-      } catch (_) { /* ignore */ }
-      this.isPlaying = false
-      try { this.stopWordHighlighting?.() } catch (_) { /* ignore */ }
+      // Stop session/reciter audio as soon as AI Recite opens (do not leave playback under the mic UI).
+      try { this.stopWorkspaceAudio?.() } catch (_) { /* ignore */ }
+      try { this.stopRecordingsPlayback?.({ clearSource: true }) } catch (_) { /* ignore */ }
       // Clear any stuck recording gate so the learner can press Start when ready.
       this.recitationCheckPreparing = false
       this.recitationCheckRecording = false
@@ -38729,6 +38729,19 @@ export default {
       }
       // Admins use the same Progress page as learners; admin console stays in nav.
       window.location.assign(this.learnerDashboardUrl)
+    },
+    openAchievementsView() {
+      if (this.showDashboardReturn) {
+        void this.leaveDashboardEntry()
+        return
+      }
+      try {
+        this.persistContinueSession?.()
+        this.markActiveSessionSnapshot?.()
+      } catch (error) {
+        console.error('Failed to snapshot session before achievements:', error)
+      }
+      window.location.assign(this.achievementsDashboardUrl || '/dashboard#achievements')
     },
     returnToDashboard() {
       if (this.showDashboardReturn) {

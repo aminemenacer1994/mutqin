@@ -57,6 +57,12 @@ final class ProductEventName
 
     public const DAILY_MUTQIN_COMPLETED = 'daily_mutqin_completed';
 
+    public const ACHIEVEMENT_UNLOCKED = 'achievement_unlocked';
+
+    public const ACHIEVEMENT_VIEWED = 'achievement_viewed';
+
+    public const ACHIEVEMENT_PROGRESS_VIEWED = 'achievement_progress_viewed';
+
     /**
      * Events the browser may submit. Completion of accounts, sessions,
      * assessments, recommendations, and feedback is recorded on the server.
@@ -81,6 +87,8 @@ final class ProductEventName
             self::DAILY_MUTQIN_STARTED,
             self::DAILY_MUTQIN_STEP_VIEWED,
             self::DAILY_MUTQIN_COMPLETED,
+            self::ACHIEVEMENT_VIEWED,
+            self::ACHIEVEMENT_PROGRESS_VIEWED,
         ];
     }
 
@@ -116,6 +124,9 @@ final class ProductEventName
             self::DAILY_MUTQIN_STARTED,
             self::DAILY_MUTQIN_STEP_VIEWED,
             self::DAILY_MUTQIN_COMPLETED,
+            self::ACHIEVEMENT_UNLOCKED,
+            self::ACHIEVEMENT_VIEWED,
+            self::ACHIEVEMENT_PROGRESS_VIEWED,
         ];
     }
 
@@ -154,6 +165,9 @@ final class ProductEventName
             self::TUTORIAL_COMPLETED,
             self::DAILY_MUTQIN_STARTED,
             self::DAILY_MUTQIN_COMPLETED,
+            self::ACHIEVEMENT_UNLOCKED,
+            self::ACHIEVEMENT_VIEWED,
+            self::ACHIEVEMENT_PROGRESS_VIEWED,
         ];
     }
 }

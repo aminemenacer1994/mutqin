@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\MemorisationProgress;
 use App\Models\User;
+use App\Models\UserAchievement;
 use App\Http\Requests\UpdateAiSessionSettingsRequest;
 use App\Services\Auth\AiAudioConsentService;
 use App\Services\Auth\AiSessionSettingsService;
@@ -30,6 +31,21 @@ class ProfileController extends Controller
             ->whereIn('status', ['memorised', 'mastered'])
             ->count();
 
+        $achievementUnlockedCount = (int) UserAchievement::query()
+            ->where('user_id', $user->id)
+            ->count();
+        $recentAchievements = UserAchievement::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('unlocked_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get(['achievement_id', 'unlocked_at']);
+
+        $prefs = is_array($user->practice_preferences) ? $user->practice_preferences : [];
+        $weeklyPracticeDaysGoal = isset($prefs['weekly_practice_days_goal'])
+            ? (int) $prefs['weekly_practice_days_goal']
+            : null;
+
         return view('profile', [
             'user' => $user,
             'isAdmin' => $isAdmin,
@@ -41,6 +57,9 @@ class ProfileController extends Controller
             'themeModes' => Theme::modes(),
             'currentTheme' => Theme::toDataTheme($user->theme),
             'memorisedAyahCount' => $memorisedAyahCount,
+            'recentAchievements' => $recentAchievements,
+            'achievementUnlockedCount' => $achievementUnlockedCount,
+            'weeklyPracticeDaysGoal' => $weeklyPracticeDaysGoal,
         ]);
     }
 

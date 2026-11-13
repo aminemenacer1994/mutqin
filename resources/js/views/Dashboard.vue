@@ -118,6 +118,31 @@
             </div>
           </div>
         </section>
+
+        <DashboardAchievementsWidget
+          v-if="achievementsWidget"
+          :widget="achievementsWidget"
+          :collapsed="isSectionCollapsed('achievements')"
+          :title="t('dashboard.achievements.title')"
+          :subtitle="t('dashboard.achievements.subtitle')"
+          :view-all-label="t('dashboard.achievements.view_all')"
+          :show-more-label="t('dashboard.achievements.show_more')"
+          :show-less-label="t('dashboard.achievements.show_less')"
+          :empty-title="t('dashboard.achievements.empty_title')"
+          :empty-hint="t('dashboard.achievements.empty_hint')"
+          :locale="localeCode"
+          :unlock-prefix="t('dashboard.achievements.unlocked_on')"
+          :name-for="achievementName"
+          :description-for="achievementDescription"
+          :progress-for="achievementProgressLabel"
+          :remaining-for="achievementRemainingLabel"
+          :requirement-for="achievementRequirement"
+          :tier-title-for="achievementTierTitle"
+          :tier-hint-for="achievementTierHint"
+          @toggle="toggleSection('achievements')"
+          @view-all="openAchievementsDrawer"
+        />
+
         <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section
           v-if="showMurajaahSection"
@@ -616,7 +641,7 @@
               </button>
             </div>
             <div
-              v-else-if="!visibleDrawerItems.length && drawerMode !== 'ai_checks'"
+              v-else-if="!visibleDrawerItems.length && drawerMode !== 'ai_checks' && drawerMode !== 'achievements'"
               class="dash-drawer__status dash-drawer__status--empty"
             >
               <span class="dash-drawer__status-icon" aria-hidden="true">
@@ -790,6 +815,22 @@
               </ul>
             </template>
 
+            <div v-else-if="drawerMode === 'achievements'" class="dash-drawer__achievements">
+              <AchievementsPanel
+                :items="achievementDrawerItems"
+                :tiers="achievementDrawerTiers"
+                :locale="localeCode"
+                :show-more-label="t('dashboard.achievements.show_more')"
+                :show-less-label="t('dashboard.achievements.show_less')"
+                :name-for="achievementName"
+                :description-for="achievementDescription"
+                :progress-for="achievementProgressLabel"
+                :requirement-for="achievementRequirement"
+                :tier-title-for="achievementTierTitle"
+                :tier-hint-for="achievementTierHint"
+                :unlock-prefix="t('dashboard.achievements.unlocked_on')"
+              />
+            </div>
             <ul v-else-if="drawerMode === 'murajaah' || drawerMode === 'due'" class="dash-drawer__list dash-drawer__list--murajaah">
               <li v-for="(item, index) in visibleDrawerItems" :key="`${drawerMode}-${item.key}`">
                 <div
@@ -939,6 +980,15 @@
       </Transition>
     </Teleport>
 
+    <AchievementUnlockToast
+      :queue="achievementUnlockQueue"
+      :kicker="t('dashboard.achievements.unlock_kicker')"
+      :dismiss-label="t('common.close')"
+      :title-for="achievementName"
+      :message-for="achievementUnlockMessage"
+      @acknowledge="acknowledgeAchievementUnlock"
+    />
+
     <SessionVoiceAssistant
       v-if="auth.session_voice_enabled && sessionVoiceOpen"
       :theme="darkTheme ? 'dark' : 'light'"
@@ -984,13 +1034,18 @@ import {
   readSessionCompletionRetry,
 } from '../scripts/session/postSessionDashboardFlow'
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
+import { PRODUCT_EVENTS, trackProductEvent } from '../scripts/analytics/productEvents.js'
 import {
   captureReturnFocus,
   handleModalKeydown,
   restoreReturnFocus,
 } from '../utils/modalFocus'
+import DashboardAchievementsWidget from '../components/achievements/DashboardAchievementsWidget.vue'
+import AchievementsPanel from '../components/achievements/AchievementsPanel.vue'
+import AchievementUnlockToast from '../components/achievements/AchievementUnlockToast.vue'
 import './Dashboard.css'
 import './Dashboard.learner-teacher.css'
+import '../components/achievements/achievements.css'
 
 const SessionAnalysisModal = defineAsyncComponent(() => import(
   /* webpackChunkName: "session-analysis-modal" */
@@ -1021,6 +1076,7 @@ const DRAWER_TITLES = {
   hifz: 'drawer_hifz_title',
   murajaah: 'drawer_murajaah_title',
   due: 'drawer_due_title',
+  achievements: 'achievements.drawer_title',
 }
 
 const DRAWER_SUBTITLES = {
@@ -1031,6 +1087,7 @@ const DRAWER_SUBTITLES = {
   hifz: 'drawer_hifz_subtitle',
   murajaah: 'drawer_murajaah_subtitle',
   due: 'drawer_due_subtitle',
+  achievements: 'achievements.drawer_subtitle',
 }
 
 const DRAWER_EMPTY = {
@@ -1041,6 +1098,7 @@ const DRAWER_EMPTY = {
   hifz: 'drawer_hifz_empty',
   murajaah: 'drawer_murajaah_empty',
   due: 'drawer_due_empty',
+  achievements: 'achievements.empty_title',
 }
 
 const DRAWER_ICONS = {
@@ -1051,6 +1109,7 @@ const DRAWER_ICONS = {
   hifz: 'bi bi-journal-bookmark',
   murajaah: 'bi bi-arrow-repeat',
   due: 'bi bi-calendar-check',
+  achievements: 'bi bi-award',
 }
 
 export default {
@@ -1062,6 +1121,9 @@ export default {
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
     SessionVoiceAssistant,
+    DashboardAchievementsWidget,
+    AchievementsPanel,
+    AchievementUnlockToast,
   },
   props: {
     auth: { type: Object, default: () => ({}) },
@@ -1116,6 +1178,10 @@ export default {
       sessionVoiceOpen: false,
       toastMessage: '',
       toastTimer: null,
+      achievementUnlockQueue: [],
+      achievementDrawerItems: [],
+      achievementDrawerTiers: [],
+      achievementNotifiedIds: {},
       support: null,
       supportLoading: false,
       supportError: '',
@@ -2075,6 +2141,12 @@ export default {
     drawerOpen() {
       return !!this.drawerMode
     },
+    achievementsWidget() {
+      return this.data?.achievements || null
+    },
+    localeCode() {
+      return document.documentElement?.lang || 'en'
+    },
     drawerTitleId() {
       return 'dash-drawer-title'
     },
@@ -2090,6 +2162,7 @@ export default {
       return DRAWER_ICONS[this.drawerMode] || ''
     },
     drawerCountLabel() {
+      if (this.drawerMode === 'achievements') return ''
       if (this.drawerLoading || this.drawerError) return ''
       const count = this.visibleDrawerItems.length
       if (count <= 0) return ''
@@ -2238,6 +2311,8 @@ export default {
     this.loadLearningHistory()
     this.hydrateRevisitAyahs()
     this.scrollToAiReciteResults()
+    this.enqueueAchievementUnlocks(this.data?.achievements?.pending_unlocks)
+    this.openAchievementsFromHash()
     trackAckeeEvent(ACKEE_EVENTS.PROGRESS_DASHBOARD_VIEWED)
   },
   beforeUnmount() {
@@ -3037,7 +3112,20 @@ export default {
       const requestId = ++this.drawerRequestId
       try {
         let items = []
-        if (mode === 'activity') {
+        if (mode === 'achievements') {
+          const payload = await learningApi.getAchievements()
+          if (requestId !== this.drawerRequestId) return
+          this.achievementDrawerItems = Array.isArray(payload?.items) ? payload.items : []
+          this.achievementDrawerTiers = Array.isArray(payload?.tiers) ? payload.tiers : []
+          this.enqueueAchievementUnlocks(payload?.pending_unlocks)
+          trackProductEvent(PRODUCT_EVENTS.ACHIEVEMENT_VIEWED, {
+            unlock_source: 'dashboard_drawer',
+          }, { onceKey: 'achievement_viewed:drawer' })
+          trackProductEvent(PRODUCT_EVENTS.ACHIEVEMENT_PROGRESS_VIEWED, {
+            unlock_source: 'dashboard_drawer',
+          }, { onceKey: 'achievement_progress_viewed:drawer' })
+          this.drawerItems = this.achievementDrawerItems
+        } else if (mode === 'activity') {
           items = await learningApi.getActivityLog()
         } else if (mode === 'sessions') {
           items = await learningApi.getSessionHistory()
@@ -3048,7 +3136,9 @@ export default {
           items = this.groupHifzProgress(progress)
         }
         if (requestId !== this.drawerRequestId) return
-        this.drawerItems = Array.isArray(items) ? items : []
+        if (mode !== 'achievements') {
+          this.drawerItems = Array.isArray(items) ? items : []
+        }
       } catch (error) {
         console.error('Dashboard drawer fetch failed', error)
         if (requestId !== this.drawerRequestId) return
@@ -3442,6 +3532,7 @@ export default {
           this.chartReady = true
           this.refreshActiveSessionSnapshot()
           this.scrollToAiReciteResults()
+          this.enqueueAchievementUnlocks(sanitized?.achievements?.pending_unlocks)
           if (announce) this.showToast(this.t('dashboard.updated'))
         }
       } catch (error) {
@@ -3479,6 +3570,157 @@ export default {
       if (this.toastTimer) clearTimeout(this.toastTimer)
       this.toastTimer = null
       this.toastMessage = ''
+    },
+    achievementName(item) {
+      const id = item?.id || item
+      return this.t(`dashboard.achievements.items.${id}.name`)
+    },
+    achievementDescription(item) {
+      const id = item?.id || item
+      return this.t(`dashboard.achievements.items.${id}.description`)
+    },
+    achievementHowLabel(item) {
+      if (!item?.id) return ''
+      const key = `dashboard.achievements.items.${item.id}.how`
+      const value = this.t(key)
+      return value === key ? '' : value
+    },
+    achievementUnlockMessage(item) {
+      const id = item?.id || item
+      return this.t(`dashboard.achievements.items.${id}.unlock`)
+    },
+    achievementStatusLabel(item) {
+      if (!item) return ''
+      if (item.state === 'unlocked') return this.t('dashboard.achievements.status_unlocked')
+      if (item.state === 'in_progress') return this.t('dashboard.achievements.status_in_progress')
+      if (item.detail === 'path_locked' || item.path_open === false) {
+        return this.t('dashboard.achievements.status_locked_path')
+      }
+      return this.t('dashboard.achievements.status_locked')
+    },
+    achievementPathSummary(widget) {
+      if (!widget) return ''
+      const unlocked = Number(widget.unlocked_count || 0)
+      const total = Number(widget.total_count || 0)
+      const tierId = widget.active_tier || widget.next?.tier || 'beginner'
+      const tierName = this.t(`dashboard.achievements.tiers.${tierId}.name`)
+      return this.t('dashboard.achievements.path_summary', {
+        unlocked,
+        total,
+        tier: tierName,
+      })
+    },
+    achievementTierTitle(tier) {
+      const id = tier?.id || 'beginner'
+      return this.t(`dashboard.achievements.tiers.${id}.name`)
+    },
+    achievementTierHint(tier) {
+      const id = tier?.id || 'beginner'
+      if (tier && tier.open === false) {
+        return this.t(`dashboard.achievements.tiers.${id}.locked_hint`)
+      }
+      if (tier?.complete) {
+        return this.t(`dashboard.achievements.tiers.${id}.complete_hint`)
+      }
+      return this.t(`dashboard.achievements.tiers.${id}.hint`)
+    },
+    achievementProgressLabel(item) {
+      if (!item || item.state === 'unlocked') return ''
+      if (item.detail === 'path_locked' || item.path_open === false) return ''
+      if ((item.target || 0) <= 0) return ''
+      return this.t('dashboard.achievements.progress_generic', {
+        current: item.current || 0,
+        target: item.target || 0,
+      })
+    },
+    achievementRemainingLabel(item) {
+      if (!item || item.state === 'unlocked') return ''
+      if (item.detail === 'path_locked' || item.path_open === false) {
+        const requiredId = item.requires_id
+        if (requiredId) {
+          return this.t('dashboard.achievements.path_locked_after', {
+            name: this.achievementName(requiredId),
+          })
+        }
+        return this.t('dashboard.achievements.path_locked')
+      }
+      if (item.id === 'focused' && item.detail === 'goal_unset') {
+        return this.t('dashboard.achievements.focused_set_goal')
+      }
+      const remaining = Math.max(0, (item.target || 0) - (item.current || 0))
+      if (remaining <= 0) return ''
+      if (['reviser', 'memoriser', 'first_steps', 'checker'].includes(item.id)) {
+        return this.t('dashboard.achievements.remaining_sessions', { n: remaining })
+      }
+      if (item.id === 'explorer') {
+        return this.t('dashboard.achievements.remaining_surahs', { n: remaining })
+      }
+      if (item.id === 'growing' && item.detail === 'insufficient_data') {
+        return this.t('dashboard.achievements.remaining_attempts', { n: remaining })
+      }
+      if (item.id === 'growing') {
+        return this.t('dashboard.achievements.remaining_improvement')
+      }
+      return this.t('dashboard.achievements.remaining_days', { n: remaining })
+    },
+    achievementRequirement(item) {
+      if (!item || item.state === 'unlocked' || item.state === 'in_progress') return ''
+      if (item.detail === 'path_locked' || item.path_open === false) {
+        return this.achievementRemainingLabel(item)
+      }
+      if (item.id === 'focused' && (item.detail === 'goal_unset' || !(item.target > 0))) {
+        return this.t('dashboard.achievements.focused_set_goal')
+      }
+      return this.t(`dashboard.achievements.items.${item.id}.requirement`)
+    },
+    isAchievementsDesktopLayout() {
+      if (typeof window === 'undefined' || !window.matchMedia) return false
+      return window.matchMedia('(min-width: 900px)').matches
+    },
+    revealAchievementsSection() {
+      if (this.isSectionCollapsed('achievements')) {
+        this.toggleSection('achievements')
+      }
+      this.$nextTick(() => {
+        const el = document.getElementById('achievements')
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
+    },
+    openAchievementsFromHash() {
+      if (typeof window === 'undefined') return
+      if (window.location.hash !== '#achievements') return
+      this.$nextTick(() => {
+        void this.openAchievementsDrawer()
+      })
+    },
+    enqueueAchievementUnlocks(pending) {
+      const list = Array.isArray(pending) ? pending : []
+      if (!list.length) return
+      const existing = new Set(this.achievementUnlockQueue.map((item) => item.id))
+      list.forEach((item) => {
+        if (!item?.id || existing.has(item.id) || this.achievementNotifiedIds[item.id]) return
+        this.achievementUnlockQueue.push(item)
+        existing.add(item.id)
+      })
+    },
+    async acknowledgeAchievementUnlock(achievementId) {
+      if (!achievementId) return
+      this.achievementNotifiedIds = { ...this.achievementNotifiedIds, [achievementId]: true }
+      this.achievementUnlockQueue = this.achievementUnlockQueue.filter((item) => item.id !== achievementId)
+      try {
+        await learningApi.acknowledgeAchievements([achievementId])
+      } catch (error) {
+        console.error('Achievement acknowledge failed', error)
+      }
+    },
+    async openAchievementsDrawer() {
+      if (this.isAchievementsDesktopLayout()) {
+        this.revealAchievementsSection()
+        return
+      }
+      await this.openDrawer('achievements')
     },
   },
 }

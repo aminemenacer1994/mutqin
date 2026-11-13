@@ -51,6 +51,8 @@ export const PRODUCT_EVENTS = Object.freeze({
   DAILY_MUTQIN_STARTED: 'daily_mutqin_started',
   DAILY_MUTQIN_STEP_VIEWED: 'daily_mutqin_step_viewed',
   DAILY_MUTQIN_COMPLETED: 'daily_mutqin_completed',
+  ACHIEVEMENT_VIEWED: 'achievement_viewed',
+  ACHIEVEMENT_PROGRESS_VIEWED: 'achievement_progress_viewed',
 })
 
 const ALLOWED_EVENTS = new Set(Object.values(PRODUCT_EVENTS))
@@ -78,6 +80,8 @@ const CLIENT_INGEST = new Set([
   PRODUCT_EVENTS.DAILY_MUTQIN_STARTED,
   PRODUCT_EVENTS.DAILY_MUTQIN_STEP_VIEWED,
   PRODUCT_EVENTS.DAILY_MUTQIN_COMPLETED,
+  PRODUCT_EVENTS.ACHIEVEMENT_VIEWED,
+  PRODUCT_EVENTS.ACHIEVEMENT_PROGRESS_VIEWED,
 ])
 
 const INGEST_ALIAS = Object.freeze({
@@ -263,6 +267,16 @@ export function sanitiseProductParams(params = {}) {
   }
   const stage = String(params.stage || '')
   if (stage === 'ended_early' || stage === 'abandoned' || stage === 'discarded') safe.stage = stage
+  const achievementId = String(params.achievement_id || '')
+  if (/^[a-z][a-z0-9_]{1,62}$/.test(achievementId)) safe.achievement_id = achievementId
+  const achievementCategory = String(params.achievement_category || '')
+  if (/^[a-z][a-z0-9_]{1,40}$/.test(achievementCategory)) safe.achievement_category = achievementCategory
+  const progressPct = Number(params.progress_percentage)
+  if (Number.isFinite(progressPct) && progressPct >= 0 && progressPct <= 100) {
+    safe.progress_percentage = Math.round(progressPct)
+  }
+  const unlockSource = String(params.unlock_source || '')
+  if (/^[a-z][a-z0-9_]{1,40}$/.test(unlockSource)) safe.unlock_source = unlockSource
   return safe
 }
 

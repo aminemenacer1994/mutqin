@@ -227,6 +227,47 @@
             </li>
           </ul>
         </article>
+
+        <article v-if="achievementStats" class="growth__panel growth__panel--features">
+          <header class="growth__panel-head">
+            <h3>Achievements</h3>
+            <p>Unlocks and engagement in this period</p>
+          </header>
+          <ul class="growth__features">
+            <li>
+              <div>
+                <h4>Users earning</h4>
+                <p v-if="!achievementStats.collected">No data yet</p>
+                <p v-else>{{ achievementStats.users_earning }} accounts · {{ achievementStats.unlocks }} unlocks</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Engagement</h4>
+                <p v-if="!achievementStats.collected">No data yet</p>
+                <p v-else>{{ achievementStats.engagement_users }} accounts · {{ achievementStats.engagement_views }} views</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Practice after unlock</h4>
+                <p v-if="!achievementStats.collected">No data yet</p>
+                <p v-else>{{ achievementStats.practised_after_unlock }} accounts practised later</p>
+              </div>
+            </li>
+          </ul>
+          <ul v-if="achievementStats.most_common?.length" class="growth__features" style="margin-top: 10px">
+            <li v-for="row in achievementStats.most_common" :key="row.achievement_id">
+              <div>
+                <h4>{{ achievementLabel(row.achievement_id) }}</h4>
+                <p>{{ row.users }} accounts · {{ row.unlocks }} unlocks</p>
+              </div>
+            </li>
+          </ul>
+          <p v-if="achievementStats.disclaimer" class="growth__section-desc" style="margin-top: 8px">
+            {{ achievementStats.disclaimer }}
+          </p>
+        </article>
       </section>
 
       <section class="growth__section" aria-labelledby="growth-retention">
@@ -439,6 +480,9 @@ export default {
         { label: 'Abandoned', data: points.map((point) => point.abandoned), color: this.theme.danger },
       ]
     },
+    achievementStats() {
+      return this.report?.engagement?.achievements || null
+    },
   },
   mounted() {
     this.readTheme()
@@ -451,6 +495,21 @@ export default {
     this.themeObserver?.disconnect()
   },
   methods: {
+    achievementLabel(id) {
+      const labels = {
+        first_steps: 'First Steps',
+        consistent: 'Consistent',
+        reviser: 'Reviser',
+        dedicated: 'Dedicated',
+        focused: 'Focused',
+        growing: 'Growing',
+        checker: 'Checker',
+        memoriser: 'Memoriser',
+        explorer: 'Explorer',
+        steadfast: 'Steadfast',
+      }
+      return labels[id] || id
+    },
     chartKey(name) {
       return `${name}-${this.from}-${this.to}-${this.theme.text}-${this.report?.generated_at || ''}`
     },

@@ -41,6 +41,7 @@
     "endingSession": "Ending…",
     "startingSession": "Starting…",
     "dashboard": "Progress",
+    "achievements": "Achievements",
     "adminDashboard": "Admin",
     "retry": "Try again",
     "tryAgain": "Try again",
@@ -5604,6 +5605,126 @@
     "history_more": "Show more",
     "history_less": "Show less",
     "history_unspecified": "Session",
+    "achievements": {
+      "title": "Your achievements",
+      "subtitle": "Earn them one by one.",
+      "view_all": "View all",
+      "show_more": "Show more",
+      "show_less": "Show less",
+      "drawer_title": "Achievements",
+      "drawer_subtitle": "Finish each stage before the next opens.",
+      "empty_title": "Your first badge awaits",
+      "empty_hint": "Finish one practice session to begin.",
+      "unlock_kicker": "Achievement unlocked",
+      "unlocked_on": "Unlocked",
+      "status_unlocked": "Unlocked",
+      "status_in_progress": "In progress",
+      "status_locked": "Locked",
+      "status_locked_path": "Locked",
+      "path_intro": "",
+      "path_summary": "{unlocked} of {total} · {tier}",
+      "path_locked": "Finish the previous badge first.",
+      "path_locked_after": "Unlock {name} first.",
+      "focused_set_goal": "Set a weekly goal in Profile.",
+      "progress_generic": "{current} / {target}",
+      "remaining_sessions": "{n} more to go",
+      "remaining_days": "{n} more days",
+      "remaining_surahs": "{n} more surahs",
+      "remaining_attempts": "{n} more checks",
+      "remaining_improvement": "Keep improving on the same passage",
+      "tiers": {
+        "beginner": {
+          "name": "Beginner",
+          "hint": "Start practising and build a short habit.",
+          "locked_hint": "",
+          "complete_hint": "Beginner complete."
+        },
+        "intermediate": {
+          "name": "Intermediate",
+          "hint": "Practise more often and across more surahs.",
+          "locked_hint": "Complete Beginner first.",
+          "complete_hint": "Intermediate complete."
+        },
+        "advanced": {
+          "name": "Advanced",
+          "hint": "Revision, improvement, and longer consistency.",
+          "locked_hint": "Complete Intermediate first.",
+          "complete_hint": "Path complete."
+        }
+      },
+      "items": {
+        "first_steps": {
+          "name": "First Steps",
+          "description": "Finish your first practice session",
+          "how": "Complete a memorisation or revision session.",
+          "unlock": "Your first practice session is done.",
+          "requirement": "Finish one practice session"
+        },
+        "checker": {
+          "name": "Checker",
+          "description": "Try AI Recite once",
+          "how": "Run one AI Recite check and save it.",
+          "unlock": "Your first AI Recite is saved.",
+          "requirement": "Complete one AI Recite"
+        },
+        "consistent": {
+          "name": "Consistent",
+          "description": "Practise 3 days in a row",
+          "how": "Come back three days in a row.",
+          "unlock": "Three days in a row.",
+          "requirement": "Practise 3 days in a row"
+        },
+        "memoriser": {
+          "name": "Memoriser",
+          "description": "Complete 5 memorisation sessions",
+          "how": "Finish five memorisation sessions.",
+          "unlock": "Five memorisation sessions done.",
+          "requirement": "Complete 5 memorisation sessions"
+        },
+        "explorer": {
+          "name": "Explorer",
+          "description": "Practise in 3 different surahs",
+          "how": "Practise across three surahs.",
+          "unlock": "Three surahs practised.",
+          "requirement": "Practise in 3 different surahs"
+        },
+        "dedicated": {
+          "name": "Dedicated",
+          "description": "Practise on 7 different days",
+          "how": "Practise on any seven different days.",
+          "unlock": "Seven practice days.",
+          "requirement": "Practise on 7 different days"
+        },
+        "reviser": {
+          "name": "Reviser",
+          "description": "Complete 10 revision sessions",
+          "how": "Finish ten revision sessions.",
+          "unlock": "Ten revision sessions done.",
+          "requirement": "Complete 10 revision sessions"
+        },
+        "growing": {
+          "name": "Growing",
+          "description": "Improve with AI Recite",
+          "how": "Score better on the same passage over a few AI Recite checks.",
+          "unlock": "Your AI Recite scores improved.",
+          "requirement": "Improve with AI Recite"
+        },
+        "focused": {
+          "name": "Focused",
+          "description": "Meet your weekly practice goal",
+          "how": "Set a weekly goal in Profile, then meet it.",
+          "unlock": "You met your weekly goal.",
+          "requirement": "Meet your weekly practice goal"
+        },
+        "steadfast": {
+          "name": "Steadfast",
+          "description": "Practise on 14 different days",
+          "how": "Practise on fourteen different days.",
+          "unlock": "Fourteen practice days.",
+          "requirement": "Practise on 14 different days"
+        }
+      }
+    },
     "trends_title": "Practice trends",
     "trends_hint": "Ayahs and sessions you practised. Separate from the counts above.",
     "hifz_progress_aria": "Hifz progress",
