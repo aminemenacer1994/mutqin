@@ -288,10 +288,14 @@ class SessionAnalysisQueryService
                         'accuracy_sum' => 0,
                         'attempts' => 0,
                         'latest_needs_practice' => (bool) ($scored['needs_practice'] ?? false),
+                        // Attempts are newest-first, so the first write is the latest check.
+                        'last_attempted_at' => optional($attempt->created_at)?->toIso8601String(),
                     ];
                 }
                 $ayahBuckets[$key]['accuracy_sum'] += (int) ($scored['accuracy'] ?? 0);
                 $ayahBuckets[$key]['attempts']++;
+                $ayahBuckets[$key]['latest_needs_practice'] = (bool) ($scored['needs_practice'] ?? false)
+                    || (bool) ($ayahBuckets[$key]['latest_needs_practice'] ?? false);
             }
 
             $words = is_array($attempt->weak_words) ? $attempt->weak_words : [];
@@ -359,6 +363,7 @@ class SessionAnalysisQueryService
                     'attempts' => $attempts,
                     'accuracy' => $accuracy,
                     'needs_practice' => $needsPractice,
+                    'last_attempted_at' => $row['last_attempted_at'] ?? null,
                 ];
             })
             ->filter(fn (array $row) => $row['needs_practice'] === true)

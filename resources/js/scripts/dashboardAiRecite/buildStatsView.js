@@ -79,6 +79,7 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
         accuracy,
         tone: toneForAccuracy(accuracy),
         needs_practice: item.needs_practice === true,
+        last_attempted_at: asText(item.last_attempted_at || item.occurred_at || item.last_checked_at),
         label: [surahName, ayahLabel].filter(Boolean).join(' · '),
         value: t('dashboard.drawer_accuracy', { n: accuracy }),
       }

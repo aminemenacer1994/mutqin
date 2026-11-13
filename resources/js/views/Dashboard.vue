@@ -83,57 +83,76 @@
         </header>
 
         <div class="user-dashboard__content">
-        <section class="dash-section dash-section--flat dash-learning" aria-labelledby="dash-learning-heading">
+        <section
+          class="dash-section dash-section--flat dash-learning"
+          :class="{ 'is-collapsed': isSectionCollapsed('learning') }"
+          aria-labelledby="dash-learning-heading"
+        >
           <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__head-row">
-              <div class="dash-section__title">
+            <button
+              type="button"
+              class="dash-section__collapse"
+              :aria-expanded="isSectionCollapsed('learning') ? 'false' : 'true'"
+              aria-controls="dash-learning-body"
+              @click="toggleSection('learning')"
+            >
+              <span class="dash-section__title">
                 <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
                   <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
                 </span>
-                <div class="dash-section__title-copy">
+                <span class="dash-section__title-copy">
                   <h2 id="dash-learning-heading">{{ t('dashboard.learning_title') }}</h2>
                   <p class="dash-section__hint">{{ t('dashboard.learning_period', { days: chartDays }) }}</p>
-                </div>
-              </div>
-              <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
-                <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'is-active': chartDays === 7 }" :aria-pressed="chartDays === 7 ? 'true' : 'false'" :disabled="loading" @click="setChartDays(7)">{{ t('dashboard.days_7') }}</button>
-                <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'is-active': chartDays === 30 }" :aria-pressed="chartDays === 30 ? 'true' : 'false'" :disabled="loading" @click="setChartDays(30)">{{ t('dashboard.days_30') }}</button>
-              </div>
-            </div>
-          </div>
-          <div class="dash-learning__metrics" role="list">
-            <button v-for="metric in learningCards" :key="metric.key" type="button" class="dash-learning__metric" role="listitem" @click="onLearningMetric(metric)">
-              <strong>{{ metric.value }}</strong>
-              <span>{{ metric.label }}</span>
-              <small>{{ metric.hint }}</small>
+                </span>
+              </span>
+              <i class="bi dash-section__chevron" :class="isSectionCollapsed('learning') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
             </button>
+          </div>
+          <div v-show="!isSectionCollapsed('learning')" id="dash-learning-body" class="dash-section__body dash-learning__body">
+            <div class="dash-learning__metrics" role="list">
+              <button v-for="metric in learningCards" :key="metric.key" type="button" class="dash-learning__metric" role="listitem" @click="onLearningMetric(metric)">
+                <strong>{{ metric.value }}</strong>
+                <span>{{ metric.label }}</span>
+                <small>{{ metric.hint }}</small>
+              </button>
+            </div>
           </div>
         </section>
         <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section
           v-if="showMurajaahSection"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
-          :class="{ 'dash-section--empty': showMurajaahEmpty }"
+          :class="{
+            'dash-section--empty': showMurajaahEmpty,
+            'is-collapsed': isSectionCollapsed('murajaah'),
+          }"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
         >
           <div class="dash-murajaah-block">
             <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
-              <div class="dash-murajaah-block__head-main">
-                <div class="dash-murajaah-block__title-row">
+              <button
+                type="button"
+                class="dash-section__collapse dash-murajaah-block__head-main"
+                :aria-expanded="isSectionCollapsed('murajaah') ? 'false' : 'true'"
+                aria-controls="dash-murajaah-body"
+                @click="toggleSection('murajaah')"
+              >
+                <span class="dash-murajaah-block__title-row">
                   <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                   </span>
-                  <div class="dash-section__title-copy">
+                  <span class="dash-section__title-copy">
                     <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
                       {{ t('dashboard.revisit_title') }}
                     </h2>
                     <p class="dash-section__hint">{{ t('dashboard.revisit_subtitle') }}</p>
-                  </div>
-                </div>
-              </div>
+                  </span>
+                </span>
+                <i class="bi dash-section__chevron" :class="isSectionCollapsed('murajaah') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
+              </button>
               <button
-                v-if="showMurajaahViewAll"
+                v-if="showMurajaahViewAll && !isSectionCollapsed('murajaah')"
                 type="button"
                 class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
                 @click="openDrawer('murajaah')"
@@ -143,74 +162,84 @@
               </button>
             </div>
 
+            <div v-show="!isSectionCollapsed('murajaah')" id="dash-murajaah-body">
             <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty dash-empty">
               <p class="dash-murajaah-block__empty-title">{{ t('dashboard.revisit_empty_title') }}</p>
               <p class="dash-murajaah-block__empty-hint">{{ t('dashboard.revisit_empty_hint') }}</p>
             </div>
 
             <template v-else>
-            <p class="dash-revisit__guide">{{ t('dashboard.revisit_colour_guide') }}</p>
-            <ul class="dash-color-key dash-revisit__key" :aria-label="t('dashboard.ai_word_meaning')">
-              <li class="is-matched">{{ t('dashboard.word_matched') }}</li>
-              <li class="is-uncertain">{{ t('dashboard.word_uncertain') }}</li>
-              <li class="is-mismatch">{{ t('dashboard.word_mismatch') }}</li>
-              <li class="is-skipped">{{ t('dashboard.word_skipped') }}</li>
-            </ul>
             <ul class="dash-murajaah-list dash-revisit" data-testid="next-to-revisit">
               <li v-for="(item, index) in revisitItems" :key="item.key">
-                <article class="dash-revisit__card dash-reveal" :style="{ '--dash-delay': `${index * 50}ms` }">
+                <article
+                  class="dash-revisit__card dash-reveal"
+                  :class="{ 'is-collapsed': isCardCollapsed(`revisit:${item.key}`) }"
+                  :style="{ '--dash-delay': `${index * 50}ms` }"
+                >
                   <header class="dash-revisit__head">
-                    <h3 class="dash-revisit__title">
-                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                    </h3>
-                    <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
-                      {{ revisitStateLabel(item) }}
-                    </span>
-                  </header>
-                  <p class="dash-revisit__why">{{ revisitWhy(item) }}</p>
-                  <div class="dash-revisit__ayah">
-                    <p
-                      v-if="referenceLine(item).words.length"
-                      class="dash-ayah"
-                      lang="ar"
-                      dir="rtl"
+                    <button
+                      type="button"
+                      class="dash-card__collapse"
+                      :aria-expanded="isCardCollapsed(`revisit:${item.key}`) ? 'false' : 'true'"
+                      @click="toggleCard(`revisit:${item.key}`)"
                     >
-                      <span
-                        v-for="(word, wordIndex) in referenceLine(item).words"
-                        :key="`${item.key}-${wordIndex}`"
-                        class="dash-word"
-                        :class="`is-${word.state}`"
-                      >
-                        <span class="dash-word__text">{{ word.text }}</span>
-                        <span class="visually-hidden">{{ t(word.labelKey) }}</span>
+                      <span class="dash-revisit__head-copy">
+                        <h3 class="dash-revisit__title">
+                          {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                        </h3>
+                        <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
+                          {{ revisitStateLabel(item) }}
+                        </span>
                       </span>
-                    </p>
-                    <p v-else class="dash-revisit__missing">{{ t('dashboard.reference_unavailable') }}</p>
-                  </div>
-                  <footer class="dash-revisit__foot">
-                    <div class="dash-revisit__stats">
-                      <p v-if="item.accuracy_percent != null" class="dash-revisit__meta">
-                        {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
-                      </p>
+                      <i class="bi dash-section__chevron" :class="isCardCollapsed(`revisit:${item.key}`) ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
+                    </button>
+                  </header>
+                  <div v-show="!isCardCollapsed(`revisit:${item.key}`)" class="dash-revisit__body">
+                    <div class="dash-revisit__ayah">
                       <p
-                        v-if="weakHistoryLine(item)"
-                        class="dash-murajaah-row__history"
-                        data-testid="dash-weak-history"
-                      >{{ weakHistoryLine(item) }}</p>
+                        v-if="referenceLine(item).words.length"
+                        class="dash-ayah"
+                        lang="ar"
+                        dir="rtl"
+                      >
+                        <span
+                          v-for="(word, wordIndex) in referenceLine(item).words"
+                          :key="`${item.key}-${wordIndex}`"
+                          class="dash-word"
+                          :class="`is-${word.state}`"
+                        >
+                          <span class="dash-word__text">{{ word.text }}</span>
+                          <span class="visually-hidden">{{ t(word.labelKey) }}</span>
+                        </span>
+                      </p>
+                      <p v-else class="dash-revisit__missing">{{ t('dashboard.reference_unavailable') }}</p>
                     </div>
-                    <a
-                      class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta"
-                      :href="reviewNowHref(item)"
-                      @click="stashReviewContext(item)"
-                    >
-                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                      {{ t('dashboard.revisit_review') }}
-                    </a>
-                  </footer>
+                    <footer class="dash-revisit__foot">
+                      <div class="dash-revisit__stats">
+                        <p v-if="item.accuracy_percent != null" class="dash-revisit__meta">
+                          {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
+                        </p>
+                        <p
+                          v-if="weakHistoryLine(item)"
+                          class="dash-murajaah-row__history"
+                          data-testid="dash-weak-history"
+                        >{{ weakHistoryLine(item) }}</p>
+                      </div>
+                      <a
+                        class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta"
+                        :href="reviewNowHref(item)"
+                        @click="stashReviewContext(item)"
+                      >
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                        {{ t('dashboard.revisit_review') }}
+                      </a>
+                    </footer>
+                  </div>
                 </article>
               </li>
             </ul>
             </template>
+            </div>
           </div>
         </section>
 
@@ -219,34 +248,37 @@
           id="ai-recite-results"
           ref="aiReciteResults"
           class="dash-section dash-section--flat dash-ai-results dash-reveal"
-          :class="{ 'dash-section--empty': !aiReciteLoading && !aiReciteError && (!aiReciteView || aiReciteView.empty) }"
+          :class="{
+            'dash-section--empty': !aiReciteLoading && !aiReciteError && (!aiReciteView || aiReciteView.empty),
+            'is-collapsed': isSectionCollapsed('ai_recite'),
+          }"
           aria-labelledby="dash-ai-results-heading"
           style="--dash-delay: 40ms"
         >
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__head-row">
-              <div class="dash-section__title">
-                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-                  <i class="bi bi-mic" aria-hidden="true"></i>
-                </span>
-                <div class="dash-section__title-copy">
-                  <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
-                </div>
-              </div>
               <button
-                v-if="aiReciteView && !aiReciteView.empty"
                 type="button"
-                class="dash-glance-action dash-glance-action--ghost"
-                @click="openDrawer('ai_checks')"
+                class="dash-section__collapse"
+                :aria-expanded="isSectionCollapsed('ai_recite') ? 'false' : 'true'"
+                aria-controls="dash-ai-results-body"
+                @click="toggleSection('ai_recite')"
               >
-                <i class="bi bi-list-ul" aria-hidden="true"></i>
-                {{ t('dashboard.ai_recite.view_all_results') }}
+                <span class="dash-section__title">
+                  <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                    <i class="bi bi-mic" aria-hidden="true"></i>
+                  </span>
+                  <span class="dash-section__title-copy">
+                    <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
+                    <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
+                  </span>
+                </span>
+                <i class="bi dash-section__chevron" :class="isSectionCollapsed('ai_recite') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
               </button>
             </div>
           </div>
 
-          <div class="dash-section__body">
+          <div v-show="!isSectionCollapsed('ai_recite')" id="dash-ai-results-body" class="dash-section__body">
             <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status" role="status">
               <span>{{ t('dashboard.loading') }}</span>
             </div>
@@ -268,29 +300,7 @@
               </a>
             </div>
             <template v-else>
-              <div class="dash-ai-results__summary">
-                <ul v-if="aiReciteFacts.length" class="dash-ai-results__facts">
-                  <li v-for="fact in aiReciteFacts" :key="fact.key">
-                    <strong>{{ fact.value }}</strong>
-                    <span>{{ fact.label }}</span>
-                  </li>
-                </ul>
-                <p v-if="comparableSummary" class="dash-ai-results__compare">
-                  {{ t('dashboard.ai_comparable_plain', { n: comparableSummary.attempts, average: comparableSummary.average }) }}
-                </p>
-              </div>
-
-              <p class="dash-ai-results__legend">{{ t('dashboard.ai_colour_guide') }}</p>
-
-              <details v-if="aiReciteExtraFacts.length" class="dash-score-details">
-                <summary>{{ t('dashboard.ai_recite.show_score_details') }}</summary>
-                <ul class="dash-ai-results__facts">
-                  <li v-for="fact in aiReciteExtraFacts" :key="fact.key">
-                    <span>{{ fact.label }}</span>
-                    <strong>{{ fact.value }}</strong>
-                  </li>
-                </ul>
-              </details>
+              <p v-if="aiReciteSummaryLine" class="dash-ai-results__summary-line">{{ aiReciteSummaryLine }}</p>
 
               <p v-if="aiReciteHolding" class="dash-ai-results__holding">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i>
@@ -301,21 +311,20 @@
               </p>
 
               <div class="dash-ai-results__layout">
-                <section class="dash-ai-results__panel dash-ai-results__panel--list" :aria-label="t('dashboard.ai_recite.recent_attempts')">
-                  <header class="dash-panel-intro">
-                    <h3 class="dash-ai-results__panel-title">{{ t('dashboard.ai_recite.recent_attempts') }}</h3>
-                    <p>{{ t('dashboard.ai_recite.recent_attempts_hint') }}</p>
-                  </header>
-                  <div v-if="aiReciteView.recent.length" class="dash-review-feed-scroll">
+                <section
+                  class="dash-ai-results__panel dash-ai-results__panel--list"
+                  :aria-label="t('dashboard.ai_recite.recent_attempts')"
+                >
+                  <div v-if="aiReciteUnifiedCards.length" class="dash-review-feed-scroll">
                     <ul class="dash-section__feed dash-ai-results__attempts">
-                      <li v-for="item in aiRecitePreview" :key="item.id">
-                        <button
-                          type="button"
+                      <li
+                        v-for="item in aiReciteUnifiedCards"
+                        :key="item.card_key"
+                        class="dash-ai-results__attempt-block"
+                      >
+                        <div
                           class="dash-ai-results__attempt"
                           :class="`is-${aiAttemptTone(item)}`"
-                          :aria-expanded="expandedAttemptId === item.id ? 'true' : 'false'"
-                          :aria-label="aiAttemptActionLabel(item)"
-                          @click="toggleAttemptDetail(item)"
                         >
                           <span class="dash-ai-results__attempt-score">{{ aiAttemptScoreShort(item) }}</span>
                           <span class="dash-ai-results__attempt-copy">
@@ -323,26 +332,47 @@
                               {{ aiCheckTitle(item) }}
                               <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                             </strong>
-                            <span v-if="focusToneLabel(item)" class="dash-ai-results__band" :class="`dash-ai-results__band--${aiAttemptTone(item)}`">
+                            <span
+                              v-if="focusToneLabel(item)"
+                              class="dash-ai-results__band"
+                              :class="`dash-ai-results__band--${aiAttemptTone(item)}`"
+                            >
                               {{ focusToneLabel(item) }}
                             </span>
                             <span class="dash-ai-results__attempt-meta">
-                              <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
+                              <time
+                                v-if="item.occurred_at"
+                                :datetime="item.occurred_at"
+                              >{{ formatActivityDate(item.occurred_at) }}</time>
                               <span v-if="item.has_word_alignment && Number(item.flagged_word_count) > 0">
                                 {{ flaggedWordLabel(item.flagged_word_count) }}
                               </span>
-                              <span v-if="item.has_audio" class="dash-ai-results__listen">
-                                <i class="bi bi-play-fill" aria-hidden="true"></i>
-                                {{ t('dashboard.ai_recite.listen') }}
-                              </span>
                             </span>
                           </span>
-                          <span class="dash-ai-results__open">
-                            {{ t('dashboard.ai_recite.see_words') }}
-                            <i class="bi dash-ai-results__attempt-go" :class="expandedAttemptId === item.id ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-                          </span>
-                        </button>
-                        <div v-if="expandedAttemptId === item.id" class="dash-attempt-detail">
+                          <button
+                            v-if="item.card_kind === 'attempt'"
+                            type="button"
+                            class="dash-btn dash-btn--ghost dash-btn--sm dash-ai-results__expand-btn"
+                            :aria-expanded="expandedAttemptId === item.id ? 'true' : 'false'"
+                            :aria-label="aiAttemptActionLabel(item)"
+                            @click="toggleAttemptDetail(item)"
+                          >
+                            <span>{{ expandedAttemptId === item.id ? t('dashboard.history_less') : t('dashboard.ai_recite.see_words') }}</span>
+                            <i class="bi" :class="expandedAttemptId === item.id ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                          </button>
+                          <a
+                            v-else-if="focusReviewHref(item)"
+                            class="dash-btn dash-btn--ghost dash-btn--sm dash-ai-results__expand-btn"
+                            :href="focusReviewHref(item)"
+                          >
+                            <span>{{ t('dashboard.ai_focus_review') }}</span>
+                            <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                          </a>
+                        </div>
+                        <div
+                          v-if="item.card_kind === 'attempt' && expandedAttemptId === item.id"
+                          class="dash-attempt-detail"
+                        >
                           <p v-if="expandedLoading" role="status">{{ t('dashboard.loading') }}</p>
                           <p v-else-if="expandedError">
                             {{ t('dashboard.ai_recite.stats_error_title') }}
@@ -351,16 +381,23 @@
                             </button>
                           </p>
                           <template v-else-if="expandedComparison">
-                            <ul class="dash-color-key" :aria-label="t('dashboard.ai_word_meaning')">
+                            <ul class="dash-color-key dash-color-key--compact" :aria-label="t('dashboard.ai_word_meaning')">
                               <li class="is-matched">{{ t('dashboard.word_matched') }}</li>
                               <li class="is-uncertain">{{ t('dashboard.word_uncertain') }}</li>
                               <li class="is-mismatch">{{ t('dashboard.word_mismatch') }}</li>
-                              <li class="is-skipped">{{ t('dashboard.word_skipped') }}</li>
                             </ul>
-                            <section v-for="ayah in expandedComparison.ayahs" :key="`${item.id}-${ayah.number}`">
+                            <section
+                              v-for="ayah in expandedComparison.ayahs"
+                              :key="`${item.id}-${ayah.number}`"
+                              class="dash-attempt-detail__ayah"
+                            >
                               <h4>{{ t('dashboard.ayah_n', { n: ayah.number }) }}</h4>
-                              <p class="dash-attempt-detail__label">{{ t('dashboard.ai_correct') }}</p>
-                              <p v-if="ayah.reference.length" class="dash-ayah" lang="ar" dir="rtl">
+                              <p
+                                v-if="ayah.reference.length"
+                                class="dash-ayah dash-ayah--feedback"
+                                lang="ar"
+                                dir="rtl"
+                              >
                                 <span
                                   v-for="(word, wordIndex) in ayah.reference"
                                   :key="`${ayah.number}-ref-${wordIndex}`"
@@ -371,30 +408,9 @@
                                   <span class="visually-hidden">{{ t(word.labelKey) }}</span>
                                 </span>
                               </p>
-                              <p v-else>{{ t('dashboard.reference_unavailable') }}</p>
-                              <p class="dash-attempt-detail__label">{{ t('dashboard.ai_detected') }}</p>
-                              <p v-if="ayah.detected.length" class="dash-ayah" lang="ar" dir="rtl">
-                                <span
-                                  v-for="(word, wordIndex) in ayah.detected"
-                                  :key="`${ayah.number}-det-${wordIndex}`"
-                                  class="dash-word"
-                                  :class="`is-${word.state}`"
-                                >
-                                  <span class="dash-word__text">{{ word.text }}</span>
-                                  <span class="visually-hidden">{{ t(word.labelKey) }}</span>
-                                </span>
-                              </p>
-                              <p v-else>{{ t('dashboard.ai_no_transcript') }}</p>
+                              <p v-else class="dash-attempt-detail__empty">{{ t('dashboard.reference_unavailable') }}</p>
                             </section>
-                            <p v-if="!expandedComparison.ayahs.length">{{ t('dashboard.ai_no_transcript') }}</p>
-                            <p v-if="expandedComparison.delta">
-                              {{ t('dashboard.ai_delta', { n: formatPoints(expandedComparison.delta.points) }) }}
-                            </p>
-                            <p v-else-if="expandedComparison.samePassageWithoutModel">{{ t('dashboard.ai_not_comparable') }}</p>
-                            <p v-if="expandedComparison.recurring.length">
-                              {{ t('dashboard.ai_recurring') }}:
-                              <span lang="ar" dir="rtl">{{ expandedComparison.recurring.join(' ') }}</span>
-                            </p>
+                            <p v-if="!expandedComparison.ayahs.length" class="dash-attempt-detail__empty">{{ t('dashboard.ai_no_transcript') }}</p>
                             <div class="dash-attempt-detail__actions">
                               <a class="dash-btn dash-btn--primary dash-btn--sm" :href="reviewNowHref(attemptReviewItem(item))" @click="stashReviewContext(attemptReviewItem(item))">
                                 {{ t('dashboard.revisit_review') }}
@@ -418,78 +434,45 @@
                   </div>
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
                 </section>
-
-                <div v-if="aiReciteFocus.length" class="dash-ai-results__insights">
-                  <section class="dash-ai-results__panel dash-focus-panel" :aria-label="t('dashboard.ai_recite.results_focus')">
-                    <header class="dash-panel-intro">
-                      <h3 class="dash-ai-results__panel-title">{{ t('dashboard.ai_recite.results_focus') }}</h3>
-                      <p>{{ t('dashboard.ai_recite.results_focus_hint') }}</p>
-                    </header>
-                    <ul class="dash-ai-results__focus">
-                      <li v-for="item in aiReciteFocus" :key="item.key" class="dash-focus" :class="`is-${item.tone}`">
-                        <a
-                          v-if="focusReviewHref(item)"
-                          class="dash-focus__row"
-                          :href="focusReviewHref(item)"
-                        >
-                          <span class="dash-focus__copy">
-                            <strong>{{ item.surah_name || t('dashboard.ai_check_unknown_surah') }}</strong>
-                            <span>{{ item.ayah_label }}</span>
-                            <span v-if="focusToneLabel(item)" class="dash-focus__why">{{ focusToneLabel(item) }}</span>
-                          </span>
-                          <span class="dash-focus__meter">
-                            <strong>{{ Math.round(item.accuracy) }}%</strong>
-                            <span class="dash-ai-results__bar" aria-hidden="true">
-                              <span :style="{ width: `${Math.max(8, Math.min(100, item.accuracy))}%` }"></span>
-                            </span>
-                          </span>
-                          <span class="dash-focus__go">
-                            {{ t('dashboard.ai_focus_review') }}
-                            <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                          </span>
-                        </a>
-                        <div v-else class="dash-focus__row">
-                          <span class="dash-focus__copy">
-                            <strong>{{ item.surah_name || t('dashboard.ai_check_unknown_surah') }}</strong>
-                            <span>{{ item.ayah_label }}</span>
-                            <span v-if="focusToneLabel(item)" class="dash-focus__why">{{ focusToneLabel(item) }}</span>
-                          </span>
-                          <span class="dash-focus__meter">
-                            <strong>{{ Math.round(item.accuracy) }}%</strong>
-                            <span class="dash-ai-results__bar" aria-hidden="true">
-                              <span :style="{ width: `${Math.max(8, Math.min(100, item.accuracy))}%` }"></span>
-                            </span>
-                          </span>
-                        </div>
-                      </li>
-                    </ul>
-                  </section>
-                </div>
               </div>
+
+              <button
+                type="button"
+                class="dash-ai-results__all-link"
+                @click="openDrawer('ai_checks')"
+              >
+                {{ t('dashboard.ai_recite.view_all_results') }}
+                <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+              </button>
             </template>
           </div>
         </section>
         </div>
-        <section class="dash-section dash-section--flat dash-history" aria-labelledby="dash-history-heading">
+        <section
+          class="dash-section dash-section--flat dash-history"
+          :class="{ 'is-collapsed': isSectionCollapsed('history') }"
+          aria-labelledby="dash-history-heading"
+        >
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__head-row">
-              <div class="dash-section__title">
-                <div class="dash-section__title-copy">
-                  <h2 id="dash-history-heading">{{ t('dashboard.history_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.history_hint') }}</p>
-                </div>
-              </div>
-              <a class="dash-btn dash-btn--ghost dash-btn--sm dash-history__saved" :href="savedSessionsHref">
-                <i class="bi bi-bookmark" aria-hidden="true"></i>
-                {{ t('dashboard.saved_sets') }}
-              </a>
+              <button
+                type="button"
+                class="dash-section__collapse"
+                :aria-expanded="isSectionCollapsed('history') ? 'false' : 'true'"
+                aria-controls="dash-history-body"
+                @click="toggleSection('history')"
+              >
+                <span class="dash-section__title">
+                  <span class="dash-section__title-copy">
+                    <h2 id="dash-history-heading">{{ t('dashboard.history_title') }}</h2>
+                    <p class="dash-section__hint">{{ t('dashboard.history_hint') }}</p>
+                  </span>
+                </span>
+                <i class="bi dash-section__chevron" :class="isSectionCollapsed('history') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
-          <div class="dash-history__toolbar">
-            <div class="dash-history__filters" role="tablist" :aria-label="t('dashboard.history_title')">
-              <button v-for="filter in historyFilters" :key="filter.key" type="button" role="tab" class="dash-drawer__filter" :class="{ 'is-active': historyFilter === filter.key }" :aria-selected="historyFilter === filter.key ? 'true' : 'false'" @click="historyFilter = filter.key; historyPage = 1">{{ filter.label }}</button>
-            </div>
-          </div>
+          <div v-show="!isSectionCollapsed('history')" id="dash-history-body">
           <p v-if="historyLoading" class="dash-history__status" role="status">{{ t('dashboard.loading') }}</p>
           <p v-else-if="historyError" class="dash-history__status">
             {{ t('dashboard.drawer_load_error') }}
@@ -530,7 +513,21 @@
                 </li>
               </ul>
             </section>
-            <button v-if="historyHasMore" type="button" class="dash-btn dash-btn--ghost dash-btn--sm dash-history__more" @click="historyPage += 1">{{ t('dashboard.history_more') }}</button>
+            <div v-if="historyHasMore || historyCanCollapse" class="dash-history__toggle-row">
+              <button
+                v-if="historyHasMore"
+                type="button"
+                class="dash-btn dash-btn--ghost dash-history__more w-100"
+                @click="expandHistory"
+              >{{ t('dashboard.history_more') }}</button>
+              <button
+                v-if="historyCanCollapse"
+                type="button"
+                class="dash-btn dash-btn--ghost dash-history__less w-100"
+                @click="collapseHistory"
+              >{{ t('dashboard.history_less') }}</button>
+            </div>
+          </div>
           </div>
         </section>
         </div>
@@ -900,7 +897,7 @@
       :try-again-label="t('memorisation.amd.tryAgain')"
       :your-result-label="t('memorisation.postSession.recommendation.yourResult')"
       :beta-badge-label="t('memorisation.postSession.recommendation.aiRecitationBeta')"
-      :disclaimer-label="t('memorisation.postSession.recommendation.aiDisclaimer')"
+      :disclaimer-label="t('memorisation.amd.disclaimerShort') || t('memorisation.postSession.recommendation.aiDisclaimer')"
       :details-section-label="t('memorisation.postSession.recommendation.viewDetails')"
       :view-details-label="t('memorisation.postSession.recommendation.viewDetails')"
       :hide-details-label="t('memorisation.postSession.recommendation.hideDetails')"
@@ -921,7 +918,7 @@
       results-href=""
       :results-label="''"
       :show-back-to-progress="true"
-      :back-to-progress-label="t('memorisation.back_to_progress') || 'Back to progress'"
+      :back-to-progress-label="t('memorisation.back_to_progress') || 'Check progress'"
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
@@ -1079,7 +1076,7 @@ export default {
       loading: !initial,
       error: false,
       failureKind: 'failure',
-      chartDays: initial?.chart?.days === 7 ? 7 : 30,
+      chartDays: 30,
       chartReady: true,
       reduceMotion: false,
       lastSyncedAt: initial?.meta?.generated_at || null,
@@ -1131,11 +1128,15 @@ export default {
       historyError: false,
       historyFilter: 'all',
       historyPage: 1,
+      historyExpanded: false,
+      historyPreviewCount: 5,
       revisitAyahText: {},
       expandedAttemptId: null,
       expandedLoading: false,
       expandedError: false,
       expandedComparison: null,
+      collapsedSections: {},
+      collapsedCards: {},
     }
   },
   computed: {
@@ -1791,12 +1792,11 @@ export default {
         .map((key) => cards.find((card) => card.key === key))
         .filter((card) => card && card.value && card.value !== '—')
     },
-    aiReciteExtraFacts() {
-      const preferred = ['average', 'recent', 'best']
-      const cards = this.aiReciteView?.cards || []
-      return preferred
-        .map((key) => cards.find((card) => card.key === key))
-        .filter((card) => card && card.value && card.value !== '—')
+    aiReciteSummaryLine() {
+      return this.aiReciteFacts
+        .map((fact) => `${fact.value} ${String(fact.label || '').toLowerCase()}`)
+        .filter(Boolean)
+        .join(' · ')
     },
     aiReciteFocus() {
       return this.aiReciteView?.focus || []
@@ -1807,24 +1807,48 @@ export default {
     aiRecitePreview() {
       return (this.aiReciteView?.recent || []).slice(0, 6)
     },
-    historyFilters() {
-      return [
-        { key: 'all', label: this.t('dashboard.activity_filter_all') },
-        { key: 'memorisation', label: this.t('dashboard.history_filter_memorisation') },
-        { key: 'revision', label: this.t('dashboard.history_filter_revision') },
-        { key: 'recitation', label: this.t('dashboard.history_filter_recitation') },
-      ]
+    aiReciteUnifiedCards() {
+      const recent = this.aiRecitePreview.map((item) => ({
+        ...item,
+        card_kind: 'attempt',
+        card_key: `attempt-${item.id}`,
+      }))
+      const covered = new Set(
+        recent
+          .filter((item) => Number(item.ayah_start) > 0 && Number(item.ayah_start) === Number(item.ayah_end))
+          .map((item) => `${Number(item.surah_number)}:${Number(item.ayah_start)}`)
+      )
+      const focus = this.aiReciteFocus
+        .filter((item) => !covered.has(`${Number(item.surah_number)}:${Number(item.ayah)}`))
+        .map((item) => ({
+          ...item,
+          card_kind: 'focus',
+          card_key: `focus-${item.key}`,
+          id: item.key,
+          accuracy_percent: item.accuracy,
+          band: item.tone,
+          ayah_start: item.ayah,
+          ayah_end: item.ayah,
+          ayah_number: item.ayah,
+          occurred_at: item.last_attempted_at || '',
+          has_word_alignment: false,
+          flagged_word_count: 0,
+          has_audio: false,
+        }))
+      return [...recent, ...focus]
     },
     filteredHistory() {
-      const items = Array.isArray(this.historyItems) ? this.historyItems : []
-      if (this.historyFilter === 'all') return items
-      return items.filter((item) => item.practice_kind === this.historyFilter)
+      return Array.isArray(this.historyItems) ? this.historyItems : []
     },
     historyVisible() {
-      return this.filteredHistory.slice(0, this.historyPage * 8)
+      if (this.historyExpanded) return this.filteredHistory
+      return this.filteredHistory.slice(0, this.historyPreviewCount)
     },
     historyHasMore() {
-      return this.filteredHistory.length > this.historyVisible.length
+      return !this.historyExpanded && this.filteredHistory.length > this.historyPreviewCount
+    },
+    historyCanCollapse() {
+      return this.historyExpanded && this.filteredHistory.length > this.historyPreviewCount
     },
     historyGroups() {
       const groups = []
@@ -2231,6 +2255,31 @@ export default {
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
+    },
+    isSectionCollapsed(key) {
+      return !!this.collapsedSections?.[key]
+    },
+    toggleSection(key) {
+      this.collapsedSections = {
+        ...this.collapsedSections,
+        [key]: !this.collapsedSections?.[key],
+      }
+    },
+    isCardCollapsed(key) {
+      return !!this.collapsedCards?.[key]
+    },
+    toggleCard(key) {
+      this.collapsedCards = {
+        ...this.collapsedCards,
+        [key]: !this.collapsedCards?.[key],
+      }
+    },
+    expandHistory() {
+      this.historyExpanded = true
+    },
+    collapseHistory() {
+      this.historyExpanded = false
+      this.historyPage = 1
     },
     openSessionVoice() {
       if (!this.auth?.session_voice_enabled || this.sessionVoiceOpen) return

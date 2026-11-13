@@ -110,8 +110,9 @@ assert.match(
 assert.match(memorisation, /audio_reference_not_saved/, 'missing recording references stay in the retry path')
 
 assert.match(dashboard, /aiReciteFocus/, 'progress page shows weak ayahs that need practice')
-assert.match(dashboard, /dash-ai-results__focus/, 'weak ayahs use the focus list')
-assert.match(dashboard, /dashboard\.ai_recite\.results_focus/, 'weak ayahs section uses the needs-practice heading')
+assert.match(dashboard, /aiReciteUnifiedCards/, 'recent checks and needs-practice share one card list')
+assert.match(dashboard, /card_kind: 'focus'/, 'needs-practice items map into the shared attempt card layout')
+assert.match(dashboard, /card_kind === 'attempt'/, 'attempt cards keep see-words expand in the shared list')
 assert.doesNotMatch(dashboard, /dash-ai-results__word/, 'often-missed chips are removed from the dashboard')
 assert.doesNotMatch(dashboard, /openMissedWordAttempt/, 'often-missed actions are removed with the section')
 assert.doesNotMatch(dashboard, /missed_words_hint/, 'often-missed helper copy is removed with the section')
@@ -182,7 +183,7 @@ const filled = buildDashboardAiReciteStatsView({
   peek_used_count: 1,
   peek_used_percent: 25,
   improvement: 6,
-  weakest_ayahs: [{ surah_number: 1, surah_name: 'Al-Fatiha', ayah: 5, accuracy: 60 }],
+  weakest_ayahs: [{ surah_number: 1, surah_name: 'Al-Fatiha', ayah: 5, accuracy: 60, last_attempted_at: '2026-09-04T12:00:00Z' }],
   missed_words: [{
     text: 'الضالين',
     count: 2,
@@ -206,7 +207,9 @@ const filled = buildDashboardAiReciteStatsView({
 assert.equal(filled.empty, false)
 assert.ok(filled.cards.some((card) => card.key === 'average' && card.value.includes('81')))
 assert.equal(filled.weakest[0].label.includes('5'), true)
+assert.equal(filled.weakest[0].last_attempted_at, '2026-09-04T12:00:00Z')
 assert.equal(filled.focus.length, 1)
+assert.equal(filled.focus[0].last_attempted_at, '2026-09-04T12:00:00Z')
 assert.equal(filled.holding, false)
 assert.equal(filled.score.tone, 'strong')
 assert.equal(filled.missed[0].text, 'الضالين')

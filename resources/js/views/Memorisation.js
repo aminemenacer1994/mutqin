@@ -2693,6 +2693,7 @@ export default {
           id: 'memorise',
           icon: 'bi-journal-bookmark',
           title: this.t('memorisation.sessionGoal.memorise'),
+          shortTitle: this.t('memorisation.sessionGoal.memoriseShort') || this.t('memorisation.sessionGoal.memorise'),
           hint: this.t('memorisation.sessionGoal.memoriseHint'),
           description: this.t('memorisation.sessionGoal.planDescMemorise'),
         },
@@ -2700,6 +2701,7 @@ export default {
           id: 'revise',
           icon: 'bi-arrow-repeat',
           title: this.t('memorisation.sessionGoal.revise'),
+          shortTitle: this.t('memorisation.sessionGoal.reviseShort') || this.t('memorisation.sessionGoal.revise'),
           hint: this.t('memorisation.sessionGoal.reviseHint'),
           description: this.t('memorisation.sessionGoal.planDescRevise'),
         },
@@ -2707,10 +2709,15 @@ export default {
           id: 'test',
           icon: 'bi-mic',
           title: this.t('memorisation.sessionGoal.test'),
+          shortTitle: this.t('memorisation.sessionGoal.testShort') || this.t('memorisation.sessionGoal.test'),
           hint: this.t('memorisation.sessionGoal.testHint'),
           description: this.t('memorisation.sessionGoal.planDescTest'),
         },
       ]
+    },
+    /** Temporarily hidden while beginner onboarding is simplified. */
+    showMrMutqinEntry() {
+      return false
     },
     /** Known-ayah choices: revise, then test, then new memorisation. */
     firstRunKnownAyahOptions() {
@@ -2841,6 +2848,8 @@ export default {
       return true
     },
     shouldShowOffcanvasTabs() {
+      // First-run setup stays on one path: choose ayahs, then start.
+      if (this.isFirstRunFlowActive) return false
       return true
     },
     controlsPanelTitle() {
@@ -13461,6 +13470,7 @@ export default {
       await this.openWorkspaceAiRecite()
     },
     openSessionVoice() {
+      if (!this.showMrMutqinEntry) return
       if (!this.auth?.session_voice_enabled || this.sessionVoiceOpen) return
       void preloadSessionVoiceAssistant().catch(() => {})
       this.sessionVoiceOpen = true

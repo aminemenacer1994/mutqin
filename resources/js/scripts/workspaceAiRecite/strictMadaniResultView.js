@@ -3,21 +3,20 @@ import { isQcfPageGlyphText } from '../mushaf/qpcMadaniReadingTools.js'
 
 function madaniParts(parts, glyphs, options = {}) {
   if (!Array.isArray(parts) || !parts.length) return []
+  if (!Array.isArray(glyphs) || !glyphs.length) return []
+
   const painted = applyMadaniGlyphsToParts(parts, glyphs, options)
-  return painted.map((part) => {
+  const verified = painted.map((part) => {
     const glyphOk = part.madaniGlyph === true
       && /^QCF2\d{3}$/.test(String(part.fontFamily || ''))
       && isQcfPageGlyphText(part.text)
-    if (glyphOk) return part
-    const plain = String(part.plainText || part.text || '').trim()
-    return {
-      ...part,
-      text: plain,
-      plainText: plain,
-      madaniGlyph: false,
-      fontFamily: '',
-    }
-  }).filter((part) => part.text)
+    if (!glyphOk) return null
+    return part
+  }).filter(Boolean)
+
+  // Never mix Madani glyphs with Unicode fallbacks in one ayah row.
+  if (options.contiguous === true && verified.length !== parts.length) return []
+  return verified
 }
 
 export function withStrictMadaniResultGlyphs(view, glyphsByAyah = {}) {

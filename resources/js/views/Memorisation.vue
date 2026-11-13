@@ -678,7 +678,7 @@
               <i class="bi bi-sliders" aria-hidden="true"></i>
             </button>
             <button
-              v-if="auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible && !quietBeginnerChrome"
+              v-if="showMrMutqinEntry && auth.session_voice_enabled && hasVerses && !isPostSessionChoiceVisible && !quietBeginnerChrome"
               type="button"
               class="action-btn action-btn-secondary top-card-action-trigger top-card-icon-control top-card-voice-trigger"
               :class="{ 'is-open': sessionVoiceOpen }"
@@ -1296,6 +1296,9 @@
                 :class="{ 'workspace-empty-card--first-run': isFirstRunFlowActive }"
               >
                 <header class="plan-choice-head">
+                  <p v-if="isFirstRunFlowActive" class="plan-choice-head__step">
+                    {{ t('memorisation.firstRun.stepGoal') || 'Step 1 of 2' }}
+                  </p>
                   <h2>
                     {{ isFirstRunFlowActive
                       ? (t('memorisation.firstRun.whatWouldYouLike') || t('memorisation.sessionGoal.label'))
@@ -1307,7 +1310,7 @@
                       : t('memorisation.sessionGoal.planChooserIntro') }}
                   </p>
                   <button
-                    v-if="auth.session_voice_enabled"
+                    v-if="showMrMutqinEntry"
                     type="button"
                     class="plan-voice-entry"
                     data-testid="empty-voice-open"
@@ -1327,7 +1330,7 @@
                   </button>
                 </header>
                 <div
-                  v-if="auth.session_voice_enabled"
+                  v-if="showMrMutqinEntry"
                   class="plan-voice-divider"
                   role="presentation"
                   aria-hidden="true"
@@ -2014,7 +2017,7 @@
               class="setup-plan"
               aria-labelledby="setup-plan-label"
             >
-              <h4 id="setup-plan-label" class="setup-plan__label">{{ t('memorisation.sessionGoal.label') }}</h4>
+              <h4 id="setup-plan-label" class="setup-plan__label">{{ t('memorisation.sessionGoal.labelShort') || t('memorisation.sessionGoal.label') }}</h4>
               <div
                 class="session-goal"
                 role="radiogroup"
@@ -2028,14 +2031,23 @@
                   role="radio"
                   :aria-checked="sessionStartGoal === goal.id ? 'true' : 'false'"
                   :class="{ 'is-selected': sessionStartGoal === goal.id }"
+                  :aria-label="`${goal.title}. ${goal.hint}`"
                   @click="setSessionStartGoal(goal.id)"
                 >
-                  <strong>{{ goal.title }}</strong>
+                  <i class="bi session-goal__icon" :class="goal.icon" aria-hidden="true"></i>
+                  <strong>{{ goal.shortTitle || goal.title }}</strong>
                   <span>{{ goal.hint }}</span>
                 </button>
               </div>
             </section>
-            <section class="setup-plan setup-plan--passage">
+            <section class="setup-plan setup-plan--passage" :class="{ 'setup-plan--first-run-step': isFirstRunFlowActive }">
+            <header v-if="isFirstRunFlowActive" class="setup-plan__intro" aria-labelledby="setup-passage-step-label">
+              <p id="setup-passage-step-label" class="setup-plan__step">
+                {{ t('memorisation.firstRun.stepPassage') || 'Step 2 of 2' }}
+              </p>
+              <h4 class="setup-plan__label">{{ t('memorisation.firstRun.choosePassage') || 'Choose your ayahs' }}</h4>
+              <p class="setup-plan__hint">{{ t('memorisation.firstRun.choosePassageHint') || 'Pick a short set to begin.' }}</p>
+            </header>
             <div class="session-essentials" data-tour="setup-sheet">
               <div class="field setup-field-row" data-tour="setup-surah">
                 <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
@@ -3843,7 +3855,7 @@
       :try-again-label="translateOrFallback('memorisation.amd.tryAgain', translateOrFallback('common.tryAgain', 'Try again'))"
       :your-result-label="translateOrFallback('memorisation.postSession.recommendation.yourResult', 'Your result')"
       :beta-badge-label="translateOrFallback('memorisation.postSession.recommendation.aiRecitationBeta', 'Audio recitation · Beta')"
-      :disclaimer-label="translateOrFallback('memorisation.postSession.recommendation.aiDisclaimer', '')"
+      :disclaimer-label="translateOrFallback('memorisation.amd.disclaimerShort', translateOrFallback('memorisation.postSession.recommendation.aiDisclaimer', 'AI can miss or mishear words. Check with your teacher.'))"
       :details-section-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'Details')"
       :view-details-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'View details')"
       :hide-details-label="translateOrFallback('memorisation.postSession.recommendation.hideDetails', 'Hide details')"
@@ -3865,7 +3877,7 @@
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
       :show-back-to-progress="showProgressExitCta"
-      :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Back to progress')"
+      :back-to-progress-label="translateOrFallback('memorisation.back_to_progress', 'Check progress')"
       :progress-href="progressPageUrl"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"

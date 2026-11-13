@@ -22,10 +22,7 @@
             tabindex="-1"
             @keydown="onDialogKeydown"
           >
-            <header class="post-session-simple__header post-session-simple__header--calm">
-              <span class="post-session-simple__check" aria-hidden="true">
-                <i class="bi bi-stars"></i>
-              </span>
+            <header class="post-session-simple__header post-session-simple__header--calm post-session-simple__header--compact">
               <div class="post-session-simple__header-copy">
                 <h2 id="workspaceReciteResultTitle" class="post-session-simple__title">
                   {{ title }}
@@ -212,26 +209,33 @@
                       <div
                         v-if="row.parts?.length"
                         class="post-session-simple__quran-focus post-session-simple__quran-focus--static"
+                        dir="rtl"
+                        lang="ar"
                       >
                         <span class="post-session-simple__quran-focus-text" dir="rtl" lang="ar">
-                          <span
+                          <template
                             v-for="(part, idx) in row.parts"
                             :key="`workspace-focus-${row.ayah}-${idx}`"
-                            class="post-session-simple__quran-token"
-                            :class="{
-                              'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
-                              'is-incorrect': part.tone === 'incorrect',
-                              'is-partial': part.tone === 'partial' || part.tone === 'uncertain',
-                              'is-omitted': part.tone === 'omitted',
-                              'is-corrected': part.tone === 'ok' && !part.weak,
-                            }"
-                            :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
                           >
                             <span
-                              class="post-session-simple__quran-token-text"
-                              data-arabic-fallback="true"
-                            >{{ part.plainText || part.text }}</span>
-                          </span>
+                              v-if="part.madaniGlyph && part.fontFamily"
+                              class="post-session-simple__quran-token"
+                              :class="{
+                                'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
+                                'is-incorrect': part.tone === 'incorrect',
+                                'is-partial': part.tone === 'partial' || part.tone === 'uncertain',
+                                'is-omitted': part.tone === 'omitted',
+                                'is-corrected': part.tone === 'ok' && !part.weak,
+                              }"
+                              :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
+                            >
+                              <span
+                                class="post-session-simple__quran-token-text"
+                                data-madani-glyph="true"
+                                :style="{ '--madani-font': `'${part.fontFamily}'` }"
+                              >{{ part.text }}</span>
+                            </span>
+                          </template>
                         </span>
                       </div>
                     </li>
@@ -264,19 +268,24 @@
                         dir="rtl"
                         lang="ar"
                       >
-                        <span
+                        <template
                           v-for="(entry, wordIdx) in row.wordEntries"
                           :key="`workspace-weak-word-${row.ayah}-${wordIdx}`"
-                          class="post-session-simple__weak-spots-word"
-                          :class="{
-                            'is-partial': entry.tone === 'partial',
-                            'is-omitted': entry.tone === 'omitted',
-                            'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
-                          }"
-                        ><span
-                          class="post-session-simple__quran-token-text"
-                          data-arabic-fallback="true"
-                        >{{ entry.plainText || entry.text }}</span></span>
+                        >
+                          <span
+                            v-if="entry.madaniGlyph && entry.fontFamily"
+                            class="post-session-simple__weak-spots-word"
+                            :class="{
+                              'is-partial': entry.tone === 'partial',
+                              'is-omitted': entry.tone === 'omitted',
+                              'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
+                            }"
+                          ><span
+                            class="post-session-simple__quran-token-text"
+                            data-madani-glyph="true"
+                            :style="{ '--madani-font': `'${entry.fontFamily}'` }"
+                          >{{ entry.text }}</span></span>
+                        </template>
                       </span>
                     </li>
                   </ul>
@@ -362,10 +371,10 @@
               </section>
             </div>
 
-            <footer v-if="!loading && !error && !empty" class="post-session-simple__footer">
+            <footer v-if="!loading && !error && !empty" class="post-session-simple__footer post-session-simple__footer--compact">
               <div
-                class="post-session-simple__actions"
-                :class="showBackToProgress ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
+                class="post-session-simple__actions post-session-simple__actions--2"
+                :class="{ 'post-session-simple__actions--single': !showBackToProgress }"
               >
                 <a
                   v-if="showBackToProgress"
@@ -376,18 +385,9 @@
                   data-testid="workspace-recite-back-progress"
                   @click="onBackToProgress"
                 >
-                  <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  <i class="bi bi-chevron-left" aria-hidden="true"></i>
                   <span>{{ backToProgressLabel }}</span>
                 </a>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="actionsBusy"
-                  @click="requestClose"
-                >
-                  <i class="bi bi-book" aria-hidden="true"></i>
-                  <span>{{ closeLabel }}</span>
-                </button>
                 <button
                   type="button"
                   class="post-session-simple__btn post-session-simple__btn--primary"
@@ -461,7 +461,7 @@ export default {
     mutashabihatLead: { type: String, default: 'Your recitation may have drifted toward a similar ayah.' },
     compareDifferencesLabel: { type: String, default: 'Compare differences' },
     showBackToProgress: { type: Boolean, default: false },
-    backToProgressLabel: { type: String, default: 'Back to progress' },
+    backToProgressLabel: { type: String, default: 'Check progress' },
     progressHref: { type: String, default: '/progress' },
   },
   emits: ['close', 'try-again', 'mutashabihat-compare', 'back-to-progress'],

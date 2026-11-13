@@ -9804,7 +9804,7 @@ html body .app .tools .sheet--setup .setup-plan {
   flex-direction: column !important;
   gap: 0.7rem !important;
   margin: 0 !important;
-  padding: 0.85rem !important;
+  padding: 0.9rem 1rem !important;
   border: 1px solid var(--controls-border, var(--border)) !important;
   border-radius: var(--controls-radius, 16px) !important;
   background: var(--controls-card, var(--zone-elevated, var(--surface))) !important;
@@ -9819,10 +9819,39 @@ html body .app .tools .sheet--setup .setup-plan__label {
   color: var(--controls-text, var(--text)) !important;
 }
 
+html body .app .tools .sheet--setup .setup-plan__step {
+  margin: 0 !important;
+  color: var(--accent-strong, var(--controls-accent, var(--accent))) !important;
+  font-size: 0.7rem !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+html body .app .tools .sheet--setup .setup-plan__hint {
+  margin: 0 !important;
+  color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+html body .app .tools .sheet--setup .setup-plan__intro {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.28rem !important;
+  margin: 0 0 0.15rem !important;
+}
+
+html body .app .tools .sheet--setup .setup-plan--first-run-step {
+  gap: 0.7rem !important;
+}
+
 html body .app .tools .sheet--setup .session-goal {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 0.4rem !important;
+  gap: 0.5rem !important;
   margin: 0 !important;
 }
 
@@ -9831,10 +9860,10 @@ html body .app .tools .sheet--setup .session-goal__option {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.18rem !important;
-  min-height: 4.5rem !important;
+  gap: 0.2rem !important;
+  min-height: 4.6rem !important;
   margin: 0 !important;
-  padding: 0.55rem 0.35rem !important;
+  padding: 0.6rem 0.45rem !important;
   border: 1px solid var(--controls-border, var(--border)) !important;
   border-radius: var(--controls-inner-radius, 12px) !important;
   background: var(--controls-field, transparent) !important;
@@ -9843,18 +9872,25 @@ html body .app .tools .sheet--setup .session-goal__option {
   box-shadow: none !important;
 }
 
+html body .app .tools .sheet--setup .session-goal__icon {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  color: color-mix(in srgb, var(--accent-strong, var(--controls-accent, var(--accent))) 72%, var(--controls-text, var(--text))) !important;
+}
+
 html body .app .tools .sheet--setup .session-goal__option strong {
-  font-size: 0.8rem !important;
+  font-size: 0.86rem !important;
   font-weight: 700 !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
   color: inherit !important;
 }
 
 html body .app .tools .sheet--setup .session-goal__option span {
   color: var(--controls-muted, var(--muted, var(--text-muted))) !important;
-  font-size: 0.7rem !important;
+  font-size: 0.68rem !important;
   font-weight: 500 !important;
-  line-height: 1.25 !important;
+  line-height: 1.2 !important;
+  max-width: 100% !important;
 }
 
 html body .app .tools .sheet--setup .session-goal__option.is-selected {
@@ -9864,6 +9900,7 @@ html body .app .tools .sheet--setup .session-goal__option.is-selected {
   box-shadow: inset 0 0 0 1px var(--controls-accent, var(--accent)) !important;
 }
 
+html body .app .tools .sheet--setup .session-goal__option.is-selected .session-goal__icon,
 html body .app .tools .sheet--setup .session-goal__option.is-selected span {
   color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, var(--controls-text, var(--text))) !important;
 }
