@@ -304,8 +304,11 @@
           </div>
 
           <div v-show="!isSectionCollapsed('ai_recite')" id="dash-ai-results-body" class="dash-section__body">
-            <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status" role="status">
-              <span>{{ t('dashboard.loading') }}</span>
+            <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status dash-fb-skeleton" role="status">
+              <span class="visually-hidden">{{ t('dashboard.loading') }}</span>
+              <div class="dash-fb-skeleton__card" aria-hidden="true"></div>
+              <div class="dash-fb-skeleton__card" aria-hidden="true"></div>
+              <div class="dash-fb-skeleton__card" aria-hidden="true"></div>
             </div>
             <div v-else-if="aiReciteError && (!aiReciteView || aiReciteView.empty)" class="dash-ai-results__status">
               <p>{{ t('dashboard.ai_recite.stats_error_title') }}</p>
@@ -340,121 +343,32 @@
                   class="dash-ai-results__panel dash-ai-results__panel--list"
                   :aria-label="t('dashboard.ai_recite.recent_attempts')"
                 >
-                  <div v-if="aiReciteUnifiedCards.length" class="dash-review-feed-scroll">
-                    <ul class="dash-section__feed dash-ai-results__attempts">
-                      <li
-                        v-for="item in aiReciteUnifiedCards"
+                  <div v-if="aiReciteVisibleCards.length" class="dash-review-feed-scroll">
+                    <ul class="dash-section__feed dash-ai-results__attempts dash-fb-cards">
+                      <DashAiReciteAttemptCard
+                        v-for="item in aiReciteVisibleCards"
                         :key="item.card_key"
-                        class="dash-ai-results__attempt-block"
-                      >
-                        <div
-                          class="dash-ai-results__attempt"
-                          :class="`is-${aiAttemptTone(item)}`"
-                        >
-                          <span class="dash-ai-results__attempt-score">{{ aiAttemptScoreShort(item) }}</span>
-                          <span class="dash-ai-results__attempt-copy">
-                            <strong>
-                              {{ aiCheckTitle(item) }}
-                              <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
-                            </strong>
-                            <span
-                              v-if="focusToneLabel(item)"
-                              class="dash-ai-results__band"
-                              :class="`dash-ai-results__band--${aiAttemptTone(item)}`"
-                            >
-                              {{ focusToneLabel(item) }}
-                            </span>
-                            <span class="dash-ai-results__attempt-meta">
-                              <time
-                                v-if="item.occurred_at"
-                                :datetime="item.occurred_at"
-                              >{{ formatActivityDate(item.occurred_at) }}</time>
-                              <span v-if="item.has_word_alignment && Number(item.flagged_word_count) > 0">
-                                {{ flaggedWordLabel(item.flagged_word_count) }}
-                              </span>
-                            </span>
-                          </span>
-                          <button
-                            v-if="item.card_kind === 'attempt'"
-                            type="button"
-                            class="dash-btn dash-btn--ghost dash-btn--sm dash-ai-results__expand-btn"
-                            :aria-expanded="expandedAttemptId === item.id ? 'true' : 'false'"
-                            :aria-label="aiAttemptActionLabel(item)"
-                            @click="toggleAttemptDetail(item)"
-                          >
-                            <span>{{ expandedAttemptId === item.id ? t('dashboard.history_less') : t('dashboard.ai_recite.see_words') }}</span>
-                            <i class="bi" :class="expandedAttemptId === item.id ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-                          </button>
-                          <a
-                            v-else-if="focusReviewHref(item)"
-                            class="dash-btn dash-btn--ghost dash-btn--sm dash-ai-results__expand-btn"
-                            :href="focusReviewHref(item)"
-                          >
-                            <span>{{ t('dashboard.ai_focus_review') }}</span>
-                            <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                          </a>
-                        </div>
-                        <div
-                          v-if="item.card_kind === 'attempt' && expandedAttemptId === item.id"
-                          class="dash-attempt-detail"
-                        >
-                          <p v-if="expandedLoading" role="status">{{ t('dashboard.loading') }}</p>
-                          <p v-else-if="expandedError">
-                            {{ t('dashboard.ai_recite.stats_error_title') }}
-                            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="toggleAttemptDetail(item, true)">
-                              {{ t('dashboard.retry') }}
-                            </button>
-                          </p>
-                          <template v-else-if="expandedComparison">
-                            <ul class="dash-color-key dash-color-key--compact" :aria-label="t('dashboard.ai_word_meaning')">
-                              <li class="is-matched">{{ t('dashboard.word_matched') }}</li>
-                              <li class="is-uncertain">{{ t('dashboard.word_uncertain') }}</li>
-                              <li class="is-mismatch">{{ t('dashboard.word_mismatch') }}</li>
-                            </ul>
-                            <section
-                              v-for="ayah in expandedComparison.ayahs"
-                              :key="`${item.id}-${ayah.number}`"
-                              class="dash-attempt-detail__ayah"
-                            >
-                              <h4>{{ t('dashboard.ayah_n', { n: ayah.number }) }}</h4>
-                              <p
-                                v-if="ayah.reference.length"
-                                class="dash-ayah dash-ayah--feedback"
-                                lang="ar"
-                                dir="rtl"
-                              >
-                                <span
-                                  v-for="(word, wordIndex) in ayah.reference"
-                                  :key="`${ayah.number}-ref-${wordIndex}`"
-                                  class="dash-word"
-                                  :class="`is-${word.state}`"
-                                >
-                                  <span class="dash-word__text">{{ word.text }}</span>
-                                  <span class="visually-hidden">{{ t(word.labelKey) }}</span>
-                                </span>
-                              </p>
-                              <p v-else class="dash-attempt-detail__empty">{{ t('dashboard.reference_unavailable') }}</p>
-                            </section>
-                            <p v-if="!expandedComparison.ayahs.length" class="dash-attempt-detail__empty">{{ t('dashboard.ai_no_transcript') }}</p>
-                            <div class="dash-attempt-detail__actions">
-                              <a class="dash-btn dash-btn--primary dash-btn--sm" :href="reviewNowHref(attemptReviewItem(item))" @click="stashReviewContext(attemptReviewItem(item))">
-                                {{ t('dashboard.revisit_review') }}
-                              </a>
-                              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="checkAgainHref(item)">
-                                {{ t('dashboard.revisit_check_again') }}
-                              </a>
-                              <button
-                                v-if="item.has_audio"
-                                type="button"
-                                class="dash-btn dash-btn--ghost dash-btn--sm"
-                                @click="openAnalysisForItem(item, 'attempt')"
-                              >
-                                {{ t('dashboard.ai_recite.listen') }}
-                              </button>
-                            </div>
-                          </template>
-                        </div>
-                      </li>
+                        :item="item"
+                        :expanded="item.card_kind === 'attempt' && expandedAttemptId === item.id"
+                        :loading="expandedAttemptId === item.id && expandedLoading"
+                        :error="expandedAttemptId === item.id && expandedError"
+                        :detail="expandedAttemptId === item.id ? expandedComparison : null"
+                        :tone="aiAttemptTone(item)"
+                        :title="aiCheckTitle(item)"
+                        :range-label="ayahRangeLabel(item)"
+                        :checked-label="aiCheckedLabel(item)"
+                        :score-short="aiAttemptScoreShort(item)"
+                        :percent-label="aiAttemptAccuracy(item)"
+                        :review-href="reviewNowHref(attemptReviewItem(item))"
+                        :check-again-href="checkAgainHref(item)"
+                        :focus-href="focusReviewHref(item)"
+                        :review-item="attemptReviewItem(item)"
+                        :build-review-href="(payload) => reviewNowHref(payload)"
+                        @toggle="toggleAttemptDetail(item)"
+                        @retry="toggleAttemptDetail(item, true)"
+                        @listen="openAnalysisForItem(item, 'attempt')"
+                        @stash-review="stashReviewContext"
+                      />
                     </ul>
                   </div>
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
@@ -466,7 +380,7 @@
                 class="dash-ai-results__all-link"
                 @click="openDrawer('ai_checks')"
               >
-                {{ t('dashboard.ai_recite.view_all_results') }}
+                {{ t('dashboard.ai_recite.view_all_checks') }}
                 <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
               </button>
             </template>
@@ -1014,14 +928,19 @@ import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
 import {
+  buildAttemptAyahFeedback,
+  feedbackInsightKey,
+  resolveWordCounts,
+} from '../scripts/dashboardAiRecite/attemptFeedback'
+import {
   buildCheckAgainHref,
   buildReviewHref,
   compatibleAttemptDelta,
-  detectedWords,
   paintReferenceWords,
   presentationTone as presentationToneForScore,
   stashPreviousAiCheck,
 } from '../scripts/dashboard/progressView'
+import DashAiReciteAttemptCard from '../components/dashboard/DashAiReciteAttemptCard.vue'
 import { pickDashboardPrimaryKind } from '../scripts/dashboard/primaryAction'
 import { dailyMutqinHref, memorisationGoalHref } from '../scripts/session/sessionGoal'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
@@ -1118,6 +1037,7 @@ export default {
     NetworkFallback,
     LearnerTeacherSection,
     DashAnimatedNumber,
+    DashAiReciteAttemptCard,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
     SessionVoiceAssistant,
@@ -1201,6 +1121,7 @@ export default {
       expandedLoading: false,
       expandedError: false,
       expandedComparison: null,
+      expandedDetailCache: {},
       collapsedSections: {},
       collapsedCards: {},
     }
@@ -1871,7 +1792,7 @@ export default {
       return !!this.aiReciteView?.holding
     },
     aiRecitePreview() {
-      return (this.aiReciteView?.recent || []).slice(0, 6)
+      return (this.aiReciteView?.recent || []).slice(0, 3)
     },
     aiReciteUnifiedCards() {
       const recent = this.aiRecitePreview.map((item) => ({
@@ -1902,6 +1823,14 @@ export default {
           has_audio: false,
         }))
       return [...recent, ...focus]
+    },
+    aiReciteVisibleCards() {
+      // Compact feedback lists attempts first (max 3). Focus rows stay available
+      // only when there are no recent attempts to show.
+      const cards = this.aiReciteUnifiedCards
+      const attempts = cards.filter((item) => item.card_kind === 'attempt')
+      if (attempts.length) return attempts
+      return cards.filter((item) => item.card_kind === 'focus').slice(0, 3)
     },
     filteredHistory() {
       return Array.isArray(this.historyItems) ? this.historyItems : []
@@ -2795,7 +2724,7 @@ export default {
       }))
     },
     attemptReviewItem(item) {
-      const detail = this.expandedComparison
+      const detail = this.expandedAttemptId === item?.id ? this.expandedComparison : null
       const words = []
       ;(detail?.ayahs || []).forEach((ayah) => {
         ;(ayah.stored || []).forEach((word) => {
@@ -2809,6 +2738,12 @@ export default {
         attempt_id: item.id,
       }
     },
+    aiCheckedLabel(item) {
+      if (!item?.occurred_at) return ''
+      const when = this.formatActivityDate(item.occurred_at)
+      if (!when) return ''
+      return this.t('dashboard.ai_recite.checked_at', { when })
+    },
     async toggleAttemptDetail(item, force = false) {
       if (!force && this.expandedAttemptId === item.id) {
         this.expandedAttemptId = null
@@ -2816,29 +2751,29 @@ export default {
         return
       }
       this.expandedAttemptId = item.id
-      this.expandedLoading = true
       this.expandedError = false
+
+      const cached = !force ? this.expandedDetailCache[item.id] : null
+      if (cached) {
+        this.expandedComparison = cached
+        this.expandedLoading = false
+        return
+      }
+
+      this.expandedLoading = true
       this.expandedComparison = null
       try {
         const payload = await learningApi.getAiReciteAttemptAnalysis(item.id)
         const attempt = payload?.ai_attempt || {}
         const words = Array.isArray(attempt.word_statuses) ? attempt.word_statuses : []
-        const from = Number(item.ayah_start || 0)
-        const to = Number(item.ayah_end || from)
-        const ayahs = []
-        if (from > 0) {
-          const limit = Math.min(to || from, from + 5)
-          for (let ayah = from; ayah <= limit; ayah += 1) {
-            const loaded = await loadAyah(item.surah_number, ayah).catch(() => null)
-            const stored = words.filter((word) => Number(word?.ayah_number || word?.ayahNumber || word?.ayah || (from === to ? from : 0)) === ayah)
-            ayahs.push({
-              number: ayah,
-              reference: paintReferenceWords(loaded?.text || '', stored, ayah).words,
-              detected: detectedWords(stored, ayah),
-              stored,
-            })
-          }
-        }
+        const built = await buildAttemptAyahFeedback({
+          surahNumber: item.surah_number,
+          ayahStart: item.ayah_start,
+          ayahEnd: item.ayah_end,
+          wordStatuses: words,
+          loadAyahText: loadAyah,
+          maxAyahs: 6,
+        })
         const previous = (this.aiReciteView?.recent || []).find((other) => (
           other.id !== item.id
           && other.surah_number === item.surah_number
@@ -2846,28 +2781,27 @@ export default {
           && other.ayah_end === item.ayah_end
         ))
         const delta = compatibleAttemptDelta(item, previous)
-        const recurring = []
-        if (delta && previous?.has_word_alignment && item.has_word_alignment) {
-          const previousPayload = await learningApi.getAiReciteAttemptAnalysis(previous.id)
-          const previousWords = Array.isArray(previousPayload?.ai_attempt?.word_statuses)
-            ? previousPayload.ai_attempt.word_statuses
-            : []
-          const previousFlagged = new Set(previousWords.filter((word) => ['mismatch', 'uncertain', 'skipped'].includes(paintReferenceWords('', [word]).words[0]?.state)).map((word) => `${word.ayah_number || word.ayah}:${word.ayah_word_index || word.word_index}:${word.text || word.expected_word || ''}`))
-          words.forEach((word) => {
-            const state = paintReferenceWords('', [word]).words[0]?.state
-            const key = `${word.ayah_number || word.ayah}:${word.ayah_word_index || word.word_index}:${word.text || word.expected_word || ''}`
-            const label = String(word.text || word.expected_word || word.target_word || '').trim()
-            if (label && ['mismatch', 'uncertain', 'skipped'].includes(state) && previousFlagged.has(key)) {
-              recurring.push(label)
-            }
-          })
-        }
-        this.expandedComparison = {
-          ayahs: ayahs.filter((ayah) => ayah.reference.length || ayah.detected.length || ayah.stored.length),
+        const counts = resolveWordCounts({
+          ...item,
+          word_counts: attempt.word_counts || item.word_counts,
+          color_counts: attempt.color_counts || item.color_counts,
+          has_word_alignment: words.length > 0,
+        }) || resolveWordCounts(item)
+        const insightKey = feedbackInsightKey(counts, { incomplete: built.incomplete })
+        const detail = {
+          ayahs: built.ayahs,
+          incomplete: built.incomplete,
+          counts,
+          insightKey: `dashboard.ai_recite.${insightKey}`,
           delta,
           samePassageWithoutModel: !delta && !!previous,
-          recurring: [...new Set(recurring)].slice(0, 8),
+          recurring: [],
         }
+        this.expandedDetailCache = {
+          ...this.expandedDetailCache,
+          [item.id]: detail,
+        }
+        this.expandedComparison = detail
       } catch (error) {
         console.error('AI check detail failed', error)
         this.expandedError = true

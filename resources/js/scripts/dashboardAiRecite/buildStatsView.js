@@ -151,6 +151,8 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       audio_duration_ms: item.audio_duration_ms == null ? null : asNumber(item.audio_duration_ms),
       has_word_alignment: !!item.has_word_alignment,
       flagged_word_count: item.flagged_word_count == null ? null : asNumber(item.flagged_word_count),
+      word_counts: item.word_counts && typeof item.word_counts === 'object' ? item.word_counts : null,
+      color_counts: item.color_counts && typeof item.color_counts === 'object' ? item.color_counts : null,
       assessment_id: asNumber(item.assessment_id) || null,
       model_version: asText(item.model_version),
       algorithm_version: asText(item.algorithm_version),

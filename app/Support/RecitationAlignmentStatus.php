@@ -94,6 +94,68 @@ final class RecitationAlignmentStatus
     }
 
     /**
+     * Count semantic alignment states for compact feedback summaries.
+     * Evaluated excludes extras and unassessed words.
+     *
+     * @param  list<mixed>  $words
+     * @return array{
+     *     matched: int,
+     *     uncertain: int,
+     *     mismatch: int,
+     *     skipped: int,
+     *     extra: int,
+     *     unassessed: int,
+     *     evaluated: int,
+     *     attention: int
+     * }|null
+     */
+    public static function countStatuses(array $words): ?array
+    {
+        if ($words === []) {
+            return null;
+        }
+
+        $counts = [
+            self::MATCHED => 0,
+            self::UNCERTAIN => 0,
+            self::MISMATCH => 0,
+            self::SKIPPED => 0,
+            self::EXTRA => 0,
+            self::UNASSESSED => 0,
+        ];
+
+        foreach ($words as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            $state = self::classify($word);
+            if (! array_key_exists($state, $counts)) {
+                continue;
+            }
+            $counts[$state]++;
+        }
+
+        $evaluated = $counts[self::MATCHED]
+            + $counts[self::UNCERTAIN]
+            + $counts[self::MISMATCH]
+            + $counts[self::SKIPPED];
+
+        return [
+            'matched' => $counts[self::MATCHED],
+            'uncertain' => $counts[self::UNCERTAIN],
+            'mismatch' => $counts[self::MISMATCH],
+            'skipped' => $counts[self::SKIPPED],
+            'extra' => $counts[self::EXTRA],
+            'unassessed' => $counts[self::UNASSESSED],
+            'evaluated' => $evaluated,
+            'attention' => $counts[self::UNCERTAIN]
+                + $counts[self::MISMATCH]
+                + $counts[self::SKIPPED]
+                + $counts[self::EXTRA],
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $word
      */
     public static function confidence(array $word): ?float

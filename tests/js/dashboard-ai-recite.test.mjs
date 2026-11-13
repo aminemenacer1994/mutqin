@@ -12,7 +12,9 @@ import {
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const dashboard = readFileSync(join(root, 'resources/js/views/Dashboard.vue'), 'utf8')
+const aiReciteAttemptCard = readFileSync(join(root, 'resources/js/components/dashboard/DashAiReciteAttemptCard.vue'), 'utf8')
 const dashboardCss = readFileSync(join(root, 'resources/js/views/Dashboard.css'), 'utf8')
+const attemptFeedback = readFileSync(join(root, 'resources/js/scripts/dashboardAiRecite/attemptFeedback.js'), 'utf8')
 const adminDashboardCss = readFileSync(join(root, 'resources/js/views/AdminDashboard.css'), 'utf8')
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
   + '\n'
@@ -35,8 +37,15 @@ assert.doesNotMatch(dashboard, /dash-ai-recite-cta/, 'progress page does not exp
 assert.doesNotMatch(dashboard, /openAiRecite/, 'progress page does not open the standalone modal')
 assert.doesNotMatch(dashboard, /DashboardAiReciteModal/, 'progress page does not mount the AI Recite modal')
 assert.match(dashboard, /id="ai-recite-results"/, 'progress page has an AI Recite results section')
-assert.match(dashboard, /item.has_audio/, 'recent attempts expose a listen affordance when audio exists')
-assert.match(dashboard, /dashboard\.ai_recite\.listen/, 'listen copy is used on saved checks')
+assert.match(aiReciteAttemptCard, /item\.has_audio/, 'recent attempts expose a listen affordance when audio exists')
+assert.match(aiReciteAttemptCard, /dashboard\.ai_recite\.listen/, 'listen copy is used on saved checks')
+assert.match(dashboard, /DashAiReciteAttemptCard/, 'progress page uses compact AI Recite attempt cards')
+assert.match(aiReciteAttemptCard, /dashboard\.ai_recite\.review_feedback/, 'compact cards expose review feedback')
+assert.match(dashboard, /dashboard\.ai_recite\.view_all_checks/, 'compact list links to view all checks')
+assert.match(dashboard, /aiReciteVisibleCards/, 'progress page limits visible AI Recite cards')
+assert.match(dashboard, /aiRecitePreview\(\)[\s\S]*?slice\(0,\s*3\)/, 'recent AI Recite preview shows at most three attempts')
+assert.match(dashboardCss, /\.dash-fb-card/, 'compact feedback cards have dedicated styles')
+assert.match(attemptFeedback, /feedbackInsightKey/, 'attempt feedback insights are deterministic helpers')
 assert.match(
   dashboardCss,
   /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-history[\s\S]*?order:\s*3/,
@@ -112,7 +121,10 @@ assert.match(memorisation, /audio_reference_not_saved/, 'missing recording refer
 assert.match(dashboard, /aiReciteFocus/, 'progress page shows weak ayahs that need practice')
 assert.match(dashboard, /aiReciteUnifiedCards/, 'recent checks and needs-practice share one card list')
 assert.match(dashboard, /card_kind: 'focus'/, 'needs-practice items map into the shared attempt card layout')
-assert.match(dashboard, /card_kind === 'attempt'/, 'attempt cards keep see-words expand in the shared list')
+assert.match(dashboard, /card_kind === 'attempt'/, 'attempt cards keep expandable feedback in the shared list')
+assert.equal(en.dashboard.ai_recite.review_feedback, 'Review feedback')
+assert.equal(en.dashboard.ai_recite.insight_excellent, 'Excellent match. Most evaluated words matched.')
+assert.match(en.dashboard.ai_recite.words_matched_percent, /\{n\}% words matched/)
 assert.doesNotMatch(dashboard, /dash-ai-results__word/, 'often-missed chips are removed from the dashboard')
 assert.doesNotMatch(dashboard, /openMissedWordAttempt/, 'often-missed actions are removed with the section')
 assert.doesNotMatch(dashboard, /missed_words_hint/, 'often-missed helper copy is removed with the section')

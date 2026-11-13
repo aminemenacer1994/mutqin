@@ -398,6 +398,7 @@ class SessionAnalysisQueryService
             'recent_attempts' => $attempts->take(12)->map(function (AiReciteAttempt $attempt) {
                 $range = $this->attemptRange($attempt);
                 $words = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
+                $wordCounts = RecitationAlignmentStatus::countStatuses($words);
 
                 return [
                     'id' => $attempt->id,
@@ -415,6 +416,8 @@ class SessionAnalysisQueryService
                     'audio_duration_ms' => $attempt->audio_duration_ms ? (int) $attempt->audio_duration_ms : null,
                     'has_word_alignment' => $words !== [],
                     'flagged_word_count' => $words === [] ? null : RecitationAlignmentStatus::flaggedCount($words),
+                    'word_counts' => $wordCounts,
+                    'color_counts' => is_array($attempt->color_counts) ? $attempt->color_counts : null,
                     'model_version' => $attempt->assessment?->model_version,
                     'algorithm_version' => $attempt->assessment?->algorithm_version,
                     'weak_words' => collect(is_array($attempt->weak_words) ? $attempt->weak_words : [])

@@ -5962,6 +5962,372 @@ a.dash-ai-results__attempt {
   justify-content: center;
 }
 
+.user-dashboard--progress .dash-fb-skeleton {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.user-dashboard--progress .dash-fb-skeleton__card {
+  min-height: 5.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--dash-muted) 10%, transparent) 0%,
+    color-mix(in srgb, var(--dash-muted) 18%, transparent) 50%,
+    color-mix(in srgb, var(--dash-muted) 10%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: dash-fb-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-dashboard--progress .dash-fb-skeleton__card {
+    animation: none;
+  }
+}
+
+@keyframes dash-fb-skeleton-pulse {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.user-dashboard--progress .dash-fb-cards {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.user-dashboard--progress .dash-fb-card-block {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-fb-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--dash-card-bg) 92%, var(--dash-bg));
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.user-dashboard--progress .dash-fb-card.is-expanded {
+  border-color: var(--dash-border-strong);
+}
+
+.user-dashboard--progress .dash-fb-card__summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem 0.85rem;
+  align-items: start;
+}
+
+.user-dashboard--progress .dash-fb-card__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.user-dashboard--progress .dash-fb-card__score {
+  display: grid;
+  place-items: center;
+  min-width: 3rem;
+  min-height: 3rem;
+  padding: 0.3rem;
+  border-radius: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--dash-muted) 12%, transparent);
+  color: var(--dash-ink);
+}
+
+.user-dashboard--progress .dash-fb-card__score-value {
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.user-dashboard--progress .dash-fb-card.is-strong .dash-fb-card__score {
+  color: #146443;
+  background: rgba(20, 100, 67, 0.12);
+}
+
+.user-dashboard--progress .dash-fb-card.is-mixed .dash-fb-card__score {
+  color: #8a4f08;
+  background: rgba(138, 79, 8, 0.12);
+}
+
+.user-dashboard--progress .dash-fb-card.is-weak .dash-fb-card__score {
+  color: #9b2e27;
+  background: rgba(155, 46, 39, 0.12);
+}
+
+[data-theme="dark"] .user-dashboard--progress .dash-fb-card.is-strong .dash-fb-card__score {
+  color: #8dcead;
+  background: rgba(141, 206, 173, 0.14);
+}
+
+[data-theme="dark"] .user-dashboard--progress .dash-fb-card.is-mixed .dash-fb-card__score {
+  color: #e2b56a;
+  background: rgba(226, 181, 106, 0.14);
+}
+
+[data-theme="dark"] .user-dashboard--progress .dash-fb-card.is-weak .dash-fb-card__score {
+  color: #e08b84;
+  background: rgba(224, 139, 132, 0.14);
+}
+
+[data-theme="sepia"] .user-dashboard--progress .dash-fb-card {
+  background: color-mix(in srgb, var(--dash-card-bg) 88%, #d9c7a5);
+}
+
+.user-dashboard--progress .dash-fb-card__body {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-fb-card__head {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.user-dashboard--progress .dash-fb-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.5rem;
+  margin: 0;
+  color: var(--dash-ink);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.user-dashboard--progress .dash-fb-card__range {
+  color: var(--dash-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.user-dashboard--progress .dash-fb-card__match {
+  margin: 0;
+  color: var(--dash-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.user-dashboard--progress .dash-fb-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+}
+
+.user-dashboard--progress .dash-fb-card__count-n {
+  color: var(--dash-ink);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.user-dashboard--progress .dash-fb-card__counts .is-uncertain .dash-fb-card__count-n {
+  color: #8a4f08;
+}
+
+.user-dashboard--progress .dash-fb-card__counts .is-mismatch .dash-fb-card__count-n {
+  color: #9b2e27;
+}
+
+.user-dashboard--progress .dash-fb-card__meta,
+.user-dashboard--progress .dash-fb-card__insight {
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.user-dashboard--progress .dash-fb-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+}
+
+.user-dashboard--progress .dash-fb-card__sep {
+  opacity: 0.7;
+}
+
+.user-dashboard--progress .dash-fb-detail {
+  margin-top: 0.15rem;
+}
+
+.user-dashboard--progress .dash-fb-detail__positive {
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.8rem;
+}
+
+.user-dashboard--progress .dash-fb-ayah-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-dashboard--progress .dash-fb-ayah {
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--dash-bg) 40%, transparent);
+}
+
+.user-dashboard--progress .dash-fb-ayah.is-open {
+  border-color: var(--dash-border);
+}
+
+.user-dashboard--progress .dash-fb-ayah__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.user-dashboard--progress .dash-fb-ayah__toggle:hover,
+.user-dashboard--progress .dash-fb-ayah__toggle:focus-visible {
+  background: color-mix(in srgb, var(--dash-accent-light) 30%, transparent);
+  outline: none;
+}
+
+.user-dashboard--progress .dash-fb-ayah__toggle:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dash-accent) 50%, transparent);
+}
+
+.user-dashboard--progress .dash-fb-ayah__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.55rem;
+  min-width: 0;
+  color: var(--dash-muted);
+  font-size: 0.8rem;
+}
+
+.user-dashboard--progress .dash-fb-ayah__label strong {
+  color: var(--dash-ink);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.user-dashboard--progress .dash-fb-ayah__body {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 0.6rem 0.65rem;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-fb-ayah__explain {
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.user-dashboard--progress .dash-fb-review-words {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.user-dashboard--progress .dash-fb-review-words h4 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.user-dashboard--progress .dash-fb-review-words ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-dashboard--progress .dash-fb-review-word {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--dash-bg) 65%, var(--dash-card-bg));
+  font-size: 0.8rem;
+}
+
+.user-dashboard--progress .dash-fb-review-word p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-fb-review-word__label {
+  color: var(--dash-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.user-dashboard--progress .dash-fb-review-word__missing {
+  color: var(--dash-muted);
+  font-style: italic;
+}
+
+.user-dashboard--progress .dash-fb-review-word .is-uncertain {
+  color: #8a4f08;
+}
+
+.user-dashboard--progress .dash-fb-review-word .is-mismatch,
+.user-dashboard--progress .dash-fb-review-word .is-extra,
+.user-dashboard--progress .dash-fb-review-word .is-skipped {
+  color: #9b2e27;
+}
+
+.user-dashboard--progress .dash-fb-ayah__actions,
+.user-dashboard--progress .dash-fb-detail__show-all {
+  margin-top: 0.1rem;
+}
+
+@media (min-width: 768px) {
+  .user-dashboard--progress .dash-fb-card__summary {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .user-dashboard--progress .dash-fb-card__actions {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 9.5rem;
+  }
+
+  .user-dashboard--progress .dash-fb-card__actions .dash-btn {
+    justify-content: center;
+  }
+}
+
 .user-dashboard--progress .dash-ai-results__focus {
   display: grid;
   gap: 0.6rem;
