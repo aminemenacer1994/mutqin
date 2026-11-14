@@ -23,12 +23,13 @@
             <div class="aa-header__actions">
               <button
                 type="button"
-                class="aa-btn aa-btn--primary"
+                class="aa-icon-btn aa-icon-btn--pdf"
                 :disabled="exporting || loading || !view || view.isEmpty"
+                :aria-label="exporting ? t('dashboard.advanced_analytics.exporting') : t('dashboard.advanced_analytics.export_pdf')"
+                :title="exporting ? t('dashboard.advanced_analytics.exporting') : t('dashboard.advanced_analytics.export_pdf')"
                 @click="exportPdf"
               >
                 <i class="bi bi-filetype-pdf" aria-hidden="true"></i>
-                <span>{{ exporting ? t('dashboard.advanced_analytics.exporting') : t('dashboard.advanced_analytics.export_pdf') }}</span>
               </button>
               <button
                 ref="closeButton"

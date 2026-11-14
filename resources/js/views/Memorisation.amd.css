@@ -7131,7 +7131,7 @@ html body .app .verse-arabic.word-by-word-meanings .word-meaning {
   display: block !important;
   position: relative !important;
   z-index: 1 !important;
-  margin-top: 0.18em !important;
+  margin-top: 7px !important;
   line-height: 1.35 !important;
   white-space: normal !important;
 }

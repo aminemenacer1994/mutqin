@@ -3116,12 +3116,16 @@
                   <h3><i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}</h3>
                   <p>{{ t('memorisation.today_first_advanced_analytics_stay_tucked_away_un') }}</p>
                 </div>
-                <div class="hifz-simple-analytics" :aria-label="t('memorisation.a11y.currentSessionAnalytics')">
-                  <article v-for="item in controlsAnalyticsCards" :key="item.key" class="hifz-simple-analytics-item">
-                    <i class="bi" :class="item.icon" aria-hidden="true"></i>
-                    <span>{{ item.label }}</span>
-                    <strong>{{ item.value }}</strong>
-                    <small>{{ item.description }}</small>
+                <div class="hifz-simple-analytics hifz-simple-analytics--aa" :aria-label="t('memorisation.a11y.currentSessionAnalytics')">
+                  <article v-for="item in controlsAnalyticsCards" :key="item.key" class="hifz-simple-analytics-item hifz-simple-analytics-item--aa">
+                    <span class="hifz-simple-analytics-item__top">
+                      <span class="hifz-simple-analytics-item__icon" aria-hidden="true">
+                        <i class="bi" :class="item.icon"></i>
+                      </span>
+                    </span>
+                    <span class="hifz-simple-analytics-item__title">{{ item.label }}</span>
+                    <strong class="hifz-simple-analytics-item__value">{{ item.value }}</strong>
+                    <small class="hifz-simple-analytics-item__hint">{{ item.description }}</small>
                   </article>
                   <AppStatus
                     v-if="!controlsAnalyticsCards.length"

@@ -8,7 +8,7 @@ Chart.register(...registerables)
 const PAGE = {
   width: 210,
   height: 297,
-  margin: 16,
+  margin: 14,
 }
 
 const COLORS = {
@@ -138,10 +138,13 @@ function kpiGrid(doc, cursor, cards) {
   return cursor
 }
 
-function drawChartImage(doc, cursor, image, { height = 58 } = {}) {
+function drawChartImage(doc, cursor, image, { height = 52, maxWidth = null } = {}) {
   if (!image) return cursor
+  const fullW = contentWidth()
+  const drawW = Math.min(fullW, maxWidth || fullW)
+  const drawX = PAGE.margin + (fullW - drawW) / 2
   cursor = ensureSpace(doc, cursor, height + 4)
-  doc.addImage(image, 'PNG', PAGE.margin, cursor.y, contentWidth(), height)
+  doc.addImage(image, 'PNG', drawX, cursor.y, drawW, height)
   cursor.y += height + 8
   return cursor
 }
@@ -256,8 +259,8 @@ export async function exportAdvancedAnalyticsPdf(view, t) {
 
   if (view.practiceChart) {
     cursor = sectionTitle(doc, cursor, t('dashboard.advanced_analytics.chart_practice_title'))
-    const image = await chartToImage({ type: 'line', ...view.practiceChart }, { width: 860, height: 300 })
-    cursor = drawChartImage(doc, cursor, image, { height: 62 })
+    const image = await chartToImage({ type: 'line', ...view.practiceChart }, { width: 820, height: 260 })
+    cursor = drawChartImage(doc, cursor, image, { height: 54 })
   }
 
   // Page 2 — Learning progress
@@ -267,8 +270,8 @@ export async function exportAdvancedAnalyticsPdf(view, t) {
     cursor = sectionTitle(doc, cursor, t('dashboard.advanced_analytics.pdf_progress'))
     if (view.sessionMixChart) {
       cursor = bodyText(doc, cursor, t('dashboard.advanced_analytics.chart_mix_title'), { size: 11, gap: 4 })
-      const mixImage = await chartToImage({ type: 'bar', ...view.sessionMixChart }, { width: 860, height: 280 })
-      cursor = drawChartImage(doc, cursor, mixImage, { height: 58 })
+      const mixImage = await chartToImage({ type: 'bar', ...view.sessionMixChart }, { width: 820, height: 250 })
+      cursor = drawChartImage(doc, cursor, mixImage, { height: 52 })
     }
     if (view.overview) {
       cursor = bodyText(
@@ -292,13 +295,13 @@ export async function exportAdvancedAnalyticsPdf(view, t) {
     cursor = sectionTitle(doc, cursor, t('dashboard.advanced_analytics.pdf_ai'))
     if (view.aiChart) {
       cursor = bodyText(doc, cursor, t('dashboard.advanced_analytics.chart_ai_title'), { size: 11, gap: 4 })
-      const aiImage = await chartToImage({ type: 'line', ...view.aiChart }, { width: 860, height: 260 })
-      cursor = drawChartImage(doc, cursor, aiImage, { height: 54 })
+      const aiImage = await chartToImage({ type: 'line', ...view.aiChart }, { width: 820, height: 240 })
+      cursor = drawChartImage(doc, cursor, aiImage, { height: 50 })
     }
     if (view.breakdownChart) {
       cursor = bodyText(doc, cursor, t('dashboard.advanced_analytics.chart_breakdown_title'), { size: 11, gap: 4 })
-      const donut = await chartToImage({ type: 'doughnut', ...view.breakdownChart }, { width: 420, height: 280 })
-      cursor = drawChartImage(doc, cursor, donut, { height: 55 })
+      const donut = await chartToImage({ type: 'doughnut', ...view.breakdownChart }, { width: 480, height: 320 })
+      cursor = drawChartImage(doc, cursor, donut, { height: 62, maxWidth: 110 })
     }
     cursor = attentionTable(doc, cursor, view.attention || [], t)
   }
@@ -309,15 +312,16 @@ export async function exportAdvancedAnalyticsPdf(view, t) {
     cursor = { y: PAGE.margin, page: cursor.page + 1 }
     cursor = sectionTitle(doc, cursor, t('dashboard.advanced_analytics.pdf_insights'))
     view.insights.forEach((insight) => {
-      cursor = ensureSpace(doc, cursor, 14)
+      const lines = doc.splitTextToSize(String(insight.text || ''), contentWidth() - 8)
+      const boxH = Math.max(12, lines.length * 4.6 + 6)
+      cursor = ensureSpace(doc, cursor, boxH + 4)
       doc.setFillColor(...COLORS.soft)
-      doc.roundedRect(PAGE.margin, cursor.y - 4, contentWidth(), 12, 2, 2, 'F')
+      doc.roundedRect(PAGE.margin, cursor.y - 3, contentWidth(), boxH, 2, 2, 'F')
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
       doc.setTextColor(...COLORS.ink)
-      const lines = doc.splitTextToSize(insight.text, contentWidth() - 8)
-      doc.text(lines.slice(0, 2), PAGE.margin + 3, cursor.y + 2)
-      cursor.y += Math.max(14, lines.slice(0, 2).length * 5 + 6)
+      doc.text(lines, PAGE.margin + 3, cursor.y + 2)
+      cursor.y += boxH + 4
     })
     cursor = bodyText(
       doc,

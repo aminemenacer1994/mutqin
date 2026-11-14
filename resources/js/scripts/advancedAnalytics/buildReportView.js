@@ -110,16 +110,16 @@ function doughnutOptions(colors) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    layout: { padding: 4 },
+    layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } },
     plugins: {
       legend: {
-        position: 'right',
+        position: 'bottom',
         align: 'center',
         labels: {
           color: colors.text,
           boxWidth: 10,
           boxHeight: 10,
-          padding: 12,
+          padding: 10,
           font: { size: 11 },
         },
       },

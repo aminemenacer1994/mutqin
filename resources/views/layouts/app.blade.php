@@ -561,13 +561,13 @@
         /* Do not shrink --qpc-word-size here: that invents gaps under space-between. */
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v118">
-      /* v118 — WBW interlinear: per-column horizontal padding + compact vertical stack */
+    <style id="mutqin-memorisation-hotfix-v119">
+      /* v119 — WBW interlinear: 6–8px gap between Arabic and English gloss */
       html body .app .verse-arabic.word-by-word-meanings word,
       html body .app .verse-arabic.word-by-word-meanings .wbw-word,
       html body .app .mushaf-ayah-text.word-by-word-meanings word,
       html body .app .mushaf-ayah-text.word-by-word-meanings .wbw-word {
-        gap: 0.1em !important;
+        gap: 7px !important;
         margin: 0 0.1em 0.55em !important;
         padding: 0 0.42em !important;
         line-height: 1.1 !important;
@@ -581,7 +581,7 @@
       }
       html body .app .verse-arabic.word-by-word-meanings .word-meaning,
       html body .app .mushaf-ayah-text.word-by-word-meanings .word-meaning {
-        margin: 0.08em auto 0 !important;
+        margin: 7px auto 0 !important;
         padding: 0 0.06em !important;
         line-height: 1.28 !important;
       }

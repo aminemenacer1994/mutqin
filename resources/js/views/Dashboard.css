@@ -4924,34 +4924,39 @@ a.dash-ai-results__attempt {
 .dash-learning__metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 0.6rem;
 }
 
 .dash-learning__metric {
-  display: grid;
-  gap: 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   min-width: 0;
-  min-height: 5.25rem;
+  min-height: 0;
   padding: 0.75rem 0.8rem;
   border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius);
+  border-radius: 10px;
   background: var(--dash-card-bg);
   color: var(--dash-ink);
   text-align: start;
 }
 
-.dash-learning__metric strong {
-  font-size: 1.55rem;
-  line-height: 1.1;
+.dash-learning__metric strong,
+.dash-learning__metric-value {
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
 }
 
 .dash-learning__metric small,
+.dash-learning__metric-hint,
 .dash-revisit__meta,
 .dash-attempt-detail__note,
 .dash-history__group h3 {
   color: var(--dash-muted);
-  font-size: 0.75rem;
-  line-height: 1.35;
+  font-size: 0.7rem;
+  line-height: 1.3;
 }
 
 .dash-revisit,
@@ -5229,56 +5234,100 @@ a.dash-ai-results__attempt {
 .user-dashboard--progress .dash-learning__metrics,
 .user-dashboard--progress .dash-learning__metrics--compact {
   padding: 0;
-  gap: 0.45rem;
+  gap: 0.6rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.user-dashboard--progress .dash-learning__metric {
+/* Basic Analytics: same KPI language as Advanced Analytics, without charts */
+.user-dashboard--progress .dash-learning__metric,
+.user-dashboard--progress .dash-learning__metric--aa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
   min-height: 0;
-  padding: 0.65rem 0.75rem;
-  gap: 0.1rem;
+  padding: 0.75rem 0.8rem;
   align-content: start;
-  border: 1px solid var(--dash-border);
-  background: var(--dash-card-bg);
+  border: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 88%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dash-card-bg, var(--surface-strong)) 94%, #fff);
   box-shadow: none;
+  text-align: start;
+  cursor: pointer;
 }
 
-.user-dashboard--progress .dash-learning__metric strong {
-  font-size: 1.35rem;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  letter-spacing: -0.03em !important;
+.user-dashboard--progress .dash-learning__metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
 }
 
-.user-dashboard--progress .dash-learning__metric span {
-  font-size: 0.8125rem;
+.user-dashboard--progress .dash-learning__metric-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--dash-accent, var(--accent)) 14%, transparent);
+  color: var(--dash-accent-strong, var(--accent-strong));
+  font-size: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.user-dashboard--progress .dash-learning__metric-title,
+.user-dashboard--progress .dash-learning__metric--aa .dash-learning__metric-title {
+  margin: 0;
+  font-size: 0.74rem;
   font-weight: 600;
-  line-height: 1.25;
+  color: var(--dash-muted, var(--text-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.user-dashboard--progress .dash-learning__metric small {
+.user-dashboard--progress .dash-learning__metric-value,
+.user-dashboard--progress .dash-learning__metric--aa .dash-learning__metric-value,
+.user-dashboard--progress .dash-learning__metric strong.dash-learning__metric-value {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  letter-spacing: -0.03em !important;
+  color: var(--dash-ink, var(--text));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-dashboard--progress .dash-learning__metric-hint,
+.user-dashboard--progress .dash-learning__metric--aa .dash-learning__metric-hint,
+.user-dashboard--progress .dash-learning__metric small.dash-learning__metric-hint {
   min-height: 0;
-  margin-top: 0.05rem;
+  margin: 0;
   font-size: 0.7rem !important;
   font-weight: 400;
   line-height: 1.3;
-  color: var(--dash-muted);
+  color: var(--dash-muted, var(--text-muted));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
   .user-dashboard--progress .dash-learning__metrics--compact {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.55rem;
+    gap: 0.6rem;
   }
+}
 
-  .user-dashboard--progress .dash-learning__metric {
-    padding: 0.75rem 0.85rem;
-  }
-
-  .user-dashboard--progress .dash-learning__metric strong {
-    font-size: 1.5rem;
+@media (max-width: 420px) {
+  .user-dashboard--progress .dash-learning__metrics--compact {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -109,11 +109,23 @@
             </button>
           </div>
           <div v-show="!isSectionCollapsed('learning')" id="dash-learning-body" class="dash-section__body dash-learning__body">
-            <div class="dash-learning__metrics dash-learning__metrics--compact" role="list">
-              <button v-for="metric in learningCards" :key="metric.key" type="button" class="dash-learning__metric" role="listitem" @click="onLearningMetric(metric)">
-                <strong>{{ metric.value }}</strong>
-                <span>{{ metric.label }}</span>
-                <small>{{ metric.hint }}</small>
+            <div class="dash-learning__metrics dash-learning__metrics--compact dash-learning__metrics--aa" role="list">
+              <button
+                v-for="metric in learningCards"
+                :key="metric.key"
+                type="button"
+                class="dash-learning__metric dash-learning__metric--aa"
+                role="listitem"
+                @click="onLearningMetric(metric)"
+              >
+                <span class="dash-learning__metric-top">
+                  <span class="dash-learning__metric-icon" aria-hidden="true">
+                    <i class="bi" :class="metric.icon"></i>
+                  </span>
+                </span>
+                <span class="dash-learning__metric-title">{{ metric.label }}</span>
+                <strong class="dash-learning__metric-value">{{ metric.value }}</strong>
+                <small class="dash-learning__metric-hint">{{ metric.hint }}</small>
               </button>
             </div>
 
@@ -1428,10 +1440,10 @@ export default {
         ? `${recitedHint} ${this.t('dashboard.learning_capped')}`
         : recitedHint
       return [
-        { key: 'memorised', value: Number(metrics.memorised?.value || 0), label: this.t('dashboard.learning_memorised'), hint: this.t('dashboard.learning_memorised_hint'), action: 'hifz' },
-        { key: 'revised', value: Number(metrics.revised?.value || 0), label: this.t('dashboard.learning_revised'), hint: revisedHint, action: 'revision' },
-        { key: 'recited', value: Number(metrics.recited?.value || 0), label: this.t('dashboard.learning_recited'), hint: recitedNote, action: 'recitation' },
-        { key: 'ai_checks', value: Math.max(Number(metrics.ai_checks?.value || 0), Number(this.aiReciteStats?.total_attempts || 0)), label: this.t('dashboard.learning_ai_checks'), hint: this.t('dashboard.learning_ai_checks_hint'), action: 'ai' },
+        { key: 'memorised', value: Number(metrics.memorised?.value || 0), label: this.t('dashboard.learning_memorised'), hint: this.t('dashboard.learning_memorised_hint'), action: 'hifz', icon: 'bi-bookmark-check' },
+        { key: 'revised', value: Number(metrics.revised?.value || 0), label: this.t('dashboard.learning_revised'), hint: revisedHint, action: 'revision', icon: 'bi-arrow-repeat' },
+        { key: 'recited', value: Number(metrics.recited?.value || 0), label: this.t('dashboard.learning_recited'), hint: recitedNote, action: 'recitation', icon: 'bi-mic' },
+        { key: 'ai_checks', value: Math.max(Number(metrics.ai_checks?.value || 0), Number(this.aiReciteStats?.total_attempts || 0)), label: this.t('dashboard.learning_ai_checks'), hint: this.t('dashboard.learning_ai_checks_hint'), action: 'ai', icon: 'bi-stars' },
       ]
     },
     comparableSummary() {
