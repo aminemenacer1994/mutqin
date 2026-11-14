@@ -5604,8 +5604,18 @@
       "error_title": "AI Recite couldn’t finish",
       "continue_without_ai": "Continue without AI"
     },
-    "learning_title": "My learning",
+    "learning_title": "Basic Analytics",
     "learning_period": "Last {days} days for revised and recited. All-time for memorised and checks.",
+    "basic_analytics": {
+      "title": "Basic Analytics",
+      "entry_cta": "Open Basic Analytics",
+      "entry_hint": "Summary of memorised, revised, recited, and AI checks.",
+      "overview_label": "Learning summary",
+      "progress_title": "This period",
+      "progress_hint": "High-level practice activity for the selected window.",
+      "empty_title": "Your learning summary will appear here",
+      "empty_message": "Complete a session or AI check to see your basic stats."
+    },
     "advanced_analytics": {
       "title": "Advanced Analytics",
       "subtitle": "A clear view of your practice, revision, and AI recitation progress.",

@@ -5520,7 +5520,18 @@
       "modeTest": "اختبار التلاوة"
     },
     "revision_aside_label": "Revision",
-    "revision_aside_cta": "Revise"
+    "revision_aside_cta": "Revise",
+    "learning_title": "التحليلات الأساسية",
+    "basic_analytics": {
+      "title": "التحليلات الأساسية",
+      "entry_cta": "فتح التحليلات الأساسية",
+      "entry_hint": "ملخص لما حفظت وراجعت وتلوت وفحوصات الذكاء.",
+      "overview_label": "ملخص التعلم",
+      "progress_title": "هذه الفترة",
+      "progress_hint": "نشاط الممارسة عالي المستوى للفترة المحددة.",
+      "empty_title": "سيظهر ملخص تعلمك هنا",
+      "empty_message": "أكمل جلسة أو فحصًا بالذكاء الاصطناعي لترى إحصاءاتك الأساسية."
+    }
   },
   "admin": {
     "loading": "جارٍ التحميل…",

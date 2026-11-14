@@ -5254,6 +5254,9 @@ a.dash-ai-results__attempt {
 /* Basic Analytics: same KPI language as Advanced Analytics, without charts */
 .user-dashboard--progress .dash-learning__metric,
 .user-dashboard--progress .dash-learning__metric--aa {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -5263,7 +5266,8 @@ a.dash-ai-results__attempt {
   align-content: start;
   border: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 88%, transparent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--dash-card-bg, var(--surface-strong)) 94%, #fff);
+  background: color-mix(in srgb, var(--dash-card-bg, var(--surface-strong, #fffaf3)) 94%, #fff);
+  color: var(--dash-ink, var(--text, #1c1917));
   box-shadow: none;
   text-align: start;
   cursor: pointer;
@@ -6922,9 +6926,19 @@ a.dash-ai-results__attempt {
   }
 }
 
-/* Advanced Analytics entry on Progress learning section */
-.dash-advanced-analytics {
+/* Basic + Advanced Analytics entries on Progress learning section */
+.dash-analytics-entries {
+  display: grid;
+  gap: 0.55rem;
   margin-top: 0.85rem;
+}
+
+.dash-advanced-analytics {
+  margin-top: 0;
+}
+
+.dash-basic-analytics__cta {
+  width: 100%;
 }
 
 .dash-advanced-analytics__cta,

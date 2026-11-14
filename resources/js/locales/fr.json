@@ -5488,7 +5488,18 @@
       "modeTest": "Tester la récitation"
     },
     "revision_aside_label": "Revision",
-    "revision_aside_cta": "Revise"
+    "revision_aside_cta": "Revise",
+    "learning_title": "Analytique de base",
+    "basic_analytics": {
+      "title": "Analytique de base",
+      "entry_cta": "Ouvrir l’analytique de base",
+      "entry_hint": "Résumé des ayahs mémorisés, révisés, récitês et des contrôles IA.",
+      "overview_label": "Résumé d’apprentissage",
+      "progress_title": "Cette période",
+      "progress_hint": "Activité de pratique de haut niveau pour la période sélectionnée.",
+      "empty_title": "Votre résumé d’apprentissage apparaîtra ici",
+      "empty_message": "Terminez une session ou un contrôle IA pour voir vos statistiques de base."
+    }
   },
   "admin": {
     "loading": "Chargement…",

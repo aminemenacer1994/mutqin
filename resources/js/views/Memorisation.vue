@@ -4837,23 +4837,28 @@
                 </button>
               </template>
             </div>
-            <button
-              v-if="showSessionFeedbackPrompt"
-              type="button"
-              class="post-session-simple__feedback"
-              @vue:mounted="noteSessionFeedbackPromptSeen"
-              @click="openSessionFeedbackPrompt"
+            <div
+              v-if="showSessionFeedbackPrompt || showPostSessionReferralInvite"
+              class="post-session-simple__secondary-links"
             >
-              {{ t('memorisation.sessionGoal.feedbackPrompt') }}
-            </button>
-            <a
-              v-if="showPostSessionReferralInvite"
-              class="post-session-simple__feedback post-session-simple__referral-invite"
-              href="/referrals"
-              data-testid="post-session-referral-invite"
-            >
-              {{ t('referral.postSessionInvite') }}
-            </a>
+              <button
+                v-if="showSessionFeedbackPrompt"
+                type="button"
+                class="post-session-simple__feedback"
+                @vue:mounted="noteSessionFeedbackPromptSeen"
+                @click="openSessionFeedbackPrompt"
+              >
+                {{ t('memorisation.sessionGoal.feedbackPrompt') }}
+              </button>
+              <a
+                v-if="showPostSessionReferralInvite"
+                class="post-session-simple__feedback post-session-simple__referral-invite"
+                href="/referrals"
+                data-testid="post-session-referral-invite"
+              >
+                {{ t('referral.postSessionInvite') }}
+              </a>
+            </div>
           </footer>
         </div>
       </div>

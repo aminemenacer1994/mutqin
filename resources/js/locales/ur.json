@@ -5488,7 +5488,18 @@
       "modeTest": "تلاوت کا امتحان"
     },
     "revision_aside_label": "Revision",
-    "revision_aside_cta": "Revise"
+    "revision_aside_cta": "Revise",
+    "learning_title": "Basic Analytics",
+    "basic_analytics": {
+      "title": "Basic Analytics",
+      "entry_cta": "Open Basic Analytics",
+      "entry_hint": "Summary of memorised, revised, recited, and AI checks.",
+      "overview_label": "Learning summary",
+      "progress_title": "This period",
+      "progress_hint": "High-level practice activity for the selected window.",
+      "empty_title": "Your learning summary will appear here",
+      "empty_message": "Complete a session or AI check to see your basic stats."
+    }
   },
   "admin": {
     "loading": "جارٍ التحميل…",

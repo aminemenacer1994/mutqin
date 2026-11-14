@@ -5475,7 +5475,18 @@
       "modeTest": "Probar la recitación"
     },
     "revision_aside_label": "Revision",
-    "revision_aside_cta": "Revise"
+    "revision_aside_cta": "Revise",
+    "learning_title": "Analítica básica",
+    "basic_analytics": {
+      "title": "Analítica básica",
+      "entry_cta": "Abrir analítica básica",
+      "entry_hint": "Resumen de memorizado, revisado, recitado y comprobaciones de IA.",
+      "overview_label": "Resumen de aprendizaje",
+      "progress_title": "Este periodo",
+      "progress_hint": "Actividad de práctica de alto nivel para la ventana seleccionada.",
+      "empty_title": "Tu resumen de aprendizaje aparecerá aquí",
+      "empty_message": "Completa una sesión o una comprobación de IA para ver tus estadísticas básicas."
+    }
   },
   "admin": {
     "loading": "cargando…",

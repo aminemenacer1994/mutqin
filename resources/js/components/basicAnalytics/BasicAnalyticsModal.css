@@ -1,0 +1,38 @@
+/* Basic Analytics: compact Advanced Analytics shell, summary-only */
+
+.aa-modal--basic {
+  width: min(720px, calc(100vw - 1.5rem));
+  height: auto;
+  max-height: min(720px, calc(100dvh - 1.5rem));
+  min-height: 0;
+}
+
+.aa-modal--basic .aa-header__subtitle {
+  margin: 0;
+  color: var(--aa-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.aa-modal--basic .aa-kpi-grid--basic-progress {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .aa-modal--basic {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .aa-modal--basic .aa-kpi-grid--basic-progress {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .aa-modal--basic .aa-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

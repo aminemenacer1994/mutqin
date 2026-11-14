@@ -79,8 +79,8 @@
 .workspace-recite-result--refresh .post-session-simple__body {
   flex: 1 1 auto !important;
   min-height: 0 !important;
-  padding: 0.75rem 0.9rem 0.85rem !important;
-  gap: 0.65rem !important;
+  padding: 0.55rem 0.85rem 0.65rem !important;
+  gap: 0.5rem !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
   min-width: 0 !important;
@@ -88,7 +88,7 @@
 }
 
 .workspace-recite-result--refresh .post-session-simple__ai-review--guided {
-  gap: 0.7rem !important;
+  gap: 0.5rem !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -100,14 +100,14 @@
 
 .workspace-recite-result--refresh .post-session-simple__outcome--hero {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.4rem;
   min-width: 0;
   max-width: 100%;
 }
 
 /* Editorial outcome */
 .workspace-recite-result--refresh .wrr-hero--editorial {
-  padding: 0.75rem 0.85rem;
+  padding: 0.55rem 0.7rem;
   border-radius: var(--wrr-radius-sm);
   border: 1px solid var(--wrr-line);
   background: var(--wrr-surface);
@@ -248,7 +248,7 @@
 /* Support blocks — expand with content; never crop ayah cards */
 .workspace-recite-result--refresh .post-session-simple__support-block {
   margin: 0 !important;
-  padding: 0.7rem 0.8rem !important;
+  padding: 0.55rem 0.65rem !important;
   border-radius: var(--wrr-radius-sm) !important;
   border: 1px solid var(--wrr-line) !important;
   background: var(--wrr-surface) !important;
@@ -424,7 +424,8 @@
 
 .workspace-recite-result--refresh .post-session-simple__footer,
 .workspace-recite-result--refresh .post-session-simple__footer--compact {
-  padding: 0.45rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 0.25rem !important;
+  padding: 0.4rem 0.8rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
   border-top: 1px solid var(--wrr-line);
   background: transparent;
 }
@@ -432,7 +433,7 @@
 .workspace-recite-result--refresh .post-session-simple__actions--2 {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 0.4rem !important;
+  gap: 0.35rem !important;
   width: 100% !important;
   align-items: stretch !important;
 }
@@ -445,13 +446,13 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 2.25rem !important;
-  padding: 0.4rem 0.55rem !important;
+  min-height: 2.1rem !important;
+  padding: 0.32rem 0.5rem !important;
   font-family: var(--wrr-ui) !important;
-  font-size: 0.8125rem !important;
+  font-size: 0.8rem !important;
   font-weight: 600 !important;
   line-height: 1.2 !important;
-  gap: 0.3rem !important;
+  gap: 0.28rem !important;
 }
 
 .workspace-recite-result--refresh .post-session-simple__footer .post-session-simple__btn > i,

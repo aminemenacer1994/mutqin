@@ -129,25 +129,42 @@
               </button>
             </div>
 
-            <div
-              v-if="canUseAdvancedAnalytics"
-              class="dash-advanced-analytics"
-              data-testid="advanced-analytics-entry"
-            >
+            <div class="dash-analytics-entries" data-testid="basic-analytics-entry">
               <button
                 type="button"
-                class="dash-advanced-analytics__cta"
-                @click="openAdvancedAnalytics"
+                class="dash-advanced-analytics__cta dash-basic-analytics__cta"
+                @click="openBasicAnalytics"
               >
                 <span class="dash-advanced-analytics__icon" aria-hidden="true">
-                  <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  <i class="bi bi-clipboard-data" aria-hidden="true"></i>
                 </span>
                 <span class="dash-advanced-analytics__copy">
-                  <strong>{{ t('dashboard.advanced_analytics.entry_cta') }}</strong>
-                  <small>{{ t('dashboard.advanced_analytics.entry_hint') }}</small>
+                  <strong>{{ t('dashboard.basic_analytics.entry_cta') }}</strong>
+                  <small>{{ t('dashboard.basic_analytics.entry_hint') }}</small>
                 </span>
                 <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
               </button>
+
+              <div
+                v-if="canUseAdvancedAnalytics"
+                class="dash-advanced-analytics"
+                data-testid="advanced-analytics-entry"
+              >
+                <button
+                  type="button"
+                  class="dash-advanced-analytics__cta"
+                  @click="openAdvancedAnalytics"
+                >
+                  <span class="dash-advanced-analytics__icon" aria-hidden="true">
+                    <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  </span>
+                  <span class="dash-advanced-analytics__copy">
+                    <strong>{{ t('dashboard.advanced_analytics.entry_cta') }}</strong>
+                    <small>{{ t('dashboard.advanced_analytics.entry_hint') }}</small>
+                  </span>
+                  <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -885,6 +902,14 @@
       @retry="retrySessionAnalysis"
     />
 
+    <BasicAnalyticsModal
+      :open="basicAnalyticsOpen"
+      :cards="basicAnalyticsCards"
+      :progress-cards="basicAnalyticsProgressCards"
+      :period-label="t('dashboard.learning_period', { days: chartDays })"
+      @close="closeBasicAnalytics"
+    />
+
     <AdvancedAnalyticsModal
       :open="advancedAnalyticsOpen"
       @close="closeAdvancedAnalytics"
@@ -1033,6 +1058,10 @@ const WorkspaceAiReciteResultModal = defineAsyncComponent(() => import(
   '../components/WorkspaceAiReciteResultModal.vue'
 ))
 
+const BasicAnalyticsModal = defineAsyncComponent(() => import(
+  /* webpackChunkName: "basic-analytics-modal" */
+  '../components/basicAnalytics/BasicAnalyticsModal.vue'
+))
 const AdvancedAnalyticsModal = defineAsyncComponent(() => import(
   /* webpackChunkName: "advanced-analytics-modal" */
   '../components/advancedAnalytics/AdvancedAnalyticsModal.vue'
@@ -1097,6 +1126,7 @@ export default {
     DashAiReciteAttemptCard,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
+    BasicAnalyticsModal,
     AdvancedAnalyticsModal,
     SessionVoiceAssistant,
     DashboardAchievementsWidget,
@@ -1149,6 +1179,7 @@ export default {
       analysisSourceId: null,
       analysisSourceKey: '',
       analysisRequestId: 0,
+      basicAnalyticsOpen: false,
       advancedAnalyticsOpen: false,
       aiReciteStats: initial?.ai_recite_stats || null,
       aiReciteLoading: false,
@@ -1445,6 +1476,24 @@ export default {
         { key: 'recited', value: Number(metrics.recited?.value || 0), label: this.t('dashboard.learning_recited'), hint: recitedNote, action: 'recitation', icon: 'bi-mic' },
         { key: 'ai_checks', value: Math.max(Number(metrics.ai_checks?.value || 0), Number(this.aiReciteStats?.total_attempts || 0)), label: this.t('dashboard.learning_ai_checks'), hint: this.t('dashboard.learning_ai_checks_hint'), action: 'ai', icon: 'bi-stars' },
       ]
+    },
+    basicAnalyticsCards() {
+      return this.learningCards.map((card) => ({
+        key: card.key,
+        icon: card.icon,
+        title: card.label,
+        value: String(card.value ?? 0),
+        description: card.hint,
+      }))
+    },
+    basicAnalyticsProgressCards() {
+      return this.weeklyAnalytics.map((card) => ({
+        key: card.key,
+        icon: card.icon || 'bi bi-activity',
+        title: card.label,
+        value: String(card.value ?? 0),
+        description: card.hint,
+      }))
     },
     comparableSummary() {
       const summary = this.data?.learning?.comparable
@@ -3257,6 +3306,12 @@ export default {
       this.analysisLoading = true
       this.analysisModalOpen = true
       this.fetchSessionAnalysis()
+    },
+    openBasicAnalytics() {
+      this.basicAnalyticsOpen = true
+    },
+    closeBasicAnalytics() {
+      this.basicAnalyticsOpen = false
     },
     openAdvancedAnalytics() {
       if (!this.canUseAdvancedAnalytics) return
