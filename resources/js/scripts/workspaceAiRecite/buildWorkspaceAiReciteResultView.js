@@ -94,11 +94,13 @@ function buildFocusAyahRows(wordStatuses, weakAyahs, t) {
     const text = wordText(word)
     if (!text) continue
     const tone = tokenTone(word)
+    const ayahWordIndex = Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.ayah_word_index ?? -1)
     grouped.get(ayah).push({
       text,
       tone,
       weak: isWeakTone(tone),
-      wordIndex: Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.ayah_word_index ?? -1),
+      wordIndex: ayahWordIndex,
+      ayahWordIndex,
     })
   }
 
@@ -348,8 +350,8 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
     wordsLabel: word.text,
     wordEntries: [{
       text: word.text,
-      tone: word.status === 'low_confidence' ? 'partial' : 'incorrect',
-      ayahWordIndex: word.index,
+      tone: word.status === 'low_confidence' ? 'partial' : (word.status === 'missing' ? 'omitted' : 'incorrect'),
+      ayahWordIndex: Number.isFinite(Number(word.ayahWordIndex)) ? Number(word.ayahWordIndex) : word.index,
     }],
   }))
   const focusAyahRows = buildFocusAyahRows(wordStatuses, weakAyahs, t)

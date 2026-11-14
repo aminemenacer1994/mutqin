@@ -67,7 +67,9 @@ assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Rec
 assert.match(dashboard, /aiReciteStats:\s*initial\?\.ai_recite_stats \|\| null/, 'progress page hydrates AI Recite results from dashboard DB payload')
 assert.match(dashboard, /ai-recite-results/, 'progress page can be linked to the results section')
 assert.match(dashboard, /WorkspaceAiReciteResultModal/, 'saved attempts use the canonical result modal')
-assert.doesNotMatch(dashboard, /withStrictMadaniResultGlyphs/, 'dashboard previews keep Unicode Arabic without QCF page glyphs')
+assert.match(dashboard, /withStrictMadaniResultGlyphs/, 'saved attempt analysis strictly applies Madani V2 glyphs')
+assert.match(dashboard, /hydrateSavedReciteMadaniGlyphs/, 'saved attempt analysis hydrates Madani page glyphs')
+assert.match(dashboard, /Test has been saved/, 'saved attempt modal tells the user the test was saved')
 
 assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the AI Recite CTA')
 assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the memory check modal')
@@ -79,11 +81,19 @@ assert.match(memorisation, /presentWorkspaceReciteAnalysis/, 'workspace recite o
 assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts the recite analysis modal')
 assert.match(memorisation, /WorkspaceAiReciteResultModal/, 'workspace recite uses the post-session-style result modal')
 assert.match(memorisation, /buildWorkspaceAiReciteResultView/, 'workspace recite builds guided AI review view')
-assert.match(memorisation, /Feedback UI uses shaped Unicode Arabic only/, 'live results keep Unicode Arabic instead of QCF page glyphs')
-assert.match(memorisation, /hydrateWorkspaceReciteMadaniGlyphs[\s\S]*Intentionally no-op/, 'live result hydration does not apply Madani page glyphs')
+assert.match(memorisation, /withStrictMadaniResultGlyphs/, 'live results enrich through the Madani result helper')
+assert.match(
+  memorisation,
+  /hydrateWorkspaceReciteMadaniGlyphs[\s\S]*loadMadaniAyahGlyphs/,
+  'live result hydration can load Madani V2 ayah glyphs',
+)
+assert.match(memorisation, /readable Unicode Arabic immediately/, 'analysis shows readable Unicode without waiting on QCF glyphs')
 assert.match(memorisation, /dashboard_ai_recite/, 'workspace recite saves standalone attempts')
 assert.match(memorisation, /workspaceReciteAttemptSaved/, 'workspace recite marks a saved attempt')
 assert.match(memorisation, /aiReciteResultsHref/, 'workspace recite links to the progress results section')
+assert.match(memorisation, /:attempt-saved="workspaceReciteAttemptSaved"/, 'workspace modal surfaces save status')
+assert.match(memorisation, /Test has been saved/, 'workspace modal tells the user the test was saved')
+assert.equal(en.dashboard.ai_recite.attempt_saved, 'Test has been saved.')
 assert.match(memorisation, /border-radius:\s*8px/, 'session card CTA uses 8px radius')
 assert.match(memorisation, /workspace-ai-gold-pulse/, 'session card CTA has gold glow')
 assert.match(memorisation, /workspace-ai-shimmer/, 'session card CTA has AI shimmer')

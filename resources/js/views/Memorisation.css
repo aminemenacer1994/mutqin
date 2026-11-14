@@ -71859,10 +71859,22 @@ html body .post-session-simple__weak-spots-word {
 }
 
 html body .post-session-simple__quran-token-text[data-madani-glyph="true"] {
-  font-family: "Noto Naskh Arabic", "Amiri", "Geeza Pro", "Arial", sans-serif !important;
+  font-family: var(--madani-font), "Noto Naskh Arabic", "Amiri", sans-serif !important;
   letter-spacing: 0 !important;
   font-size: inherit !important;
   line-height: inherit !important;
+}
+
+html body .workspace-recite-result--refresh .post-session-simple__quran-token-text[data-arabic-fallback="true"],
+html body .workspace-recite-result--refresh .wrr-focus-ayah__verse .post-session-simple__quran-token-text,
+html body .workspace-recite-result--refresh .wrr-weak-chip .post-session-simple__quran-token-text {
+  font-family: "Noto Naskh Arabic", "Amiri Quran", "Amiri", "Geeza Pro", "Traditional Arabic", serif !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0.12em !important;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1 !important;
+  font-kerning: normal !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
 }
 
 .tools-body .sheet--setup {

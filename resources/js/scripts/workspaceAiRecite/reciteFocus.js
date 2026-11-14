@@ -32,12 +32,16 @@ function normalizeStatus(word) {
  * @param {Array<object>} words
  */
 export function normalizeReciteWords(words = []) {
-  const list = (Array.isArray(words) ? words : []).map((word, index) => ({
-    ayah: ayahNumber(word?.ayah ?? word?.ayahNumber ?? word?.ayah_number),
-    text: String(word?.text || word?.word || word?.target_word || '').trim(),
-    status: normalizeStatus(word),
-    index,
-  })).filter((word) => word.ayah > 0 && word.text)
+  const list = (Array.isArray(words) ? words : []).map((word, index) => {
+    const ayahWordIndex = Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.ayah_word_index)
+    return {
+      ayah: ayahNumber(word?.ayah ?? word?.ayahNumber ?? word?.ayah_number),
+      text: String(word?.text || word?.word || word?.target_word || '').trim(),
+      status: normalizeStatus(word),
+      index,
+      ayahWordIndex: Number.isFinite(ayahWordIndex) && ayahWordIndex >= 0 ? ayahWordIndex : index,
+    }
+  }).filter((word) => word.ayah > 0 && word.text)
 
   let lastReached = -1
   list.forEach((word, index) => {
@@ -115,6 +119,8 @@ export function buildReciteFocus(words = []) {
       ayah: word.ayah,
       text: word.text,
       status: word.status,
+      index: word.index,
+      ayahWordIndex: word.ayahWordIndex,
       ayahLabel: `Ayah ${word.ayah}`,
     })),
   }

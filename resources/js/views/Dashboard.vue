@@ -944,9 +944,9 @@
       :error-desc="t('memorisation.analyticsEmpty.modalErrorDesc')"
       :empty-title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
       :empty-desc="t('dashboard.analysis_empty_desc')"
-      :attempt-saved="false"
-      save-state=""
-      :saved-label="''"
+      :attempt-saved="true"
+      save-state="saved"
+      :saved-label="t('dashboard.ai_recite.attempt_saved') || 'Test has been saved.'"
       results-href=""
       :results-label="''"
       :show-back-to-progress="true"
@@ -999,6 +999,8 @@ import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThrea
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
+import { withStrictMadaniResultGlyphs } from '../scripts/workspaceAiRecite/strictMadaniResultView.js'
+import { loadMadaniAyahGlyphs } from '../scripts/mushaf/madaniSnippetGlyphs.js'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -3362,7 +3364,11 @@ export default {
             rangeStart: Number(session.ayah_start || payload?.assessment?.start_ayah || 0),
             rangeEnd: Number(session.ayah_end || payload?.assessment?.end_ayah || 0),
           }, this.t.bind(this))
-          this.analysisView = view
+          // Readable Unicode first; Madani metadata may enrich without blanking.
+          this.analysisView = withStrictMadaniResultGlyphs(view)
+          const painted = await this.hydrateSavedReciteMadaniGlyphs(view)
+          if (requestId !== this.analysisRequestId) return
+          this.analysisView = painted
         } else {
           this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this), { includeRecommendations: false })
         }
@@ -3377,8 +3383,24 @@ export default {
       }
     },
     async hydrateSavedReciteMadaniGlyphs(view) {
-      // Keep Unicode Arabic for feedback — QCF page glyphs break outside mushaf.
-      return view
+      const rows = Array.isArray(view?.focusAyahRows) ? view.focusAyahRows : []
+      const weakItems = Array.isArray(view?.infoArchitecture?.weakAreas?.items)
+        ? view.infoArchitecture.weakAreas.items
+        : []
+      const chapter = Number(view?.surahNumber || 0)
+      const ayahs = [...new Set(
+        [...rows, ...weakItems].map((row) => Number(row?.ayah)).filter((n) => n > 0),
+      )]
+      const byAyah = {}
+      await Promise.all((chapter ? ayahs : []).map(async (ayah) => {
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          if (glyphs?.length) byAyah[ayah] = glyphs
+        } catch {
+          // Strict view hides Arabic when Madani glyphs are unavailable.
+        }
+      }))
+      return withStrictMadaniResultGlyphs(view, byAyah)
     },
     retrySavedReciteAttempt() {
       const view = this.analysisView || {}

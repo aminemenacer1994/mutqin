@@ -72,12 +72,6 @@
         'freeSavedSessions' => (int) config('billing.limits.free.saved_sessions', 5),
         'freeFindAyahPerDay' => (int) config('billing.limits.free.find_ayah_per_day', 5),
     ];
-    $showAiAllowance = $navUser
-        && ! $navUser->hasProAccess()
-        && request()->routeIs('dashboard', 'progress.dashboard', 'profile.show');
-    $aiAllowance = $showAiAllowance
-        ? app(\App\Services\Billing\SubscriptionEntitlement::class)->getRemainingUsage($navUser, \App\Services\Billing\SubscriptionEntitlement::AI_ASSESSMENT)
-        : null;
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
@@ -8584,22 +8578,6 @@
                                     <i class="bi bi-people" aria-hidden="true"></i> <span>{{ __('ui.invite_someone') }}</span>
                                 </a>
                             </li>
-                            @if (! $navUser->hasProAccess())
-                            <li>
-                                <a class="dropdown-item" href="{{ route('pricing') }}" role="menuitem">
-                                    <i class="bi bi-arrow-up-circle" aria-hidden="true"></i>
-                                    <span>{{ __('profile.upgrade_to_pro') }}</span>
-                                </a>
-                            </li>
-                            @endif
-                            @if (is_array($aiAllowance) && $aiAllowance['limit'] !== null)
-                            <li>
-                                <span class="dropdown-item" style="cursor: default;">
-                                    <i class="bi bi-mic" aria-hidden="true"></i>
-                                    <span>{{ __('profile.ai_remaining', ['count' => (int) ($aiAllowance['remaining'] ?? 0)]) }}</span>
-                                </span>
-                            </li>
-                            @endif
                             <li>
                                 <button
                                     type="button"

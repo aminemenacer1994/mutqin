@@ -181,34 +181,42 @@
 
                 <div
                   v-if="showMainFocusBlock"
-                  class="post-session-simple__focus-block post-session-simple__support-block"
+                  class="post-session-simple__focus-block post-session-simple__support-block wrr-analysis-card"
                   data-testid="workspace-recite-main-focus"
                   data-tour="weak-areas"
                 >
-                  <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                    {{ view.infoArchitecture.mainFocus.title }}
-                  </p>
-                  <p
-                    v-if="showMainFocusExplanation"
-                    class="post-session-simple__why-block post-session-simple__next-line"
-                    data-testid="workspace-recite-why"
-                  >{{ view.infoArchitecture.mainFocus.explanation }}</p>
+                  <div class="wrr-analysis-card__head">
+                    <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                      {{ view.infoArchitecture.mainFocus.title }}
+                    </p>
+                    <p
+                      v-if="showMainFocusExplanation"
+                      class="post-session-simple__why-block post-session-simple__next-line wrr-analysis-card__lead"
+                      data-testid="workspace-recite-why"
+                    >{{ view.infoArchitecture.mainFocus.explanation }}</p>
+                  </div>
                   <ul
                     v-if="view.focusAyahRows?.length"
-                    class="post-session-simple__focus-ayah-list"
+                    class="post-session-simple__focus-ayah-list wrr-focus-list"
                     data-testid="workspace-recite-focus-ayah-list"
                   >
                     <li
                       v-for="row in view.focusAyahRows"
                       :key="`workspace-focus-ayah-${row.ayah || row.ayahLabel}`"
-                      class="post-session-simple__focus-ayah-item"
+                      class="post-session-simple__focus-ayah-item wrr-focus-ayah"
+                      dir="rtl"
                     >
-                      <p v-if="row.ayahLabel" class="post-session-simple__focus-ayah-label">
+                      <p
+                        v-if="row.ayahLabel"
+                        class="post-session-simple__focus-ayah-label wrr-ayah-badge"
+                        dir="rtl"
+                        lang="en"
+                      >
                         {{ row.ayahLabel }}
                       </p>
                       <div
                         v-if="row.parts?.length"
-                        class="post-session-simple__quran-focus post-session-simple__quran-focus--static"
+                        class="post-session-simple__quran-focus post-session-simple__quran-focus--static wrr-focus-ayah__verse"
                         dir="rtl"
                         lang="ar"
                       >
@@ -218,22 +226,15 @@
                             :key="`workspace-focus-${row.ayah}-${idx}`"
                           >
                             <span
-                              v-if="part.madaniGlyph && part.fontFamily"
+                              v-if="analysisTokenText(part)"
                               class="post-session-simple__quran-token"
-                              :class="{
-                                'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
-                                'is-incorrect': part.tone === 'incorrect',
-                                'is-partial': part.tone === 'partial' || part.tone === 'uncertain',
-                                'is-omitted': part.tone === 'omitted',
-                                'is-corrected': part.tone === 'ok' && !part.weak,
-                              }"
+                              :class="analysisTokenClass(part)"
                               :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
                             >
                               <span
                                 class="post-session-simple__quran-token-text"
-                                data-madani-glyph="true"
-                                :style="{ '--madani-font': `'${part.fontFamily}'` }"
-                              >{{ part.text }}</span>
+                                data-arabic-fallback="true"
+                              >{{ analysisTokenText(part) }}</span>
                             </span>
                           </template>
                         </span>
@@ -243,49 +244,65 @@
                 </div>
 
                 <section
-                  v-if="view.infoArchitecture?.weakAreas?.items?.length"
-                  class="post-session-simple__weak-spots post-session-simple__support-block"
+                  v-if="visibleWeakAreaItems.length"
+                  class="post-session-simple__weak-spots post-session-simple__support-block wrr-analysis-card wrr-analysis-card--weak"
                   data-testid="workspace-recite-weak-spots"
-                  :aria-label="view.infoArchitecture.weakAreas.title"
+                  :aria-label="view.infoArchitecture?.weakAreas?.title || 'Weak areas'"
                 >
-                  <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                    {{ view.infoArchitecture.weakAreas.title }}
-                  </p>
-                  <p
-                    v-if="view.infoArchitecture.weakAreas.lead"
-                    class="post-session-simple__weak-spots-lead"
-                  >{{ view.infoArchitecture.weakAreas.lead }}</p>
-                  <ul class="post-session-simple__weak-spots-list post-session-simple__weak-spots-list--inline">
+                  <div class="wrr-analysis-card__head">
+                    <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                      {{ view.infoArchitecture?.weakAreas?.title || 'Weak areas' }}
+                    </p>
+                    <p
+                      v-if="view.infoArchitecture?.weakAreas?.lead"
+                      class="post-session-simple__weak-spots-lead wrr-analysis-card__lead"
+                    >{{ view.infoArchitecture.weakAreas.lead }}</p>
+                  </div>
+                  <ul class="post-session-simple__weak-spots-list post-session-simple__weak-spots-list--inline wrr-weak-list">
                     <li
-                      v-for="(row, rowIdx) in view.infoArchitecture.weakAreas.items"
+                      v-for="(row, rowIdx) in visibleWeakAreaItems"
                       :key="`workspace-weak-word-${row.ayah}-${rowIdx}`"
-                      class="post-session-simple__weak-spots-item"
+                      class="post-session-simple__weak-spots-item wrr-weak-row"
+                      dir="rtl"
                     >
-                      <strong class="post-session-simple__weak-spots-ayah">{{ row.ayahLabel }}</strong>
+                      <strong
+                        class="post-session-simple__weak-spots-ayah wrr-ayah-badge"
+                        dir="rtl"
+                        lang="en"
+                      >{{ row.ayahLabel }}</strong>
                       <span
-                        v-if="row.wordEntries?.length"
-                        class="post-session-simple__weak-spots-words"
+                        class="post-session-simple__weak-spots-words wrr-weak-words"
                         dir="rtl"
                         lang="ar"
                       >
-                        <template
-                          v-for="(entry, wordIdx) in row.wordEntries"
-                          :key="`workspace-weak-word-${row.ayah}-${wordIdx}`"
-                        >
+                        <template v-if="weakRowEntries(row).length">
                           <span
-                            v-if="entry.madaniGlyph && entry.fontFamily"
-                            class="post-session-simple__weak-spots-word"
+                            v-for="(entry, wordIdx) in weakRowEntries(row)"
+                            :key="`workspace-weak-word-${row.ayah}-${wordIdx}`"
+                            class="post-session-simple__weak-spots-word wrr-weak-chip"
                             :class="{
                               'is-partial': entry.tone === 'partial',
                               'is-omitted': entry.tone === 'omitted',
                               'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
                             }"
-                          ><span
-                            class="post-session-simple__quran-token-text"
-                            data-madani-glyph="true"
-                            :style="{ '--madani-font': `'${entry.fontFamily}'` }"
-                          >{{ entry.text }}</span></span>
+                            :data-tone="entry.tone || 'incorrect'"
+                          >
+                            <span
+                              class="post-session-simple__quran-token-text"
+                              data-arabic-fallback="true"
+                            >{{ analysisTokenText(entry) }}</span>
+                          </span>
                         </template>
+                        <span
+                          v-else-if="row.wordsLabel"
+                          class="post-session-simple__weak-spots-word wrr-weak-chip is-incorrect"
+                          data-tone="incorrect"
+                        >
+                          <span
+                            class="post-session-simple__quran-token-text"
+                            data-arabic-fallback="true"
+                          >{{ row.wordsLabel }}</span>
+                        </span>
                       </span>
                     </li>
                   </ul>
@@ -372,6 +389,21 @@
             </div>
 
             <footer v-if="!loading && !error && !empty" class="post-session-simple__footer post-session-simple__footer--compact">
+              <p
+                v-if="attemptSaved || saveState === 'retrying' || saveState === 'saved' || resultsHref"
+                class="workspace-recite-saved"
+                data-testid="workspace-recite-saved"
+                aria-live="polite"
+              >
+                <span v-if="saveState === 'retrying'" class="workspace-recite-saved__retrying">{{ retryingLabel }}</span>
+                <span v-else-if="attemptSaved || saveState === 'saved'">{{ savedLabel }}</span>
+                <a
+                  v-if="resultsHref"
+                  class="workspace-recite-saved__link"
+                  :href="resultsHref"
+                  data-testid="workspace-recite-results-link"
+                >{{ resultsLabel }}</a>
+              </p>
               <div
                 class="post-session-simple__actions post-session-simple__actions--2"
                 :class="{ 'post-session-simple__actions--single': !showBackToProgress }"
@@ -452,7 +484,7 @@ export default {
     emptyDesc: { type: String, default: 'Complete a recitation check to see your results here.' },
     attemptSaved: { type: Boolean, default: false },
     saveState: { type: String, default: '' },
-    savedLabel: { type: String, default: 'This attempt is saved.' },
+    savedLabel: { type: String, default: 'Test has been saved.' },
     retryingLabel: { type: String, default: "Couldn't save yet. Retrying…" },
     resultsHref: { type: String, default: '' },
     resultsLabel: { type: String, default: 'See all results' },
@@ -500,6 +532,38 @@ export default {
       const summary = String(this.view?.understandingText || '').trim()
       return explanation !== summary
     },
+    visibleWeakAreaItems() {
+      const items = Array.isArray(this.view?.infoArchitecture?.weakAreas?.items)
+        ? this.view.infoArchitecture.weakAreas.items
+        : []
+      const usable = items.filter((row) => {
+        if (this.weakRowEntries(row).length) return true
+        return String(row?.wordsLabel || '').trim().length > 0
+      })
+      if (usable.length) return usable
+
+      // Recover from wiped weak-area payloads using focus ayah weak tokens.
+      const focusRows = Array.isArray(this.view?.focusAyahRows) ? this.view.focusAyahRows : []
+      return focusRows
+        .map((row) => {
+          const wordEntries = (Array.isArray(row?.parts) ? row.parts : [])
+            .filter((part) => part?.weak || ['incorrect', 'partial', 'omitted', 'uncertain'].includes(String(part?.tone || '')))
+            .map((part) => ({
+              text: this.analysisTokenText(part),
+              plainText: this.analysisTokenText(part),
+              tone: part.tone || 'incorrect',
+            }))
+            .filter((entry) => entry.text)
+          if (!wordEntries.length) return null
+          return {
+            ayah: row.ayah,
+            ayahLabel: row.ayahLabel || `Ayah ${row.ayah}`,
+            wordsLabel: wordEntries.map((entry) => entry.text).join(' · '),
+            wordEntries,
+          }
+        })
+        .filter(Boolean)
+    },
   },
   watch: {
     open(value) {
@@ -519,6 +583,23 @@ export default {
     this.returnFocusEl = null
   },
   methods: {
+    analysisTokenText(part) {
+      return String(part?.plainText || part?.text || part?.word || '').trim()
+    },
+    weakRowEntries(row) {
+      const entries = Array.isArray(row?.wordEntries) ? row.wordEntries : []
+      return entries.filter((entry) => this.analysisTokenText(entry))
+    },
+    analysisTokenClass(part) {
+      const tone = String(part?.tone || '')
+      return {
+        'is-weak': !!part?.weak && tone !== 'omitted' && tone !== 'partial',
+        'is-incorrect': tone === 'incorrect',
+        'is-partial': tone === 'partial' || tone === 'uncertain',
+        'is-omitted': tone === 'omitted',
+        'is-corrected': tone === 'ok' && !part?.weak,
+      }
+    },
     onDialogKeydown(event) {
       handleModalKeydown(event, {
         container: this.$refs.dialog,
@@ -543,6 +624,30 @@ export default {
 
 <style>
 .workspace-recite-saved {
-  display: none !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+  margin: 0 0 0.55rem;
+  color: var(--text-muted, #6d6256);
+  font-size: 0.92rem;
+}
+
+.workspace-recite-saved__link {
+  color: var(--accent-strong, #8a6230);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+html[data-theme="dark"] .workspace-recite-saved,
+.post-session-simple[data-theme="dark"] .workspace-recite-saved {
+  color: rgba(247, 234, 219, 0.68);
+}
+
+html[data-theme="dark"] .workspace-recite-saved__link,
+.post-session-simple[data-theme="dark"] .workspace-recite-saved__link {
+  color: #f2bd6b;
 }
 </style>

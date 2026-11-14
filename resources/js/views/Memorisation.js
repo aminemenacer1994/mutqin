@@ -588,6 +588,7 @@ import {
 } from '../scripts/mutashabihat/workspaceBridge.js'
 import MutashabihatPairCard from '../components/MutashabihatPairCard.vue'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
+import { withStrictMadaniResultGlyphs } from '../scripts/workspaceAiRecite/strictMadaniResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
@@ -13370,16 +13371,17 @@ export default {
         )
         return
       }
-      // Feedback UI uses shaped Unicode Arabic only. QCF page glyphs look
-      // disconnected outside the mushaf page face and permanently break joining.
+      // Analysis cards paint readable Unicode Arabic immediately. Madani V2
+      // glyphs may enrich metadata in the background, but never blank the verse.
       this._workspaceReciteAnalysisSourceView = view
-      this.workspaceReciteAnalysisView = view
+      this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view)
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
       this.workspaceReciteSaveState = options.saveState
         || (this.workspaceReciteAttemptSaved ? 'saved' : 'retrying')
       this.workspaceReciteAnalysisOpen = true
+      void this.hydrateWorkspaceReciteMadaniGlyphs(view)
     },
     scheduleWorkspaceReciteSaveRetry({ result = null, audioUrl = '', audioBlob = null } = {}) {
       if (!this._workspaceReciteRetryPayload || !this.isLoggedIn) return
@@ -23358,9 +23360,27 @@ export default {
       this.postSessionMadaniGlyphByAyah = next
     },
     async hydrateWorkspaceReciteMadaniGlyphs(view) {
-      // Intentionally no-op: QCF page glyphs break Arabic joining outside the mushaf page.
-      if (!view || this._workspaceReciteAnalysisSourceView !== view) return
-      this.workspaceReciteAnalysisView = view
+      const rows = Array.isArray(view?.focusAyahRows) ? view.focusAyahRows : []
+      const weakItems = Array.isArray(view?.infoArchitecture?.weakAreas?.items)
+        ? view.infoArchitecture.weakAreas.items
+        : []
+      const chapter = Number(this.chapterId || view?.surahNumber || 0)
+      const ayahs = [...new Set(
+        [...rows, ...weakItems].map((row) => Number(row?.ayah)).filter((n) => n > 0),
+      )]
+      const token = (this._workspaceMadaniGlyphToken = (this._workspaceMadaniGlyphToken || 0) + 1)
+      const byAyah = {}
+      await Promise.all((chapter ? ayahs : []).map(async (ayah) => {
+        try {
+          const glyphs = await loadMadaniAyahGlyphs(chapter, ayah)
+          if (glyphs?.length) byAyah[ayah] = glyphs
+        } catch {
+          // The strict result view will hide Arabic for any unavailable ayah.
+        }
+      }))
+      if (token !== this._workspaceMadaniGlyphToken) return
+      if (this._workspaceReciteAnalysisSourceView !== view) return
+      this.workspaceReciteAnalysisView = withStrictMadaniResultGlyphs(view, byAyah)
     },
     buildPostSessionFocusPartsForAyah(ayahNumber, focusInput = null) {
       const focus = focusInput || this.resolvePostSessionFocusPhraseForAyah?.(ayahNumber) || null
