@@ -16,11 +16,10 @@
         @keydown="onKeydown"
       >
         <header class="aa-header">
-          <div class="aa-header__top">
-            <div class="aa-header__copy">
-              <h2 :id="titleId" tabindex="-1">{{ t('dashboard.advanced_analytics.title') }}</h2>
-              <p>{{ t('dashboard.advanced_analytics.subtitle') }}</p>
-            </div>
+          <div class="aa-header__row">
+            <h2 :id="titleId" class="aa-header__title" tabindex="-1">
+              {{ t('dashboard.advanced_analytics.title') }}
+            </h2>
             <div class="aa-header__actions">
               <button
                 type="button"
