@@ -61,6 +61,7 @@ function lineOptions(colors) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: { top: 4, right: 4, bottom: 0, left: 0 } },
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { display: false },
@@ -74,12 +75,12 @@ function lineOptions(colors) {
     },
     scales: {
       x: {
-        ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, font: { size: 11 } },
+        ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8, font: { size: 10 } },
         grid: { display: false },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: colors.muted, precision: 0, font: { size: 11 } },
+        ticks: { color: colors.muted, precision: 0, font: { size: 10 } },
         grid: { color: colors.border },
       },
     },
@@ -109,10 +110,18 @@ function doughnutOptions(colors) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: 4 },
     plugins: {
       legend: {
-        position: 'bottom',
-        labels: { color: colors.text, boxWidth: 10, font: { size: 11 } },
+        position: 'right',
+        align: 'center',
+        labels: {
+          color: colors.text,
+          boxWidth: 10,
+          boxHeight: 10,
+          padding: 12,
+          font: { size: 11 },
+        },
       },
     },
   }
@@ -223,7 +232,7 @@ function buildPracticeChart(points, t, colors) {
         legend: {
           display: true,
           position: 'bottom',
-          labels: { color: colors.text, boxWidth: 10, font: { size: 11 } },
+          labels: { color: colors.text, boxWidth: 10, boxHeight: 10, padding: 10, font: { size: 10 } },
         },
       },
     },
@@ -245,22 +254,28 @@ function buildSessionMixChart(points, t, colors) {
           label: t('dashboard.advanced_analytics.mix_memorisation'),
           data: rows.map((row) => asNumber(row.memorisation)),
           backgroundColor: colors.memorisation,
-          borderRadius: 4,
-          maxBarThickness: 18,
+          borderRadius: 3,
+          maxBarThickness: 28,
+          categoryPercentage: 0.72,
+          barPercentage: 0.9,
         },
         {
           label: t('dashboard.advanced_analytics.mix_revision'),
           data: rows.map((row) => asNumber(row.revision)),
           backgroundColor: colors.revision,
-          borderRadius: 4,
-          maxBarThickness: 18,
+          borderRadius: 3,
+          maxBarThickness: 28,
+          categoryPercentage: 0.72,
+          barPercentage: 0.9,
         },
         {
           label: t('dashboard.advanced_analytics.mix_recitation'),
           data: rows.map((row) => asNumber(row.recitation)),
           backgroundColor: colors.recitation,
-          borderRadius: 4,
-          maxBarThickness: 18,
+          borderRadius: 3,
+          maxBarThickness: 28,
+          categoryPercentage: 0.72,
+          barPercentage: 0.9,
         },
       ],
     },

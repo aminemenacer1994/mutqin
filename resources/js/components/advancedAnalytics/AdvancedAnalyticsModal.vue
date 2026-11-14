@@ -100,13 +100,7 @@
             </div>
 
             <template v-else>
-              <section class="aa-section" :aria-label="t('dashboard.advanced_analytics.overview_label')">
-                <div class="aa-section__head">
-                  <div>
-                    <h3>{{ t('dashboard.advanced_analytics.overview_title') }}</h3>
-                    <p>{{ t('dashboard.advanced_analytics.overview_hint') }}</p>
-                  </div>
-                </div>
+              <section class="aa-section aa-section--overview" :aria-label="t('dashboard.advanced_analytics.overview_label')">
                 <div class="aa-kpi-grid">
                   <article v-for="card in view.cards" :key="card.key" class="aa-kpi">
                     <div class="aa-kpi__top">
@@ -169,7 +163,7 @@
                     <p>{{ t('dashboard.advanced_analytics.chart_breakdown_hint') }}</p>
                   </div>
                 </div>
-                <div class="aa-chart aa-chart--donut">
+                <div class="aa-chart aa-chart--donut-wide">
                   <Doughnut :data="view.breakdownChart.data" :options="view.breakdownChart.options" />
                 </div>
               </section>
@@ -243,15 +237,17 @@
                 <ul class="aa-attention-list">
                   <li v-for="item in view.attention" :key="item.key" class="aa-attention">
                     <div class="aa-attention__main">
-                      <strong>{{ item.label }}</strong>
-                      <span class="aa-attention__score" :class="`is-${item.tone}`">{{ item.accuracy_label }}</span>
+                      <div class="aa-attention__title-row">
+                        <strong>{{ item.label }}</strong>
+                        <span class="aa-attention__score" :class="`is-${item.tone}`">{{ item.accuracy_label }}</span>
+                      </div>
                       <span class="aa-attention__meta">
                         {{ [item.attempts_label, item.classifications_label, item.last_label].filter(Boolean).join(' · ') }}
                       </span>
                     </div>
                     <a
                       v-if="item.practise_href"
-                      class="aa-btn"
+                      class="aa-btn aa-btn--compact"
                       :href="item.practise_href"
                     >
                       {{ t('dashboard.advanced_analytics.practise_again') }}
