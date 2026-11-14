@@ -432,6 +432,15 @@ export const learningApi = {
     const { data } = await http.get('/analytics', { params })
     return data?.analytics ?? []
   },
+  async getAdvancedAnalytics(params = {}) {
+    const { data } = await withRetry(() =>
+      http.get('/analytics/advanced', {
+        params,
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      })
+    )
+    return data?.report && typeof data.report === 'object' ? data.report : null
+  },
   async saveAnalytics(payload) {
     const { data } = await http.post('/analytics', payload)
     return data

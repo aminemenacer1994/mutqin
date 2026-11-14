@@ -135,7 +135,11 @@ function sliceMethod(source, name) {
 
 {
   const finish = sliceMethod(memorisationJs, 'finishWorkspaceTour')
+  assert.match(finish, /enterFirstRunGoalAfterTour\(\)/)
   assert.match(finish, /markOnboardingCompleted\(\)/)
+  assert.match(sliceMethod(memorisationJs, 'enterFirstRunGoalAfterTour'), /clearWorkspaceForFirstRunGoalStep\(\)/)
+  assert.match(sliceMethod(memorisationJs, 'enterFirstRunGoalAfterTour'), /persistFirstRunStep\('goal'\)/)
+  assert.match(sliceMethod(memorisationJs, 'teardownWorkspaceTourPreview'), /skipCommit/)
   assert.doesNotMatch(
     sliceMethod(memorisationJs, 'scheduleWorkspaceTourStart'),
     /openOnboardingModal\(\)/,

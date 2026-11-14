@@ -6873,6 +6873,86 @@ a.dash-ai-results__attempt {
   }
 }
 
+/* Advanced Analytics entry on Progress learning section */
+.dash-advanced-analytics {
+  margin-top: 0.85rem;
+}
+
+.dash-advanced-analytics__cta,
+.dash-advanced-analytics__upgrade {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--dash-radius-sm, 12px);
+  border: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 88%, transparent);
+  background: color-mix(in srgb, var(--dash-surface-muted, var(--surface-soft)) 80%, transparent);
+  color: inherit;
+  text-align: start;
+}
+
+.dash-advanced-analytics__cta {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dash-advanced-analytics__cta:hover {
+  border-color: color-mix(in srgb, var(--dash-accent, var(--accent)) 40%, var(--dash-border, var(--border)));
+  background: color-mix(in srgb, var(--dash-accent-light, var(--accent-light)) 55%, var(--dash-surface, #fffaf3));
+}
+
+.dash-advanced-analytics__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dash-accent, var(--accent)) 12%, transparent);
+  color: var(--dash-accent-strong, var(--accent-strong));
+  flex: 0 0 auto;
+}
+
+.dash-advanced-analytics__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dash-advanced-analytics__copy strong {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.dash-advanced-analytics__copy small {
+  color: var(--dash-muted, var(--text-muted));
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.dash-advanced-analytics__cta > .bi-arrow-right-short {
+  font-size: 1.4rem;
+  color: var(--dash-muted, var(--text-muted));
+}
+
+.dash-advanced-analytics__upgrade .dash-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .dash-advanced-analytics__upgrade {
+    flex-wrap: wrap;
+  }
+
+  .dash-advanced-analytics__upgrade .dash-btn {
+    width: 100%;
+  }
+}
+
 /* Teacher dashboard: Amiri + Source Serif, clear interaction, performance groups */
 
 .teacher-dashboard {

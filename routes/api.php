@@ -267,6 +267,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('api.analytics.index');
         Route::post('/analytics', [AnalyticsController::class, 'store'])->name('api.analytics.store');
+        Route::get('/analytics/advanced', [AnalyticsController::class, 'advanced'])
+            ->name('api.analytics.advanced');
 
         // Personalised next-session recommendations.
         Route::get('/recommendations/next', [RecommendationController::class, 'show'])->name('api.recommendations.next');

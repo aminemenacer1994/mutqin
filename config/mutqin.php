@@ -191,11 +191,12 @@ return [
     ],
 
     /*
-     | Learner referral programme. Activation = referred user completes first real sitting.
-     | Reward is bonus AI Recite checks (not cash).
+     | Learner referral programme.
+     | Activation = referred user completes first real sitting (recognition only).
+     | Reward = every N referred Pro conversions grants one complimentary Pro month.
      */
     'referrals' => [
-        'reward_ai_checks' => max(0, (int) env('MUTQIN_REFERRAL_REWARD_AI_CHECKS', 3)),
+        'pro_signups_for_free_month' => max(1, (int) env('MUTQIN_REFERRAL_PRO_SIGNUPS_FOR_FREE_MONTH', 3)),
     ],
 
     /*

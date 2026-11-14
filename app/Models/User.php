@@ -92,6 +92,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'practice_preferences',
         'ai_recite_lifetime_limit',
         'ai_recite_bonus_checks',
+        'complimentary_pro_until',
+        'referral_free_months_granted',
         'marketing_unsubscribed_at',
         'signup_utm_source',
         'signup_utm_medium',
@@ -116,6 +118,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'signup_referral_code',
         'referral_code',
         'referred_by_user_id',
+        'complimentary_pro_until',
+        'referral_free_months_granted',
     ];
 
     /**
@@ -142,6 +146,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'practice_preferences' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
             'ai_recite_bonus_checks' => 'integer',
+            'complimentary_pro_until' => 'datetime',
+            'referral_free_months_granted' => 'integer',
             'marketing_unsubscribed_at' => 'datetime',
             'account_role' => AccountRole::class,
         ];
@@ -361,6 +367,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
      */
     public function billingSubscriptionTier(): string
     {
+        if (SubscriptionAccess::hasComplimentaryPro($this)) {
+            return 'pro';
+        }
+
         if (! $this->hasPaidAccess()) {
             return 'free';
         }

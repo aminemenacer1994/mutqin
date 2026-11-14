@@ -8,23 +8,21 @@ use App\Models\Referral;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Analytics\ProductEventRecorder;
-use App\Services\UserAiReciteUsageService;
 use App\Support\Analytics\Acquisition;
 use App\Support\Analytics\ProductEventName;
+use App\Support\Billing\SubscriptionAccess;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-/** Owned invite codes, signup attribution, activation, and AI Recite rewards. */
+/** Owned invite codes, attribution, activation, and Pro-conversion free-month rewards. */
 final class ReferralService
 {
     private const CODE_LENGTH = 10;
 
     private const CODE_ATTEMPTS = 12;
 
-    public function __construct(
-        private readonly ProductEventRecorder $events,
-        private readonly UserAiReciteUsageService $aiUsage,
-    ) {}
+    public function __construct(private readonly ProductEventRecorder $events) {}
 
     public function ensureCode(User $user): string
     {
@@ -57,9 +55,9 @@ final class ReferralService
         return rtrim((string) config('app.url'), '/').'/?ref='.rawurlencode($code);
     }
 
-    public function rewardAiChecksPerActivation(): int
+    public function proSignupsForFreeMonth(): int
     {
-        return max(0, (int) config('mutqin.referrals.reward_ai_checks', 3));
+        return max(1, (int) config('mutqin.referrals.pro_signups_for_free_month', 3));
     }
 
     public function attributeSignup(User $newUser, ?string $code): void
@@ -138,44 +136,23 @@ final class ReferralService
                 return;
             }
 
-            $rewardAmount = $this->rewardAiChecksPerActivation();
+            $updated = Referral::query()
+                ->whereKey($referral->id)
+                ->whereNull('activated_at')
+                ->update(['activated_at' => now()]);
 
-            $activated = DB::transaction(function () use ($referral, $rewardAmount): ?Referral {
-                $locked = Referral::query()->whereKey($referral->id)->lockForUpdate()->first();
-                if (! $locked || $locked->activated_at !== null) {
-                    return null;
-                }
-
-                $locked->forceFill([
-                    'activated_at' => now(),
-                ])->save();
-
-                if ($locked->reward_granted_at === null && $rewardAmount > 0) {
-                    $referrer = User::query()->whereKey($locked->referrer_user_id)->lockForUpdate()->first();
-                    if ($referrer) {
-                        $this->aiUsage->grantBonusChecks($referrer, $rewardAmount);
-                        $locked->forceFill([
-                            'reward_ai_checks' => $rewardAmount,
-                            'reward_granted_at' => now(),
-                        ])->save();
-                    }
-                }
-
-                return $locked->fresh();
-            });
-
-            if (! $activated) {
+            if ($updated < 1) {
                 return;
             }
 
-            $referrer = User::query()->find($activated->referrer_user_id);
+            $referrer = User::query()->find($referral->referrer_user_id);
             $this->events->recordQuietly(
                 ProductEventName::REFERRAL_ACTIVATED,
                 $referrer,
                 null,
-                'referral:'.$activated->id.':activated',
+                'referral:'.$referral->id.':activated',
                 ['feature_id' => 'referral'],
-                ['referral_code' => $activated->referral_code],
+                ['referral_code' => $referral->referral_code],
             );
         } catch (\Throwable $error) {
             report($error);
@@ -183,8 +160,67 @@ final class ReferralService
     }
 
     /**
-     * Aggregate invite stats without exposing referred users' identities.
-     *
+     * When a referred learner becomes Pro, count them once and grant free months
+     * for every completed batch of N Pro conversions.
+     */
+    public function recordProConversionIfEligible(User $user): void
+    {
+        try {
+            if (! $this->userHoldsProEntitlement($user)) {
+                return;
+            }
+
+            $referral = Referral::query()
+                ->where('referred_user_id', $user->id)
+                ->whereNull('converted_to_pro_at')
+                ->first();
+
+            if (! $referral) {
+                return;
+            }
+
+            DB::transaction(function () use ($referral): void {
+                $locked = Referral::query()->whereKey($referral->id)->lockForUpdate()->first();
+                if (! $locked || $locked->converted_to_pro_at !== null) {
+                    return;
+                }
+
+                $locked->forceFill(['converted_to_pro_at' => now()])->save();
+
+                $referrer = User::query()->whereKey($locked->referrer_user_id)->lockForUpdate()->first();
+                if (! $referrer) {
+                    return;
+                }
+
+                $granted = $this->grantDueFreeMonths($referrer);
+                if ($granted > 0 && $locked->free_month_rewarded_at === null) {
+                    $locked->forceFill(['free_month_rewarded_at' => now()])->save();
+                }
+            });
+        } catch (\Throwable $error) {
+            report($error);
+        }
+    }
+
+    /**
+     * Extend complimentary Pro by one month from the later of now or current complimentary end.
+     */
+    public function grantComplimentaryProMonth(User $user): Carbon
+    {
+        $now = now();
+        $current = $user->complimentary_pro_until;
+        $base = ($current instanceof Carbon && $current->isFuture()) ? $current->copy() : $now->copy();
+        $until = $base->addMonth();
+
+        $user->forceFill([
+            'complimentary_pro_until' => $until,
+            'referral_free_months_granted' => max(0, (int) $user->referral_free_months_granted) + 1,
+        ])->save();
+
+        return $until;
+    }
+
+    /**
      * @return array{
      *     code: string,
      *     url: string,
@@ -193,18 +229,29 @@ final class ReferralService
      *     activations: int,
      *     conversion_rate: float|null,
      *     pending_thanks: int,
-     *     reward: array{per_activation: int, total_ai_checks_earned: int, bonus_remaining: int}
+     *     reward: array{
+     *         pro_signups_needed: int,
+     *         pro_signups: int,
+     *         progress_in_cycle: int,
+     *         free_months_earned: int,
+     *         complimentary_pro_until: string|null
+     *     }
      * }
      */
     public function statsFor(User $user): array
     {
         $code = $this->ensureCode($user);
         $url = $this->inviteUrl($user);
+        $needed = $this->proSignupsForFreeMonth();
 
         $signups = (int) Referral::query()->where('referrer_user_id', $user->id)->count();
         $activations = (int) Referral::query()
             ->where('referrer_user_id', $user->id)
             ->whereNotNull('activated_at')
+            ->count();
+        $proSignups = (int) Referral::query()
+            ->where('referrer_user_id', $user->id)
+            ->whereNotNull('converted_to_pro_at')
             ->count();
         $pendingThanks = (int) Referral::query()
             ->where('referrer_user_id', $user->id)
@@ -217,14 +264,8 @@ final class ReferralService
             ->where('referral_code', $code)
             ->count();
 
-        $totalEarned = (int) Referral::query()
-            ->where('referrer_user_id', $user->id)
-            ->whereNotNull('reward_granted_at')
-            ->sum('reward_ai_checks');
-
-        $bonusRemaining = (int) User::query()
-            ->whereKey($user->id)
-            ->value('ai_recite_bonus_checks');
+        $fresh = User::query()->whereKey($user->id)->first(['complimentary_pro_until', 'referral_free_months_granted']);
+        $until = $fresh?->complimentary_pro_until;
 
         return [
             'code' => $code,
@@ -235,9 +276,13 @@ final class ReferralService
             'conversion_rate' => $signups > 0 ? round($activations / $signups, 4) : null,
             'pending_thanks' => $pendingThanks,
             'reward' => [
-                'per_activation' => $this->rewardAiChecksPerActivation(),
-                'total_ai_checks_earned' => $totalEarned,
-                'bonus_remaining' => max(0, $bonusRemaining),
+                'pro_signups_needed' => $needed,
+                'pro_signups' => $proSignups,
+                'progress_in_cycle' => $needed > 0 ? ($proSignups % $needed) : 0,
+                'free_months_earned' => max(0, (int) ($fresh?->referral_free_months_granted ?? 0)),
+                'complimentary_pro_until' => ($until instanceof Carbon && $until->isFuture())
+                    ? $until->toIso8601String()
+                    : null,
             ],
         ];
     }
@@ -249,6 +294,42 @@ final class ReferralService
             ->whereNotNull('activated_at')
             ->whereNull('acknowledged_at')
             ->update(['acknowledged_at' => now()]);
+    }
+
+    private function grantDueFreeMonths(User $referrer): int
+    {
+        $needed = $this->proSignupsForFreeMonth();
+        $proSignups = (int) Referral::query()
+            ->where('referrer_user_id', $referrer->id)
+            ->whereNotNull('converted_to_pro_at')
+            ->count();
+
+        $earned = intdiv($proSignups, $needed);
+        $already = max(0, (int) $referrer->referral_free_months_granted);
+        $due = max(0, $earned - $already);
+
+        for ($i = 0; $i < $due; $i++) {
+            $this->grantComplimentaryProMonth($referrer);
+            $referrer->refresh();
+        }
+
+        return $due;
+    }
+
+    private function userHoldsProEntitlement(User $user): bool
+    {
+        if (SubscriptionAccess::hasComplimentaryPro($user)) {
+            return true;
+        }
+
+        if (! SubscriptionAccess::grantsPaidAccess($user)) {
+            return false;
+        }
+
+        $tier = strtolower((string) ($user->subscription_tier ?? ''));
+
+        return in_array($tier, ['pro', 'premium'], true)
+            || strtolower((string) $user->subscription_status) === 'lifetime';
     }
 
     private function generateUniqueCode(): string

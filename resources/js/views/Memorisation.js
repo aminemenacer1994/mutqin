@@ -8501,10 +8501,10 @@ export default {
       // Keep to 5 essential highlights: workspace → setup → tools → start → AI check.
       return [
         { key: 'welcome', selector: '[data-tour="workspace-welcome"]', pad: 8, radius: 20, placement: 'dock-bottom' },
-        { key: 'setup', selector: '[data-tour="setup-sheet"], [data-tour="setup-tab"]', pad: 8, radius: 16, placement: 'left' },
-        { key: 'practice', selector: '[data-tour="practice-sheet"], [data-tour="practice-tab"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'setup', selector: '[data-tour="setup-passage"], [data-tour="setup-sheet"], [data-tour="setup-tab"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'practice', selector: '[data-tour="practice-beginner"], [data-tour="practice-sheet"], [data-tour="practice-tab"]', pad: 8, radius: 16, placement: 'left' },
         { key: 'start', selector: '[data-tour="start-session"]', pad: 10, radius: 16, placement: 'top' },
-        { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
+        { key: 'ai', selector: '[data-tour="ai-modal"], .amd-modal', pad: 6, radius: 20, placement: 'dock-bottom' },
       ]
     },
     workspaceTourStep() {
@@ -19729,6 +19729,13 @@ export default {
           this.sectionOpen.advanced_setup = true
         }
         await this.applyWorkspaceTourPracticePreview()
+        if (key === 'setup' && this.isFirstRunFlowActive) {
+          this.persistFirstRunStep('passage')
+        }
+        if (key === 'practice') {
+          await this.$nextTick()
+          this.focusWorkspaceTourBeginnerTools()
+        }
         return
       }
 
@@ -19759,7 +19766,10 @@ export default {
     },
     shouldDockWorkspaceTourTooltip() {
       const step = this.workspaceTourStep
-      return step?.placement === 'dock-bottom' || step?.key === 'welcome' || step?.key === 'dashboard'
+      return step?.placement === 'dock-bottom'
+        || step?.key === 'welcome'
+        || step?.key === 'ai'
+        || step?.key === 'dashboard'
     },
     shouldParkWorkspaceTourTooltipOutside() {
       return this.workspaceTourStep?.placement === 'dock-outside'
@@ -19825,12 +19835,18 @@ export default {
     readWorkspaceTourSafeInset() {
       const vw = window.innerWidth || 0
       const vh = window.innerHeight || 0
-      const footer = document.querySelector('.post-session-simple__footer, .post-session-simple__actions')
-      const header = document.querySelector('.post-session-simple__header')
+      const isAiStep = this.workspaceTourStep?.key === 'ai'
+      const footer = isAiStep
+        ? null
+        : document.querySelector('.post-session-simple__footer, .post-session-simple__actions')
+      const header = isAiStep
+        ? null
+        : document.querySelector('.post-session-simple__header')
       const footerBottom = footer ? footer.getBoundingClientRect().top : vh
       const headerBottom = header ? header.getBoundingClientRect().bottom : 0
       const edge = vw <= 720 ? 10 : 8
-      const dockReserve = this.shouldDockWorkspaceTourTooltip()
+      // AI uses its own clamp path; skip dock reserve so framing math stays honest.
+      const dockReserve = (!isAiStep && this.shouldDockWorkspaceTourTooltip())
         ? this.readWorkspaceTourDockHeight()
         : 0
       return {
@@ -19895,7 +19911,22 @@ export default {
       return (step?.key || this.workspaceTourStep?.key) === 'dashboard' && this.isWorkspaceTourMobileViewport()
     },
     shouldExpandWorkspaceTourHole(step = null) {
-      return this.shouldCoverWorkspaceTourPlanCards(step) || this.shouldCoverWorkspaceTourDashboardCards(step)
+      const key = step?.key || this.workspaceTourStep?.key
+      // AI modal must keep its sticky header + close control inside the hole.
+      return key === 'ai'
+        || this.shouldCoverWorkspaceTourPlanCards(step)
+        || this.shouldCoverWorkspaceTourDashboardCards(step)
+    },
+    focusWorkspaceTourBeginnerTools() {
+      try {
+        const beginner = document.querySelector('[data-tour="practice-beginner"]')
+        if (beginner && 'open' in beginner) beginner.open = true
+        document.querySelectorAll('.sheet--practice .practice-group').forEach((group) => {
+          if (group === beginner) return
+          if ('open' in group) group.open = false
+        })
+        beginner?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+      } catch { /* ignore */ }
     },
     readWorkspaceTourTargetRect(el, step = null) {
       const base = el?.getBoundingClientRect?.()
@@ -19935,12 +19966,28 @@ export default {
       }
     },
     clampWorkspaceTourHole(rect, pad = 8, radius = 16, step = null) {
+      const stepKey = step?.key || this.workspaceTourStep?.key
+      const edge = (typeof window !== 'undefined' && window.innerWidth <= 720) ? 10 : 8
+      const vh = typeof window !== 'undefined' ? (window.innerHeight || 0) : 0
+      const vw = typeof window !== 'undefined' ? (window.innerWidth || 0) : 0
+      // Keep the full AI modal (title + close) inside the spotlight hole.
+      if (stepKey === 'ai') {
+        const top = Math.max(edge, rect.top - pad)
+        const left = Math.max(edge, rect.left - pad)
+        const right = Math.min(vw - edge, rect.right + pad)
+        const bottom = Math.min(vh - edge, rect.bottom + pad)
+        return {
+          top,
+          left,
+          width: Math.max(24, right - left),
+          height: Math.max(24, bottom - top),
+          radius: Number(radius) || 16,
+        }
+      }
       const inset = this.readWorkspaceTourSafeInset()
       const coverPlanCards = this.shouldCoverWorkspaceTourPlanCards(step)
       const expandHole = coverPlanCards || this.shouldExpandWorkspaceTourHole(step)
       const maxHeight = expandHole ? 0 : Number(step?.maxHeight || 0)
-      const edge = (typeof window !== 'undefined' && window.innerWidth <= 720) ? 10 : 8
-      const vh = typeof window !== 'undefined' ? (window.innerHeight || 0) : 0
       let top = Math.max(inset.top, rect.top - pad)
       let left = Math.max(inset.left, rect.left - pad)
       let right = Math.min(inset.right, rect.right + pad)
@@ -20139,18 +20186,44 @@ export default {
       this.workspaceTourRect = null
       this.unbindWorkspaceTourListeners()
       this.topCardMenuOpen = false
-      this.teardownWorkspaceTourPreview({ fullFatihah: !!dismiss })
+      // After the spotlight, new learners land on Memorise / Revise / Recite.
+      // Mark the tour dismissed so it never auto-replays; keep first-run open
+      // until they pick a plan (completeFirstRunOnPracticeStart finishes it).
+      const landOnFirstRunChooser = !!(
+        this.learningBackendEnabled?.()
+        && !this.hasCompletedOnboarding()
+        && !this.hasPostOnboardingPracticeEvidence()
+      )
+      this.teardownWorkspaceTourPreview({
+        fullFatihah: !!dismiss,
+        skipCommit: landOnFirstRunChooser,
+      })
       restoreReturnFocus(this.workspaceTourReturnFocusEl)
       this.workspaceTourReturnFocusEl = null
-      // First-run completion must run for both Skip and Finish — Finish used to pass
-      // dismiss:false only, which left onboarding incomplete so the tour replayed.
       try {
         localStorage.setItem(this.getTesterGuideStorageKey(), '1')
       } catch { /* ignore */ }
+      if (landOnFirstRunChooser) {
+        this.enterFirstRunGoalAfterTour()
+        return
+      }
       if (!this.hasCompletedOnboarding()) {
         this.markOnboardingCompleted()
         trackAckeeEvent(ACKEE_EVENTS.ONBOARDING_COMPLETED)
       }
+    },
+    enterFirstRunGoalAfterTour() {
+      if (this.showTools) {
+        try { this.closeToolsPanel?.() } catch { /* ignore */ }
+        this.showTools = false
+      }
+      this.tab = 'tools'
+      this.clearWorkspaceForFirstRunGoalStep()
+      this.persistFirstRunStep('goal')
+      this.markOnboardingAutoPresented()
+      this.trackFirstRunSurfacePresented('goal')
+      this.isDataReady = true
+      this.appReady = true
     },
     maybeAdvanceWorkspaceTourFromSession() {
       if (!this.workspaceTourActive) return
@@ -20374,7 +20447,7 @@ export default {
       this.ensureWorkspaceTourSamplePlan()
       await this.$nextTick()
     },
-    teardownWorkspaceTourPreview({ fullFatihah = false } = {}) {
+    teardownWorkspaceTourPreview({ fullFatihah = false, skipCommit = false } = {}) {
       this.workspaceTourDashboardOpen = false
       if (this.amdOpen) this.closeAmdModal?.({ returnToCompletion: false })
       this.postSessionAiReciteActive = false
@@ -20387,6 +20460,11 @@ export default {
       }
       this.workspaceTourPreviewOwned = false
       this.workspaceTourOpenedPostSession = false
+      if (skipCommit) {
+        this.workspaceTourConfigSnapshot = null
+        this.workspaceTourFreshStartPending = false
+        return
+      }
       void this.commitWorkspaceTourFocusedReview({ fullFatihah })
     },
     async commitWorkspaceTourFocusedReview({ fullFatihah = false } = {}) {

@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveAnalyticsRequest;
 use App\Models\LearningAnalytic;
 use App\Services\DashboardService;
+use App\Services\Learning\AdvancedAnalyticsService;
+use App\Support\AdvancedAnalyticsAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class AnalyticsController extends Controller
 {
@@ -56,5 +59,31 @@ class AnalyticsController extends Controller
         DashboardService::forgetForUser($request->user());
 
         return response()->json(['saved' => true, 'analytic' => $analytic]);
+    }
+
+    public function advanced(Request $request, AdvancedAnalyticsService $service): JsonResponse
+    {
+        if (! AdvancedAnalyticsAccess::visible($request->user())) {
+            return response()->json([
+                'message' => 'Advanced Analytics is not available for this account.',
+                'reason' => 'super_admin_required',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'range' => ['sometimes', Rule::in(['7', '30', '90', 'all', 'custom'])],
+            'from' => ['required_if:range,custom', 'nullable', 'date'],
+            'to' => ['required_if:range,custom', 'nullable', 'date', 'after_or_equal:from'],
+        ]);
+
+        $params = [
+            'range' => $validated['range'] ?? '30',
+            'from' => $validated['from'] ?? $request->query('from'),
+            'to' => $validated['to'] ?? $request->query('to'),
+        ];
+
+        return response()->json([
+            'report' => $service->build($request->user(), $params),
+        ]);
     }
 }

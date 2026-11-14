@@ -60,13 +60,12 @@ class SubscriptionBillingTest extends TestCase
         $this->assertTrue($entitlement->canAccessFeature($user, SubscriptionEntitlement::MEMORISATION));
         $this->assertTrue($entitlement->canAccessFeature($user, SubscriptionEntitlement::BASIC_PROGRESS));
         $this->assertTrue($entitlement->canAccessFeature($user, SubscriptionEntitlement::AI_ASSESSMENT));
-        $this->assertTrue($entitlement->canAccessFeature($user, SubscriptionEntitlement::FIND_AYAH));
+        $this->assertFalse($entitlement->canAccessFeature($user, SubscriptionEntitlement::FIND_AYAH));
         $this->assertFalse($entitlement->canAccessFeature($user, SubscriptionEntitlement::PRO_TOOLS));
         $this->assertFalse($entitlement->canAccessFeature($user, SubscriptionEntitlement::WORD_BY_WORD));
         $this->assertFalse($entitlement->canAccessFeature($user, SubscriptionEntitlement::OFFLINE_AUDIO));
         $this->assertFalse($entitlement->canAccessFeature($user, SubscriptionEntitlement::WEAK_AYAH_INSIGHTS));
         $this->assertSame(5, $entitlement->freeSavedSessionsLimit());
-        $this->assertSame(5, $entitlement->freeFindAyahDailyLimit());
 
         $this->actingAs($user)
             ->getJson('/api/memorisation/weak-spots')
@@ -74,22 +73,16 @@ class SubscriptionBillingTest extends TestCase
             ->assertJsonPath('reason', 'plan_required');
     }
 
-    public function test_free_users_cannot_exceed_the_daily_find_ayah_limit(): void
+    public function test_find_ayah_requires_premium_access(): void
     {
         $user = User::factory()->create();
+        $pro = User::factory()->pro()->create();
         $entitlement = app(SubscriptionEntitlement::class);
 
-        for ($i = 0; $i < 5; $i++) {
-            $this->assertTrue($entitlement->consumeFindAyah($user));
-        }
-
-        $this->assertFalse($entitlement->consumeFindAyah($user));
         $this->assertFalse($entitlement->canStartFindAyah($user));
-        $this->assertSame(0, $entitlement->getRemainingUsage($user, SubscriptionEntitlement::FIND_AYAH)['remaining']);
-
-        $pro = User::factory()->pro()->create();
+        $this->assertFalse($entitlement->consumeFindAyah($user));
+        $this->assertTrue($entitlement->canStartFindAyah($pro));
         $this->assertTrue($entitlement->consumeFindAyah($pro));
-        $this->assertNull($entitlement->getRemainingUsage($pro, SubscriptionEntitlement::FIND_AYAH)['limit']);
     }
 
     public function test_free_users_cannot_exceed_the_daily_ai_assessment_limit(): void

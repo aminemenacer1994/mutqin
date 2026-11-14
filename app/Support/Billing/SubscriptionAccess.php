@@ -20,11 +20,26 @@ final class SubscriptionAccess
 
     public static function grantsPaidAccess(User $user): bool
     {
+        if (self::hasComplimentaryPro($user)) {
+            return true;
+        }
+
         return self::statusGrantsAccess(
             (string) $user->subscription_status,
             $user->subscription_current_period_ends_at,
             (bool) $user->subscription_cancel_at_period_end,
         );
+    }
+
+    /** Local complimentary Pro (e.g. referral reward). Not cleared by Stripe sync. */
+    public static function hasComplimentaryPro(User $user): bool
+    {
+        $until = $user->complimentary_pro_until;
+        if (! $until instanceof Carbon) {
+            return false;
+        }
+
+        return $until->isFuture();
     }
 
     public static function statusGrantsAccess(string $status, ?Carbon $periodEnd, bool $cancelAtPeriodEnd): bool

@@ -43,6 +43,7 @@ class DashboardController extends Controller
                     'subscription_tier' => $user->effectiveSubscriptionTier(),
                     'subscription_status' => $user->subscription_status ?? 'free',
                     'is_admin' => $user->isAdmin(),
+                    'advanced_analytics_enabled' => \App\Support\AdvancedAnalyticsAccess::visible($user),
                     'session_voice_enabled' => \App\Support\SessionVoiceAccess::visible($user),
                     'session_voice_hints' => \App\Support\SessionVoiceAccess::visible($user)
                         ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary(

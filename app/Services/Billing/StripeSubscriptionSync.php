@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\User;
+use App\Services\Referrals\ReferralService;
 use App\Support\Billing\SubscriptionAccess;
 use Illuminate\Support\Carbon;
 
@@ -72,6 +73,10 @@ class StripeSubscriptionSync
             'subscription_state_at' => $stateAt > 0 ? $stateAt : $user->subscription_state_at,
         ])->save();
 
+        if ($tier === 'pro') {
+            app(ReferralService::class)->recordProConversionIfEligible($user->fresh() ?? $user);
+        }
+
         return true;
     }
 
@@ -107,6 +112,8 @@ class StripeSubscriptionSync
             'subscription_current_period_ends_at' => null,
             'subscription_state_at' => $stateAt,
         ])->save();
+
+        app(ReferralService::class)->recordProConversionIfEligible($user->fresh() ?? $user);
 
         return true;
     }

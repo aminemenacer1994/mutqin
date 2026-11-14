@@ -330,20 +330,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
 
             if ($isFindAyah && ! $entitlement->canStartFindAyah($user)) {
-                $usage = $entitlement->getRemainingUsage($user, SubscriptionEntitlement::FIND_AYAH);
-
                 return response()->json([
                     'available' => false,
-                    'reason' => 'usage_cap',
-                    'message' => $entitlement->quotaPayload($user)['message']
-                        ?? __('billing.plan_required', ['tier' => 'pro']),
-                    'remaining' => $usage['remaining'] ?? 0,
-                    'limit' => $usage['limit'] ?? null,
-                    'resets_at' => $usage['resets_at'] ?? null,
-                    'upgrade' => ! $user->hasProAccess(),
+                    'reason' => 'plan_required',
+                    'message' => __('billing.plan_required', ['tier' => 'pro']),
+                    'tier' => 'pro',
+                    'upgrade' => true,
                     'pricing_url' => route('pricing'),
-                    'speechmatics_status' => 429,
-                ], 429);
+                ], 403);
             }
 
             $lifetime = $lifetimeUsage->inspect($user);
@@ -470,20 +464,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                     'speechmatics_status' => 502,
                 ]);
-            }
-
-            if ($isFindAyah && $user instanceof User) {
-                $entitlement = app(SubscriptionEntitlement::class);
-                if (! $entitlement->consumeFindAyah($user)) {
-                    return response()->json([
-                        'available' => false,
-                        'reason' => 'usage_cap',
-                        'message' => __('billing.plan_required', ['tier' => 'pro']),
-                        'upgrade' => ! $user->hasProAccess(),
-                        'pricing_url' => route('pricing'),
-                        'speechmatics_status' => 429,
-                    ], 429);
-                }
             }
 
             $usageCap->recordSuccessfulMint($userId);

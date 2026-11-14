@@ -260,7 +260,6 @@ export default {
     const plans = computed(() => {
       const checks = billingDisplay.freeChecks;
       const saved = billingDisplay.freeSavedSessions;
-      const findAyah = billingDisplay.freeFindAyah;
       const included = t('pricingPage.comparisonValues.included');
       const unlimited = t('pricingPage.comparisonValues.unlimited');
 
@@ -268,17 +267,18 @@ export default {
         featureRow(t('pricingPage.comparisonRows.aiChecks'), t('pricingPage.comparisonValues.perDay', { count: checks }), true),
         featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.essential'), true),
         featureRow(t('pricingPage.comparisonRows.savedSessions'), String(saved), true),
-        featureRow(t('pricingPage.comparisonRows.findAyah'), t('pricingPage.comparisonValues.perDay', { count: findAyah }), true),
         featureRow(t('pricingPage.comparisonRows.translation'), included, true),
         featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
         featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.beginner'), true),
         featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.basic'), true),
+        featureRow(t('pricingPage.comparisonRows.findAyah'), '', false),
         featureRow(t('pricingPage.comparisonRows.wordByWord'), '', false),
         featureRow(t('pricingPage.comparisonRows.offlineAudio'), '', false),
         featureRow(t('pricingPage.comparisonRows.weakAyahInsights'), '', false),
       ];
 
-      const proFeatures = [
+      const premiumFeatures = [
+        featureRow(t('pricingPage.everythingInFree'), '', true),
         featureRow(t('pricingPage.comparisonRows.aiChecks'), unlimited, true),
         featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.advanced'), true),
         featureRow(t('pricingPage.comparisonRows.savedSessions'), unlimited, true),
@@ -311,9 +311,9 @@ export default {
         },
         {
           id: 'pro',
-          name: t('homepage.pro'),
+          name: t('pricingPage.premium'),
           ...proPrice(),
-          features: proFeatures,
+          features: premiumFeatures,
           featured: true,
           badge: t('pricingPage.recommended'),
           ...proCta(),
@@ -350,7 +350,7 @@ export default {
       const checkoutPlan = selectedCheckoutPlan();
       if (isCurrentPro.value) {
         if (canManageBilling.value) {
-          return { ctaType: 'portal', ctaLabel: t('pricingPage.currentPlan'), ctaClass: 'btn--primary' };
+          return { ctaType: 'portal', ctaLabel: t('pricingPage.currentPlan'), ctaClass: 'btn--primary btn--premium' };
         }
         return { ctaType: 'current', ctaLabel: t('pricingPage.currentPlan') };
       }
@@ -358,15 +358,15 @@ export default {
         return {
           ctaType: 'link',
           ctaHref: `/register?plan=${checkoutPlan}`,
-          ctaLabel: t('pricingPage.simple.unlockPro'),
-          ctaClass: 'btn--primary',
+          ctaLabel: t('pricingPage.simple.unlockPremium'),
+          ctaClass: 'btn--primary btn--premium',
         };
       }
       return {
         ctaType: 'checkout',
         checkoutPlan,
-        ctaLabel: t('pricingPage.simple.unlockPro'),
-        ctaClass: 'btn--primary',
+        ctaLabel: t('pricingPage.simple.unlockPremium'),
+        ctaClass: 'btn--primary btn--premium',
       };
     }
 

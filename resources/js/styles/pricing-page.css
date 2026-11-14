@@ -383,6 +383,26 @@
   width: 100%;
 }
 
+.pricing-page .pricing-card--featured .btn--premium,
+.pricing-page .pricing-card--featured .btn--primary {
+  background: linear-gradient(135deg, var(--success, #059669), color-mix(in srgb, var(--success, #059669) 72%, #064e3b));
+  border-color: color-mix(in srgb, var(--success, #059669) 55%, transparent);
+  color: #ecfdf5;
+  box-shadow: 0 12px 24px -16px color-mix(in srgb, var(--success, #059669) 55%, transparent);
+}
+
+.pricing-page .pricing-card--featured .btn--premium:hover,
+.pricing-page .pricing-card--featured .btn--primary:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--success, #059669) 88%, #fff), var(--success, #059669));
+  color: #ecfdf5;
+}
+
+.pricing-page .pricing-card--featured .btn--premium:focus-visible,
+.pricing-page .pricing-card--featured .btn--primary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring), 0 0 0 3px color-mix(in srgb, var(--success, #059669) 28%, transparent);
+}
+
 .pricing-includes {
   display: grid;
   gap: 0.7rem;

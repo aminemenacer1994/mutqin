@@ -13,8 +13,10 @@ class Referral extends Model
         'referral_code',
         'signed_up_at',
         'activated_at',
+        'converted_to_pro_at',
         'reward_ai_checks',
         'reward_granted_at',
+        'free_month_rewarded_at',
         'acknowledged_at',
     ];
 
@@ -23,8 +25,10 @@ class Referral extends Model
         return [
             'signed_up_at' => 'datetime',
             'activated_at' => 'datetime',
+            'converted_to_pro_at' => 'datetime',
             'reward_ai_checks' => 'integer',
             'reward_granted_at' => 'datetime',
+            'free_month_rewarded_at' => 'datetime',
             'acknowledged_at' => 'datetime',
         ];
     }

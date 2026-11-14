@@ -116,6 +116,27 @@
                 <small>{{ metric.hint }}</small>
               </button>
             </div>
+
+            <div
+              v-if="canUseAdvancedAnalytics"
+              class="dash-advanced-analytics"
+              data-testid="advanced-analytics-entry"
+            >
+              <button
+                type="button"
+                class="dash-advanced-analytics__cta"
+                @click="openAdvancedAnalytics"
+              >
+                <span class="dash-advanced-analytics__icon" aria-hidden="true">
+                  <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                </span>
+                <span class="dash-advanced-analytics__copy">
+                  <strong>{{ t('dashboard.advanced_analytics.entry_cta') }}</strong>
+                  <small>{{ t('dashboard.advanced_analytics.entry_hint') }}</small>
+                </span>
+                <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -852,6 +873,11 @@
       @retry="retrySessionAnalysis"
     />
 
+    <AdvancedAnalyticsModal
+      :open="advancedAnalyticsOpen"
+      @close="closeAdvancedAnalytics"
+    />
+
     <WorkspaceAiReciteResultModal
       v-if="analysisModalOpen && analysisSourceKind === 'attempt'"
       :theme="dashboardTheme"
@@ -995,6 +1021,11 @@ const WorkspaceAiReciteResultModal = defineAsyncComponent(() => import(
   '../components/WorkspaceAiReciteResultModal.vue'
 ))
 
+const AdvancedAnalyticsModal = defineAsyncComponent(() => import(
+  /* webpackChunkName: "advanced-analytics-modal" */
+  '../components/advancedAnalytics/AdvancedAnalyticsModal.vue'
+))
+
 const METRIC_META = [
   { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed', hintKey: 'metric_completed_hint', drawer: 'sessions', icon: 'bi bi-journal-check' },
   { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved', hintKey: 'metric_saved_hint', hrefPanel: 'saved', icon: 'bi bi-bookmark-heart' },
@@ -1054,6 +1085,7 @@ export default {
     DashAiReciteAttemptCard,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
+    AdvancedAnalyticsModal,
     SessionVoiceAssistant,
     DashboardAchievementsWidget,
     AchievementsPanel,
@@ -1105,6 +1137,7 @@ export default {
       analysisSourceId: null,
       analysisSourceKey: '',
       analysisRequestId: 0,
+      advancedAnalyticsOpen: false,
       aiReciteStats: initial?.ai_recite_stats || null,
       aiReciteLoading: false,
       aiReciteError: false,
@@ -1197,6 +1230,9 @@ export default {
     },
     testRecitationHref() {
       return memorisationGoalHref(this.memorisationUrl, 'test')
+    },
+    canUseAdvancedAnalytics() {
+      return this.auth?.advanced_analytics_enabled === true
     },
     showLearnerTeacherSection() {
       return this.auth?.learner_teacher_section_enabled === true
@@ -3209,6 +3245,13 @@ export default {
       this.analysisLoading = true
       this.analysisModalOpen = true
       this.fetchSessionAnalysis()
+    },
+    openAdvancedAnalytics() {
+      if (!this.canUseAdvancedAnalytics) return
+      this.advancedAnalyticsOpen = true
+    },
+    closeAdvancedAnalytics() {
+      this.advancedAnalyticsOpen = false
     },
     closeSessionAnalysis() {
       this.analysisRequestId += 1

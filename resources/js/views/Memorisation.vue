@@ -2058,7 +2058,11 @@
                 </button>
               </div>
             </section>
-            <section class="setup-plan setup-plan--passage" :class="{ 'setup-plan--first-run-step': isFirstRunFlowActive }">
+            <section
+              class="setup-plan setup-plan--passage"
+              :class="{ 'setup-plan--first-run-step': isFirstRunFlowActive }"
+              data-tour="setup-passage"
+            >
             <header v-if="isFirstRunFlowActive" class="setup-plan__intro" aria-labelledby="setup-passage-step-label">
               <p id="setup-passage-step-label" class="setup-plan__step">
                 {{ t('memorisation.firstRun.stepPassage') || 'Step 2 of 2' }}
@@ -2329,7 +2333,7 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-if="tab === 'techniques'" class="sheet sheet--practice" data-tour="practice-sheet">
-            <details class="practice-group" open>
+            <details class="practice-group" open data-tour="practice-beginner">
               <summary class="practice-group__summary">
                 <span class="practice-group__copy">
                   <strong>{{ t('memorisation.practiceTools.beginner') }}</strong>
