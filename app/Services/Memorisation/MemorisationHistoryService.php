@@ -2,11 +2,13 @@
 
 namespace App\Services\Memorisation;
 
+use App\Models\AiReciteAttempt;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationAssessmentWord;
 use App\Models\MemorisationAttemptComparison;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationWeakSpot;
+use App\Models\MemorisationWeakSpotOccurrence;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -152,6 +154,7 @@ class MemorisationHistoryService
             if (! $this->isReliableWordWeakness($word, $existingSpot)) {
                 continue;
             }
+            $mistakeKind = $this->mistakeKindFromWord($word);
             $pending[$spotKey] = [
                 'spot_type' => MemorisationWeakSpot::TYPE_WORD,
                 'surah_number' => $surahNumber,
@@ -160,6 +163,14 @@ class MemorisationHistoryService
                 'verse_key' => $word['verse_key'] ?? $word['verseKey'] ?? ($surahNumber.':'.$ayahNumber),
                 'spot_key' => $spotKey,
                 'severity' => $this->normaliseSeverity($word['severity'] ?? $word['severity_label'] ?? 'moderate'),
+                'mistake_kind' => $mistakeKind,
+                'result_type' => strtolower((string) ($word['status'] ?? $word['reason'] ?? '')),
+                'confidence' => isset($word['confidence']) && is_numeric($word['confidence'])
+                    ? round((float) $word['confidence'], 4)
+                    : null,
+                'detected_token' => $this->detectedTokenFromWord($word),
+                'text' => mb_substr((string) ($word['text'] ?? $word['target_word'] ?? $word['expected_word'] ?? ''), 0, 120) ?: null,
+                'visual_status' => $this->visualStatusFromWord($word),
             ];
         }
 
@@ -189,6 +200,12 @@ class MemorisationHistoryService
                 'severity' => is_array($ayah)
                     ? $this->normaliseSeverity($ayah['severity'] ?? 'moderate')
                     : 'moderate',
+                'mistake_kind' => null,
+                'result_type' => null,
+                'confidence' => null,
+                'detected_token' => null,
+                'text' => null,
+                'visual_status' => null,
             ];
         }
 
@@ -202,12 +219,38 @@ class MemorisationHistoryService
             ->get()
             ->keyBy('spot_key');
 
-        $inserts = [];
+        $attemptId = AiReciteAttempt::query()
+            ->where('memorisation_assessment_id', $assessment->id)
+            ->value('id');
+
         foreach ($pending as $spotKey => $attributes) {
             /** @var MemorisationWeakSpot|null $spot */
             $spot = $existing->get($spotKey);
+            $occurrenceMeta = [
+                'result_type' => $attributes['result_type'] ?? null,
+                'mistake_kind' => $attributes['mistake_kind'] ?? null,
+                'confidence' => $attributes['confidence'] ?? null,
+                'detected_token' => $attributes['detected_token'] ?? null,
+                'visual_status' => $attributes['visual_status'] ?? null,
+            ];
+            unset(
+                $attributes['result_type'],
+                $attributes['confidence'],
+                $attributes['detected_token'],
+                $attributes['text'],
+                $attributes['visual_status']
+            );
+
             if (! $spot) {
-                $inserts[] = [
+                $metadata = [];
+                if (! empty($occurrenceMeta['detected_token']) || ! empty($pending[$spotKey]['text'])) {
+                    $metadata = array_filter([
+                        'text' => $pending[$spotKey]['text'] ?? null,
+                        'detected_token' => $occurrenceMeta['detected_token'],
+                    ]);
+                }
+                $spot = new MemorisationWeakSpot;
+                $spot->forceFill([
                     ...$attributes,
                     'user_id' => $user->id,
                     'status' => MemorisationWeakSpot::STATUS_ACTIVE,
@@ -217,29 +260,136 @@ class MemorisationHistoryService
                     'last_identified_at' => $now,
                     'source_assessment_id' => $assessment->id,
                     'last_assessment_id' => $assessment->id,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+                    'metadata' => $metadata ?: null,
+                ])->save();
+                $existing->put($spotKey, $spot);
+                $this->recordOccurrence($spot, $user, $assessment, $attemptId ? (int) $attemptId : null, $occurrenceMeta, $now);
 
                 continue;
             }
 
             $sameAttempt = (int) $spot->last_assessment_id === (int) $assessment->id;
             $nextCount = (int) $spot->affected_attempt_count + ($sameAttempt ? 0 : 1);
-            $spot->fill([
+            $metadata = is_array($spot->metadata) ? $spot->metadata : [];
+            if (! empty($pending[$spotKey]['text'])) {
+                $metadata['text'] = $pending[$spotKey]['text'];
+            }
+            if (! empty($occurrenceMeta['detected_token'])) {
+                $metadata['detected_token'] = $occurrenceMeta['detected_token'];
+            }
+            $updates = [
                 'severity' => $attributes['severity'] ?? $spot->severity,
+                'mistake_kind' => $attributes['mistake_kind'] ?? $spot->mistake_kind,
                 'affected_attempt_count' => $nextCount,
                 'last_identified_at' => $now,
                 'last_assessment_id' => $assessment->id,
                 'status' => MemorisationWeakSpot::STATUS_ACTIVE,
                 'trend' => $nextCount >= 3 ? 'regressing' : 'stable',
                 'verse_key' => $attributes['verse_key'] ?? $spot->verse_key,
-            ])->save();
+                'metadata' => $metadata ?: null,
+            ];
+            // A new AI hit after dismiss resurfaces the difficulty for teacher review.
+            if (! $sameAttempt && $spot->teacher_review_status === MemorisationWeakSpot::REVIEW_DISMISSED) {
+                $updates['teacher_review_status'] = null;
+                $updates['teacher_reviewed_by'] = null;
+                $updates['teacher_reviewed_at'] = null;
+                $updates['teacher_review_note'] = null;
+            }
+            $spot->fill($updates)->save();
+            if (! $sameAttempt) {
+                $this->recordOccurrence($spot, $user, $assessment, $attemptId ? (int) $attemptId : null, $occurrenceMeta, $now);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    private function recordOccurrence(
+        MemorisationWeakSpot $spot,
+        User $user,
+        MemorisationAssessment $assessment,
+        ?int $attemptId,
+        array $meta,
+        Carbon $occurredAt,
+    ): void {
+        MemorisationWeakSpotOccurrence::query()->updateOrCreate(
+            [
+                'weak_spot_id' => $spot->id,
+                'assessment_id' => $assessment->id,
+            ],
+            [
+                'user_id' => $user->id,
+                'ai_recite_attempt_id' => $attemptId,
+                'result_type' => $meta['result_type'] ?? null,
+                'mistake_kind' => $meta['mistake_kind'] ?? null,
+                'visual_status' => $meta['visual_status'] ?? null,
+                'confidence' => $meta['confidence'] ?? null,
+                'detected_token' => $meta['detected_token'] ?? null,
+                'occurred_at' => $occurredAt,
+            ]
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $word
+     */
+    private function mistakeKindFromWord(array $word): ?string
+    {
+        $status = strtolower((string) ($word['status'] ?? $word['reason'] ?? ''));
+        $type = strtoupper((string) ($word['type'] ?? $word['alignment_type'] ?? ''));
+
+        if (in_array($status, ['missing', 'omitted', 'omission'], true) || $type === 'DELETION') {
+            return 'omission';
+        }
+        if (in_array($status, ['wrong', 'incorrect', 'substitution'], true) || $type === 'SUBSTITUTION') {
+            return 'substitution';
+        }
+        if (in_array($status, ['minor_mistake', 'partial', 'close'], true)) {
+            return 'pronunciation';
+        }
+        if (in_array($status, ['extra', 'insertion'], true) || $type === 'INSERTION') {
+            return 'insertion';
+        }
+        if (in_array($status, ['skipped'], true)) {
+            return 'skipped';
         }
 
-        foreach (array_chunk($inserts, 100) as $chunk) {
-            MemorisationWeakSpot::query()->insert($chunk);
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $word
+     */
+    private function detectedTokenFromWord(array $word): ?string
+    {
+        $detected = $word['detected'] ?? $word['actual'] ?? $word['recognised'] ?? $word['recognized'] ?? $word['recognised_word'] ?? null;
+
+        return is_string($detected) && $detected !== '' ? mb_substr($detected, 0, 120) : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $word
+     */
+    private function visualStatusFromWord(array $word): ?string
+    {
+        $visual = strtolower((string) ($word['visual_status'] ?? $word['highlight'] ?? ''));
+        if (in_array($visual, ['green', 'amber', 'red', 'black', 'gray', 'grey'], true)) {
+            return $visual === 'grey' ? 'gray' : $visual;
         }
+        $severity = strtolower((string) ($word['severity'] ?? ''));
+        if (in_array($severity, ['red', 'black', 'amber', 'gray', 'grey', 'green'], true)) {
+            return $severity === 'grey' ? 'gray' : $severity;
+        }
+        $status = strtolower((string) ($word['status'] ?? $word['reason'] ?? ''));
+
+        return match ($status) {
+            'wrong', 'incorrect' => 'red',
+            'missing', 'omitted', 'omission' => 'black',
+            'minor_mistake', 'partial' => 'amber',
+            'uncertain' => 'gray',
+            default => null,
+        };
     }
 
     /**

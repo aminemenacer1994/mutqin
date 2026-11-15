@@ -12,6 +12,21 @@
           </p>
         </div>
       </div>
+      <div class="teacher-hero__signals">
+        <button type="button" class="teacher-hero__signal" @click="$emit('open-students')">
+          <strong>{{ studentCount }}</strong>
+          <span>{{ t('teacher.kpi_students') }}</span>
+        </button>
+        <button
+          type="button"
+          class="teacher-hero__signal"
+          :class="{ 'is-alert': supportCount > 0 }"
+          @click="$emit('open-attention')"
+        >
+          <strong>{{ supportCount }}</strong>
+          <span>{{ t('teacher.kpi_need_support') }}</span>
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -28,5 +43,6 @@ export default {
     studentCount: { type: Number, default: 0 },
     supportCount: { type: Number, default: 0 },
   },
+  emits: ['open-students', 'open-attention'],
 }
 </script>

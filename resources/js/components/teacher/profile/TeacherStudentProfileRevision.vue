@@ -57,7 +57,9 @@ export default {
         iconTone: 'accent',
         title: group.title,
         hint: group.findings.join(' · '),
-        href: group.first?.evidence_url || '',
+        studentId: this.profile.student.id,
+        attemptId: group.first?.evidence?.attempt_id || null,
+        href: group.first?.evidence?.attempt_id ? '' : (group.first?.evidence_url || ''),
         audio: group.first?.evidence?.audio || null,
         transcript: group.first?.evidence?.transcript || '',
       }))

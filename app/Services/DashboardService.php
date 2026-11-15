@@ -126,6 +126,20 @@ class DashboardService
                 'weak_total' => 0,
                 'recommended_practice' => null,
             ],
+            'revision_reminders' => [
+                'outstanding_count' => 0,
+                'due_today_count' => 0,
+                'overdue_count' => 0,
+                'upcoming_count' => 0,
+                'items' => [],
+                'primary' => null,
+                'preferences' => [
+                    'in_app' => true,
+                    'email' => false,
+                    'snooze_hours' => 4,
+                    'max_emails_per_day' => 1,
+                ],
+            ],
             'ai_recite_stats' => $this->emptyAiReciteStats(),
             'learning' => ProgressOverviewService::empty($chartDays),
             'journey' => $this->emptyJourney(),
@@ -263,6 +277,27 @@ class DashboardService
             $achievements = app(\App\Services\Achievements\AchievementService::class)->emptyWidget();
         }
 
+        try {
+            $revisionReminders = app(\App\Services\RevisionReminders\RevisionReminderQueryService::class)
+                ->dashboardCard($user);
+        } catch (\Throwable $e) {
+            report($e);
+            $revisionReminders = [
+                'outstanding_count' => 0,
+                'due_today_count' => 0,
+                'overdue_count' => 0,
+                'upcoming_count' => 0,
+                'items' => [],
+                'primary' => null,
+                'preferences' => [
+                    'in_app' => true,
+                    'email' => false,
+                    'snooze_hours' => 4,
+                    'max_emails_per_day' => 1,
+                ],
+            ];
+        }
+
         return [
             'meta' => [
                 'owner_id' => (int) $user->id,
@@ -278,6 +313,7 @@ class DashboardService
             'continue' => $continue,
             'recommended_next' => $recommendedNext,
             'daily_revision' => $dailyRevision,
+            'revision_reminders' => $revisionReminders,
             'ai_recite_stats' => $aiReciteStats,
             'learning' => $learning,
             'journey' => $journey,

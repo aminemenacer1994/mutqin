@@ -1,17 +1,42 @@
 <template>
-  <div class="teacher-recite-mushaf" lang="ar" dir="rtl">
-    <article v-for="ayah in ayahs" :key="ayah.ayah" class="teacher-recite-mushaf__ayah">
-      <span class="teacher-recite-mushaf__ayah-marker" :aria-label="t('teacher.ayah_n', { n: ayah.ayah })">{{ ayah.ayah }}</span>
-      <p class="teacher-recite-mushaf__line">
+  <div class="teacher-recite-mushaf" :class="{ 'is-plain': plain, 'is-lines': lines }" lang="ar" dir="rtl">
+    <template v-if="lines">
+      <p
+        v-for="line in ayahs"
+        :key="line.id"
+        class="teacher-recite-mushaf__line"
+        :class="{ 'is-centered': line.centered }"
+      >
         <span
-          v-for="(part, index) in ayah.parts"
-          :key="`${ayah.ayah}-${index}`"
-          :class="part.className"
+          v-for="(part, index) in line.parts"
+          :key="`${line.id}-${index}`"
+          :class="[part.className, isActive(line, part) ? 'is-playback-active' : '', isSelected(line, part) ? 'is-playback-selected' : '', markClass(line, part)]"
           :style="part.fontFamily ? { fontFamily: part.fontFamily } : undefined"
           :title="part.title || undefined"
+          :data-playback-key="partKey(line, part)"
+          :aria-current="isActive(line, part) ? 'true' : undefined"
+          :aria-label="part.isEnd ? t('teacher.ayah_n', { n: part.ayah }) : undefined"
+          @click="choose(line, part)"
         >{{ part.text }}</span>
       </p>
-    </article>
+    </template>
+    <template v-else>
+      <article v-for="ayah in ayahs" :key="ayah.ayah" class="teacher-recite-mushaf__ayah">
+        <span v-if="!plain" class="teacher-recite-mushaf__ayah-marker" :aria-label="t('teacher.ayah_n', { n: ayah.ayah })">{{ ayah.ayah }}</span>
+        <p class="teacher-recite-mushaf__line">
+          <span
+            v-for="(part, index) in ayah.parts"
+            :key="`${ayah.ayah}-${index}`"
+            :class="[part.className, isActive(ayah, part) ? 'is-playback-active' : '', isSelected(ayah, part) ? 'is-playback-selected' : '', markClass(ayah, part)]"
+            :style="part.fontFamily ? { fontFamily: part.fontFamily } : undefined"
+            :title="part.title || undefined"
+            :data-playback-key="partKey(ayah, part)"
+            :aria-current="isActive(ayah, part) ? 'true' : undefined"
+            @click="choose(ayah, part)"
+          >{{ part.text }}</span>
+        </p>
+      </article>
+    </template>
   </div>
 </template>
 
@@ -23,6 +48,43 @@ export default {
   mixins: [i18nMixin],
   props: {
     ayahs: { type: Array, default: () => [] },
+    activeKey: { type: String, default: '' },
+    selectedKey: { type: String, default: '' },
+    marks: { type: Object, default: () => ({}) },
+    interactive: { type: Boolean, default: false },
+    plain: { type: Boolean, default: false },
+    lines: { type: Boolean, default: false },
+  },
+  emits: ['select-word'],
+  methods: {
+    partKey(ayah, part) {
+      const number = Number(part?.ayah || ayah?.ayah)
+      const index = Number(part?.word_index)
+      if (!Number.isInteger(number) || number < 1 || !Number.isInteger(index) || index < 0) return ''
+      return `${number}:${index}`
+    },
+    isActive(ayah, part) {
+      const key = this.partKey(ayah, part)
+      return Boolean(key && key === this.activeKey)
+    },
+    isSelected(ayah, part) {
+      const key = this.partKey(ayah, part)
+      return Boolean(key && key === this.selectedKey)
+    },
+    markClass(ayah, part) {
+      const key = this.partKey(ayah, part)
+      const mark = key ? this.marks?.[key] : ''
+      if (mark === 'confirmed') return 'is-teacher-confirmed'
+      if (mark === 'dismissed') return 'is-teacher-dismissed'
+      if (mark === 'reviewed') return 'is-teacher-reviewed'
+      return ''
+    },
+    choose(ayah, part) {
+      if (!this.interactive) return
+      const key = this.partKey(ayah, part)
+      if (!key) return
+      this.$emit('select-word', { ...part, ayah: part.ayah || ayah.ayah, key })
+    },
   },
 }
 </script>

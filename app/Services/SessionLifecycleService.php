@@ -775,6 +775,13 @@ class SessionLifecycleService
             } catch (\Throwable $error) {
                 report($error);
             }
+
+            try {
+                app(\App\Services\RevisionReminders\RevisionReminderSyncService::class)
+                    ->handleSessionCompleted($user, $session);
+            } catch (\Throwable $error) {
+                report($error);
+            }
         }
 
         return $session;

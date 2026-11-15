@@ -258,6 +258,34 @@ export const learningApi = {
     return data?.settings && typeof data.settings === 'object' ? data.settings : data
   },
 
+  async getRevisionReminders() {
+    const { data } = await withRetry(() =>
+      http.get('/revision-reminders', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    return data?.payload && typeof data.payload === 'object' ? data.payload : data
+  },
+
+  async snoozeRevisionReminder(id, hours = null) {
+    const body = hours != null ? { hours } : {}
+    const { data } = await http.post(`/revision-reminders/${id}/snooze`, body)
+    return data?.payload && typeof data.payload === 'object' ? data.payload : data
+  },
+
+  async dismissRevisionReminder(id) {
+    const { data } = await http.post(`/revision-reminders/${id}/dismiss`)
+    return data?.payload && typeof data.payload === 'object' ? data.payload : data
+  },
+
+  async updateRevisionReminderPreferences(payload = {}) {
+    const { data } = await http.patch('/revision-reminders/preferences', payload)
+    return data?.preferences && typeof data.preferences === 'object' ? data.preferences : data
+  },
+
   async completeOnboarding() {
     const { data } = await http.patch('/profile/onboarding')
     return data && typeof data === 'object' ? data : {}
@@ -696,8 +724,14 @@ export const learningApi = {
     const { data } = await http.get('/teacher/attendance', { params })
     return data
   },
-  async setTeacherAttendance(groupId, studentId, date, status) {
-    const { data } = await http.put(`/teacher/attendance/groups/${groupId}/students/${studentId}`, { date, status })
+  async scheduleTeacherLesson(groupId, date, title = '') {
+    const { data } = await http.post(`/teacher/attendance/groups/${groupId}/lessons`, { date, title: title || null })
+    return data
+  },
+  async setTeacherAttendance(groupId, studentId, date, status, notes = undefined) {
+    const payload = { date, status }
+    if (notes !== undefined) payload.notes = notes
+    const { data } = await http.put(`/teacher/attendance/groups/${groupId}/students/${studentId}`, payload)
     return data
   },
   async getTeacherStudent(studentId, section = 'overview') {
@@ -742,8 +776,106 @@ export const learningApi = {
     const { data } = await http.post(`/teacher/students/${studentId}/reviews/${planId}/complete`)
     return data
   },
-  async saveTeacherNote(studentId, payload) {
+  async getTeacherPrivateNotes(studentId, params = {}) {
+    const { data } = await http.get(`/teacher/students/${studentId}/private-notes`, {
+      params,
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async createTeacherPrivateNote(studentId, payload = {}) {
+    const { data } = await http.post(`/teacher/students/${studentId}/private-notes`, payload)
+    return data
+  },
+  async updateTeacherPrivateNote(studentId, noteId, payload = {}) {
+    const { data } = await http.patch(`/teacher/students/${studentId}/private-notes/${noteId}`, payload)
+    return data
+  },
+  async deleteTeacherPrivateNote(studentId, noteId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/private-notes/${noteId}`)
+    return data
+  },
+  async archiveTeacherPrivateNote(studentId, noteId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/private-notes/${noteId}/archive`)
+    return data
+  },
+  async unarchiveTeacherPrivateNote(studentId, noteId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/private-notes/${noteId}/unarchive`)
+    return data
+  },
+  async shareTeacherPrivateNote(studentId, noteId, payload = {}) {
+    const { data } = await http.post(`/teacher/students/${studentId}/private-notes/${noteId}/share`, payload)
+    return data
+  },
+  async getTeacherRecitationPlayback(studentId, attemptId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/attempts/${attemptId}/playback`)
+    return data
+  },
+  async markTeacherRecitationReviewed(studentId, attemptId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/review`)
+    return data
+  },
+  async saveTeacherRecitationFeedback(studentId, attemptId, payload = {}, recording = null) {
+    const form = new FormData()
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      form.append(key, String(value))
+    })
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/feedback`, form)
+    return data
+  },
+  async saveTeacherRecitationPrivateNote(studentId, attemptId, body) {
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/private-note`, { body })
+    return data
+  },
+  async assignTeacherRecitationRevision(studentId, attemptId, payload) {
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/revision`, payload)
+    return data
+  },
+  async saveTeacherWordCoaching(studentId, attemptId, payload = {}, recording = null) {
+    const form = new FormData()
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      form.append(key, String(value))
+    })
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/words`, form)
+    return data
+  },
+  async deleteTeacherWordCoachingAudio(studentId, attemptId, correctionId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/corrections/${correctionId}/audio`)
+    return data
+  },
+  async saveTeacherNote(studentId, payload = {}, recording = null) {
+    const hasRecording = Boolean(recording?.blob)
+    if (hasRecording || payload instanceof FormData) {
+      const form = payload instanceof FormData ? payload : new FormData()
+      if (!(payload instanceof FormData)) {
+        Object.entries(payload || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === '') return
+          form.append(key, String(value))
+        })
+      }
+      if (!form.has('kind')) form.append('kind', 'feedback')
+      if (recording?.blob) {
+        form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+        if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+      }
+      const { data } = await http.post(`/teacher/students/${studentId}/notes`, form)
+      return data
+    }
     const { data } = await http.post(`/teacher/students/${studentId}/notes`, payload)
+    return data
+  },
+  async deleteTeacherNote(noteId) {
+    const { data } = await http.delete(`/teacher/notes/${noteId}`)
     return data
   },
   async getTeacherGroups() {
@@ -799,6 +931,64 @@ export const learningApi = {
   },
   async requestTeacherAssignmentCorrection(recipientId, note = '') {
     const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/correction`, { note })
+    return data
+  },
+  async getTeacherLearningPlans(studentId = null) {
+    const { data } = await http.get('/teacher/learning-plans', {
+      params: studentId ? { student_id: studentId } : {},
+    })
+    return data
+  },
+  async createTeacherLearningPlan(payload) {
+    const { data } = await http.post('/teacher/learning-plans', payload)
+    return data
+  },
+  async updateTeacherLearningPlan(planId, payload) {
+    const { data } = await http.put(`/teacher/learning-plans/${planId}`, payload)
+    return data
+  },
+  async setTeacherLearningPlanStatus(planId, status) {
+    const { data } = await http.post(`/teacher/learning-plans/${planId}/status`, { status })
+    return data
+  },
+  async approveTeacherLearningPlanItem(itemId) {
+    const { data } = await http.post(`/teacher/learning-plan-items/${itemId}/approve`)
+    return data
+  },
+  async skipTeacherLearningPlanItem(itemId) {
+    const { data } = await http.post(`/teacher/learning-plan-items/${itemId}/skip`)
+    return data
+  },
+  async getTeacherLearningPlanSuggestions(studentId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/learning-plan-suggestions`)
+    return data
+  },
+  async getTeacherLearningPlanTemplates() {
+    const { data } = await http.get('/teacher/learning-plan-templates')
+    return data
+  },
+  async createTeacherLearningPlanTemplate(payload) {
+    const { data } = await http.post('/teacher/learning-plan-templates', payload)
+    return data
+  },
+  async applyTeacherLearningPlanTemplate(templateId, payload) {
+    const { data } = await http.post(`/teacher/learning-plan-templates/${templateId}/apply`, payload)
+    return data
+  },
+  async getTeacherRecitationDifficultyQueue(limit = 12) {
+    const { data } = await http.get('/teacher/recitation-difficulties', { params: { limit } })
+    return data
+  },
+  async getTeacherStudentRecitationDifficulties(studentId, params = {}) {
+    const { data } = await http.get(`/teacher/students/${studentId}/recitation-difficulties`, { params })
+    return data
+  },
+  async getTeacherStudentRecitationDifficulty(studentId, spotId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/recitation-difficulties/${spotId}`)
+    return data
+  },
+  async reviewTeacherStudentRecitationDifficulty(studentId, spotId, payload) {
+    const { data } = await http.post(`/teacher/students/${studentId}/recitation-difficulties/${spotId}/review`, payload)
     return data
   },
 }

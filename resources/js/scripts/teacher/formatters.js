@@ -149,6 +149,8 @@ export function teacherRecitationEvidenceRow(base = {}, evidence = null, rangeFa
   const assigned = ev.assigned_range ?? base.assignedRange ?? null
   return {
     ...base,
+    attemptId: base.attemptId ?? ev.attempt_id ?? null,
+    studentId: base.studentId ?? null,
     audio: ev.audio ?? base.audio ?? null,
     transcript: ev.transcript ?? base.transcript ?? '',
     words: ev.words ?? base.words ?? [],

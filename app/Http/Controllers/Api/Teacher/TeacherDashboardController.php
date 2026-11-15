@@ -9,6 +9,9 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\AiReciteAttempt;
+use App\Enums\TeacherPrivateNoteCategory;
+use App\Models\TeacherNote;
+use App\Models\TeacherPrivateNote;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\User;
 use App\Enums\MembershipRole;
@@ -16,9 +19,16 @@ use App\Enums\MembershipStatus;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Models\LearningPlan;
+use App\Models\LearningPlanItem;
+use App\Models\LearningPlanTemplate;
+use App\Services\Teacher\LearningPlanService;
+use App\Services\Teacher\RecitationDifficultyService;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Models\MemorisationWeakSpot;
 use App\Services\Teacher\TeacherAttendanceService;
 use App\Services\Teacher\TeacherDirectMessageService;
+use App\Services\Teacher\TeacherPrivateNoteService;
 use App\Services\Teacher\TeacherReportService;
 use App\Services\Teacher\TeacherDashboardService;
 use App\Support\TeacherFeatures;
@@ -49,14 +59,32 @@ class TeacherDashboardController extends Controller
             'group_id' => ['nullable', 'integer'],
             'week_start' => ['nullable', 'date_format:Y-m-d'],
             'month' => ['nullable', 'date_format:Y-m'],
+            'student_id' => ['nullable', 'integer'],
         ]);
 
         $teacher = $this->teacher($request);
+        $studentId = isset($data['student_id']) ? (int) $data['student_id'] : null;
         if (! empty($data['month'])) {
-            return $this->json($attendance->month($teacher, $data['group_id'] ?? null, $data['month']));
+            return $this->json($attendance->month($teacher, $data['group_id'] ?? null, $data['month'], $studentId));
         }
 
-        return $this->json($attendance->week($teacher, $data['group_id'] ?? null, $data['week_start'] ?? null));
+        return $this->json($attendance->week($teacher, $data['group_id'] ?? null, $data['week_start'] ?? null, $studentId));
+    }
+
+    public function scheduleLesson(Request $request, LearningGroup $group, TeacherAttendanceService $attendance): JsonResponse
+    {
+        $data = $request->validate([
+            'date' => ['required', 'date_format:Y-m-d'],
+            'title' => ['nullable', 'string', 'max:120'],
+        ]);
+        $lesson = $attendance->schedule($this->teacher($request), $group, $data['date'], $data['title'] ?? null);
+
+        return $this->json([
+            'id' => (int) $lesson->id,
+            'date' => $lesson->lesson_date->toDateString(),
+            'title' => $lesson->title,
+            'group_id' => (int) $lesson->learning_group_id,
+        ], 201);
     }
 
     public function setAttendance(Request $request, LearningGroup $group, User $student, TeacherAttendanceService $attendance): JsonResponse
@@ -64,12 +92,21 @@ class TeacherDashboardController extends Controller
         $data = $request->validate([
             'date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'status' => ['required', Rule::in([...TeacherAttendanceService::STATUSES, 'clear'])],
+            'notes' => ['nullable', 'string', 'max:'.TeacherAttendanceService::NOTES_MAX],
         ]);
-        $attendance->setStatus($this->teacher($request), $group, $student, $data['date'], $data['status']);
+        $record = $attendance->setStatus(
+            $this->teacher($request),
+            $group,
+            $student,
+            $data['date'],
+            $data['status'],
+            array_key_exists('notes', $data) ? ($data['notes'] ?? '') : null,
+        );
 
         return $this->json([
             'date' => $data['date'],
             'status' => $data['status'],
+            'notes' => $record?->notes,
             'source' => 'teacher_recorded',
         ]);
     }
@@ -314,6 +351,7 @@ class TeacherDashboardController extends Controller
             'ayah_end' => ['required', 'integer', 'min:1'],
             'repetition_target' => ['nullable', 'integer', 'between:1,50'],
             'due_at' => ['required', 'date'],
+            'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
             'student_id' => ['nullable', 'integer', 'required_without:learning_group_id'],
             'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
@@ -338,6 +376,7 @@ class TeacherDashboardController extends Controller
             'ayah_end' => ['required', 'integer', 'min:1'],
             'repetition_target' => ['nullable', 'integer', 'between:1,50'],
             'due_at' => ['required', 'date'],
+            'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -402,17 +441,349 @@ class TeacherDashboardController extends Controller
         $teacher = $this->teacher($request);
         $data = $request->validate([
             'kind' => ['required', Rule::in(['note', 'feedback'])],
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'surah_number' => ['nullable', 'integer', 'between:1,114'],
+            'ayah_start' => ['nullable', 'integer', 'min:1'],
+            'ayah_end' => ['nullable', 'integer', 'min:1'],
+            'teacher_assignment_id' => ['nullable', 'integer'],
         ]);
 
-        $note = $dashboard->addNote($teacher, $student, $data['kind'], $data['body']);
+        $note = $dashboard->addNote(
+            $teacher,
+            $student,
+            $data['kind'],
+            (string) ($data['body'] ?? ''),
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+            isset($data['surah_number']) ? (int) $data['surah_number'] : null,
+            isset($data['ayah_start']) ? (int) $data['ayah_start'] : null,
+            isset($data['ayah_end']) ? (int) $data['ayah_end'] : null,
+            isset($data['teacher_assignment_id']) ? (int) $data['teacher_assignment_id'] : null,
+        );
+
+        $audio = app(\App\Services\Teacher\TeacherAssignmentMessageAudioService::class)->payload($note);
 
         return $this->json([
             'id' => (int) $note->id,
-            'kind' => $note->kind->value,
+            'kind' => $note->kind instanceof \App\Enums\TeacherNoteKind ? $note->kind->value : (string) $note->kind,
             'body' => $note->body,
+            'audio' => $audio,
+            'passage' => $note->surah_number ? [
+                'surah_number' => (int) $note->surah_number,
+                'ayah_start' => (int) $note->ayah_start,
+                'ayah_end' => (int) ($note->ayah_end ?: $note->ayah_start),
+            ] : null,
             'created_at' => $note->created_at?->toIso8601String(),
         ], 201);
+    }
+
+    public function privateNotes(Request $request, User $student, TeacherPrivateNoteService $notes): JsonResponse
+    {
+        return $this->json($notes->listForStudent($this->teacher($request), $student, $request->query()));
+    }
+
+    public function storePrivateNote(Request $request, User $student, TeacherPrivateNoteService $notes): JsonResponse
+    {
+        $data = $request->validate([
+            'category' => ['required', Rule::in(TeacherPrivateNoteCategory::values())],
+            'body' => ['required', 'string', 'max:'.TeacherPrivateNoteService::BODY_MAX],
+            'pinned' => ['nullable', 'boolean'],
+            'surah_number' => ['nullable', 'integer', 'between:1,114'],
+            'ayah_start' => ['nullable', 'integer', 'min:1'],
+            'ayah_end' => ['nullable', 'integer', 'min:1'],
+            'teacher_assignment_id' => ['nullable', 'integer'],
+        ]);
+
+        $note = $notes->create($this->teacher($request), $student, $data);
+
+        return $this->json(['note' => $notes->present($note)], 201);
+    }
+
+    public function updatePrivateNote(
+        Request $request,
+        User $student,
+        TeacherPrivateNote $privateNote,
+        TeacherPrivateNoteService $notes,
+    ): JsonResponse {
+        $this->assertPrivateNoteStudent($student, $privateNote);
+
+        $data = $request->validate([
+            'category' => ['sometimes', Rule::in(TeacherPrivateNoteCategory::values())],
+            'body' => ['sometimes', 'string', 'max:'.TeacherPrivateNoteService::BODY_MAX],
+            'pinned' => ['sometimes', 'boolean'],
+            'surah_number' => ['nullable', 'integer', 'between:1,114'],
+            'ayah_start' => ['nullable', 'integer', 'min:1'],
+            'ayah_end' => ['nullable', 'integer', 'min:1'],
+            'teacher_assignment_id' => ['nullable', 'integer'],
+        ]);
+
+        $note = $notes->update($this->teacher($request), $privateNote, $data);
+
+        return $this->json(['note' => $notes->present($note)]);
+    }
+
+    public function destroyPrivateNote(
+        Request $request,
+        User $student,
+        TeacherPrivateNote $privateNote,
+        TeacherPrivateNoteService $notes,
+    ): JsonResponse {
+        $this->assertPrivateNoteStudent($student, $privateNote);
+        $notes->delete($this->teacher($request), $privateNote);
+
+        return $this->json(['deleted' => true]);
+    }
+
+    public function archivePrivateNote(
+        Request $request,
+        User $student,
+        TeacherPrivateNote $privateNote,
+        TeacherPrivateNoteService $notes,
+    ): JsonResponse {
+        $this->assertPrivateNoteStudent($student, $privateNote);
+        $note = $notes->archive($this->teacher($request), $privateNote);
+
+        return $this->json(['note' => $notes->present($note)]);
+    }
+
+    public function unarchivePrivateNote(
+        Request $request,
+        User $student,
+        TeacherPrivateNote $privateNote,
+        TeacherPrivateNoteService $notes,
+    ): JsonResponse {
+        $this->assertPrivateNoteStudent($student, $privateNote);
+        $note = $notes->unarchive($this->teacher($request), $privateNote);
+
+        return $this->json(['note' => $notes->present($note)]);
+    }
+
+    public function sharePrivateNote(
+        Request $request,
+        User $student,
+        TeacherPrivateNote $privateNote,
+        TeacherPrivateNoteService $notes,
+    ): JsonResponse {
+        $this->assertPrivateNoteStudent($student, $privateNote);
+        $data = $request->validate([
+            'body' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $note = $notes->shareWithStudent(
+            $this->teacher($request),
+            $privateNote,
+            array_key_exists('body', $data) ? (string) $data['body'] : null,
+        );
+
+        return $this->json(['note' => $notes->present($note)], 201);
+    }
+
+    public function destroyAssignmentMessage(Request $request, TeacherNote $note, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $assignments->deleteTeacherMessage($teacher, $note);
+
+        return $this->json(['removed' => true]);
+    }
+
+    public function recitationDifficultyQueue(Request $request, RecitationDifficultyService $difficulties): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['data' => $difficulties->reviewQueue($teacher, (int) $request->integer('limit', 12))]);
+    }
+
+    public function studentRecitationDifficulties(Request $request, User $student, RecitationDifficultyService $difficulties): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $page = $difficulties->listForStudent(
+            $teacher,
+            $student,
+            (int) $request->integer('per_page', 20),
+            $request->query('state'),
+            $request->query('review'),
+            true,
+        );
+
+        return $this->json([
+            'summary' => $difficulties->studentSummary($teacher, $student)['counts'],
+            'data' => $page->items(),
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'last_page' => $page->lastPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+            ],
+        ]);
+    }
+
+    public function showStudentRecitationDifficulty(
+        Request $request,
+        User $student,
+        MemorisationWeakSpot $spot,
+        RecitationDifficultyService $difficulties,
+    ): JsonResponse {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['difficulty' => $difficulties->show($teacher, $student, $spot, true)]);
+    }
+
+    public function reviewStudentRecitationDifficulty(
+        Request $request,
+        User $student,
+        MemorisationWeakSpot $spot,
+        RecitationDifficultyService $difficulties,
+    ): JsonResponse {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['confirmed', 'dismissed', 'clear'])],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        return $this->json(['difficulty' => $difficulties->review($teacher, $student, $spot, $data)]);
+    }
+
+    public function learningPlans(Request $request, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $studentId = $request->query('student_id') ? (int) $request->query('student_id') : null;
+
+        return $this->json(['data' => $plans->listForTeacher($teacher, $studentId)]);
+    }
+
+    public function storeLearningPlan(Request $request, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'student_id' => ['required', 'integer'],
+            'title' => ['required', 'string', 'max:160'],
+            'cadence' => ['nullable', Rule::in(['weekly', 'monthly'])],
+            'starts_on' => ['nullable', 'date'],
+            'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'source_template_id' => ['nullable', 'integer'],
+            'activate' => ['nullable', 'boolean'],
+            'items' => ['nullable', 'array'],
+            'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
+            'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
+            'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
+            'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.ayah_end' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.repetition_target' => ['nullable', 'integer', 'between:1,50'],
+            'items.*.due_on' => ['nullable', 'date'],
+            'items.*.priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
+            'items.*.instructions' => ['nullable', 'string', 'max:2000'],
+            'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
+            'items.*.weak_spot_id' => ['nullable', 'integer'],
+        ]);
+
+        $plan = $plans->createPlan($teacher, $data);
+
+        return $this->json(['plan' => $plans->presentPlan($plan)], 201);
+    }
+
+    public function updateLearningPlan(Request $request, LearningPlan $plan, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'title' => ['sometimes', 'string', 'max:160'],
+            'cadence' => ['nullable', Rule::in(['weekly', 'monthly'])],
+            'starts_on' => ['nullable', 'date'],
+            'ends_on' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'status' => ['nullable', Rule::in(['draft', 'active', 'paused', 'completed', 'archived'])],
+            'items' => ['nullable', 'array'],
+            'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
+            'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
+            'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
+            'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.ayah_end' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.repetition_target' => ['nullable', 'integer', 'between:1,50'],
+            'items.*.due_on' => ['nullable', 'date'],
+            'items.*.priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
+            'items.*.instructions' => ['nullable', 'string', 'max:2000'],
+            'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
+            'items.*.id' => ['nullable', 'integer'],
+        ]);
+        $updated = $plans->updatePlan($teacher, $plan, $data);
+
+        return $this->json(['plan' => $plans->presentPlan($updated)]);
+    }
+
+    public function setLearningPlanStatus(Request $request, LearningPlan $plan, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['draft', 'active', 'paused', 'completed', 'archived'])],
+        ]);
+
+        return $this->json(['plan' => $plans->presentPlan($plans->setStatus($teacher, $plan, $data['status']))]);
+    }
+
+    public function approveLearningPlanItem(Request $request, LearningPlanItem $item, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['item' => $plans->presentItem($plans->approveSuggestion($teacher, $item))]);
+    }
+
+    public function skipLearningPlanItem(Request $request, LearningPlanItem $item, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['item' => $plans->presentItem($plans->skipItem($teacher, $item))]);
+    }
+
+    public function learningPlanSuggestions(Request $request, User $student, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['suggestions' => $plans->suggestFromWeakSpots($teacher, $student)]);
+    }
+
+    public function learningPlanTemplates(Request $request, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['data' => $plans->listTemplates($teacher)]);
+    }
+
+    public function storeLearningPlanTemplate(Request $request, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'cadence' => ['nullable', Rule::in(['weekly', 'monthly'])],
+            'is_shared' => ['nullable', 'boolean'],
+            'items' => ['nullable', 'array'],
+            'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
+            'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
+            'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
+            'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.ayah_end' => ['required_with:items', 'integer', 'min:1'],
+            'items.*.repetition_target' => ['nullable', 'integer', 'between:1,50'],
+            'items.*.day_offset' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'items.*.priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
+            'items.*.instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $template = $plans->saveTemplate($teacher, $data);
+
+        return $this->json(['template' => $plans->presentTemplate($template)], 201);
+    }
+
+    public function applyLearningPlanTemplate(Request $request, LearningPlanTemplate $template, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'student_id' => ['required', 'integer'],
+            'starts_on' => ['nullable', 'date'],
+        ]);
+        $plan = $plans->createFromTemplate($teacher, $template, (int) $data['student_id'], $data['starts_on'] ?? null);
+
+        return $this->json(['plan' => $plans->presentPlan($plan)], 201);
     }
 
     private function teacher(Request $request): User
@@ -423,6 +794,11 @@ class TeacherDashboardController extends Controller
         abort_unless($user instanceof User && $user->isTeacher(), 403);
 
         return $user;
+    }
+
+    private function assertPrivateNoteStudent(User $student, TeacherPrivateNote $privateNote): void
+    {
+        abort_unless((int) $privateNote->student_id === (int) $student->id, 404);
     }
 
     /**

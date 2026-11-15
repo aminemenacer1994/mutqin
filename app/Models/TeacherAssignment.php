@@ -26,6 +26,7 @@ class TeacherAssignment extends Model
             'ayah_end' => 'integer',
             'repetition_target' => 'integer',
             'due_at' => 'datetime',
+            'priority' => 'string',
         ];
     }
 
@@ -42,6 +43,16 @@ class TeacherAssignment extends Model
     public function learningGroup(): BelongsTo
     {
         return $this->belongsTo(LearningGroup::class);
+    }
+
+    public function learningPlan(): BelongsTo
+    {
+        return $this->belongsTo(LearningPlan::class);
+    }
+
+    public function learningPlanItem(): BelongsTo
+    {
+        return $this->belongsTo(LearningPlanItem::class);
     }
 
     public function recipients(): HasMany

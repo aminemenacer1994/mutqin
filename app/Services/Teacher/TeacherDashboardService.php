@@ -22,6 +22,7 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherNote;
+use App\Models\TeacherRecitationReview;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Learning\AiReciteAttemptAudioService;
@@ -30,6 +31,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
 use App\Support\Registration\OrganisationName;
 use App\Support\TeacherFeatures;
+use App\Support\TeacherRecitationWordEvidence;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -45,6 +47,9 @@ class TeacherDashboardService
         private readonly AiReciteAttemptAudioService $audio,
         private readonly TeacherAttendanceService $attendance,
         private readonly TeacherDirectMessageService $directMessages,
+        private readonly LearningPlanService $learningPlans,
+        private readonly RecitationDifficultyService $difficulties,
+        private readonly TeacherWordCoachingService $wordCoachings,
     ) {}
 
     /**
@@ -109,6 +114,7 @@ class TeacherDashboardService
                 'assignments' => $assignments,
                 'surahs' => $this->surahCatalog(),
                 'roster' => $this->organisationRoster($teacher, $ids),
+                'difficulty_queue' => $this->difficulties->reviewQueue($teacher, 10),
             ];
         });
     }
@@ -137,6 +143,7 @@ class TeacherDashboardService
             return [
                 'id' => $id,
                 'name' => $user->name,
+                'email' => $user->email,
                 'groups' => $groups->get($id, collect())->map(fn (LearningGroup $group) => [
                     'id' => (int) $group->id,
                     'name' => $group->name,
@@ -163,7 +170,10 @@ class TeacherDashboardService
         $query = trim((string) ($filters['q'] ?? ''));
         if ($query !== '') {
             $needle = mb_strtolower($query);
-            $rows = $rows->filter(fn (array $row) => str_contains(mb_strtolower($row['name']), $needle))->values();
+            $rows = $rows->filter(function (array $row) use ($needle) {
+                return str_contains(mb_strtolower($row['name']), $needle)
+                    || str_contains(mb_strtolower((string) ($row['email'] ?? '')), $needle);
+            })->values();
         }
 
         $groupId = (int) ($filters['group_id'] ?? 0);
@@ -246,7 +256,7 @@ class TeacherDashboardService
 
         $this->assertAuthorised($teacher, $student);
         $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
-        $section = in_array($section, ['overview', 'analytics', 'practice', 'focus', 'weak', 'ai', 'revision', 'tasks', 'messages'], true) ? $section : 'overview';
+        $section = in_array($section, ['overview', 'analytics', 'practice', 'focus', 'weak', 'ai', 'revision', 'tasks', 'messages', 'notes'], true) ? $section : 'overview';
         $metrics = $this->metricsFor($teacher, [(int) $student->id])[(int) $student->id];
         $groups = $this->sharedGroups($teacher, [(int) $student->id])->get($student->id, collect());
 
@@ -262,6 +272,11 @@ class TeacherDashboardService
                 ])->values()->all(),
             ],
             'section' => $section,
+            'meta' => [
+                'ai_success_rate' => $metrics['ai_success_rate'] ?? null,
+                'ai_attempts' => (int) ($metrics['ai_attempts'] ?? 0),
+                'assignments_overdue' => (int) ($metrics['assignments']['overdue'] ?? 0),
+            ],
         ];
 
         $base['payload'] = match ($section) {
@@ -272,6 +287,7 @@ class TeacherDashboardService
             'revision' => $this->revisionSection($teacher, $student),
             'tasks' => $this->tasksSection($teacher, $student),
             'messages' => ['messages' => $this->directMessages->thread($teacher, $student, $teacher)],
+            'notes' => app(TeacherPrivateNoteService::class)->listForStudent($teacher, $student, request()->query()),
             'analytics' => $this->analyticsSection($teacher, $student, $metrics),
             default => $this->overviewSection($teacher, $student, $metrics),
         };
@@ -370,17 +386,50 @@ class TeacherDashboardService
         return $this->presentGroup($teacher, $group, $teaches, $this->access->authorizedStudentIds($teacher), true);
     }
 
-    public function addNote(User $teacher, User $student, string $kind, string $body): TeacherNote
-    {
+    public function addNote(
+        User $teacher,
+        User $student,
+        string $kind,
+        string $body,
+        ?\Illuminate\Http\UploadedFile $audio = null,
+        ?int $durationMs = null,
+        ?int $surahNumber = null,
+        ?int $ayahStart = null,
+        ?int $ayahEnd = null,
+        ?int $assignmentId = null,
+    ): TeacherNote {
         TeacherFeatures::abortUnlessEnabled();
 
         $this->assertAuthorised($teacher, $student);
         $noteKind = TeacherNoteKind::tryFrom($kind);
         $body = trim($body);
-        if ($noteKind === null || $body === '' || mb_strlen($body) > 2000) {
+        if ($noteKind === null || mb_strlen($body) > 2000) {
             throw ValidationException::withMessages([
                 'body' => 'Enter a note of up to 2000 characters.',
             ]);
+        }
+        if ($body === '' && $audio === null) {
+            throw ValidationException::withMessages([
+                'body' => 'Enter written feedback or add an audio recording.',
+            ]);
+        }
+
+        if ($assignmentId !== null) {
+            $assignment = \App\Models\TeacherAssignment::query()
+                ->whereKey($assignmentId)
+                ->where('teacher_id', $teacher->id)
+                ->first();
+            if ($assignment === null) {
+                abort(404);
+            }
+            $surahNumber ??= (int) $assignment->surah_number;
+            $ayahStart ??= (int) $assignment->ayah_start;
+            $ayahEnd ??= (int) $assignment->ayah_end;
+        }
+
+        if ($surahNumber !== null) {
+            $ayahStart ??= 1;
+            $ayahEnd = max($ayahStart, $ayahEnd ?? $ayahStart);
         }
 
         $note = new TeacherNote;
@@ -388,11 +437,25 @@ class TeacherDashboardService
             'teacher_id' => $teacher->id,
             'student_id' => $student->id,
             'organisation_id' => $teacher->organisation_id,
+            'teacher_assignment_id' => $assignmentId,
+            'surah_number' => $surahNumber,
+            'ayah_start' => $ayahStart,
+            'ayah_end' => $ayahEnd,
             'kind' => $noteKind->value,
             'body' => $body,
         ])->save();
 
-        return $note;
+        if ($audio !== null) {
+            $audioService = app(TeacherAssignmentMessageAudioService::class);
+            if (! $audioService->store($note, $audio, $durationMs)) {
+                $note->delete();
+                throw ValidationException::withMessages([
+                    'audio' => 'Use a supported voice recording smaller than 8 MB.',
+                ]);
+            }
+        }
+
+        return $note->refresh();
     }
 
     /**
@@ -479,7 +542,7 @@ class TeacherDashboardService
             ->values()
             ->all();
 
-        return [
+        $payload = [
             'account_role' => $user->account_role?->value,
             'teacher_dashboard_url' => $user->isTeacher() ? route('teacher.dashboard') : null,
             'assignments' => $assignmentPayloads,
@@ -487,6 +550,55 @@ class TeacherDashboardService
             'direct_threads' => $this->directMessages->threadsForStudent($user),
             'overview' => $this->learnerOverview($user, $assignments),
             'learning' => $this->learnerLearning($user, $assignmentPayloads),
+            'learning_plan' => $this->learningPlans->presentForLearner($user),
+            'recitation_difficulties' => $this->learnerRecitationDifficulties($user),
+        ];
+
+        $attendance = $this->attendance->learnerSummary($user);
+        if ($attendance !== null) {
+            $payload['attendance'] = $attendance;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function learnerRecitationDifficulties(User $user): array
+    {
+        $page = $this->difficulties->listForStudent($user, $user, 8, null, null, false);
+        $counts = [
+            'recurring' => MemorisationWeakSpot::query()
+                ->where('user_id', $user->id)
+                ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+                ->where('affected_attempt_count', '>=', 2)
+                ->where(function ($query) {
+                    $query->whereNull('teacher_review_status')
+                        ->orWhere('teacher_review_status', '!=', MemorisationWeakSpot::REVIEW_DISMISSED);
+                })
+                ->count(),
+            'improving' => MemorisationWeakSpot::query()
+                ->where('user_id', $user->id)
+                ->where('status', MemorisationWeakSpot::STATUS_IMPROVING)
+                ->count(),
+            'resolved' => MemorisationWeakSpot::query()
+                ->where('user_id', $user->id)
+                ->where(function ($query) {
+                    $query->where('status', MemorisationWeakSpot::STATUS_RESOLVED)
+                        ->orWhere('teacher_review_status', MemorisationWeakSpot::REVIEW_DISMISSED);
+                })
+                ->count(),
+            'insufficient_data' => MemorisationWeakSpot::query()
+                ->where('user_id', $user->id)
+                ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+                ->where('affected_attempt_count', '<', 2)
+                ->count(),
+        ];
+
+        return [
+            'counts' => $counts,
+            'items' => collect($page->items())->values()->all(),
         ];
     }
 
@@ -500,21 +612,31 @@ class TeacherDashboardService
             ->where('user_id', $user->id)
             ->whereIn('status', [MemorisationWeakSpot::STATUS_ACTIVE, MemorisationWeakSpot::STATUS_IMPROVING])
             ->where('affected_attempt_count', '>=', 1)
+            ->where(function ($query) {
+                $query->whereNull('teacher_review_status')
+                    ->orWhere('teacher_review_status', '!=', MemorisationWeakSpot::REVIEW_DISMISSED);
+            })
+            ->withCount('occurrences')
             ->orderByDesc('affected_attempt_count')
             ->orderByDesc('last_identified_at')
-            ->limit(6)
+            ->limit(8)
             ->get()
-            ->map(fn (MemorisationWeakSpot $spot) => [
-                'id' => (int) $spot->id,
-                'label' => QuranMetadata::name((int) $spot->surah_number).' · '.(int) $spot->ayah_number,
-                'surah_number' => (int) $spot->surah_number,
-                'ayah_number' => (int) $spot->ayah_number,
-                'spot_type' => $spot->spot_type,
-                'affected_attempt_count' => (int) $spot->affected_attempt_count,
-                'issue' => $this->learnerWeakSpotIssue($spot),
-                'source' => 'ai_suggestion',
-                'href' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
-            ])->all();
+            ->map(function (MemorisationWeakSpot $spot) {
+                $presented = $this->difficulties->present($spot, includeHistory: false);
+
+                return [
+                    ...$presented,
+                    'label' => $presented['ayah_label'],
+                    'issue' => $this->learnerWeakSpotIssue($spot),
+                    'source' => 'ai_suggestion',
+                    'href' => $this->memorisationEvidenceUrl(
+                        (int) $spot->surah_number,
+                        (int) $spot->ayah_number,
+                        (int) $spot->ayah_number,
+                        true
+                    ),
+                ];
+            })->all();
 
         $revisionPlans = MemorisationPracticePlan::query()
             ->where('user_id', $user->id)
@@ -622,9 +744,21 @@ class TeacherDashboardService
             ->values()
             ->all();
 
+        $recitationNoteIds = TeacherRecitationReview::query()
+            ->where('student_id', $user->id)
+            ->whereNotNull('feedback_note_id')
+            ->pluck('feedback_note_id')
+            ->map(fn ($id) => (int) $id)
+            ->flip();
+
         $feedbackInbox = collect($taskFeedback)
             ->merge(collect($this->learnerGeneralFeedback($user)))
             ->unique('id')
+            ->map(function (array $item) use ($recitationNoteIds) {
+                $item['recitation'] = $recitationNoteIds->has((int) ($item['id'] ?? 0));
+
+                return $item;
+            })
             ->sortByDesc('created_at')
             ->values()
             ->take(12)
@@ -632,6 +766,7 @@ class TeacherDashboardService
 
         return [
             'feedback_inbox' => $feedbackInbox,
+            'word_corrections' => $this->wordCoachings->forStudent($user),
             'weak_focus' => array_slice($weakSpots, 0, 4),
             'revision_queue' => array_slice($revisionPlans, 0, 4),
             'submissions' => array_slice($submissions, 0, 10),
@@ -644,19 +779,40 @@ class TeacherDashboardService
     private function presentLearnerFeedbackNote(TeacherNote $note, ?int $recipientId = null): ?array
     {
         $body = trim((string) $note->body);
-        if ($body === '') {
+        $audio = app(TeacherAssignmentMessageAudioService::class)->payload($note);
+        if ($body === '' && ! ($audio['available'] ?? false)) {
             return null;
         }
+
+        $surah = $note->surah_number ? (int) $note->surah_number : null;
+        $from = $note->ayah_start ? (int) $note->ayah_start : null;
+        $to = $note->ayah_end ? (int) $note->ayah_end : $from;
+        $passageLabel = null;
+        if ($surah && $from) {
+            $passageLabel = QuranMetadata::name($surah).' · '.$from.($to && $to !== $from ? '–'.$to : '');
+        }
+
+        $preview = $body !== ''
+            ? (mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'…' : $body)
+            : ($audio['available'] ? 'Audio feedback' : '');
 
         return [
             'id' => (int) $note->id,
             'body' => $body,
-            'preview' => mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'…' : $body,
+            'preview' => $preview,
+            'audio' => $audio,
+            'passage' => $surah && $from ? [
+                'surah_number' => $surah,
+                'surah_name' => QuranMetadata::name($surah),
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+                'label' => $passageLabel,
+            ] : null,
             'teacher_name' => $note->teacher?->name,
             'teacher_id' => $note->teacher_id ? (int) $note->teacher_id : null,
             'created_at' => $note->created_at?->toIso8601String(),
             'source' => 'task',
-            'task_title' => null,
+            'task_title' => $passageLabel,
             'recipient_id' => $recipientId ? (int) $recipientId : null,
             'unread' => $note->read_at === null,
         ];
@@ -1396,9 +1552,27 @@ class TeacherDashboardService
                 'recommendation' => $metrics['recommendation'],
             ],
             'calendar' => $this->calendar((int) $student->id),
-            'attendance' => $this->attendance->recentForStudent($teacher, $student),
+            ...$this->attendanceOverviewPayload($teacher, $student),
             'hifz_this_week' => $this->hifzThisWeek($teacher, $student),
             'latest_saved' => $saved ? $this->presentSession($saved) : null,
+        ];
+    }
+
+    /**
+     * @return array{attendance: list<array{date: string, status: string, group: string, notes: string|null, source: string}>, attendance_summary: array{rate_percent: int|null, total: int, counts: array{present: int, absent: int, late: int, excused: int}, source: string}}
+     */
+    private function attendanceOverviewPayload(User $teacher, User $student): array
+    {
+        $summary = $this->attendance->profileForStudent($teacher, $student);
+
+        return [
+            'attendance' => $summary['history'],
+            'attendance_summary' => [
+                'rate_percent' => $summary['rate_percent'],
+                'total' => $summary['total'],
+                'counts' => $summary['counts'],
+                'source' => 'teacher_recorded',
+            ],
         ];
     }
 
@@ -1598,6 +1772,11 @@ class TeacherDashboardService
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->where('affected_attempt_count', '>=', 2)
+            ->where(function ($query) {
+                $query->whereNull('teacher_review_status')
+                    ->orWhere('teacher_review_status', '!=', MemorisationWeakSpot::REVIEW_DISMISSED);
+            })
+            ->withCount('occurrences')
             ->orderByDesc('last_identified_at')
             ->orderByDesc('id')
             ->orderByDesc('affected_attempt_count')
@@ -1613,24 +1792,20 @@ class TeacherDashboardService
             ->values();
 
         $evidenceAttempts = $this->attemptsForWeakSpots($student, $spots);
-        $items = $spots->map(fn (MemorisationWeakSpot $spot) => [
-            'id' => (int) $spot->id,
-            'spot_type' => $spot->spot_type,
-            'surah_number' => (int) $spot->surah_number,
-            'surah_name' => QuranMetadata::name((int) $spot->surah_number),
-            'ayah_number' => (int) $spot->ayah_number,
-            'word_index' => $spot->word_index,
-            'severity' => $spot->severity,
-            'status' => $spot->status,
-            'trend' => $spot->trend,
-            'affected_attempt_count' => (int) $spot->affected_attempt_count,
-            'first_identified_at' => $spot->first_identified_at?->toIso8601String(),
-            'last_identified_at' => $spot->last_identified_at?->toIso8601String(),
-            'evidence_url' => $this->memorisationEvidenceUrl((int) $spot->surah_number, (int) $spot->ayah_number, (int) $spot->ayah_number, true),
-            'evidence' => ($attempt = $this->attemptForWeakSpot($spot, $evidenceAttempts))
+        $items = $spots->map(function (MemorisationWeakSpot $spot) use ($evidenceAttempts) {
+            $presented = $this->difficulties->present($spot, includeHistory: false);
+            $presented['evidence_url'] = $this->memorisationEvidenceUrl(
+                (int) $spot->surah_number,
+                (int) $spot->ayah_number,
+                (int) $spot->ayah_number,
+                true
+            );
+            $presented['evidence'] = ($attempt = $this->attemptForWeakSpot($spot, $evidenceAttempts))
                 ? $this->presentAttemptEvidence($attempt)
-                : null,
-        ])->all();
+                : null;
+
+            return $presented;
+        })->all();
 
         return ['items' => $items];
     }
@@ -1671,6 +1846,7 @@ class TeacherDashboardService
             'score_count' => $scored->count(),
             'score_window_start' => $scored->min('created_at')?->toIso8601String(),
             'score_window_end' => $scored->max('created_at')?->toIso8601String(),
+            'difficulties' => $this->difficulties->studentSummary($teacher, $student),
             'attempts' => $attempts->map(fn (AiReciteAttempt $attempt) => [
                 'id' => (int) $attempt->id,
                 'teacher_assessment' => ($human = $humanAssessments->get($attempt->id)) ? [
@@ -1782,52 +1958,7 @@ class TeacherDashboardService
         $assessment = $attempt->assessment;
         $assessmentStatus = $assessment?->status;
         $transcript = $this->attemptTranscript($attempt);
-        $words = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
-            ->filter(fn ($word) => is_array($word))
-            ->map(function (array $word): ?array {
-                $text = trim((string) (
-                    $word['expected_word']
-                    ?? $word['displayText']
-                    ?? $word['text']
-                    ?? $word['expected']
-                    ?? $word['word']
-                    ?? ''
-                ));
-                $ayah = isset($word['ayah_number'])
-                    ? (int) $word['ayah_number']
-                    : (isset($word['ayah']) ? (int) $word['ayah'] : null);
-                $wordIndex = isset($word['ayah_word_index'])
-                    ? (int) $word['ayah_word_index']
-                    : (isset($word['word_index']) ? (int) $word['word_index'] : null);
-
-                if ($text === '' && ($ayah === null || $wordIndex === null)) {
-                    return null;
-                }
-
-                $payload = [
-                    'status' => (string) ($word['status'] ?? 'unknown'),
-                    'type' => isset($word['type']) ? (string) $word['type'] : null,
-                    'detected' => trim((string) (
-                        $word['recognised_word']
-                        ?? $word['recognized_word']
-                        ?? $word['detected_token']
-                        ?? $word['detected']
-                        ?? $word['actual']
-                        ?? ''
-                    )) ?: null,
-                    'ayah' => $ayah,
-                    'word_index' => $wordIndex,
-                ];
-                if ($text !== '' && ! preg_match('/^word$/iu', $text)) {
-                    $payload['text'] = mb_substr($text, 0, 120);
-                }
-
-                return $payload;
-            })
-            ->filter()
-            ->take(250)
-            ->values()
-            ->all();
+        $words = TeacherRecitationWordEvidence::fromAttempt($attempt);
 
         return [
             'attempt_id' => (int) $attempt->id,

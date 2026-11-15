@@ -4,6 +4,7 @@ import {
   detectedWords,
   paintReferenceWords,
 } from '../dashboard/progressView.js'
+import { loadTeacherMadaniAyah, overlayMadaniGlyphs } from '../teacher/madaniDisplayWords.js'
 
 /** Reference words that need review (matches RecitationAlignmentStatus::isFlagged). */
 const ATTENTION_STATES = new Set([
@@ -307,10 +308,12 @@ export async function buildAttemptAyahFeedback({
         return number === ayah
       })
       const painted = paintReferenceWords(loaded?.text || '', stored, ayah)
+      const glyphs = await loadTeacherMadaniAyah(surahNumber, ayah)
+      const reference = overlayMadaniGlyphs(painted.words, glyphs)
       const finalCounts = countsFromPaintedWords(painted.words, stored)
       return {
         number: ayah,
-        reference: painted.words,
+        reference,
         detected: detectedWords(stored, ayah),
         reviewWords: reviewWordPairs(stored, ayah),
         stored,
@@ -319,7 +322,7 @@ export async function buildAttemptAyahFeedback({
         needsAttention: ayahNeedsAttention(finalCounts),
         attentionKey: ayahAttentionSummaryKey(finalCounts),
         attentionCount: asNumber(finalCounts.attention),
-        source: painted.source,
+        source: reference.length ? 'madani' : 'unavailable',
       }
     })())
   }

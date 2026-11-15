@@ -355,6 +355,13 @@ class LearningHistoryRetentionService
                 ->where('user_id', $user->id)
                 ->delete();
 
+            // Private teacher notes must not outlive either party.
+            \App\Models\TeacherPrivateNote::withTrashed()
+                ->where(function ($query) use ($user) {
+                    $query->where('teacher_id', $user->id)->orWhere('student_id', $user->id);
+                })
+                ->forceDelete();
+
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }

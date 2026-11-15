@@ -71,9 +71,13 @@ final class TeacherAnchorStudentEnroller
 
         $joined = now()->subDays(30);
         $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first() ?? new User;
-        // A configured mailbox may now be the demo teacher. Never convert an
-        // existing teacher (or another real account) into a student here.
+        // A configured mailbox may already be the owner's personal account.
+        // Keep that role and progress, and still list them for demo teachers.
         if ($user->exists && $user->account_role !== AccountRole::Student) {
+            foreach ($groupIds as $groupId) {
+                $this->ensureStudentMembership($user, (int) $groupId);
+            }
+
             return;
         }
         $attributes = [

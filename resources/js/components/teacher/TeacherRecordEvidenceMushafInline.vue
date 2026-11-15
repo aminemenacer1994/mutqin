@@ -12,6 +12,7 @@
       </div>
       <p v-if="loading" class="teacher-record-evidence__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
       <TeacherReciteMushafAyahs v-else-if="ayahs.length" :ayahs="ayahs" />
+      <p v-else class="teacher-record-evidence__muted">{{ t('teacher.madani_text_unavailable') }}</p>
     </div>
   </div>
 </template>

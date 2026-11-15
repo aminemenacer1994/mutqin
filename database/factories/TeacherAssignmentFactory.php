@@ -30,6 +30,7 @@ class TeacherAssignmentFactory extends Factory
             'ayah_end' => 7,
             'repetition_target' => 1,
             'due_at' => null,
+            'priority' => 'normal',
             'feedback' => null,
         ];
     }

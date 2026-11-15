@@ -1030,6 +1030,7 @@ export default {
       // Present only while a teacher-task deep link is being consumed. The API
       // validates the recipient, task kind, and exact ayah range independently.
       teacherAssignmentRecipientId: null,
+      wordCoachingId: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
       learnerStreakDays: 0,
@@ -14551,6 +14552,7 @@ export default {
         const panel = String(params.get('panel') || '').trim().toLowerCase()
         const returnTo = String(params.get('return') || '').trim().toLowerCase()
         const assignmentRecipientId = Number(params.get('assignment_recipient') || 0)
+        const wordCoachingId = Number(params.get('word_coaching') || 0)
         const surah = Number(params.get('surah') || 0)
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
@@ -14590,6 +14592,7 @@ export default {
             panel: panel || null,
             returnTo: returnTo || null,
             assignmentRecipientId: assignmentRecipientId > 0 ? assignmentRecipientId : null,
+            wordCoachingId: wordCoachingId > 0 ? wordCoachingId : null,
             journey: journey || null,
             surah: surah > 0 ? surah : 0,
             from: from > 0 ? from : 0,
@@ -14614,7 +14617,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14629,6 +14632,7 @@ export default {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
       this.teacherAssignmentRecipientId = Number(entry.assignmentRecipientId || 0) || null
+      this.wordCoachingId = Number(entry.wordCoachingId || 0) || null
       this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
         ? (this.learnerDashboardUrl || '/dashboard')
         : null
@@ -30244,6 +30248,8 @@ export default {
       if (assignmentRecipientId) {
         payload.teacher_assignment_recipient_id = assignmentRecipientId
       }
+      const wordCoachingId = Number(this.wordCoachingId || 0)
+      if (wordCoachingId > 0) payload.word_coaching_id = wordCoachingId
 
       try {
         const data = await memorisationDetectionApi.createAssessment(payload)
@@ -30276,6 +30282,7 @@ export default {
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this._lastAmdSubmitData = data
         if (assignmentRecipientId) this.teacherAssignmentRecipientId = null
+        if (wordCoachingId > 0) this.wordCoachingId = null
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
         const canonicalResult = applyBackendAlignmentToResult(result, data.assessment || {})

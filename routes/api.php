@@ -21,11 +21,13 @@ use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\MutashabihatController;
 use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
+use App\Http\Controllers\Api\Learning\RevisionReminderController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
+use App\Http\Controllers\Api\Teacher\TeacherRecitationPlaybackController;
 use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\BillingController;
@@ -175,6 +177,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/overview', [TeacherDashboardController::class, 'overview'])->name('api.teacher.overview');
                 Route::get('/students', [TeacherDashboardController::class, 'students'])->name('api.teacher.students');
                 Route::get('/attendance', [TeacherDashboardController::class, 'attendance'])->name('api.teacher.attendance');
+                Route::post('/attendance/groups/{group}/lessons', [TeacherDashboardController::class, 'scheduleLesson'])->name('api.teacher.attendance.lessons.store');
                 Route::put('/attendance/groups/{group}/students/{student}', [TeacherDashboardController::class, 'setAttendance'])->name('api.teacher.attendance.set');
                 Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
                 Route::delete('/students/{student}', [TeacherDashboardController::class, 'deleteStudent'])->name('api.teacher.students.destroy');
@@ -183,8 +186,23 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1')->name('api.teacher.students.messages.store');
                 Route::delete('/students/{student}/messages/{note}', [TeacherDashboardController::class, 'deleteStudentMessage'])->name('api.teacher.students.messages.destroy');
                 Route::put('/students/{student}/attempts/{attempt}/assessment', [TeacherDashboardController::class, 'assessRecitation'])->name('api.teacher.students.attempts.assess');
+                Route::get('/students/{student}/attempts/{attempt}/playback', [TeacherRecitationPlaybackController::class, 'show'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback');
+                Route::post('/students/{student}/attempts/{attempt}/playback/review', [TeacherRecitationPlaybackController::class, 'review'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.review');
+                Route::post('/students/{student}/attempts/{attempt}/playback/feedback', [TeacherRecitationPlaybackController::class, 'feedback'])->whereNumber('attempt')->middleware('throttle:20,1')->name('api.teacher.students.attempts.playback.feedback');
+                Route::post('/students/{student}/attempts/{attempt}/playback/private-note', [TeacherRecitationPlaybackController::class, 'privateNote'])->whereNumber('attempt')->middleware('throttle:40,1')->name('api.teacher.students.attempts.playback.private-note');
+                Route::post('/students/{student}/attempts/{attempt}/playback/revision', [TeacherRecitationPlaybackController::class, 'revision'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.revision');
+                Route::post('/students/{student}/attempts/{attempt}/playback/words', [TeacherRecitationPlaybackController::class, 'word'])->whereNumber('attempt')->middleware('throttle:30,1')->name('api.teacher.students.attempts.playback.words');
+                Route::delete('/students/{student}/attempts/{attempt}/playback/corrections/{correction}/audio', [TeacherRecitationPlaybackController::class, 'deleteWordAudio'])->whereNumber('attempt')->whereNumber('correction')->name('api.teacher.students.attempts.playback.corrections.audio.destroy');
+                Route::get('/word-coaching-corrections/{correction}/audio', [TeacherRecitationPlaybackController::class, 'correctionAudio'])->whereNumber('correction')->name('api.teacher.word-coaching-corrections.audio');
                 Route::post('/students/{student}/reviews/{practicePlan}/complete', [TeacherDashboardController::class, 'completeReview'])->name('api.teacher.students.reviews.complete');
                 Route::post('/students/{student}/notes', [TeacherDashboardController::class, 'storeNote'])->name('api.teacher.students.notes');
+                Route::get('/students/{student}/private-notes', [TeacherDashboardController::class, 'privateNotes'])->name('api.teacher.students.private-notes.index');
+                Route::post('/students/{student}/private-notes', [TeacherDashboardController::class, 'storePrivateNote'])->middleware('throttle:40,1')->name('api.teacher.students.private-notes.store');
+                Route::patch('/students/{student}/private-notes/{privateNote}', [TeacherDashboardController::class, 'updatePrivateNote'])->name('api.teacher.students.private-notes.update');
+                Route::delete('/students/{student}/private-notes/{privateNote}', [TeacherDashboardController::class, 'destroyPrivateNote'])->name('api.teacher.students.private-notes.destroy');
+                Route::post('/students/{student}/private-notes/{privateNote}/archive', [TeacherDashboardController::class, 'archivePrivateNote'])->name('api.teacher.students.private-notes.archive');
+                Route::post('/students/{student}/private-notes/{privateNote}/unarchive', [TeacherDashboardController::class, 'unarchivePrivateNote'])->name('api.teacher.students.private-notes.unarchive');
+                Route::post('/students/{student}/private-notes/{privateNote}/share', [TeacherDashboardController::class, 'sharePrivateNote'])->middleware('throttle:20,1')->name('api.teacher.students.private-notes.share');
                 Route::get('/groups', [TeacherDashboardController::class, 'groups'])->name('api.teacher.groups');
                 Route::post('/groups', [TeacherDashboardController::class, 'storeGroup'])->name('api.teacher.groups.store');
                 Route::get('/groups/{group}', [TeacherDashboardController::class, 'showGroup'])->name('api.teacher.groups.show');
@@ -197,8 +215,23 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/assignments/{assignment}', [TeacherDashboardController::class, 'updateAssignment'])->name('api.teacher.assignments.update');
                 Route::delete('/assignments/{assignment}', [TeacherDashboardController::class, 'destroyAssignment'])->name('api.teacher.assignments.destroy');
                 Route::post('/assignment-recipients/{recipient}/notes', [TeacherDashboardController::class, 'storeAssignmentMessage'])->name('api.teacher.assignment-recipients.notes.store');
+                Route::delete('/notes/{note}', [TeacherDashboardController::class, 'destroyAssignmentMessage'])->name('api.teacher.notes.destroy');
                 Route::post('/assignment-recipients/{recipient}/approve', [TeacherDashboardController::class, 'approveAssignmentRecipient'])->name('api.teacher.assignment-recipients.approve');
                 Route::post('/assignment-recipients/{recipient}/correction', [TeacherDashboardController::class, 'requestAssignmentCorrection'])->name('api.teacher.assignment-recipients.correction');
+                Route::get('/recitation-difficulties', [TeacherDashboardController::class, 'recitationDifficultyQueue'])->name('api.teacher.recitation-difficulties.queue');
+                Route::get('/students/{student}/recitation-difficulties', [TeacherDashboardController::class, 'studentRecitationDifficulties'])->name('api.teacher.students.recitation-difficulties.index');
+                Route::get('/students/{student}/recitation-difficulties/{spot}', [TeacherDashboardController::class, 'showStudentRecitationDifficulty'])->name('api.teacher.students.recitation-difficulties.show');
+                Route::post('/students/{student}/recitation-difficulties/{spot}/review', [TeacherDashboardController::class, 'reviewStudentRecitationDifficulty'])->name('api.teacher.students.recitation-difficulties.review');
+                Route::get('/learning-plans', [TeacherDashboardController::class, 'learningPlans'])->name('api.teacher.learning-plans.index');
+                Route::post('/learning-plans', [TeacherDashboardController::class, 'storeLearningPlan'])->name('api.teacher.learning-plans.store');
+                Route::put('/learning-plans/{plan}', [TeacherDashboardController::class, 'updateLearningPlan'])->name('api.teacher.learning-plans.update');
+                Route::post('/learning-plans/{plan}/status', [TeacherDashboardController::class, 'setLearningPlanStatus'])->name('api.teacher.learning-plans.status');
+                Route::post('/learning-plan-items/{item}/approve', [TeacherDashboardController::class, 'approveLearningPlanItem'])->name('api.teacher.learning-plan-items.approve');
+                Route::post('/learning-plan-items/{item}/skip', [TeacherDashboardController::class, 'skipLearningPlanItem'])->name('api.teacher.learning-plan-items.skip');
+                Route::get('/students/{student}/learning-plan-suggestions', [TeacherDashboardController::class, 'learningPlanSuggestions'])->name('api.teacher.students.learning-plan-suggestions');
+                Route::get('/learning-plan-templates', [TeacherDashboardController::class, 'learningPlanTemplates'])->name('api.teacher.learning-plan-templates.index');
+                Route::post('/learning-plan-templates', [TeacherDashboardController::class, 'storeLearningPlanTemplate'])->name('api.teacher.learning-plan-templates.store');
+                Route::post('/learning-plan-templates/{template}/apply', [TeacherDashboardController::class, 'applyLearningPlanTemplate'])->name('api.teacher.learning-plan-templates.apply');
             });
         });
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
@@ -331,6 +364,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
             ->middleware(['plan:pro', 'throttle:20,1'])
             ->name('api.memorisation.practice-plans.retest');
+
+        // Automated revision reminders (murājaʿah + teacher tasks).
+        Route::get('/revision-reminders', [RevisionReminderController::class, 'index'])
+            ->name('api.revision-reminders.index');
+        Route::get('/revision-reminders/preferences', [RevisionReminderController::class, 'preferences'])
+            ->name('api.revision-reminders.preferences');
+        Route::patch('/revision-reminders/preferences', [RevisionReminderController::class, 'updatePreferences'])
+            ->name('api.revision-reminders.preferences.update');
+        Route::post('/revision-reminders/{revisionReminder}/snooze', [RevisionReminderController::class, 'snooze'])
+            ->whereNumber('revisionReminder')
+            ->name('api.revision-reminders.snooze');
+        Route::post('/revision-reminders/{revisionReminder}/dismiss', [RevisionReminderController::class, 'dismiss'])
+            ->whereNumber('revisionReminder')
+            ->name('api.revision-reminders.dismiss');
 
         // Full-fidelity state blob used as the live persistence boundary.
         Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');

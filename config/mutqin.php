@@ -139,6 +139,34 @@ return [
         'retain_raw_audio' => $rawRecordingRetention === 'retain',
     ],
 
+    /*
+     | Automated revision reminders (spaced murājaʿah + teacher tasks).
+     | Zone ladders mirror resources/js/scripts/composables/useRetentionZones.js.
+     */
+    'revision_reminders' => [
+        'zones' => [
+            'Fresh' => [0, 1, 2],
+            'Stable' => [3, 7, 14],
+            'Strong' => [30, 60, 90],
+        ],
+        'quiet_hours' => [
+            'start' => max(0, min(23, (int) env('MUTQIN_REVISION_REMINDER_QUIET_START', 22))),
+            'end' => max(0, min(23, (int) env('MUTQIN_REVISION_REMINDER_QUIET_END', 7))),
+        ],
+        'max_in_app_per_day' => max(1, (int) env('MUTQIN_REVISION_REMINDER_MAX_IN_APP_PER_DAY', 3)),
+        'default_snooze_hours' => max(1, min(72, (int) env('MUTQIN_REVISION_REMINDER_SNOOZE_HOURS', 4))),
+        'max_emails_per_day' => max(1, (int) env('MUTQIN_REVISION_REMINDER_MAX_EMAILS_PER_DAY', 1)),
+    ],
+
+    /*
+     | Dedicated teacher private notes (author-only; never exposed to learners/parents).
+     | 0 disables the corresponding purge window.
+     */
+    'teacher_private_notes' => [
+        'archive_purge_days' => max(0, (int) env('MUTQIN_TEACHER_PRIVATE_NOTE_ARCHIVE_PURGE_DAYS', 365)),
+        'soft_delete_purge_days' => max(0, (int) env('MUTQIN_TEACHER_PRIVATE_NOTE_SOFT_DELETE_PURGE_DAYS', 30)),
+    ],
+
     /**
      * Microphone + AI audio privacy.
      *

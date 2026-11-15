@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
+use App\Enums\RevisionReminderPriority;
 use App\Support\TeacherTaskState;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
@@ -23,6 +24,7 @@ use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Support\LearnerCompletionAttempt;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
+use App\Support\TeacherRecitationWordEvidence;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -105,12 +107,16 @@ class TeacherAssignmentService
             ]);
         }
 
-        return DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients) {
+        $priority = RevisionReminderPriority::normalise($input['priority'] ?? 'normal')->value;
+
+        return DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority) {
             $assignment = new TeacherAssignment;
             $assignment->forceFill([
                 'teacher_id' => $teacher->id,
                 'organisation_id' => $teacher->organisation_id,
                 'learning_group_id' => $groupId,
+                'learning_plan_id' => isset($input['learning_plan_id']) ? (int) $input['learning_plan_id'] : null,
+                'learning_plan_item_id' => isset($input['learning_plan_item_id']) ? (int) $input['learning_plan_item_id'] : null,
                 'kind' => $kind->value,
                 'hifz_category' => $input['hifz_category'],
                 'surah_number' => $surah,
@@ -118,6 +124,7 @@ class TeacherAssignmentService
                 'ayah_end' => $end,
                 'repetition_target' => $target,
                 'due_at' => $input['due_at'] ?? null,
+                'priority' => $priority,
                 'feedback' => $this->nullableText($input['feedback'] ?? null),
             ])->save();
 
@@ -130,7 +137,10 @@ class TeacherAssignmentService
                 ])->save();
             }
 
-            return $assignment->load('recipients');
+            $loaded = $assignment->load('recipients');
+            $this->syncRevisionRemindersForAssignment($loaded);
+
+            return $loaded;
         });
     }
 
@@ -162,7 +172,9 @@ class TeacherAssignmentService
             throw ValidationException::withMessages(['ayah_end' => 'Choose a surah and an ayah range that exists.']);
         }
 
-        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end) {
+        $priority = RevisionReminderPriority::normalise($input['priority'] ?? $assignment->priority ?? 'normal')->value;
+
+        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority) {
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
             $locked->forceFill([
@@ -173,10 +185,14 @@ class TeacherAssignmentService
                 'ayah_end' => $end,
                 'repetition_target' => $input['repetition_target'] ?? null,
                 'due_at' => $input['due_at'] ?? null,
+                'priority' => $priority,
                 'feedback' => $this->nullableText($input['feedback'] ?? null),
             ])->save();
 
-            return $locked->refresh()->load('recipients');
+            $loaded = $locked->refresh()->load('recipients');
+            $this->syncRevisionRemindersForAssignment($loaded);
+
+            return $loaded;
         });
     }
 
@@ -386,7 +402,15 @@ class TeacherAssignmentService
             'completed_at' => $approvedAt,
         ])->save();
 
-        return $recipient->refresh();
+        $fresh = $recipient->refresh();
+        try {
+            app(\App\Services\RevisionReminders\RevisionReminderSyncService::class)
+                ->completeAssignmentReminder($fresh, 'assignment');
+        } catch (\Throwable $error) {
+            report($error);
+        }
+
+        return $fresh;
     }
 
     public function requestCorrectionByTeacher(
@@ -786,6 +810,7 @@ class TeacherAssignmentService
             'ayah_end' => (int) $assignment->ayah_end,
             'repetition_target' => $assignment->repetition_target,
             'due_at' => $assignment->due_at?->toIso8601String(),
+            'priority' => RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value,
             'feedback' => $assignment->feedback,
             'learning_group_id' => $assignment->learning_group_id ? (int) $assignment->learning_group_id : null,
             'created_at' => $assignment->created_at?->toIso8601String(),
@@ -938,6 +963,9 @@ class TeacherAssignmentService
             'student_id' => $student->id,
             'organisation_id' => $assignment->organisation_id,
             'teacher_assignment_id' => $assignment->id,
+            'surah_number' => (int) $assignment->surah_number,
+            'ayah_start' => (int) $assignment->ayah_start,
+            'ayah_end' => (int) $assignment->ayah_end,
             'kind' => $kind->value,
             'body' => $body,
             'client_message_id' => $clientMessageId,
@@ -1009,6 +1037,9 @@ class TeacherAssignmentService
     public function presentAssignmentMessage(TeacherNote $note, ?int $viewerId = null): array
     {
         $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+        $surah = $note->surah_number ? (int) $note->surah_number : null;
+        $from = $note->ayah_start ? (int) $note->ayah_start : null;
+        $to = $note->ayah_end ? (int) $note->ayah_end : $from;
 
         return [
             'id' => (int) $note->id,
@@ -1016,11 +1047,37 @@ class TeacherAssignmentService
             'sender_name' => $kind === TeacherNoteKind::Feedback ? $note->teacher?->name : null,
             'body' => $note->body,
             'audio' => $this->messageAudio->payload($note),
+            'passage' => $surah && $from ? [
+                'surah_number' => $surah,
+                'surah_name' => \App\Support\QuranMetadata::name($surah),
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+            ] : null,
             'created_at' => $note->created_at?->toIso8601String(),
             'read_at' => $note->read_at?->toIso8601String(),
             'unread' => $viewerId !== null && $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId),
             'delivery_status' => $note->read_at === null ? 'sent' : 'read',
+            'can_delete' => $viewerId !== null
+                && $kind === TeacherNoteKind::Feedback
+                && (int) $note->teacher_id === (int) $viewerId,
         ];
+    }
+
+    public function deleteTeacherMessage(User $teacher, TeacherNote $note): void
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $note->loadMissing(['assignment', 'student']);
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+        abort_unless(
+            $kind === TeacherNoteKind::Feedback
+            && (int) $note->teacher_id === (int) $teacher->id
+            && $note->student !== null
+            && $this->access->allows($teacher, $note->student),
+            404
+        );
+
+        $this->messageAudio->deleteStored($note);
+        $note->delete();
     }
 
     private function assignmentMessageSentBy(TeacherNote $note, int $viewerId): bool
@@ -1286,52 +1343,7 @@ class TeacherAssignmentService
         $assessment = $attempt->assessment;
         $assessmentStatus = $assessment?->status;
         $transcript = $this->attemptTranscript($attempt);
-        $words = collect(is_array($attempt->word_statuses) ? $attempt->word_statuses : [])
-            ->filter(fn ($word) => is_array($word))
-            ->map(function (array $word): ?array {
-                $text = trim((string) (
-                    $word['expected_word']
-                    ?? $word['displayText']
-                    ?? $word['text']
-                    ?? $word['expected']
-                    ?? $word['word']
-                    ?? ''
-                ));
-                $ayah = isset($word['ayah_number'])
-                    ? (int) $word['ayah_number']
-                    : (isset($word['ayah']) ? (int) $word['ayah'] : null);
-                $wordIndex = isset($word['ayah_word_index'])
-                    ? (int) $word['ayah_word_index']
-                    : (isset($word['word_index']) ? (int) $word['word_index'] : null);
-
-                if ($text === '' && ($ayah === null || $wordIndex === null)) {
-                    return null;
-                }
-
-                $payload = [
-                    'status' => (string) ($word['status'] ?? 'unknown'),
-                    'type' => isset($word['type']) ? (string) $word['type'] : null,
-                    'detected' => trim((string) (
-                        $word['recognised_word']
-                        ?? $word['recognized_word']
-                        ?? $word['detected_token']
-                        ?? $word['detected']
-                        ?? $word['actual']
-                        ?? ''
-                    )) ?: null,
-                    'ayah' => $ayah,
-                    'word_index' => $wordIndex,
-                ];
-                if ($text !== '' && ! preg_match('/^word$/iu', $text)) {
-                    $payload['text'] = mb_substr($text, 0, 120);
-                }
-
-                return $payload;
-            })
-            ->filter()
-            ->take(250)
-            ->values()
-            ->all();
+        $words = TeacherRecitationWordEvidence::fromAttempt($attempt);
 
         return [
             'attempt_id' => (int) $attempt->id,
@@ -1374,6 +1386,18 @@ class TeacherAssignmentService
             'to' => max($from, $to),
             'surah_name' => QuranMetadata::name($surah),
         ];
+    }
+
+    private function syncRevisionRemindersForAssignment(TeacherAssignment $assignment): void
+    {
+        try {
+            $sync = app(\App\Services\RevisionReminders\RevisionReminderSyncService::class);
+            foreach ($assignment->recipients as $recipient) {
+                $sync->syncTeacherAssignmentRecipient($recipient);
+            }
+        } catch (\Throwable $error) {
+            report($error);
+        }
     }
 
     private function attemptTranscript(AiReciteAttempt $attempt): ?string

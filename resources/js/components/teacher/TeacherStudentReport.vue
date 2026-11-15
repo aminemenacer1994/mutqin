@@ -43,6 +43,7 @@
             </div>
             <div class="teacher-report__chart-card">
               <h3>{{ t('teacher.nav_attendance') }}</h3>
+              <p v-if="attendanceRate != null" class="teacher-report__attendance-rate">{{ t('teacher.attendance_rate_percent', { rate: attendanceRate }) }}</p>
               <div v-if="attendanceEmpty" class="teacher-report__chart-empty">{{ t('teacher.report_attendance_empty') }}</div>
               <div v-else class="teacher-report__chart-wrap teacher-report__chart-wrap--donut">
                 <Doughnut :data="attendanceChartData" :options="donutOptions" />
@@ -93,11 +94,16 @@ export default {
         { key: 'checks', icon: 'bi bi-mic', label: this.t('teacher.scored_checks'), value: Number(this.summary.scored_checks || 0) },
         { key: 'average', icon: 'bi bi-graph-up', label: this.t('teacher.report_average_score'), value: this.summary.ai_word_match_average == null ? '—' : `${this.summary.ai_word_match_average}%` },
         { key: 'tasks', icon: 'bi bi-journal-check', label: this.t('teacher.report_tasks'), value: Number(this.summary.tasks_assigned || 0) },
+        { key: 'rate', tone: 'good', icon: 'bi bi-percent', label: this.t('teacher.attendance_rate_label'), value: this.attendanceRate == null ? '—' : `${this.attendanceRate}%` },
         { key: 'present', tone: 'good', icon: 'bi bi-check-lg', label: this.t('teacher.attendance_present'), value: Number(this.summary.attendance?.present || 0) },
         { key: 'absent', tone: 'danger', icon: 'bi bi-x-lg', label: this.t('teacher.attendance_absent'), value: Number(this.summary.attendance?.absent || 0) },
         { key: 'late', tone: 'warning', icon: 'bi bi-clock', label: this.t('teacher.attendance_late'), value: Number(this.summary.attendance?.late || 0) },
         { key: 'excused', icon: 'bi bi-shield-check', label: this.t('teacher.attendance_excused'), value: Number(this.summary.attendance?.excused || 0) },
       ]
+    },
+    attendanceRate() {
+      const rate = this.summary.attendance?.rate_percent
+      return rate == null ? null : Number(rate)
     },
     activityEmpty() {
       return Boolean(this.summary.activity_chart?.is_empty)

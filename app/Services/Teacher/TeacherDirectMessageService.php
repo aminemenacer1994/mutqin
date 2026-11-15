@@ -144,6 +144,7 @@ class TeacherDirectMessageService
         abort_unless(in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::StudentMessage], true)
             && $note->teacher_assignment_id === null, 404);
         abort_unless($kind === TeacherNoteKind::TeacherMessage, 403);
+        $this->messageAudio->deleteStored($note);
         $note->delete();
     }
 

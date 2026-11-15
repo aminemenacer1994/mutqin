@@ -72,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);
+        Gate::policy(\App\Models\TeacherPrivateNote::class, \App\Policies\TeacherPrivateNotePolicy::class);
         Gate::define('view-student-analytics', function (User $actor, User $student): bool {
             return app(StudentAccessAuthorizer::class)->allows($actor, $student);
         });

@@ -1,62 +1,80 @@
 <template>
-  <TeacherSectionPane tone="neutral">
-    <section class="teacher-direct-thread teacher-direct-thread--compact" :aria-label="t('teacher.messages')">
+  <TeacherSectionPane tone="neutral" flat>
+    <TeacherTabGuide kind="page" :title="t('teacher.messages')" :description="t('teacher.messages_page_desc')" />
+    <section class="teacher-direct-thread teacher-direct-thread--chat" :aria-label="t('teacher.messages')">
       <header class="teacher-direct-thread__head">
+        <span class="teacher-direct-thread__mark" aria-hidden="true">{{ studentInitial }}</span>
         <div class="teacher-direct-thread__head-copy">
           <h3>{{ profile.student.name }}</h3>
         </div>
         <span v-if="messages.length" class="teacher-direct-thread__badge">{{ messages.length }}</span>
       </header>
 
-      <div v-if="messages.length" class="teacher-direct-thread__list" aria-live="polite">
+      <div ref="thread" class="teacher-direct-thread__list" role="log" aria-live="polite" :aria-relevant="'additions'">
+        <div v-if="!messages.length" class="teacher-direct-thread__empty">
+          <span aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
+          <p>{{ t('teacher.direct_messages_empty') }}</p>
+        </div>
         <article
-          v-for="message in messages"
+          v-for="(message, index) in messages"
           :key="message.id"
           class="teacher-direct-thread__bubble"
-          :class="[`is-${message.sender}`, { 'is-unread': message.unread }]"
+          :class="bubbleClass(message, index)"
         >
-          <header class="teacher-direct-thread__bubble-head">
-            <strong>{{ message.sender_name || (message.sender === 'teacher' ? t('teacher.you') : profile.student.name) }}</strong>
-            <div class="teacher-direct-thread__bubble-tools">
-              <time :datetime="message.created_at">{{ formatMessageWhen(message.created_at) }}</time>
-              <button
-                v-if="message.sender === 'teacher'"
-                type="button"
-                class="btn btn-link btn-sm teacher-direct-thread__delete"
-                :aria-label="t('teacher.delete_message')"
-                :title="t('teacher.delete_message')"
-                :disabled="deletingId === message.id"
-                @click="deleteMessage(message)"
-              >
-                <i class="bi bi-trash3" aria-hidden="true"></i>
-              </button>
-            </div>
+          <header v-if="!isGrouped(index)" class="teacher-direct-thread__bubble-head">
+            <strong>{{ senderName(message) }}</strong>
           </header>
-          <p v-if="message.body">{{ message.body }}</p>
+          <p v-if="message.body" dir="auto">{{ message.body }}</p>
           <div v-if="message.audio?.available && message.audio?.url" class="teacher-direct-thread__audio">
-            <audio controls preload="metadata" :src="message.audio.url">{{ t('teacher.voice_note') }}</audio>
+            <TeacherAudioFeedbackPlayer
+              :src="message.audio.url"
+              :duration-ms="message.audio.duration_ms"
+              compact
+            />
           </div>
-          <footer v-if="message.sender === 'teacher'" class="teacher-direct-thread__bubble-foot">
-            <small>{{ deliveryLabel(message) }}</small>
+          <footer class="teacher-direct-thread__bubble-foot">
+            <time :datetime="message.created_at">{{ formatMessageWhen(message.created_at) }}</time>
+            <small v-if="message.sender === 'teacher'">{{ deliveryLabel(message) }}</small>
+            <button
+              v-if="message.sender === 'teacher'"
+              type="button"
+              class="teacher-direct-thread__delete"
+              :aria-label="t('teacher.delete_message')"
+              :title="t('teacher.delete_message')"
+              :disabled="deletingId === message.id"
+              @click="deleteMessage(message)"
+            >
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
           </footer>
         </article>
       </div>
-      <p v-else class="teacher-direct-thread__empty">{{ t('teacher.direct_messages_empty') }}</p>
 
-      <form class="teacher-direct-thread__composer teacher-direct-thread__composer--compact" @submit.prevent="send">
+      <form class="teacher-direct-thread__composer" @submit.prevent="send">
         <label class="visually-hidden" for="teacher-direct-reply">{{ t('teacher.message') }}</label>
-        <textarea id="teacher-direct-reply" v-model="draft" rows="2" maxlength="2000" :placeholder="t('teacher.direct_message_prompt')" :disabled="saving"></textarea>
-        <TeacherVoiceNoteControls ref="voice" :disabled="saving" />
+        <div class="teacher-direct-thread__composer-box">
+          <textarea
+            id="teacher-direct-reply"
+            v-model="draft"
+            rows="1"
+            maxlength="2000"
+            dir="auto"
+            :placeholder="t('teacher.direct_message_prompt')"
+            :disabled="saving"
+            @keydown.enter.exact.prevent="send"
+          ></textarea>
+          <span class="teacher-direct-thread__count">{{ draft.length }}/2000</span>
+        </div>
         <div class="teacher-direct-thread__composer-foot">
-          <span v-if="error" role="alert" class="alert alert-danger py-1 px-2 mb-0">{{ error }}</span>
-          <span v-else-if="success" role="status" class="alert alert-success py-1 px-2 mb-0">{{ success }}</span>
+          <TeacherVoiceNoteControls ref="voice" :disabled="saving" />
+          <p v-if="error" role="alert" class="teacher-direct-thread__status is-error">{{ error }}</p>
+          <p v-else-if="success" role="status" class="teacher-direct-thread__status is-success">{{ success }}</p>
           <div class="teacher-direct-thread__composer-actions">
-            <button type="button" class="btn btn-link btn-sm" :disabled="!draft && !hasVoiceNote" :aria-label="t('teacher.clear_message')" @click="clearComposer">
+            <button type="button" class="teacher-direct-thread__tool" :disabled="!draft && !hasVoiceNote" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="clearComposer">
               <i class="bi bi-eraser" aria-hidden="true"></i>
-              <span class="d-none d-sm-inline">{{ t('teacher.clear_message') }}</span>
             </button>
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="saving || !canSend">
-              <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+            <button type="submit" class="btn btn-primary btn-sm teacher-direct-thread__send" :disabled="saving || !canSend">
+              <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send-fill'" aria-hidden="true"></i>
               <span class="d-none d-sm-inline">{{ t('teacher.send_message') }}</span>
             </button>
           </div>
@@ -69,17 +87,25 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
+import TeacherAudioFeedbackPlayer from '../TeacherAudioFeedbackPlayer.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
+import TeacherTabGuide from '../TeacherTabGuide.vue'
 import TeacherVoiceNoteControls from '../TeacherVoiceNoteControls.vue'
 
 export default {
   name: 'TeacherStudentProfileMessages',
-  components: { TeacherSectionPane, TeacherVoiceNoteControls },
+  components: { TeacherAudioFeedbackPlayer, TeacherSectionPane, TeacherTabGuide, TeacherVoiceNoteControls },
   mixins: [i18nMixin],
   props: { profile: { type: Object, required: true }, formatWhen: { type: Function, required: true } },
-  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null } },
-  watch: { 'profile.student.id'() { this.resetThread() } },
+  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null, stickToBottom: true } },
+  watch: {
+    'profile.student.id'() { this.resetThread() },
+  },
   computed: {
+    studentInitial() {
+      const name = String(this.profile?.student?.name || '').trim()
+      return name ? name.charAt(0).toUpperCase() : '?'
+    },
     messages() {
       const removed = new Set(this.removed)
       const rows = [...(this.profile.payload?.messages || []), ...this.synced, ...this.sent]
@@ -93,7 +119,18 @@ export default {
       return Boolean(this.draft.trim() || this.$refs.voice?.hasRecording)
     },
   },
-  mounted() { this.pollTimer = window.setInterval(() => this.refreshThread(), 10000) },
+  mounted() {
+    this.pollTimer = window.setInterval(() => this.refreshThread(), 10000)
+    this.$nextTick(() => this.scrollThread())
+  },
+  beforeUpdate() {
+    const thread = this.$refs.thread
+    if (!thread) return
+    this.stickToBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 96
+  },
+  updated() {
+    if (this.stickToBottom) this.scrollThread()
+  },
   beforeUnmount() { window.clearInterval(this.pollTimer) },
   methods: {
     resetThread() {
@@ -144,6 +181,27 @@ export default {
         const payload = await learningApi.getTeacherStudentMessages(this.profile.student.id)
         this.synced = payload?.messages || []
       } catch (_) { /* keep thread during polling failures */ }
+    },
+    senderName(message) {
+      return message.sender_name || (message.sender === 'teacher' ? this.t('teacher.you') : this.profile.student.name)
+    },
+    isGrouped(index) {
+      const previous = this.messages[index - 1]
+      const current = this.messages[index]
+      return Boolean(previous && previous.sender === current.sender)
+    },
+    bubbleClass(message, index) {
+      return [
+        `is-${message.sender}`,
+        {
+          'is-unread': message.unread,
+          'is-grouped': this.isGrouped(index),
+        },
+      ]
+    },
+    scrollThread() {
+      const thread = this.$refs.thread
+      if (thread) thread.scrollTop = thread.scrollHeight
     },
     formatMessageWhen(value) {
       const date = new Date(value)

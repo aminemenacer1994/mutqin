@@ -6,6 +6,7 @@
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
           <span class="teacher-student-card__identity">
             <strong>{{ student.name }}</strong>
+            <small v-if="student.email" class="d-block text-body-secondary">{{ student.email }}</small>
           </span>
           <i class="bi bi-chevron-right" aria-hidden="true"></i>
         </button>
@@ -60,6 +61,7 @@
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
           <span class="teacher-table__identity">
             <span class="teacher-table__name">{{ student.name }}</span>
+            <small v-if="student.email" class="d-block text-body-secondary fw-normal">{{ student.email }}</small>
             <span class="teacher-table__mobile-meta">
               <span>{{ score(student) }}</span>
             </span>
@@ -169,7 +171,7 @@ export default {
     },
     rowLabel(student) {
       const concern = this.concern(student)?.label
-      return [student.name, this.score(student), this.lastSeen(student), concern].filter(Boolean).join(', ')
+      return [student.name, student.email, this.score(student), this.lastSeen(student), concern].filter(Boolean).join(', ')
     },
     scrollTable(direction) {
       const wrap = this.$refs.tableWrap

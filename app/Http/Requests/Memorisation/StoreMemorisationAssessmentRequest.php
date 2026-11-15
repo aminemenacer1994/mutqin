@@ -87,6 +87,7 @@ class StoreMemorisationAssessmentRequest extends FormRequest
             'provider' => ['sometimes', 'nullable', 'string', 'max:40'],
             'user_session_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'teacher_assignment_recipient_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'word_coaching_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'session_recommendation_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'previous_assessment_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'idempotency_key' => ['sometimes', 'nullable', 'string', 'max:64'],

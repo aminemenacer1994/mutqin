@@ -2,7 +2,8 @@
   <div
     v-if="featuresEnabled"
     class="user-dashboard teacher-dashboard"
-    data-teacher-ui="2026-10-25-focus"
+    data-teacher-ui="2026-11-14-plans-difficulties"
+    data-platform-shell="teacher"
     tabindex="-1"
   >
     <div class="container user-dashboard__shell teacher-dashboard__shell">
@@ -43,6 +44,8 @@
               :organisation-name="overview?.teacher?.organisation?.name || ''"
               :student-count="Number(overview?.kpis?.authorised_students || 0)"
               :support-count="Number(overview?.kpis?.needs_attention || 0)"
+              @open-students="openView('students')"
+              @open-attention="openStudentsFromKpi('attention')"
             />
 
             <TeacherOverviewSection
@@ -61,6 +64,8 @@
               @select-kpi="openStudentsFromKpi"
               @assign-revision="openAssignRevision"
               @set-chart-days="setDays"
+              @open-assignments="openAssignments"
+              @create-assignment="startAssignment"
             />
 
             <TeacherStudentsSection
@@ -80,10 +85,13 @@
               @assign-revision="openAssignRevision"
             />
 
+            <TeacherPlansView v-else-if="view === 'plans'" />
+
             <TeacherStudentProfileSection
               v-else-if="view === 'student'"
               :profile="profile"
               :section="profileSection"
+              :learning-subview="profileLearningSubview"
               :tabs="TEACHER_PROFILE_TABS"
               :loading="profileLoading"
               :metric="metric"
@@ -123,8 +131,6 @@
               @open-student="openStudent"
             />
 
-            <TeacherAttendanceSection v-else-if="view === 'attendance'" />
-
             <TeacherSettingsSection
               v-else
               :teacher="overview?.teacher"
@@ -147,7 +153,7 @@
 <script>
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
-import TeacherAttendanceSection from '../components/teacher/TeacherAttendanceSection.vue'
+import TeacherPlansView from '../components/teacher/TeacherPlansView.vue'
 import TeacherHero from '../components/teacher/TeacherHero.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import TeacherOverviewSection from '../components/teacher/TeacherOverviewSection.vue'
@@ -161,7 +167,7 @@ export default {
   components: {
     NetworkFallback,
     TeacherAssignmentsSection,
-    TeacherAttendanceSection,
+    TeacherPlansView,
     TeacherHero,
     TeacherNav,
     TeacherOverviewSection,
@@ -182,10 +188,21 @@ export default {
       if (!dashboard.profile.value?.student?.id) return
       dashboard.loadProfile(dashboard.profile.value.student.id, tab, true)
     }
+    function openAssignments(filter = 'all') {
+      dashboard.assignmentEntryFilter.value = typeof filter === 'string' && filter ? filter : 'all'
+      dashboard.openView('assignments')
+    }
+    function startAssignment() {
+      dashboard.assignmentEntryFilter.value = 'all'
+      dashboard.beginCreateAssignment()
+      dashboard.openView('assignments')
+    }
     return {
       ...dashboard,
       updateFilters,
       onProfileSection,
+      openAssignments,
+      startAssignment,
     }
   },
 }

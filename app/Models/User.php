@@ -158,6 +158,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(UserAchievement::class);
     }
 
+    public function revisionReminders(): HasMany
+    {
+        return $this->hasMany(RevisionReminder::class);
+    }
+
     public function referralsGiven(): HasMany
     {
         return $this->hasMany(Referral::class, 'referrer_user_id');

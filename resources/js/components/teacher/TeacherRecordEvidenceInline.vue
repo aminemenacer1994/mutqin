@@ -8,8 +8,7 @@
 
     <div v-if="hasAssignedCompare" class="teacher-record-evidence__compare">
       <span class="teacher-record-evidence__label">{{ t('teacher.assigned_task_passage') }}</span>
-      <p v-if="assignedLoading" class="teacher-record-evidence__muted">{{ t('teacher.loading_quran_text') }}</p>
-      <p v-else class="teacher-record-evidence__words teacher-quran is-assigned" lang="ar" dir="rtl">{{ assignedText }}</p>
+      <QuranAyahDisplay :words="assignedWords" :loading="assignedLoading" />
     </div>
 
     <div v-if="row?.transcript" class="teacher-record-evidence__said">
@@ -19,41 +18,39 @@
 
     <div v-if="practicedOnlyCompare" class="teacher-record-evidence__compare">
       <span class="teacher-record-evidence__label">{{ t('teacher.practiced_passage') }}</span>
-      <p v-if="practicedLoading" class="teacher-record-evidence__muted">{{ t('teacher.loading_quran_text') }}</p>
-      <p v-else class="teacher-record-evidence__words teacher-quran" lang="ar" dir="rtl">{{ practicedText }}</p>
+      <QuranAyahDisplay :words="practicedWords" :loading="practicedLoading" />
     </div>
 
     <div v-if="canonicalWords.length || canonicalLoading" class="teacher-record-evidence__compare">
       <div class="teacher-record-evidence__compare-head">
         <span class="teacher-record-evidence__label">{{ compareLabel }}</span>
       </div>
-      <p v-if="canonicalLoading" class="teacher-record-evidence__muted">{{ t('teacher.loading_quran_text') }}</p>
-      <div v-else class="teacher-record-evidence__words teacher-quran" lang="ar" dir="rtl">
-        <span
-          v-for="(word, index) in canonicalWords"
-          :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`"
-          class="teacher-record-evidence__word"
-        >{{ word.text }}</span>
-      </div>
+      <QuranAyahDisplay
+        :words="canonicalWords"
+        :loading="canonicalLoading"
+        coloured
+      />
     </div>
   </div>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { teacherCanonicalEvidenceWords } from '../../scripts/teacher/quranContent'
+import { loadTeacherMadaniWords } from '../../scripts/teacher/madaniDisplayWords'
+import QuranAyahDisplay from './QuranAyahDisplay.vue'
 
 export default {
   name: 'TeacherRecordEvidenceInline',
+  components: { QuranAyahDisplay },
   mixins: [i18nMixin],
   props: { row: { type: Object, required: true } },
   data() {
     return {
       canonicalWords: [],
       canonicalLoading: false,
-      assignedText: '',
+      assignedWords: [],
       assignedLoading: false,
-      practicedText: '',
+      practicedWords: [],
       practicedLoading: false,
       requestId: 0,
     }
@@ -70,7 +67,9 @@ export default {
     },
     hasAssignedCompare() {
       const range = this.row?.assignedRange
-      return Boolean(range?.surah && range?.from)
+      if (!range?.surah || !range?.from) return false
+      if (!this.performanceRange) return true
+      return this.rangesDiffer(range, this.performanceRange)
     },
     performanceRange() {
       if (this.row?.range?.surah && this.row?.range?.from) return this.row.range
@@ -79,18 +78,18 @@ export default {
       return null
     },
     practicedOnlyCompare() {
-      if (!this.hasAssignedCompare || this.performanceRange) return false
+      if (this.hasAssignedCompare || this.performanceRange) return false
       const practiced = this.row?.practicedRange
       if (!practiced?.surah || !practiced?.from) return false
       return this.rangesDiffer(this.row.assignedRange, practiced)
     },
     transcriptLabel() {
-      return this.hasAssignedCompare
+      return this.row?.assignedRange?.surah
         ? this.t('teacher.recited_passage')
         : this.t('teacher.transcript_label')
     },
     compareLabel() {
-      return this.hasAssignedCompare
+      return this.row?.assignedRange?.surah
         ? this.t('teacher.recitation_compare_label')
         : this.t('teacher.recitation_text')
     },
@@ -111,19 +110,19 @@ export default {
       this.assignedLoading = Boolean(this.hasAssignedCompare)
       this.practicedLoading = this.practicedOnlyCompare
       this.canonicalWords = []
-      this.assignedText = ''
-      this.practicedText = ''
+      this.assignedWords = []
+      this.practicedWords = []
 
       const tasks = []
       if (this.hasAssignedCompare) {
-        tasks.push(teacherCanonicalEvidenceWords({ range: this.row.assignedRange, words: [] }).then((words) => {
+        tasks.push(loadTeacherMadaniWords({ range: this.row.assignedRange, words: [] }, { paintStatus: false }).then((words) => {
           if (request !== this.requestId) return
-          this.assignedText = words.map((word) => word.text).join(' ')
+          this.assignedWords = words
           this.assignedLoading = false
         }))
       }
       if (this.performanceRange) {
-        tasks.push(teacherCanonicalEvidenceWords({ range: this.performanceRange, words: this.row?.words }).then((words) => {
+        tasks.push(loadTeacherMadaniWords({ range: this.performanceRange, words: this.row?.words }).then((words) => {
           if (request !== this.requestId) return
           this.canonicalWords = words
           this.canonicalLoading = false
@@ -132,9 +131,9 @@ export default {
         this.canonicalLoading = false
       }
       if (this.practicedOnlyCompare) {
-        tasks.push(teacherCanonicalEvidenceWords({ range: this.row.practicedRange, words: [] }).then((words) => {
+        tasks.push(loadTeacherMadaniWords({ range: this.row.practicedRange, words: [] }, { paintStatus: false }).then((words) => {
           if (request !== this.requestId) return
-          this.practicedText = words.map((word) => word.text).join(' ')
+          this.practicedWords = words
           this.practicedLoading = false
         }))
       }

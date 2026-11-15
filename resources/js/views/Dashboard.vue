@@ -28,11 +28,26 @@
       />
 
       <template v-else>
-        <header class="dash-hero dash-section dash-reveal">
+        <nav class="dash-jump" data-platform-shell="student" :aria-label="t('dashboard.jump_label')">
+          <button
+            v-for="item in dashboardJumps"
+            :key="item.id"
+            type="button"
+            class="dash-jump__link"
+            :class="{ 'is-active': studentPane === item.pane }"
+            :aria-current="studentPane === item.pane ? 'page' : null"
+            @click="openDashPane(item)"
+          >
+            <i :class="item.icon" aria-hidden="true"></i>
+            <span>{{ item.label }}</span>
+          </button>
+        </nav>
+
+        <div v-show="studentPane === 'home'" class="dash-pane">
+        <header id="dash-home" class="dash-hero dash-section dash-reveal" tabindex="-1">
           <div class="dash-hero__top">
-            <div class="dash-hero__greeting">
-              <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
-              <p v-if="showHeroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
+            <div v-if="showHeroProgressSummary" class="dash-hero__greeting">
+              <p class="dash-hero__summary">{{ heroProgressSummary }}</p>
             </div>
             <button
               type="button"
@@ -81,9 +96,36 @@
             </a>
           </div>
         </header>
+        </div>
 
-        <div class="user-dashboard__content">
+        <div v-show="studentPane === 'learning'" class="dash-pane">
+        <header class="learner-learning-greeting">
+          <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
+        </header>
+        <LearnerTeacherSection
+          v-if="showLearnerTeacherSection"
+          :support="support"
+          :loading="supportLoading"
+          :error="supportError"
+          :saving-id="assignmentSavingId"
+          :completion-message="assignmentCompletionMessage"
+          :failed-item="assignmentFailedItem"
+          :student-first-name="learnerFirstName"
+          :on-send-note="sendSupportNote"
+          :on-send-direct-message="sendDirectTeacherMessage"
+          @start="startSupportAssignment"
+          @complete="completeSupportAssignment"
+          @view-completed="showCompletedAssignments"
+          @dismiss-completion="dismissAssignmentCompletion"
+          @support-thread-update="patchLearnerSupportThread"
+        />
+        <p v-else class="dash-pane__empty">{{ t('dashboard.jump_learning_empty') }}</p>
+        </div>
+
+        <div v-show="studentPane === 'progress'" class="dash-pane user-dashboard__content">
         <section
+          id="dash-progress"
+          tabindex="-1"
           class="dash-section dash-section--flat dash-learning"
           :class="{ 'is-collapsed': isSectionCollapsed('learning') }"
           aria-labelledby="dash-learning-heading"
@@ -278,7 +320,7 @@
                           class="dash-word"
                           :class="`is-${word.state}`"
                         >
-                          <span class="dash-word__text">{{ word.text }}</span>
+                          <span class="dash-word__text" :style="madaniWordStyle(word)">{{ word.text }}</span>
                           <span class="visually-hidden">{{ t(word.labelKey) }}</span>
                         </span>
                       </p>
@@ -421,7 +463,9 @@
           </div>
         </section>
         </div>
+        </div>
 
+        <div v-show="studentPane === 'activity'" class="dash-pane">
         <DashboardAchievementsWidget
           v-if="achievementsWidget"
           :widget="achievementsWidget"
@@ -450,6 +494,8 @@
         />
 
         <section
+          id="dash-activity"
+          tabindex="-1"
           class="dash-section dash-section--flat dash-history"
           :class="{ 'is-collapsed': isSectionCollapsed('history') }"
           aria-labelledby="dash-history-heading"
@@ -1006,6 +1052,7 @@ import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
+import { loadTeacherMadaniAyah, overlayMadaniGlyphs } from '../scripts/teacher/madaniDisplayWords.js'
 import {
   buildAttemptAyahFeedback,
   feedbackInsightKey,
@@ -1216,6 +1263,9 @@ export default {
       expandedDetailCache: {},
       collapsedSections: {},
       collapsedCards: {},
+      studentPane: 'home',
+      revisionSnoozingId: 0,
+      revisionPrefsSaving: false,
     }
   },
   computed: {
@@ -1282,6 +1332,19 @@ export default {
     showLearnerTeacherSection() {
       return this.auth?.learner_teacher_section_enabled === true
         && (this.supportLoading || this.support !== null)
+    },
+    dashboardJumps() {
+      const items = [
+        { id: 'dash-home', pane: 'home', label: this.t('dashboard.jump_home'), icon: 'bi bi-house' },
+      ]
+      if (this.showLearnerTeacherSection) {
+        items.push({ id: 'dash-my-learning', pane: 'learning', label: this.t('dashboard.jump_learning'), icon: 'bi bi-journal-check' })
+      }
+      items.push(
+        { id: 'dash-progress', pane: 'progress', label: this.t('dashboard.jump_progress'), icon: 'bi bi-graph-up' },
+        { id: 'dash-activity', pane: 'activity', label: this.t('dashboard.jump_activity'), icon: 'bi bi-clock-history' },
+      )
+      return items
     },
     savedSessionsHref() {
       const base = this.memorisationUrl.split('?')[0]
@@ -1761,6 +1824,31 @@ export default {
       const total = Number(this.dailyRevision.weak_total)
       if (Number.isFinite(total) && total >= 0) return total
       return this.dailyWeakAllItems.length
+    },
+    revisionReminders() {
+      const block = this.data?.revision_reminders
+      return block && typeof block === 'object' ? block : {}
+    },
+    revisionOutstandingCount() {
+      const n = Number(this.revisionReminders.outstanding_count)
+      return Number.isFinite(n) && n > 0 ? n : 0
+    },
+    todaysRevisionItems() {
+      return Array.isArray(this.revisionReminders.items) ? this.revisionReminders.items.slice(0, 3) : []
+    },
+    revisionReminderPrefs() {
+      const prefs = this.revisionReminders.preferences
+      return prefs && typeof prefs === 'object'
+        ? {
+            in_app: prefs.in_app !== false,
+            email: prefs.email === true,
+            snooze_hours: Number(prefs.snooze_hours) || 4,
+          }
+        : { in_app: true, email: false, snooze_hours: 4 }
+    },
+    showTodaysRevisionCard() {
+      // Always show so reminder prefs and empty state are discoverable.
+      return true
     },
     snapshotCards() {
       const snap = this.data?.snapshot || {}
@@ -2373,6 +2461,81 @@ export default {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
     },
+    openDashPane(item) {
+      this.studentPane = item?.pane || 'home'
+      this.$nextTick(() => {
+        const el = document.getElementById('mainContent')
+        if (!el) return
+        const reduce = typeof window !== 'undefined'
+          && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+      })
+    },
+    revisionRangeLabel(item) {
+      const start = Number(item?.ayah_start || 0)
+      const end = Number(item?.ayah_end || start)
+      if (!start) return ''
+      return start === end
+        ? this.t('dashboard.todays_revision_ayah_one', { n: start })
+        : this.t('dashboard.todays_revision_ayah_range', { start, end })
+    },
+    revisionDueLabel(item) {
+      const bucket = String(item?.bucket || '')
+      if (bucket === 'overdue') return this.t('dashboard.todays_revision_overdue')
+      if (bucket === 'due_today') return this.t('dashboard.todays_revision_due_today')
+      if (item?.due_local_date) {
+        return `${this.t('dashboard.todays_revision_upcoming')} · ${item.due_local_date}`
+      }
+      return this.t('dashboard.todays_revision_upcoming')
+    },
+    async snoozeRevisionReminder(item) {
+      const id = Number(item?.id || 0)
+      if (!id || this.revisionSnoozingId) return
+      this.revisionSnoozingId = id
+      try {
+        await learningApi.snoozeRevisionReminder(id)
+        await this.reload(true)
+      } catch (err) {
+        this.showToast?.(this.t('common.tryAgain') || 'Try again')
+      } finally {
+        this.revisionSnoozingId = 0
+      }
+    },
+    async setRevisionReminderPref(key, value) {
+      if (this.revisionPrefsSaving) return
+      this.revisionPrefsSaving = true
+      try {
+        const next = {
+          ...this.revisionReminderPrefs,
+          [key]: !!value,
+        }
+        await learningApi.updateRevisionReminderPreferences({
+          revision_reminders: {
+            in_app: next.in_app,
+            email: next.email,
+            snooze_hours: next.snooze_hours,
+          },
+        })
+        if (this.data?.revision_reminders) {
+          this.data = {
+            ...this.data,
+            revision_reminders: {
+              ...this.data.revision_reminders,
+              preferences: {
+                ...(this.data.revision_reminders.preferences || {}),
+                in_app: next.in_app,
+                email: next.email,
+                snooze_hours: next.snooze_hours,
+              },
+            },
+          }
+        }
+      } catch (err) {
+        this.showToast?.(this.t('common.tryAgain') || 'Try again')
+      } finally {
+        this.revisionPrefsSaving = false
+      }
+    },
     isSectionCollapsed(key) {
       return !!this.collapsedSections?.[key]
     },
@@ -2701,9 +2864,17 @@ export default {
     stashReviewContext(item) {
       stashPreviousAiCheck(typeof sessionStorage === 'undefined' ? null : sessionStorage, item)
     },
+    madaniWordStyle(word) {
+      if (!word?.fontFamily) return undefined
+      return { fontFamily: word.fontFamily, fontWeight: 400 }
+    },
     referenceLine(item) {
       const stored = this.revisitAyahText[item?.key] || {}
-      return paintReferenceWords(stored.text || '', item?.words || [], item?.ayah_number)
+      const painted = paintReferenceWords(stored.text || '', item?.words || [], item?.ayah_number)
+      return {
+        words: overlayMadaniGlyphs(painted.words, stored.glyphs),
+        source: stored.glyphs?.length ? 'madani' : 'unavailable',
+      }
     },
     revisitStateLabel(item) {
       const state = String(item?.assessment_state || 'not_assessed')
@@ -2849,15 +3020,22 @@ export default {
       const items = this.revisitItems
       await Promise.all(items.map(async (item) => {
         const key = item.key
-        if (!key || this.revisitAyahText[key]?.text) return
+        if (!key || this.revisitAyahText[key]?.glyphs) return
         try {
-          const ayah = await loadAyah(item.surah_number, item.ayah_number)
+          const [ayah, glyphs] = await Promise.all([
+            loadAyah(item.surah_number, item.ayah_number).catch(() => null),
+            loadTeacherMadaniAyah(item.surah_number, item.ayah_number).catch(() => []),
+          ])
           this.revisitAyahText = {
             ...this.revisitAyahText,
-            [key]: { text: ayah?.text || '', source: ayah?.text ? 'uthmani' : 'unavailable' },
+            [key]: {
+              text: ayah?.text || '',
+              glyphs,
+              source: glyphs.length ? 'madani' : 'unavailable',
+            },
           }
         } catch (_) {
-          this.revisitAyahText = { ...this.revisitAyahText, [key]: { text: '', source: 'unavailable' } }
+          this.revisitAyahText = { ...this.revisitAyahText, [key]: { text: '', glyphs: [], source: 'unavailable' } }
         }
       }))
     },
@@ -3075,6 +3253,7 @@ export default {
     },
     scrollToAiReciteResults() {
       if (typeof window === 'undefined' || window.location.hash !== '#ai-recite-results') return
+      this.studentPane = 'progress'
       this.$nextTick(() => {
         const el = this.$refs.aiReciteResults
         if (!el || typeof el.scrollIntoView !== 'function') return
@@ -3484,7 +3663,6 @@ export default {
       if (tasks.length) await Promise.allSettled(tasks)
     },
     async loadLearnerSupport() {
-      if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportLoading = true
       try {
         this.support = await learningApi.getLearnerSupport()

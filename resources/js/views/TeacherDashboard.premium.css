@@ -428,7 +428,7 @@ html[data-theme="dark"] .teacher-dashboard .teacher-hero { background: linear-gr
 
 @media (max-width: 767.98px) {
   .teacher-dashboard .teacher-hero__row { align-items: flex-start; padding: 1rem !important; }
-  .teacher-dashboard .teacher-hero__signals { display: none; }
+  .teacher-dashboard .teacher-hero__signals { display: flex; flex-wrap: wrap; width: 100%; }
   .teacher-dashboard .teacher-hero__mark { width: 40px; height: 40px; border-radius: 12px; }
   .teacher-dashboard .teacher-hero__title { font-size: 1.3rem !important; }
   .teacher-dashboard .teacher-kpis.row { grid-template-columns: 1fr; }

@@ -63,6 +63,7 @@ export default {
     weakRows() {
       return groupAyahFindings(this.profile.payload.items, this.t).map((group) => teacherRecitationEvidenceRow({
         key: `fix-${group.key}`,
+        studentId: this.profile.student.id,
         icon: 'bi bi-exclamation-triangle',
         iconTone: 'warn',
         title: group.title,

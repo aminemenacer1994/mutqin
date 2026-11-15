@@ -1,61 +1,128 @@
 <template>
-  <div>
-  <ul class="list-group list-group-flush teacher-records">
-    <li v-for="(row, index) in visibleRows" :key="row.key ?? index" class="list-group-item teacher-records__item" :class="{ 'has-issues': row.attention, 'teacher-records__item--stacked': inlineEvidence }">
-      <div class="teacher-records__row">
-      <span class="teacher-records__icon" :class="row.iconTone ? `teacher-records__icon--${row.iconTone}` : ''" aria-hidden="true">
-        <i :class="row.icon || 'bi bi-dot'"></i>
-      </span>
-      <div class="teacher-records__copy">
-        <a v-if="row.href" class="teacher-records__title teacher-records__link" :class="{ 'teacher-quran': row.quran }" :href="row.href">{{ row.title }}</a>
-        <button v-else-if="hasReviewEvidence(row)" type="button" class="teacher-records__title teacher-records__title-button" :class="{ 'teacher-quran': row.quran }" @click="openEvidence(row, preferredEvidenceMode(row))">
-          {{ row.title }}
+  <div class="teacher-profile-sheet" :class="{ 'teacher-profile-sheet--cards': layout === 'cards', 'is-selectable': selectable }">
+  <div v-if="layout === 'cards'" class="teacher-record-grid">
+    <article
+      v-for="(row, index) in visibleRows"
+      :key="row.key ?? index"
+      class="teacher-record-card"
+      :class="{ 'is-interactive': playbackReview(row), 'is-selected': isSelected(row) }"
+      @click="onCardClick($event, row)"
+    >
+      <button v-if="hasReviewEvidence(row)" type="button" class="teacher-record-card__title" @click="openEvidence(row, preferredEvidenceMode(row))">{{ row.title }}</button>
+      <strong v-else class="teacher-record-card__title">{{ row.title }}</strong>
+      <p v-if="row.hint" class="teacher-record-card__hint">{{ row.hint }}</p>
+      <span
+        v-if="row.badge"
+        class="teacher-badge"
+        :class="row.badgeTone ? `teacher-badge--${row.badgeTone}` : 'teacher-badge--muted'"
+      >{{ row.badge }}</span>
+      <div v-if="playbackReview(row) || showEvidenceActions(row)" class="teacher-records__evidence-actions">
+        <button v-if="playbackReview(row)" type="button" class="btn btn-primary btn-sm teacher-records__review" @click="openEvidence(row, 'audio')">
+          {{ t('teacher.playback_open') }}
         </button>
-        <span v-else class="teacher-records__title" :class="{ 'teacher-quran': row.quran }">{{ row.title }}</span>
-        <span v-if="row.hint" class="teacher-records__hint">{{ row.hint }}</span>
-        <details v-if="row.arabicText" class="teacher-records__ayah-details">
-          <summary>{{ t('teacher.show_ayah_text') }}</summary>
-          <span v-if="row.arabicName" class="teacher-records__arabic-name" lang="ar" dir="rtl">{{ row.arabicName }}</span>
-          <span class="teacher-records__arabic" lang="ar" dir="rtl">{{ row.arabicText }}</span>
-        </details>
-      </div>
-      <div class="teacher-records__aside">
-        <div v-if="showEvidenceActions(row)" class="teacher-records__evidence-actions" :aria-label="t('teacher.recitation_evidence')">
-          <button v-if="row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
-            <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
-          </button>
-          <button v-if="row.transcript || hasCanonicalEvidence(row)" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
-            <i class="bi bi-file-text" aria-hidden="true"></i>
-          </button>
-        </div>
-        <span
-          v-if="row.badge"
-          class="teacher-badge"
-          :class="row.badgeTone ? `teacher-badge--${row.badgeTone}` : 'teacher-badge--muted'"
-        >{{ row.badge }}</span>
-        <span v-if="row.source" class="teacher-records__source">{{ row.source }}</span>
-        <button
-          v-if="row.actionLabel"
-          type="button"
-          class="btn btn-outline-secondary btn-sm dash-btn dash-btn--ghost dash-btn--sm"
-          :aria-label="`${row.actionLabel}: ${row.title}`"
-          :title="row.actionLabel"
-          @click="$emit('action', row.actionPayload)"
-        >
-          <i :class="row.actionIcon || 'bi bi-journal-plus'" aria-hidden="true"></i>
-          <span class="visually-hidden">{{ row.actionLabel }}</span>
+        <button v-if="!playbackReview(row) && row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
+          <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
         </button>
-        <button v-if="row.reviewActionLabel" type="button" class="btn btn-outline-secondary btn-sm dash-btn dash-btn--ghost dash-btn--sm" :aria-label="`${row.reviewActionLabel}: ${row.title}`" :title="row.reviewActionLabel" @click="$emit('review', row.reviewActionPayload)">
-          <i class="bi bi-check2-circle" aria-hidden="true"></i><span class="visually-hidden">{{ row.reviewActionLabel }}</span>
+        <button v-if="!playbackReview(row) && (row.transcript || hasCanonicalEvidence(row))" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
+          <i class="bi bi-file-text" aria-hidden="true"></i>
         </button>
       </div>
+      <div v-if="row.actionLabel || row.reviewActionLabel" class="teacher-record-card__actions">
+        <button v-if="row.actionLabel" type="button" class="btn btn-sm btn-primary" @click="$emit('action', row.actionPayload)">{{ row.actionLabel }}</button>
+        <button v-if="row.reviewActionLabel" type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('review', row.reviewActionPayload)">{{ row.reviewActionLabel }}</button>
       </div>
-      <TeacherRecordEvidenceMushafInline v-if="inlineEvidence && showEvidencePanel(row) && mushafReviewModal" :row="row" />
-      <TeacherRecordEvidenceInline v-else-if="inlineEvidence && showEvidencePanel(row)" :row="row" />
-    </li>
-  </ul>
+    </article>
+  </div>
+  <div v-else class="table-responsive">
+  <table class="table align-middle mb-0 teacher-profile-table teacher-profile-table--records">
+    <thead>
+      <tr>
+        <th scope="col">{{ columnHeadings.title }}</th>
+        <th scope="col">{{ columnHeadings.detail }}</th>
+        <th scope="col">{{ columnHeadings.status }}</th>
+        <th scope="col" class="text-end"><span class="visually-hidden">{{ t('teacher.student_actions') }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <template v-for="(row, index) in visibleRows" :key="row.key ?? index">
+        <tr class="teacher-profile-table__row" :class="{ 'has-issues': row.attention, 'is-selected': isSelected(row) }" @click="onRowClick($event, row)">
+          <th scope="row" class="teacher-profile-table__item">
+            <a v-if="row.href" class="teacher-profile-table__title" :class="{ 'teacher-quran': row.quran }" :href="row.href">
+              <i :class="rowIconClass(row)" aria-hidden="true"></i>
+              <span>{{ row.title }}</span>
+            </a>
+            <button v-else-if="hasReviewEvidence(row)" type="button" class="teacher-profile-table__title" :class="{ 'teacher-quran': row.quran }" @click="openEvidence(row, preferredEvidenceMode(row))">
+              <i :class="rowIconClass(row)" aria-hidden="true"></i>
+              <span>{{ row.title }}</span>
+            </button>
+            <span v-else class="teacher-profile-table__title" :class="{ 'teacher-quran': row.quran }">
+              <i :class="rowIconClass(row)" aria-hidden="true"></i>
+              <span>{{ row.title }}</span>
+            </span>
+          </th>
+          <td class="teacher-profile-table__detail">
+            <span v-if="row.hint">{{ row.hint }}</span>
+            <details v-if="row.arabicText" class="teacher-records__ayah-details">
+              <summary>{{ t('teacher.show_ayah_text') }}</summary>
+              <span v-if="row.arabicName" class="teacher-records__arabic-name" lang="ar" dir="rtl">{{ row.arabicName }}</span>
+              <span class="teacher-records__arabic" lang="ar" dir="rtl">{{ row.arabicText }}</span>
+            </details>
+          </td>
+          <td class="teacher-profile-table__status">
+            <span
+              v-if="row.badge"
+              class="teacher-badge"
+              :class="row.badgeTone ? `teacher-badge--${row.badgeTone}` : 'teacher-badge--muted'"
+            >{{ row.badge }}</span>
+            <span v-if="row.source" class="teacher-profile-table__source">{{ row.source }}</span>
+          </td>
+          <td class="teacher-profile-table__actions text-end">
+            <div v-if="playbackReview(row) || showEvidenceActions(row)" class="teacher-records__evidence-actions" :aria-label="t('teacher.recitation_evidence')">
+              <button v-if="playbackReview(row)" type="button" class="btn btn-primary btn-sm teacher-records__review" @click="openEvidence(row, 'audio')">
+                {{ t('teacher.playback_open') }}
+              </button>
+              <button v-if="!playbackReview(row) && row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
+                <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+              </button>
+              <button v-if="!playbackReview(row) && (row.transcript || hasCanonicalEvidence(row))" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
+                <i class="bi bi-file-text" aria-hidden="true"></i>
+              </button>
+            </div>
+            <button
+              v-if="row.actionLabel"
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              :aria-label="`${row.actionLabel}: ${row.title}`"
+              :title="row.actionLabel"
+              @click="$emit('action', row.actionPayload)"
+            >
+              <i :class="row.actionIcon || 'bi bi-journal-plus'" aria-hidden="true"></i>
+              <span class="visually-hidden">{{ row.actionLabel }}</span>
+            </button>
+            <button v-if="row.reviewActionLabel" type="button" class="btn btn-outline-secondary btn-sm" :aria-label="`${row.reviewActionLabel}: ${row.title}`" :title="row.reviewActionLabel" @click="$emit('review', row.reviewActionPayload)">
+              <i class="bi bi-check2-circle" aria-hidden="true"></i><span class="visually-hidden">{{ row.reviewActionLabel }}</span>
+            </button>
+          </td>
+        </tr>
+        <tr v-if="inlineEvidence && showEvidencePanel(row) && !playbackReview(row)" class="teacher-profile-table__evidence">
+          <td colspan="4">
+            <TeacherRecordEvidenceMushafInline v-if="mushafReviewModal" :row="row" />
+            <TeacherRecordEvidenceInline v-else :row="row" />
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+  </div>
   <TeacherMore :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
   <TeacherAudioDrawer :open="Boolean(activeEvidence)" :row="activeEvidence" :mode="evidenceMode" :text-evidence-in-drawer="!mushafReviewModal" @close="activeEvidence = null" />
+  <TeacherRecitationPlaybackReview
+    :open="Boolean(playbackRow)"
+    :student-id="playbackRow?.studentId"
+    :attempt-id="playbackRow?.attemptId"
+    :autoplay="playbackAutoplay"
+    @close="playbackRow = null"
+  />
   <TeacherReciteEvidenceModal
     v-if="mushafReviewModal"
     :open="Boolean(mushafModalRow)"
@@ -72,36 +139,82 @@ import TeacherAudioDrawer from './TeacherAudioDrawer.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
 import TeacherRecordEvidenceMushafInline from './TeacherRecordEvidenceMushafInline.vue'
+import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.vue'
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherReciteEvidenceModal },
+  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
+    layout: { type: String, default: 'table' },
     inlineEvidence: { type: Boolean, default: true },
     mushafReviewModal: { type: Boolean, default: false },
+    headings: { type: Object, default: () => ({}) },
+    selectable: { type: Boolean, default: false },
+    selectedKey: { type: [String, Number], default: null },
   },
-  emits: ['action', 'review'],
+  emits: ['action', 'review', 'select'],
   data() {
     return {
       shown: 5,
       activeEvidence: null,
       evidenceMode: 'audio',
       mushafModalRow: null,
+      playbackRow: null,
+      playbackAutoplay: false,
     }
   },
   computed: {
     visibleRows() {
       return this.rows.slice(0, this.shown)
     },
+    columnHeadings() {
+      return {
+        title: this.headings.title || this.t('teacher.profile_col_item'),
+        detail: this.headings.detail || this.t('teacher.profile_col_detail'),
+        status: this.headings.status || this.t('teacher.col_status'),
+      }
+    },
   },
   methods: {
+    isSelected(row) {
+      return this.selectedKey != null && String(this.selectedKey) === String(row.key)
+    },
+    onCardClick(event, row) {
+      if (event.target.closest('button, a, summary, input, textarea')) return
+      if (this.playbackReview(row)) {
+        this.openEvidence(row, 'audio')
+        return
+      }
+      if (this.selectable) this.$emit('select', row)
+    },
+    onRowClick(event, row) {
+      if (!this.selectable) return
+      if (event.target.closest('button, a, summary, input, textarea')) return
+      this.$emit('select', row)
+    },
+    rowIconClass(row) {
+      return [row.icon || 'bi bi-dot', row.iconTone ? `is-${row.iconTone}` : '']
+    },
+    playbackReview(row) {
+      return Boolean(row?.attemptId && row?.studentId)
+    },
     openEvidence(row, mode) {
+      if (this.playbackReview(row)) {
+        this.playbackAutoplay = mode === 'audio'
+        this.playbackRow = row
+        return
+      }
       this.activeEvidence = row
       this.evidenceMode = mode
     },
     openTranscriptReview(row) {
+      if (this.playbackReview(row)) {
+        this.playbackAutoplay = false
+        this.playbackRow = row
+        return
+      }
       if (this.mushafReviewModal) {
         this.mushafModalRow = row
         return

@@ -77,7 +77,7 @@ export async function teacherCanonicalEvidenceWords(evidence = {}) {
 
     return ayahs.flatMap((ayah) => ayah.text.split(/\s+/u).filter(Boolean).map((text, wordIndex) => {
       const status = statuses.get(`${ayah.ayah}:${wordIndex}`) || {}
-      return {
+      const row = {
         text,
         ayah: ayah.ayah,
         word_index: wordIndex,
@@ -85,6 +85,11 @@ export async function teacherCanonicalEvidenceWords(evidence = {}) {
         type: status.type || null,
         detected: status.detected || null,
       }
+      const start = Number(status.start ?? status.start_time)
+      const end = Number(status.end ?? status.end_time)
+      if (Number.isFinite(start) && start >= 0) row.start = start
+      if (Number.isFinite(end) && end >= (row.start ?? 0)) row.end = end
+      return row
     }))
   } catch {
     // A review can still show genuine persisted expected words while the Quran

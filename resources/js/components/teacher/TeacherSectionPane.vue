@@ -1,13 +1,22 @@
 <template>
-  <section class="card teacher-pane" :class="tone ? `teacher-pane--${tone}` : ''">
-    <header v-if="title || hint" class="card-header teacher-pane__head d-flex align-items-start gap-2">
-      <span v-if="icon" class="teacher-pane__icon d-inline-flex align-items-center justify-content-center" aria-hidden="true"><i :class="icon"></i></span>
-      <div class="teacher-pane__titles flex-grow-1">
-        <h3 v-if="title" class="card-title teacher-pane__title mb-0">{{ title }}</h3>
-        <p v-if="hint" class="card-text teacher-pane__hint mb-0">{{ hint }}</p>
-      </div>
+  <section
+    class="teacher-pane"
+    :class="[
+      tone ? `teacher-pane--${tone}` : '',
+      flat ? 'teacher-pane--flat' : 'card',
+    ]"
+  >
+    <header v-if="title || hint || $slots.head" class="teacher-pane__head d-flex align-items-start gap-2" :class="{ 'card-header': !flat }">
+      <slot name="head">
+        <span v-if="icon" class="teacher-pane__icon d-inline-flex align-items-center justify-content-center" aria-hidden="true"><i :class="icon"></i></span>
+        <div class="teacher-pane__titles flex-grow-1">
+          <h3 v-if="title" class="teacher-pane__title mb-0" :class="{ 'card-title': !flat }">{{ title }}</h3>
+          <p v-if="hint" class="teacher-pane__hint mb-0" :class="{ 'card-text': !flat }">{{ hint }}</p>
+        </div>
+      </slot>
+      <slot name="actions" />
     </header>
-    <div class="card-body teacher-pane__body">
+    <div class="teacher-pane__body" :class="{ 'card-body': !flat }">
       <slot />
     </div>
   </section>
@@ -21,6 +30,7 @@ export default {
     hint: { type: String, default: '' },
     icon: { type: String, default: '' },
     tone: { type: String, default: 'neutral' },
+    flat: { type: Boolean, default: false },
   },
 }
 </script>

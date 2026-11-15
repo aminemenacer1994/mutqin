@@ -3899,6 +3899,26 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   color: color-mix(in srgb, var(--dash-ink) 68%, var(--dash-muted));
 }
 
+.user-dashboard .learner-teacher__feedback-who {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__feedback-kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent) 12%, transparent);
+  color: var(--dash-accent-strong);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
 .user-dashboard .learner-teacher__feedback-sender time {
   flex-shrink: 0;
   font-size: 0.6875rem;
@@ -4020,9 +4040,28 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 
 .user-dashboard .learner-teacher__mistake-ayah-text {
   margin: 0 0 0.35rem;
-  font-family: var(--quran-font, 'KFGQPC Uthmanic Script HAFS', serif);
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-family: inherit;
+  font-size: clamp(1.2rem, 2.2vw, 1.45rem);
+  font-weight: 400;
+  line-height: 2.15;
+  letter-spacing: 0;
+  text-align: start;
+}
+
+.user-dashboard .learner-teacher__mistake-ayah-word {
+  display: inline-block;
+  margin: 0;
+  padding: 0.02em 0.01em 0.04em;
+  font-weight: 400;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.user-dashboard .learner-teacher__mistake-ayah-missing {
+  font-family: var(--dash-font, inherit);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--dash-text-muted, inherit);
 }
 
 .user-dashboard .learner-teacher__mistake-ayah-text .is-flagged-word {
@@ -6286,8 +6325,8 @@ html[data-theme="dark"] .user-dashboard .dash-section--learner-teacher .learner-
 .user-dashboard .learner-teacher__mistake-ayah-text {
   width: 100%;
   text-align: start;
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: clamp(1.2rem, 2.2vw, 1.45rem);
+  line-height: 2.15;
 }
 
 .user-dashboard .learner-teacher__mistake-type {
@@ -6540,8 +6579,8 @@ html[data-theme="dark"] .user-dashboard .dash-section--learner-teacher .learner-
   }
 
   .user-dashboard .learner-teacher__mistake-ayah-text {
-    font-size: 1.15rem;
-    line-height: 1.75;
+    font-size: 1.25rem;
+    line-height: 2.15;
   }
 }
 
@@ -7168,4 +7207,151 @@ html[data-theme="dark"] .user-dashboard .dash-section--learner-teacher .learner-
   .user-dashboard .learner-teacher__panel-toggle {
     display: none;
   }
+}
+
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) :is(.btn, a.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) .btn.btn-sm {
+  min-height: 2rem;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) .btn-primary {
+  color: var(--dash-on-accent, #fff);
+  background: var(--dash-accent);
+  border-color: transparent;
+}
+
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) .btn-outline-secondary,
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) .btn-outline-primary {
+  color: var(--dash-ink);
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+}
+
+.user-dashboard :is(.learner-teacher, .learner-difficulties, .learner-my-plan) .btn-link {
+  min-height: 2rem;
+  padding: 0.2rem 0.45rem;
+  color: var(--dash-accent-strong);
+  background: transparent;
+  border-color: transparent;
+  text-decoration: none;
+}
+
+/* Learner messages stay a single conversation: history above, reply docked below. */
+.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__shell,
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__shell {
+  display: flex;
+  flex-direction: column;
+  min-height: min(62dvh, 32rem);
+  gap: 0.65rem;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread,
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 14rem;
+  padding: 0.35rem 0.15rem 0.35rem 0;
+  border-inline-end: 0;
+}
+
+.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer,
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer {
+  margin-top: 0;
+  padding: 0.65rem 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border) 88%, transparent);
+}
+
+.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea,
+.learner-task-thread-modal.user-dashboard .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer-box textarea {
+  min-height: 2.75rem;
+  max-height: 7rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  border-radius: 0.9rem;
+}
+
+.user-dashboard .message-bubble.is-teacher,
+.learner-task-thread-modal.user-dashboard .message-bubble.is-teacher {
+  border-color: var(--dash-student-border, var(--dash-border-strong));
+  background: var(--dash-card-bg, var(--dash-surface));
+}
+
+.user-dashboard .message-bubble.is-student,
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student {
+  border-color: transparent;
+  background: var(--dash-accent);
+  color: var(--dash-on-accent, #fff);
+}
+
+.user-dashboard .message-bubble.is-student .message-bubble__time,
+.user-dashboard .message-bubble.is-student .message-bubble__receipt,
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student .message-bubble__time,
+.learner-task-thread-modal.user-dashboard .message-bubble.is-student .message-bubble__receipt {
+  color: color-mix(in srgb, var(--dash-on-accent, #fff) 78%, transparent);
+}
+
+.user-dashboard .dash-student-dialog--thread .message-bubble,
+.learner-task-thread-modal.user-dashboard .message-bubble {
+  max-inline-size: min(86%, 24rem);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.user-dashboard .dash-student-dialog--thread .dash-student-dialog__body,
+.learner-task-thread-modal.user-dashboard .learner-task-thread-modal__body {
+  display: flex;
+  flex-direction: column;
+  min-height: min(68dvh, 36rem);
+}
+
+.learner-word-corrections {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0 0 0.9rem;
+  padding: 0.8rem;
+  border: 1px solid var(--dash-line, var(--line, #eadfce));
+  border-radius: 12px;
+  background: var(--dash-surface, transparent);
+}
+.learner-word-corrections h3 { margin: 0; font-size: 0.92rem; }
+.learner-word-corrections ul { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.learner-word-corrections__head { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.78rem; }
+.learner-word-corrections__note { display: grid; gap: 0.35rem; }
+.learner-word-corrections__clip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; font-size: 0.78rem; }
+.learner-word-corrections__clip button,
+.learner-word-corrections__again {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--dash-line, var(--line, #eadfce));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+.teacher-quran-ayah__word.is-coaching-focus {
+  border-radius: 0.2em;
+  outline: 2px solid currentColor;
+  outline-offset: 0.08em;
 }

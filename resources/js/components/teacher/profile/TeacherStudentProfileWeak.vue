@@ -36,11 +36,12 @@ export default {
     weakRows() {
       return groupAyahFindings(this.profile.payload.items, this.t).map((group) => teacherRecitationEvidenceRow({
         key: group.key,
+        studentId: this.profile.student.id,
         icon: 'bi bi-exclamation-triangle',
         iconTone: 'warn',
         title: group.title,
         hint: group.findings.join(' · '),
-        href: group.first?.evidence_url || '',
+        href: group.first?.evidence?.attempt_id ? '' : (group.first?.evidence_url || ''),
         badge: this.t(Number(group.first?.affected_attempt_count || 0) === 1 ? 'teacher.check_count_one' : 'teacher.check_count_many', { n: Number(group.first?.affected_attempt_count || 0) }),
         badgeTone: 'warn',
         source: group.first?.evidence_url ? this.t('teacher.open_evidence') : '',

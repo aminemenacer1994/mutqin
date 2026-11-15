@@ -144,7 +144,7 @@
                     class="dash-word"
                     :class="`is-${word.state}`"
                   >
-                    <span class="dash-word__text">{{ word.text }}</span>
+                    <span class="dash-word__text" :style="word.fontFamily ? { fontFamily: word.fontFamily, fontWeight: 400 } : undefined">{{ word.text }}</span>
                     <span class="visually-hidden">{{ t(word.labelKey) }}</span>
                   </span>
                 </p>

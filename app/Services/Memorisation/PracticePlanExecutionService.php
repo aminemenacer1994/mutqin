@@ -215,7 +215,15 @@ class PracticePlanExecutionService
             'completion_data' => $completion,
         ]);
 
-        return $this->assessments->transformPlan($plan->fresh());
+        $fresh = $plan->fresh() ?? $plan;
+        try {
+            app(\App\Services\RevisionReminders\RevisionReminderSyncService::class)
+                ->handlePracticePlanCompleted($user, $fresh, $completion['score'] ?? $completion['band'] ?? $outcome);
+        } catch (\Throwable $error) {
+            report($error);
+        }
+
+        return $this->assessments->transformPlan($fresh);
     }
 
     private function assertOwned(User $user, MemorisationPracticePlan $plan): void

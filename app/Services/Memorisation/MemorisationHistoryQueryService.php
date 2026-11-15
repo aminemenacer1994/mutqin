@@ -102,24 +102,10 @@ class MemorisationHistoryQueryService
             $query->where('status', $status);
         }
 
-        return $query->paginate(max(1, min(100, $perPage)))
-            ->through(fn (MemorisationWeakSpot $spot) => [
-                'id' => $spot->id,
-                'spot_type' => $spot->spot_type,
-                'surah_number' => $spot->surah_number,
-                'ayah_number' => $spot->ayah_number,
-                'word_index' => $spot->word_index,
-                'verse_key' => $spot->verse_key,
-                'severity' => $spot->severity,
-                'status' => $spot->status,
-                'trend' => $spot->trend,
-                'affected_attempt_count' => $spot->affected_attempt_count,
-                'first_identified_at' => optional($spot->first_identified_at)?->toIso8601String(),
-                'last_identified_at' => optional($spot->last_identified_at)?->toIso8601String(),
-                'last_recalled_at' => optional($spot->last_recalled_at)?->toIso8601String(),
-                'source_assessment_id' => $spot->source_assessment_id,
-                'last_assessment_id' => $spot->last_assessment_id,
-            ]);
+        return $query->withCount('occurrences')
+            ->paginate(max(1, min(100, $perPage)))
+            ->through(fn (MemorisationWeakSpot $spot) => app(\App\Services\Teacher\RecitationDifficultyService::class)
+                ->present($spot, includeHistory: false));
     }
 
     public function recommendationHistory(User $user, int $perPage = 20): LengthAwarePaginator

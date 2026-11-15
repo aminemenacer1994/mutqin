@@ -1,24 +1,31 @@
 import { defaultAyahRange } from './taskTypes'
 
-export const TEACHER_VIEWS = ['overview', 'students', 'student', 'attendance', 'assignments', 'settings']
+export const TEACHER_VIEWS = ['overview', 'students', 'student', 'plans', 'assignments', 'settings']
 
 export const TEACHER_CHART_DAY_OPTIONS = [30, 90]
 
 export const TEACHER_NAV = [
   { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },
   { id: 'students', label: 'teacher.nav_students', icon: 'bi bi-people' },
-  { id: 'attendance', label: 'teacher.nav_attendance', icon: 'bi bi-calendar-check' },
+  { id: 'plans', label: 'teacher.nav_plans', icon: 'bi bi-calendar-week' },
   { id: 'assignments', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
   { id: 'settings', label: 'teacher.nav_settings', icon: 'bi bi-person' },
 ]
 
+/** One profile tab row. Review is the working page: listen, then clear what is due. */
 export const TEACHER_PROFILE_TABS = [
-  { id: 'overview', label: 'teacher.tab_overview', icon: 'bi bi-house-door' },
-  { id: 'practice', label: 'teacher.tab_practice', icon: 'bi bi-play-circle' },
-  { id: 'ai', label: 'teacher.tab_ai', icon: 'bi bi-mic' },
-  { id: 'focus', label: 'teacher.tab_focus', icon: 'bi bi-bullseye' },
-  { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
+  { id: 'ai', label: 'teacher.tab_review', icon: 'bi bi-ear' },
+  { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-clipboard-check' },
   { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
+  { id: 'plan', label: 'teacher.learning_plan', icon: 'bi bi-calendar-week' },
+]
+
+/** Views inside the Learning tab. Recite covers the old Recitation tab. */
+export const TEACHER_LEARNING_SUBVIEWS = [
+  { id: 'memorisation', label: 'teacher.learning_memorisation' },
+  { id: 'recite', label: 'teacher.learning_recite' },
+  { id: 'revision', label: 'teacher.learning_revision' },
+  { id: 'plan', label: 'teacher.learning_plan' },
 ]
 
 export function defaultAssignmentForm(surahs = []) {
@@ -34,6 +41,7 @@ export function defaultAssignmentForm(surahs = []) {
     ayah_end: range.ayah_end,
     repetition_target: 1,
     due_at: '',
+    priority: 'normal',
     feedback: '',
   }
 }

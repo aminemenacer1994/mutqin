@@ -9,12 +9,14 @@ use App\Http\Requests\Memorisation\StoreFailedMemorisationAssessmentRequest;
 use App\Http\Requests\Memorisation\StoreMemorisationAssessmentRequest;
 use App\Enums\AssignmentKind;
 use App\Models\AiReciteAttempt;
+use App\Models\User;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Services\Teacher\TeacherWordCoachingService;
 use App\Services\Billing\AiAssessmentQuotaExceeded;
 use App\Services\Billing\SubscriptionEntitlement;
 use App\Support\MutqinLog;
@@ -106,6 +108,12 @@ class MemorisationDetectionController extends Controller
             ], 500);
         }
         DashboardService::forgetForUser($request->user());
+        $learner = $request->user();
+        $coachingId = (int) ($payload['word_coaching_id'] ?? 0);
+        $attemptId = (int) ($result['ai_attempt']['id'] ?? 0);
+        if ($learner instanceof User && $coachingId > 0 && $attemptId > 0) {
+            app(TeacherWordCoachingService::class)->attachRetry($learner, $coachingId, $attemptId);
+        }
 
         MutqinLog::fromRequest($request, 'memorisation.assessment.submitted', [
             'assessment_id' => $result['id'] ?? ($result['assessment']['id'] ?? null),

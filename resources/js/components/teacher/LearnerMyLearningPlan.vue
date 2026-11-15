@@ -1,0 +1,113 @@
+<template>
+  <section class="learner-my-plan" :aria-label="t('teacher.learner_my_plan')">
+    <header class="learner-my-plan__head">
+      <div>
+        <p class="learner-my-plan__eyebrow">{{ t('teacher.learner_my_plan') }}</p>
+        <h3 class="learner-my-plan__title">{{ plan?.title || t('teacher.learner_my_plan_empty_title') }}</h3>
+        <p v-if="plan?.teacher_name" class="learner-my-plan__teacher mb-0">{{ plan.teacher_name }}</p>
+        <p v-else-if="!plan" class="learner-my-plan__teacher mb-0">{{ t('teacher.learner_my_plan_empty') }}</p>
+      </div>
+      <span v-if="plan" class="learner-my-plan__status" :class="`is-${plan.status}`">{{ statusLabel(plan.status) }}</span>
+    </header>
+    <template v-if="plan">
+
+    <div
+      class="learner-my-plan__meter"
+      role="progressbar"
+      :aria-valuemin="0"
+      :aria-valuemax="100"
+      :aria-valuenow="progressPercent"
+      :aria-label="progressLabel"
+    >
+      <span class="learner-my-plan__meter-fill" :style="{ width: `${progressPercent}%` }"></span>
+    </div>
+    <p class="learner-my-plan__progress-label">{{ progressLabel }}</p>
+
+    <div v-if="nextAction" class="learner-my-plan__next">
+      <div class="learner-my-plan__next-copy">
+        <strong>{{ t('teacher.learner_continue_learning') }}</strong>
+        <span>{{ nextAction.label }}</span>
+        <small v-if="nextAction.due_on">{{ t('teacher.due') }}: {{ nextAction.due_on }}</small>
+      </div>
+      <button
+        v-if="nextRecipient"
+        type="button"
+        class="btn btn-primary btn-sm"
+        @click="$emit('continue', nextRecipient)"
+      >
+        {{ t('teacher.learner_continue_learning') }}
+      </button>
+    </div>
+
+    <ul class="learner-my-plan__week list-unstyled mb-0">
+      <li
+        v-for="item in weekItems"
+        :key="item.id"
+        class="learner-my-plan__week-item"
+        :class="[`is-${item.display_status}`]"
+      >
+        <span class="learner-my-plan__week-label">{{ item.label }}</span>
+        <span class="learner-my-plan__week-status">{{ displayStatusLabel(item.display_status) }}</span>
+      </li>
+    </ul>
+    </template>
+  </section>
+</template>
+
+<script>
+import { i18nMixin } from '../../mixins/i18nMixin'
+
+export default {
+  name: 'LearnerMyLearningPlan',
+  mixins: [i18nMixin],
+  props: {
+    plan: { type: Object, default: null },
+    assignments: { type: Array, default: () => [] },
+  },
+  emits: ['continue'],
+  computed: {
+    progressPercent() {
+      return Number(this.plan?.progress?.percent || 0)
+    },
+    progressLabel() {
+      return this.t('teacher.plan_progress', {
+        done: this.plan?.progress?.completed || 0,
+        total: this.plan?.progress?.total || 0,
+      })
+    },
+    nextAction() {
+      return this.plan?.next_action || null
+    },
+    nextRecipient() {
+      const recipientId = this.nextAction?.recipient_id
+      if (!recipientId) return null
+      return this.assignments.find((row) => Number(row.id) === Number(recipientId)) || null
+    },
+    weekItems() {
+      const items = Array.isArray(this.plan?.items) ? this.plan.items : []
+      return items.slice(0, 8)
+    },
+  },
+  methods: {
+    statusLabel(value) {
+      const key = {
+        active: 'teacher.plan_status_active',
+        paused: 'teacher.plan_status_paused',
+        completed: 'teacher.plan_status_completed',
+      }[value]
+      return key ? this.t(key) : value
+    },
+    displayStatusLabel(value) {
+      const key = {
+        overdue: 'teacher.overdue',
+        upcoming: 'teacher.plan_status_upcoming',
+        completed: 'teacher.task_filter_completed',
+        paused: 'teacher.plan_status_paused',
+        planned: 'teacher.plan_status_planned',
+        in_progress: 'teacher.task_filter_progress',
+      }[value]
+      return key ? this.t(key) : value
+    },
+  },
+}
+</script>

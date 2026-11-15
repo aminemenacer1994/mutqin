@@ -66,8 +66,7 @@
             <div class="teacher-audio-evidence__heading">
               <h3>{{ t('teacher.assigned_task_passage') }}</h3>
             </div>
-            <p v-if="assignedLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
-            <p v-else class="teacher-audio-evidence__words teacher-quran is-assigned" lang="ar" dir="rtl">{{ assignedText }}</p>
+            <QuranAyahDisplay :words="assignedWords" :loading="assignedLoading" />
           </section>
 
           <section v-if="textEvidenceInDrawer && row?.transcript" class="teacher-audio-transcript" :class="{ 'is-featured': mode === 'transcript' }">
@@ -75,15 +74,12 @@
             <p dir="auto">{{ row.transcript }}</p>
           </section>
 
-          <section v-if="textEvidenceInDrawer && canonicalWords.length" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
+          <section v-if="textEvidenceInDrawer && (canonicalWords.length || canonicalLoading)" class="teacher-audio-evidence" :aria-labelledby="evidenceTitleId">
             <div class="teacher-audio-evidence__heading">
               <h3 :id="evidenceTitleId">{{ compareHeading }}</h3>
             </div>
-            <p class="teacher-audio-evidence__words" lang="ar" dir="rtl">
-              <span v-for="(word, index) in canonicalWords" :key="`${word.ayah || 0}-${word.word_index ?? index}-${index}`">{{ word.text }}</span>
-            </p>
+            <QuranAyahDisplay :words="canonicalWords" :loading="canonicalLoading" coloured />
           </section>
-          <p v-else-if="textEvidenceInDrawer && canonicalLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading_quran_text') }}</p>
         </section>
       </div>
     </Transition>
@@ -92,12 +88,14 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { teacherCanonicalEvidenceWords } from '../../scripts/teacher/quranContent'
+import { loadTeacherMadaniWords } from '../../scripts/teacher/madaniDisplayWords'
+import QuranAyahDisplay from './QuranAyahDisplay.vue'
 
 let drawerUid = 0
 
 export default {
   name: 'TeacherAudioDrawer',
+  components: { QuranAyahDisplay },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -118,14 +116,21 @@ export default {
       canonicalWords: [],
       canonicalLoading: false,
       canonicalRequest: 0,
-      assignedText: '',
+      assignedWords: [],
       assignedLoading: false,
     }
   },
   computed: {
     hasAssignedCompare() {
       const range = this.row?.assignedRange
-      return Boolean(range?.surah && range?.from)
+      if (!range?.surah || !range?.from) return false
+      const performanceRange = this.row?.range?.surah && this.row?.range?.from
+        ? this.row.range
+        : (this.row?.practicedRange?.surah ? this.row.practicedRange : null)
+      if (!performanceRange) return true
+      return range.surah !== performanceRange.surah
+        || range.from !== performanceRange.from
+        || Number(range.to || range.from) !== Number(performanceRange.to || performanceRange.from)
     },
     transcriptHeading() {
       return this.hasAssignedCompare ? this.t('teacher.recited_passage') : this.t('teacher.transcript_label')
@@ -181,12 +186,12 @@ export default {
       this.canonicalLoading = true
       this.assignedLoading = this.hasAssignedCompare
       this.canonicalWords = []
-      this.assignedText = ''
+      this.assignedWords = []
       const tasks = []
       if (this.hasAssignedCompare) {
-        tasks.push(teacherCanonicalEvidenceWords({ range: this.row.assignedRange, words: [] }).then((words) => {
+        tasks.push(loadTeacherMadaniWords({ range: this.row.assignedRange, words: [] }, { paintStatus: false }).then((words) => {
           if (request !== this.canonicalRequest) return
-          this.assignedText = words.map((word) => word.text).join(' ')
+          this.assignedWords = words
           this.assignedLoading = false
         }))
       }
@@ -194,7 +199,7 @@ export default {
         ? this.row.range
         : (this.row?.practicedRange?.surah ? this.row.practicedRange : null)
       if (performanceRange) {
-        tasks.push(teacherCanonicalEvidenceWords({
+        tasks.push(loadTeacherMadaniWords({
           range: performanceRange,
           words: this.row?.words,
         }).then((words) => {

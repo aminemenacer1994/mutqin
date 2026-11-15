@@ -69,4 +69,13 @@ return [
     'registered_user_broadcast_action' => 'Start Memorising',
     'registered_user_broadcast_fallback' => 'If the button does not work, copy and paste this link into your browser:',
     'registered_user_broadcast_signoff' => 'The Mutqin Team',
+
+    'revision_reminder_subject' => 'Revision due: :surah',
+    'revision_reminder_preheader' => 'A murājaʿah revision is ready for you.',
+    'revision_reminder_heading' => 'Time to revise',
+    'revision_reminder_greeting' => 'Assalamu Alaikum,',
+    'revision_reminder_greeting_named' => 'Assalamu Alaikum, :name,',
+    'revision_reminder_body' => 'Your revision for :surah (āyāt :ayahs) is due. A short murājaʿah session will keep it strong.',
+    'revision_reminder_action' => 'Start Revision',
+    'revision_reminder_fallback' => 'If the button does not work, copy and paste this link into your browser:',
 ];

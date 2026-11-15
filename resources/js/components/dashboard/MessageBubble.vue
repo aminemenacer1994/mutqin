@@ -10,8 +10,17 @@
       class="message-bubble__voice"
       :aria-label="voiceAriaLabel"
     >
-      <AudioClip :src="message.audioUrl" :label="playLabel" />
-      <span v-if="voiceDuration" class="message-bubble__voice-duration">{{ voiceDuration }}</span>
+      <TeacherAudioFeedbackPlayer
+        v-if="useRichPlayer"
+        :src="message.audioUrl"
+        :duration-ms="message.durationMs"
+        compact
+        :play-label="playLabel"
+      />
+      <template v-else>
+        <AudioClip :src="message.audioUrl" :label="playLabel" />
+        <span v-if="voiceDuration" class="message-bubble__voice-duration">{{ voiceDuration }}</span>
+      </template>
     </div>
     <footer class="message-bubble__foot">
       <time v-if="timeLabel" class="message-bubble__time" :datetime="message.sentAt || message.created_at">{{ timeLabel }}</time>
@@ -33,10 +42,11 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import AudioClip from '../AudioClip.vue'
+import TeacherAudioFeedbackPlayer from '../teacher/TeacherAudioFeedbackPlayer.vue'
 
 export default {
   name: 'MessageBubble',
-  components: { AudioClip },
+  components: { AudioClip, TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {
     message: { type: Object, required: true },
@@ -46,11 +56,15 @@ export default {
     playLabel: { type: String, default: '' },
     voiceAriaLabel: { type: String, default: '' },
     grouped: { type: Boolean, default: false },
+    richPlayer: { type: Boolean, default: true },
   },
   emits: ['retry'],
   computed: {
+    useRichPlayer() {
+      return this.richPlayer !== false
+    },
     showVoice() {
-      return this.message.type === 'voice' && this.message.audioUrl
+      return (this.message.type === 'voice' || this.message.audioUrl) && this.message.audioUrl
     },
     voiceDuration() {
       const ms = Number(this.message.durationMs)

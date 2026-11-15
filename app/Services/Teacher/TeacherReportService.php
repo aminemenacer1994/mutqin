@@ -58,12 +58,20 @@ class TeacherReportService
             ->where('teacher_id', $teacher->id)->where('student_id', $student->id)
             ->whereIn('ai_recite_attempt_id', $assessmentAttemptIds)->pluck('tajweed_score');
 
-        $attendance = TeacherAttendanceRecord::query()->where('teacher_id', $teacher->id)
+        $attendanceCounts = TeacherAttendanceRecord::query()->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
             ->whereIn('learning_group_id', $this->access->teacherGroupIds($teacher))
             ->when($from, fn (Builder $query) => $query->whereDate('attendance_date', '>=', $from))
             ->when($to, fn (Builder $query) => $query->whereDate('attendance_date', '<=', $to))
-            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status')
+            ->map(fn ($count) => (int) $count)
+            ->all();
+
+        $present = (int) ($attendanceCounts['present'] ?? 0);
+        $absent = (int) ($attendanceCounts['absent'] ?? 0);
+        $late = (int) ($attendanceCounts['late'] ?? 0);
+        $excused = (int) ($attendanceCounts['excused'] ?? 0);
+        $attendanceTotal = $present + $absent + $late + $excused;
 
         $chartEnd = $to ? Carbon::parse($to)->endOfDay() : now();
         $chartStart = $from ? Carbon::parse($from)->startOfDay() : $chartEnd->copy()->subDays(29)->startOfDay();
@@ -77,7 +85,14 @@ class TeacherReportService
             'ai_word_match_average' => $attempts->isEmpty() ? null : round((float) $attempts->avg('accuracy_percent'), 1),
             'teacher_tajweed_average' => $teacherScores->isEmpty() ? null : round((float) $teacherScores->avg(), 1),
             'tasks_assigned' => $tasks,
-            'attendance' => $attendance->map(fn ($count) => (int) $count)->all(),
+            'attendance' => [
+                'present' => $present,
+                'absent' => $absent,
+                'late' => $late,
+                'excused' => $excused,
+                'total' => $attendanceTotal,
+                'rate_percent' => $attendanceTotal > 0 ? (int) round(100 * ($present + $late) / $attendanceTotal) : null,
+            ],
             'activity_chart' => $this->activityChart($student->id, $chartStart, $chartDays),
         ];
     }

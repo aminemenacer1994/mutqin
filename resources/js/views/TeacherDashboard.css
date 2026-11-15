@@ -94,11 +94,27 @@ html[data-theme="sepia"] .teacher-dashboard {
   font-weight: 700;
 }
 
-.teacher-dashboard .teacher-quran {
-  font-family: var(--quran-font, "KFGQPC Uthmanic Script HAFS", serif);
-  font-weight: 600;
-  line-height: 1.8;
+.teacher-dashboard .teacher-quran,
+.teacher-task-modal .teacher-quran,
+.teacher-recite-modal .teacher-quran {
+  font-family: "Noto Naskh Arabic", "Amiri", "Scheherazade New", serif;
+  font-weight: 500;
+  line-height: 2;
+  letter-spacing: 0;
   font-variant-numeric: normal;
+  unicode-bidi: isolate;
+}
+
+.teacher-dashboard .teacher-quran-ayah,
+.teacher-task-modal .teacher-quran-ayah,
+.teacher-audio-drawer .teacher-quran-ayah,
+.teacher-recite-modal .teacher-quran-ayah {
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 2.2;
+  letter-spacing: 0;
+  font-variant-numeric: normal;
+  unicode-bidi: isolate;
 }
 
 .teacher-dashboard .teacher-records__title,

@@ -1,31 +1,16 @@
 <template>
-  <Teleport to="body">
-    <Transition name="teacher-recite-modal">
-      <div v-if="open" class="teacher-recite-modal user-dashboard dash-student-dialog-root" @keydown.esc.prevent="$emit('close')">
-        <button type="button" class="dash-drawer__backdrop teacher-recite-modal__scrim" :aria-label="t('teacher.close')" @click="$emit('close')"></button>
-        <section
-          ref="dialog"
-          class="teacher-recite-modal__panel dash-student-dialog dash-student-dialog--wide"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="titleId"
-          tabindex="-1"
-        >
-          <header class="dash-drawer__head teacher-recite-modal__head">
-            <div class="dash-drawer__head-main">
-              <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
-              <div class="dash-drawer__head-copy">
-                <span class="teacher-recite-modal__eyebrow">{{ eyebrowLabel }}</span>
-                <h2 :id="titleId" class="dash-drawer__title">{{ row?.title || t('teacher.profile_recite_attempt') }}</h2>
-                <p v-if="row?.hint" class="dash-drawer__subtitle teacher-recite-modal__hint">{{ row.hint }}</p>
-              </div>
-            </div>
-            <button type="button" class="dash-icon-btn dash-drawer__close teacher-recite-modal__close" :aria-label="t('teacher.close')" @click="$emit('close')">
-              <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-          </header>
-
-          <div class="dash-student-dialog__body">
+  <TeacherDialog
+    :open="open"
+    size="xl"
+    :title="row?.title || t('teacher.profile_recite_attempt')"
+    :eyebrow="eyebrowLabel"
+    :close-label="t('teacher.close')"
+    @close="$emit('close')"
+  >
+    <template #pills>
+      <span v-if="row?.hint" class="badge rounded-pill text-bg-light border">{{ row.hint }}</span>
+    </template>
+    <div class="teacher-recite-modal">
           <div v-if="hasAudio" class="teacher-recite-modal__audio">
             <audio
               ref="player"
@@ -49,9 +34,11 @@
           <p v-else-if="mode === 'audio'" class="teacher-recite-modal__muted">{{ audioUnavailableLabel }}</p>
 
           <div v-if="mode === 'mushaf'" class="teacher-recite-modal__body">
-            <section v-if="assignedAyahs.length" class="teacher-recite-mushaf__block is-assigned">
+            <section v-if="hasAssignedRange" class="teacher-recite-mushaf__block is-assigned">
               <h3>{{ t('teacher.assigned_task_passage') }}</h3>
-              <TeacherReciteMushafAyahs :ayahs="assignedAyahs" />
+              <p v-if="loading" class="teacher-recite-modal__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
+              <TeacherReciteMushafAyahs v-else-if="assignedAyahs.length" :ayahs="assignedAyahs" />
+              <p v-else class="teacher-recite-modal__muted">{{ t('teacher.madani_text_unavailable') }}</p>
             </section>
 
             <section class="teacher-recite-mushaf__block">
@@ -59,7 +46,8 @@
                 <h3>{{ t('teacher.recitation_compare_label') }}</h3>
               </div>
               <p v-if="loading" class="teacher-recite-modal__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
-              <TeacherReciteMushafAyahs v-else :ayahs="ayahs" />
+              <TeacherReciteMushafAyahs v-else-if="ayahs.length" :ayahs="ayahs" />
+              <p v-else class="teacher-recite-modal__muted">{{ t('teacher.madani_text_unavailable') }}</p>
             </section>
 
             <details v-if="row?.transcript" class="teacher-recite-modal__asr">
@@ -68,23 +56,21 @@
               <small>{{ t('teacher.transcript_asr_note') }}</small>
             </details>
           </div>
-          </div>
-        </section>
-      </div>
-    </Transition>
-  </Teleport>
+    </div>
+  </TeacherDialog>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { buildTeacherReciteMushafView } from '../../scripts/teacher/teacherReciteMushafView'
+import TeacherDialog from './TeacherDialog.vue'
 import TeacherReciteMushafAyahs from './TeacherReciteMushafAyahs.vue'
 
 let modalUid = 0
 
 export default {
   name: 'TeacherReciteEvidenceModal',
-  components: { TeacherReciteMushafAyahs },
+  components: { TeacherDialog, TeacherReciteMushafAyahs },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -115,6 +101,15 @@ export default {
     eyebrowLabel() {
       return this.mode === 'audio' ? this.t('teacher.audio_review') : this.t('teacher.recitation_mushaf_review')
     },
+    hasAssignedRange() {
+      const range = this.row?.assignedRange
+      const performance = this.row?.range
+      if (!range?.surah || !range?.from) return false
+      if (!performance?.surah || !performance?.from) return true
+      return range.surah !== performance.surah
+        || range.from !== performance.from
+        || Number(range.to || range.from) !== Number(performance.to || performance.from)
+    },
     audioUnavailableLabel() {
       const reason = this.row?.audio?.reason
       if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
@@ -128,7 +123,6 @@ export default {
         this.resetPlayer()
         this.loadMushaf()
         this.$nextTick(() => {
-          this.$refs.dialog?.focus({ preventScroll: true })
           if (this.mode === 'audio' && this.hasAudio) this.togglePlayback()
         })
       } else {

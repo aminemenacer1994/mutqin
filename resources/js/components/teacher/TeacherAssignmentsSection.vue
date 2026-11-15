@@ -74,13 +74,13 @@
             <button type="button" class="teacher-task-row__copy teacher-task-row__open" :disabled="!item.studentId" @click="$emit('open-student', item.studentId)">
               <span class="teacher-task-row__student">{{ item.studentName }}</span>
               <span class="teacher-task-row__range">{{ item.title }}</span>
-              <span class="teacher-task-row__meta">
-                <span class="teacher-hifz-tag" :class="`is-${item.category}`">{{ item.categoryLabel }}</span>
-                <span>{{ item.actionLabel }}</span>
-                <span v-if="item.status === 'completed' && item.completionEvidence">{{ item.completionEvidence }}</span>
+              <span class="teacher-task-row__meta d-flex flex-wrap gap-1">
+                <span class="badge rounded-pill text-bg-light border">{{ item.categoryLabel }}</span>
+                <span class="badge rounded-pill text-bg-light border">{{ item.actionLabel }}</span>
+                <span v-if="item.status === 'completed' && item.completionEvidence" class="badge rounded-pill text-bg-success">{{ item.completionEvidence }}</span>
                 <template v-else>
-                  <span v-if="item.dueText" class="teacher-task-row__due" :class="`is-${item.dueTone}`">{{ item.dueText }}</span>
-                  <span v-if="item.status === 'in_progress' && item.progress">{{ item.progress }}</span>
+                  <span v-if="item.dueText" class="badge rounded-pill text-bg-light border">{{ item.dueText }}</span>
+                  <span v-if="item.status === 'in_progress' && item.progress" class="badge rounded-pill text-bg-light border">{{ item.progress }}</span>
                 </template>
               </span>
             </button>
@@ -94,7 +94,8 @@
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                 <span class="visually-hidden">{{ t('teacher.conversation') }}</span>
               </button>
-              <button v-if="item.evidence?.audio?.available || item.evidence?.transcript" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="t('teacher.open_session_review')" :title="t('teacher.open_session_review')" @click="openMessages(item)"><i class="bi bi-play-circle" aria-hidden="true"></i></button>
+              <button v-if="canReviewPlayback(item)" type="button" class="btn btn-sm btn-primary teacher-task-row__review" :aria-label="`${t('teacher.playback_open')}: ${item.studentName}`" @click="openPlayback(item)">{{ t('teacher.playback_open') }}</button>
+              <button v-else-if="item.evidence?.audio?.available || item.evidence?.transcript" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="t('teacher.open_session_review')" :title="t('teacher.open_session_review')" @click="openMessages(item)"><i class="bi bi-play-circle" aria-hidden="true"></i></button>
               <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
                 <span class="visually-hidden">{{ t('teacher.task_edit') }}</span>
@@ -133,88 +134,58 @@
       @submit="$emit('save')"
       @update:form="$emit('update:form', $event)"
     />
-    <Teleport to="body">
-      <template v-if="removeItem">
-        <div class="modal-backdrop fade show teacher-task-backdrop" @click="closeRemove"></div>
-        <div ref="removeDialog" class="modal fade show d-block teacher-task-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-remove-title" tabindex="-1" @keydown="onRemoveKeydown">
-          <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog">
-            <div class="modal-content teacher-task-modal__content teacher-task-modal__content--remove">
-              <div class="modal-header teacher-task-modal__header">
-                <div class="teacher-task-modal__intro">
-                  <span class="teacher-task-modal__eyebrow teacher-task-modal__eyebrow--danger"><i class="bi bi-trash3" aria-hidden="true"></i> {{ t('teacher.task_remove') }}</span>
-                  <h2 id="teacher-remove-title" class="modal-title h5 teacher-task-modal__title">{{ t('teacher.task_remove') }}</h2>
-                </div>
-                <button type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeRemove"></button>
-              </div>
-              <div class="modal-body teacher-task-modal__remove-body">
-                <span class="teacher-task-modal__remove-icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
-                <p class="mb-0">{{ t('teacher.task_remove_confirm', { student: removeItem.studentName, range: removeItem.title }) }}</p>
-              </div>
-              <div class="modal-footer teacher-task-modal__footer">
-                <button type="button" class="btn btn-outline-secondary" @click="closeRemove">{{ t('teacher.close') }}</button>
-                <button ref="removeButton" type="button" class="btn btn-danger" :disabled="saving" @click="confirmRemove">{{ t('teacher.task_remove') }}</button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <TeacherDialog
+      :open="Boolean(removeItem)"
+      size="sm"
+      :title="t('teacher.task_remove')"
+      :close-label="t('teacher.close')"
+      @close="closeRemove"
+    >
+      <p v-if="removeItem" class="mb-0">{{ t('teacher.task_remove_confirm', { student: removeItem.studentName, range: removeItem.title }) }}</p>
+      <template #footer>
+        <button type="button" class="btn btn-outline-secondary" @click="closeRemove">{{ t('teacher.close') }}</button>
+        <button type="button" class="btn btn-danger" :disabled="saving" @click="confirmRemove">{{ t('teacher.task_remove') }}</button>
+      </template>
+    </TeacherDialog>
+    <TeacherDialog
+      :open="Boolean(messageItem)"
+      :title="messageItem ? messageItem.studentName : t('teacher.messages')"
+      :close-label="t('teacher.close')"
+      @close="closeMessages"
+    >
+      <template v-if="messageItem" #pills>
+        <span class="badge rounded-pill text-bg-light border">{{ messageItem.title }}</span>
+        <span class="badge rounded-pill text-bg-light border">{{ messageItem.statusLabel }}</span>
+        <span v-if="messageItem.categoryLabel" class="badge rounded-pill teacher-pill">{{ messageItem.categoryLabel }}</span>
       </template>
       <template v-if="messageItem">
-        <div class="modal-backdrop fade show teacher-task-backdrop" @click="closeMessages"></div>
-        <div ref="messageDialog" class="modal fade show d-block teacher-task-modal teacher-message-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-message-title" tabindex="-1" @keydown="onMessageKeydown">
-          <div class="modal-dialog modal-dialog-centered teacher-task-modal__dialog teacher-message-modal__dialog">
-            <div class="modal-content teacher-task-modal__content teacher-message-modal__content">
-              <div class="modal-header teacher-task-modal__header teacher-message-modal__header teacher-message-modal__header--simple">
-                <div class="teacher-task-modal__intro">
-                  <h2 id="teacher-message-title" class="modal-title h5 teacher-task-modal__title">{{ messageItem.studentName }}</h2>
-                  <p class="teacher-message-modal__subtitle">{{ messageItem.title }} · {{ messageItem.statusLabel }}</p>
-                </div>
-                <button ref="messageClose" type="button" class="btn-close" :aria-label="t('teacher.close')" @click="closeMessages"></button>
-              </div>
-              <div class="modal-body teacher-message-modal__body">
-                <p v-if="messageItem.assignment.feedback" class="teacher-message-modal__note-line"><strong>{{ t('teacher.task_note_label') }}</strong> {{ messageItem.assignment.feedback }}</p>
-                <audio v-if="messageItem.evidence?.audio?.available" class="teacher-message-modal__audio" controls preload="metadata" :src="messageItem.evidence.audio.url"></audio>
-                <div v-if="messageItem.messages.length" class="teacher-message-thread" aria-live="polite">
-                  <article v-for="message in messageItem.messages" :key="message.id" class="teacher-message-bubble" :class="[`is-${message.sender}`, { 'is-unread': message.unread }]">
-                    <span>{{ message.sender === 'teacher' ? t('teacher.you') : messageItem.studentName }}</span>
-                    <p v-if="message.body">{{ message.body }}</p>
-                    <div v-if="message.audio?.available && message.audio?.url" class="teacher-message-bubble__audio">
-                      <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                      <audio controls preload="metadata" :src="message.audio.url">{{ t('teacher.voice_note') }}</audio>
-                    </div>
-                    <time v-if="message.created_at" :datetime="message.created_at">{{ messageWhen(message) }}<template v-if="message.sender === 'teacher'"> · {{ message.delivery_status === 'read' ? t('teacher.message_read') : t('teacher.message_sent_status') }}</template></time>
-                  </article>
-                </div>
-                <div v-else class="teacher-message-empty">
-                  <i class="bi bi-chat-left-text" aria-hidden="true"></i>
-                  <p>{{ t('teacher.messages_empty_short') }}</p>
-                </div>
-                <form class="teacher-message-composer teacher-message-composer--compact" @submit.prevent="sendMessage">
-                  <label class="visually-hidden" for="teacher-task-reply">{{ t('teacher.message') }}</label>
-                  <textarea id="teacher-task-reply" v-model="messageDraft" rows="3" maxlength="2000" :placeholder="t('teacher.reply_placeholder')" :disabled="messageSaving"></textarea>
-                  <TeacherVoiceNoteControls ref="taskVoice" :disabled="messageSaving" />
-                  <div v-if="messageItem.status === 'awaiting_confirmation'" class="teacher-message-composer__review">
-                    <button type="button" class="btn btn-success btn-sm" :disabled="reviewSaving" @click="approveSubmission">
-                      <i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.task_approve') }}
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="reviewSaving" @click="requestCorrection">
-                      <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ t('teacher.task_request_correction') }}
-                    </button>
-                  </div>
-                  <div class="teacher-message-composer__foot">
-                    <span v-if="messageError" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ messageError }}</span>
-                    <span v-else-if="messageSent" class="alert alert-success py-1 px-2 mb-0" role="status">{{ t('teacher.message_sent') }}</span>
-                    <span v-else aria-hidden="true"></span>
-                    <button type="submit" class="btn btn-primary teacher-message-composer__send" :disabled="messageSaving || !canSendTaskMessage" :aria-label="messageSaving ? t('teacher.saving_message') : t('teacher.send_message')" :title="t('teacher.send_message')">
-                      <i class="bi" :class="messageSaving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+        <div v-if="messageItem.status === 'awaiting_confirmation'" class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-success btn-sm" :disabled="reviewSaving" @click="approveSubmission">{{ t('teacher.task_approve') }}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="reviewSaving" @click="requestCorrection">{{ t('teacher.task_request_correction') }}</button>
         </div>
+        <p v-if="messageError" class="alert alert-danger" role="alert">{{ messageError }}</p>
+        <TeacherTaskConversation
+          variant="teacher"
+          :messages="messageItem.messages"
+          :peer-name="messageItem.studentName"
+          :teacher-note="messageItem.assignment.feedback || ''"
+          :evidence-audio="messageItem.evidence?.audio || null"
+          :composer-id="`teacher-task-reply-${messageItem.recipientId}`"
+          :composer-label="t('teacher.message')"
+          :composer-placeholder="t('teacher.reply_placeholder')"
+          :empty-label="t('teacher.messages_empty_short')"
+          :on-send="sendConversationMessage"
+          :on-delete="deleteConversationMessage"
+        />
       </template>
-    </Teleport>
+    </TeacherDialog>
+    <TeacherRecitationPlaybackReview
+      :open="Boolean(playbackItem)"
+      :student-id="playbackItem?.studentId"
+      :attempt-id="playbackItem?.evidence?.attempt_id"
+      autoplay
+      @close="playbackItem = null"
+    />
   </section>
 </template>
 
@@ -230,19 +201,20 @@ import {
   taskStateLabelKey,
   teacherListStatusTone,
 } from '../../scripts/teacher/taskState'
+import TeacherDialog from './TeacherDialog.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
+import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
+import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
-import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
-import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
 import { learningApi } from '../../scripts/api/learning'
 
 const STEP = 25
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherSectionPane, TeacherTaskSheet, TeacherVoiceNoteControls },
+  components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskSheet },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
@@ -264,7 +236,7 @@ export default {
       shown: STEP,
       STEP,
       query: '',
-      statusFilter: this.initialStatusFilter,
+      statusFilter: ['waiting', 'submitted'].includes(this.initialStatusFilter) ? 'all' : this.initialStatusFilter,
       removeItem: null,
       messageItem: null,
       messageDraft: '',
@@ -273,32 +245,18 @@ export default {
       messageSent: false,
       messageSentTimer: null,
       reviewSaving: false,
-      returnFocusEl: null,
+      playbackItem: null,
       compactView: false,
     }
   },
   mounted() {
     this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1'
   },
-  watch: {
-    removeItem(value) {
-      this.syncModalState(Boolean(value) || Boolean(this.messageItem))
-    },
-    messageItem(value) {
-      this.syncModalState(Boolean(value) || Boolean(this.removeItem))
-    },
-  },
   beforeUnmount() {
     if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-    this.$refs.taskVoice?.discardRecording()
-    document.body.classList.remove('modal-open', 'teacher-task-modal-open')
   },
   computed: {
     hasActiveTaskFilters() { return Boolean(this.query || this.statusFilter !== 'all') },
-    canSendTaskMessage() {
-      if (this.messageSaving || this.$refs.taskVoice?.isRecordingActive) return false
-      return Boolean(this.messageDraft.trim() || this.$refs.taskVoice?.hasRecording)
-    },
     taskFilters() {
       const counts = this.flatItems.reduce((result, item) => {
         result.all += 1
@@ -311,9 +269,7 @@ export default {
       }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
       return [
         { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
-        { id: 'waiting', label: this.t('teacher.task_filter_waiting'), count: counts.waiting },
         { id: 'progress', label: this.t('teacher.task_filter_progress'), count: counts.progress },
-        { id: 'submitted', label: this.t('status_submitted'), count: counts.submitted },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
         { id: 'done', label: this.t('teacher.task_filter_completed'), count: counts.done },
       ]
@@ -411,79 +367,65 @@ export default {
       this.compactView = !this.compactView
       window.localStorage.setItem('mutqin.teacher.tasks.compact', this.compactView ? '1' : '0')
     },
-    syncModalState(open) {
-      document.body.classList.toggle('modal-open', open)
-      document.body.classList.toggle('teacher-task-modal-open', open)
-    },
     openRemove(item) {
-      this.returnFocusEl = captureReturnFocus()
       this.removeItem = item
-      this.$nextTick(() => this.$refs.removeButton?.focus())
     },
     closeRemove() {
       this.removeItem = null
-      this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
     },
     confirmRemove() {
       if (!this.removeItem || this.saving) return
       this.$emit('remove', this.removeItem.assignment.id)
       this.closeRemove()
     },
-    onRemoveKeydown(event) {
-      handleModalKeydown(event, { container: this.$refs.removeDialog, open: Boolean(this.removeItem), onEscape: this.closeRemove })
+    openPlayback(item) {
+      this.playbackItem = item
+    },
+    canReviewPlayback(item) {
+      return Boolean(item?.studentId && item?.evidence?.attempt_id)
     },
     openMessages(item) {
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-      this.$refs.taskVoice?.discardRecording()
-      this.returnFocusEl = captureReturnFocus()
       this.messageItem = item
       this.messageDraft = ''
       this.messageError = ''
       this.messageSent = false
-      this.$nextTick(() => this.$refs.messageClose?.focus())
     },
     closeMessages() {
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-      this.$refs.taskVoice?.discardRecording()
       this.messageItem = null
-      this.$nextTick(() => restoreReturnFocus(this.returnFocusEl))
     },
     clearMessageComposer() {
       this.messageDraft = ''
       this.messageError = ''
       this.messageSent = false
-      this.$refs.taskVoice?.discardRecording()
     },
     openMessageStudent() {
       const id = this.messageItem?.studentId
       this.closeMessages()
       if (id) this.$emit('open-student', id)
     },
-    onMessageKeydown(event) {
-      handleModalKeydown(event, { container: this.$refs.messageDialog, open: Boolean(this.messageItem), onEscape: this.closeMessages })
-    },
-    async sendMessage() {
-      const body = this.messageDraft.trim()
-      const recording = this.$refs.taskVoice?.recordingPayload?.() || null
-      if ((!body && !recording) || !this.messageItem || this.messageSaving) return
-      this.messageSaving = true
+    async sendConversationMessage(body, recording = null) {
+      if (!this.messageItem) return
       this.messageError = ''
-      this.messageSent = false
       try {
-        const message = await this.onSendMessage(this.messageItem.recipientId, body, recording)
+        const payload = await this.onSendMessage(this.messageItem.recipientId, body, recording)
+        const message = payload?.message || payload
         if (message) this.messageItem.messages.push(message)
-        this.messageDraft = ''
-        this.$refs.taskVoice?.discardRecording()
-        this.messageSent = true
-        if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
-        this.messageSentTimer = window.setTimeout(() => {
-          this.messageSent = false
-          this.messageSentTimer = null
-        }, 3000)
       } catch (error) {
         this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
-      } finally {
-        this.messageSaving = false
+        throw error
+      }
+    },
+    async deleteConversationMessage(message) {
+      if (!message?.id) return
+      this.messageError = ''
+      try {
+        await learningApi.deleteTeacherNote(message.id)
+        this.messageItem.messages = this.messageItem.messages.filter((item) => item.id !== message.id)
+      } catch (error) {
+        this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
+        throw error
       }
     },
     async approveSubmission() {
@@ -507,12 +449,10 @@ export default {
       this.reviewSaving = true
       this.messageError = ''
       try {
-        const note = this.messageDraft.trim()
-        const payload = await learningApi.requestTeacherAssignmentCorrection(this.messageItem.recipientId, note)
+        const payload = await learningApi.requestTeacherAssignmentCorrection(this.messageItem.recipientId, '')
         if (payload?.recipient) {
           this.syncMessageItemState(payload.recipient)
         }
-        this.messageDraft = ''
         this.$emit('refresh')
       } catch (error) {
         this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')

@@ -6,21 +6,57 @@
       <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
     </section>
 
-    <TeacherActivityChart
-      :chart-days="chartDays"
-      :day-options="chartDayOptions"
-      :is-empty="chartEmpty"
-      :chart-ready="chartReady"
-      :chart-data="chartData"
-      :chart-options="chartOptions"
-      @set-days="$emit('set-chart-days', $event)"
-    />
+    <TeacherSectionPane
+      v-if="taskRows.length"
+      :title="t('teacher.overview_task_status')"
+      :hint="t('teacher.overview_task_status_hint')"
+      icon="bi bi-list-check"
+      tone="practice"
+      flat
+    >
+      <div class="teacher-task-pulse">
+        <div class="teacher-task-pulse__lead">
+          <strong>{{ taskLead.count }}</strong>
+          <span>{{ taskLead.label }}</span>
+        </div>
+        <div class="teacher-task-pulse__breakdown">
+          <button
+            v-for="row in taskRows"
+            :key="row.id"
+            type="button"
+            :class="row.tone"
+            :aria-label="`${row.label}: ${row.count}`"
+            @click="$emit('open-assignments', row.id)"
+          >
+            <span class="teacher-task-pulse__name"><i aria-hidden="true"></i>{{ row.label }}</span>
+            <strong>{{ row.count }}</strong>
+          </button>
+        </div>
+      </div>
+    </TeacherSectionPane>
+
+    <TeacherSectionPane
+      v-else-if="hasStudents"
+      :title="t('teacher.overview_task_status')"
+      :hint="t('teacher.overview_task_status_hint')"
+      icon="bi bi-list-check"
+      tone="practice"
+      flat
+    >
+      <div class="teacher-empty-with-action">
+        <TeacherEmpty inline icon="bi bi-journal-plus" :message="t('teacher.assignments_empty')" />
+        <button type="button" class="btn btn-primary btn-sm teacher-empty-action" @click="$emit('create-assignment')">
+          {{ t('teacher.add_task') }}
+        </button>
+      </div>
+    </TeacherSectionPane>
 
     <TeacherSectionPane
       :title="t('teacher.overview_need_look')"
       :hint="t('teacher.overview_need_look_hint')"
       icon="bi bi-exclamation-circle"
       tone="warn"
+      flat
     >
       <TeacherAttentionList
         :rows="attentionRows"
@@ -36,6 +72,7 @@
         :hint="t('teacher.overview_recent_activity_hint')"
         icon="bi bi-activity"
         tone="practice"
+        flat
       >
         <ul v-if="recentActivity.length" class="teacher-activity-list">
           <li v-for="student in recentActivity" :key="student.id">
@@ -58,14 +95,13 @@
           <button type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
         </div>
       </TeacherSectionPane>
-
     </div>
+
   </section>
 </template>
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
-import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -74,7 +110,6 @@ import TeacherSectionPane from './TeacherSectionPane.vue'
 export default {
   name: 'TeacherOverviewSection',
   components: {
-    TeacherActivityChart,
     TeacherAttentionList,
     TeacherEmpty,
     TeacherKpiGrid,
@@ -93,10 +128,30 @@ export default {
     chartData: { type: Object, required: true },
     chartOptions: { type: Object, required: true },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'create-assignment'],
   computed: {
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
+    },
+    assignmentCounts() {
+      return this.overview?.assignments || {}
+    },
+    hasStudents() {
+      return Number(this.overview?.kpis?.authorised_students || 0) > 0
+    },
+    taskRows() {
+      const counts = this.assignmentCounts
+      return [
+        { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: Number(counts.overdue || 0), tone: 'is-danger' },
+        { id: 'progress', label: this.t('teacher.task_filter_progress'), count: Number(counts.in_progress || 0), tone: '' },
+        { id: 'done', label: this.t('teacher.task_filter_completed'), count: Number(counts.completed || 0), tone: 'is-good' },
+      ].filter((row) => row.count > 0)
+    },
+    taskLead() {
+      const counts = this.assignmentCounts
+      const overdue = Number(counts.overdue || 0)
+      if (overdue > 0) return { count: overdue, label: this.t('teacher.task_filter_overdue') }
+      return { count: Number(this.overview?.kpis?.outstanding_assignments || 0), label: this.t('teacher.kpi_open_tasks') }
     },
     attentionRows() {
       if (this.attentionPreview.length) return this.attentionPreview
@@ -113,8 +168,8 @@ export default {
   methods: {
     initial: studentInitial,
     scoreTone: scoreBadgeTone,
-    openStudent(id) {
-      this.$emit('open-student', id, 'overview')
+    openStudent(id, section = 'ai') {
+      this.$emit('open-student', id, section)
     },
   },
 }

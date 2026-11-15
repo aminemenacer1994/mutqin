@@ -101,6 +101,7 @@ class TeacherDemoReset
             'teacher_recitation_assessments' => ['teacher_id', 'student_id'],
             'teacher_attendance_records' => ['teacher_id', 'student_id'],
             'teacher_notes' => ['teacher_id', 'student_id'],
+            'teacher_private_notes' => ['teacher_id', 'student_id'],
             'teacher_assignment_recipients' => ['student_id'],
             'teacher_assignments' => ['teacher_id'],
             'group_memberships' => ['user_id'],

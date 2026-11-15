@@ -51,12 +51,27 @@
         >
           <p v-if="message.body" class="teacher-task-conversation__body">{{ message.body }}</p>
           <div v-if="message.audio?.available && message.audio?.url" class="teacher-task-conversation__voice">
-            <i class="bi bi-mic-fill" aria-hidden="true"></i>
-            <audio controls preload="metadata" :src="message.audio.url">{{ t('teacher.voice_note') }}</audio>
+            <TeacherAudioFeedbackPlayer
+              :src="message.audio.url"
+              :duration-ms="message.audio.duration_ms"
+              compact
+            />
           </div>
-          <time v-if="message.created_at" :datetime="message.created_at">
-            {{ messageWhen(message) }}<template v-if="showDelivery(message)"> · {{ deliveryLabel(message) }}</template>
-          </time>
+          <div class="teacher-task-conversation__meta">
+            <time v-if="message.created_at" :datetime="message.created_at">
+              {{ messageWhen(message) }}<template v-if="showDelivery(message)"> · {{ deliveryLabel(message) }}</template>
+            </time>
+            <button
+              v-if="message.can_delete && onDelete"
+              type="button"
+              class="btn btn-link btn-sm teacher-task-conversation__delete"
+              :aria-label="t('teacher.delete_audio_feedback')"
+              :disabled="deletingId === message.id"
+              @click="deleteMessage(message)"
+            >
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+          </div>
         </article>
       </template>
       <div v-if="!normalizedMessages.length" class="teacher-task-conversation__empty">
@@ -207,6 +222,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import MessageBubble from '../dashboard/MessageBubble.vue'
 import AudioClip from '../AudioClip.vue'
+import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import {
   chooseSupportedRecorderMimeType,
   createObjectUrlFromBlob,
@@ -233,7 +249,7 @@ const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherTaskConversation',
-  components: { MessageBubble, AudioClip },
+  components: { MessageBubble, AudioClip, TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {
     messages: { type: Array, default: () => [] },
@@ -251,11 +267,13 @@ export default {
     emptyLabel: { type: String, default: '' },
     uiDirection: { type: String, default: '' },
     onSend: { type: Function, default: null },
+    onDelete: { type: Function, default: null },
   },
   data() {
     return {
       draft: '',
       saving: false,
+      deletingId: null,
       errorText: '',
       sent: false,
       audioRecorder: null,
@@ -404,6 +422,18 @@ export default {
         return date.toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
       } catch (_) {
         return ''
+      }
+    },
+    async deleteMessage(message) {
+      if (!this.onDelete || !message?.id || this.deletingId) return
+      this.deletingId = message.id
+      this.errorText = ''
+      try {
+        await this.onDelete(message)
+      } catch (error) {
+        this.errorText = error?.response?.data?.message || error?.message || this.t('teacher.action_failed')
+      } finally {
+        this.deletingId = null
       }
     },
     scrollThread() {

@@ -1,64 +1,123 @@
 <template>
-  <TeacherSectionPane tone="recite">
-    <div v-if="attemptGroups.length" class="teacher-section-summary teacher-section-summary--recite" role="list">
-      <div role="listitem">
-        <span>{{ t('teacher.ai_check_average') }}</span>
-        <strong>{{ averageLabel }}</strong>
-        <small>{{ t('teacher.ai_check_average_help') }}</small>
-      </div>
-      <div role="listitem">
-        <span>{{ t('teacher.scored_checks') }}</span>
-        <strong>{{ Number(profile.payload?.score_count || 0) }}</strong>
-        <small>{{ scoreSummary || t('teacher.no_scored_checks') }}</small>
-      </div>
+  <div class="teacher-recite">
+    <TeacherTabGuide kind="section" :step="step" :title="t('teacher.review_listen_title')" :description="t('teacher.review_listen_desc')" />
+    <div v-if="summaryRows.length" class="teacher-review-facts">
+      <span v-for="row in summaryRows" :key="row.key" class="badge rounded-pill teacher-pill" :class="row.tone">
+        {{ [row.label, row.value].filter(Boolean).join(' ') }}<template v-if="row.detail"> · {{ row.detail }}</template>
+      </span>
     </div>
-    <div v-if="attemptGroups.length" class="teacher-history-groups">
-      <details v-for="(group, index) in attemptGroups" :key="group.key" class="teacher-history-group" :open="index === 0">
-        <summary class="teacher-history-group__summary">
-          <span class="teacher-history-group__title">{{ group.title }} <small v-if="arabicNames[group.surah]" lang="ar" dir="rtl">{{ arabicNames[group.surah] }}</small></span>
-          <span class="teacher-history-group__count">{{ group.rows.length }} {{ group.rows.length === 1 ? t('teacher.check_one') : t('teacher.check_many') }}</span>
-          <i class="bi bi-chevron-down" aria-hidden="true"></i>
-        </summary>
-        <TeacherRecordList :rows="group.rows" mushaf-review-modal />
-      </details>
-    </div>
-    <div v-if="!attemptGroups.length" class="teacher-profile-empty teacher-profile-empty--row">
+
+    <template v-if="attemptGroups.length">
+      <div class="teacher-review-filter">
+        <p>{{ t('teacher.review_filter_label') }}</p>
+      <div class="teacher-learn__chips" role="group" :aria-label="t('teacher.review_filter_label')">
+        <button type="button" :class="{ 'is-active': !passageFilter }" :aria-pressed="!passageFilter ? 'true' : 'false'" @click="passageFilter = ''">
+          {{ t('teacher.learning_all_passages') }}
+        </button>
+        <button
+          v-for="group in attemptGroups"
+          :key="group.key"
+          type="button"
+          :class="{ 'is-active': passageFilter === group.key }"
+          :aria-pressed="passageFilter === group.key ? 'true' : 'false'"
+          @click="passageFilter = group.key"
+        >
+          {{ group.title }}
+          <em>{{ group.rows.length }}</em>
+        </button>
+      </div>
+      </div>
+      <TeacherRecordList layout="cards" :rows="visibleAttempts" mushaf-review-modal />
+    </template>
+    <div v-else class="teacher-profile-empty teacher-profile-empty--row">
       <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
-      <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-journal-plus" aria-hidden="true"></i>{{ t('teacher.assign_task') }}</button>
     </div>
-  </TeacherSectionPane>
+
+  </div>
 </template>
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { ayahRangeLabel, scoreBadgeTone, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
-import { teacherArabicSurahNames } from '../../../scripts/teacher/quranContent'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
-import TeacherSectionPane from '../TeacherSectionPane.vue'
+import TeacherTabGuide from '../TeacherTabGuide.vue'
 
 export default {
   name: 'TeacherStudentProfileAi',
-  components: { TeacherEmpty, TeacherRecordList, TeacherSectionPane },
+  components: { TeacherEmpty, TeacherRecordList, TeacherTabGuide },
   mixins: [i18nMixin],
-  data() { return { arabicNames: {} } },
-  mounted() { teacherArabicSurahNames().then((names) => { this.arabicNames = names }) },
+  data() { return { passageFilter: '' } },
   props: {
     profile: { type: Object, required: true },
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
+    step: { type: [String, Number], default: 2 },
   },
   emits: ['assign-revision'],
+  methods: {
+    scoreTone(value) {
+      const score = Number(value)
+      if (!Number.isFinite(score)) return 'is-quiet'
+      if (score >= 80) return 'is-score'
+      if (score >= 50) return 'is-partial'
+      return 'is-flagged'
+    },
+  },
   computed: {
     averageLabel() {
       return typeof this.profile.payload?.success_rate === 'number'
         ? this.t('teacher.score_n', { n: this.profile.payload.success_rate })
         : this.t('teacher.no_scored_checks')
     },
-    scoreSummary() {
+    latestAttempt() {
+      const attempts = this.profile.payload?.attempts || []
+      return attempts[0] || null
+    },
+    latestLabel() {
+      const attempt = this.latestAttempt
+      if (!attempt || typeof attempt.accuracy_percent !== 'number') return ''
+      return this.t('teacher.score_n', { n: attempt.accuracy_percent })
+    },
+    latestWhen() {
+      return this.latestAttempt ? this.formatWhen(this.latestAttempt.created_at) : ''
+    },
+    summaryRows() {
+      const rows = []
       const count = Number(this.profile.payload?.score_count || 0)
-      if (!count) return ''
-      return this.t('teacher.profile_recite_score_basis', { count })
+      if (this.attemptGroups.length || typeof this.profile.payload?.success_rate === 'number') {
+        rows.push({
+          key: 'avg',
+          label: this.t('teacher.ai_check_average'),
+          value: this.averageLabel,
+          tone: this.scoreTone(this.profile.payload?.success_rate),
+        })
+        rows.push({
+          key: 'checks',
+          label: '',
+          value: this.t(count === 1 ? 'teacher.check_count_one' : 'teacher.check_count_many', { n: count }),
+          tone: '',
+        })
+      }
+      if (this.latestLabel) {
+        rows.push({
+          key: 'latest',
+          label: this.t('teacher.latest_result'),
+          value: this.latestLabel,
+          detail: this.latestWhen,
+          tone: this.scoreTone(this.latestAttempt?.accuracy_percent),
+        })
+      }
+      return rows
+    },
+    visibleAttempts() {
+      const groups = this.passageFilter
+        ? this.attemptGroups.filter((group) => group.key === this.passageFilter)
+        : this.attemptGroups
+      return groups.flatMap((group) => group.rows.map((row) => ({
+        ...row,
+        hint: [group.title, row.hint].filter(Boolean).join(' · '),
+      })))
     },
     attemptGroups() {
       const groups = new Map()
@@ -82,6 +141,8 @@ export default {
         const when = this.formatWhen(attempt.created_at)
         const row = teacherRecitationEvidenceRow({
           key: attempt.id,
+          attemptId: attempt.id,
+          studentId: this.profile.student?.id,
           icon: 'bi bi-mic',
           iconTone: scoreBadgeTone(attempt.accuracy_percent),
           attention: hasIssues,

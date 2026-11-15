@@ -14,11 +14,14 @@
           <li v-for="(mistake, rowIndex) in group.items" :key="`${group.ayah}-${rowIndex}`" class="learner-teacher__mistake-row">
             <div class="learner-teacher__mistake-row-main">
               <p class="learner-teacher__mistake-ayah-text" dir="rtl" lang="ar">
+                <span v-if="!ayahParts(group.ayah, mistake).length" class="learner-teacher__mistake-ayah-missing">{{ t('teacher.madani_text_unavailable') }}</span>
                 <span
                   v-for="(part, partIndex) in ayahParts(group.ayah, mistake)"
                   :key="partIndex"
+                  class="learner-teacher__mistake-ayah-word"
                   :class="{ 'is-flagged-word': part.highlighted }"
-                >{{ part.text }}<template v-if="partIndex < ayahParts(group.ayah, mistake).length - 1">&nbsp;</template></span>
+                  :style="part.fontFamily ? { fontFamily: part.fontFamily, fontWeight: 400 } : undefined"
+                >{{ part.text }}</span>
               </p>
               <p class="learner-teacher__mistake-type">
                 <i class="bi" :class="typeIcon(mistake.type)" aria-hidden="true"></i>
@@ -59,9 +62,8 @@
 <script>
 import { i18nMixin } from '@/mixins/i18nMixin'
 import AudioClip from '@/components/AudioClip.vue'
-import { loadSurahAyahs } from '@/scripts/dashboardAiRecite/ayahText.js'
+import { loadTeacherMadaniAyah } from '@/scripts/teacher/madaniDisplayWords.js'
 import {
-  buildAyahWordHighlightParts,
   groupMistakesByAyah,
   isPerfectCompletionResult,
   mistakeWordIndex,
@@ -82,7 +84,7 @@ export default {
   },
   data() {
     return {
-      ayahTextByNumber: {},
+      ayahWordsByNumber: {},
       ayahLoadToken: 0,
     }
   },
@@ -111,23 +113,30 @@ export default {
   methods: {
     async loadAyahTexts() {
       const surah = Number(this.surah)
-      if (!surah || !this.mistakes.length) return
-      const token = ++this.ayahLoadToken
-      try {
-        const ayahs = await loadSurahAyahs(surah)
-        if (token !== this.ayahLoadToken) return
-        const map = {}
-        for (const ayah of ayahs) {
-          map[ayah.ayah] = ayah.text
-        }
-        this.ayahTextByNumber = map
-      } catch {
-        if (token === this.ayahLoadToken) this.ayahTextByNumber = {}
+      const numbers = [...new Set(this.groups.map((group) => Number(group.ayah)).filter((ayah) => ayah > 0))]
+      if (!surah || !numbers.length) {
+        this.ayahWordsByNumber = {}
+        return
       }
+      const token = ++this.ayahLoadToken
+      const entries = await Promise.all(numbers.map(async (ayah) => {
+        try {
+          return [ayah, await loadTeacherMadaniAyah(surah, ayah)]
+        } catch {
+          return [ayah, []]
+        }
+      }))
+      if (token !== this.ayahLoadToken) return
+      this.ayahWordsByNumber = Object.fromEntries(entries)
     },
     ayahParts(ayahNumber, mistake) {
-      const text = this.ayahTextByNumber[ayahNumber] || mistake.expected || ''
-      return buildAyahWordHighlightParts(text, mistakeWordIndex(mistake))
+      const words = this.ayahWordsByNumber[Number(ayahNumber)] || []
+      const index = mistakeWordIndex(mistake)
+      return words.map((word) => ({
+        text: word.text,
+        fontFamily: word.fontFamily,
+        highlighted: Number.isInteger(index) && word.word_index === index,
+      }))
     },
     typeIcon(type) {
       if (type === 'missed') return 'bi-dash-circle-fill is-missed'

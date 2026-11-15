@@ -66,18 +66,32 @@
             @click="$emit('open-feedback', item)"
           >
             <span class="learner-teacher__feedback-icon" aria-hidden="true">
-              <i class="bi bi-chat-left-quote"></i>
+              <i class="bi" :class="item.audio?.available ? 'bi-mic-fill' : 'bi-chat-left-quote'"></i>
             </span>
             <span class="learner-teacher__feedback-body">
               <span class="learner-teacher__feedback-top">
-                <strong>{{ item.task_title || t('teacher.feedback') }}</strong>
+                <strong>{{ item.task_title || item.passage?.label || t('teacher.feedback') }}</strong>
                 <span v-if="item.unread" class="learner-teacher__dot" :aria-label="t('teacher.unread')"></span>
               </span>
               <span class="learner-teacher__feedback-sender">
-                {{ item.teacher_name || t('teacher.teacher') }}
+                <span class="learner-teacher__feedback-who">
+                  {{ item.teacher_name || t('teacher.teacher') }}
+                  <span v-if="item.recitation" class="learner-teacher__feedback-kind">{{ t('teacher.playback_feedback') }}</span>
+                </span>
                 <time>{{ formatWhen(item.created_at) }}</time>
               </span>
-              <p class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</p>
+              <p v-if="item.preview || item.body" class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</p>
+              <div
+                v-if="item.audio?.available && item.audio?.url"
+                class="learner-teacher__feedback-audio"
+                @click.stop
+              >
+                <TeacherAudioFeedbackPlayer
+                  :src="item.audio.url"
+                  :duration-ms="item.audio.duration_ms"
+                  compact
+                />
+              </div>
             </span>
           </button>
           <button
@@ -100,11 +114,13 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
 import { mergeFeedbackReadState, readFeedbackReadMap, sortFeedbackInbox } from '../../scripts/teacher/learnerDashboard.js'
 import { learnerDashboardTp } from '../../scripts/teacher/learnerDashboardI18n.js'
+import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 
 const SIDEBAR_PREVIEW_LIMIT = 2
 
 export default {
   name: 'LearnerTeacherLearning',
+  components: { TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {
     learning: { type: Object, default: null },

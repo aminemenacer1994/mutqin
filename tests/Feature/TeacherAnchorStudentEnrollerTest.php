@@ -49,6 +49,31 @@ class TeacherAnchorStudentEnrollerTest extends TestCase
         }
     }
 
+    public function test_existing_individual_super_admin_keeps_personal_progress_account(): void
+    {
+        $anchor = User::factory()->create([
+            'email' => 'menacer72@gmail.com',
+            'name' => 'Amine Menacer',
+            'account_role' => 'individual',
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
+        config()->set('mutqin.admin_emails', ['menacer72@gmail.com']);
+
+        $this->seed(OrganisationNetworkSeeder::class);
+
+        $anchor->refresh();
+        $this->assertSame('individual', $anchor->account_role->value);
+        $this->assertNull($anchor->organisation_id);
+        $this->assertTrue($anchor->is_admin);
+        $this->assertGreaterThan(0, $anchor->groupMemberships()->count());
+
+        $access = app(StudentAccessAuthorizer::class);
+        $teacher = User::query()->where('account_role', 'teacher')->first();
+        $this->assertNotNull($teacher);
+        $this->assertTrue($access->authorizedStudentIds($teacher)->contains((int) $anchor->id));
+    }
+
     public function test_teacher_demo_seeder_leaves_personal_student_account_untouched(): void
     {
         $anchor = User::factory()->create(['email' => 'menacer72@gmail.com', 'name' => 'Existing Student', 'account_role' => 'student']);

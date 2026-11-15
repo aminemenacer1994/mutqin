@@ -1,7 +1,9 @@
 <template>
   <section
+    id="dash-my-learning"
     class="dash-section dash-section--learner-teacher dash-reveal"
     aria-labelledby="learner-teacher-heading"
+    tabindex="-1"
     style="--dash-delay: 15ms"
   >
     <div class="dash-section__body learner-teacher">
@@ -45,7 +47,7 @@
               </div>
             </div>
             <div
-              v-if="overview.active_days_this_week || overview.practice_streak_days"
+              v-if="overview.active_days_this_week || overview.practice_streak_days || learnerAttendance"
               class="learner-teacher__intro-badges"
             >
               <span v-if="overview.active_days_this_week" class="learner-teacher__progress-badge">
@@ -55,6 +57,14 @@
               <span v-if="overview.practice_streak_days" class="learner-teacher__progress-badge is-streak">
                 <i class="bi bi-fire" aria-hidden="true"></i>
                 {{ ldtp('teacher.learner_weekly_streak', overview.practice_streak_days) }}
+              </span>
+              <span
+                v-if="learnerAttendance"
+                class="learner-teacher__progress-badge"
+                :title="learnerAttendanceHint"
+              >
+                <i class="bi bi-person-check" aria-hidden="true"></i>
+                {{ t('teacher.learner_attendance_rate', { rate: learnerAttendance.rate_percent }) }}
               </span>
             </div>
           </div>
@@ -338,6 +348,7 @@
         </section>
 
         <div class="learner-teacher__sidebar">
+        <LearnerWordCorrections :items="wordCorrections" />
         <LearnerTeacherLearning
           class="learner-teacher__feedback-panel--desktop"
           :learning="learningForPanel"
@@ -408,6 +419,7 @@
         </header>
         <div class="dash-drawer__body">
           <div class="dash-drawer__content">
+            <LearnerWordCorrections :items="wordCorrections" />
             <LearnerTeacherLearning
               variant="drawer"
               :learning="learningForPanel"
@@ -648,6 +660,7 @@ import {
 } from '../../scripts/teacher/learnerCardExpansion.js'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
+import LearnerWordCorrections from './LearnerWordCorrections.vue'
 import LearnerTeacherUpcoming from './LearnerTeacherUpcoming.vue'
 import LearnerAttemptPlaybackModal from '@/components/shared/LearnerAttemptPlaybackModal.vue'
 import LearnerCompletionMistakePanel from '@/components/shared/LearnerCompletionMistakePanel.vue'
@@ -665,6 +678,7 @@ export default {
   components: {
     TeacherTaskConversation,
     LearnerTeacherLearning,
+    LearnerWordCorrections,
     LearnerTeacherUpcoming,
     LearnerCompletionMistakePanel,
     LearnerAttemptPlaybackModal,
@@ -731,8 +745,24 @@ export default {
         practice_streak_days: 0,
       }
     },
+    learnerAttendance() {
+      const attendance = this.support?.attendance
+      if (!attendance || attendance.rate_percent == null || !Number(attendance.total || 0)) return null
+      return attendance
+    },
+    learnerAttendanceHint() {
+      if (!this.learnerAttendance) return ''
+      const counts = this.learnerAttendance.counts || {}
+      return this.t('teacher.attendance_absent_late', {
+        absent: Number(counts.absent || 0),
+        late: Number(counts.late || 0),
+      })
+    },
     learning() {
       return this.support?.learning || null
+    },
+    wordCorrections() {
+      return Array.isArray(this.learning?.word_corrections) ? this.learning.word_corrections : []
     },
     learnerLocale() {
       return this.$i18n?.global?.locale?.value

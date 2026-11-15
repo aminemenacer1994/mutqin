@@ -10,6 +10,7 @@
     <span class="teacher-list__avatar" aria-hidden="true">{{ initial }}</span>
     <span class="teacher-tile__copy">
       <strong>{{ student.name }}</strong>
+      <small v-if="student.email" class="d-block text-body-secondary fw-normal">{{ student.email }}</small>
       <span class="teacher-tile__meta">
         <template v-if="lastSeen">{{ lastSeen }} · </template>{{ status.label }}
       </span>

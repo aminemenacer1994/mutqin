@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Services\Teacher\TeacherPrivateNoteService;
 use App\Support\AudioPrivacy;
 use Illuminate\Console\Command;
 
@@ -12,12 +13,13 @@ class PurgeLearningHistoryCommand extends Command
                             {--soft-delete-assessments : Soft-delete assessments older than configured retention}
                             {--purge-temp-audio : Delete expired temporary learner audio files}
                             {--strip-sync-audio : Scrub raw audio fields from sync-state JSON when retention is not retain}
+                            {--purge-private-notes : Permanently remove archived / soft-deleted teacher private notes past retention}
                             {--days= : Override assessment soft-delete retention days}
                             {--ttl-hours= : Override temporary audio TTL hours}';
 
     protected $description = 'Apply Mutqin learning-history retention rules (never logs notes or recordings).';
 
-    public function handle(LearningHistoryRetentionService $retention): int
+    public function handle(LearningHistoryRetentionService $retention, TeacherPrivateNoteService $privateNotes): int
     {
         $didWork = false;
 
@@ -42,8 +44,14 @@ class PurgeLearningHistoryCommand extends Command
             $didWork = true;
         }
 
+        if ($this->option('purge-private-notes')) {
+            $removed = $privateNotes->purgeExpired();
+            $this->info("Purged {$removed} expired teacher private note(s).");
+            $didWork = true;
+        }
+
         if (! $didWork) {
-            $this->comment('Nothing to do. Pass --soft-delete-assessments, --purge-temp-audio, and/or --strip-sync-audio.');
+            $this->comment('Nothing to do. Pass --soft-delete-assessments, --purge-temp-audio, --strip-sync-audio, and/or --purge-private-notes.');
         }
 
         return self::SUCCESS;

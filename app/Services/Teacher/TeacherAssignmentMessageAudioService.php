@@ -126,26 +126,52 @@ class TeacherAssignmentMessageAudioService
         ]);
     }
 
-    private function canStream(User $user, TeacherNote $note): bool
+    public function deleteStored(TeacherNote $note): void
     {
-        if ($note->teacher_assignment_id !== null) {
-            return (int) $note->student_id === (int) $user->id
-                || ((int) $note->teacher_id === (int) $user->id
-                    && $note->student !== null
-                    && $this->access->allows($user, $note->student));
+        if (! $note->audio_path) {
+            return;
         }
 
+        try {
+            Storage::disk($note->audio_disk ?: self::DISK)->delete($note->audio_path);
+        } catch (\Throwable) {
+            // Best-effort cleanup; the note row is still removed by the caller.
+        }
+
+        $note->forceFill([
+            'audio_disk' => null,
+            'audio_path' => null,
+            'audio_mime' => null,
+            'audio_bytes' => null,
+            'audio_duration_ms' => null,
+        ])->save();
+    }
+
+    private function canStream(User $user, TeacherNote $note): bool
+    {
         $kind = $note->kind instanceof TeacherNoteKind
             ? $note->kind
             : TeacherNoteKind::tryFrom((string) $note->kind);
-        if (! in_array($kind, [TeacherNoteKind::TeacherMessage, TeacherNoteKind::StudentMessage], true)) {
-            return false;
-        }
 
-        return (int) $note->student_id === (int) $user->id
+        $isParticipant = (int) $note->student_id === (int) $user->id
             || ((int) $note->teacher_id === (int) $user->id
                 && $note->student !== null
                 && $this->access->allows($user, $note->student));
+
+        if (! $isParticipant) {
+            return false;
+        }
+
+        if ($note->teacher_assignment_id !== null) {
+            return true;
+        }
+
+        // Direct messages and standalone teacher audio feedback (kind=feedback).
+        return in_array($kind, [
+            TeacherNoteKind::TeacherMessage,
+            TeacherNoteKind::StudentMessage,
+            TeacherNoteKind::Feedback,
+        ], true);
     }
 
     private function normaliseMime(UploadedFile $file): string

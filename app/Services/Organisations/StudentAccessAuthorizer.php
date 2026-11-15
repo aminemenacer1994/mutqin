@@ -31,7 +31,7 @@ class StudentAccessAuthorizer
             return false;
         }
 
-        if ($actor->account_role !== AccountRole::Teacher || $student->account_role !== AccountRole::Student) {
+        if ($actor->account_role !== AccountRole::Teacher || (! $this->isConfiguredAnchor($student) && $student->account_role !== AccountRole::Student)) {
             return false;
         }
 
@@ -92,11 +92,44 @@ class StudentAccessAuthorizer
                 $query->where('organisation_id', $actor->organisation_id);
             })
             ->whereHas('user', function ($query) {
-                $query->where('account_role', AccountRole::Student->value);
+                $query->where(function ($inner) {
+                    $inner->where('account_role', AccountRole::Student->value);
+                    $anchors = $this->configuredAnchorEmails();
+                    if ($anchors !== []) {
+                        $inner->orWhere(function ($emailQuery) use ($anchors) {
+                            foreach ($anchors as $email) {
+                                $emailQuery->orWhereRaw('LOWER(email) = ?', [$email]);
+                            }
+                        });
+                    }
+                });
             })
             ->pluck('user_id')
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
+    }
+
+    private function isConfiguredAnchor(User $student): bool
+    {
+        $email = strtolower(trim((string) $student->email));
+
+        return $email !== '' && in_array($email, $this->configuredAnchorEmails(), true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function configuredAnchorEmails(): array
+    {
+        $configured = config('mutqin.teacher_anchor_student_emails', []);
+        if (! is_array($configured)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn (mixed $email): string => strtolower(trim((string) $email)),
+            $configured,
+        )));
     }
 }
