@@ -1,6 +1,6 @@
 <template>
   <div class="teacher-voice-note" :class="{ 'is-recorded': recordingState === 'recorded' }">
-    <div v-if="recordingState === 'requesting' || recordingState === 'recording' || recordingState === 'paused'" class="teacher-voice-note__status" :class="`is-${recordingState}`">
+    <div v-if="recordingState === 'requesting' || recordingState === 'recording' || recordingState === 'paused'" class="teacher-voice-note__status" :class="`is-${recordingState}`" role="status" aria-live="polite">
       <span v-if="recordingState === 'requesting'"><i class="bi bi-mic" aria-hidden="true"></i>{{ t('teacher.preparing_recording') }}</span>
       <span v-else><i class="bi bi-record-circle-fill" aria-hidden="true"></i>{{ recordingState === 'paused' ? t('teacher.pause_voice_note') : t('teacher.recording_voice_note') }} · {{ recordingTimeLabel }}</span>
     </div>
@@ -30,6 +30,7 @@
       type="button"
       class="btn btn-outline-secondary btn-sm"
       :disabled="disabled"
+      :aria-label="t('teacher.pause_voice_note')"
       @click="pauseRecording"
     >
       <i class="bi bi-pause-fill" aria-hidden="true"></i>
@@ -40,6 +41,7 @@
       type="button"
       class="btn btn-outline-secondary btn-sm"
       :disabled="disabled"
+      :aria-label="t('teacher.resume_voice_note')"
       @click="resumeRecording"
     >
       <i class="bi bi-mic" aria-hidden="true"></i>
@@ -51,6 +53,7 @@
       class="btn btn-outline-secondary btn-sm teacher-voice-note__record"
       :class="{ 'is-recording': recordingState === 'recording' || recordingState === 'paused' }"
       :disabled="disabled || recordingState === 'requesting' || recordingState === 'stopping'"
+      :aria-label="recordingState === 'recording' || recordingState === 'paused' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
       @click="recordingState === 'recording' || recordingState === 'paused' ? stopRecording() : startRecording()"
     >
       <i class="bi" :class="recordingState === 'recording' || recordingState === 'paused' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i>
@@ -75,6 +78,7 @@ export default {
   props: {
     disabled: { type: Boolean, default: false },
   },
+  emits: ['state-change'],
   data() {
     return {
       audioRecorder: null,
@@ -89,6 +93,8 @@ export default {
       recordingTimer: null,
       recordingState: 'idle',
       recordingError: '',
+      recordingRequestId: 0,
+      disposed: false,
     }
   },
   computed: {
@@ -109,7 +115,11 @@ export default {
       return this.recordingState === 'recording' || this.recordingState === 'paused' || this.recordingState === 'requesting' || this.recordingState === 'stopping'
     },
   },
+  watch: {
+    recordingState: { immediate: true, handler() { this.$emit('state-change', { hasRecording: this.hasRecording, active: this.isRecordingActive }) } },
+  },
   beforeUnmount() {
+    this.disposed = true
     this.discardRecording()
   },
   methods: {
@@ -128,10 +138,12 @@ export default {
     async startRecording() {
       if (!this.recordingSupported || this.disabled) return
       this.discardRecording()
+      const requestId = this.recordingRequestId
       this.recordingError = ''
       this.recordingState = 'requesting'
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        if (this.disposed || requestId !== this.recordingRequestId) { stream.getTracks().forEach(track => track.stop()); return }
         const mimeType = chooseSupportedRecorderMimeType()
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
         this.audioStream = stream
@@ -175,6 +187,7 @@ export default {
     async stopRecording() {
       const recorder = this.audioRecorder
       if (!recorder || (this.recordingState !== 'recording' && this.recordingState !== 'paused')) return
+      const requestId = this.recordingRequestId
       if (this.recordingState === 'paused' && this.pauseStartedAt) {
         this.pausedAccumulatedMs += Date.now() - this.pauseStartedAt
         this.pauseStartedAt = 0
@@ -184,6 +197,7 @@ export default {
       const durationMs = Math.min(MAX_RECORDING_MS, Math.max(1, Date.now() - this.recordingStartedAt - this.pausedAccumulatedMs))
       try {
         const blob = await stopMediaRecorderAndCollectBlob(recorder, [], { mimeType: recorder.mimeType })
+        if (this.disposed || requestId !== this.recordingRequestId) return
         this.audioBlob = blob
         this.audioDurationMs = durationMs
         this.audioPreviewUrl = createObjectUrlFromBlob(blob)
@@ -203,6 +217,7 @@ export default {
       this.audioRecorder = null
     },
     discardRecording() {
+      this.recordingRequestId += 1
       if (this.audioRecorder?.state !== 'inactive') {
         try { this.audioRecorder?.stop() } catch (_) { /* noop */ }
       }

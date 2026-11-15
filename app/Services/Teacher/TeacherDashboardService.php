@@ -224,6 +224,7 @@ class TeacherDashboardService
             'last_seen' => $rows->sortByDesc(fn (array $row) => $row['last_activity_at'] ?? '')->values(),
             'attention' => $rows->sortBy(fn (array $row) => [
                 -((int) ($row['assignments']['overdue'] ?? 0)),
+                -((int) ($row['assignments']['awaiting_confirmation'] ?? 0)),
                 -((int) $row['revision_overdue']),
                 $row['ai_success_rate'] === null ? 100 : $row['ai_success_rate'],
                 -((int) $row['recurring_weak']),
@@ -1235,6 +1236,7 @@ class TeacherDashboardService
                 || $row['repeated_absence']
                 || $row['revision_overdue'] > 0
                 || $row['assignments']['overdue'] > 0
+                || $row['assignments']['awaiting_confirmation'] > 0
                 || $row['recurring_weak'] > 0
                 || ($row['ai_attempts'] >= 2 && $row['ai_success_rate'] !== null && $row['ai_success_rate'] < 65);
             $metrics[$id]['recommendation'] = $this->recommendationFor(

@@ -182,6 +182,10 @@ export function attentionReasonTags(student, t) {
     })
   }
   const overdueReviews = Number(student?.revision_overdue || 0)
+  const pendingReviews = Number(student?.assignments?.awaiting_confirmation || 0)
+  if (pendingReviews > 0) {
+    tags.push({ key: 'pending-review', tone: 'warn', icon: 'bi bi-clipboard-check', label: `${t('teacher.status_awaiting_confirmation')} · ${pendingReviews}` })
+  }
   if (overdueReviews > 0) {
     tags.push({
       key: 'revision',

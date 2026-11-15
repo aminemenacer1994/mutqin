@@ -15,14 +15,17 @@
           :title="part.title || undefined"
           :data-playback-key="partKey(line, part)"
           :aria-current="isActive(line, part) ? 'true' : undefined"
-          :aria-label="part.isEnd ? t('teacher.ayah_n', { n: part.ayah }) : undefined"
+          :aria-label="part.isEnd ? t('teacher.ayah_n', { n: part.ayah }) : (part.accessibleText || (interactive ? t('teacher.word_n', { n: Number(part.word_index) + 1 }) : undefined))"
+          :role="interactive && partKey(line, part) ? 'button' : undefined"
+          :tabindex="interactive && partKey(line, part) ? 0 : undefined"
+          @keydown.enter.prevent="choose(line, part)"
+          @keydown.space.prevent="choose(line, part)"
           @click="choose(line, part)"
         >{{ part.text }}</span>
       </p>
     </template>
     <template v-else>
       <article v-for="ayah in ayahs" :key="ayah.ayah" class="teacher-recite-mushaf__ayah">
-        <span v-if="!plain" class="teacher-recite-mushaf__ayah-marker" :aria-label="t('teacher.ayah_n', { n: ayah.ayah })">{{ ayah.ayah }}</span>
         <p class="teacher-recite-mushaf__line">
           <span
             v-for="(part, index) in ayah.parts"
@@ -32,6 +35,10 @@
             :title="part.title || undefined"
             :data-playback-key="partKey(ayah, part)"
             :aria-current="isActive(ayah, part) ? 'true' : undefined"
+            :role="interactive && partKey(ayah, part) ? 'button' : undefined"
+            :tabindex="interactive && partKey(ayah, part) ? 0 : undefined"
+            @keydown.enter.prevent="choose(ayah, part)"
+            @keydown.space.prevent="choose(ayah, part)"
             @click="choose(ayah, part)"
           >{{ part.text }}</span>
         </p>
@@ -58,6 +65,7 @@ export default {
   emits: ['select-word'],
   methods: {
     partKey(ayah, part) {
+      if (part?.isEnd || part?.word_index == null) return ''
       const number = Number(part?.ayah || ayah?.ayah)
       const index = Number(part?.word_index)
       if (!Number.isInteger(number) || number < 1 || !Number.isInteger(index) || index < 0) return ''

@@ -76,6 +76,7 @@ export function collectStackedQpcWordsFromLeaves(leavesByPage = {}, verseKeys = 
     : new Set((verseKeys || []).map((key) => String(key || '').trim()).filter(Boolean))
   /** @type {Map<string, object[]>} */
   const byKey = new Map()
+  const identities = new Map()
 
   for (const [pageKey, leaf] of Object.entries(leavesByPage || {})) {
     const pageNumber = Math.trunc(Number(pageKey) || Number(leaf?.page?.page_number) || 0)
@@ -86,6 +87,16 @@ export function collectStackedQpcWordsFromLeaves(leavesByPage = {}, verseKeys = 
         const verseKey = ayahKeyFromPageWord(word)
         if (!verseKey || (wanted.size && !wanted.has(verseKey))) continue
         if (!isQcfPageGlyphText(word?.text)) continue
+        const position = Number(word?.word ?? word?.position ?? String(word?.location || '').split(':')[2])
+        const identity = Number.isInteger(position) && position > 0 ? `${verseKey}:${position}` : String(word?.location || word?.id || '')
+        const fingerprint = `${word.text}|${word.page || pageNumber}|${word.line || line.line_number}|${fontFamily}`
+        if (identity && identities.has(identity)) {
+          // Duplicate leaves must never paint the same canonical word twice.
+          // A conflicting corpus entry is a data error, not a second word.
+          if (identities.get(identity) !== fingerprint) throw new Error(`Conflicting Madani word ${identity}`)
+          continue
+        }
+        if (identity) identities.set(identity, fingerprint)
         const next = {
           ...word,
           verseKey,

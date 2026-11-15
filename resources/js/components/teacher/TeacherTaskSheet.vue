@@ -1,8 +1,11 @@
 <template>
   <TeacherDialog
+    ref="dialog"
     :open="open"
     :title="editing ? t('teacher.task_edit') : t('teacher.assign_form_title')"
     :close-label="t('teacher.close')"
+    :busy="saving"
+    :dirty="isDirty"
     @close="$emit('close')"
   >
     <template #pills>
@@ -36,6 +39,7 @@
               @keydown.down.prevent="moveStudent(1)"
               @keydown.up.prevent="moveStudent(-1)"
               @keydown.enter.prevent="chooseHighlightedStudent"
+              @keydown.esc="onStudentEscape"
               @blur="closeStudentOptions"
             >
             <ul v-if="studentOptionsOpen && !editing" :id="`${formId}-student-options`" class="teacher-task-modal__student-options" role="listbox">
@@ -53,9 +57,7 @@
         </div>
         <div class="col-md-6">
           <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }}</label>
-          <select :id="`${formId}-surah`" class="form-select" :value="form.surah_number" required @change="onSurahChange($event.target.value)">
-            <option v-for="surah in surahs" :key="surah.number" :value="String(surah.number)">{{ surah.number }}. {{ surah.name }}</option>
-          </select>
+          <TeacherSurahSelect :model-value="form.surah_number" :surahs="surahs" :disabled="saving" @update:model-value="onSurahChange" />
         </div>
         <div class="col-6 col-md-3">
           <label class="form-label" :for="`${formId}-from`">{{ t('teacher.from') }}</label>
@@ -103,7 +105,7 @@
       </div>
     </form>
     <template #footer>
-      <button type="button" class="btn btn-outline-secondary" @click="$emit('close')">{{ t('teacher.cancel') }}</button>
+      <button type="button" class="btn btn-outline-secondary" :disabled="saving" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
       <button type="submit" class="btn btn-primary" :form="formId" :disabled="saving || !canSubmit">{{ editing ? t('teacher.task_save') : t('teacher.assign_task') }}</button>
     </template>
   </TeacherDialog>
@@ -112,6 +114,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherDialog from './TeacherDialog.vue'
+import TeacherSurahSelect from './TeacherSurahSelect.vue'
 import {
   TEACHER_TASK_TYPES,
   applyTeacherTaskType,
@@ -122,7 +125,7 @@ let sheetUid = 0
 
 export default {
   name: 'TeacherTaskSheet',
-  components: { TeacherDialog },
+  components: { TeacherDialog, TeacherSurahSelect },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -144,6 +147,8 @@ export default {
       highlightedStudent: 0,
       dueTouched: false,
       submitAttempted: false,
+      initialForm: '',
+      studentBlurTimer: null,
     }
   },
   watch: {
@@ -151,15 +156,19 @@ export default {
       if (this.form.student_id && !this.studentQuery) this.syncStudentQuery()
     },
     open(value) {
+      window.clearTimeout(this.studentBlurTimer)
       if (!value) return
       this.dueTouched = false
       this.submitAttempted = false
+      this.initialForm = JSON.stringify(this.form)
       this.syncStudentQuery()
       this.studentOptionsOpen = false
       this.$nextTick(() => (this.editing ? this.$refs.categoryField : this.$refs.studentField)?.focus({ preventScroll: true }))
     },
   },
+  beforeUnmount() { window.clearTimeout(this.studentBlurTimer) },
   computed: {
+    isDirty() { return this.initialForm !== JSON.stringify(this.form) },
     filteredStudents() {
       const needle = this.studentQuery.trim().toLocaleLowerCase()
       return this.students.filter((student) => student.name.toLocaleLowerCase().includes(needle)).slice(0, 10)
@@ -187,8 +196,8 @@ export default {
       const end = Number(this.form.ayah_end)
       if (!Number.isInteger(start) || start < 1) return this.t('teacher.ayah_range_from_error')
       if (!Number.isInteger(end) || end < 1) return this.t('teacher.ayah_range_to_error')
-      if (!this.selectedSurahAyahCount) return ''
       if (start > end) return this.t('teacher.ayah_range_order_error')
+      if (!this.selectedSurahAyahCount) return ''
       if (start > this.selectedSurahAyahCount || end > this.selectedSurahAyahCount) {
         return this.t('teacher.ayah_range_max_error', { n: this.selectedSurahAyahCount })
       }
@@ -223,12 +232,14 @@ export default {
   },
   methods: {
     openStudentOptions() {
+      window.clearTimeout(this.studentBlurTimer)
       if (!this.editing) this.studentOptionsOpen = true
     },
     syncStudentQuery() {
       this.studentQuery = this.students.find((student) => String(student.id) === String(this.form.student_id))?.name || ''
     },
     onStudentInput() {
+      window.clearTimeout(this.studentBlurTimer)
       this.studentOptionsOpen = true
       this.highlightedStudent = 0
       this.patch('student_id', '')
@@ -248,8 +259,11 @@ export default {
       this.studentOptionsOpen = false
     },
     closeStudentOptions() {
-      window.setTimeout(() => { this.studentOptionsOpen = false }, 100)
+      this.studentBlurTimer = window.setTimeout(() => {
+        if (document.activeElement !== this.$refs.studentField) this.studentOptionsOpen = false
+      }, 100)
     },
+    onStudentEscape(event) { if (this.studentOptionsOpen) { event.stopPropagation(); this.studentOptionsOpen = false } },
     onDueInput(value) {
       this.dueTouched = true
       this.patch('due_at', value)

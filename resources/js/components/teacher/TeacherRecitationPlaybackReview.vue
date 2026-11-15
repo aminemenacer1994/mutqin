@@ -5,6 +5,8 @@
     :title="heading"
     compact
     :close-label="t('teacher.playback_close')"
+    :busy="Boolean(saving)"
+    :dirty="hasUnsavedWork"
     @close="$emit('close')"
   >
     <template #pills>
@@ -17,7 +19,7 @@
         {{ reviewed ? t('teacher.playback_status_reviewed') : t('teacher.playback_status_pending') }}
       </span>
     </template>
-    <div class="teacher-playback" @keydown="onDialogKeydown">
+    <div class="teacher-playback">
           <p v-if="loading" class="teacher-playback__status" role="status">{{ t('teacher.playback_loading') }}</p>
           <p v-else-if="loadError" class="teacher-playback__status" role="alert">{{ loadError }}</p>
 
@@ -34,6 +36,7 @@
                   @play="playing = true"
                   @pause="playing = false"
                   @ended="playing = false"
+                  @error="audioError = true"
                 ></audio>
                 <p v-if="!hasAudio" class="teacher-playback__hint teacher-playback__hint--solo">{{ audioUnavailableLabel }}</p>
                 <div v-else class="teacher-playback__transport" role="group" :aria-label="t('teacher.playback_review_title')">
@@ -59,6 +62,13 @@
                     <span>{{ formatTime(trackEnd) }}</span>
                   </p>
                 </div>
+                <div v-if="hasAudio" class="teacher-playback__tools" data-dialog-transient>
+                  <label><span>{{ t('teacher.playback_speed') }}</span><select :value="playbackRate" @change="setRate(Number($event.target.value))"><option v-for="speed in speeds" :key="speed" :value="speed">{{ speed }}×</option></select></label>
+                  <button v-if="canReplayAyah" type="button" @click="replayAyah">{{ t('teacher.repeat_ayah') }}</button>
+                  <button v-if="hasPreviousFlagged" type="button" @click="jumpFlagged(-1)">{{ t('teacher.previous_flag') }}</button>
+                  <button v-if="hasNextFlagged" type="button" @click="jumpFlagged(1)">{{ t('teacher.next_flag') }}</button>
+                </div>
+                <p v-if="hasAudio && timingNote" class="teacher-playback__hint">{{ timingNote }}</p>
               </div>
                 <div class="teacher-playback__legend" :aria-label="t('teacher.playback_follow')">
                   <span class="is-correct">{{ t('teacher.word_status_correct') }}</span>
@@ -117,7 +127,6 @@
             <aside class="teacher-playback__side" :class="{ 'has-selection': Boolean(selectedKey) }">
               <section v-if="selectedKey" class="teacher-playback__card teacher-playback__word" :aria-label="t('teacher.coaching_word')">
                 <h3>{{ t('teacher.coaching_word') }}</h3>
-                <template>
                   <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
                   <p class="teacher-playback__hint">{{ selectedReference }}</p>
                   <p>{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</p>
@@ -129,10 +138,10 @@
                   <p v-if="selectedWord?.error_type || selectedCoaching?.ai?.error_type" class="teacher-playback__hint">{{ selectedWord?.error_type || selectedCoaching?.ai?.error_type }}</p>
                   <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
                   <p v-if="selectedCoaching" class="teacher-playback__hint">{{ reviewStatusLabel(selectedCoaching.review_status) }}</p>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="!canRepeatWord" @click="repeatWord">
-                    {{ canRepeatWord ? t('teacher.coaching_play_segment') : t('teacher.playback_jump_unavailable') }}
+                  <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
+                    {{ t('teacher.coaching_play_segment') }}
                   </button>
-                  <details class="teacher-playback__fold">
+                  <details class="teacher-playback__fold" open>
                     <summary>{{ t('teacher.coaching_write') }}</summary>
                   <ul v-if="selectedCoaching?.corrections?.length" class="teacher-playback__history">
                     <li v-for="item in selectedCoaching.corrections" :key="item.id">
@@ -158,7 +167,7 @@
                     <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
                   </label>
                   <div class="teacher-playback__action-row">
-                    <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" />
+                    <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
                     <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving)" @click="saveWord('correct')">
                       {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
                     </button>
@@ -179,7 +188,6 @@
                   </label>
                   <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
                   </details>
-                </template>
               </section>
               <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_follow')">
                 <h3>{{ t('teacher.playback_follow') }}</h3>
@@ -205,9 +213,7 @@
                       :key="ayah.ayah"
                       type="button"
                       :class="{ 'is-current': ayah.ayah === currentAyah }"
-                      :disabled="ayah.start == null || !hasAudio"
-                      :title="ayah.start == null ? t('teacher.playback_jump_unavailable') : undefined"
-                      @click="seekTo(ayah.start, true)"
+                      @click="selectAyah(ayah.ayah)"
                     >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
                   </div>
                 </div>
@@ -216,12 +222,10 @@
                     <button
                       type="button"
                       :class="{ 'is-current': item.key === activeKey }"
-                      :disabled="item.start == null || !hasAudio"
-                      :title="item.start == null ? t('teacher.playback_jump_unavailable') : undefined"
-                      @click="seekTo(item.start, true)"
+                      @click="selectAttention(item)"
                     >
                       <span v-if="item.ayah" class="teacher-playback__word-ayah">{{ item.ayah }}</span>
-                      <span v-if="item.text" class="teacher-playback__arabic" lang="ar" dir="rtl">{{ item.text }}</span>
+                      <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
                       <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
                       <small>{{ wordStatusLabel(item.status) }}</small>
                     </button>
@@ -245,8 +249,8 @@
                   <textarea v-model="feedback" rows="2" maxlength="2000" :placeholder="t('teacher.playback_feedback_placeholder')" :disabled="saving"></textarea>
                 </label>
                 <div class="teacher-playback__action-row">
-                  <TeacherVoiceNoteControls ref="voice" :disabled="saving" />
-                  <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving)" @click="sendFeedback">
+                  <TeacherVoiceNoteControls ref="voice" :disabled="Boolean(saving)" @state-change="voiceState = $event" />
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || (!feedback.trim() && !voiceState.hasRecording) || voiceState.active" @click="sendFeedback">
                     {{ saving === 'feedback' ? t('teacher.saving') : t('teacher.playback_send_feedback') }}
                   </button>
                 </div>
@@ -339,6 +343,10 @@ export default {
       currentTime: 0,
       duration: 0,
       playing: false,
+      audioError: false,
+      voiceState: { hasRecording: false, active: false },
+      wordVoiceState: { hasRecording: false, active: false },
+      wordDrafts: {},
       playbackRate: 1,
       speeds: [0.5, 0.75, 1, 1.25],
       activeKey: '',
@@ -359,8 +367,11 @@ export default {
     }
   },
   computed: {
+    hasUnsavedWork() {
+      return Boolean(this.feedback.trim() || this.privateNote.trim() || this.wordNote.trim() || this.wordStatus || Object.values(this.wordDrafts).some(Boolean) || this.voiceState.hasRecording || this.voiceState.active || this.wordVoiceState.hasRecording || this.wordVoiceState.active)
+    },
     hasAudio() {
-      return Boolean(this.payload?.audio?.available && this.payload?.audio?.url)
+      return Boolean(!this.audioError && this.payload?.audio?.available && this.payload?.audio?.url)
     },
     words() {
       return this.payload?.words || []
@@ -457,7 +468,7 @@ export default {
       return ayahAtTime(this.words, this.currentTime)
     },
     canReplayAyah() {
-      return this.hasAudio && ayahRepeatWindow(this.words, this.currentAyah || this.selectedWord?.ayah) != null
+      return this.hasAudio && ayahRepeatWindow(this.words, this.currentAyah || this.selectedWord?.ayah)?.end != null
     },
     selectedWord() {
       return this.words.find((word) => wordKey(word) === this.selectedKey) || null
@@ -475,7 +486,7 @@ export default {
     },
     canRepeatWord() {
       const word = this.selectedWord || this.words.find((item) => wordKey(item) === this.activeKey)
-      return this.hasAudio && wordWindow(word) != null
+      return this.hasAudio && wordWindow(word)?.end != null
     },
     selectedReference() {
       const ayah = this.selectedWord?.ayah || this.selectedCoaching?.ayah || this.selectedGlyph?.ayah
@@ -533,6 +544,7 @@ export default {
         this.load()
         window.addEventListener('keydown', this.onShortcut)
       } else {
+        this.loadToken += 1
         window.removeEventListener('keydown', this.onShortcut)
         this.$refs.player?.pause()
       }
@@ -552,6 +564,8 @@ export default {
     },
   },
   beforeUnmount() {
+    this.loadToken += 1
+    this.$refs.player?.pause()
     window.removeEventListener('keydown', this.onShortcut)
   },
   methods: {
@@ -577,10 +591,18 @@ export default {
       this.selectedGlyph = { text: '', fontFamily: '' }
       this.repeatUntil = null
       this.wordNote = ''
+      this.wordDrafts = {}
+      this.$refs.voice?.discardRecording()
+      this.$refs.wordVoice?.discardRecording()
       this.wordStatus = ''
       this.currentTime = 0
       this.duration = 0
       this.playing = false
+      this.audioError = false
+      this.feedback = ''
+      this.privateNote = ''
+      this.actionError = ''
+      this.actionMessage = ''
       try {
         const payload = await learningApi.getTeacherRecitationPlayback(this.studentId, this.attemptId)
         if (token !== this.loadToken) return
@@ -630,6 +652,7 @@ export default {
       }
     },
     onMetadata() {
+      if (this.$refs.player) this.$refs.player.playbackRate = this.playbackRate
       const seconds = Number(this.$refs.player?.duration)
       if (Number.isFinite(seconds) && seconds > 0) this.duration = seconds
     },
@@ -649,6 +672,7 @@ export default {
       this.seekTo(Number(event.target.value || 0), false)
     },
     seekTo(seconds, resume = false, keepRepeat = false) {
+      if (!this.hasAudio) return
       const time = Number(seconds)
       if (!Number.isFinite(time) || time < 0) return
       if (!keepRepeat) this.repeatUntil = null
@@ -689,6 +713,11 @@ export default {
     onSelectWord(part) {
       const key = part?.key || ''
       if (!key) return
+      if (key !== this.selectedKey && (this.wordVoiceState.hasRecording || this.wordVoiceState.active)) {
+        this.actionError = this.t('teacher.coaching_finish_recording')
+        return
+      }
+      if (this.selectedKey) this.wordDrafts[this.selectedKey] = this.wordNote
       this.selectedKey = key
       this.selectedGlyph = {
         text: part?.isEnd ? '' : (part?.text || ''),
@@ -696,10 +725,29 @@ export default {
         ayah: part?.ayah,
       }
       this.wordStatus = ''
+      this.wordNote = this.wordDrafts[key] || ''
       const match = this.words.find((word) => wordKey(word) === key)
       const start = wordWindow(match)?.start ?? (Number.isFinite(part?.start) ? part.start : null)
       if (start == null) return
       this.seekTo(start, this.hasAudio)
+    },
+    glyphForKey(key) {
+      for (const line of this.ayahs) {
+        const glyph = line.parts.find(part => part.word_index != null && !part.isEnd && `${part.ayah}:${part.word_index}` === key)
+        if (glyph) return glyph
+      }
+      return null
+    },
+    selectAttention(item) {
+      const glyph = this.glyphForKey(item.key)
+      if (glyph) this.onSelectWord({ ...glyph, key: item.key })
+    },
+    selectAyah(number) {
+      for (const line of this.ayahs) {
+        const glyph = line.parts.find(part => part.ayah === number && !part.isEnd)
+        if (glyph) { this.onSelectWord({ ...glyph, key: `${glyph.ayah}:${glyph.word_index}` }); break }
+      }
+      this.$nextTick(() => this.$refs.mushaf?.querySelector(`[data-playback-key="${this.selectedKey}"]`)?.scrollIntoView({ block: 'nearest' }))
     },
     reviewStatusLabel(status) {
       if (status === 'awaiting_retry') return this.t('teacher.coaching_status_awaiting')
@@ -742,6 +790,7 @@ export default {
         }, recording)
         this.applyPayload(payload)
         if (action === 'correct') {
+          delete this.wordDrafts[this.selectedKey]
           this.wordNote = ''
           this.$refs.wordVoice?.discardRecording()
         }
@@ -863,6 +912,7 @@ export default {
       if (!this.open || event.key === 'Escape') return
       const tag = event.target?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') return
+      if (event.target?.closest?.('[role="button"]')) return
       if (event.key === ' ' || event.key === 'k' || event.key === 'K') {
         event.preventDefault()
         this.togglePlayback()

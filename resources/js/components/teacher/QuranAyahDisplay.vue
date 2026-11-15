@@ -62,7 +62,8 @@ export default {
   },
   methods: {
     showMarker(group) {
-      return !this.inline && this.groups.length > 1 && group.ayah > 0
+      // The verified Madani page words already include the verse-end glyph.
+      return false
     },
     wordClass(word) {
       return wordReviewClass(word, 'teacher-quran-ayah__word--status')

@@ -1,6 +1,9 @@
 <template>
   <section class="teacher-stack">
-    <h2 class="visually-hidden">{{ t('teacher.nav_students') }}</h2>
+    <header class="teacher-page-header">
+      <div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_students') }}</h1></div>
+      <span class="teacher-page-count">{{ meta.total || students.length }} {{ t('teacher.kpi_students') }}</span>
+    </header>
     <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-student-toolbar d-flex flex-wrap align-items-center gap-2">
       <label class="input-group teacher-search teacher-search--compact flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
@@ -15,6 +18,13 @@
         >
       </label>
       <div class="teacher-student-toolbar__fields d-flex flex-wrap gap-2">
+        <label class="teacher-field teacher-field--inline teacher-student-toolbar__field">
+          <span class="visually-hidden">{{ t('teacher.follow_up_reason') }}</span>
+          <select class="form-select form-select-sm" :value="filters.attention" @change="onFilterChange('attention', $event.target.value)">
+            <option value="">{{ t('teacher.follow_up_reason') }} · {{ t('teacher.any') }}</option>
+            <option value="1">{{ t('teacher.need_look') }}</option>
+          </select>
+        </label>
         <label class="teacher-field teacher-field--inline teacher-student-toolbar__field">
           <span class="visually-hidden">{{ t('teacher.activity_filter') }}</span>
           <select class="form-select form-select-sm" :value="filters.activity" @change="onFilterChange('activity', $event.target.value)">
@@ -105,8 +115,10 @@ export default {
     return { compactView: true }
   },
   mounted() {
-    const saved = window.localStorage.getItem('mutqin.teacher.students.compact')
-    this.compactView = saved === null ? true : saved === '1'
+    try {
+      const saved = window.localStorage.getItem('mutqin.teacher.students.compact')
+      this.compactView = saved === null ? true : saved === '1'
+    } catch { /* Storage is optional. */ }
   },
   computed: {
     hasFilters() {
@@ -127,7 +139,7 @@ export default {
   methods: {
     toggleCompactView() {
       this.compactView = !this.compactView
-      window.localStorage.setItem('mutqin.teacher.students.compact', this.compactView ? '1' : '0')
+      try { window.localStorage.setItem('mutqin.teacher.students.compact', this.compactView ? '1' : '0') } catch { /* Storage is optional. */ }
     },
     resetFilters() {
       this.$emit('update:filters', { ...this.filters, q: '', activity: '', performance: '', attention: '', sort: 'name' })

@@ -770,7 +770,7 @@ export default {
         || 'en'
     },
     showWeeklyProgress() {
-      return !this.loading && this.assignments.length > 0
+      return !this.loading && this.weeklyProgressTotal > 0
     },
     weeklyProgressSnapshot() {
       return learnerWeeklyProgressFromAssignments(

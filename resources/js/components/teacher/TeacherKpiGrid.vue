@@ -13,7 +13,6 @@
         `teacher-metric--${card.key}`,
         { 'teacher-metric--selectable': selectable },
       ]"
-      role="listitem"
       :aria-label="`${card.label}: ${card.value}. ${card.action || t('teacher.open')}`"
       :style="stagger ? { '--dash-delay': `${index * 45}ms` } : undefined"
       :disabled="!selectable"
@@ -23,7 +22,6 @@
       <span class="teacher-metric__copy">
         <span class="teacher-metric__value dash-num">{{ card.value }}</span>
         <span class="teacher-metric__label">{{ card.label }}</span>
-        <span v-if="card.description" class="teacher-metric__description">{{ card.description }}</span>
       </span>
       <span v-if="selectable" class="teacher-metric__action" aria-hidden="true">
         <i class="bi bi-arrow-right-short"></i>

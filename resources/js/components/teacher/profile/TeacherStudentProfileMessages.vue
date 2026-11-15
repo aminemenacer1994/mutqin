@@ -66,14 +66,14 @@
           <span class="teacher-direct-thread__count">{{ draft.length }}/2000</span>
         </div>
         <div class="teacher-direct-thread__composer-foot">
-          <TeacherVoiceNoteControls ref="voice" :disabled="saving" />
+          <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
           <p v-if="error" role="alert" class="teacher-direct-thread__status is-error">{{ error }}</p>
           <p v-else-if="success" role="status" class="teacher-direct-thread__status is-success">{{ success }}</p>
           <div class="teacher-direct-thread__composer-actions">
             <button type="button" class="teacher-direct-thread__tool" :disabled="!draft && !hasVoiceNote" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="clearComposer">
               <i class="bi bi-eraser" aria-hidden="true"></i>
             </button>
-            <button type="submit" class="btn btn-primary btn-sm teacher-direct-thread__send" :disabled="saving || !canSend">
+            <button type="submit" class="btn btn-primary btn-sm teacher-direct-thread__send" :disabled="saving || !canSend" :aria-label="t('teacher.send_message')">
               <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send-fill'" aria-hidden="true"></i>
               <span class="d-none d-sm-inline">{{ t('teacher.send_message') }}</span>
             </button>
@@ -97,7 +97,7 @@ export default {
   components: { TeacherAudioFeedbackPlayer, TeacherSectionPane, TeacherTabGuide, TeacherVoiceNoteControls },
   mixins: [i18nMixin],
   props: { profile: { type: Object, required: true }, formatWhen: { type: Function, required: true } },
-  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null, stickToBottom: true } },
+  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null, stickToBottom: true, voiceState: { hasRecording: false, active: false } } },
   watch: {
     'profile.student.id'() { this.resetThread() },
   },
@@ -113,10 +113,10 @@ export default {
         .filter((message) => !removed.has(message.id))
         .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
     },
-    hasVoiceNote() { return Boolean(this.$refs.voice?.hasRecording) },
+    hasVoiceNote() { return this.voiceState.hasRecording },
     canSend() {
-      if (this.saving || this.$refs.voice?.isRecordingActive) return false
-      return Boolean(this.draft.trim() || this.$refs.voice?.hasRecording)
+      if (this.saving || this.voiceState.active) return false
+      return Boolean(this.draft.trim() || this.voiceState.hasRecording)
     },
   },
   mounted() {

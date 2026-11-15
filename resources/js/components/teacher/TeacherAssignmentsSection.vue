@@ -1,6 +1,6 @@
 <template>
   <section class="teacher-stack teacher-assignments" :class="{ 'is-compact': compactView }">
-    <h2 class="visually-hidden">{{ t('teacher.nav_assignments') }}</h2>
+    <header class="teacher-page-header"><div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_assignments') }}</h1></div></header>
     <p v-if="success" class="alert alert-success mb-0" role="status">{{ success }}</p>
     <p v-if="error && !formOpen" class="alert alert-danger mb-0" role="alert">{{ error }}</p>
 
@@ -149,6 +149,7 @@
     </TeacherDialog>
     <TeacherDialog
       :open="Boolean(messageItem)"
+      :busy="messageSending || reviewSaving"
       :title="messageItem ? messageItem.studentName : t('teacher.messages')"
       :close-label="t('teacher.close')"
       @close="closeMessages"
@@ -176,6 +177,7 @@
           :empty-label="t('teacher.messages_empty_short')"
           :on-send="sendConversationMessage"
           :on-delete="deleteConversationMessage"
+          @sending-change="messageSending = $event"
         />
       </template>
     </TeacherDialog>
@@ -239,6 +241,7 @@ export default {
       statusFilter: ['waiting', 'submitted'].includes(this.initialStatusFilter) ? 'all' : this.initialStatusFilter,
       removeItem: null,
       messageItem: null,
+      messageSending: false,
       messageDraft: '',
       messageSaving: false,
       messageError: '',
@@ -260,15 +263,16 @@ export default {
     taskFilters() {
       const counts = this.flatItems.reduce((result, item) => {
         result.all += 1
-        if (item.status === 'completed') result.done += 1
-        else if (item.status === 'overdue') result.overdue += 1
-        else if (item.status === 'in_progress') result.progress += 1
-        else if (item.status === 'awaiting_confirmation') result.submitted += 1
+        if (item.status === 'awaiting_confirmation') result.submitted += 1
+        if (item.taskStateDisplay === TASK_STATE.DONE) result.done += 1
+        else if (item.taskStateDisplay === TASK_STATE.OVERDUE) result.overdue += 1
+        else if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS) result.progress += 1
         else result.waiting += 1
         return result
       }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
       return [
         { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
+        ...(counts.submitted ? [{ id: 'submitted', label: this.t('teacher.status_awaiting_confirmation'), count: counts.submitted }] : []),
         { id: 'progress', label: this.t('teacher.task_filter_progress'), count: counts.progress },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
         { id: 'done', label: this.t('teacher.task_filter_completed'), count: counts.done },
@@ -308,7 +312,7 @@ export default {
             statusLabel: recipient.review_state === 'needs_correction'
               ? this.t('teacher.status_needs_correction')
               : this.t(taskStateLabelKey(displayState)),
-            dueText: dueUrgency.text,
+            dueText: assignment.due_at ? this.t('teacher.task_due_date', { date: formatTeacherWhen(assignment.due_at) }) : '',
             dueTone: dueUrgency.tone,
             due: dueUrgency.text,
             progress: this.progressLabel(recipient, assignment),
@@ -330,11 +334,11 @@ export default {
       const filtered = this.statusFilter === 'all'
         ? items
         : items.filter((item) => {
-          if (this.statusFilter === 'done') return item.status === 'completed'
-          if (this.statusFilter === 'overdue') return item.status === 'overdue'
-          if (this.statusFilter === 'progress') return item.status === 'in_progress'
+          if (this.statusFilter === 'done') return item.taskStateDisplay === TASK_STATE.DONE
+          if (this.statusFilter === 'overdue') return item.taskStateDisplay === TASK_STATE.OVERDUE
+          if (this.statusFilter === 'progress') return item.taskStateDisplay === TASK_STATE.IN_PROGRESS
           if (this.statusFilter === 'submitted') return item.status === 'awaiting_confirmation'
-          return item.status === 'pending'
+          return item.taskStateDisplay === TASK_STATE.NOT_STARTED
         })
       return filtered.sort((a, b) => {
         const rank = (item) => {
@@ -392,6 +396,7 @@ export default {
       this.messageSent = false
     },
     closeMessages() {
+      if (this.messageSending || this.reviewSaving) return
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
       this.messageItem = null
     },
@@ -407,11 +412,12 @@ export default {
     },
     async sendConversationMessage(body, recording = null) {
       if (!this.messageItem) return
+      const item = this.messageItem
       this.messageError = ''
       try {
-        const payload = await this.onSendMessage(this.messageItem.recipientId, body, recording)
+        const payload = await this.onSendMessage(item.recipientId, body, recording)
         const message = payload?.message || payload
-        if (message) this.messageItem.messages.push(message)
+        if (message) item.messages.push(message)
       } catch (error) {
         this.messageError = error?.response?.data?.message || this.t('teacher.action_failed')
         throw error

@@ -1,10 +1,11 @@
 <template>
   <section class="teacher-stack">
+    <header class="teacher-page-header"><div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_settings') }}</h1></div></header>
     <div class="card teacher-account teacher-account--flat">
       <div class="card-body teacher-profile-hero teacher-profile-hero--compact d-flex align-items-center gap-3">
         <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(teacherName) }}</span>
         <div class="teacher-profile-hero__copy">
-          <h2>{{ teacher?.name }}</h2>
+          <h2>{{ teacher?.name || teacherName }}</h2>
           <p v-if="teacher?.email" class="teacher-account__email">{{ teacher.email }}</p>
           <p v-if="teacher?.organisation?.name" class="teacher-meta">
             <i class="bi bi-building" aria-hidden="true"></i>

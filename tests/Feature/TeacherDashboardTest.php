@@ -35,6 +35,44 @@ class TeacherDashboardTest extends TestCase
         $this->enableTeacherFeatures();
     }
 
+    public function test_submitted_work_keeps_an_active_student_in_the_attention_queue_until_reviewed(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        UserSession::query()->create([
+            'user_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => 'completed',
+            'last_activity_at' => now(),
+        ]);
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipient = TeacherAssignmentRecipient::query()->findOrFail($created['recipients'][0]['id']);
+        $recipient->forceFill([
+            'status' => AssignmentStatus::AwaitingConfirmation,
+            'student_completed_at' => now(),
+        ])->save();
+        cache()->flush();
+
+        $this->actingAs($teacher)->getJson(route('api.teacher.overview'))
+            ->assertOk()->assertJsonPath('kpis.needs_attention', 1);
+        $this->actingAs($teacher)->getJson(route('api.teacher.students', ['attention' => '1']))
+            ->assertOk()->assertJsonPath('data.0.id', $student->id)
+            ->assertJsonPath('data.0.assignments.awaiting_confirmation', 1);
+
+        $recipient->forceFill(['status' => AssignmentStatus::Completed, 'completed_at' => now()])->save();
+        cache()->flush();
+        $this->actingAs($teacher)->getJson(route('api.teacher.overview'))
+            ->assertOk()->assertJsonPath('kpis.needs_attention', 0);
+    }
+
     public function test_teacher_can_assess_recitation_separately_from_ai_score(): void
     {
         [$teacher, $student, $hidden] = $this->classroom();

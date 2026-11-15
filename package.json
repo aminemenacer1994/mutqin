@@ -15,6 +15,7 @@
         "tutorial:revise-surah": "node scripts/tutorials/record-how-to-revise-a-surah.mjs --record",
         "tutorial:revise-surah:rehearse": "node scripts/tutorials/record-how-to-revise-a-surah.mjs --rehearse",
         "test:mutqin:browser": "node tests/js/mutqin-browser-smoke.mjs",
+        "test:teacher:workspace": "node tests/js/teacher-workspace-responsive.cjs && node tests/js/learner-workspace-responsive.cjs && node tests/js/teacher-microphone-lifecycle.cjs",
         "test:mutqin:mobile": "node tests/js/mutqin-mobile-responsive.test.mjs",
         "test:mutqin:overflow": "node tests/js/mobile-horizontal-overflow.test.mjs",
         "test:mutqin:scroll": "node tests/js/mobile-scroll.test.mjs",

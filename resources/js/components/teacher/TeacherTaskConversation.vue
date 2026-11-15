@@ -20,7 +20,9 @@
       ref="threadEl"
       class="teacher-task-conversation__thread"
       :class="threadClass"
-      :aria-live="variant === 'learner' ? 'polite' : 'polite'"
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions"
     >
       <template v-if="variant === 'learner'">
         <section v-for="group in learnerDayGroups" :key="group.dayKey" class="teacher-task-conversation__day">
@@ -132,36 +134,9 @@
           >
             <i class="bi bi-eraser" aria-hidden="true"></i>
           </button>
-          <button
-            type="button"
-            class="teacher-task-conversation__icon-btn is-utility"
-            :aria-label="t('teacher.learner_thread_new_chat')"
-            :title="t('teacher.learner_thread_new_chat')"
-            :disabled="saving"
-            @click="startNewComposer"
-          >
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="teacher-task-conversation__icon-btn is-utility"
-            :aria-label="t('teacher.learner_thread_upload_pdf')"
-            :title="t('teacher.learner_thread_upload_pdf')"
-            :disabled="saving"
-            @click="uploadPdfPlaceholder"
-          >
-            <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="teacher-task-conversation__icon-btn is-utility is-danger"
-            :aria-label="t('teacher.learner_thread_clear_conversation')"
-            :title="t('teacher.learner_thread_clear_conversation')"
-            :disabled="saving"
-            @click="clearConversationDraft"
-          >
-            <i class="bi bi-trash3" aria-hidden="true"></i>
-          </button>
+
+
+
           <span v-if="draft.length && !errorText && !sent" class="teacher-task-conversation__composer-count">{{ draft.length }}</span>
         </div>
         <div class="teacher-task-conversation__composer-primary">
@@ -199,6 +174,8 @@
             type="button"
             class="teacher-task-conversation__icon-btn"
             :class="{ 'is-active': recordingState === 'recording' }"
+            :aria-label="recordingState === 'recording' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
+            :title="recordingState === 'recording' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
             :disabled="saving || sendBlocked || recordingState === 'requesting' || recordingState === 'stopping'"
             @click="recordingState === 'recording' ? stopRecording() : startRecording()"
           >
@@ -207,9 +184,10 @@
           <button
             type="submit"
             class="teacher-task-conversation__icon-btn teacher-task-conversation__icon-btn--send"
+            :aria-label="saving ? t('teacher.saving') : t('teacher.send_message')"
             :disabled="saving || sendBlocked || recordingState === 'recording' || !hasComposerContent"
           >
-            <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+            <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i><span>{{ saving ? t('teacher.saving') : t('teacher.send_message') }}</span>
           </button>
         </div>
       </div>
@@ -249,6 +227,7 @@ const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherTaskConversation',
+  emits: ['sending-change'],
   components: { MessageBubble, AudioClip, TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {
@@ -290,6 +269,8 @@ export default {
       sendCooldownTimer: null,
       failedPayloads: {},
       recordingLiveMessage: '',
+      recordingRequestId: 0,
+      disposed: false,
     }
   },
   computed: {
@@ -340,6 +321,7 @@ export default {
     },
   },
   watch: {
+    saving(value) { this.$emit('sending-change', value) },
     messages() {
       this.$nextTick(() => this.scrollThread())
     },
@@ -360,6 +342,7 @@ export default {
     },
   },
   beforeUnmount() {
+    this.disposed = true
     this.discardRecording()
     clearTimeout(this.sendCooldownTimer)
   },
@@ -483,9 +466,11 @@ export default {
     async startRecording() {
       if (!this.recordingSupported || this.saving) return
       this.discardRecording()
+      const requestId = this.recordingRequestId
       this.recordingState = recordingStateReducer('idle', 'request')
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        if (this.disposed || requestId !== this.recordingRequestId) { stream.getTracks().forEach(track => track.stop()); return }
         const mimeType = chooseSupportedRecorderMimeType()
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
         this.audioStream = stream
@@ -507,12 +492,14 @@ export default {
     async stopRecording() {
       const recorder = this.audioRecorder
       if (!recorder || this.recordingState !== 'recording') return
+      const requestId = this.recordingRequestId
       this.recordingState = 'stopping'
       clearInterval(this.recordingTimer)
       this.recordingTimer = null
       const durationMs = Math.min(this.maxRecordingMs, Math.max(1, Date.now() - this.recordingStartedAt))
       try {
         const blob = await stopMediaRecorderAndCollectBlob(recorder, [], { mimeType: recorder.mimeType })
+        if (this.disposed || requestId !== this.recordingRequestId) return
         this.audioBlob = blob
         this.audioDurationMs = durationMs
         this.audioPreviewUrl = createObjectUrlFromBlob(blob)
@@ -533,6 +520,7 @@ export default {
       this.audioRecorder = null
     },
     discardRecording() {
+      this.recordingRequestId += 1
       const recorder = this.audioRecorder
       if (recorder && recorder.state !== 'inactive') {
         try { recorder.stop() } catch (_) { /* noop */ }

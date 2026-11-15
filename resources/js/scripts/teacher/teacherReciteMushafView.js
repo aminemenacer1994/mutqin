@@ -8,8 +8,19 @@ import {
   resolveStackedQpcPageFontFamily,
 } from '../mushaf/stackedQpcMadaniDisplay.js'
 import { madaniPartsFromMushafWords } from './madaniGlyphParts.js'
+import { resolveQuranFontFamily } from '../quran/quranFonts.js'
 import { teacherCanonicalEvidenceWords } from './quranContent.js'
 import { wordReviewClass } from './wordReviewClass.js'
+
+const UTHMANI_FONT = resolveQuranFontFamily('uthmanic')
+
+function isAyahNumberToken(text) {
+  return /^[\u0660-\u0669\u06F0-\u06F9]+$/u.test(String(text || '').trim())
+}
+
+function arabicIndic(number) {
+  return String(number).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)])
+}
 
 function versesForRange(range) {
   const surah = Number(range?.surah)
@@ -204,6 +215,7 @@ export async function buildTeacherPlaybackMushafLines(row) {
         position,
         word_index: isEnd ? null : wordIndex,
         isEnd,
+        accessibleText: isEnd ? '' : String(statusWord.text || ''),
         className: [
           'qpc-madani-word',
           'teacher-recite-mushaf__word',

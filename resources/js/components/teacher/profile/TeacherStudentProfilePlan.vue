@@ -117,7 +117,10 @@
     </div>
 
     <TeacherDialog
+      ref="dialog"
       :open="composerOpen"
+      :busy="busy"
+      :dirty="formDirty"
       :title="editingPlan ? t('teacher.plan_edit') : t('teacher.plan_new')"
       :eyebrow="t('teacher.learning_plan')"
       :close-label="t('teacher.close')"
@@ -128,6 +131,7 @@
         <span v-if="form.starts_on" class="badge rounded-pill text-bg-light border">{{ form.starts_on }}</span>
         <span class="badge rounded-pill teacher-pill">{{ t('teacher.plan_activities') }} {{ form.items.length }}</span>
       </template>
+      <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
       <div class="teacher-plan-modal__body">
                 <div class="teacher-plan-modal__fields">
                   <label class="teacher-plan-modal__field">
@@ -147,12 +151,16 @@
                   </label>
                   <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
                     <span>{{ t('teacher.plan_notes') }}</span>
-                    <textarea v-model="form.notes" class="form-control" rows="3" maxlength="2000"></textarea>
+                    <textarea v-model="form.notes" class="form-control" rows="2" maxlength="2000"></textarea>
                   </label>
                 </div>
 
+                <details v-if="editingPlan?.items?.length" class="teacher-plan-existing">
+                  <summary>{{ t('teacher.plan_existing_activities', { n: editingPlan.items.length }) }}</summary>
+                  <ul><li v-for="item in editingPlan.items" :key="item.id">{{ item.label }} <span>{{ displayStatusLabel(item.display_status) }}</span></li></ul>
+                </details>
                 <div class="teacher-plan-modal__activities-head">
-                  <strong>{{ t('teacher.plan_activities') }}</strong>
+                  <strong>{{ t(editingPlan ? 'teacher.plan_additional_activities' : 'teacher.plan_activities') }}</strong>
                   <button type="button" class="btn btn-sm btn-outline-secondary" @click="addDraftItem()">{{ t('teacher.plan_add_activity') }}</button>
                 </div>
 
@@ -174,21 +182,22 @@
                     </label>
                     <label>
                       <span>{{ t('teacher.surah') }}</span>
-                      <input v-model.number="item.surah_number" class="form-control form-control-sm" type="number" min="1" max="114">
+                      <TeacherSurahSelect :model-value="item.surah_number" :surahs="teacherSurahs" :disabled="busy" @update:model-value="changeSurah(item, $event)" />
                     </label>
                     <label>
                       <span>{{ t('teacher.from') }}</span>
-                      <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1">
+                      <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
                     </label>
                     <label>
                       <span>{{ t('teacher.to') }}</span>
-                      <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1">
+                      <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
                     </label>
                     <label>
                       <span>{{ t('teacher.due') }}</span>
                       <input v-model="item.due_on" class="form-control form-control-sm" type="date">
                     </label>
                   </div>
+                  <p v-if="itemError(item)" class="text-danger small mt-2 mb-0" role="alert">{{ itemError(item) }}</p>
                   <input v-model="item.instructions" class="form-control form-control-sm" type="text" :placeholder="t('teacher.plan_instructions_placeholder')">
                 </article>
 
@@ -204,9 +213,9 @@
                 </section>
       </div>
       <template #footer>
-        <button type="button" class="btn btn-outline-secondary" :disabled="busy" @click="closeComposer">{{ t('teacher.close') }}</button>
-        <button type="button" class="btn" :class="editingPlan ? 'btn-primary' : 'btn-outline-secondary'" :disabled="busy" @click="savePlan(false)">{{ t('teacher.task_save') }}</button>
-        <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy" @click="savePlan(true)">{{ t('teacher.plan_save_activate') }}</button>
+        <button type="button" class="btn btn-outline-secondary" :disabled="busy" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
+        <button type="button" class="btn" :class="editingPlan ? 'btn-primary' : 'btn-outline-secondary'" :disabled="busy || !formValid" @click="savePlan(false)">{{ t(editingPlan ? 'teacher.task_save' : 'teacher.plan_save_draft') }}</button>
+        <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy || !formValid" @click="savePlan(true)">{{ t('teacher.plan_save_activate') }}</button>
       </template>
     </TeacherDialog>
   </div>
@@ -216,6 +225,7 @@
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
 import TeacherDialog from '../TeacherDialog.vue'
+import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherTabGuide from '../TeacherTabGuide.vue'
 
@@ -246,7 +256,9 @@ function blankForm(studentId) {
 
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherTabGuide },
+  components: { TeacherDialog, TeacherEmpty, TeacherTabGuide, TeacherSurahSelect },
+  inject: { teacherSurahs: { default: () => [] } },
+  emits: ['updated'],
   mixins: [i18nMixin],
   props: {
     studentId: { type: [Number, String], required: true },
@@ -264,9 +276,13 @@ export default {
       composerOpen: false,
       editingPlan: null,
       form: blankForm(this.studentId),
+      initialForm: '',
+      requestId: 0,
     }
   },
   computed: {
+    formDirty() { return JSON.stringify(this.form) !== this.initialForm },
+    formValid() { return Boolean(this.form.title.trim() && this.form.starts_on && (this.editingPlan || this.form.items.length) && this.form.items.every(item => !this.itemError(item))) },
     orderedPlans() {
       const rank = { active: 0, paused: 1, draft: 2, upcoming: 3, completed: 4, archived: 5 }
       return [...this.plans].sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9))
@@ -281,7 +297,18 @@ export default {
     },
   },
   methods: {
+    ayahCount(item) { return Number(this.teacherSurahs.find(surah => Number(surah.number) === Number(item.surah_number))?.ayah_count || 0) },
+    changeSurah(item, number) { item.surah_number = number; item.ayah_start = 1; item.ayah_end = Math.min(this.ayahCount(item) || 1, 7) },
+    itemError(item) {
+      const from = Number(item.ayah_start), to = Number(item.ayah_end), max = this.ayahCount(item)
+      if (!Number.isInteger(from) || from < 1) return this.t('teacher.ayah_range_from_error')
+      if (!Number.isInteger(to) || to < 1) return this.t('teacher.ayah_range_to_error')
+      if (from > to) return this.t('teacher.ayah_range_order_error')
+      if (max && (from > max || to > max)) return this.t('teacher.ayah_range_max_error', { n: max })
+      return ''
+    },
     async reload() {
+      const requestId = ++this.requestId
       this.loading = true
       this.error = ''
       try {
@@ -289,15 +316,18 @@ export default {
           learningApi.getTeacherLearningPlans(this.studentId),
           learningApi.getTeacherLearningPlanTemplates(),
         ])
+        if (requestId !== this.requestId) return
         this.plans = Array.isArray(plansRes?.data) ? plansRes.data : []
         this.templates = Array.isArray(templatesRes?.data) ? templatesRes.data : []
       } catch (error) {
+        if (requestId !== this.requestId) return
         this.error = error?.response?.data?.message || this.t('teacher.plan_load_error')
       } finally {
-        this.loading = false
+        if (requestId === this.requestId) this.loading = false
       }
     },
     openComposer(plan = null) {
+      if (this.busy) return
       this.editingPlan = plan
       this.success = ''
       this.error = ''
@@ -314,6 +344,7 @@ export default {
         this.form = blankForm(this.studentId)
         this.form.title = this.t('teacher.plan_default_title')
       }
+      this.initialForm = JSON.stringify(this.form)
       this.composerOpen = true
       this.$nextTick(() => this.$refs.planTitle?.focus())
     },
@@ -347,6 +378,7 @@ export default {
       try {
         const data = await learningApi.getTeacherLearningPlanSuggestions(this.studentId)
         this.suggestions = Array.isArray(data?.suggestions) ? data.suggestions : []
+        this.busy = false
         if (!this.composerOpen) this.openComposer()
         if (!this.suggestions.length) this.success = this.t('teacher.plan_no_suggestions')
       } catch (error) {
@@ -356,6 +388,7 @@ export default {
       }
     },
     async savePlan(activate) {
+      if (this.busy || !this.formValid) return
       this.busy = true
       this.error = ''
       this.success = ''
@@ -378,6 +411,7 @@ export default {
         }
         this.closeComposer(true)
         await this.reload()
+        this.$emit('updated')
       } catch (error) {
         this.error = error?.response?.data?.message
           || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]

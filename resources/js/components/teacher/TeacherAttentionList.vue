@@ -13,16 +13,7 @@
           </span>
         </span>
       </button>
-      <button
-        type="button"
-        class="teacher-attention-list__assign"
-        :aria-label="t('teacher.assign_revision_for', { name: student.name })"
-        :title="t('teacher.assign_revision')"
-        @click="$emit('assign-revision', student)"
-      >
-        <i class="bi bi-journal-plus" aria-hidden="true"></i>
-      </button>
-      <i class="bi bi-chevron-right teacher-attention-list__chev" aria-hidden="true"></i>
+
     </li>
   </ul>
   <TeacherMore v-if="rows.length" :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
@@ -57,7 +48,7 @@ export default {
       return attentionReasonTags(student, this.t)[0] || null
     },
     reasons(student) {
-      return attentionReasonTags(student, this.t)
+      return attentionReasonTags(student, this.t).slice(0, 3)
     },
   },
 }

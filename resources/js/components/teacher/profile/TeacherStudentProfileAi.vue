@@ -1,6 +1,6 @@
 <template>
   <div class="teacher-recite">
-    <TeacherTabGuide kind="section" :step="step" :title="t('teacher.review_listen_title')" :description="t('teacher.review_listen_desc')" />
+    <TeacherTabGuide kind="section" :title="t('teacher.review_history')" />
     <div v-if="summaryRows.length" class="teacher-review-facts">
       <span v-for="row in summaryRows" :key="row.key" class="badge rounded-pill teacher-pill" :class="row.tone">
         {{ [row.label, row.value].filter(Boolean).join(' ') }}<template v-if="row.detail"> · {{ row.detail }}</template>

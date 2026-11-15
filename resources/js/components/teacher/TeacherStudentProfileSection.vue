@@ -12,9 +12,15 @@
                 <button type="button" @click="$emit('back')"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
               </nav>
               <h2>{{ profile.student.name }}</h2>
-              <div class="d-flex flex-wrap gap-1 mt-2" :aria-label="t('teacher.student')">
-                <span v-for="pill in metaPills" :key="pill.key" class="badge rounded-pill border" :class="pill.className">{{ pill.label }}</span>
+              <div class="teacher-profile-summary">
+                <span v-if="profile.student.organisation">{{ profile.student.organisation }}</span>
+                <span v-if="typeof profile.meta?.ai_success_rate === 'number'">{{ t('teacher.profile_recite_avg_with_count', { score: profile.meta.ai_success_rate, count: Number(profile.meta.ai_attempts || 0) }) }}</span>
               </div>
+              <details class="teacher-profile-details">
+                <summary>{{ t('teacher.student_details') }}</summary>
+                <p v-if="profile.student.email">{{ profile.student.email }}</p>
+                <p v-for="group in profile.student.groups || []" :key="group.id">{{ group.name }}</p>
+              </details>
             </div>
           </div>
           <div class="teacher-profile-hero__actions">

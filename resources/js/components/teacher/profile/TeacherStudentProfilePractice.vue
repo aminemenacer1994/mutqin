@@ -37,7 +37,7 @@
       </template>
 
       <template v-else-if="isReview">
-        <TeacherTabGuide kind="page" :title="t('teacher.tab_review')" :description="t('teacher.review_flow_lead')">
+        <TeacherTabGuide kind="page" :title="t('teacher.tab_review')">
           <template #action>
             <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)">
               <i class="bi bi-plus-lg" aria-hidden="true"></i>
@@ -46,21 +46,13 @@
           </template>
         </TeacherTabGuide>
 
-        <section class="teacher-review-block" :aria-label="t('teacher.focus_ayahs')">
-          <TeacherTabGuide kind="section" step="1" :title="t('teacher.focus_ayahs')" :description="t('teacher.review_practise_desc')" />
+        <section v-if="weakRows.length || !planRows.length" class="teacher-review-block" :aria-label="t('teacher.review_requires_attention')">
+          <TeacherTabGuide kind="section" :title="t('teacher.review_requires_attention')" />
           <TeacherRecordList v-if="weakRows.length" layout="cards" :rows="weakRows" @action="$emit('assign-revision', $event)" />
-          <p v-else-if="!planRows.length" class="teacher-review-empty">{{ t('teacher.review_practise_empty') }}</p>
+          <p v-else class="teacher-review-empty">{{ t('teacher.review_practise_empty') }}</p>
         </section>
 
-        <section v-if="planRows.length" class="teacher-review-block" :aria-label="t('teacher.focus_reviews')">
-          <TeacherTabGuide kind="section" :step="2" :title="t('teacher.focus_reviews')" :description="t('teacher.review_due_desc')" />
-          <TeacherRecordList
-            layout="cards"
-            :rows="planRows"
-            @action="$emit('assign-revision', $event)"
-            @review="$emit('mark-reviewed', $event)"
-          />
-        </section>
+
 
         <section class="teacher-review-block teacher-review-block--checks" :aria-label="t('teacher.review_listen_title')">
           <TeacherStudentProfileAi
@@ -69,6 +61,16 @@
             :format-when="formatWhen"
             :step="planRows.length ? 3 : 2"
             @assign-revision="$emit('assign-revision', $event)"
+          />
+        </section>
+
+        <section v-if="planRows.length" class="teacher-review-block" :aria-label="t('teacher.focus_reviews')">
+          <TeacherTabGuide kind="section" :title="t('teacher.review_revision_followup')" />
+          <TeacherRecordList
+            layout="cards"
+            :rows="planRows"
+            @action="$emit('assign-revision', $event)"
+            @review="$emit('mark-reviewed', $event)"
           />
         </section>
       </template>

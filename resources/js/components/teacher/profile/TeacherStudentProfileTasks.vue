@@ -1,8 +1,7 @@
 <template>
   <TeacherSectionPane tone="neutral" flat>
-    <TeacherTabGuide kind="page" :title="t('teacher.nav_assignments')" :description="t('teacher.tasks_page_desc')" />
+    <TeacherTabGuide kind="page" :title="t('teacher.nav_assignments')"  />
     <section class="teacher-review-block">
-    <TeacherTabGuide kind="section" step="1" :title="t('teacher.tasks_list_title')" :description="t('teacher.tasks_list_desc')" />
     <div v-if="taskRows.length" class="teacher-context-stats teacher-context-stats--interactive" :aria-label="t('teacher.task_summary')">
       <button v-for="filter in filters" :key="filter.id" type="button" :class="[`is-${filter.id}`, { 'is-active': activeFilter === filter.id }]" :aria-pressed="activeFilter === filter.id ? 'true' : 'false'" @click="activeFilter = filter.id"><strong>{{ filter.count }}</strong> {{ filter.label }}</button>
     </div>
@@ -14,12 +13,15 @@
     <section class="teacher-review-block">
     <TeacherTabGuide
       kind="section"
-      step="2"
       :title="t('teacher.tasks_feedback_title')"
       :description="selectedPassageLabel ? t('teacher.tasks_feedback_for', { passage: selectedPassageLabel }) : t('teacher.tasks_feedback_desc')"
     />
     <TeacherAudioFeedbackComposer
+      ref="composer"
+      :key="selectedRecipientId || 'general'"
       class="mt-3"
+      :show-heading="false"
+      :messages="selectedAssignment?.messages || []"
       :student-id="profile.student.id"
       :recipient-id="selectedRecipientId"
       :assignment-id="selectedAssignmentId"
@@ -30,6 +32,10 @@
     />
     </section>
   </TeacherSectionPane>
+  <TeacherDialog :open="Boolean(pendingTask)" :title="t('teacher.unsaved_changes')" size="sm" :close-label="t('teacher.close')" @close="pendingTask = null">
+    <p>{{ t('teacher.unsaved_changes') }}</p>
+    <template #footer><button type="button" class="btn btn-outline-secondary" @click="pendingTask = null">{{ t('teacher.keep_editing') }}</button><button type="button" class="btn btn-danger" @click="switchTask">{{ t('teacher.discard_changes') }}</button></template>
+  </TeacherDialog>
 </template>
 
 <script>
@@ -46,16 +52,17 @@ import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
 import TeacherTabGuide from '../TeacherTabGuide.vue'
+import TeacherDialog from '../TeacherDialog.vue'
 
 export default {
   name: 'TeacherStudentProfileTasks',
-  components: { TeacherAudioFeedbackComposer, TeacherEmpty, TeacherRecordList, TeacherSectionPane, TeacherTabGuide },
+  components: { TeacherAudioFeedbackComposer, TeacherEmpty, TeacherRecordList, TeacherSectionPane, TeacherTabGuide, TeacherDialog },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
     formatWhen: { type: Function, required: true },
   },
-  data() { return { activeFilter: 'all', selectedTaskKey: null } },
+  data() { return { activeFilter: 'all', selectedTaskKey: null, pendingTask: null } },
   watch: {
     'profile.student.id'() {
       this.activeFilter = 'all'
@@ -190,8 +197,11 @@ export default {
       return item?.progress ? assignmentProgressLabel(item, this.t.bind(this)) : ''
     },
     chooseTask(row) {
+      if (String(row?.key) === String(this.selectedTaskKey)) return
+      if (this.$refs.composer?.hasDraft) { this.pendingTask = row; return }
       this.selectedTaskKey = row?.key ?? null
     },
+    switchTask() { this.$refs.composer?.clear(); this.selectedTaskKey = this.pendingTask?.key ?? null; this.pendingTask = null },
     completionEvidenceLabel(item) {
       if (item?.status !== 'completed' || !item?.completed_at) return ''
       return this.t('teacher.learner_assignments_completed_at', {

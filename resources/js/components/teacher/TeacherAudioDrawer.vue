@@ -1,22 +1,7 @@
 <template>
-  <Teleport to="body">
-    <Transition name="teacher-audio-drawer">
-      <div v-if="open" class="teacher-audio-drawer" @keydown.esc.prevent="$emit('close')">
-        <button class="teacher-audio-drawer__scrim" type="button" :aria-label="t('teacher.close_audio_player')" @click="$emit('close')"></button>
-        <section ref="drawer" class="teacher-audio-drawer__sheet" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1">
-          <div class="teacher-audio-drawer__handle" aria-hidden="true"></div>
-          <header class="teacher-audio-drawer__head">
-            <span class="teacher-audio-drawer__mark" aria-hidden="true"><i :class="hasAudio ? 'bi bi-soundwave' : 'bi bi-file-text'"></i></span>
-            <div>
-              <span>{{ mode === 'transcript' ? t('teacher.recitation_transcript') : t('teacher.audio_review') }}</span>
-              <h2 :id="titleId">{{ row?.title || t('teacher.practice_session') }}</h2>
-              <p v-if="row?.hint">{{ row.hint }}</p>
-            </div>
-            <button type="button" class="teacher-audio-drawer__close" :aria-label="t('teacher.close_audio_player')" @click="$emit('close')">
-              <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-          </header>
-
+  <TeacherDialog :open="open" :title="row?.title || t('teacher.audio_review')" :eyebrow="mode === 'transcript' ? t('teacher.recitation_transcript') : t('teacher.audio_review')" :close-label="t('teacher.close_audio_player')" @close="$emit('close')">
+    <template #pills><span v-if="row?.hint" class="badge rounded-pill teacher-pill">{{ row.hint }}</span></template>
+    <div class="teacher-audio-evidence-workspace">
           <div v-if="hasAudio" class="teacher-audio-player">
             <audio
               ref="player"
@@ -80,22 +65,21 @@
             </div>
             <QuranAyahDisplay :words="canonicalWords" :loading="canonicalLoading" coloured />
           </section>
-        </section>
-      </div>
-    </Transition>
-  </Teleport>
+    </div>
+  </TeacherDialog>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { loadTeacherMadaniWords } from '../../scripts/teacher/madaniDisplayWords'
 import QuranAyahDisplay from './QuranAyahDisplay.vue'
+import TeacherDialog from './TeacherDialog.vue'
 
 let drawerUid = 0
 
 export default {
   name: 'TeacherAudioDrawer',
-  components: { QuranAyahDisplay },
+  components: { QuranAyahDisplay, TeacherDialog },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -157,11 +141,9 @@ export default {
   },
   watch: {
     open(value) {
-      document.body.classList.toggle('teacher-audio-open', value)
       if (value) {
         this.resetPlayer()
         this.loadCanonicalWords()
-        this.$nextTick(() => this.$refs.drawer?.focus({ preventScroll: true }))
       } else {
         this.$refs.player?.pause()
       }
@@ -172,7 +154,8 @@ export default {
     },
   },
   beforeUnmount() {
-    document.body.classList.remove('teacher-audio-open')
+    this.canonicalRequest += 1
+    this.$refs.player?.pause()
   },
   methods: {
     async loadCanonicalWords() {

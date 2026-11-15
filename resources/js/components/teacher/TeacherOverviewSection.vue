@@ -1,104 +1,36 @@
 <template>
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
-
-    <section class="teacher-overview-summary" :aria-label="t('teacher.nav_overview')">
-      <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
-    </section>
-
-    <TeacherSectionPane
-      v-if="taskRows.length"
-      :title="t('teacher.overview_task_status')"
-      :hint="t('teacher.overview_task_status_hint')"
-      icon="bi bi-list-check"
-      tone="practice"
-      flat
-    >
-      <div class="teacher-task-pulse">
-        <div class="teacher-task-pulse__lead">
-          <strong>{{ taskLead.count }}</strong>
-          <span>{{ taskLead.label }}</span>
-        </div>
-        <div class="teacher-task-pulse__breakdown">
-          <button
-            v-for="row in taskRows"
-            :key="row.id"
-            type="button"
-            :class="row.tone"
-            :aria-label="`${row.label}: ${row.count}`"
-            @click="$emit('open-assignments', row.id)"
-          >
-            <span class="teacher-task-pulse__name"><i aria-hidden="true"></i>{{ row.label }}</span>
-            <strong>{{ row.count }}</strong>
-          </button>
-        </div>
-      </div>
-    </TeacherSectionPane>
-
-    <TeacherSectionPane
-      v-else-if="hasStudents"
-      :title="t('teacher.overview_task_status')"
-      :hint="t('teacher.overview_task_status_hint')"
-      icon="bi bi-list-check"
-      tone="practice"
-      flat
-    >
-      <div class="teacher-empty-with-action">
-        <TeacherEmpty inline icon="bi bi-journal-plus" :message="t('teacher.assignments_empty')" />
-        <button type="button" class="btn btn-primary btn-sm teacher-empty-action" @click="$emit('create-assignment')">
-          {{ t('teacher.add_task') }}
-        </button>
-      </div>
-    </TeacherSectionPane>
-
-    <TeacherSectionPane
-      :title="t('teacher.overview_need_look')"
-      :hint="t('teacher.overview_need_look_hint')"
-      icon="bi bi-exclamation-circle"
-      tone="warn"
-      flat
-    >
-      <TeacherAttentionList
-        :rows="attentionRows"
-        @open-student="openStudent"
-        @assign-revision="$emit('assign-revision', $event)"
-      />
-      <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
-    </TeacherSectionPane>
-
-    <div class="teacher-overview-detail-grid teacher-overview-detail-grid--activity-only">
-      <TeacherSectionPane
-        :title="t('teacher.overview_recent_activity')"
-        :hint="t('teacher.overview_recent_activity_hint')"
-        icon="bi bi-activity"
-        tone="practice"
-        flat
-      >
-        <ul v-if="recentActivity.length" class="teacher-activity-list">
-          <li v-for="student in recentActivity" :key="student.id">
-            <button type="button" @click="openStudent(student.id)">
-              <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
-              <span class="teacher-activity-list__copy">
-                <strong>{{ student.name }}</strong>
-                <small>{{ t('teacher.activity_recorded', { when: formatWhen(student.last_activity_at) }) }}</small>
-              </span>
-              <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">
-                {{ student.ai_success_rate }}%
-                <small>{{ t('teacher.ai_word_match_short') }}</small>
-              </span>
-              <i class="bi bi-chevron-right" aria-hidden="true"></i>
-            </button>
-          </li>
-        </ul>
-        <div v-else class="teacher-empty-with-action">
-          <TeacherEmpty inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
-          <button type="button" class="btn btn-outline-secondary btn-sm teacher-empty-action" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
-        </div>
+    <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    <div class="teacher-overview-columns">
+      <TeacherSectionPane :title="t('teacher.overview_need_look')" icon="bi bi-exclamation-circle" tone="warn" flat>
+        <TeacherAttentionList :rows="attentionRows" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
+        <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
       </TeacherSectionPane>
+      <div class="teacher-overview-secondary">
+        <TeacherSectionPane :title="t('teacher.overview_recent_activity')" icon="bi bi-activity" flat>
+          <ul v-if="recentActivity.length" class="teacher-activity-list">
+            <li v-for="student in recentActivity" :key="student.id">
+              <button type="button" @click="openStudent(student.id)">
+                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
+                <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ t('teacher.activity_recorded', { when: formatWhen(student.last_activity_at) }) }}</small></span>
+                <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
+        </TeacherSectionPane>
+        <TeacherSectionPane v-if="taskRows.length > 1 || assignmentCounts.awaiting_confirmation" :title="t('teacher.overview_task_status')" flat>
+          <div class="teacher-task-pulse__breakdown">
+            <button v-for="row in taskRows" :key="row.id" type="button" :class="row.tone" @click="$emit('open-assignments', row.id)"><span class="teacher-task-pulse__name"><i aria-hidden="true"></i>{{ row.label }}</span><strong>{{ row.count }}</strong></button>
+          </div>
+        </TeacherSectionPane>
+      </div>
     </div>
-
   </section>
 </template>
+
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
@@ -142,6 +74,7 @@ export default {
     taskRows() {
       const counts = this.assignmentCounts
       return [
+        { id: 'submitted', label: this.t('teacher.status_awaiting_confirmation'), count: Number(counts.awaiting_confirmation || 0), tone: '' },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: Number(counts.overdue || 0), tone: 'is-danger' },
         { id: 'progress', label: this.t('teacher.task_filter_progress'), count: Number(counts.in_progress || 0), tone: '' },
         { id: 'done', label: this.t('teacher.task_filter_completed'), count: Number(counts.completed || 0), tone: 'is-good' },

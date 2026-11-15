@@ -7355,3 +7355,34 @@ html[data-theme="dark"] .user-dashboard .dash-section--learner-teacher .learner-
   outline: 2px solid currentColor;
   outline-offset: 0.08em;
 }
+
+/* Match the teacher workspace's surfaces and density while retaining the
+   learner's task, feedback and upcoming-lesson interactions. */
+#dash-my-learning.dash-section {
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 12px;
+  background: var(--surface-strong);
+  box-shadow: none;
+}
+#dash-my-learning .learner-teacher__intro {
+  padding: 0 0 16px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#dash-my-learning :is(.learner-teacher__card, .learner-teacher__feedback-panel, .learner-teacher__upcoming-panel) {
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 10px;
+  background: var(--surface-strong);
+  box-shadow: none;
+}
+#dash-my-learning :is(.learner-teacher__feedback-item, .learner-teacher__filters--segmented) {
+  border-color: color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 8px;
+  box-shadow: none;
+}
+#dash-my-learning .learner-teacher__section-name { font-size: 15px; font-weight: 600; }
+#dash-my-learning .learner-teacher__card { padding: 12px 14px; }
+#dash-my-learning .learner-teacher__card-title { font-size: 14px; }

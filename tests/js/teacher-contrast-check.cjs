@@ -23,12 +23,6 @@ const selectors = [
   '.teacher-badge',
 ]
 
-function channels(color) {
-  const values = color.match(/[\d.]+/g)?.map(Number) || []
-  if (color.startsWith('color(srgb')) return values.slice(0, 3).map((value) => value * 255)
-  return values.length >= 3 ? values.slice(0, 3) : [0, 0, 0]
-}
-
 function luminance(rgb) {
   const [r, g, b] = rgb.map((value) => {
     const channel = value / 255
@@ -59,18 +53,34 @@ async function main() {
         const sample = await page.locator(selector).first().evaluate((element) => {
           if (!element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') return null
           const foreground = getComputedStyle(element).color
+          const canvas = document.createElement('canvas')
+          canvas.width = canvas.height = 1
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })
+          const rgba = (color) => {
+            ctx.clearRect(0, 0, 1, 1)
+            ctx.fillStyle = color
+            ctx.fillRect(0, 0, 1, 1)
+            const pixel = [...ctx.getImageData(0, 0, 1, 1).data]
+            return [pixel[0], pixel[1], pixel[2], pixel[3] / 255]
+          }
+          const composite = (front, back) => front.slice(0, 3).map((value, i) => value * front[3] + back[i] * (1 - front[3]))
           let node = element
           let background = 'rgb(255, 255, 255)'
+          const layers = []
           while (node) {
             const color = getComputedStyle(node).backgroundColor
-            if (color && !/rgba?\(0, 0, 0, 0\)/.test(color) && color !== 'transparent') { background = color; break }
+            if (color) layers.push(rgba(color))
             node = node.parentElement
           }
-          return { foreground, background }
+          let backgroundRgb = [255, 255, 255]
+          for (const layer of layers.reverse()) backgroundRgb = composite(layer, backgroundRgb)
+          const foregroundRgb = composite(rgba(foreground), backgroundRgb)
+          background = `rgb(${backgroundRgb.map(Math.round).join(', ')})`
+          return { foreground, background, foregroundRgb, backgroundRgb }
         }).catch(() => null)
         if (!sample) continue
-        const a = luminance(channels(sample.foreground))
-        const b = luminance(channels(sample.background))
+        const a = luminance(sample.foregroundRgb)
+        const b = luminance(sample.backgroundRgb)
         results.push({ width, theme, view, selector, ...sample, ratio: Number(((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2)) })
       }
     }

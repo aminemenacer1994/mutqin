@@ -280,7 +280,7 @@ export function useTeacherDashboard(authRef) {
     try {
       await learningApi.completeTeacherReview(studentId, id)
       formSuccess.value = t('teacher.review_marked')
-      await loadProfile(studentId, 'practice')
+      await loadProfile(studentId, 'ai')
       await loadOverview()
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
@@ -447,7 +447,11 @@ export function useTeacherDashboard(authRef) {
       syncUrl(pushHistory)
     } catch (err) {
       if (requestId !== profileRequestId) return
-      profile.value = null
+      if (!sameStudent) profile.value = null
+      else {
+        profileSection.value = profile.value.section
+        syncUrl()
+      }
       formError.value = teacherErrorMessage(err, t)
     } finally {
       if (requestId === profileRequestId) profileLoading.value = false

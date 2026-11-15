@@ -2,7 +2,7 @@
   <div
     v-if="featuresEnabled"
     class="user-dashboard teacher-dashboard"
-    data-teacher-ui="2026-11-14-plans-difficulties"
+    data-teacher-ui="2026-11-15-unified-workspace"
     data-platform-shell="teacher"
     tabindex="-1"
   >
@@ -46,6 +46,7 @@
               :support-count="Number(overview?.kpis?.needs_attention || 0)"
               @open-students="openView('students')"
               @open-attention="openStudentsFromKpi('attention')"
+              @create-assignment="startAssignment"
             />
 
             <TeacherOverviewSection
@@ -151,6 +152,7 @@
 </template>
 
 <script>
+import { provide } from 'vue'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
 import TeacherPlansView from '../components/teacher/TeacherPlansView.vue'
@@ -180,6 +182,7 @@ export default {
   },
   setup(props) {
     const dashboard = useTeacherDashboard(props.auth)
+    provide('teacherSurahs', dashboard.surahs)
     function updateFilters(next) {
       dashboard.filters.value = next
       dashboard.syncUrl()

@@ -9,6 +9,7 @@
       <i class="bi bi-bookmark" aria-hidden="true"></i>
       {{ passageLabel }}
     </p>
+    <TeacherTaskConversation v-if="allMessages.length" :messages="allMessages" variant="teacher" :compose="false" :composer-id="`${composerId}-history`" />
 
     <label class="teacher-audio-feedback__text" :for="composerId">
       <span class="visually-hidden">{{ t('teacher.feedback') }}</span>
@@ -22,7 +23,7 @@
       ></textarea>
     </label>
 
-    <TeacherVoiceNoteControls ref="voice" :disabled="saving" />
+    <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
 
     <p v-if="error" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ error }}</p>
     <p v-else-if="success" class="alert alert-success py-1 px-2 mb-0" role="status">{{ success }}</p>
@@ -43,10 +44,11 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
+import TeacherTaskConversation from './TeacherTaskConversation.vue'
 
 export default {
   name: 'TeacherAudioFeedbackComposer',
-  components: { TeacherVoiceNoteControls },
+  components: { TeacherVoiceNoteControls, TeacherTaskConversation },
   mixins: [i18nMixin],
   props: {
     studentId: { type: [Number, String], required: true },
@@ -57,6 +59,7 @@ export default {
     ayahEnd: { type: [Number, String], default: null },
     passageLabel: { type: String, default: '' },
     showHeading: { type: Boolean, default: true },
+    messages: { type: Array, default: () => [] },
   },
   emits: ['sent'],
   data() {
@@ -68,14 +71,18 @@ export default {
       error: '',
       success: '',
       successTimer: null,
+      sentMessages: [],
+      voiceState: { hasRecording: false, active: false },
     }
   },
   computed: {
     hasRecording() {
-      return Boolean(this.$refs.voice?.hasRecording)
+      return this.voiceState.hasRecording
     },
+    hasDraft() { return Boolean(this.draft.trim() || this.voiceState.hasRecording || this.voiceState.active) },
+    allMessages() { return [...new Map([...this.messages, ...this.sentMessages].map(message => [message.id, message])).values()] },
     canSend() {
-      return Boolean(this.draft.trim() || this.$refs.voice?.hasRecording) && !this.$refs.voice?.isRecordingActive
+      return Boolean(this.draft.trim() || this.voiceState.hasRecording) && !this.voiceState.active
     },
   },
   beforeUnmount() {
@@ -110,6 +117,7 @@ export default {
             ayah_end: this.ayahEnd || this.ayahStart || undefined,
           }, recording)
         }
+        if (message?.id && this.recipientId) this.sentMessages.push(message)
         this.clear()
         this.success = this.t('teacher.audio_feedback_sent')
         if (this.successTimer) clearTimeout(this.successTimer)
