@@ -16,20 +16,22 @@
         class="teacher-badge"
         :class="row.badgeTone ? `teacher-badge--${row.badgeTone}` : 'teacher-badge--muted'"
       >{{ row.badge }}</span>
-      <div v-if="playbackReview(row) || showEvidenceActions(row)" class="teacher-records__evidence-actions">
-        <button v-if="playbackReview(row)" type="button" class="btn btn-primary btn-sm teacher-records__review" @click="openEvidence(row, 'audio')">
-          {{ t('teacher.playback_open') }}
-        </button>
-        <button v-if="!playbackReview(row) && row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
-          <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
-        </button>
-        <button v-if="!playbackReview(row) && (row.transcript || hasCanonicalEvidence(row))" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
-          <i class="bi bi-file-text" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div v-if="row.actionLabel || row.reviewActionLabel" class="teacher-record-card__actions">
-        <button v-if="row.actionLabel" type="button" class="btn btn-sm btn-primary" @click="$emit('action', row.actionPayload)">{{ row.actionLabel }}</button>
-        <button v-if="row.reviewActionLabel" type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('review', row.reviewActionPayload)">{{ row.reviewActionLabel }}</button>
+      <div v-if="playbackReview(row) || showEvidenceActions(row) || row.actionLabel || row.reviewActionLabel" class="teacher-record-card__controls">
+        <div v-if="playbackReview(row) || showEvidenceActions(row)" class="teacher-records__evidence-actions">
+          <button v-if="playbackReview(row)" type="button" class="btn btn-primary btn-sm teacher-records__review" @click="openEvidence(row, 'audio')">
+            {{ t('teacher.playback_open') }}
+          </button>
+          <button v-if="!playbackReview(row) && row.audio?.available" type="button" class="teacher-records__evidence-icon is-audio is-available" :aria-label="`${t('teacher.play_recording')}: ${row.title}`" :title="t('teacher.play_recording')" @click="openEvidence(row, 'audio')">
+            <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+          </button>
+          <button v-if="!playbackReview(row) && (row.transcript || hasCanonicalEvidence(row))" type="button" class="teacher-records__evidence-icon is-transcript is-available" :aria-label="`${t('teacher.view_transcript')}: ${row.title}`" :title="t('teacher.view_transcript')" @click="openTranscriptReview(row)">
+            <i class="bi bi-file-text" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div v-if="row.actionLabel || row.reviewActionLabel" class="teacher-record-card__actions">
+          <button v-if="row.actionLabel" type="button" class="btn btn-sm" :class="playbackReview(row) ? 'btn-outline-secondary' : 'btn-primary'" @click="$emit('action', row.actionPayload)">{{ row.actionLabel }}</button>
+          <button v-if="row.reviewActionLabel" type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('review', row.reviewActionPayload)">{{ row.reviewActionLabel }}</button>
+        </div>
       </div>
     </article>
   </div>
@@ -62,10 +64,9 @@
           </th>
           <td class="teacher-profile-table__detail">
             <span v-if="row.hint">{{ row.hint }}</span>
-            <details v-if="row.arabicText" class="teacher-records__ayah-details">
+            <details v-if="row.arabicText && ayahRange(row)" class="teacher-records__ayah-details" @toggle="loadAyahPreview($event, row)">
               <summary>{{ t('teacher.show_ayah_text') }}</summary>
-              <span v-if="row.arabicName" class="teacher-records__arabic-name" lang="ar" dir="rtl">{{ row.arabicName }}</span>
-              <span class="teacher-records__arabic" lang="ar" dir="rtl">{{ row.arabicText }}</span>
+              <QuranAyahDisplay v-if="ayahPreview(row)" :words="ayahPreview(row).words" :loading="ayahPreview(row).loading" />
             </details>
           </td>
           <td class="teacher-profile-table__status">
@@ -135,6 +136,9 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { recordAyahRange } from '../../scripts/teacher/recordAyahRange.js'
+import { loadTeacherMadaniWords } from '../../scripts/teacher/madaniDisplayWords.js'
+import QuranAyahDisplay from './QuranAyahDisplay.vue'
 import TeacherAudioDrawer from './TeacherAudioDrawer.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
@@ -143,7 +147,7 @@ import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.v
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal },
+  components: { QuranAyahDisplay, TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
@@ -158,6 +162,8 @@ export default {
   data() {
     return {
       shown: 5,
+      ayahPreviews: new Map(),
+      previewGeneration: 0,
       activeEvidence: null,
       evidenceMode: 'audio',
       mushafModalRow: null,
@@ -177,7 +183,35 @@ export default {
       }
     },
   },
+  beforeUnmount() {
+    this.previewGeneration += 1
+  },
   methods: {
+    ayahRange(row) {
+      return recordAyahRange(row)
+    },
+    ayahPreviewKey(row) {
+      const range = this.ayahRange(row)
+      return range ? `${range.surah}:${range.from}:${range.to}` : ''
+    },
+    ayahPreview(row) {
+      return this.ayahPreviews.get(this.ayahPreviewKey(row)) || null
+    },
+    async loadAyahPreview(event, row) {
+      if (!event.target.open) return
+      const range = this.ayahRange(row)
+      const key = this.ayahPreviewKey(row)
+      if (!range || !key || this.ayahPreviews.has(key)) return
+      const generation = this.previewGeneration
+      this.ayahPreviews.set(key, { loading: true, words: [] })
+      let words = []
+      try {
+        words = await loadTeacherMadaniWords({ range, words: [] }, { paintStatus: false })
+      } catch {
+        // The shared display shows its unavailable state; raw Arabic is never a fallback.
+      }
+      if (generation === this.previewGeneration) this.ayahPreviews.set(key, { loading: false, words })
+    },
     isSelected(row) {
       return this.selectedKey != null && String(this.selectedKey) === String(row.key)
     },

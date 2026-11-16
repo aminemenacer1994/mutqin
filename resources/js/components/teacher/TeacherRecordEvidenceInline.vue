@@ -13,7 +13,7 @@
 
     <div v-if="row?.transcript" class="teacher-record-evidence__said">
       <span class="teacher-record-evidence__label">{{ transcriptLabel }}</span>
-      <p class="teacher-quran" lang="ar" dir="rtl">{{ row.transcript }}</p>
+      <p class="teacher-recognition-transcript" lang="ar" dir="rtl">{{ row.transcript }}</p>
     </div>
 
     <div v-if="practicedOnlyCompare" class="teacher-record-evidence__compare">

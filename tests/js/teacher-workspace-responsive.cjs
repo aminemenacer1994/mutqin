@@ -33,6 +33,47 @@ async function main() {
       ...['ai', 'tasks', 'messages', 'plan'].map(tab => [`profile-${tab}`, `/teacher?view=student&student=${student.id}&section=${tab}`, '[role=tabpanel]']),
     ]
     const results = []
+    async function checkFormLayout(name) {
+      const formDialog = page.locator('.teacher-dialog[role=dialog]')
+      for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+        await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
+        for (const theme of ['light', 'sepia', 'dark']) {
+          await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+          const layout = await formDialog.evaluate(root => {
+            const box = root.querySelector('.modal-content').getBoundingClientRect()
+            const body = root.querySelector('.modal-body')
+            const footer = root.querySelector('.modal-footer').getBoundingClientRect()
+            const actions = [...root.querySelectorAll('.modal-footer .btn')].map(el => el.getBoundingClientRect())
+            const controls = [...body.querySelectorAll('input, select, textarea')].filter(el => el.getClientRects().length).map(el => el.getBoundingClientRect())
+            return {
+              contained: box.left >= 0 && box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight + 1,
+              horizontalOverflow: body.scrollWidth - body.clientWidth,
+              clippedControl: controls.some(control => control.left < box.left || control.right > box.right + 1),
+              footerContained: footer.bottom <= box.bottom + 1,
+              overlappingActions: actions.some((a, i) => actions.slice(i + 1).some(b => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1)),
+              primaryWidth: actions.at(-1).width,
+              footerWidth: footer.width,
+              headerHeight: root.querySelector('.modal-header').getBoundingClientRect().height,
+            }
+          })
+          assert.ok(layout.contained && layout.footerContained, `${name} ${width}px ${theme}: viewport-safe form and footer`)
+          assert.ok(layout.horizontalOverflow <= 1 && !layout.clippedControl, `${name} ${width}px ${theme}: no clipped fields`)
+          assert.equal(layout.overlappingActions, false, `${name}: separated footer actions`)
+          if (width >= 768) {
+            assert.ok(layout.primaryWidth < layout.footerWidth / 2, `${name}: primary action must not stretch across the footer`)
+            assert.ok(layout.headerHeight <= 80, `${name}: compact form header`)
+          }
+          results.push({ name, width, theme, ...layout })
+          if ([390, 1440].includes(width) && theme === 'light') {
+            await page.waitForTimeout(220)
+            await page.screenshot({ path: path.join(shots, `${name}-${width}.png`) })
+          }
+        }
+      }
+      await page.setViewportSize({ width: 390, height: 844 })
+      await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
+    }
     for (const [name, route, ready] of routes) {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await page.goto(`${base}${route}`)
@@ -53,7 +94,10 @@ async function main() {
           assert.equal(state.mobile, width < 992, `${name}: mobile nav`)
           assert.equal(state.clipped, false, `${name}: clipped tab`)
           results.push({ name, width, theme, ...state })
-          if ([390, 1440].includes(width) && (theme === 'light' || ['overview', 'profile-ai'].includes(name))) await page.screenshot({ path: path.join(shots, `${name}-${width}-${theme}.png`) })
+          if ([390, 1440].includes(width) && (theme === 'light' || ['overview', 'profile-ai'].includes(name))) {
+            await page.waitForTimeout(220)
+            await page.screenshot({ path: path.join(shots, `${name}-${width}-${theme}.png`) })
+          }
         }
       }
     }
@@ -62,6 +106,7 @@ async function main() {
     await page.goto(`${base}/teacher?view=assignments`)
     await page.locator('.teacher-task-add').click()
     let dialog = page.locator('.teacher-dialog[role=dialog]')
+    await checkFormLayout('task-grid')
     await dialog.locator('input[id$="-student"]').fill(student.name)
     await dialog.locator('input[id$="-student"]').press('ArrowDown')
     await dialog.locator('input[id$="-student"]').press('Enter')
@@ -96,14 +141,33 @@ async function main() {
     // Plan creation: canonical surah options, ayah bounds, multi-activity layout, draft guard.
     await page.goto(`${base}/teacher?view=plans`)
     await page.locator('.teacher-plans-view__picker select').selectOption(String(student.id))
+    assert.equal(await page.getByRole('button', { name: 'New learning plan', exact: true }).count(), 1, 'One plan creation action in the selected student context')
     await page.locator('.teacher-learning-plan__toolbar').getByRole('button', { name: 'New learning plan', exact: true }).click()
     dialog = page.locator('.teacher-dialog[role=dialog]')
+    await checkFormLayout('plan-grid')
     await dialog.locator('.teacher-surah-select input').fill('112')
     await dialog.locator('.teacher-surah-select__options').getByRole('option').first().click()
     await dialog.getByRole('button', { name: 'Add activity', exact: true }).click()
     await page.screenshot({ path: path.join(shots, 'plan-form-390.png') })
     await page.keyboard.press('Escape')
     await dialog.getByRole('button', { name: 'Discard changes', exact: true }).click()
+    // Empty task lists must not offer a composer detached from an assignment.
+    const unassigned = await page.evaluate(async students => {
+      for (const student of students) {
+        const response = await fetch(`/api/teacher/students/${student.id}?section=tasks`)
+        const profile = await response.json()
+        if (response.ok && Array.isArray(profile.payload?.assignments) && !profile.payload.assignments.length) return student
+      }
+      return null
+    }, roster)
+    if (unassigned) {
+      await page.goto(`${base}/teacher?view=student&student=${unassigned.id}&section=tasks`)
+      await page.locator('.teacher-empty-panel').waitFor()
+      assert.equal(await page.locator('.teacher-audio-feedback').count(), 0, 'No feedback composer without an assignment')
+      await page.locator('.teacher-empty-panel').getByRole('button', { name: 'Assign task', exact: true }).click()
+      await page.locator('.teacher-dialog[role=dialog]').waitFor()
+      await page.keyboard.press('Escape')
+    }
     // Recording state transitions and audio-only feedback: synthetic media is discarded.
     await page.goto(`${base}/teacher?view=student&student=${student.id}&section=messages`)
     const recorder = page.locator('.teacher-direct-thread .teacher-voice-note')
@@ -157,14 +221,64 @@ async function main() {
     await dialog.locator('.teacher-playback__word').waitFor()
     assert.equal(await dialog.locator('.teacher-playback__word textarea').isVisible(), true, 'Selected-word correction editor is visible')
     if (await dialog.locator('.teacher-playback__player.is-empty').count()) assert.equal(await dialog.locator('.teacher-playback__transport').count(), 0, 'Unavailable recording has no transport')
+    assert.equal(await dialog.locator('.teacher-playback__summary-counts dt').count(), 4, 'Assessment summary exposes all four real word states')
+    let studioCases = 0
+    for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+      await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
+      for (const theme of ['light', 'sepia', 'dark']) {
+        await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
+        await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
+        const geometry = await dialog.evaluate(root => {
+          const content = root.querySelector('.modal-content').getBoundingClientRect()
+          const body = root.querySelector('.modal-body')
+          const layout = root.querySelector('.teacher-playback__layout').getBoundingClientRect()
+          const main = root.querySelector('.teacher-playback__main').getBoundingClientRect()
+          const side = root.querySelector('.teacher-playback__side').getBoundingClientRect()
+          return { height: content.height, overflow: body.scrollWidth - body.clientWidth, outerScroll: root.querySelector('.modal-content').scrollHeight - root.querySelector('.modal-content').clientHeight, columns: side.left > main.right - 1, mainFraction: main.width / (layout.width - 24), bodyScroll: body.scrollHeight > body.clientHeight }
+        })
+        assert.ok(geometry.height <= (width < 768 ? 844 : 1000) * .9 + 1, `Studio ${width}px ${theme}: content stays within 90vh`)
+        assert.ok(geometry.overflow <= 1, `Studio ${width}px ${theme}: no horizontal overflow`)
+        assert.ok(geometry.outerScroll <= 1, `Studio ${width}px ${theme}: a single body owns vertical scrolling`)
+        if (width > 960) {
+          assert.equal(geometry.columns, true, 'Desktop studio retains separate reading and coaching columns')
+          assert.ok(geometry.mainFraction >= .60 && geometry.mainFraction <= .70, 'Reading area has approximately 65% of available width')
+        } else assert.equal(geometry.columns, false, 'Tablet and mobile coaching stacks below the reading area')
+        for (const selector of ['.teacher-playback__response', '.teacher-playback__private-note', '.teacher-playback__revision', '.teacher-playback__review-status']) {
+          const section = dialog.locator(selector)
+          await section.scrollIntoViewIfNeeded()
+          assert.ok(await section.isVisible(), `Studio section ${selector} is accessible without expansion`)
+        }
+        results.push({ name: 'studio', width, theme, ...geometry })
+        studioCases += 1
+      }
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
+    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
     await page.screenshot({ path: path.join(shots, 'coaching-390.png') })
     await page.setViewportSize({ width: 1440, height: 1000 })
+    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
     const reviewBounds = await dialog.locator('.modal-content').boundingBox()
     assert.ok(Math.abs(reviewBounds.x + reviewBounds.width / 2 - 720) <= 1, 'Desktop review is horizontally centred')
     assert.ok(reviewBounds.width >= 1100, 'Desktop review provides usable space for the Quran and feedback sidebar')
     await page.screenshot({ path: path.join(shots, 'coaching-1440.png') })
+    await page.keyboard.press('Escape')
+    const attentionStudent = roster.find(row => row.weak_count > 0)
+    if (attentionStudent) {
+      await page.goto(`${base}/teacher?view=student&student=${attentionStudent.id}&section=ai`)
+      const attentionRow = page.locator('.teacher-review-block[aria-label="Requires attention"] .teacher-record-card').first()
+      await attentionRow.waitFor()
+      const actionLayout = await attentionRow.locator('.teacher-record-card__controls').evaluate(el => {
+        const buttons = [...el.querySelectorAll('button')].map(button => button.getBoundingClientRect())
+        return { count: buttons.length, centres: buttons.map(box => box.y + box.height / 2), widest: Math.max(...buttons.map(box => box.width)), rowWidth: el.closest('article').getBoundingClientRect().width }
+      })
+      assert.ok(actionLayout.count >= 2, 'Review and revision actions remain connected to their evidence')
+      assert.ok(Math.max(...actionLayout.centres) - Math.min(...actionLayout.centres) <= 2, 'Related review actions share one desktop row')
+      assert.ok(actionLayout.widest < actionLayout.rowWidth / 2, 'Review actions retain natural width')
+      await page.screenshot({ path: path.join(shots, 'attention-actions-1440.png') })
+    }
     assert.deepEqual(errors, [], 'No runtime errors')
-    console.log(JSON.stringify({ responsiveCases: results.length, routes: routes.length, widths: 8, themes: 3, formValidation: true, focusReturn: true, unsavedChanges: true, conversation: true, audioOnly: true, keyboardWordSelection: true, uniqueGlyphs: glyphs.length, runtimeErrors: errors.length, screenshots: shots }, null, 2))
+    console.log(JSON.stringify({ responsiveCases: results.length, studioCases, routes: routes.length, widths: 8, themes: 3, formValidation: true, focusReturn: true, unsavedChanges: true, conversation: true, audioOnly: true, keyboardWordSelection: true, uniqueGlyphs: glyphs.length, runtimeErrors: errors.length, screenshots: shots }, null, 2))
     fs.writeFileSync(path.join(shots, 'results.json'), JSON.stringify(results, null, 2))
   } catch (error) { await page.screenshot({ path: path.join(shots, 'failure.png') }); console.log(await page.locator('[role=dialog]').allTextContents()); throw error } finally { await browser.close() }
 }

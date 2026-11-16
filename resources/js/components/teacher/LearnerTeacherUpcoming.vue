@@ -84,7 +84,7 @@ export default {
   computed: {
     items() {
       return buildUpcomingAssignments(this.assignments, this.isComplete, 3, {
-        excludeTodoIds: [],
+        excludeTodoIds: this.todoIds,
       })
     },
     learnerLocale() {

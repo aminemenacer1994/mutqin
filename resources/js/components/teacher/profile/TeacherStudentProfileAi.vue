@@ -1,15 +1,8 @@
 <template>
   <div class="teacher-recite">
     <TeacherTabGuide kind="section" :title="t('teacher.review_history')" />
-    <div v-if="summaryRows.length" class="teacher-review-facts">
-      <span v-for="row in summaryRows" :key="row.key" class="badge rounded-pill teacher-pill" :class="row.tone">
-        {{ [row.label, row.value].filter(Boolean).join(' ') }}<template v-if="row.detail"> · {{ row.detail }}</template>
-      </span>
-    </div>
-
     <template v-if="attemptGroups.length">
-      <div class="teacher-review-filter">
-        <p>{{ t('teacher.review_filter_label') }}</p>
+      <div v-if="attemptGroups.length > 1" class="teacher-review-filter">
       <div class="teacher-learn__chips" role="group" :aria-label="t('teacher.review_filter_label')">
         <button type="button" :class="{ 'is-active': !passageFilter }" :aria-pressed="!passageFilter ? 'true' : 'false'" @click="passageFilter = ''">
           {{ t('teacher.learning_all_passages') }}
@@ -55,61 +48,8 @@ export default {
     step: { type: [String, Number], default: 2 },
   },
   emits: ['assign-revision'],
-  methods: {
-    scoreTone(value) {
-      const score = Number(value)
-      if (!Number.isFinite(score)) return 'is-quiet'
-      if (score >= 80) return 'is-score'
-      if (score >= 50) return 'is-partial'
-      return 'is-flagged'
-    },
-  },
+  watch: { 'profile.student.id'() { this.passageFilter = '' } },
   computed: {
-    averageLabel() {
-      return typeof this.profile.payload?.success_rate === 'number'
-        ? this.t('teacher.score_n', { n: this.profile.payload.success_rate })
-        : this.t('teacher.no_scored_checks')
-    },
-    latestAttempt() {
-      const attempts = this.profile.payload?.attempts || []
-      return attempts[0] || null
-    },
-    latestLabel() {
-      const attempt = this.latestAttempt
-      if (!attempt || typeof attempt.accuracy_percent !== 'number') return ''
-      return this.t('teacher.score_n', { n: attempt.accuracy_percent })
-    },
-    latestWhen() {
-      return this.latestAttempt ? this.formatWhen(this.latestAttempt.created_at) : ''
-    },
-    summaryRows() {
-      const rows = []
-      const count = Number(this.profile.payload?.score_count || 0)
-      if (this.attemptGroups.length || typeof this.profile.payload?.success_rate === 'number') {
-        rows.push({
-          key: 'avg',
-          label: this.t('teacher.ai_check_average'),
-          value: this.averageLabel,
-          tone: this.scoreTone(this.profile.payload?.success_rate),
-        })
-        rows.push({
-          key: 'checks',
-          label: '',
-          value: this.t(count === 1 ? 'teacher.check_count_one' : 'teacher.check_count_many', { n: count }),
-          tone: '',
-        })
-      }
-      if (this.latestLabel) {
-        rows.push({
-          key: 'latest',
-          label: this.t('teacher.latest_result'),
-          value: this.latestLabel,
-          detail: this.latestWhen,
-          tone: this.scoreTone(this.latestAttempt?.accuracy_percent),
-        })
-      }
-      return rows
-    },
     visibleAttempts() {
       const groups = this.passageFilter
         ? this.attemptGroups.filter((group) => group.key === this.passageFilter)
@@ -117,7 +57,7 @@ export default {
       return groups.flatMap((group) => group.rows.map((row) => ({
         ...row,
         hint: [group.title, row.hint].filter(Boolean).join(' · '),
-      })))
+      }))).sort((a, b) => (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0))
     },
     attemptGroups() {
       const groups = new Map()
@@ -141,6 +81,7 @@ export default {
         const when = this.formatWhen(attempt.created_at)
         const row = teacherRecitationEvidenceRow({
           key: attempt.id,
+          sortAt: attempt.created_at,
           attemptId: attempt.id,
           studentId: this.profile.student?.id,
           icon: 'bi bi-mic',

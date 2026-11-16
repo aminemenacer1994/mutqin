@@ -32,5 +32,9 @@ const upcoming = buildUpcomingAssignments(rows, () => false, 3, {
   now: fixedNow,
 })
 assert.deepEqual(upcoming.map((row) => row.id), [2])
+assert.equal(shouldShowUpcomingPanel(rows, row => row.status === 'completed', [1, 2], fixedNow), false, 'Upcoming does not repeat tasks already displayed')
+assert.deepEqual(buildUpcomingAssignments([
+  { id: 4, status: 'awaiting_confirmation', review_state: 'submitted', assignment: { due_at: '2026-03-20T00:00:00Z' } },
+], () => false, 3, { now: fixedNow }), [], 'Work awaiting teacher review is not offered as upcoming practice')
 
 console.log('learner-upcoming.test.mjs: ok')

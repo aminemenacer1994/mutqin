@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="open"
-      class="aa-overlay"
+      class="aa-overlay aa-overlay--basic"
       role="presentation"
       @click.self="close"
     >
@@ -26,6 +26,7 @@
                 type="button"
                 class="aa-icon-btn"
                 :aria-label="t('common.close')"
+                :title="t('common.close')"
                 @click="close"
               >
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -38,15 +39,11 @@
         <div class="aa-body">
           <section class="aa-section aa-section--overview" :aria-label="t('dashboard.basic_analytics.overview_label')">
             <div class="aa-kpi-grid">
-              <article v-for="card in cards" :key="card.key" class="aa-kpi">
-                <div class="aa-kpi__top">
-                  <span class="aa-kpi__icon" aria-hidden="true">
-                    <i class="bi" :class="card.icon"></i>
-                  </span>
-                </div>
+              <article v-for="card in cards" :key="card.key" class="aa-kpi" :title="card.description">
+                <span class="aa-kpi__icon" aria-hidden="true"><i class="bi" :class="card.icon"></i></span>
                 <p class="aa-kpi__title">{{ card.title }}</p>
                 <p class="aa-kpi__value">{{ card.value }}</p>
-                <p class="aa-kpi__hint">{{ card.description }}</p>
+                <p class="visually-hidden">{{ card.description }}</p>
               </article>
             </div>
           </section>
@@ -55,19 +52,14 @@
             <div class="aa-section__head">
               <div>
                 <h3>{{ t('dashboard.basic_analytics.progress_title') }}</h3>
-                <p>{{ t('dashboard.basic_analytics.progress_hint') }}</p>
               </div>
             </div>
             <div class="aa-kpi-grid aa-kpi-grid--basic-progress">
-              <article v-for="card in progressCards" :key="card.key" class="aa-kpi">
-                <div class="aa-kpi__top">
-                  <span class="aa-kpi__icon" aria-hidden="true">
-                    <i :class="card.icon"></i>
-                  </span>
-                </div>
+              <article v-for="card in progressCards" :key="card.key" class="aa-kpi" :title="card.description">
+                <span class="aa-kpi__icon" aria-hidden="true"><i :class="card.icon"></i></span>
                 <p class="aa-kpi__title">{{ card.title }}</p>
                 <p class="aa-kpi__value">{{ card.value }}</p>
-                <p class="aa-kpi__hint">{{ card.description }}</p>
+                <p class="visually-hidden">{{ card.description }}</p>
               </article>
             </div>
           </section>
@@ -85,6 +77,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
+import { setModalScrollLock } from '../../utils/modalScrollLock'
 import '../advancedAnalytics/AdvancedAnalyticsModal.css'
 import './BasicAnalyticsModal.css'
 
@@ -105,23 +98,23 @@ export default {
     }
   },
   watch: {
-    open(value) {
-      document.body.classList.toggle('modal-open', value)
-      if (value) {
-        this.returnFocusEl = captureReturnFocus()
-        this.$nextTick(() => {
-          this.$refs.closeButton?.focus?.()
-          this.$refs.dialogRoot?.focus?.()
-        })
-      } else if (this.returnFocusEl) {
-        const target = this.returnFocusEl
-        this.returnFocusEl = null
-        this.$nextTick(() => restoreReturnFocus(target))
-      }
+    open: {
+      immediate: true,
+      handler(value) {
+        setModalScrollLock(this, value)
+        if (value) {
+          this.returnFocusEl = captureReturnFocus()
+          this.$nextTick(() => this.$refs.dialogRoot?.focus?.({ preventScroll: true }))
+        } else if (this.returnFocusEl) {
+          const target = this.returnFocusEl
+          this.returnFocusEl = null
+          this.$nextTick(() => restoreReturnFocus(target))
+        }
+      },
     },
   },
   beforeUnmount() {
-    document.body.classList.remove('modal-open')
+    setModalScrollLock(this, false)
     restoreReturnFocus(this.returnFocusEl)
   },
   methods: {

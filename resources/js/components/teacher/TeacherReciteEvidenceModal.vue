@@ -52,7 +52,7 @@
 
             <details v-if="row?.transcript" class="teacher-recite-modal__asr">
               <summary>{{ t('teacher.transcript_label') }}</summary>
-              <p class="teacher-quran" lang="ar" dir="rtl">{{ row.transcript }}</p>
+              <p class="teacher-recognition-transcript" lang="ar" dir="rtl">{{ row.transcript }}</p>
               <small>{{ t('teacher.transcript_asr_note') }}</small>
             </details>
           </div>

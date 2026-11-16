@@ -45,9 +45,9 @@
         </section>
       </template>
       <template v-else>
+        <template v-for="(message, index) in groupedMessages" :key="message.id">
+        <p v-if="startsDay(message, groupedMessages[index - 1])" class="teacher-task-conversation__day-label">{{ messageDay(message.created_at) }}</p>
         <article
-          v-for="(message, index) in groupedMessages"
-          :key="message.id"
           class="teacher-task-conversation__bubble"
           :class="bubbleClasses(message, index)"
         >
@@ -68,6 +68,7 @@
               type="button"
               class="btn btn-link btn-sm teacher-task-conversation__delete"
               :aria-label="t('teacher.delete_audio_feedback')"
+              :title="t('teacher.delete_audio_feedback')"
               :disabled="deletingId === message.id"
               @click="deleteMessage(message)"
             >
@@ -75,6 +76,7 @@
             </button>
           </div>
         </article>
+        </template>
       </template>
       <div v-if="!normalizedMessages.length" class="teacher-task-conversation__empty">
         <span>{{ emptyLabel || t('teacher.task_conversation_empty') }}</span>
@@ -87,6 +89,7 @@
       <label class="visually-hidden" :for="composerId">{{ composerLabel || t('teacher.message_teacher') }}</label>
       <div class="teacher-task-conversation__composer-box">
         <textarea
+          v-auto-grow
           :id="composerId"
           v-model="draft"
           rows="1"
@@ -94,7 +97,7 @@
           dir="auto"
           :placeholder="composerPlaceholder || t('teacher.message_teacher_placeholder')"
           :disabled="saving || sendBlocked"
-          @keydown.enter.exact.prevent="onEnterSend"
+          @keydown.enter.exact="onEnterSend"
         ></textarea>
         <div v-if="recordingState !== 'idle'" class="teacher-task-conversation__recording" :class="`is-${recordingState}`">
           <span v-if="recordingState === 'requesting'" class="teacher-task-conversation__recording-pill">{{ t('teacher.preparing_recording') }}</span>
@@ -103,7 +106,7 @@
           </span>
           <template v-else-if="audioPreviewUrl">
             <audio class="teacher-task-conversation__recording-audio" controls preload="metadata" :src="audioPreviewUrl">{{ t('teacher.voice_note') }}</audio>
-            <button type="button" class="teacher-task-conversation__icon-btn" :aria-label="t('teacher.remove_voice_note')" @click="discardRecording">
+            <button type="button" class="teacher-task-conversation__icon-btn" :aria-label="t('teacher.remove_voice_note')" :title="t('teacher.remove_voice_note')" @click="discardRecording">
               <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </template>
@@ -137,7 +140,6 @@
 
 
 
-          <span v-if="draft.length && !errorText && !sent" class="teacher-task-conversation__composer-count">{{ draft.length }}</span>
         </div>
         <div class="teacher-task-conversation__composer-primary">
           <button
@@ -160,6 +162,7 @@
             :disabled="saving || sendBlocked || recordingState === 'recording' || !hasComposerContent"
           >
             <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send-fill'" aria-hidden="true"></i>
+            <span>{{ saving ? t('teacher.saving') : t('teacher.send_message') }}</span>
           </button>
         </div>
       </div>
@@ -201,6 +204,8 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import MessageBubble from '../dashboard/MessageBubble.vue'
 import AudioClip from '../AudioClip.vue'
 import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
+import autoGrow from '../../directives/autoGrow.js'
+import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
 import {
   chooseSupportedRecorderMimeType,
   createObjectUrlFromBlob,
@@ -227,10 +232,12 @@ const MAX_RECORDING_MS = 120000
 
 export default {
   name: 'TeacherTaskConversation',
+  directives: { autoGrow },
   emits: ['sending-change'],
   components: { MessageBubble, AudioClip, TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {
+    allowRecording: { type: Boolean, default: true },
     messages: { type: Array, default: () => [] },
     variant: { type: String, default: 'learner' },
     threadClass: { type: String, default: '' },
@@ -246,6 +253,7 @@ export default {
     emptyLabel: { type: String, default: '' },
     uiDirection: { type: String, default: '' },
     onSend: { type: Function, default: null },
+    onRetry: { type: Function, default: null },
     onDelete: { type: Function, default: null },
   },
   data() {
@@ -267,7 +275,6 @@ export default {
       recordingError: '',
       lastSentAtMs: 0,
       sendCooldownTimer: null,
-      failedPayloads: {},
       recordingLiveMessage: '',
       recordingRequestId: 0,
       disposed: false,
@@ -279,7 +286,7 @@ export default {
       return normalizeThreadMessages(this.messages, this.taskId || 0)
     },
     learnerDayGroups() {
-      const locale = this.$i18n?.locale?.value || 'en'
+      const locale = this.$i18n?.locale?.value || this.$i18n?.locale || 'en'
       return groupThreadMessagesByDay(this.normalizedMessages, this.t.bind(this), locale)
     },
     groupedMessages() {
@@ -288,7 +295,7 @@ export default {
       ))
     },
     recordingSupported() {
-      return typeof window !== 'undefined'
+      return this.allowRecording && typeof window !== 'undefined'
         && typeof window.MediaRecorder !== 'undefined'
         && Boolean(navigator.mediaDevices?.getUserMedia)
     },
@@ -299,6 +306,8 @@ export default {
     hasComposerContent() {
       return Boolean(this.draft.trim() || this.audioBlob)
     },
+    hasVoiceDraft() { return Boolean(this.audioBlob || ['requesting', 'recording', 'stopping'].includes(this.recordingState)) },
+    hasDraft() { return Boolean(this.draft.trim() || this.hasVoiceDraft) },
     maxRecordingMs() {
       return this.variant === 'learner' ? LEARNER_VOICE_MAX_MS : MAX_RECORDING_MS
     },
@@ -307,7 +316,7 @@ export default {
     },
     uiDirectionResolved() {
       if (this.uiDirection === 'rtl' || this.uiDirection === 'ltr') return this.uiDirection
-      const locale = this.$i18n?.locale?.value || 'en'
+      const locale = this.$i18n?.locale?.value || this.$i18n?.locale || 'en'
       return ['ar', 'ur'].includes(String(locale).split('-')[0]) ? 'rtl' : 'ltr'
     },
     isRtl() {
@@ -383,12 +392,14 @@ export default {
     },
     bubbleClasses(message, index) {
       const prev = this.groupedMessages[index - 1]
-      const grouped = prev && prev.sender === message.sender
+      const grouped = prev && prev.sender === message.sender && !this.startsDay(message, prev)
       return [
         `is-${message.sender}`,
         { 'is-unread': message.unread, 'is-grouped': grouped },
       ]
     },
+    startsDay(message, previous) { return !previous || new Date(message.created_at).toDateString() !== new Date(previous.created_at).toDateString() },
+    messageDay(value) { return formatLearnerDisplayDate(value, this.t.bind(this), this.$i18n?.locale?.value || this.$i18n?.locale || 'en') },
     showDelivery(message) {
       const outgoing = this.viewerRole === 'teacher'
         ? message.sender === 'teacher'
@@ -425,8 +436,14 @@ export default {
       el.scrollTop = el.scrollHeight
     },
     onEnterSend(event) {
-      if (event.shiftKey) return
+      if (event.isComposing || event.shiftKey) return
+      event.preventDefault()
       this.submit()
+    },
+    beginCooldown() {
+      clearTimeout(this.sendCooldownTimer)
+      this.lastSentAtMs = Date.now()
+      this.sendCooldownTimer = setTimeout(() => { this.lastSentAtMs = 0 }, SEND_COOLDOWN_MS)
     },
     async submit() {
       if (!this.onSend || (!this.draft.trim() && !this.audioBlob) || this.saving || this.sendBlocked) return
@@ -445,7 +462,7 @@ export default {
         if (this.taskId) saveThreadDraft(this.taskId, '')
         this.discardRecording()
         this.sent = true
-        this.lastSentAtMs = Date.now()
+        this.beginCooldown()
         this.$nextTick(() => this.scrollThread())
       } catch (error) {
         this.errorText = error?.response?.data?.message || error?.message || this.t('teacher.action_failed')
@@ -454,14 +471,19 @@ export default {
       }
     },
     async retryFailed(message) {
-      const payload = this.failedPayloads[message.id]
-      if (!payload || !this.onSend) return
+      if (!this.onRetry || this.saving || this.sendBlocked) return
+      this.saving = true
       this.errorText = ''
+      this.sent = false
       try {
-        await this.onSend(payload.body, payload.recording)
+        const result = await this.onRetry(message)
+        if (this.draft.trim() === result?.body) this.draft = ''
+        if (this.audioBlob && this.audioBlob === result?.blob) this.discardRecording()
+        this.sent = true
+        this.beginCooldown()
       } catch (error) {
         this.errorText = error?.response?.data?.message || error?.message || this.t('teacher.action_failed')
-      }
+      } finally { this.saving = false }
     },
     async startRecording() {
       if (!this.recordingSupported || this.saving) return

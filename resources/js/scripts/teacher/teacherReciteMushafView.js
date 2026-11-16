@@ -11,6 +11,7 @@ import { madaniPartsFromMushafWords } from './madaniGlyphParts.js'
 import { resolveQuranFontFamily } from '../quran/quranFonts.js'
 import { teacherCanonicalEvidenceWords } from './quranContent.js'
 import { wordReviewClass } from './wordReviewClass.js'
+import { wordWindow } from './playbackSync.js'
 
 const UTHMANI_FONT = resolveQuranFontFamily('uthmanic')
 
@@ -123,6 +124,8 @@ async function paintMadaniAyahs(verses, index, canonicalFallback, paintStatus = 
       text: word.text,
       fontFamily: word.fontFamily,
       madaniGlyph: true,
+      status: word.status,
+      accessibleText: String(statusMap?.get(`${word.ayah}:${word.word_index}`)?.text || ''),
       className: word.className,
       title: '',
       ayah: word.ayah,
@@ -206,8 +209,7 @@ export async function buildTeacherPlaybackMushafLines(row) {
           parts: [],
         })
       }
-      const start = Number(statusWord.start ?? statusWord.start_time)
-      const end = Number(statusWord.end ?? statusWord.end_time)
+      const timing = wordWindow(statusWord)
       lines.get(id).parts.push({
         text,
         fontFamily,
@@ -216,13 +218,14 @@ export async function buildTeacherPlaybackMushafLines(row) {
         word_index: isEnd ? null : wordIndex,
         isEnd,
         accessibleText: isEnd ? '' : String(statusWord.text || ''),
+        status: isEnd ? '' : (statusWord.status || 'unknown'),
         className: [
           'qpc-madani-word',
           'teacher-recite-mushaf__word',
           isEnd ? 'is-ayah-end' : assessedReviewClass(statusWord),
         ].filter(Boolean).join(' '),
-        start: Number.isFinite(start) && start >= 0 ? start : null,
-        end: Number.isFinite(end) && end >= (Number.isFinite(start) ? start : 0) ? end : null,
+        start: timing?.start ?? null,
+        end: timing?.end ?? null,
       })
     }
   }

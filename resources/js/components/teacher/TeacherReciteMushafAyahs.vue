@@ -15,7 +15,8 @@
           :title="part.title || undefined"
           :data-playback-key="partKey(line, part)"
           :aria-current="isActive(line, part) ? 'true' : undefined"
-          :aria-label="part.isEnd ? t('teacher.ayah_n', { n: part.ayah }) : (part.accessibleText || (interactive ? t('teacher.word_n', { n: Number(part.word_index) + 1 }) : undefined))"
+          :aria-pressed="interactive && partKey(line, part) ? isSelected(line, part) : undefined"
+          :aria-label="accessibleLabel(line, part)"
           :role="interactive && partKey(line, part) ? 'button' : undefined"
           :tabindex="interactive && partKey(line, part) ? 0 : undefined"
           @keydown.enter.prevent="choose(line, part)"
@@ -35,6 +36,8 @@
             :title="part.title || undefined"
             :data-playback-key="partKey(ayah, part)"
             :aria-current="isActive(ayah, part) ? 'true' : undefined"
+            :aria-pressed="interactive && partKey(ayah, part) ? isSelected(ayah, part) : undefined"
+            :aria-label="accessibleLabel(ayah, part)"
             :role="interactive && partKey(ayah, part) ? 'button' : undefined"
             :tabindex="interactive && partKey(ayah, part) ? 0 : undefined"
             @keydown.enter.prevent="choose(ayah, part)"
@@ -49,6 +52,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { studioWordStatusKey } from '../../scripts/teacher/teacherStudioState'
 
 export default {
   name: 'TeacherReciteMushafAyahs',
@@ -64,6 +68,15 @@ export default {
   },
   emits: ['select-word'],
   methods: {
+    accessibleLabel(ayah, part) {
+      const number = part?.ayah || ayah?.ayah
+      if (part?.isEnd) return this.t('teacher.ayah_n', { n: number })
+      if (!this.interactive || !this.partKey(ayah, part)) return part?.accessibleText || undefined
+      const word = part?.accessibleText || this.t('teacher.word_n', { n: Number(part.word_index) + 1 })
+      const mark = this.marks?.[this.partKey(ayah, part)]
+      const reviewKey = mark === 'confirmed' ? 'teacher.coaching_confirmed' : mark === 'dismissed' ? 'teacher.coaching_dismissed' : mark === 'reviewed' ? 'teacher.playback_status_reviewed' : ''
+      return [this.t('teacher.ayah_n', { n: number }), word, this.t(studioWordStatusKey(part?.status)), reviewKey ? this.t(reviewKey) : ''].filter(Boolean).join(' · ')
+    },
     partKey(ayah, part) {
       if (part?.isEnd || part?.word_index == null) return ''
       const number = Number(part?.ayah || ayah?.ayah)

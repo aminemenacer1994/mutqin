@@ -1,28 +1,20 @@
 <template>
   <div class="teacher-learning-plan">
-    <TeacherTabGuide kind="page" :title="t('teacher.learning_plan')" :description="t('teacher.plan_page_desc')" />
+    <TeacherTabGuide kind="page" :title="t('teacher.learning_plan')">
+      <template #action>
+        <div class="teacher-learning-plan__toolbar">
+          <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="openComposer()">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_new') }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="loadSuggestions">
+            <i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('teacher.plan_suggest_revisions') }}
+          </button>
+          <button v-if="templates.length" type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="showTemplates = !showTemplates">{{ t('teacher.plan_templates') }}</button>
+        </div>
+      </template>
+    </TeacherTabGuide>
     <p v-if="error" class="alert alert-danger mb-2" role="alert">{{ error }}</p>
     <p v-if="success" class="alert alert-success mb-2" role="status">{{ success }}</p>
-
-    <div class="teacher-learning-plan__toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-      <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="openComposer()">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-        {{ t('teacher.plan_new') }}
-      </button>
-      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="loadSuggestions">
-        <i class="bi bi-lightbulb" aria-hidden="true"></i>
-        {{ t('teacher.plan_suggest_revisions') }}
-      </button>
-      <button
-        v-if="templates.length"
-        type="button"
-        class="btn btn-outline-secondary btn-sm"
-        :disabled="busy"
-        @click="showTemplates = !showTemplates"
-      >
-        {{ t('teacher.plan_templates') }}
-      </button>
-    </div>
 
     <div v-if="showTemplates && templates.length" class="teacher-learning-plan__templates">
       <p class="teacher-learning-plan__templates-label">{{ t('teacher.plan_templates') }}</p>
@@ -39,7 +31,7 @@
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
 
-    <TeacherEmpty v-else-if="!plans.length" icon="bi bi-calendar-week" :message="t('teacher.plan_empty')" />
+    <TeacherEmpty v-else-if="!plans.length" class="teacher-empty-panel" icon="bi bi-calendar-week" :message="t('teacher.plan_empty')" />
 
     <div v-else class="teacher-learning-plan__board">
       <article
@@ -59,7 +51,7 @@
           </div>
           <p class="teacher-learning-plan__progress-label">{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</p>
         </header>
-        <div class="teacher-learning-plan__progress-bar" role="progressbar" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
+        <div class="teacher-learning-plan__progress-bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
           <span :style="{ width: `${planPercent(plan)}%` }"></span>
         </div>
         <p v-if="plan.notes" class="teacher-learning-plan__notes">{{ plan.notes }}</p>
@@ -122,15 +114,10 @@
       :busy="busy"
       :dirty="formDirty"
       :title="editingPlan ? t('teacher.plan_edit') : t('teacher.plan_new')"
-      :eyebrow="t('teacher.learning_plan')"
+      compact
       :close-label="t('teacher.close')"
       @close="closeComposer"
     >
-      <template #pills>
-        <span class="badge rounded-pill text-bg-light border">{{ form.cadence === 'monthly' ? t('teacher.plan_monthly') : t('teacher.plan_weekly') }}</span>
-        <span v-if="form.starts_on" class="badge rounded-pill text-bg-light border">{{ form.starts_on }}</span>
-        <span class="badge rounded-pill teacher-pill">{{ t('teacher.plan_activities') }} {{ form.items.length }}</span>
-      </template>
       <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
       <div class="teacher-plan-modal__body">
                 <div class="teacher-plan-modal__fields">
@@ -166,7 +153,7 @@
 
                 <article v-for="(item, index) in form.items" :key="`draft-${index}`" class="teacher-plan-modal__activity">
                   <header>
-                    <span>{{ index + 1 }}</span>
+                    <strong>{{ t('teacher.plan_kind') }} {{ index + 1 }}</strong>
                     <button type="button" class="teacher-plan-modal__remove" :aria-label="t('teacher.plan_remove_activity')" @click="form.items.splice(index, 1)">
                       <i class="bi bi-trash" aria-hidden="true"></i>
                     </button>
@@ -198,7 +185,10 @@
                     </label>
                   </div>
                   <p v-if="itemError(item)" class="text-danger small mt-2 mb-0" role="alert">{{ itemError(item) }}</p>
-                  <input v-model="item.instructions" class="form-control form-control-sm" type="text" :placeholder="t('teacher.plan_instructions_placeholder')">
+                  <label class="teacher-plan-modal__instructions">
+                    <span class="visually-hidden">{{ t('teacher.plan_instructions_placeholder') }}</span>
+                    <input v-model="item.instructions" class="form-control form-control-sm" type="text" :placeholder="t('teacher.plan_instructions_placeholder')">
+                  </label>
                 </article>
 
                 <section v-if="suggestions.length" class="teacher-plan-modal__suggestions">

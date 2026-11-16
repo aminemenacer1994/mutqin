@@ -27946,7 +27946,8 @@ word {
   overscroll-behavior: contain;
 }
 
-.modal-content:not(.keyboard-shortcuts-modal):not(.memorisation-checker-modal):not(.recordings-library-modal):not(.session-analytics-modal):not(.self-check-modal),
+/* TeacherDialog owns its own sizing and scrolling. */
+.modal-content:not(.teacher-dialog *):not(.keyboard-shortcuts-modal):not(.memorisation-checker-modal):not(.recordings-library-modal):not(.session-analytics-modal):not(.self-check-modal),
 .save-name-modal,
 .memorisation-checker-modal,
 .recordings-library-modal {

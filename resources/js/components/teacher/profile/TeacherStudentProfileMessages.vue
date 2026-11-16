@@ -1,11 +1,9 @@
 <template>
   <TeacherSectionPane tone="neutral" flat>
-    <TeacherTabGuide kind="page" :title="t('teacher.messages')" :description="t('teacher.messages_page_desc')" />
     <section class="teacher-direct-thread teacher-direct-thread--chat" :aria-label="t('teacher.messages')">
       <header class="teacher-direct-thread__head">
-        <span class="teacher-direct-thread__mark" aria-hidden="true">{{ studentInitial }}</span>
         <div class="teacher-direct-thread__head-copy">
-          <h3>{{ profile.student.name }}</h3>
+          <h2>{{ t('teacher.messages') }}</h2>
         </div>
         <span v-if="messages.length" class="teacher-direct-thread__badge">{{ messages.length }}</span>
       </header>
@@ -15,9 +13,9 @@
           <span aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
           <p>{{ t('teacher.direct_messages_empty') }}</p>
         </div>
+        <template v-for="(message, index) in messages" :key="message.id">
+        <p v-if="startsDay(index)" class="teacher-direct-thread__day">{{ messageDay(message.created_at) }}</p>
         <article
-          v-for="(message, index) in messages"
-          :key="message.id"
           class="teacher-direct-thread__bubble"
           :class="bubbleClass(message, index)"
         >
@@ -48,12 +46,14 @@
             </button>
           </footer>
         </article>
+        </template>
       </div>
 
       <form class="teacher-direct-thread__composer" @submit.prevent="send">
         <label class="visually-hidden" for="teacher-direct-reply">{{ t('teacher.message') }}</label>
         <div class="teacher-direct-thread__composer-box">
           <textarea
+            v-auto-grow
             id="teacher-direct-reply"
             v-model="draft"
             rows="1"
@@ -61,21 +61,20 @@
             dir="auto"
             :placeholder="t('teacher.direct_message_prompt')"
             :disabled="saving"
-            @keydown.enter.exact.prevent="send"
+            @keydown.enter.exact="onEnterSend"
           ></textarea>
-          <span class="teacher-direct-thread__count">{{ draft.length }}/2000</span>
         </div>
         <div class="teacher-direct-thread__composer-foot">
           <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
           <p v-if="error" role="alert" class="teacher-direct-thread__status is-error">{{ error }}</p>
           <p v-else-if="success" role="status" class="teacher-direct-thread__status is-success">{{ success }}</p>
           <div class="teacher-direct-thread__composer-actions">
-            <button type="button" class="teacher-direct-thread__tool" :disabled="!draft && !hasVoiceNote" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="clearComposer">
+            <button v-if="draft || hasVoiceNote" type="button" class="teacher-direct-thread__tool" :disabled="saving" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="clearComposer">
               <i class="bi bi-eraser" aria-hidden="true"></i>
             </button>
             <button type="submit" class="btn btn-primary btn-sm teacher-direct-thread__send" :disabled="saving || !canSend" :aria-label="t('teacher.send_message')">
               <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send-fill'" aria-hidden="true"></i>
-              <span class="d-none d-sm-inline">{{ t('teacher.send_message') }}</span>
+              <span>{{ t('teacher.send_message') }}</span>
             </button>
           </div>
         </div>
@@ -89,23 +88,21 @@ import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
 import TeacherAudioFeedbackPlayer from '../TeacherAudioFeedbackPlayer.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
-import TeacherTabGuide from '../TeacherTabGuide.vue'
 import TeacherVoiceNoteControls from '../TeacherVoiceNoteControls.vue'
+import autoGrow from '../../../directives/autoGrow.js'
+import { formatLearnerDisplayDate } from '../../../utils/learnerDisplayDate.js'
 
 export default {
   name: 'TeacherStudentProfileMessages',
-  components: { TeacherAudioFeedbackPlayer, TeacherSectionPane, TeacherTabGuide, TeacherVoiceNoteControls },
+  directives: { autoGrow },
+  components: { TeacherAudioFeedbackPlayer, TeacherSectionPane, TeacherVoiceNoteControls },
   mixins: [i18nMixin],
   props: { profile: { type: Object, required: true }, formatWhen: { type: Function, required: true } },
-  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null, stickToBottom: true, voiceState: { hasRecording: false, active: false } } },
+  data() { return { draft: '', saving: false, deletingId: null, error: '', success: '', sent: [], synced: [], removed: [], pollTimer: null, threadRequest: 0, disposed: false, stickToBottom: true, voiceState: { hasRecording: false, active: false } } },
   watch: {
     'profile.student.id'() { this.resetThread() },
   },
   computed: {
-    studentInitial() {
-      const name = String(this.profile?.student?.name || '').trim()
-      return name ? name.charAt(0).toUpperCase() : '?'
-    },
     messages() {
       const removed = new Set(this.removed)
       const rows = [...(this.profile.payload?.messages || []), ...this.synced, ...this.sent]
@@ -131,9 +128,13 @@ export default {
   updated() {
     if (this.stickToBottom) this.scrollThread()
   },
-  beforeUnmount() { window.clearInterval(this.pollTimer) },
+  beforeUnmount() { this.disposed = true; this.threadRequest += 1; window.clearInterval(this.pollTimer) },
   methods: {
     resetThread() {
+      this.threadRequest += 1
+      this.saving = false
+      this.deletingId = null
+      this.$refs.voice?.discardRecording()
       this.sent = []
       this.synced = []
       this.removed = []
@@ -152,43 +153,54 @@ export default {
       const body = this.draft.trim()
       const recording = this.$refs.voice?.recordingPayload?.() || null
       if ((!body && !recording) || this.saving) return
+      const studentId = this.profile.student.id
+      this.threadRequest += 1
       this.saving = true
       this.error = ''
       try {
-        const payload = await learningApi.sendTeacherStudentMessage(this.profile.student.id, body, recording)
+        const payload = await learningApi.sendTeacherStudentMessage(studentId, body, recording)
+        if (this.disposed || studentId !== this.profile.student.id) return
         this.sent.push(payload.message)
         this.draft = ''
         this.$refs.voice?.discardRecording()
         this.success = this.t('teacher.message_sent')
       } catch (error) {
-        this.error = error?.response?.data?.message || this.t('teacher.action_failed')
-      } finally { this.saving = false }
+        if (!this.disposed && studentId === this.profile.student.id) this.error = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally { if (!this.disposed && studentId === this.profile.student.id) this.saving = false }
     },
     async deleteMessage(message) {
       if (!message?.id || this.deletingId) return
+      const studentId = this.profile.student.id
+      this.threadRequest += 1
       this.deletingId = message.id
       this.error = ''
       try {
-        await learningApi.deleteTeacherStudentMessage(this.profile.student.id, message.id)
-        this.removed.push(message.id)
+        await learningApi.deleteTeacherStudentMessage(studentId, message.id)
+        if (!this.disposed && studentId === this.profile.student.id) this.removed.push(message.id)
       } catch (error) {
-        this.error = error?.response?.data?.message || this.t('teacher.action_failed')
-      } finally { this.deletingId = null }
+        if (!this.disposed && studentId === this.profile.student.id) this.error = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally { if (!this.disposed && studentId === this.profile.student.id) this.deletingId = null }
     },
     async refreshThread() {
-      if (!this.profile?.student?.id || this.saving) return
+      if (!this.profile?.student?.id || this.saving || this.disposed) return
+      const studentId = this.profile.student.id
+      const request = ++this.threadRequest
       try {
-        const payload = await learningApi.getTeacherStudentMessages(this.profile.student.id)
+        const payload = await learningApi.getTeacherStudentMessages(studentId)
+        if (this.disposed || request !== this.threadRequest || studentId !== this.profile.student.id) return
         this.synced = payload?.messages || []
       } catch (_) { /* keep thread during polling failures */ }
     },
     senderName(message) {
       return message.sender_name || (message.sender === 'teacher' ? this.t('teacher.you') : this.profile.student.name)
     },
+    startsDay(index) { return !index || new Date(this.messages[index]?.created_at).toDateString() !== new Date(this.messages[index - 1]?.created_at).toDateString() },
+    messageDay(value) { return formatLearnerDisplayDate(value, this.t.bind(this), this.$i18n?.locale?.value || this.$i18n?.locale || 'en') },
+    onEnterSend(event) { if (event.isComposing || event.shiftKey) return; event.preventDefault(); this.send() },
     isGrouped(index) {
       const previous = this.messages[index - 1]
       const current = this.messages[index]
-      return Boolean(previous && previous.sender === current.sender)
+      return Boolean(previous && previous.sender === current.sender && !this.startsDay(index))
     },
     bubbleClass(message, index) {
       return [

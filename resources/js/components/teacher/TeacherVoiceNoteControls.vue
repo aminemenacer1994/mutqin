@@ -14,11 +14,11 @@
         :pause-label="t('teacher.pause_recording')"
       />
       <div class="teacher-voice-note__preview-actions">
-        <button type="button" class="btn btn-outline-secondary btn-sm" :aria-label="t('teacher.rerecord_voice_note')" @click="rerecord">
+        <button type="button" class="btn btn-outline-secondary btn-sm" :aria-label="t('teacher.rerecord_voice_note')" :title="t('teacher.rerecord_voice_note')" @click="rerecord">
           <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
           <span>{{ t('teacher.rerecord_voice_note') }}</span>
         </button>
-        <button type="button" class="btn btn-link btn-sm teacher-voice-note__discard" :aria-label="t('teacher.remove_voice_note')" @click="discardRecording">
+        <button type="button" class="btn btn-link btn-sm teacher-voice-note__discard" :aria-label="t('teacher.remove_voice_note')" :title="t('teacher.remove_voice_note')" @click="discardRecording">
           <i class="bi bi-trash3" aria-hidden="true"></i>
           <span class="d-none d-sm-inline">{{ t('teacher.remove_voice_note') }}</span>
         </button>
@@ -31,6 +31,7 @@
       class="btn btn-outline-secondary btn-sm"
       :disabled="disabled"
       :aria-label="t('teacher.pause_voice_note')"
+      :title="t('teacher.pause_voice_note')"
       @click="pauseRecording"
     >
       <i class="bi bi-pause-fill" aria-hidden="true"></i>
@@ -42,6 +43,7 @@
       class="btn btn-outline-secondary btn-sm"
       :disabled="disabled"
       :aria-label="t('teacher.resume_voice_note')"
+      :title="t('teacher.resume_voice_note')"
       @click="resumeRecording"
     >
       <i class="bi bi-mic" aria-hidden="true"></i>
@@ -54,6 +56,7 @@
       :class="{ 'is-recording': recordingState === 'recording' || recordingState === 'paused' }"
       :disabled="disabled || recordingState === 'requesting' || recordingState === 'stopping'"
       :aria-label="recordingState === 'recording' || recordingState === 'paused' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
+      :title="recordingState === 'recording' || recordingState === 'paused' ? t('teacher.stop_voice_note') : t('teacher.record_voice_note')"
       @click="recordingState === 'recording' || recordingState === 'paused' ? stopRecording() : startRecording()"
     >
       <i class="bi" :class="recordingState === 'recording' || recordingState === 'paused' ? 'bi-stop-fill' : 'bi-mic'" aria-hidden="true"></i>

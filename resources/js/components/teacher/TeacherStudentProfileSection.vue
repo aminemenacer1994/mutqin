@@ -3,14 +3,14 @@
     <div v-if="loading" class="teacher-skeletons"><div class="teacher-skeleton"></div></div>
 
     <template v-else-if="profile">
+      <nav class="teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
+        <button type="button" @click="$emit('back')"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
+      </nav>
       <header class="card teacher-profile-hero teacher-profile-hero--compact">
         <div class="card-body teacher-profile-hero__body">
           <div class="teacher-profile-hero__identity">
             <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
             <div class="teacher-profile-hero__copy">
-              <nav class="teacher-profile-hero__eyebrow teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
-                <button type="button" @click="$emit('back')"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
-              </nav>
               <h2>{{ profile.student.name }}</h2>
               <div class="teacher-profile-summary">
                 <span v-if="profile.student.organisation">{{ profile.student.organisation }}</span>
@@ -24,10 +24,10 @@
             </div>
           </div>
           <div class="teacher-profile-hero__actions">
-            <button type="button" class="btn btn-outline-secondary" @click="selectTab('messages')">
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="selectTab('messages')">
               <i class="bi bi-chat-dots" aria-hidden="true"></i> {{ t('teacher.message_student') }}
             </button>
-            <button type="button" class="btn btn-primary teacher-profile-hero__assign" @click="$emit('assign-revision', profile.student)">
+            <button type="button" class="btn btn-primary btn-sm teacher-profile-hero__assign" @click="$emit('assign-revision', profile.student)">
               <i class="bi bi-journal-plus" aria-hidden="true"></i>
               {{ t('teacher.assign_task') }}
             </button>
@@ -82,6 +82,7 @@
           v-else-if="section === 'tasks'"
           :profile="tabProfile"
           :format-when="formatWhen"
+          @assign-revision="$emit('assign-revision', $event)"
         />
         <TeacherStudentProfileMessages v-else-if="section === 'messages'" :profile="tabProfile" :format-when="formatWhen" />
       </div>

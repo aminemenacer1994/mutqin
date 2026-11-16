@@ -34,10 +34,11 @@ let selectUid = 0
 export default {
   name: 'TeacherSurahSelect',
   mixins: [i18nMixin],
-  props: { modelValue: { type: [String, Number], default: '' }, surahs: { type: Array, default: () => [] }, disabled: Boolean },
+  props: { id: { type: String, default: '' }, modelValue: { type: [String, Number], default: '' }, surahs: { type: Array, default: () => [] }, disabled: Boolean },
   emits: ['update:modelValue'],
-  data() { return { inputId: `teacher-surah-${++selectUid}`, query: '', expanded: false, active: 0 } },
+  data() { return { fallbackId: `teacher-surah-${++selectUid}`, query: '', expanded: false, active: 0 } },
   computed: {
+    inputId() { return this.id || this.fallbackId },
     filtered() {
       const current = this.surahs.find(s => String(s.number) === String(this.modelValue))
       const needle = this.query === this.label(current) ? '' : this.query.toLocaleLowerCase().trim()

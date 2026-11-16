@@ -14,7 +14,7 @@ const PAGE = {
 const COLORS = {
   ink: [28, 25, 23],
   muted: [107, 99, 90],
-  accent: [63, 111, 109],
+  accent: [139, 94, 60],
   line: [210, 200, 185],
   soft: [247, 243, 236],
 }

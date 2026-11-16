@@ -6,18 +6,13 @@
     :close-label="t('teacher.close')"
     :busy="saving"
     :dirty="isDirty"
+    compact
     @close="$emit('close')"
   >
-    <template #pills>
-      <span v-if="selectedSurah" class="badge rounded-pill text-bg-light border">{{ selectedSurah.number }}. {{ selectedSurah.name }}</span>
-      <span v-if="form.ayah_start && form.ayah_end" class="badge rounded-pill text-bg-light border">{{ form.ayah_start }}–{{ form.ayah_end }}</span>
-      <span v-if="form.due_at" class="badge rounded-pill text-bg-light border">{{ form.due_at }}</span>
-      <span class="badge rounded-pill teacher-pill">{{ priorityLabel }}</span>
-    </template>
-    <form :id="formId" @submit.prevent="submit">
+    <form :id="formId" class="teacher-task-form" @submit.prevent="submit">
       <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
-      <div class="row g-3">
-        <div class="col-md-6">
+      <div class="teacher-form-grid teacher-form-grid--task">
+        <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-student`">{{ t('teacher.student') }}</label>
           <div class="teacher-task-modal__student-picker">
             <input
@@ -48,33 +43,33 @@
             </ul>
           </div>
         </div>
-        <div class="col-md-6">
+        <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-category`">{{ t('teacher.hifz_task_type') }}</label>
           <select :id="`${formId}-category`" ref="categoryField" class="form-select" :value="form.task_type || ''" required @change="onTaskTypeChange($event.target.value)">
             <option value="" disabled>{{ t('teacher.hifz_choose_type') }}</option>
             <option v-for="type in taskTypes" :key="type.id" :value="type.id">{{ t(type.labelKey) }}</option>
           </select>
         </div>
-        <div class="col-md-6">
+        <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }}</label>
-          <TeacherSurahSelect :model-value="form.surah_number" :surahs="surahs" :disabled="saving" @update:model-value="onSurahChange" />
+          <TeacherSurahSelect :id="`${formId}-surah`" :model-value="form.surah_number" :surahs="surahs" :disabled="saving" @update:model-value="onSurahChange" />
         </div>
-        <div class="col-6 col-md-3">
+        <div class="teacher-form-field teacher-form-field--quarter">
           <label class="form-label" :for="`${formId}-from`">{{ t('teacher.from') }}</label>
           <input :id="`${formId}-from`" class="form-control" :value="form.ayah_start" type="number" min="1" :max="selectedSurahAyahCount || undefined" :aria-invalid="rangeError ? 'true' : 'false'" :aria-describedby="rangeError ? `${formId}-range-error` : undefined" inputmode="numeric" required @input="patch('ayah_start', Number($event.target.value))">
         </div>
-        <div class="col-6 col-md-3">
+        <div class="teacher-form-field teacher-form-field--quarter">
           <label class="form-label" :for="`${formId}-to`">{{ t('teacher.to') }}</label>
           <input :id="`${formId}-to`" class="form-control" :value="form.ayah_end" type="number" min="1" :max="selectedSurahAyahCount || undefined" :aria-invalid="rangeError ? 'true' : 'false'" :aria-describedby="rangeError ? `${formId}-range-error` : undefined" inputmode="numeric" required @input="patch('ayah_end', Number($event.target.value))">
         </div>
-        <div v-if="rangeError" class="col-12">
+        <div v-if="rangeError" class="teacher-form-field teacher-form-field--full">
           <p :id="`${formId}-range-error`" class="text-danger small mb-0" role="alert">{{ rangeError }}</p>
         </div>
-        <div class="col-md-4">
+        <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-reps`">{{ t('teacher.repetitions') }}</label>
           <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required @input="patch('repetition_target', $event.target.value)">
         </div>
-        <div class="col-md-4">
+        <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_date') }}</label>
           <input
             :id="`${formId}-due`"
@@ -90,7 +85,7 @@
           >
           <p v-if="showDueError" :id="`${formId}-due-error`" class="text-danger small mb-0 mt-1" role="alert">{{ dueError }}</p>
         </div>
-        <div class="col-md-4">
+        <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-priority`">{{ t('teacher.priority') }}</label>
           <select :id="`${formId}-priority`" class="form-select" :value="form.priority || 'normal'" @change="patch('priority', $event.target.value)">
             <option value="low">{{ t('teacher.priority_low') }}</option>
@@ -98,9 +93,9 @@
             <option value="high">{{ t('teacher.priority_high') }}</option>
           </select>
         </div>
-        <div class="col-12">
+        <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
-          <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="3" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
+          <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
         </div>
       </div>
     </form>
@@ -181,11 +176,6 @@ export default {
     },
     taskTypes() {
       return TEACHER_TASK_TYPES
-    },
-    priorityLabel() {
-      const key = `teacher.priority_${this.form.priority || 'normal'}`
-      const label = this.t(key)
-      return label && label !== key ? label : this.t('teacher.priority_normal')
     },
     minDueDate() {
       const today = new Date()

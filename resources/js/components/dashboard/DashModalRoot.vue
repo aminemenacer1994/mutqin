@@ -28,8 +28,10 @@
 import {
   captureReturnFocus,
   handleModalKeydown,
+  getFocusableElements,
   restoreReturnFocus,
 } from '../../utils/modalFocus.js'
+import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 
 export default {
   name: 'DashModalRoot',
@@ -49,16 +51,22 @@ export default {
     }
   },
   watch: {
-    open(value) {
+    open: { immediate: true, handler(value) {
       if (value) {
         this.returnFocusEl = captureReturnFocus(this.$refs.panelEl)
         this.lockScroll(true)
+        this.$nextTick(() => {
+          const panel = this.$refs.panelEl
+          if (!this.open || !panel || panel.contains(document.activeElement)) return
+          const first = getFocusableElements(panel)[0] || this.$refs.rootEl
+          first?.focus({ preventScroll: true })
+        })
       } else {
         this.lockScroll(false)
         restoreReturnFocus(this.returnFocusEl)
         this.returnFocusEl = null
       }
-    },
+    } },
   },
   beforeUnmount() {
     this.lockScroll(false)
@@ -80,9 +88,7 @@ export default {
     },
     lockScroll(locked) {
       if (typeof document === 'undefined') return
-      document.documentElement.classList.toggle('dash-drawer-open', locked)
-      document.body.classList.toggle('dash-drawer-open', locked)
-      document.body.classList.toggle('modal-open', locked)
+      setModalScrollLock(this, locked, { dashboard: true })
     },
   },
 }

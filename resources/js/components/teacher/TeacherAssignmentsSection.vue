@@ -149,15 +149,16 @@
     </TeacherDialog>
     <TeacherDialog
       :open="Boolean(messageItem)"
+      size="md"
+      compact
       :busy="messageSending || reviewSaving"
       :title="messageItem ? messageItem.studentName : t('teacher.messages')"
       :close-label="t('teacher.close')"
       @close="closeMessages"
     >
       <template v-if="messageItem" #pills>
-        <span class="badge rounded-pill text-bg-light border">{{ messageItem.title }}</span>
-        <span class="badge rounded-pill text-bg-light border">{{ messageItem.statusLabel }}</span>
-        <span v-if="messageItem.categoryLabel" class="badge rounded-pill teacher-pill">{{ messageItem.categoryLabel }}</span>
+        <span class="teacher-dialog__context">{{ messageItem.title }}</span>
+        <span class="teacher-badge" :class="`teacher-badge--${messageItem.statusTone || 'muted'}`">{{ messageItem.statusLabel }}</span>
       </template>
       <template v-if="messageItem">
         <div v-if="messageItem.status === 'awaiting_confirmation'" class="d-flex flex-wrap gap-2 mb-3">

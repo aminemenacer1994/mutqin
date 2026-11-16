@@ -1,3 +1,5 @@
+import { isLearnerSubmitted } from './learnerDashboard.js'
+
 /**
  * Pending assignments with due dates, earliest first.
  * @param {Array<object>} assignments
@@ -10,7 +12,7 @@ export function buildUpcomingAssignments(assignments, isComplete, max = 3, optio
   const now = options.now instanceof Date ? options.now : new Date()
   const rows = (Array.isArray(assignments) ? assignments : [])
     .filter((row) => {
-      if (!row?.assignment?.due_at || isComplete(row)) return false
+      if (!row?.assignment?.due_at || isComplete(row) || isLearnerSubmitted(row)) return false
       const days = dueDaysFromNow(row.assignment.due_at, now)
       if (days === null || days <= 0) return false
       if (exclude.has(Number(row.id))) return false
@@ -27,9 +29,8 @@ export function buildUpcomingAssignments(assignments, isComplete, max = 3, optio
  * @param {Date} [now]
  */
 export function shouldShowUpcomingPanel(assignments, isComplete, todoIds = [], now = new Date()) {
-  void todoIds
   if (!Array.isArray(assignments) || assignments.length === 0) return false
-  return buildUpcomingAssignments(assignments, isComplete, 1, { now }).length > 0
+  return buildUpcomingAssignments(assignments, isComplete, 1, { now, excludeTodoIds: todoIds }).length > 0
 }
 
 export function dueDaysFromNow(dueAt, now = new Date()) {

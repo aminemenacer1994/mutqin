@@ -685,11 +685,11 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/complete`)
     return data
   },
-  async sendLearnerAssignmentMessage(recipientId, body, recording = null) {
+  async sendLearnerAssignmentMessage(recipientId, body, recording = null, clientMessageId = null) {
     const form = new FormData()
     const text = String(body || '').trim()
     if (text) form.append('body', text)
-    form.append('client_message_id', createClientMessageId())
+    form.append('client_message_id', clientMessageId || createClientMessageId())
     if (recording?.blob) {
       form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
       if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))

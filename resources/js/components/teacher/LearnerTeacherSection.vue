@@ -114,9 +114,12 @@
                 class="learner-teacher__filter"
                 :class="{ 'is-active': activeFilter === filter.id }"
                 role="tab"
+                :id="`learner-filter-${filter.id}`"
+                :tabindex="activeFilter === filter.id ? 0 : -1"
                 :aria-selected="activeFilter === filter.id ? 'true' : 'false'"
                 :aria-controls="`learner-teacher-panel-${filter.id}`"
                 @click="setFilter(filter.id)"
+                @keydown="onTaskFilterKeydown($event, filter.id)"
               >
                 {{ filter.label }}
                 <span class="learner-teacher__filter-count">{{ filter.count }}</span>
@@ -137,6 +140,7 @@
             </button>
             </div>
 
+            <div :id="`learner-teacher-panel-${activeFilter}`" :aria-labelledby="`learner-filter-${activeFilter}`" role="tabpanel">
             <p
               v-if="activeFilter === 'todo' && pendingCount === 0"
               class="learner-teacher__uptodate"
@@ -148,7 +152,7 @@
               {{ t('teacher.learner_assignments_no_completed') }}
             </p>
 
-            <ul v-if="listItems.length" :id="`learner-teacher-panel-${activeFilter}`" class="learner-teacher__list learner-teacher__card-list learner-teacher__card-list--tasks" role="tabpanel">
+            <ul v-if="listItems.length" class="learner-teacher__list learner-teacher__card-list learner-teacher__card-list--tasks">
               <li v-for="(item, index) in listItems" :key="item.id">
                 <article
                   :id="`learner-task-card-${item.id}`"
@@ -196,6 +200,7 @@
                           @click="!primaryAction(item)?.href && onPrimaryAction(item)"
                         >
                           <i class="bi" :class="primaryAction(item).icon" aria-hidden="true"></i>
+                          <span>{{ primaryAction(item).label }}</span>
                         </component>
                         <button
                           type="button"
@@ -228,6 +233,8 @@
                       </div>
                     </div>
                   </div>
+
+                  <p v-if="hasInstruction(item) && !isCardExpanded(item)" class="learner-teacher__instruction-preview">{{ instructionPreview(item) }}</p>
 
                   <div
                     v-show="!cardHasExpandableContent(item) || isCardExpanded(item)"
@@ -333,6 +340,7 @@
                 </article>
               </li>
             </ul>
+            </div>
 
             <div v-if="showViewAll" class="learner-teacher__footer">
               <button type="button" class="dash-text-link" @click="visibleLimit += listLimit">
@@ -360,7 +368,7 @@
         <LearnerTeacherUpcoming
           v-if="showUpcomingPanel"
           :assignments="assignments"
-          :todo-ids="todoAssignmentIds"
+          :todo-ids="listItems.map(item => item.id)"
           :is-complete="isTeacherApproved"
           :mobile-collapsible="isMobileLayout"
           @open-task="scrollToAssignment"
@@ -444,21 +452,16 @@
     />
     </Teleport>
 
-    <Teleport to="body">
-    <div v-if="selectedDirectThread" class="user-dashboard dash-student-dialog-root">
-    <button
-      type="button"
-      class="dash-drawer__backdrop"
-      :aria-label="t('common.close')"
-      @click="closeDirectThread"
-    ></button>
-    <section
-      class="dash-student-dialog dash-student-dialog--thread"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="`direct-thread-title-${selectedDirectThread.teacher_id}`"
-      tabindex="-1"
+    <DashModalRoot
+      :open="Boolean(selectedDirectThread)"
+      root-class="dash-student-dialog-root"
+      panel-class="dash-student-dialog dash-student-dialog--thread"
+      :labelled-by="selectedDirectThread ? `direct-thread-title-${selectedDirectThread.teacher_id}` : ''"
+      :close-on-backdrop="!directSending"
+      :close-on-escape="!directSending"
+      @close="closeDirectThread"
     >
+      <template v-if="selectedDirectThread">
       <header class="dash-drawer__head">
         <div class="dash-drawer__head-main">
           <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-chat-left-text"></i></span>
@@ -467,11 +470,21 @@
             <p class="dash-drawer__subtitle">{{ t('teacher.messages') }}</p>
           </div>
         </div>
-        <button type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" @click="closeDirectThread">
+        <button ref="directThreadClose" type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" :title="t('common.close')" :disabled="directSending" @click="closeDirectThread">
           <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
       </header>
+      <div v-if="confirmDirectDiscard" class="learner-task-thread-modal__discard" role="alert">
+        <p>{{ t('teacher.unsaved_changes') }}</p>
+        <button ref="directKeepEditing" type="button" class="dash-btn" @click="keepDirectEditing">{{ t('teacher.keep_editing') }}</button>
+        <button type="button" class="dash-btn" @click="discardDirectThread">{{ t('teacher.discard_changes') }}</button>
+      </div>
       <div class="dash-student-dialog__body">
+          <section v-if="selectedDirectFeedback" class="learner-direct-feedback" :aria-label="t('dashboard.home_recent_feedback')">
+            <h3>{{ t('dashboard.home_recent_feedback') }}</h3>
+            <p v-if="selectedDirectFeedback.body || selectedDirectFeedback.preview" dir="auto">{{ selectedDirectFeedback.body || selectedDirectFeedback.preview }}</p>
+            <TeacherAudioFeedbackPlayer v-if="selectedDirectFeedback.audio?.available && selectedDirectFeedback.audio?.url" :src="selectedDirectFeedback.audio.url" :duration-ms="selectedDirectFeedback.audio.duration_ms" compact />
+          </section>
           <TeacherTaskConversation
             ref="directConversation"
             :messages="selectedDirectThread.messages || []"
@@ -483,12 +496,13 @@
             :composer-placeholder="t('teacher.direct_message_prompt_student')"
             :empty-label="t('teacher.direct_messages_empty_student')"
             :ui-direction="directThreadDirection"
+            :allow-recording="false"
             :on-send="sendDirectMessage"
+            @sending-change="directSending = $event"
           />
       </div>
-    </section>
-    </div>
-    </Teleport>
+      </template>
+    </DashModalRoot>
 
     <Teleport to="body">
     <div v-if="selectedSubmission" class="user-dashboard dash-student-dialog-root">
@@ -622,6 +636,8 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { setModalScrollLock } from '../../utils/modalScrollLock.js'
+import DashModalRoot from '../dashboard/DashModalRoot.vue'
 import { assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
@@ -654,11 +670,13 @@ import {
   learnerWeeklyProgressFromAssignments,
 } from '../../scripts/teacher/learnerDashboard.js'
 import { shouldShowUpcomingPanel } from '../../scripts/teacher/learnerUpcoming.js'
+import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../../scripts/teacher/taskTypes.js'
 import {
   cardHasExpandableContent as learnerCardHasExpandableContent,
   resolveCardExpanded,
 } from '../../scripts/teacher/learnerCardExpansion.js'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
+import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
 import LearnerWordCorrections from './LearnerWordCorrections.vue'
 import LearnerTeacherUpcoming from './LearnerTeacherUpcoming.vue'
@@ -676,7 +694,9 @@ const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue', 'awaiting_
 export default {
   name: 'LearnerTeacherSection',
   components: {
+    DashModalRoot,
     TeacherTaskConversation,
+    TeacherAudioFeedbackPlayer,
     LearnerTeacherLearning,
     LearnerWordCorrections,
     LearnerTeacherUpcoming,
@@ -708,11 +728,16 @@ export default {
       directSuccess: {},
       directSaving: null,
       directPollTimer: null,
+      directPollVersions: {},
+      directDisposed: false,
       listLimit: 4,
       visibleLimit: 4,
       selectedItem: null,
       threadTask: null,
       selectedDirectThread: null,
+      selectedDirectFeedback: null,
+      directSending: false,
+      confirmDirectDiscard: false,
       selectedSubmission: null,
       recitationReviewRow: null,
       expandedMistakeDetailsId: null,
@@ -802,12 +827,18 @@ export default {
       return shouldShowUpcomingPanel(
         this.assignments,
         (row) => this.isTeacherApproved(row),
-        this.todoAssignmentIds,
+        this.listItems.map(item => item.id),
       )
+    },
+    teacherNames() {
+      return [...new Set([
+        ...this.assignments.map(row => row?.teacher_name),
+        ...(this.support?.direct_threads || []).map(thread => thread.teacher_name),
+      ].filter(Boolean))]
     },
     sectionHeading() {
       const title = this.ldt('teacher.learner_section_title')
-      const names = [...new Set(this.assignments.map((row) => row?.teacher_name).filter(Boolean))]
+      const names = this.teacherNames
       if (names.length === 1) return `${title} · ${names[0]}`
       if (names.length > 1) {
         return `${title} · ${this.ldtp('teacher.learner_teachers_context', names.length, { n: names.length })}`
@@ -815,7 +846,7 @@ export default {
       return title
     },
     primaryTeacherName() {
-      const names = [...new Set(this.assignments.map((row) => row?.teacher_name).filter(Boolean))]
+      const names = this.teacherNames
       if (names.length === 1) return names[0]
       if (names.length > 1) {
         return this.ldtp('teacher.learner_teachers_context', names.length, { n: names.length })
@@ -967,16 +998,12 @@ export default {
     },
   },
   beforeUnmount() {
-    if (typeof document !== 'undefined') {
-      document.body.classList.remove('modal-open')
-      document.documentElement.classList.remove('dash-drawer-open')
-      document.body.classList.remove('dash-drawer-open')
-    }
+    this.directDisposed = true
+    setModalScrollLock(this, false)
     window.clearInterval(this.directPollTimer)
     if (this.mobileMedia?.removeEventListener) {
       this.mobileMedia.removeEventListener('change', this.syncMobileLayout)
     }
-    this.setMistakeDrawerScrollLock(false)
   },
   mounted() {
     this.directPollTimer = window.setInterval(() => this.refreshDirectThreads(), 10000)
@@ -1001,31 +1028,58 @@ export default {
       this.activeFilter = this.pendingCount > 0 ? 'todo' : 'all'
     },
     syncModalOpen() {
-      if (typeof document === 'undefined') return
-      document.body.classList.toggle(
-        'modal-open',
-        Boolean(this.threadTask) || Boolean(this.selectedDirectThread) || Boolean(this.selectedSubmission),
-      )
+      const drawerOpen = Boolean(this.feedbackDrawerOpen || this.mistakeDrawerRow)
+      setModalScrollLock(this, Boolean(this.threadTask || this.selectedDirectThread || this.selectedSubmission || drawerOpen), { dashboard: drawerOpen })
     },
-    async sendDirectMessage(body, recording = null) {
-      if (!this.selectedDirectThread) return
-      const message = await this.onSendDirectMessage(this.selectedDirectThread.teacher_id, body)
-      if (message) {
-        this.selectedDirectThread.messages = [...(this.selectedDirectThread.messages || []), message]
+    async sendDirectMessage(body) {
+      const thread = this.selectedDirectThread
+      if (!thread) throw new Error(this.t('teacher.action_failed'))
+      this.directPollVersions = { ...(this.directPollVersions || {}), [thread.teacher_id]: Number(this.directPollVersions?.[thread.teacher_id] || 0) + 1 }
+      const message = await this.onSendDirectMessage(thread.teacher_id, body)
+      if (!message?.id) throw new Error(this.t('teacher.action_failed'))
+      if (this.directDisposed) return message
+      this.directPollVersions = { ...this.directPollVersions, [thread.teacher_id]: Number(this.directPollVersions[thread.teacher_id] || 0) + 1 }
+      this.directSent = { ...(this.directSent || {}), [thread.teacher_id]: [...new Map([...(this.directSent?.[thread.teacher_id] || []), message].map(row => [row.id, row])).values()] }
+      if (this.selectedDirectThread?.teacher_id === thread.teacher_id) {
+        this.selectedDirectThread.messages = [...new Map([...(this.selectedDirectThread.messages || []), message].map(row => [row.id, row])).values()]
       }
+      return message
     },
-    openDirectThread(thread) {
+    openDirectThread(thread, feedback = null) {
+      if (this.directSending) return
+      this.confirmDirectDiscard = false
+      this.selectedDirectFeedback = feedback && !(thread.messages || []).some(message => String(message.id) === String(feedback.id)) ? feedback : null
       this.selectedDirectThread = thread
-      this.$nextTick(() => this.$refs.directConversation?.resetComposer?.())
+      this.$nextTick(() => {
+        this.$refs.directConversation?.resetComposer?.()
+        this.$refs.directThreadClose?.focus({ preventScroll: true })
+      })
     },
     closeDirectThread() {
+      if (this.directSending) return
+      if (this.confirmDirectDiscard) { this.keepDirectEditing(); return }
+      if (this.$refs.directConversation?.hasDraft) {
+        this.confirmDirectDiscard = true
+        this.$nextTick(() => this.$refs.directKeepEditing?.focus())
+        return
+      }
+      this.selectedDirectThread = null
+    },
+    keepDirectEditing() {
+      this.confirmDirectDiscard = false
+      this.$nextTick(() => this.$refs.directConversation?.focusComposer?.())
+    },
+    discardDirectThread() {
+      if (this.directSending) return
+      this.$refs.directConversation?.clearConversationDraft?.()
+      this.confirmDirectDiscard = false
       this.selectedDirectThread = null
     },
     directUnreadCount(thread) {
       return (thread.messages || []).filter((message) => message.unread && message.sender === 'teacher').length
     },
-    async sendTaskMessageOptimistic(task, body, recording = null) {
-      const message = await this.onSendNote(task, body, recording)
+    async sendTaskMessageOptimistic(task, body, recording = null, clientMessageId = null) {
+      const message = await this.onSendNote(task, body, recording, clientMessageId)
       return { message }
     },
     onThreadMessagesUpdated(payload) {
@@ -1046,9 +1100,15 @@ export default {
     async refreshDirectThreads() {
       const threads = this.support?.direct_threads || []
       await Promise.all(threads.map(async (thread) => {
+        const request = Number(this.directPollVersions[thread.teacher_id] || 0) + 1
+        this.directPollVersions = { ...this.directPollVersions, [thread.teacher_id]: request }
         try {
           const payload = await learningApi.getLearnerTeacherMessages(thread.teacher_id)
+          if (this.directDisposed || request !== this.directPollVersions[thread.teacher_id]) return
           this.directSynced = { ...this.directSynced, [thread.teacher_id]: payload?.messages || [] }
+          if (this.selectedDirectThread?.teacher_id === thread.teacher_id) {
+            this.selectedDirectThread.messages = [...new Map([...(payload?.messages || []), ...(this.directSent[thread.teacher_id] || [])].map(message => [message.id, message])).values()]
+          }
         } catch (_) { /* preserve existing messages during transient polling failures */ }
       }))
     },
@@ -1059,6 +1119,16 @@ export default {
       this.activeFilter = id
       this.visibleLimit = this.listLimit
       this.showOlderCompleted = false
+    },
+    onTaskFilterKeydown(event, id) {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+      event.preventDefault()
+      const ids = this.primaryFilters.map(filter => filter.id)
+      const direction = this.directThreadDirection === 'rtl' ? -1 : 1
+      const offset = event.key === 'ArrowRight' ? direction : -direction
+      const index = event.key === 'Home' ? 0 : event.key === 'End' ? ids.length - 1 : (ids.indexOf(id) + offset + ids.length) % ids.length
+      this.setFilter(ids[index])
+      this.$nextTick(() => this.$el.querySelector(`#learner-filter-${ids[index]}`)?.focus())
     },
     scrollToAssignment(row) {
       if (!row) return
@@ -1105,7 +1175,7 @@ export default {
       if (item?.teacher_id) {
         const thread = this.directThreads.find((row) => Number(row.teacher_id) === Number(item.teacher_id))
         if (thread) {
-          this.openDirectThread(thread)
+          this.openDirectThread(thread, item)
         }
       }
     },
@@ -1179,11 +1249,7 @@ export default {
       this.feedbackDrawerOpen = false
       this.setFeedbackDrawerScrollLock(false)
     },
-    setFeedbackDrawerScrollLock(open) {
-      if (typeof document === 'undefined') return
-      document.documentElement.classList.toggle('dash-drawer-open', open)
-      document.body.classList.toggle('dash-drawer-open', open)
-    },
+    setFeedbackDrawerScrollLock() { this.syncModalOpen() },
     onFeedbackDrawerKeydown(event) {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -1275,11 +1341,7 @@ export default {
       this.mistakeDrawerRow = null
       this.setMistakeDrawerScrollLock(false)
     },
-    setMistakeDrawerScrollLock(open) {
-      if (typeof document === 'undefined') return
-      document.documentElement.classList.toggle('dash-drawer-open', open)
-      document.body.classList.toggle('dash-drawer-open', open)
-    },
+    setMistakeDrawerScrollLock() { this.syncModalOpen() },
     onMistakeDrawerKeydown(event) {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -1376,9 +1438,7 @@ export default {
       return this.taskTypeLabel(row)
     },
     taskTypeLabel(row) {
-      const category = row?.assignment?.hifz_category
-      if (category) return this.t(`teacher.hifz_${category}`)
-      return row?.assignment?.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice')
+      return teacherTaskTypeLabel(resolveTeacherTaskType(row?.assignment?.kind, row?.assignment?.hifz_category), this.t.bind(this))
     },
     cardMetaTail(row) {
       if (this.isTeacherApproved(row)) {

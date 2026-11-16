@@ -37,19 +37,9 @@
       </template>
 
       <template v-else-if="isReview">
-        <TeacherTabGuide kind="page" :title="t('teacher.tab_review')">
-          <template #action>
-            <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)">
-              <i class="bi bi-plus-lg" aria-hidden="true"></i>
-              {{ t('teacher.learning_set_check') }}
-            </button>
-          </template>
-        </TeacherTabGuide>
-
-        <section v-if="weakRows.length || !planRows.length" class="teacher-review-block" :aria-label="t('teacher.review_requires_attention')">
+        <section v-if="weakRows.length" class="teacher-review-block" :aria-label="t('teacher.review_requires_attention')">
           <TeacherTabGuide kind="section" :title="t('teacher.review_requires_attention')" />
           <TeacherRecordList v-if="weakRows.length" layout="cards" :rows="weakRows" @action="$emit('assign-revision', $event)" />
-          <p v-else class="teacher-review-empty">{{ t('teacher.review_practise_empty') }}</p>
         </section>
 
 
@@ -235,9 +225,9 @@ export default {
         title: group.title,
         arabicName: this.arabicNames[group.first?.surah_number] || '',
         arabicText: this.arabicAyahs[`${group.first?.surah_number}:${group.first?.ayah_number}`] || '',
-        hint: group.findings[0] || '',
-        badge: this.t('teacher.check_count_many', { n: Math.max(2, group.maxChecks) }),
-        badgeTone: 'mid',
+        hint: group.first?.word_index == null
+          ? this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks })
+          : (group.findings[0] || ''),
         reviewable: Boolean(group.first?.evidence),
         href: group.first?.evidence ? '' : (group.first?.evidence_url || ''),
         actionLabel: this.t('teacher.assign_revision'),

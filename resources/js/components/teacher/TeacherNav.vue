@@ -11,7 +11,7 @@
         @click="$emit('select', item.id)"
       >
         <i :class="item.icon" aria-hidden="true"></i>
-        <span>{{ t(item.label) }}</span>
+        <span>{{ t(variant === 'mobile' && item.shortLabel ? item.shortLabel : item.label) }}</span>
       </button>
     </nav>
   </aside>

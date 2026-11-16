@@ -7,19 +7,20 @@
     </div>
     <TeacherRecordList v-if="visibleRows.length" selectable :selected-key="selectedTaskKey" :rows="visibleRows" @select="chooseTask" />
     <p v-else-if="taskRows.length" class="teacher-task-filter-empty">{{ t('teacher.no_tasks_in_filter') }}</p>
-    <TeacherEmpty v-else icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
+    <div v-else class="teacher-empty-panel teacher-empty-with-action">
+      <TeacherEmpty inline icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
+      <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-revision', profile.student)"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.assign_task') }}</button>
+    </div>
     </section>
 
-    <section class="teacher-review-block">
+    <section v-if="selectedAssignment" class="teacher-review-block teacher-task-feedback">
     <TeacherTabGuide
       kind="section"
       :title="t('teacher.tasks_feedback_title')"
-      :description="selectedPassageLabel ? t('teacher.tasks_feedback_for', { passage: selectedPassageLabel }) : t('teacher.tasks_feedback_desc')"
     />
     <TeacherAudioFeedbackComposer
       ref="composer"
       :key="selectedRecipientId || 'general'"
-      class="mt-3"
       :show-heading="false"
       :messages="selectedAssignment?.messages || []"
       :student-id="profile.student.id"
@@ -62,6 +63,7 @@ export default {
     profile: { type: Object, required: true },
     formatWhen: { type: Function, required: true },
   },
+  emits: ['assign-revision'],
   data() { return { activeFilter: 'all', selectedTaskKey: null, pendingTask: null } },
   watch: {
     'profile.student.id'() {

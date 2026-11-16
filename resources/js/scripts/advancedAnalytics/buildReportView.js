@@ -38,21 +38,23 @@ function formatDelta(value, { points = false } = {}, t) {
   return t('dashboard.advanced_analytics.delta_percent', { value: `${sign}${n}` })
 }
 
-function themeColors() {
+function themeColors({ forPrint = false } = {}) {
+  const color = (token, fallback) => forPrint ? fallback : cssThemeColor(token, fallback)
   return {
-    accent: cssThemeColor('--accent', '#3f6f6d'),
-    accentStrong: cssThemeColor('--accent-strong', '#2f5654'),
-    text: cssThemeColor('--text', '#1c1917'),
-    muted: cssThemeColor('--text-muted', '#6b635a'),
-    border: cssThemeColor('--border', 'rgba(120, 100, 70, 0.2)'),
-    surface: cssThemeColor('--surface-strong', '#fffaf3'),
-    memorisation: cssThemeColor('--accent', '#3f6f6d'),
-    revision: '#8a6a3d',
+    accent: color('--accent', '#8b5e3c'),
+    accentStrong: color('--accent-strong', '#765035'),
+    accentFill: color('--accent-light', 'rgba(139, 94, 60, 0.12)'),
+    text: color('--text', '#1f1a17'),
+    muted: color('--text-muted', '#554c45'),
+    border: color('--border', 'rgba(120, 100, 70, 0.18)'),
+    surface: color('--surface-strong', '#ffffff'),
+    memorisation: color('--accent', '#8b5e3c'),
+    revision: color('--warning-strong', '#7a4d05'),
     recitation: '#4a6d8c',
-    matched: '#2e7d64',
-    mismatch: '#a5463a',
-    skipped: '#6b635a',
-    uncertain: '#9a681f',
+    matched: color('--success', '#2d6a4f'),
+    mismatch: color('--danger', '#b55041'),
+    skipped: color('--text-muted', '#554c45'),
+    uncertain: color('--warning', '#9a6207'),
     extra: '#7a6a90',
   }
 }
@@ -61,6 +63,8 @@ function lineOptions(colors) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
+    resizeDelay: 100,
     layout: { padding: { top: 4, right: 4, bottom: 0, left: 0 } },
     interaction: { mode: 'index', intersect: false },
     plugins: {
@@ -75,12 +79,12 @@ function lineOptions(colors) {
     },
     scales: {
       x: {
-        ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8, font: { size: 10 } },
+        ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 5, font: { size: 12 } },
         grid: { display: false },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: colors.muted, precision: 0, font: { size: 10 } },
+        ticks: { color: colors.muted, precision: 0, maxTicksLimit: 5, font: { size: 12 } },
         grid: { color: colors.border },
       },
     },
@@ -100,7 +104,7 @@ function stackedBarOptions(colors) {
       legend: {
         display: true,
         position: 'bottom',
-        labels: { color: colors.text, boxWidth: 10, font: { size: 11 } },
+        labels: { color: colors.text, boxWidth: 10, padding: 12, font: { size: 12 } },
       },
     },
   }
@@ -110,6 +114,9 @@ function doughnutOptions(colors) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
+    resizeDelay: 100,
+    cutout: '68%',
     layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } },
     plugins: {
       legend: {
@@ -120,7 +127,7 @@ function doughnutOptions(colors) {
           boxWidth: 10,
           boxHeight: 10,
           padding: 10,
-          font: { size: 11 },
+          font: { size: 12 },
         },
       },
     },
@@ -173,6 +180,7 @@ function buildOverviewCards(overview, t) {
         n: asNumber(overview?.ai_checks),
       }),
       delta: formatDelta(deltas.ai_accuracy, { points: true }, t),
+      deltaTone: asNumber(deltas.ai_accuracy) > 0 ? 'positive' : 'warning',
     },
     {
       key: 'practice_days',
@@ -187,7 +195,7 @@ function buildOverviewCards(overview, t) {
 
 function buildPracticeChart(points, t, colors) {
   const rows = Array.isArray(points) ? points : []
-  if (!rows.length) return null
+  if (!rows.some((row) => asNumber(row.sessions) > 0 || asNumber(row.duration_seconds) > 0)) return null
   return {
     data: {
       labels: rows.map((row) => row.label || row.key),
@@ -196,7 +204,7 @@ function buildPracticeChart(points, t, colors) {
           label: t('dashboard.advanced_analytics.chart_sessions'),
           data: rows.map((row) => asNumber(row.sessions)),
           borderColor: colors.accent,
-          backgroundColor: `${colors.accent}33`,
+          backgroundColor: colors.accentFill,
           fill: true,
           tension: 0.35,
           pointRadius: 2,
@@ -232,7 +240,7 @@ function buildPracticeChart(points, t, colors) {
         legend: {
           display: true,
           position: 'bottom',
-          labels: { color: colors.text, boxWidth: 10, boxHeight: 10, padding: 10, font: { size: 10 } },
+          labels: { color: colors.text, boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 12 } },
         },
       },
     },
@@ -294,7 +302,7 @@ function buildAiPerformanceChart(points, t, colors) {
           label: t('dashboard.advanced_analytics.chart_accuracy'),
           data: rows.map((row) => asNullableNumber(row.accuracy)),
           borderColor: colors.accentStrong,
-          backgroundColor: `${colors.accentStrong}22`,
+          backgroundColor: colors.accentFill,
           fill: true,
           tension: 0.35,
           pointRadius: 3,
@@ -407,11 +415,11 @@ function buildSurahRows(items, sort = 'recent') {
   }))
 }
 
-export function buildAdvancedAnalyticsView(report, t, { surahSort = 'recent' } = {}) {
+export function buildAdvancedAnalyticsView(report, t, { surahSort = 'recent', forPrint = false } = {}) {
   const payload = report && typeof report === 'object' ? report : {}
   const overview = payload.overview || {}
   const series = payload.series || {}
-  const colors = themeColors()
+  const colors = themeColors({ forPrint })
   const practiceChart = buildPracticeChart(series.practice_activity, t, colors)
   const sessionMixChart = buildSessionMixChart(series.session_mix, t, colors)
   const aiChart = buildAiPerformanceChart(series.ai_performance, t, colors)

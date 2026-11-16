@@ -80,28 +80,13 @@
                 </span>
                 <time>{{ formatWhen(item.created_at) }}</time>
               </span>
-              <p v-if="item.preview || item.body" class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</p>
-              <div
-                v-if="item.audio?.available && item.audio?.url"
-                class="learner-teacher__feedback-audio"
-                @click.stop
-              >
-                <TeacherAudioFeedbackPlayer
-                  :src="item.audio.url"
-                  :duration-ms="item.audio.duration_ms"
-                  compact
-                />
-              </div>
+              <span v-if="item.preview || item.body" class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</span>
+              <span class="learner-teacher__feedback-read">{{ actionLabel(item) }} <i class="bi bi-arrow-right-short" aria-hidden="true"></i></span>
             </span>
           </button>
-          <button
-            type="button"
-            class="learner-teacher__feedback-action"
-            @click="$emit('open-feedback', item)"
-          >
-            <i class="bi" :class="actionIcon(item)" aria-hidden="true"></i>
-            {{ actionLabel(item) }}
-          </button>
+        </div>
+        <div v-if="item.audio?.available && item.audio?.url" class="learner-teacher__feedback-audio">
+          <TeacherAudioFeedbackPlayer :src="item.audio.url" :duration-ms="item.audio.duration_ms" compact />
         </div>
       </li>
     </ul>

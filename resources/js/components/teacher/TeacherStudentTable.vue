@@ -21,7 +21,7 @@
         <div class="teacher-student-card__actions">
           <span class="teacher-student-card__last">{{ t('teacher.last') }}: {{ lastSeen(student) }}</span>
           <button type="button" class="btn btn-primary btn-sm" :aria-label="t('teacher.open_profile_for', { name: student.name })" :title="t('teacher.open_profile')" @click="$emit('open', student.id)">
-            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+            {{ t('teacher.open_profile') }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i>
           </button>
         </div>
       </article>
@@ -87,7 +87,7 @@
               @click.stop="$emit('open', student.id)"
             >
               <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-              <span class="visually-hidden">{{ t('teacher.open') }}</span>
+              <span>{{ t('teacher.open') }}</span>
             </button>
           </span>
         </td>

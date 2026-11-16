@@ -1,6 +1,7 @@
 <template>
   <TeacherDialog
     :open="open"
+    class="teacher-playback-studio"
     size="xl"
     :title="heading"
     compact
@@ -13,8 +14,7 @@
       <span v-if="passageLabel" class="badge rounded-pill teacher-pill">{{ passageLabel }}</span>
       <span v-if="assignmentLabel" class="badge rounded-pill teacher-pill">{{ assignmentLabel }}</span>
       <span class="badge rounded-pill teacher-pill">{{ submittedLabel || t('teacher.unavailable') }}</span>
-      <span class="badge rounded-pill teacher-pill">{{ durationLabel }}</span>
-      <span v-if="checkerScore" class="badge rounded-pill teacher-pill" :class="scoreTone">{{ checkerScore }}</span>
+      <span v-if="durationLabel" class="badge rounded-pill teacher-pill">{{ durationLabel }}</span>
       <span class="badge rounded-pill teacher-pill" :class="reviewed ? 'is-score' : 'is-quiet'">
         {{ reviewed ? t('teacher.playback_status_reviewed') : t('teacher.playback_status_pending') }}
       </span>
@@ -40,7 +40,7 @@
                 ></audio>
                 <p v-if="!hasAudio" class="teacher-playback__hint teacher-playback__hint--solo">{{ audioUnavailableLabel }}</p>
                 <div v-else class="teacher-playback__transport" role="group" :aria-label="t('teacher.playback_review_title')">
-                  <button type="button" class="teacher-playback__play" :disabled="!hasAudio" :aria-label="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" @click="togglePlayback">
+                  <button type="button" class="teacher-playback__play" :disabled="!hasAudio" :aria-label="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" :title="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" @click="togglePlayback">
                     <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                   </button>
                   <div class="teacher-playback__seek">
@@ -81,6 +81,11 @@
                 </div>
               </div>
 
+              <nav v-if="ayahNumbers.length > 1" class="teacher-playback__navigation teacher-playback__chips" :aria-label="t('teacher.playback_ayah_navigation')" data-dialog-transient>
+                <button v-for="ayah in ayahNumbers" :key="ayah" type="button" :class="{ 'is-current': ayah === (selectedWord?.ayah || currentAyah) }" :aria-current="ayah === (selectedWord?.ayah || currentAyah) ? 'true' : undefined" :disabled="Boolean(saving)" @click="selectAyah(ayah)">
+                  {{ t('teacher.ayah_n', { n: ayah }) }}
+                </button>
+              </nav>
               <div ref="mushaf" class="teacher-playback__mushaf">
                 <p v-if="mushafLoading" class="teacher-playback__hint" role="status">{{ t('teacher.loading_quran_text') }}</p>
                 <TeacherReciteMushafAyahs
@@ -125,83 +130,32 @@
             </div>
 
             <aside class="teacher-playback__side" :class="{ 'has-selection': Boolean(selectedKey) }">
-              <section v-if="selectedKey" class="teacher-playback__card teacher-playback__word" :aria-label="t('teacher.coaching_word')">
-                <h3>{{ t('teacher.coaching_word') }}</h3>
-                  <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
-                  <p class="teacher-playback__hint">{{ selectedReference }}</p>
-                  <p>{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</p>
-                  <p v-if="selectedWord?.recognised || selectedCoaching?.ai?.recognised" class="teacher-playback__heard">
-                    <span>{{ t('teacher.playback_heard') }}</span>
-                    <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
-                  </p>
-                  <p v-if="confidenceLabel" class="teacher-playback__hint">{{ confidenceLabel }}</p>
-                  <p v-if="selectedWord?.error_type || selectedCoaching?.ai?.error_type" class="teacher-playback__hint">{{ selectedWord?.error_type || selectedCoaching?.ai?.error_type }}</p>
-                  <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
-                  <p v-if="selectedCoaching" class="teacher-playback__hint">{{ reviewStatusLabel(selectedCoaching.review_status) }}</p>
-                  <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
-                    {{ t('teacher.coaching_play_segment') }}
-                  </button>
-                  <details class="teacher-playback__fold" open>
-                    <summary>{{ t('teacher.coaching_write') }}</summary>
-                  <ul v-if="selectedCoaching?.corrections?.length" class="teacher-playback__history">
-                    <li v-for="item in selectedCoaching.corrections" :key="item.id">
-                      <p v-if="item.body">{{ item.body }}</p>
-                      <TeacherAudioFeedbackPlayer
-                        v-if="item.audio?.available"
-                        :src="item.audio.url"
-                        :duration-ms="item.audio.duration_ms"
-                        compact
-                      />
-                      <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
-                        {{ t('teacher.coaching_delete_audio') }}
-                      </button>
-                    </li>
-                  </ul>
-                  <div class="teacher-playback__action-row">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
-                  </div>
-                  <label class="teacher-playback__field">
-                    <span>{{ t('teacher.coaching_write') }}</span>
-                    <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
-                  </label>
-                  <div class="teacher-playback__action-row">
-                    <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
-                    <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving)" @click="saveWord('correct')">
-                      {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
-                    </button>
-                  </div>
-                  <div class="teacher-playback__action-row">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !dueAt" @click="saveWord('practice')">{{ t('teacher.coaching_assign_practice') }}</button>
-                  </div>
-                  <label class="teacher-playback__field">
-                    <span>{{ t('teacher.coaching_set_status') }}</span>
-                    <select v-model="wordStatus" :disabled="Boolean(saving)">
-                      <option value="">{{ t('teacher.coaching_status_keep') }}</option>
-                      <option value="awaiting_retry">{{ t('teacher.coaching_status_awaiting') }}</option>
-                      <option value="needs_practice">{{ t('teacher.coaching_status_practice') }}</option>
-                      <option value="improved">{{ t('teacher.coaching_status_improved') }}</option>
-                      <option value="resolved">{{ t('teacher.coaching_status_resolved') }}</option>
-                    </select>
-                  </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
-                  </details>
+              <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
+              <p v-else-if="actionMessage" class="teacher-playback__saved" role="status">{{ actionMessage }}</p>
+              <section class="teacher-playback__card teacher-playback__summary" :aria-label="t('teacher.playback_assessment_summary')">
+                <div class="teacher-playback__section-head">
+                  <h3>{{ t('teacher.playback_assessment_summary') }}</h3>
+                  <span v-if="checkerScore" class="teacher-badge teacher-playback__match" :class="scoreTone">{{ checkerScore }} {{ t('teacher.playback_match_label') }}</span>
+                </div>
+                <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
+                  <div class="is-correct"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
+                  <div class="is-uncertain"><dt>{{ t('teacher.playback_uncertain_count') }}</dt><dd>{{ summary.counts.uncertain }}</dd></div>
+                  <div class="is-flagged"><dt>{{ t('teacher.playback_flagged_count') }}</dt><dd>{{ summary.counts.flagged }}</dd></div>
+                  <div class="is-skipped"><dt>{{ t('teacher.playback_skipped_count') }}</dt><dd>{{ summary.counts.skipped }}</dd></div>
+                </dl>
+                <p v-else class="teacher-playback__hint">{{ t('teacher.playback_no_assessment') }}</p>
+                <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
               </section>
-              <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_follow')">
-                <h3>{{ t('teacher.playback_follow') }}</h3>
-                <div class="teacher-playback__counts">
-                  <button type="button" class="is-flagged" :aria-pressed="attentionFilter === 'flagged'" @click="attentionFilter = 'flagged'">
-                    <strong>{{ summary.counts.flagged }}</strong>
+              <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
+                <h3>{{ t('teacher.playback_attention_title') }}</h3>
+                <div class="teacher-playback__counts teacher-playback__attention-filters" data-dialog-transient>
+                  <button type="button" class="is-flagged" :aria-pressed="attentionFilter === 'flagged'" :disabled="summary.counts.flagged === 0" @click="attentionFilter = 'flagged'">
                     <span>{{ t('teacher.playback_flagged_count') }}</span>
                   </button>
-                  <button type="button" class="is-uncertain" :aria-pressed="attentionFilter === 'uncertain'" @click="attentionFilter = 'uncertain'">
-                    <strong>{{ summary.counts.uncertain }}</strong>
+                  <button type="button" class="is-uncertain" :aria-pressed="attentionFilter === 'uncertain'" :disabled="summary.counts.uncertain === 0" @click="attentionFilter = 'uncertain'">
                     <span>{{ t('teacher.playback_uncertain_count') }}</span>
                   </button>
-                  <button type="button" class="is-skipped" :aria-pressed="attentionFilter === 'skipped'" @click="attentionFilter = 'skipped'">
-                    <strong>{{ summary.counts.skipped }}</strong>
+                  <button type="button" class="is-skipped" :aria-pressed="attentionFilter === 'skipped'" :disabled="summary.counts.skipped === 0" @click="attentionFilter = 'skipped'">
                     <span>{{ t('teacher.playback_skipped_count') }}</span>
                   </button>
                 </div>
@@ -221,7 +175,10 @@
                   <li v-for="item in visibleItems" :key="item.key">
                     <button
                       type="button"
-                      :class="{ 'is-current': item.key === activeKey }"
+                      :class="{ 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }"
+                      :aria-pressed="item.key === selectedKey"
+                      :aria-label="attentionLabel(item)"
+                      :disabled="Boolean(saving)"
                       @click="selectAttention(item)"
                     >
                       <span v-if="item.ayah" class="teacher-playback__word-ayah">{{ item.ayah }}</span>
@@ -229,10 +186,7 @@
                       <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
                       <small>{{ wordStatusLabel(item.status) }}</small>
                     </button>
-                    <p v-if="item.recognised" class="teacher-playback__heard">
-                      <span>{{ t('teacher.playback_heard') }}</span>
-                      <span class="teacher-playback__arabic" lang="ar" dir="rtl">{{ item.recognised }}</span>
-                    </p>
+
                   </li>
                 </ul>
                 <p v-else class="teacher-playback__hint">{{ t('teacher.playback_no_flags') }}</p>
@@ -241,9 +195,83 @@
                 </button>
               </section>
 
+              <section v-if="selectedKey" class="teacher-playback__card teacher-playback__word" :aria-label="t('teacher.coaching_word')">
+                <h3>{{ t('teacher.coaching_word') }}</h3>
+                  <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
+                  <p class="teacher-playback__hint">{{ selectedReference }}</p>
+                  <p class="teacher-playback__selection-meta">{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</p>
+                  <p v-if="selectedWord?.recognised || selectedCoaching?.ai?.recognised" class="teacher-playback__heard">
+                    <span>{{ t('teacher.playback_heard') }}</span>
+                    <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
+                  </p>
+                  <p v-if="confidenceLabel" class="teacher-playback__hint">{{ confidenceLabel }}</p>
+                  <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
+                  <p v-if="selectedCoaching" class="teacher-playback__hint">{{ reviewStatusLabel(selectedCoaching.review_status) }}</p>
+                  <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
+                    {{ t('teacher.coaching_play_segment') }}
+                  </button>
+                  <details v-if="selectedCoaching?.corrections?.length" class="teacher-playback__fold">
+                    <summary>{{ t('teacher.coaching_history') }}</summary>
+                  <ul class="teacher-playback__history">
+                    <li v-for="item in selectedCoaching.corrections" :key="item.id">
+                      <p v-if="item.body">{{ item.body }}</p>
+                      <TeacherAudioFeedbackPlayer
+                        v-if="item.audio?.available"
+                        :src="item.audio.url"
+                        :duration-ms="item.audio.duration_ms"
+                        compact
+                      />
+                      <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
+                        {{ t('teacher.coaching_delete_audio') }}
+                      </button>
+                    </li>
+                  </ul>
+                  </details>
+                  <div class="teacher-playback__action-row">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
+                    <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
+                    <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
+                  </div>
+                  <label class="teacher-playback__field">
+                    <span>{{ t('teacher.coaching_write') }}</span>
+                    <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
+                  </label>
+                  <div class="teacher-playback__action-row">
+                    <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
+                    <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || wordVoiceState.active || (!wordNote.trim() && !wordVoiceState.hasRecording)" @click="saveWord('correct')">
+                      {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
+                    </button>
+                  </div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
+                  <div class="teacher-playback__word-practice">
+                    <label class="teacher-playback__field">
+                      <span>{{ t('teacher.playback_revision_due') }}</span>
+                      <input v-model="wordDueAt" type="date" :min="today" :disabled="Boolean(saving)">
+                    </label>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordDueAt || wordDueAt < today" @click="saveWord('practice')">{{ t('teacher.coaching_assign_practice') }}</button>
+                  </div>
+                  <details class="teacher-playback__fold">
+                    <summary>{{ t('teacher.coaching_set_status') }}</summary>
+                  <label class="teacher-playback__field">
+                    <span class="visually-hidden">{{ t('teacher.coaching_set_status') }}</span>
+                    <select v-model="wordStatus" :disabled="Boolean(saving)">
+                      <option value="">{{ t('teacher.coaching_status_keep') }}</option>
+                      <option value="awaiting_retry">{{ t('teacher.coaching_status_awaiting') }}</option>
+                      <option value="needs_practice">{{ t('teacher.coaching_status_practice') }}</option>
+                      <option value="improved">{{ t('teacher.coaching_status_improved') }}</option>
+                      <option value="resolved">{{ t('teacher.coaching_status_resolved') }}</option>
+                    </select>
+                  </label>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
+                  </details>
+              </section>
+
               <section class="teacher-playback__card teacher-playback__response" :aria-label="t('teacher.playback_actions')">
                 <h3>{{ t('teacher.playback_feedback') }}</h3>
-                <p v-if="payload.review?.feedback" class="teacher-playback__saved">{{ t('teacher.playback_feedback_sent') }}</p>
+                <div v-if="payload.review?.feedback" class="teacher-playback__saved-feedback">
+                  <p v-if="payload.review.feedback.body" class="teacher-playback__saved">{{ payload.review.feedback.body }}</p>
+                  <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_sent') }}</p>
+                </div>
                 <label class="teacher-playback__field">
                   <span class="visually-hidden">{{ t('teacher.playback_feedback') }}</span>
                   <textarea v-model="feedback" rows="2" maxlength="2000" :placeholder="t('teacher.playback_feedback_placeholder')" :disabled="saving"></textarea>
@@ -255,8 +283,10 @@
                   </button>
                 </div>
 
-                <details class="teacher-playback__fold" :open="Boolean(payload.review?.private_note?.body)">
-                  <summary>{{ t('teacher.playback_private_note') }}</summary>
+              </section>
+
+              <section class="teacher-playback__card teacher-playback__private-note" :aria-label="t('teacher.playback_private_note')">
+                  <h3><i class="bi bi-lock" aria-hidden="true"></i> {{ t('teacher.playback_private_note') }}</h3>
                   <p class="teacher-playback__hint">{{ t('teacher.playback_private_help') }}</p>
                   <p v-if="payload.review?.private_note?.body" class="teacher-playback__saved teacher-playback__private">{{ payload.review.private_note.body }}</p>
                   <label class="teacher-playback__field">
@@ -266,10 +296,10 @@
                   <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving || !privateNote.trim()" @click="savePrivateNote">
                     {{ saving === 'note' ? t('teacher.saving') : t('teacher.playback_save_note') }}
                   </button>
-                </details>
+              </section>
 
-                <details class="teacher-playback__fold" :open="Boolean(payload.review?.revision)">
-                  <summary>{{ t('teacher.playback_assign_revision') }}</summary>
+              <section class="teacher-playback__card teacher-playback__revision" :aria-label="t('teacher.playback_assign_revision')">
+                  <h3>{{ t('teacher.playback_assign_revision') }}</h3>
                   <p class="teacher-playback__hint">{{ revisionHelp }}</p>
                   <label class="teacher-playback__field">
                     <span>{{ t('teacher.playback_revision_due') }}</span>
@@ -279,18 +309,18 @@
                     <span>{{ t('teacher.playback_revision_note') }}</span>
                     <textarea v-model="revisionNote" rows="2" maxlength="2000" :placeholder="t('teacher.playback_revision_note_placeholder')" :disabled="saving || !payload.suggested_revision"></textarea>
                   </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving || !payload.suggested_revision || !dueAt" @click="assignRevision">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving || !payload.suggested_revision || !dueAt || dueAt < today" @click="assignRevision">
                     {{ saving === 'revision' ? t('teacher.saving') : t('teacher.playback_assign') }}
                   </button>
-                  <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}</p>
-                </details>
+                  <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<span v-if="assignedRevisionLabel"> · {{ assignedRevisionLabel }}</span></p>
+              </section>
 
-                <button type="button" class="btn btn-primary btn-sm teacher-playback__mark" :disabled="saving || reviewed" @click="markReviewed">
+              <section class="teacher-playback__card teacher-playback__review-status" :aria-label="t('teacher.playback_status')">
+                <h3>{{ t('teacher.playback_status') }}</h3>
+                <button type="button" class="btn btn-outline-secondary btn-sm teacher-playback__mark" :disabled="saving || reviewed" @click="markReviewed">
                   <i class="bi bi-check2-circle" aria-hidden="true"></i>
                   {{ reviewed ? t('teacher.playback_status_reviewed') : t('teacher.playback_mark_reviewed') }}
                 </button>
-                <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
-                <p v-else-if="actionMessage" class="teacher-playback__saved" role="status">{{ actionMessage }}</p>
               </section>
             </aside>
           </div>
@@ -302,6 +332,8 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { ayahRangeLabel } from '../../scripts/teacher/formatters'
+import { normaliseTeacherWordStatus } from '../../scripts/teacher/wordReviewClass'
+import { studioHasDraft, studioWordStatusKey, studioConfidenceValue } from '../../scripts/teacher/teacherStudioState'
 import { buildTeacherPlaybackMushafLines } from '../../scripts/teacher/teacherReciteMushafView'
 import {
   activeWordAt,
@@ -347,6 +379,7 @@ export default {
       voiceState: { hasRecording: false, active: false },
       wordVoiceState: { hasRecording: false, active: false },
       wordDrafts: {},
+      wordStatusDrafts: {},
       playbackRate: 1,
       speeds: [0.5, 0.75, 1, 1.25],
       activeKey: '',
@@ -361,6 +394,9 @@ export default {
       privateNote: '',
       revisionNote: '',
       dueAt: '',
+      initialDueAt: '',
+      wordDueAt: '',
+      initialWordDueAt: '',
       saving: '',
       actionError: '',
       actionMessage: '',
@@ -368,7 +404,23 @@ export default {
   },
   computed: {
     hasUnsavedWork() {
-      return Boolean(this.feedback.trim() || this.privateNote.trim() || this.wordNote.trim() || this.wordStatus || Object.values(this.wordDrafts).some(Boolean) || this.voiceState.hasRecording || this.voiceState.active || this.wordVoiceState.hasRecording || this.wordVoiceState.active)
+      return studioHasDraft(this)
+    },
+    ayahNumbers() {
+      return [...new Set(this.ayahs.flatMap(line => line.parts.map(part => part.ayah)).filter(ayah => Number.isInteger(ayah) && ayah > 0))].sort((a, b) => a - b)
+    },
+    glyphByKey() {
+      const glyphs = new Map()
+      for (const line of this.ayahs) {
+        for (const part of line.parts) {
+          if (!part.isEnd && part.word_index != null) glyphs.set(`${part.ayah}:${part.word_index}`, part)
+        }
+      }
+      return glyphs
+    },
+    selectedNeedsAttention() {
+      const status = this.selectedWord?.status || this.selectedCoaching?.ai?.status
+      return studioWordStatusKey(status) !== 'teacher.playback_word_unassessed' && ['incorrect', 'partial', 'omitted', 'skipped'].includes(normaliseTeacherWordStatus({ status }))
     },
     hasAudio() {
       return Boolean(!this.audioError && this.payload?.audio?.available && this.payload?.audio?.url)
@@ -376,8 +428,14 @@ export default {
     words() {
       return this.payload?.words || []
     },
+    assessedWords() {
+      return this.words.filter(word => String(word?.type || '').toUpperCase() === 'DELETION' || studioWordStatusKey(word?.status) !== 'teacher.playback_word_unassessed')
+    },
+    unassessedWordCount() {
+      return this.words.length - this.assessedWords.length
+    },
     summary() {
-      return playbackSummary(this.words)
+      return playbackSummary(this.assessedWords)
     },
     hasAttention() {
       const counts = this.summary?.counts || {}
@@ -433,7 +491,7 @@ export default {
       const ms = Number(this.payload?.duration_ms)
       if (Number.isFinite(ms) && ms > 0) return this.formatTime(ms / 1000)
       if (this.duration > 0) return this.formatTime(this.duration)
-      return this.t('teacher.unavailable')
+      return ''
     },
     trackEnd() {
       const stored = Number(this.payload?.duration_ms) / 1000
@@ -448,9 +506,8 @@ export default {
       return 'is-flagged'
     },
     checkerScore() {
-      return typeof this.payload?.accuracy_percent === 'number'
-        ? this.t('teacher.score_n', { n: this.payload.accuracy_percent })
-        : ''
+      const value = this.payload?.accuracy_percent
+      return typeof value === 'number' && Number.isFinite(value) ? `${value}%` : ''
     },
     timingNote() {
       const timing = this.payload?.timing
@@ -468,7 +525,7 @@ export default {
       return ayahAtTime(this.words, this.currentTime)
     },
     canReplayAyah() {
-      return this.hasAudio && ayahRepeatWindow(this.words, this.currentAyah || this.selectedWord?.ayah)?.end != null
+      return this.hasAudio && ayahRepeatWindow(this.words, this.selectedWord?.ayah || this.currentAyah)?.end != null
     },
     selectedWord() {
       return this.words.find((word) => wordKey(word) === this.selectedKey) || null
@@ -495,11 +552,8 @@ export default {
       return [surah, this.t('teacher.ayah_n', { n: ayah })].filter(Boolean).join(' · ')
     },
     confidenceLabel() {
-      const value = this.selectedWord?.confidence ?? this.selectedCoaching?.ai?.confidence
-      const number = Number(value)
-      if (!Number.isFinite(number) || number < 0) return ''
-      const shown = number <= 1 ? `${Math.round(number * 100)}%` : String(number)
-      return this.t('teacher.coaching_confidence', { n: shown })
+      const value = studioConfidenceValue(this.selectedWord?.confidence ?? this.selectedCoaching?.ai?.confidence)
+      return value ? this.t('teacher.coaching_confidence', { n: value }) : ''
     },
     selectedDecision() {
       const decision = this.selectedCoaching?.decision
@@ -528,6 +582,14 @@ export default {
       const day = String(date.getDate()).padStart(2, '0')
       return `${date.getFullYear()}-${month}-${day}`
     },
+    assignedRevisionLabel() {
+      const revision = this.payload?.review?.revision
+      if (!revision) return ''
+      const range = ayahRangeLabel(revision.surah_name, revision.ayah_start, revision.ayah_end, this.t)
+      const due = revision.due_at ? new Date(revision.due_at) : null
+      const date = due && !Number.isNaN(due.getTime()) ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(due) : ''
+      return [range, date].filter(Boolean).join(' · ')
+    },
     revisionHelp() {
       const revision = this.payload?.suggested_revision
       if (!revision) return this.t('teacher.playback_no_passage')
@@ -540,7 +602,6 @@ export default {
   watch: {
     open(value) {
       if (value) {
-        this.dueAt = this.defaultDue()
         this.load()
         window.addEventListener('keydown', this.onShortcut)
       } else {
@@ -592,6 +653,7 @@ export default {
       this.repeatUntil = null
       this.wordNote = ''
       this.wordDrafts = {}
+      this.wordStatusDrafts = {}
       this.$refs.voice?.discardRecording()
       this.$refs.wordVoice?.discardRecording()
       this.wordStatus = ''
@@ -601,12 +663,20 @@ export default {
       this.audioError = false
       this.feedback = ''
       this.privateNote = ''
+      this.revisionNote = ''
+      this.dueAt = this.defaultDue()
+      this.initialDueAt = this.dueAt
+      this.wordDueAt = this.dueAt
+      this.initialWordDueAt = this.wordDueAt
       this.actionError = ''
       this.actionMessage = ''
       try {
         const payload = await learningApi.getTeacherRecitationPlayback(this.studentId, this.attemptId)
         if (token !== this.loadToken) return
         this.payload = payload
+        const counts = this.summary.counts
+        this.attentionFilter = ['flagged', 'uncertain', 'skipped'].find(key => counts[key] > 0) || 'flagged'
+        this.showAllAttention = false
         this.loading = false
         await this.loadMushaf(token)
         if (this.autoplay) this.$nextTick(() => this.togglePlayback())
@@ -699,7 +769,7 @@ export default {
       this.seekTo(window.start, true, true)
     },
     replayAyah() {
-      const ayah = this.currentAyah || this.selectedWord?.ayah
+      const ayah = this.selectedWord?.ayah || this.currentAyah
       const bounds = ayahRepeatWindow(this.words, ayah)
       if (!bounds) return
       this.repeatUntil = bounds.end
@@ -712,19 +782,23 @@ export default {
     },
     onSelectWord(part) {
       const key = part?.key || ''
-      if (!key) return
+      if (!key || this.saving) return
       if (key !== this.selectedKey && (this.wordVoiceState.hasRecording || this.wordVoiceState.active)) {
         this.actionError = this.t('teacher.coaching_finish_recording')
         return
       }
-      if (this.selectedKey) this.wordDrafts[this.selectedKey] = this.wordNote
+      if (this.selectedKey) {
+        this.wordDrafts[this.selectedKey] = this.wordNote
+        this.wordStatusDrafts[this.selectedKey] = this.wordStatus
+      }
       this.selectedKey = key
       this.selectedGlyph = {
         text: part?.isEnd ? '' : (part?.text || ''),
         fontFamily: part?.fontFamily || '',
+        accessibleText: part?.accessibleText || '',
         ayah: part?.ayah,
       }
-      this.wordStatus = ''
+      this.wordStatus = this.wordStatusDrafts[key] || ''
       this.wordNote = this.wordDrafts[key] || ''
       const match = this.words.find((word) => wordKey(word) === key)
       const start = wordWindow(match)?.start ?? (Number.isFinite(part?.start) ? part.start : null)
@@ -732,11 +806,11 @@ export default {
       this.seekTo(start, this.hasAudio)
     },
     glyphForKey(key) {
-      for (const line of this.ayahs) {
-        const glyph = line.parts.find(part => part.word_index != null && !part.isEnd && `${part.ayah}:${part.word_index}` === key)
-        if (glyph) return glyph
-      }
-      return null
+      return this.glyphByKey.get(key) || null
+    },
+    attentionLabel(item) {
+      const glyph = this.glyphForKey(item.key)
+      return [item.ayah ? this.t('teacher.ayah_n', { n: item.ayah }) : '', glyph?.accessibleText || this.t('teacher.word_n', { n: Number(item.wordIndex) + 1 }), this.wordStatusLabel(item.status)].filter(Boolean).join(' · ')
     },
     selectAttention(item) {
       const glyph = this.glyphForKey(item.key)
@@ -776,6 +850,7 @@ export default {
         return
       }
       if (action === 'status' && !this.wordStatus) return
+      if (action === 'practice' && (!this.wordDueAt || this.wordDueAt < this.today)) return
       this.saving = action
       this.actionError = ''
       this.actionMessage = ''
@@ -786,7 +861,7 @@ export default {
           action,
           body: action === 'correct' || action === 'practice' ? this.wordNote.trim() : undefined,
           review_status: action === 'status' ? this.wordStatus : undefined,
-          due_at: action === 'practice' ? this.dueAt : undefined,
+          due_at: action === 'practice' ? this.wordDueAt : undefined,
         }, recording)
         this.applyPayload(payload)
         if (action === 'correct') {
@@ -794,7 +869,11 @@ export default {
           this.wordNote = ''
           this.$refs.wordVoice?.discardRecording()
         }
-        if (action === 'status') this.wordStatus = ''
+        if (action === 'status') {
+          this.wordStatus = ''
+          delete this.wordStatusDrafts[this.selectedKey]
+        }
+        if (action === 'practice') this.initialWordDueAt = this.wordDueAt
         this.actionMessage = this.t('teacher.coaching_saved')
       } catch (err) {
         this.actionError = this.failureMessage(err)
@@ -822,11 +901,7 @@ export default {
       return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
     },
     wordStatusLabel(status) {
-      if (status === 'partial') return this.t('teacher.playback_legend_uncertain')
-      if (status === 'incorrect') return this.t('teacher.playback_legend_flagged')
-      if (status === 'omitted') return this.t('teacher.word_status_omitted')
-      if (status === 'skipped') return this.t('teacher.word_status_skipped')
-      return this.t('teacher.word_status_correct')
+      return this.t(studioWordStatusKey(status))
     },
     async sendFeedback() {
       if (this.saving) return
@@ -872,7 +947,7 @@ export default {
       }
     },
     async assignRevision() {
-      if (this.saving || !this.payload?.suggested_revision || !this.dueAt) return
+      if (this.saving || !this.payload?.suggested_revision || !this.dueAt || this.dueAt < this.today) return
       this.saving = 'revision'
       this.actionError = ''
       this.actionMessage = ''
@@ -883,6 +958,7 @@ export default {
         })
         this.applyPayload(payload)
         this.revisionNote = ''
+        this.initialDueAt = this.dueAt
         this.actionMessage = this.t('teacher.playback_revision_sent')
       } catch (err) {
         this.actionError = this.failureMessage(err)

@@ -4,6 +4,7 @@
       <div class="modal-backdrop fade show teacher-dialog-backdrop" @click="onBackdrop"></div>
       <div
         ref="root"
+        v-bind="$attrs"
         class="modal fade show d-block teacher-dialog"
         :class="{ 'is-compact': compact }"
         role="dialog"
@@ -23,7 +24,7 @@
               <div v-if="hasPills" class="teacher-dialog__pills">
                 <slot name="pills" />
               </div>
-              <button type="button" class="btn-close" :aria-label="closeLabel" :disabled="busy" @click="requestClose"></button>
+              <button type="button" class="btn-close" :aria-label="closeLabel" :title="closeLabel" :disabled="busy" @click="requestClose"></button>
             </div>
             <div v-else class="modal-header align-items-start">
               <div class="min-w-0">
@@ -33,7 +34,7 @@
                   <slot name="pills" />
                 </div>
               </div>
-              <button type="button" class="btn-close" :aria-label="closeLabel" :disabled="busy" @click="requestClose"></button>
+              <button type="button" class="btn-close" :aria-label="closeLabel" :title="closeLabel" :disabled="busy" @click="requestClose"></button>
             </div>
             <div v-if="confirmDiscard" class="teacher-dialog__discard" role="alert">
               <p>{{ t('teacher.unsaved_changes') }}</p>
@@ -56,12 +57,13 @@
 <script>
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 
 let dialogUid = 0
-const openDialogs = new Set()
 
 export default {
   name: 'TeacherDialog',
+  inheritAttrs: false,
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -106,7 +108,6 @@ export default {
       handler(value) {
         if (typeof document === 'undefined') return
         if (value) {
-          openDialogs.add(this.titleId)
           this.confirmDiscard = false
           this.draftChanged = false
           this.inputSnapshot.clear()
@@ -115,10 +116,8 @@ export default {
             const root = this.$refs.root
             if (root && !root.contains(document.activeElement)) root.focus({ preventScroll: true })
           })
-        } else {
-          openDialogs.delete(this.titleId)
         }
-        document.body.classList.toggle('modal-open', openDialogs.size > 0)
+        setModalScrollLock(this, value)
         if (!value && this.returnFocusEl) {
           const target = this.returnFocusEl
           this.returnFocusEl = null
@@ -128,8 +127,7 @@ export default {
     },
   },
   beforeUnmount() {
-    openDialogs.delete(this.titleId)
-    if (typeof document !== 'undefined') document.body.classList.toggle('modal-open', openDialogs.size > 0)
+    setModalScrollLock(this, false)
     restoreReturnFocus(this.returnFocusEl)
   },
   methods: {

@@ -14,6 +14,7 @@
     <label class="teacher-audio-feedback__text" :for="composerId">
       <span class="visually-hidden">{{ t('teacher.feedback') }}</span>
       <textarea
+        v-auto-grow
         :id="composerId"
         v-model="draft"
         rows="2"
@@ -23,20 +24,20 @@
       ></textarea>
     </label>
 
-    <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
-
+    <div class="teacher-audio-feedback__footer">
+      <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
+      <div class="teacher-audio-feedback__actions">
+        <button v-if="draft || hasRecording" type="button" class="btn btn-link btn-sm" :disabled="saving" @click="clear">
+          <i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message') }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" :disabled="saving || !canSend" @click="send">
+          <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
+          {{ saving ? t('teacher.saving') : t('teacher.send_audio_feedback') }}
+        </button>
+      </div>
+    </div>
     <p v-if="error" class="alert alert-danger py-1 px-2 mb-0" role="alert">{{ error }}</p>
     <p v-else-if="success" class="alert alert-success py-1 px-2 mb-0" role="status">{{ success }}</p>
-
-    <div class="teacher-audio-feedback__actions">
-      <button type="button" class="btn btn-link btn-sm" :disabled="saving || (!draft && !hasRecording)" @click="clear">
-        <i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message') }}
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" :disabled="saving || !canSend" @click="send">
-        <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
-        {{ saving ? t('teacher.saving') : t('teacher.send_audio_feedback') }}
-      </button>
-    </div>
   </section>
 </template>
 
@@ -45,9 +46,11 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
+import autoGrow from '../../directives/autoGrow.js'
 
 export default {
   name: 'TeacherAudioFeedbackComposer',
+  directives: { autoGrow },
   components: { TeacherVoiceNoteControls, TeacherTaskConversation },
   mixins: [i18nMixin],
   props: {
