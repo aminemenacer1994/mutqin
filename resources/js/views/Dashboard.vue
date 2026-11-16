@@ -63,7 +63,7 @@
 
         <p v-if="assignmentCompletionMessage" class="learner-home__confirmation" role="status" aria-live="polite"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ assignmentCompletionMessage }}</p>
 
-        <div class="learner-home__grid" :class="{ 'has-feedback': homeFeedback }">
+        <div class="learner-home__grid">
           <section v-if="showLearnerTeacherSection" class="learner-home__today" aria-labelledby="learner-home-today">
             <header class="learner-home__section-head">
               <h2 id="learner-home-today">{{ t('dashboard.home_today') }}</h2>
@@ -87,7 +87,7 @@
               <div class="learner-home__task-footer">
                 <span v-if="homeTaskDue.text" class="learner-home__due" :class="`is-${homeTaskDue.tone}`"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ homeTaskDue.text }}</span>
                 <button type="button" class="dash-btn dash-btn--primary" :disabled="Boolean(assignmentSavingId)" @click="homeTaskReadyToSubmit ? completeSupportAssignment(homeTask) : startSupportAssignment(homeTask)">
-                  <i class="bi" :class="homeTaskReadyToSubmit ? 'bi-check2-circle' : homeTask.started_at ? 'bi-arrow-repeat' : 'bi-play-fill'" aria-hidden="true"></i>
+                  <i class="bi" :class="homeTaskIcon" aria-hidden="true"></i>
                   {{ assignmentSavingId === homeTask.id ? t('teacher.loading') : homeTaskAction }}
                 </button>
               </div>
@@ -98,8 +98,58 @@
             </div>
           </section>
 
+          <a
+            v-if="showHomeContinue && primaryContinueAction"
+            class="dash-continue-card learner-home__continue"
+            data-testid="dashboard-primary-continue"
+            :data-kind="primaryContinueAction.kind"
+            :class="{
+              'dash-continue-card--primary': true,
+              'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
+              'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
+              'dash-continue-card--revise': primaryContinueAction.kind === 'revise',
+              'dash-continue-card--daily-mutqin': primaryContinueAction.kind === 'fresh' || primaryContinueAction.kind === 'journey',
+            }"
+            :href="primaryContinueAction.href"
+            :aria-label="primaryContinueAction.ariaLabel || undefined"
+          >
+            <span class="dash-continue-card__icon" aria-hidden="true">
+              <i :class="primaryContinueAction.icon" aria-hidden="true"></i>
+            </span>
+            <div class="dash-continue-card__main">
+              <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
+              <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
+              <p v-if="primaryContinueAction.hint" class="dash-continue-card__hint">
+                {{ primaryContinueAction.hint }}
+              </p>
+              <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
+                {{ primaryContinueAction.range }}
+              </p>
+            </div>
+            <span class="dash-continue-card__cta">
+              <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+              {{ primaryContinueAction.cta }}
+            </span>
+          </a>
+
+          <section v-if="homeRevisions.length" class="learner-home__revisions" aria-labelledby="home-revision-title">
+            <h2 id="home-revision-title">{{ t('dashboard.home_needs_revision') }}</h2>
+            <div v-for="row in homeRevisions" :key="row.key" class="learner-home__revision-row">
+              <div>
+                <strong>{{ row.task ? row.task.assignment.surah_name : row.item.surah_name }}</strong>
+                <span>{{ row.task ? revisionRangeLabel(row.task.assignment) : t('dashboard.ayah_n', { n: row.item.ayah_number }) }}</span>
+                <span v-if="row.task && revisionDue(row.task).text" class="learner-home__due" :class="`is-${revisionDue(row.task).tone}`">{{ revisionDue(row.task).text }}</span>
+              </div>
+              <button v-if="row.task" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="assignmentSavingId === row.task.id" @click="startSupportAssignment(row.task)">{{ t('teacher.coaching_practise_again') }}</button>
+              <a v-else class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(row.item)" @click="stashReviewContext(row.item)">{{ t('teacher.coaching_practise_again') }}</a>
+            </div>
+          </section>
+
           <aside v-if="homeFeedback" class="learner-home__feedback" aria-labelledby="learner-home-feedback">
-            <h2 id="learner-home-feedback">{{ t('dashboard.home_recent_feedback') }}</h2>
+            <header class="learner-home__section-head">
+              <h2 id="learner-home-feedback">{{ t('dashboard.home_recent_feedback') }}</h2>
+              <span v-if="homeFeedback.unread" class="learner-home__status is-warning">{{ t('teacher.unread') }}</span>
+            </header>
             <p class="learner-home__feedback-context">{{ homeFeedback.task_title || homeFeedback.passage?.label || homeFeedback.teacher_name }}</p>
             <p v-if="homeFeedback.preview || homeFeedback.body" class="learner-home__feedback-preview">{{ homeFeedback.preview || homeFeedback.body }}</p>
             <p v-else-if="homeFeedback.audio?.available" class="learner-home__feedback-preview"><i class="bi bi-mic" aria-hidden="true"></i> {{ t('teacher.voice_note') }}</p>
@@ -109,52 +159,6 @@
             </div>
           </aside>
         </div>
-
-          <div v-if="showHomeContinue" class="dash-hero__stack learner-home__continue">
-            <a
-              v-if="primaryContinueAction"
-              class="dash-continue-card"
-              data-testid="dashboard-primary-continue"
-              :data-kind="primaryContinueAction.kind"
-              :class="{
-                'dash-continue-card--primary': true,
-                'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
-                'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
-                'dash-continue-card--revise': primaryContinueAction.kind === 'revise',
-                'dash-continue-card--daily-mutqin': primaryContinueAction.kind === 'fresh' || primaryContinueAction.kind === 'journey',
-              }"
-              :href="primaryContinueAction.href"
-              :aria-label="primaryContinueAction.ariaLabel || undefined"
-            >
-              <span class="dash-continue-card__icon" aria-hidden="true">
-                <i :class="primaryContinueAction.icon" aria-hidden="true"></i>
-              </span>
-              <div class="dash-continue-card__main">
-                <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
-                <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
-                <p v-if="primaryContinueAction.hint" class="dash-continue-card__hint">
-                  {{ primaryContinueAction.hint }}
-                </p>
-                <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
-                  {{ primaryContinueAction.range }}
-                </p>
-              </div>
-              <span class="dash-continue-card__cta">
-                <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                {{ primaryContinueAction.cta }}
-              </span>
-            </a>
-          </div>
-          <section v-if="homeRevisions.length" class="learner-home__revisions" aria-labelledby="home-revision-title">
-            <h2 id="home-revision-title">{{ t('dashboard.home_needs_revision') }}</h2>
-            <div v-for="row in homeRevisions" :key="row.key" class="learner-home__revision-row">
-              <div><strong>{{ row.task ? row.task.assignment.surah_name : row.item.surah_name }}</strong>
-                <span>{{ row.task ? revisionRangeLabel(row.task.assignment) : t('dashboard.ayah_n', { n: row.item.ayah_number }) }}</span>
-              </div>
-              <button v-if="row.task" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="assignmentSavingId === row.task.id" @click="startSupportAssignment(row.task)">{{ t('teacher.coaching_practise_again') }}</button>
-              <a v-else class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(row.item)" @click="stashReviewContext(row.item)">{{ t('teacher.coaching_practise_again') }}</a>
-            </div>
-          </section>
         </div>
 
         <div v-show="studentPane === 'learning'" class="dash-pane">
@@ -1105,7 +1109,7 @@ import NetworkFallback from '../components/NetworkFallback.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import { latestLearnerHomeFeedback, nextLearnerHomeTask, learnerHomeRevisions } from '../scripts/teacher/learnerHome.js'
-import { isLearnerSubmitted, learnerPrimaryActionKey } from '../scripts/teacher/learnerDashboard.js'
+import { isLearnerSubmitted, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../scripts/teacher/taskTypes.js'
 import { formatLearnerDisplayDate } from '../utils/learnerDisplayDate.js'
@@ -1157,6 +1161,7 @@ import AchievementsPanel from '../components/achievements/AchievementsPanel.vue'
 import AchievementUnlockToast from '../components/achievements/AchievementUnlockToast.vue'
 import './Dashboard.css'
 import './Dashboard.learner-teacher.css'
+import '../styles/workspace-modern.css'
 import '../components/achievements/achievements.css'
 
 const SessionAnalysisModal = defineAsyncComponent(() => import(
@@ -1313,6 +1318,7 @@ export default {
       supportRequestId: 0,
       supportError: '',
       assignmentSavingId: 0,
+      feedbackReadVersion: 0,
       assignmentCompletionMessage: '',
       assignmentCompletionTimer: null,
       assignmentFailedItem: null,
@@ -1425,7 +1431,13 @@ export default {
     },
     homeTaskTone() {
       if (this.homeTask?.review_state === 'needs_correction') return 'warning'
-      return resolveDisplayTaskState(this.homeTask) === TASK_STATE.OVERDUE ? 'danger' : 'neutral'
+      if (resolveDisplayTaskState(this.homeTask) === TASK_STATE.OVERDUE) return 'danger'
+      if (this.homeTaskDue.daysRemaining === 0) return 'warning'
+      return 'neutral'
+    },
+    homeTaskIcon() {
+      if (this.homeTaskReadyToSubmit) return 'bi-check2-circle'
+      return learnerPrimaryActionKey(this.homeTask) === 'start' ? 'bi-play-fill' : 'bi-arrow-repeat'
     },
     homeTaskDue() {
       const dueAt = this.homeTask?.assignment?.due_at
@@ -1437,7 +1449,10 @@ export default {
     },
     homeTaskAction() {
       if (this.homeTaskReadyToSubmit) return this.t('teacher.mark_complete')
-      return learnerPrimaryActionKey(this.homeTask) === 'resume' ? this.t('common.resume') : this.t('teacher.start')
+      const key = learnerPrimaryActionKey(this.homeTask)
+      if (key === 'resume') return this.t('common.resume')
+      if (key === 'redo') return this.t('teacher.coaching_practise_again')
+      return this.t('teacher.learner_upcoming_start')
     },
     homeTaskReadyToSubmit() {
       return this.homeTask?.review_state !== 'needs_correction'
@@ -1447,15 +1462,20 @@ export default {
       return (this.support?.assignments || []).some(isLearnerSubmitted)
     },
     homeRevisions() {
+      if (this.showLearnerTeacherSection && !this.support) return []
       return learnerHomeRevisions(this.support?.assignments, this.revisitItems, this.homeTask?.id)
     },
     homeFeedback() {
-      return this.showLearnerTeacherSection ? latestLearnerHomeFeedback(this.support) : null
+      void this.feedbackReadVersion
+      const item = this.showLearnerTeacherSection ? latestLearnerHomeFeedback(this.support) : null
+      if (!item) return null
+      return mergeFeedbackReadState([item], readFeedbackReadMap())[0] || null
     },
     homeFeedbackWhen() {
       return formatLearnerDisplayDate(this.homeFeedback?.created_at, this.t.bind(this), this.localeCode)
     },
     showHomeContinue() {
+      if (this.showLearnerTeacherSection && this.supportLoading && !this.support) return false
       return this.primaryContinueAction && (!this.homeTask || this.primaryContinueAction.kind === 'saved')
     },
     dashboardJumps() {
@@ -2617,9 +2637,16 @@ export default {
       const header = document.querySelector('.app-navbar')
       this.learnerHeaderHeight = Math.ceil(header?.getBoundingClientRect().height || 0)
     },
+    revisionDue(task) {
+      return formatTaskDueUrgency(task?.assignment?.due_at, { t: this.t.bind(this) })
+    },
     openHomeFeedback() {
       const feedback = this.homeFeedback
       if (!feedback) return
+      if (feedback.id) {
+        persistFeedbackRead(feedback.id)
+        this.feedbackReadVersion += 1
+      }
       this.studentPane = 'learning'
       this.$nextTick(() => {
         document.getElementById('dash-welcome-heading')?.focus({ preventScroll: true })

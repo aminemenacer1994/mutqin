@@ -11,6 +11,7 @@
     @close="$emit('close')"
   >
     <template #pills>
+      <span v-if="assignmentLabel && assignmentLabel !== passageLabel" class="badge rounded-pill teacher-pill">{{ assignmentLabel }}</span>
       <span v-if="passageLabel" class="badge rounded-pill teacher-pill">{{ passageLabel }}</span>
       <span v-if="checkerScore" class="badge rounded-pill teacher-pill" :class="scoreTone">{{ checkerScore }} {{ t('teacher.playback_match_label') }}</span>
       <span class="badge rounded-pill teacher-pill">{{ submittedLabel || t('teacher.unavailable') }}</span>
@@ -38,7 +39,7 @@
                   @ended="playing = false"
                   @error="audioError = true"
                 ></audio>
-                <p v-if="!hasAudio" class="teacher-playback__hint teacher-playback__hint--solo">{{ audioUnavailableLabel }}</p>
+                <p v-if="!hasAudio" class="teacher-playback__hint teacher-playback__hint--solo"><i class="bi bi-mic-mute" aria-hidden="true"></i>{{ audioUnavailableLabel }}</p>
                 <div v-else class="teacher-playback__transport" role="group" :aria-label="t('teacher.playback_review_title')">
                   <button type="button" class="teacher-playback__play" :disabled="!hasAudio" :aria-label="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" :title="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" @click="togglePlayback">
                     <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
@@ -139,26 +140,25 @@
                 </div>
                 <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
                   <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
-                  <div class="is-uncertain" :class="{ 'is-empty': !summary.counts.uncertain }"><dt>{{ t('teacher.playback_uncertain_count') }}</dt><dd>{{ summary.counts.uncertain }}</dd></div>
-                  <div class="is-flagged" :class="{ 'is-empty': !summary.counts.flagged }"><dt>{{ t('teacher.playback_flagged_count') }}</dt><dd>{{ summary.counts.flagged }}</dd></div>
-                  <div class="is-skipped" :class="{ 'is-empty': !summary.counts.skipped }"><dt>{{ t('teacher.playback_skipped_count') }}</dt><dd>{{ summary.counts.skipped }}</dd></div>
+                  <div class="is-uncertain" :class="{ 'is-empty': !summary.counts.uncertain, 'is-active': attentionFilter === 'uncertain' && summary.counts.uncertain > 0 }">
+                    <dt aria-hidden="true">{{ t('teacher.playback_uncertain_count') }}</dt><dd aria-hidden="true">{{ summary.counts.uncertain }}</dd>
+                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'uncertain'" :aria-label="attentionCountLabel('uncertain')" :disabled="summary.counts.uncertain === 0 || Boolean(saving)" @click="setAttention('uncertain')"></button>
+                  </div>
+                  <div class="is-flagged" :class="{ 'is-empty': !summary.counts.flagged, 'is-active': attentionFilter === 'flagged' && summary.counts.flagged > 0 }">
+                    <dt aria-hidden="true">{{ t('teacher.playback_flagged_count') }}</dt><dd aria-hidden="true">{{ summary.counts.flagged }}</dd>
+                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'flagged'" :aria-label="attentionCountLabel('flagged')" :disabled="summary.counts.flagged === 0 || Boolean(saving)" @click="setAttention('flagged')"></button>
+                  </div>
+                  <div class="is-skipped" :class="{ 'is-empty': !summary.counts.skipped, 'is-active': attentionFilter === 'skipped' && summary.counts.skipped > 0 }">
+                    <dt aria-hidden="true">{{ t('teacher.playback_skipped_count') }}</dt><dd aria-hidden="true">{{ summary.counts.skipped }}</dd>
+                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'skipped'" :aria-label="attentionCountLabel('skipped')" :disabled="summary.counts.skipped === 0 || Boolean(saving)" @click="setAttention('skipped')"></button>
+                  </div>
                 </dl>
                 <p v-else class="teacher-playback__hint">{{ t('teacher.playback_no_assessment') }}</p>
                 <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
               </section>
               <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
                 <h3>{{ t('teacher.playback_attention_title') }}</h3>
-                <div class="teacher-playback__counts teacher-playback__attention-filters" data-dialog-transient>
-                  <button type="button" class="is-flagged" :aria-pressed="attentionFilter === 'flagged'" :disabled="summary.counts.flagged === 0" @click="attentionFilter = 'flagged'">
-                    <span>{{ t('teacher.playback_flagged_count') }}</span>
-                  </button>
-                  <button type="button" class="is-uncertain" :aria-pressed="attentionFilter === 'uncertain'" :disabled="summary.counts.uncertain === 0" @click="attentionFilter = 'uncertain'">
-                    <span>{{ t('teacher.playback_uncertain_count') }}</span>
-                  </button>
-                  <button type="button" class="is-skipped" :aria-pressed="attentionFilter === 'skipped'" :disabled="summary.counts.skipped === 0" @click="attentionFilter = 'skipped'">
-                    <span>{{ t('teacher.playback_skipped_count') }}</span>
-                  </button>
-                </div>
+                <p v-if="attentionFilter === 'uncertain'" class="teacher-playback__hint">{{ t('teacher.playback_uncertain_help') }}</p>
                 <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
                   <span>{{ t('teacher.playback_weak_ayahs') }}</span>
                   <div class="teacher-playback__chips">
@@ -208,30 +208,9 @@
                   <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
                   <p v-if="selectedCoaching" class="teacher-playback__hint">{{ reviewStatusLabel(selectedCoaching.review_status) }}</p>
                   <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
+                    <i class="bi bi-play-fill" aria-hidden="true"></i>
                     {{ t('teacher.coaching_play_segment') }}
                   </button>
-                  <details v-if="selectedCoaching?.corrections?.length" class="teacher-playback__fold">
-                    <summary>{{ t('teacher.coaching_history') }}</summary>
-                  <ul class="teacher-playback__history">
-                    <li v-for="item in selectedCoaching.corrections" :key="item.id">
-                      <p v-if="item.body">{{ item.body }}</p>
-                      <TeacherAudioFeedbackPlayer
-                        v-if="item.audio?.available"
-                        :src="item.audio.url"
-                        :duration-ms="item.audio.duration_ms"
-                        compact
-                      />
-                      <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
-                        {{ t('teacher.coaching_delete_audio') }}
-                      </button>
-                    </li>
-                  </ul>
-                  </details>
-                  <div class="teacher-playback__action-row">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
-                    <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
-                    <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
-                  </div>
                   <label class="teacher-playback__field">
                     <span>{{ t('teacher.coaching_write') }}</span>
                     <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
@@ -239,30 +218,53 @@
                   <div class="teacher-playback__action-row">
                     <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
                     <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || wordVoiceState.active || (!wordNote.trim() && !wordVoiceState.hasRecording)" @click="saveWord('correct')">
+                      <i class="bi bi-send" aria-hidden="true"></i>
                       {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
                     </button>
                   </div>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
-                  <div class="teacher-playback__word-practice">
-                    <label class="teacher-playback__field">
-                      <span>{{ t('teacher.playback_revision_due') }}</span>
-                      <input v-model="wordDueAt" type="date" :min="today" :disabled="Boolean(saving)">
-                    </label>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordDueAt || wordDueAt < today" @click="saveWord('practice')">{{ t('teacher.coaching_assign_practice') }}</button>
-                  </div>
                   <details class="teacher-playback__fold">
-                    <summary>{{ t('teacher.coaching_set_status') }}</summary>
-                  <label class="teacher-playback__field">
-                    <span class="visually-hidden">{{ t('teacher.coaching_set_status') }}</span>
-                    <select v-model="wordStatus" :disabled="Boolean(saving)">
-                      <option value="">{{ t('teacher.coaching_status_keep') }}</option>
-                      <option value="awaiting_retry">{{ t('teacher.coaching_status_awaiting') }}</option>
-                      <option value="needs_practice">{{ t('teacher.coaching_status_practice') }}</option>
-                      <option value="improved">{{ t('teacher.coaching_status_improved') }}</option>
-                      <option value="resolved">{{ t('teacher.coaching_status_resolved') }}</option>
-                    </select>
-                  </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
+                    <summary>{{ t('teacher.playback_actions') }}</summary>
+                    <div class="teacher-playback__action-row">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
+                      <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
+                      <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
+                    </div>
+                    <div v-if="selectedCoaching?.corrections?.length">
+                      <p class="teacher-playback__hint">{{ t('teacher.coaching_history') }}</p>
+                      <ul class="teacher-playback__history">
+                        <li v-for="item in selectedCoaching.corrections" :key="item.id">
+                          <p v-if="item.body">{{ item.body }}</p>
+                          <TeacherAudioFeedbackPlayer
+                            v-if="item.audio?.available"
+                            :src="item.audio.url"
+                            :duration-ms="item.audio.duration_ms"
+                            compact
+                          />
+                          <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
+                            {{ t('teacher.coaching_delete_audio') }}
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="teacher-playback__word-practice">
+                      <label class="teacher-playback__field">
+                        <span>{{ t('teacher.playback_revision_due') }}</span>
+                        <input v-model="wordDueAt" type="date" :min="today" :disabled="Boolean(saving)">
+                      </label>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordDueAt || wordDueAt < today" @click="saveWord('practice')">{{ t('teacher.coaching_assign_practice') }}</button>
+                    </div>
+                    <label class="teacher-playback__field">
+                      <span>{{ t('teacher.coaching_set_status') }}</span>
+                      <select v-model="wordStatus" :disabled="Boolean(saving)">
+                        <option value="">{{ t('teacher.coaching_status_keep') }}</option>
+                        <option value="awaiting_retry">{{ t('teacher.coaching_status_awaiting') }}</option>
+                        <option value="needs_practice">{{ t('teacher.coaching_status_practice') }}</option>
+                        <option value="improved">{{ t('teacher.coaching_status_improved') }}</option>
+                        <option value="resolved">{{ t('teacher.coaching_status_resolved') }}</option>
+                      </select>
+                    </label>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
                   </details>
               </section>
 
@@ -279,6 +281,7 @@
                 <div class="teacher-playback__action-row">
                   <TeacherVoiceNoteControls ref="voice" :disabled="Boolean(saving)" @state-change="voiceState = $event" />
                   <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || (!feedback.trim() && !voiceState.hasRecording) || voiceState.active" @click="sendFeedback">
+                    <i class="bi bi-send" aria-hidden="true"></i>
                     {{ saving === 'feedback' ? t('teacher.saving') : t('teacher.playback_send_feedback') }}
                   </button>
                 </div>
@@ -301,6 +304,9 @@
               <section class="teacher-playback__card teacher-playback__revision" :aria-label="t('teacher.playback_assign_revision')">
                   <h3>{{ t('teacher.playback_assign_revision') }}</h3>
                   <p class="teacher-playback__hint">{{ revisionHelp }}</p>
+                  <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
+                    <span v-for="ayah in revisionAyahs" :key="ayah">{{ t('teacher.ayah_n', { n: ayah }) }}</span>
+                  </div>
                   <label class="teacher-playback__field">
                     <span>{{ t('teacher.playback_revision_due') }}</span>
                     <input v-model="dueAt" type="date" :min="today" :disabled="saving || !payload.suggested_revision">
@@ -309,7 +315,8 @@
                     <span>{{ t('teacher.playback_revision_note') }}</span>
                     <textarea v-model="revisionNote" rows="2" maxlength="2000" :placeholder="t('teacher.playback_revision_note_placeholder')" :disabled="saving || !payload.suggested_revision"></textarea>
                   </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving || Boolean(payload.review?.revision) || !payload.suggested_revision || !dueAt || dueAt < today" @click="assignRevision">
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="saving || Boolean(payload.review?.revision) || !payload.suggested_revision || !dueAt || dueAt < today" @click="assignRevision">
+                    <i class="bi bi-journal-check" aria-hidden="true"></i>
                     {{ saving === 'revision' ? t('teacher.saving') : t('teacher.playback_assign') }}
                   </button>
                   <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<span v-if="assignedRevisionLabel"> · {{ assignedRevisionLabel }}</span></p>
@@ -321,7 +328,7 @@
     </div>
     <template #footer>
       <div v-if="payload && !loading" class="teacher-playback__review-status">
-        <button type="button" class="btn btn-outline-secondary teacher-playback__mark" :disabled="Boolean(saving) || reviewed" @click="markReviewed">
+        <button type="button" class="teacher-playback__mark" :class="reviewed ? 'btn btn-outline-secondary' : 'btn btn-primary'" :disabled="Boolean(saving) || reviewed" @click="markReviewed">
           <i class="bi bi-check2-circle" aria-hidden="true"></i>
           {{ reviewed ? t('teacher.playback_status_reviewed') : t('teacher.playback_mark_reviewed') }}
         </button>
@@ -599,6 +606,13 @@ export default {
         ? this.t('teacher.playback_revision_focus', { range })
         : this.t('teacher.playback_revision_passage', { range })
     },
+    revisionAyahs() {
+      const revision = this.payload?.review?.revision || this.payload?.suggested_revision
+      const start = Number(revision?.ayah_start)
+      const end = Number(revision?.ayah_end || start)
+      if (!Number.isInteger(start) || start < 1 || !Number.isInteger(end) || end < start || end - start > 5) return []
+      return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+    },
   },
   watch: {
     open(value) {
@@ -623,6 +637,14 @@ export default {
     },
     attentionFilter() {
       this.showAllAttention = false
+    },
+    'summary.counts': {
+      handler(counts) {
+        const tally = counts || {}
+        if (tally[this.attentionFilter]) return
+        const next = ['flagged', 'uncertain', 'skipped'].find((key) => tally[key] > 0)
+        if (next) this.attentionFilter = next
+      },
     },
   },
   beforeUnmount() {
@@ -830,12 +852,31 @@ export default {
       const glyph = this.glyphForKey(item.key)
       return [item.ayah ? this.t('teacher.ayah_n', { n: item.ayah }) : '', glyph?.accessibleText || this.t('teacher.word_n', { n: Number(item.wordIndex) + 1 }), this.wordStatusLabel(item.status)].filter(Boolean).join(' · ')
     },
+    setAttention(filter) {
+      if (this.saving || !this.summary?.counts?.[filter]) return
+      this.attentionFilter = filter
+    },
+    attentionCountLabel(filter) {
+      const keys = {
+        flagged: 'teacher.playback_flagged_count',
+        uncertain: 'teacher.playback_uncertain_count',
+        skipped: 'teacher.playback_skipped_count',
+      }
+      return `${this.t(keys[filter] || 'teacher.playback_attention_title')} ${this.summary?.counts?.[filter] || 0}`
+    },
     selectAttention(item) {
       const glyph = this.glyphForKey(item.key)
-      if (glyph) {
-        this.onSelectWord({ ...glyph, key: item.key })
-        this.$nextTick(() => this.revealWord(this.$refs.mushaf?.querySelector(`[data-playback-key="${item.key}"]`)))
-      }
+      const word = this.words.find((row) => wordKey(row) === item.key)
+      this.onSelectWord({
+        ...(glyph || {}),
+        key: item.key,
+        text: glyph?.text || '',
+        fontFamily: glyph?.fontFamily || '',
+        accessibleText: glyph?.accessibleText || '',
+        ayah: glyph?.ayah || word?.ayah || item.ayah,
+        start: wordWindow(word)?.start,
+      })
+      this.$nextTick(() => this.revealWord(this.$refs.mushaf?.querySelector(`[data-playback-key="${CSS.escape(item.key)}"]`)))
     },
     selectAyah(number) {
       for (const line of this.ayahs) {
