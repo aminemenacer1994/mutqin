@@ -842,8 +842,30 @@ export default {
       this.wordNote = this.wordDrafts[key] || ''
       const match = this.words.find((word) => wordKey(word) === key)
       const start = wordWindow(match)?.start ?? (Number.isFinite(part?.start) ? part.start : null)
-      if (start == null) return
-      this.seekTo(start, this.hasAudio)
+      if (start != null) this.seekTo(start, this.hasAudio)
+      this.$nextTick(() => this.revealCoachingField())
+    },
+    revealCoachingField() {
+      const panel = this.$refs.coachingPanel
+      const card = panel?.querySelector('.teacher-playback__word')
+      const field = card?.querySelector('textarea')
+      if (!card || !field) return
+      const desktop = window.matchMedia('(min-width: 961px)').matches
+      const scroller = desktop ? panel : panel.closest('.modal-body')
+      if (!scroller) return
+      const bounds = scroller.getBoundingClientRect()
+      const cardBox = card.getBoundingClientRect()
+      const fieldBox = field.getBoundingClientRect()
+      const cardFits = cardBox.height <= bounds.height - 16
+      if (cardFits) {
+        if (cardBox.top < bounds.top + 4 || cardBox.bottom > bounds.bottom - 4) {
+          scroller.scrollTop += cardBox.top - bounds.top - 4
+        }
+        return
+      }
+      if (fieldBox.top < bounds.top + 8 || fieldBox.bottom > bounds.bottom - 8) {
+        scroller.scrollTop += fieldBox.top - bounds.top - 12
+      }
     },
     glyphForKey(key) {
       return this.glyphByKey.get(key) || null
