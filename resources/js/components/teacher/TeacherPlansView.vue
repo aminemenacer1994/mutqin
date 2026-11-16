@@ -1,71 +1,122 @@
 <template>
-  <section class="teacher-stack teacher-plans-view" data-feature="learning-plans">
-    <header class="teacher-page-header">
-      <div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_plans') }}</h1></div>
-      <div class="teacher-plans-view__controls">
-      <label class="teacher-plans-view__picker">
+  <section class="teacher-stack teacher-plan-hub" data-feature="learning-plans">
+    <header class="teacher-plan-hub__header">
+      <div>
+        <h1>{{ t('teacher.nav_plans') }}</h1>
+        <p>{{ t('teacher.plan_page_desc') }}</p>
+      </div>
+      <button type="button" class="btn btn-primary" :disabled="loading || !students.length" @click="startPlan">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_create') }}
+      </button>
+    </header>
+
+    <div class="teacher-plan-hub__filters">
+      <label>
         <span class="visually-hidden">{{ t('teacher.student') }}</span>
         <select ref="picker" v-model="studentId" class="form-select">
           <option value="">{{ t('teacher.all_students') }}</option>
           <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
         </select>
       </label>
-      <button v-if="!studentId" type="button" class="btn btn-primary" :disabled="loading || !students.length" @click="startPlan"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_new') }}</button>
+      <div class="teacher-plan-hub__status" role="group" :aria-label="t('teacher.plan_sort')">
+        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': status === filter.id }" @click="status = filter.id">{{ filter.label }}</button>
       </div>
-    </header>
-    <p v-if="error" class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-link btn-sm" @click="load">{{ t('teacher.retry') }}</button></p>
-    <p v-if="chooseStudent" class="teacher-loading-inline" role="status">{{ t('teacher.plan_hub_pick') }}</p>
-    <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
-    <TeacherStudentProfilePlan v-else-if="studentId" :key="studentId" ref="workspace" :student-id="studentId" @updated="loadPlans" />
-    <div v-else-if="plans.length" class="teacher-learning-plan__board">
-      <article v-for="plan in plans" :key="plan.id" class="teacher-learning-plan__card">
-        <header class="teacher-learning-plan__card-head">
-          <div><p class="teacher-kicker">{{ plan.student?.name || studentName(plan.student_id) }}</p><h3>{{ plan.title }}</h3><p class="teacher-learning-plan__meta"><span class="teacher-learning-plan__badge" :class="`is-${plan.status}`">{{ planStatus(plan.status) }}</span><span>{{ plan.starts_on }}<template v-if="plan.ends_on"> – {{ plan.ends_on }}</template></span></p></div>
-          <button type="button" class="btn btn-outline-secondary btn-sm" @click="studentId = String(plan.student_id || plan.student?.id)">{{ t('teacher.open') }}<i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-        </header>
-        <p class="teacher-learning-plan__progress-label mt-3">{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</p>
-        <div class="teacher-learning-plan__progress-bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="percent(plan)" aria-valuemin="0" aria-valuemax="100"><span :style="{ width: `${percent(plan)}%` }"></span></div>
-        <p v-if="nextActivity(plan)" class="teacher-meta">{{ t('teacher.plan_next_activity') }}: {{ nextActivity(plan).label }}<span v-if="nextActivity(plan).due_on"> · {{ nextActivity(plan).due_on }}</span></p>
-      </article>
+      <label>
+        <span class="visually-hidden">{{ t('teacher.plan_search') }}</span>
+        <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.plan_search_placeholder')">
+      </label>
+      <label>
+        <span class="visually-hidden">{{ t('teacher.plan_sort') }}</span>
+        <select v-model="sort" class="form-select">
+          <option value="recent">{{ t('teacher.plan_sort_recent') }}</option>
+          <option value="due">{{ t('teacher.plan_sort_due') }}</option>
+          <option value="progress">{{ t('teacher.plan_sort_progress') }}</option>
+        </select>
+      </label>
     </div>
-    <TeacherEmpty v-else-if="!loading && !error" class="teacher-empty-panel" icon="bi bi-calendar-week" :message="t('teacher.plans_global_empty')" />
+
+    <p v-if="error" class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-link btn-sm" @click="load">{{ t('teacher.retry') }}</button></p>
+    <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
+
+    <TeacherStudentProfilePlan
+      v-else
+      ref="workspace"
+      embedded
+      :student-id="studentId"
+      :student-name="studentName(studentId)"
+      :students="students"
+      :status-filter="status"
+      :query="query"
+      :sort="sort"
+      :focus-plan-id="focusPlanId"
+      @leave="clearStudent"
+      @created="onCreated"
+    />
   </section>
 </template>
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
-import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfilePlan from './profile/TeacherStudentProfilePlan.vue'
 export default {
   name: 'TeacherPlansView',
-  components: { TeacherEmpty, TeacherStudentProfilePlan },
+  components: { TeacherStudentProfilePlan },
   mixins: [i18nMixin],
-  data() { return { loading: true, students: [], plans: [], studentId: '', error: '', chooseStudent: false, createRequested: false } },
+  data() {
+    return {
+      loading: true,
+      students: [],
+      studentId: '',
+      status: 'all',
+      query: '',
+      sort: 'recent',
+      focusPlanId: null,
+      error: '',
+    }
+  },
+  computed: {
+    statusFilters() {
+      return [
+        { id: 'all', label: this.t('teacher.plan_filter_all') },
+        { id: 'active', label: this.t('teacher.plan_status_active') },
+        { id: 'draft', label: this.t('teacher.plan_filter_drafts') },
+        { id: 'paused', label: this.t('teacher.plan_status_paused') },
+        { id: 'completed', label: this.t('teacher.plan_status_completed') },
+      ]
+    },
+  },
   mounted() { this.load() },
-  watch: { studentId() { this.chooseStudent = false; if (!this.studentId) this.loadPlans(); if (this.createRequested && this.studentId) this.$nextTick(() => { this.$refs.workspace?.openComposer(); this.createRequested = false }) } },
   methods: {
     async load() {
-      this.loading = true; this.error = ''
+      this.loading = true
+      this.error = ''
       try {
-        const [data] = await Promise.all([learningApi.getTeacherStudents({ per_page: 50 }), this.loadPlans()])
+        const data = await learningApi.getTeacherStudents({ per_page: 50 })
         this.students = data?.data || []
         const last = Number(data?.meta?.last_page || data?.last_page || 1)
-        for (let page = 2; page <= last; page++) {
+        for (let page = 2; page <= last; page += 1) {
           const next = await learningApi.getTeacherStudents({ per_page: 50, page })
           this.students.push(...(next?.data || []))
         }
-      } catch (error) { this.error = error?.response?.data?.message || this.t('teacher.plan_load_error') }
-      finally { this.loading = false }
+      } catch (error) {
+        this.error = error?.response?.data?.message || this.t('teacher.plan_load_error')
+      } finally {
+        this.loading = false
+      }
     },
-    async loadPlans() {
-      try { const response = await learningApi.getTeacherLearningPlans(); this.plans = response?.data || [] }
-      catch (error) { this.error = error?.response?.data?.message || this.t('teacher.plan_load_error') }
+    startPlan() {
+      this.$refs.workspace?.openComposer()
     },
-    startPlan() { if (this.studentId) this.$refs.workspace?.openComposer(); else { this.createRequested = true; this.chooseStudent = true; this.$refs.picker?.focus() } },
-    studentName(id) { return this.students.find(s => String(s.id) === String(id))?.name || '' },
-    planStatus(status) { const key = `teacher.plan_status_${status}`; const value = this.t(key); return value === key ? status : value },
-    nextActivity(plan) { return (plan.items || []).filter(item => ['overdue', 'upcoming', 'in_progress', 'planned'].includes(item.display_status)).slice().sort((a, b) => String(a.due_on || '9999').localeCompare(String(b.due_on || '9999')))[0] || null },
-    percent(plan) { return plan.progress?.total ? Math.min(100, Math.round(100 * Number(plan.progress.completed || 0) / plan.progress.total)) : 0 },
+    clearStudent() {
+      this.studentId = ''
+      this.focusPlanId = null
+    },
+    onCreated(plan) {
+      const id = plan?.student?.id || plan?.student_id
+      if (id) this.studentId = String(id)
+      if (plan?.id) this.focusPlanId = plan.id
+    },
+    studentName(id) { return this.students.find((student) => String(student.id) === String(id))?.name || '' },
   },
 }
 </script>

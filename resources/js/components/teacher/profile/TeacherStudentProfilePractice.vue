@@ -225,9 +225,11 @@ export default {
         title: group.title,
         arabicName: this.arabicNames[group.first?.surah_number] || '',
         arabicText: this.arabicAyahs[`${group.first?.surah_number}:${group.first?.ayah_number}`] || '',
-        hint: group.first?.word_index == null
-          ? this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks })
-          : (group.findings[0] || ''),
+        hint: [
+          this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks }),
+          this.formatWhen(group.first?.last_identified_at),
+        ].filter(Boolean).join(' · '),
+        focusAyah: group.first?.ayah_number || null,
         reviewable: Boolean(group.first?.evidence),
         href: group.first?.evidence ? '' : (group.first?.evidence_url || ''),
         actionLabel: this.t('teacher.assign_revision'),

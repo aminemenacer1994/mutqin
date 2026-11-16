@@ -43,7 +43,7 @@
         :title="compactView ? t('teacher.comfortable_view_help') : t('teacher.compact_view_help')"
         @click="toggleCompactView"
       >
-        <i :class="compactView ? 'bi bi-arrows-expand' : 'bi bi-arrows-collapse'" aria-hidden="true"></i>
+        <i :class="compactView ? 'bi bi-arrows-angle-expand' : 'bi bi-list'" aria-hidden="true"></i>
         <span class="visually-hidden">{{ compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view') }}</span>
       </button>
       <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">

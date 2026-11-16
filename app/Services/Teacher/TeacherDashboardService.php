@@ -5,6 +5,7 @@ namespace App\Services\Teacher;
 use App\Enums\AccountRole;
 use App\Enums\AnalyticsConsentStatus;
 use App\Enums\AssignmentStatus;
+use App\Enums\LearningPlanStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationType;
@@ -13,6 +14,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\LearningPlan;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
@@ -277,13 +279,16 @@ class TeacherDashboardService
                 'ai_success_rate' => $metrics['ai_success_rate'] ?? null,
                 'ai_attempts' => (int) ($metrics['ai_attempts'] ?? 0),
                 'assignments_overdue' => (int) ($metrics['assignments']['overdue'] ?? 0),
+                'assignments_needs_review' => (int) ($metrics['assignments']['awaiting_confirmation'] ?? 0),
+                'unread_messages' => $this->unreadStudentMessageCount($teacher, $student),
+                'learning_plan' => $this->currentLearningPlan($teacher, $student),
             ],
         ];
 
         $base['payload'] = match ($section) {
             'practice' => $this->practiceSection($student),
             'focus' => $this->focusSection($teacher, $student),
-            'weak' => $this->weakSection($student),
+            'weak' => $this->weakSection($student, $teacher),
             'ai' => $this->aiSection($teacher, $student),
             'revision' => $this->revisionSection($teacher, $student),
             'tasks' => $this->tasksSection($teacher, $student),
@@ -1585,7 +1590,7 @@ class TeacherDashboardService
     {
         $overview = $this->overviewSection($teacher, $student, $metrics);
         $practice = $this->practiceSection($student);
-        $weak = $this->weakSection($student);
+        $weak = $this->weakSection($student, $teacher);
         $ai = $this->aiSection($teacher, $student);
         $revision = $this->revisionSection($teacher, $student);
 
@@ -1766,10 +1771,77 @@ class TeacherDashboardService
     }
 
     /**
+     * The teacher's current plan for this student, preferring an active plan.
+     *
+     * @return array{id: int, title: string, status: string}|null
+     */
+    private function currentLearningPlan(User $teacher, User $student): ?array
+    {
+        $rank = [
+            LearningPlanStatus::Active->value => 0,
+            LearningPlanStatus::Paused->value => 1,
+            LearningPlanStatus::Draft->value => 2,
+            LearningPlanStatus::Completed->value => 3,
+        ];
+        $plan = LearningPlan::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->where('status', '!=', LearningPlanStatus::Archived->value)
+            ->get(['id', 'title', 'status'])
+            ->sortByDesc('id')
+            ->sortBy(function (LearningPlan $plan) use ($rank) {
+                $status = $plan->status instanceof LearningPlanStatus ? $plan->status->value : (string) $plan->status;
+
+                return $rank[$status] ?? 9;
+            })
+            ->first();
+        if (! $plan instanceof LearningPlan) {
+            return null;
+        }
+        $status = $plan->status instanceof LearningPlanStatus ? $plan->status->value : (string) $plan->status;
+
+        return [
+            'id' => (int) $plan->id,
+            'title' => trim((string) $plan->title),
+            'status' => $status,
+        ];
+    }
+
+    /**
+     * Open tasks whose range includes an ayah, so a repeated flag is not assigned twice unnoticed.
+     *
+     * @return Collection<int, TeacherAssignment>
+     */
+    private function openAssignmentsForStudent(User $teacher, User $student): Collection
+    {
+        return TeacherAssignment::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereHas('recipients', function ($query) use ($student) {
+                $query->where('student_id', $student->id)
+                    ->where('status', '!=', AssignmentStatus::Completed->value);
+            })
+            ->get(['id', 'surah_number', 'ayah_start', 'ayah_end']);
+    }
+
+    /**
+     * @param  Collection<int, TeacherAssignment>  $assignments
+     */
+    private function assignmentCoversAyah(Collection $assignments, int $surah, int $ayah): bool
+    {
+        return $assignments->contains(function (TeacherAssignment $assignment) use ($surah, $ayah) {
+            $from = (int) $assignment->ayah_start;
+            $to = max($from, (int) ($assignment->ayah_end ?: $from));
+
+            return (int) $assignment->surah_number === $surah && $ayah >= $from && $ayah <= $to;
+        });
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function weakSection(User $student): array
+    private function weakSection(User $student, ?User $teacher = null): array
     {
+        $openAssignments = $teacher ? $this->openAssignmentsForStudent($teacher, $student) : collect();
         $spots = MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
@@ -1794,7 +1866,7 @@ class TeacherDashboardService
             ->values();
 
         $evidenceAttempts = $this->attemptsForWeakSpots($student, $spots);
-        $items = $spots->map(function (MemorisationWeakSpot $spot) use ($evidenceAttempts) {
+        $items = $spots->map(function (MemorisationWeakSpot $spot) use ($evidenceAttempts, $openAssignments) {
             $presented = $this->difficulties->present($spot, includeHistory: false);
             $presented['evidence_url'] = $this->memorisationEvidenceUrl(
                 (int) $spot->surah_number,
@@ -1805,6 +1877,11 @@ class TeacherDashboardService
             $presented['evidence'] = ($attempt = $this->attemptForWeakSpot($spot, $evidenceAttempts))
                 ? $this->presentAttemptEvidence($attempt)
                 : null;
+            $presented['active_revision'] = $this->assignmentCoversAyah(
+                $openAssignments,
+                (int) $spot->surah_number,
+                (int) $spot->ayah_number,
+            );
 
             return $presented;
         })->all();
@@ -1830,6 +1907,11 @@ class TeacherDashboardService
             ->whereIn('ai_recite_attempt_id', $attempts->pluck('id'))
             ->get()
             ->keyBy('ai_recite_attempt_id');
+        $reviews = TeacherRecitationReview::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('ai_recite_attempt_id', $attempts->pluck('id'))
+            ->get(['ai_recite_attempt_id', 'status', 'teacher_assignment_id'])
+            ->keyBy('ai_recite_attempt_id');
 
         // Directory and profile use the same full-history denominator. The
         // visible history remains limited to the most recent 30 checks.
@@ -1849,9 +1931,17 @@ class TeacherDashboardService
             'score_window_start' => $scored->min('created_at')?->toIso8601String(),
             'score_window_end' => $scored->max('created_at')?->toIso8601String(),
             'difficulties' => $this->difficulties->studentSummary($teacher, $student),
-            'attempts' => $attempts->map(fn (AiReciteAttempt $attempt) => [
+            'attempts' => $attempts->map(function (AiReciteAttempt $attempt) use ($humanAssessments, $reviews) {
+                $human = $humanAssessments->get($attempt->id);
+                $review = $reviews->get($attempt->id);
+
+                return [
                 'id' => (int) $attempt->id,
-                'teacher_assessment' => ($human = $humanAssessments->get($attempt->id)) ? [
+                'review' => [
+                    'status' => $review?->status === TeacherRecitationReview::REVIEWED ? 'reviewed' : 'pending',
+                    'has_revision' => $review?->teacher_assignment_id !== null,
+                ],
+                'teacher_assessment' => $human ? [
                     'score' => (int) $human->tajweed_score,
                     'annotation' => $human->annotation,
                     'updated_at' => $human->updated_at?->toIso8601String(),
@@ -1869,7 +1959,8 @@ class TeacherDashboardService
                 'issues' => $this->wordIssues($attempt),
                 'assessment_status' => $attempt->assessment?->status,
                 'evidence' => $this->presentAttemptEvidence($attempt),
-            ])->all(),
+            ];
+            })->all(),
             'trend' => $scored->sortByDesc('created_at')->take(30)->sortBy('created_at')->map(fn (AiReciteAttempt $attempt) => [
                 'at' => $attempt->created_at?->toIso8601String(),
                 'accuracy_percent' => (int) $attempt->accuracy_percent,
@@ -2107,6 +2198,16 @@ class TeacherDashboardService
         return compact('wrong', 'skipped', 'extra', 'repeated');
     }
 
+    private function unreadStudentMessageCount(User $teacher, User $student): int
+    {
+        return (int) TeacherNote::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->whereNull('read_at')
+            ->whereIn('kind', [TeacherNoteKind::StudentMessage->value, TeacherNoteKind::Note->value])
+            ->count();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -2136,7 +2237,7 @@ class TeacherDashboardService
      */
     private function focusSection(User $teacher, User $student): array
     {
-        $weak = $this->weakSection($student);
+        $weak = $this->weakSection($student, $teacher);
         $revision = $this->revisionSection($teacher, $student);
 
         return [

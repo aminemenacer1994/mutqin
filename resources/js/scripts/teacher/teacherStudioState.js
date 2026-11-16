@@ -28,7 +28,7 @@ export function studioConfidenceValue(value) {
 export function studioHasDraft(state = {}) {
   const hasText = value => typeof value === 'string' && value.trim().length > 0
   const hasVoice = voice => Boolean(voice?.hasRecording || voice?.active)
-  return [state.feedback, state.privateNote, state.wordNote, state.wordStatus, state.revisionNote].some(hasText)
+  return [state.feedback, state.privateNote, state.wordNote, state.wordStatus, state.revisionNote, state.annotationFinding, state.annotationFocus].some(hasText)
     || Object.values(state.wordDrafts || {}).some(hasText)
     || Object.values(state.wordStatusDrafts || {}).some(hasText)
     || Boolean(state.initialDueAt && state.dueAt !== state.initialDueAt)

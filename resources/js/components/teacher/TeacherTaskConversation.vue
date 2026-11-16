@@ -404,10 +404,10 @@ export default {
       const outgoing = this.viewerRole === 'teacher'
         ? message.sender === 'teacher'
         : message.sender === 'student'
-      return outgoing
+      return outgoing && message.delivery_status === 'read' && Boolean(message.read_at)
     },
     deliveryLabel(message) {
-      return message.delivery_status === 'read' ? this.t('teacher.message_read') : this.t('teacher.message_sent_status')
+      return this.t('teacher.message_read')
     },
     messageWhen(message) {
       try {

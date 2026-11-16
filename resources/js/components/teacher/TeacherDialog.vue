@@ -21,7 +21,11 @@
           <div class="modal-content">
             <div v-if="compact" class="modal-header teacher-dialog__header is-inline">
               <h2 :id="titleId" class="modal-title h6 mb-0">{{ title }}</h2>
-              <div v-if="hasPills" class="teacher-dialog__pills">
+              <div v-if="hasPills || backLabel" class="teacher-dialog__pills">
+                <button v-if="backLabel" type="button" class="teacher-playback__back" @click="requestClose">
+                  <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                  {{ backLabel }}
+                </button>
                 <slot name="pills" />
               </div>
               <button type="button" class="btn-close" :aria-label="closeLabel" :title="closeLabel" :disabled="busy" @click="requestClose"></button>
@@ -71,6 +75,7 @@ export default {
     eyebrow: { type: String, default: '' },
     size: { type: String, default: 'lg' },
     closeLabel: { type: String, default: 'Close' },
+    backLabel: { type: String, default: '' },
     closeOnBackdrop: { type: Boolean, default: true },
     compact: { type: Boolean, default: false },
     busy: { type: Boolean, default: false },

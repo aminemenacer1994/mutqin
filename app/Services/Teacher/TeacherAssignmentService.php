@@ -81,13 +81,19 @@ class TeacherAssignmentService
             ]);
         }
 
+        [$activity, $recordingRequired, $kind] = $this->coachingActivity($input, $kind);
         $duplicateExists = TeacherAssignmentRecipient::query()
             ->whereIn('student_id', $recipients)
             ->where('status', '!=', AssignmentStatus::Completed->value)
-            ->whereHas('assignment', function ($query) use ($teacher, $kind, $input, $surah, $start, $end) {
+            ->whereHas('assignment', function ($query) use ($teacher, $kind, $input, $surah, $start, $end, $activity) {
                 $query->where('teacher_id', $teacher->id)
                     ->where('kind', $kind->value)
                     ->where('hifz_category', (string) $input['hifz_category'])
+                    ->when(
+                        $activity === null,
+                        fn ($inner) => $inner->whereNull('activity'),
+                        fn ($inner) => $inner->where('activity', $activity),
+                    )
                     ->where('surah_number', $surah)
                     ->where('ayah_start', $start)
                     ->where('ayah_end', $end);
@@ -109,7 +115,7 @@ class TeacherAssignmentService
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? 'normal')->value;
 
-        return DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority) {
+        return DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired) {
             $assignment = new TeacherAssignment;
             $assignment->forceFill([
                 'teacher_id' => $teacher->id,
@@ -119,6 +125,8 @@ class TeacherAssignmentService
                 'learning_plan_item_id' => isset($input['learning_plan_item_id']) ? (int) $input['learning_plan_item_id'] : null,
                 'kind' => $kind->value,
                 'hifz_category' => $input['hifz_category'],
+                'activity' => $activity,
+                'recording_required' => $recordingRequired,
                 'surah_number' => $surah,
                 'ayah_start' => $start,
                 'ayah_end' => $end,
@@ -174,12 +182,17 @@ class TeacherAssignmentService
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? $assignment->priority ?? 'normal')->value;
 
-        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority) {
+        $kind = AssignmentKind::tryFrom((string) ($input['kind'] ?? '')) ?? $assignment->kind;
+        [$activity, $recordingRequired, $kind] = $this->coachingActivity($input, $kind instanceof AssignmentKind ? $kind : AssignmentKind::Practice);
+
+        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind) {
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
             $locked->forceFill([
-                'kind' => $input['kind'],
+                'kind' => $kind->value,
                 'hifz_category' => $input['hifz_category'],
+                'activity' => $activity,
+                'recording_required' => $recordingRequired,
                 'surah_number' => $surah,
                 'ayah_start' => $start,
                 'ayah_end' => $end,
@@ -541,6 +554,33 @@ class TeacherAssignmentService
         return $recipient->refresh();
     }
 
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{0: ?string, 1: bool, 2: AssignmentKind}
+     */
+    private function coachingActivity(array $input, AssignmentKind $kind): array
+    {
+        $activity = isset($input['activity']) && $input['activity'] !== '' ? (string) $input['activity'] : null;
+        $allowed = ['nazra', 'hifz', 'tajweed', 'revision'];
+        if ($activity !== null && ! in_array($activity, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'activity' => 'Choose Nazra, Hifz, Tajweed practice, or Revision.',
+            ]);
+        }
+
+        $recordingRequired = array_key_exists('recording_required', $input)
+            ? filter_var($input['recording_required'], FILTER_VALIDATE_BOOLEAN)
+            : in_array($activity, ['hifz', 'tajweed'], true);
+        if ($activity === 'tajweed') {
+            $recordingRequired = true;
+        }
+        if ($activity !== null) {
+            $kind = $recordingRequired ? AssignmentKind::AiRecite : AssignmentKind::Practice;
+        }
+
+        return [$activity, $recordingRequired, $kind];
+    }
+
     public function practiceHref(
         TeacherAssignment $assignment,
         ?int $resumeSessionId = null,
@@ -804,6 +844,8 @@ class TeacherAssignmentService
             'id' => (int) $assignment->id,
             'kind' => $assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind,
             'hifz_category' => $assignment->hifz_category,
+            'activity' => $assignment->activity,
+            'recording_required' => (bool) $assignment->recording_required,
             'surah_number' => (int) $assignment->surah_number,
             'surah_name' => QuranMetadata::name((int) $assignment->surah_number),
             'ayah_start' => (int) $assignment->ayah_start,

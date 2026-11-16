@@ -238,6 +238,66 @@ class LearningPlansTest extends TestCase
         $this->assertSame(LearningPlan::query()->whereKey($applied['id'])->value('source_template_id'), $template['id']);
     }
 
+    public function test_identical_open_plan_is_rejected_until_the_teacher_duplicates_it(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $payload = [
+            'student_id' => $student->id,
+            'title' => 'Week 1 plan',
+            'starts_on' => now()->toDateString(),
+            'items' => [[
+                'activity' => 'nazra',
+                'kind' => 'practice',
+                'hifz_category' => 'sabqi',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 3,
+            ]],
+        ];
+
+        $created = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.store'), $payload)
+            ->assertCreated()
+            ->json('plan');
+        $this->assertSame('nazra', $created['items'][0]['activity']);
+        $this->assertFalse($created['progress_complete']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.store'), $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['title']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.store'), $payload + ['allow_duplicate' => true])
+            ->assertCreated();
+    }
+
+    public function test_paused_plan_is_not_required_for_the_student(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $plan = $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Paused week',
+            'activate' => true,
+            'items' => [[
+                'kind' => 'practice',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 2,
+            ]],
+        ])->assertCreated()->json('plan');
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.status', $plan['id']), ['status' => 'paused'])
+            ->assertOk();
+
+        $summary = app(TeacherDashboardService::class)->learnerSupport($student);
+        $this->assertSame('paused', $summary['learning_plan']['status']);
+        $this->assertNull($summary['learning_plan']['next_action']);
+        $this->assertSame('paused', $summary['learning_plan']['items'][0]['display_status']);
+    }
+
     public function test_other_teacher_cannot_manage_plan(): void
     {
         [$teacher, $student] = $this->classroom();

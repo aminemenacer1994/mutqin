@@ -1,4 +1,4 @@
-import { formatTeacherWhen } from './formatters'
+import { formatTeacherWhen } from './formatters.js'
 
 export const TASK_STATE = {
   NOT_STARTED: 'NOT_STARTED',
@@ -197,4 +197,120 @@ export function teacherStatusToneFromDisplay(displayState) {
 export function teacherListStatusTone(row, displayState) {
   if (row?.review_state === 'needs_correction') return 'danger'
   return teacherStatusToneFromDisplay(displayState)
+}
+
+/** Mutually exclusive progress. Overdue is never one of these. */
+export const TASK_LIFECYCLE = {
+  NOT_STARTED: 'not_started',
+  IN_PROGRESS: 'in_progress',
+  SUBMITTED: 'submitted',
+  NEEDS_REVIEW: 'needs_review',
+  REVISION_REQUESTED: 'revision_requested',
+  COMPLETED: 'completed',
+}
+
+const LIFECYCLE_LABEL_KEYS = {
+  [TASK_LIFECYCLE.NOT_STARTED]: 'teacher.task_state_not_started',
+  [TASK_LIFECYCLE.IN_PROGRESS]: 'teacher.task_state_in_progress',
+  [TASK_LIFECYCLE.SUBMITTED]: 'teacher.task_lifecycle_submitted',
+  [TASK_LIFECYCLE.NEEDS_REVIEW]: 'teacher.task_lifecycle_needs_review',
+  [TASK_LIFECYCLE.REVISION_REQUESTED]: 'teacher.task_lifecycle_revision',
+  [TASK_LIFECYCLE.COMPLETED]: 'teacher.task_lifecycle_completed',
+}
+
+function hasReviewableEvidence(row) {
+  const evidence = row?.evidence || {}
+  return Boolean(
+    evidence.attempt_id
+    || evidence.audio?.available
+    || evidence.transcript
+    || (Array.isArray(evidence.words) && evidence.words.length)
+  )
+}
+
+/**
+ * One progress state per task. A submission waits for the teacher;
+ * it does not complete the task. Revision requested stays with the student.
+ */
+export function resolveTaskLifecycle(row) {
+  const status = row?.status || 'pending'
+  const reviewState = row?.review_state
+
+  if (status === 'completed' && (reviewState === 'approved' || !row?.student_submitted_at)) {
+    return TASK_LIFECYCLE.COMPLETED
+  }
+
+  if (reviewState === 'needs_correction') {
+    return TASK_LIFECYCLE.REVISION_REQUESTED
+  }
+
+  const handedIn = status === 'awaiting_confirmation'
+    || reviewState === 'submitted'
+    || Boolean(row?.student_submitted_at)
+
+  if (handedIn) {
+    return hasReviewableEvidence(row) ? TASK_LIFECYCLE.NEEDS_REVIEW : TASK_LIFECYCLE.SUBMITTED
+  }
+
+  if (row?.started_at || status === 'in_progress') {
+    return TASK_LIFECYCLE.IN_PROGRESS
+  }
+
+  return TASK_LIFECYCLE.NOT_STARTED
+}
+
+export function taskLifecycleLabelKey(lifecycle) {
+  return LIFECYCLE_LABEL_KEYS[lifecycle] || LIFECYCLE_LABEL_KEYS[TASK_LIFECYCLE.NOT_STARTED]
+}
+
+export function taskLifecycleTone(lifecycle) {
+  if (lifecycle === TASK_LIFECYCLE.COMPLETED) return 'good'
+  if (lifecycle === TASK_LIFECYCLE.REVISION_REQUESTED) return 'warn'
+  if (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW || lifecycle === TASK_LIFECYCLE.SUBMITTED) return 'mid'
+  if (lifecycle === TASK_LIFECYCLE.IN_PROGRESS) return 'mid'
+  return 'muted'
+}
+
+/** Due-date flag. Completed tasks are never overdue. */
+export function taskIsOverdue(row) {
+  if (resolveTaskLifecycle(row) === TASK_LIFECYCLE.COMPLETED) return false
+  return isDuePastEndOfDay(row?.assignment?.due_at)
+}
+
+export function studentTaskMatchesFilter(row, filter) {
+  const lifecycle = resolveTaskLifecycle(row)
+  if (filter === 'overdue') return taskIsOverdue(row)
+  if (filter === 'completed') return lifecycle === TASK_LIFECYCLE.COMPLETED
+  if (filter === 'needs_review') return lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW
+  if (filter === 'submitted') return lifecycle === TASK_LIFECYCLE.SUBMITTED
+  if (filter === 'todo') {
+    return lifecycle === TASK_LIFECYCLE.NOT_STARTED
+      || lifecycle === TASK_LIFECYCLE.IN_PROGRESS
+      || lifecycle === TASK_LIFECYCLE.REVISION_REQUESTED
+  }
+  return true
+}
+
+/** Progress filters partition every task. Overdue overlaps those sets. */
+export function summarizeStudentTaskCounts(rows = []) {
+  const counts = {
+    all: 0,
+    todo: 0,
+    submitted: 0,
+    needs_review: 0,
+    completed: 0,
+    overdue: 0,
+  }
+
+  for (const row of rows) {
+    const lifecycle = resolveTaskLifecycle(row)
+    counts.all += 1
+    if (lifecycle === TASK_LIFECYCLE.COMPLETED) counts.completed += 1
+    else if (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW) counts.needs_review += 1
+    else if (lifecycle === TASK_LIFECYCLE.SUBMITTED) counts.submitted += 1
+    else counts.todo += 1
+    if (taskIsOverdue(row)) counts.overdue += 1
+  }
+
+  return counts
 }

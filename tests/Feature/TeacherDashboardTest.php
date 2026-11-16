@@ -1619,6 +1619,85 @@ class TeacherDashboardTest extends TestCase
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
+    public function test_coaching_activities_reuse_the_existing_task_flow(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $due = today()->addDays(4)->toDateString();
+
+        $nazra = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite',
+            'hifz_category' => 'sabqi',
+            'activity' => 'nazra',
+            'recording_required' => false,
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 2,
+            'due_at' => $due,
+        ])->assertCreated()->json();
+        $this->assertSame('nazra', $nazra['assignment']['activity']);
+        $this->assertSame('practice', $nazra['assignment']['kind']);
+        $this->assertFalse($nazra['assignment']['recording_required']);
+
+        $hifz = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'activity' => 'hifz',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 3,
+            'ayah_end' => 4,
+            'due_at' => $due,
+        ])->assertCreated()->json();
+        $this->assertSame('hifz', $hifz['assignment']['activity']);
+        $this->assertTrue($hifz['assignment']['recording_required']);
+        $this->assertSame('ai_recite', $hifz['assignment']['kind']);
+
+        $tajweed = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabqi',
+            'activity' => 'tajweed',
+            'recording_required' => false,
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 5,
+            'ayah_end' => 5,
+            'due_at' => $due,
+        ])->assertCreated()->json();
+        $this->assertTrue($tajweed['assignment']['recording_required']);
+        $this->assertSame('ai_recite', $tajweed['assignment']['kind']);
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabqi',
+            'activity' => 'revision',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 6,
+            'ayah_end' => 7,
+            'due_at' => $due,
+        ])->assertCreated()
+            ->assertJsonPath('assignment.activity', 'revision')
+            ->assertJsonPath('assignment.kind', 'practice')
+            ->assertJsonPath('assignment.recording_required', false);
+
+        $nazraStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $nazra['recipients'][0]['id']))->assertOk()->json();
+        $this->assertStringNotContainsString('ai_check=1', $nazraStart['href']);
+        $tajweedStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $tajweed['recipients'][0]['id']))->assertOk()->json();
+        $this->assertStringContainsString('ai_check=1', $tajweedStart['href']);
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'activity' => 'pronunciation-score',
+            'student_id' => $student->id,
+            'surah_number' => 2,
+            'ayah_start' => 1,
+            'ayah_end' => 1,
+            'due_at' => $due,
+        ])->assertStatus(422);
+    }
+
     private function assignmentInput(array $overrides = []): array
     {
         return array_merge([

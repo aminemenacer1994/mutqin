@@ -1438,7 +1438,7 @@ export default {
       return this.taskTypeLabel(row)
     },
     taskTypeLabel(row) {
-      return teacherTaskTypeLabel(resolveTeacherTaskType(row?.assignment?.kind, row?.assignment?.hifz_category), this.t.bind(this))
+      return teacherTaskTypeLabel(resolveTeacherTaskType(row?.assignment?.kind, row?.assignment?.hifz_category, row?.assignment?.activity), this.t.bind(this))
     },
     cardMetaTail(row) {
       if (this.isTeacherApproved(row)) {

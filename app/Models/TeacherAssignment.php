@@ -21,6 +21,8 @@ class TeacherAssignment extends Model
         return [
             'kind' => AssignmentKind::class,
             'hifz_category' => 'string',
+            'activity' => 'string',
+            'recording_required' => 'boolean',
             'surah_number' => 'integer',
             'ayah_start' => 'integer',
             'ayah_end' => 'integer',

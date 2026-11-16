@@ -5,11 +5,11 @@
       <p>{{ t('teacher.audio_feedback_hint') }}</p>
     </header>
 
-    <p v-if="passageLabel" class="teacher-audio-feedback__passage">
+    <p v-if="contextLabel || passageLabel" class="teacher-audio-feedback__passage">
       <i class="bi bi-bookmark" aria-hidden="true"></i>
-      {{ passageLabel }}
+      {{ contextLabel || passageLabel }}
     </p>
-    <TeacherTaskConversation v-if="allMessages.length" :messages="allMessages" variant="teacher" :compose="false" :composer-id="`${composerId}-history`" />
+    <TeacherTaskConversation v-if="showHistory && allMessages.length" :messages="allMessages" variant="teacher" viewer-role="teacher" :compose="false" :composer-id="`${composerId}-history`" />
 
     <label class="teacher-audio-feedback__text" :for="composerId">
       <span class="visually-hidden">{{ t('teacher.feedback') }}</span>
@@ -17,18 +17,26 @@
         v-auto-grow
         :id="composerId"
         v-model="draft"
-        rows="2"
+        rows="1"
         maxlength="2000"
         :placeholder="t('teacher.audio_feedback_text_placeholder')"
         :disabled="saving"
       ></textarea>
     </label>
 
+    <label v-if="showAyahReference" class="teacher-audio-feedback__ayah" :for="`${composerId}-ayah`">
+      <span>{{ t('teacher.task_ayah_reference') }}</span>
+      <input :id="`${composerId}-ayah`" v-model="ayahReference" type="text" maxlength="80" :disabled="saving" :placeholder="t('teacher.task_ayah_reference_placeholder')">
+    </label>
+
     <div class="teacher-audio-feedback__footer">
       <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="voiceState = $event" />
       <div class="teacher-audio-feedback__actions">
-        <button v-if="draft || hasRecording" type="button" class="btn btn-link btn-sm" :disabled="saving" @click="clear">
+        <button v-if="hasDraft" type="button" class="btn btn-link btn-sm" :disabled="saving" @click="clear">
           <i class="bi bi-eraser" aria-hidden="true"></i>{{ t('teacher.clear_message') }}
+        </button>
+        <button v-if="hasDraft" type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving" @click="saveDraft">
+          {{ t('teacher.task_save_draft') }}
         </button>
         <button type="button" class="btn btn-primary btn-sm" :disabled="saving || !canSend" @click="send">
           <i class="bi" :class="saving ? 'bi-arrow-repeat' : 'bi-send'" aria-hidden="true"></i>
@@ -61,15 +69,19 @@ export default {
     ayahStart: { type: [Number, String], default: null },
     ayahEnd: { type: [Number, String], default: null },
     passageLabel: { type: String, default: '' },
+    contextLabel: { type: String, default: '' },
     showHeading: { type: Boolean, default: true },
+    showHistory: { type: Boolean, default: true },
+    showAyahReference: { type: Boolean, default: false },
     messages: { type: Array, default: () => [] },
   },
-  emits: ['sent'],
+  emits: ['sent', 'draft-change'],
   data() {
     const uid = Math.random().toString(36).slice(2, 8)
     return {
       composerId: `teacher-audio-feedback-${uid}`,
       draft: '',
+      ayahReference: '',
       saving: false,
       error: '',
       success: '',
@@ -82,25 +94,54 @@ export default {
     hasRecording() {
       return this.voiceState.hasRecording
     },
-    hasDraft() { return Boolean(this.draft.trim() || this.voiceState.hasRecording || this.voiceState.active) },
+    hasDraft() { return Boolean(this.draft.trim() || this.ayahReference.trim() || this.voiceState.hasRecording || this.voiceState.active) },
+    draftStorageKey() { return this.recipientId ? `mutqin-teacher-task-draft:${this.recipientId}` : '' },
     allMessages() { return [...new Map([...this.messages, ...this.sentMessages].map(message => [message.id, message])).values()] },
     canSend() {
       return Boolean(this.draft.trim() || this.voiceState.hasRecording) && !this.voiceState.active
     },
   },
+  watch: {
+    hasDraft: { immediate: true, handler(value) { this.$emit('draft-change', Boolean(value)) } },
+  },
+  mounted() { this.restoreDraft() },
   beforeUnmount() {
     if (this.successTimer) clearTimeout(this.successTimer)
   },
   methods: {
+    restoreDraft() {
+      if (!this.draftStorageKey) return
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(this.draftStorageKey) || 'null')
+        if (!saved) return
+        if (!this.draft) this.draft = saved.draft || ''
+        if (!this.ayahReference) this.ayahReference = saved.ayah || ''
+      } catch (_) { /* ignore a damaged draft */ }
+    },
+    saveDraft() {
+      if (!this.draftStorageKey) return
+      sessionStorage.setItem(this.draftStorageKey, JSON.stringify({ draft: this.draft, ayah: this.ayahReference }))
+      this.error = ''
+      this.success = this.t('teacher.task_draft_saved')
+    },
     clear() {
       this.draft = ''
+      this.ayahReference = ''
       this.error = ''
       this.success = ''
+      if (this.draftStorageKey) sessionStorage.removeItem(this.draftStorageKey)
       this.$refs.voice?.discardRecording()
+    },
+    feedbackBody() {
+      const body = this.draft.trim()
+      const ayah = this.ayahReference.trim()
+      if (!ayah) return body
+      const line = `${this.t('teacher.task_ayah_reference')}: ${ayah}`
+      return body ? `${body}\n${line}` : line
     },
     async send() {
       if (this.saving || !this.canSend) return
-      const body = this.draft.trim()
+      const body = this.feedbackBody()
       const recording = this.$refs.voice?.recordingPayload?.() || null
       this.saving = true
       this.error = ''

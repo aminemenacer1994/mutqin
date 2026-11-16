@@ -42,7 +42,11 @@ class LearningPlanService
             $query->where('student_id', $studentId);
         }
 
-        return $query->limit(50)->get()->map(fn (LearningPlan $plan) => $this->presentPlan($plan))->all();
+        return $query->limit(50)->get()
+            ->unique('id')
+            ->map(fn (LearningPlan $plan) => $this->presentPlan($plan))
+            ->values()
+            ->all();
     }
 
     /**
@@ -55,11 +59,27 @@ class LearningPlanService
         $this->assertAuthorised($teacher, $studentId);
 
         $rawCadence = (string) ($input['cadence'] ?? 'weekly');
-        $cadence = in_array($rawCadence, ['weekly', 'monthly'], true) ? $rawCadence : 'weekly';
+        $cadence = in_array($rawCadence, ['weekly', 'monthly', 'custom'], true) ? $rawCadence : 'weekly';
         $startsOn = Carbon::parse((string) ($input['starts_on'] ?? today()->toDateString()))->startOfDay();
+        if ($cadence === 'custom' && empty($input['ends_on'])) {
+            throw ValidationException::withMessages(['ends_on' => 'Choose an end date for a custom plan.']);
+        }
         $endsOn = isset($input['ends_on']) && $input['ends_on']
             ? Carbon::parse((string) $input['ends_on'])->startOfDay()
             : $startsOn->copy()->addDays($cadence === 'monthly' ? 30 : 7);
+        $title = trim((string) ($input['title'] ?? 'Learning plan')) ?: 'Learning plan';
+        $duplicate = LearningPlan::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $studentId)
+            ->where('title', $title)
+            ->whereDate('starts_on', $startsOn->toDateString())
+            ->where('status', '!=', LearningPlanStatus::Archived->value)
+            ->exists();
+        if ($duplicate && empty($input['allow_duplicate'])) {
+            throw ValidationException::withMessages([
+                'title' => 'A plan with this title and start date already exists for this student.',
+            ]);
+        }
 
         $plan = new LearningPlan;
         $plan->forceFill([
@@ -67,7 +87,7 @@ class LearningPlanService
             'student_id' => $studentId,
             'organisation_id' => $teacher->organisation_id,
             'source_template_id' => $input['source_template_id'] ?? null,
-            'title' => trim((string) ($input['title'] ?? 'Learning plan')) ?: 'Learning plan',
+            'title' => $title,
             'cadence' => $cadence,
             'status' => LearningPlanStatus::Draft->value,
             'starts_on' => $startsOn->toDateString(),
@@ -99,7 +119,7 @@ class LearningPlanService
         if (isset($input['notes'])) {
             $plan->notes = $this->nullableText($input['notes']);
         }
-        if (isset($input['cadence']) && in_array($input['cadence'], ['weekly', 'monthly'], true)) {
+        if (isset($input['cadence']) && in_array($input['cadence'], ['weekly', 'monthly', 'custom'], true)) {
             $plan->cadence = $input['cadence'];
         }
         if (isset($input['starts_on'])) {
@@ -221,6 +241,24 @@ class LearningPlanService
     public function addItem(User $teacher, LearningPlan $plan, array $item, ?int $sortOrder = null, bool $persist = true): LearningPlanItem
     {
         $this->assertOwns($teacher, $plan);
+        $activity = (string) ($item['activity'] ?? '');
+        $allowedActivities = ['hifz', 'sabqi', 'manzil', 'nazra', 'ai_recite'];
+        if (! in_array($activity, $allowedActivities, true)) {
+            $activity = null;
+        }
+        if ($activity === 'hifz') {
+            $item['kind'] = 'practice';
+            $item['hifz_category'] = 'sabaq';
+        } elseif ($activity === 'sabqi' || $activity === 'nazra') {
+            $item['kind'] = 'practice';
+            $item['hifz_category'] = 'sabqi';
+        } elseif ($activity === 'manzil') {
+            $item['kind'] = 'practice';
+            $item['hifz_category'] = 'manzil';
+        } elseif ($activity === 'ai_recite') {
+            $item['kind'] = 'ai_recite';
+            $item['hifz_category'] = $item['hifz_category'] ?? 'sabqi';
+        }
         $kind = (string) ($item['kind'] ?? 'practice');
         if ($kind === 'teacher_review') {
             $kind = 'practice';
@@ -244,6 +282,7 @@ class LearningPlanService
             'origin' => ($item['origin'] ?? 'assigned') === 'suggested' ? 'suggested' : 'assigned',
             'item_status' => LearningPlanItemStatus::Planned->value,
             'kind' => $kind,
+            'activity' => $activity,
             'hifz_category' => (string) ($item['hifz_category'] ?? 'sabaq'),
             'surah_number' => $surah,
             'ayah_start' => $start,
@@ -309,33 +348,45 @@ class LearningPlanService
     {
         $this->assertAuthorised($teacher, (int) $student->id);
 
-        return MemorisationWeakSpot::query()
+        $grouped = [];
+        MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->whereIn('status', ['active', 'improving'])
             ->where('affected_attempt_count', '>=', 2)
-            ->orderByDesc('severity')
             ->orderByDesc('affected_attempt_count')
-            ->limit(8)
+            ->orderByDesc('severity')
+            ->limit(24)
             ->get()
-            ->map(function (MemorisationWeakSpot $spot) {
+            ->each(function (MemorisationWeakSpot $spot) use (&$grouped) {
                 $surah = (int) $spot->surah_number;
                 $ayah = (int) $spot->ayah_number;
+                $key = $surah.':'.$ayah;
+                $count = (int) $spot->affected_attempt_count;
+                if (! isset($grouped[$key])) {
+                    $grouped[$key] = [
+                        'origin' => 'suggested',
+                        'kind' => 'practice',
+                        'activity' => 'sabqi',
+                        'hifz_category' => 'sabqi',
+                        'surah_number' => $surah,
+                        'surah_name' => QuranMetadata::name($surah),
+                        'ayah_start' => $ayah,
+                        'ayah_end' => $ayah,
+                        'repetition_target' => 3,
+                        'priority' => 'high',
+                        'weak_spot_id' => (int) $spot->id,
+                        'evidence_count' => $count,
+                    ];
+                } else {
+                    $grouped[$key]['evidence_count'] += $count;
+                }
+                $grouped[$key]['reason'] = 'This ayah did not match the expected wording in '.$grouped[$key]['evidence_count'].' recent checks.';
+            });
 
-                return [
-                    'origin' => 'suggested',
-                    'kind' => 'practice',
-                    'hifz_category' => 'sabqi',
-                    'surah_number' => $surah,
-                    'surah_name' => QuranMetadata::name($surah),
-                    'ayah_start' => $ayah,
-                    'ayah_end' => $ayah,
-                    'repetition_target' => 3,
-                    'priority' => 'high',
-                    'weak_spot_id' => (int) $spot->id,
-                    'reason' => 'Missed or unclear in recent checks ('.$spot->affected_attempt_count.' times).',
-                ];
-            })
-            ->all();
+        $suggestions = array_values($grouped);
+        usort($suggestions, fn ($a, $b) => ($b['evidence_count'] <=> $a['evidence_count']));
+
+        return array_slice($suggestions, 0, 8);
     }
 
     /**
@@ -455,6 +506,7 @@ class LearningPlanService
                 'name' => $plan->student?->name,
             ],
             'progress' => $progress,
+            'progress_complete' => $progress['total'] > 0 && $progress['completed'] >= $progress['total'],
             'items' => $items,
             'next_action' => $this->nextAction($items),
         ];
@@ -482,6 +534,7 @@ class LearningPlanService
             'item_status' => $status,
             'display_status' => $display,
             'kind' => $item->kind,
+            'activity' => $item->activity,
             'hifz_category' => $item->hifz_category,
             'surah_number' => (int) $item->surah_number,
             'surah_name' => QuranMetadata::name((int) $item->surah_number),
@@ -509,7 +562,7 @@ class LearningPlanService
         $total = count($assigned);
         $completed = count(array_filter($assigned, fn ($item) => ($item['display_status'] ?? '') === 'completed'));
         $overdue = count(array_filter($assigned, fn ($item) => ($item['display_status'] ?? '') === 'overdue'));
-        $upcoming = count(array_filter($assigned, fn ($item) => in_array(($item['display_status'] ?? ''), ['upcoming', 'in_progress', 'planned'], true)));
+        $upcoming = count(array_filter($assigned, fn ($item) => in_array(($item['display_status'] ?? ''), ['upcoming', 'in_progress', 'planned', 'submitted'], true)));
         $suggested = count(array_filter($items, fn ($item) => ($item['origin'] ?? '') === 'suggested' && ($item['item_status'] ?? '') !== 'released'));
 
         return [
@@ -545,7 +598,18 @@ class LearningPlanService
             fn ($item) => ($item['origin'] ?? '') === 'assigned' || ($item['item_status'] ?? '') === 'released'
         ));
         $presented['progress'] = $this->progressFromItems($presented['items']);
-        $presented['next_action'] = $this->nextAction($presented['items']);
+        $presented['next_action'] = $plan->status === LearningPlanStatus::Paused
+            ? null
+            : $this->nextAction($presented['items']);
+        if ($plan->status === LearningPlanStatus::Paused) {
+            $presented['items'] = array_map(function (array $item) {
+                if (! in_array($item['display_status'] ?? '', ['completed', 'skipped'], true)) {
+                    $item['display_status'] = 'paused';
+                }
+
+                return $item;
+            }, $presented['items']);
+        }
 
         return $presented;
     }
@@ -591,7 +655,10 @@ class LearningPlanService
         if ($taskStatus === AssignmentStatus::Overdue->value) {
             return 'overdue';
         }
-        if (in_array($taskStatus, [AssignmentStatus::InProgress->value, AssignmentStatus::AwaitingConfirmation->value], true)) {
+        if ($taskStatus === AssignmentStatus::AwaitingConfirmation->value) {
+            return 'submitted';
+        }
+        if ($taskStatus === AssignmentStatus::InProgress->value) {
             return 'in_progress';
         }
         $due = $dueOn ? Carbon::parse((string) $dueOn)->endOfDay() : null;

@@ -23,7 +23,8 @@
     </div>
     <p class="learner-my-plan__progress-label">{{ progressLabel }}</p>
 
-    <div v-if="nextAction" class="learner-my-plan__next">
+    <p v-if="plan.status === 'paused'" class="learner-my-plan__teacher mb-2">{{ t('teacher.plan_paused_student') }}</p>
+    <div v-else-if="nextAction" class="learner-my-plan__next">
       <div class="learner-my-plan__next-copy">
         <strong>{{ t('teacher.learner_continue_learning') }}</strong>
         <span>{{ nextAction.label }}</span>
@@ -105,6 +106,7 @@ export default {
         paused: 'teacher.plan_status_paused',
         planned: 'teacher.plan_status_planned',
         in_progress: 'teacher.task_filter_progress',
+        submitted: 'teacher.plan_status_submitted',
       }[value]
       return key ? this.t(key) : value
     },

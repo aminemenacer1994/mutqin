@@ -49,6 +49,7 @@
             <option value="" disabled>{{ t('teacher.hifz_choose_type') }}</option>
             <option v-for="type in taskTypes" :key="type.id" :value="type.id">{{ t(type.labelKey) }}</option>
           </select>
+          <p v-if="selectedTaskType" class="text-body-secondary small mb-0 mt-1">{{ t(selectedTaskType.helpKey) }}</p>
         </div>
         <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }}</label>
@@ -94,6 +95,13 @@
           </select>
         </div>
         <div class="teacher-form-field teacher-form-field--full">
+          <label class="form-check" :for="`${formId}-recording`">
+            <input :id="`${formId}-recording`" class="form-check-input" type="checkbox" :checked="Boolean(form.recording_required)" :disabled="saving || selectedTaskType?.recordingLocked" @change="onRecordingChange($event.target.checked)">
+            <span class="form-check-label">{{ t('teacher.recording_required') }}</span>
+          </label>
+          <p class="text-body-secondary small mb-0">{{ t(form.recording_required ? 'teacher.recording_required_hint' : 'teacher.recording_optional_hint') }}</p>
+        </div>
+        <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
           <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
         </div>
@@ -112,6 +120,7 @@ import TeacherDialog from './TeacherDialog.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
 import {
   TEACHER_TASK_TYPES,
+  applyRecordingRequirement,
   applyTeacherTaskType,
   defaultAyahRange,
 } from '../../scripts/teacher/taskTypes'
@@ -175,7 +184,10 @@ export default {
       return Number(this.selectedSurah?.ayah_count || 0)
     },
     taskTypes() {
-      return TEACHER_TASK_TYPES
+      return TEACHER_TASK_TYPES.filter((type) => !type.legacy || type.id === this.form.task_type)
+    },
+    selectedTaskType() {
+      return TEACHER_TASK_TYPES.find((type) => type.id === this.form.task_type) || null
     },
     minDueDate() {
       const today = new Date()
@@ -263,6 +275,9 @@ export default {
     },
     onTaskTypeChange(taskTypeId) {
       this.$emit('update:form', applyTeacherTaskType(this.form, taskTypeId))
+    },
+    onRecordingChange(required) {
+      this.$emit('update:form', applyRecordingRequirement(this.form, required))
     },
     onSurahChange(surahNumber) {
       const previousSurah = String(this.form.surah_number)

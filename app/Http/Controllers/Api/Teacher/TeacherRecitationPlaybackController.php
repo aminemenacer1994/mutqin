@@ -80,6 +80,8 @@ class TeacherRecitationPlaybackController extends Controller
             'word_index' => ['required', 'integer', 'min:0', 'max:400'],
             'action' => ['required', 'string', 'in:reviewed,confirm,dismiss,correct,retry,practice,status'],
             'body' => ['nullable', 'string', 'max:2000'],
+            'focus' => ['nullable', 'string', 'in:makharij,sifaat,madd,ghunnah,noon_meem,qalqalah,waqf,pronunciation,memorisation,other'],
+            'finding' => ['nullable', 'string', 'in:strength,difficulty,correction'],
             'audio' => ['nullable', 'file', 'max:8192'],
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
             'review_status' => ['required_if:action,status', 'nullable', 'string', 'in:awaiting_retry,needs_practice,improved,resolved'],

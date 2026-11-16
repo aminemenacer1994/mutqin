@@ -6,19 +6,15 @@
     :title="heading"
     compact
     :close-label="t('teacher.playback_close')"
+    :back-label="t('teacher.playback_back')"
     :busy="Boolean(saving)"
     :dirty="hasUnsavedWork"
     @close="$emit('close')"
   >
     <template #pills>
-      <span v-if="assignmentLabel && assignmentLabel !== passageLabel" class="badge rounded-pill teacher-pill">{{ assignmentLabel }}</span>
       <span v-if="passageLabel" class="badge rounded-pill teacher-pill">{{ passageLabel }}</span>
-      <span v-if="checkerScore" class="badge rounded-pill teacher-pill" :class="scoreTone">{{ checkerScore }} {{ t('teacher.playback_match_label') }}</span>
-      <span class="badge rounded-pill teacher-pill">{{ submittedLabel || t('teacher.unavailable') }}</span>
-      <span v-if="durationLabel" class="badge rounded-pill teacher-pill">{{ durationLabel }}</span>
-      <span class="badge rounded-pill teacher-pill" :class="reviewed ? 'is-score' : 'is-quiet'">
-        {{ reviewed ? t('teacher.playback_status_reviewed') : t('teacher.playback_status_pending') }}
-      </span>
+      <span v-if="payload && checkerScore" class="badge rounded-pill teacher-pill" :class="scoreTone">{{ checkerScore }}</span>
+      <span v-if="payload" class="badge rounded-pill teacher-pill" :class="reviewTone">{{ reviewLabel }}</span>
     </template>
     <div class="teacher-playback">
           <p v-if="loading" class="teacher-playback__status" role="status">{{ t('teacher.playback_loading') }}</p>
@@ -59,17 +55,9 @@
                   </div>
                   <p class="teacher-playback__times">
                     <span>{{ formatTime(currentTime) }}</span>
-                    <span v-if="currentAyah">{{ t('teacher.ayah_n', { n: currentAyah }) }}</span>
                     <span>{{ formatTime(trackEnd) }}</span>
                   </p>
                 </div>
-                <div v-if="hasAudio" class="teacher-playback__tools" data-dialog-transient>
-                  <label><span>{{ t('teacher.playback_speed') }}</span><select :value="playbackRate" @change="setRate(Number($event.target.value))"><option v-for="speed in speeds" :key="speed" :value="speed">{{ speed }}×</option></select></label>
-                  <button v-if="canReplayAyah" type="button" @click="replayAyah">{{ t('teacher.repeat_ayah') }}</button>
-                  <button v-if="hasPreviousFlagged" type="button" @click="jumpFlagged(-1)">{{ t('teacher.previous_flag') }}</button>
-                  <button v-if="hasNextFlagged" type="button" @click="jumpFlagged(1)">{{ t('teacher.next_flag') }}</button>
-                </div>
-                <p v-if="hasAudio && timingNote" class="teacher-playback__hint">{{ timingNote }}</p>
               </div>
                 <div class="teacher-playback__legend" :aria-label="t('teacher.playback_follow')">
                   <span class="is-correct">{{ t('teacher.word_status_correct') }}</span>
@@ -82,11 +70,6 @@
                 </div>
               </div>
 
-              <nav v-if="ayahNumbers.length > 1" class="teacher-playback__navigation teacher-playback__chips" :aria-label="t('teacher.playback_ayah_navigation')" data-dialog-transient>
-                <button v-for="ayah in ayahNumbers" :key="ayah" type="button" :class="{ 'is-current': ayah === (selectedWord?.ayah || currentAyah) }" :aria-current="ayah === (selectedWord?.ayah || currentAyah) ? 'true' : undefined" :disabled="Boolean(saving)" @click="selectAyah(ayah)">
-                  {{ t('teacher.ayah_n', { n: ayah }) }}
-                </button>
-              </nav>
               <div ref="mushaf" class="teacher-playback__mushaf">
                 <p v-if="mushafLoading" class="teacher-playback__hint" role="status">{{ t('teacher.loading_quran_text') }}</p>
                 <TeacherReciteMushafAyahs
@@ -136,7 +119,7 @@
               <section class="teacher-playback__card teacher-playback__summary" :aria-label="t('teacher.playback_assessment_summary')">
                 <div class="teacher-playback__section-head">
                   <h3>{{ t('teacher.playback_assessment_summary') }}</h3>
-                  <span v-if="checkerScore" class="teacher-badge teacher-playback__match" :class="scoreTone">{{ checkerScore }} {{ t('teacher.playback_match_label') }}</span>
+                  <span v-if="checkerScore" class="teacher-badge teacher-playback__match" :class="scoreTone">{{ t('teacher.playback_wording_score', { n: checkerScore }) }}</span>
                 </div>
                 <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
                   <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
@@ -158,7 +141,6 @@
               </section>
               <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
                 <h3>{{ t('teacher.playback_attention_title') }}</h3>
-                <p v-if="attentionFilter === 'uncertain'" class="teacher-playback__hint">{{ t('teacher.playback_uncertain_help') }}</p>
                 <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
                   <span>{{ t('teacher.playback_weak_ayahs') }}</span>
                   <div class="teacher-playback__chips">
@@ -211,6 +193,22 @@
                     <i class="bi bi-play-fill" aria-hidden="true"></i>
                     {{ t('teacher.coaching_play_segment') }}
                   </button>
+                  <div class="teacher-playback__action-row">
+                    <label class="teacher-playback__field">
+                      <span>{{ t('teacher.finding_label') }}</span>
+                      <select v-model="annotationFinding" :disabled="Boolean(saving)">
+                        <option value="">{{ t('teacher.finding_unset') }}</option>
+                        <option v-for="[id, key] in findingOptions" :key="id" :value="id">{{ t(key) }}</option>
+                      </select>
+                    </label>
+                    <label class="teacher-playback__field">
+                      <span>{{ t('teacher.focus_label') }}</span>
+                      <select v-model="annotationFocus" :disabled="Boolean(saving)">
+                        <option value="">{{ t('teacher.focus_unset') }}</option>
+                        <option v-for="[id, key] in focusOptions" :key="id" :value="id">{{ t(key) }}</option>
+                      </select>
+                    </label>
+                  </div>
                   <label class="teacher-playback__field">
                     <span>{{ t('teacher.coaching_write') }}</span>
                     <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
@@ -234,6 +232,7 @@
                       <p class="teacher-playback__hint">{{ t('teacher.coaching_history') }}</p>
                       <ul class="teacher-playback__history">
                         <li v-for="item in selectedCoaching.corrections" :key="item.id">
+                          <p v-if="item.focus || item.finding" class="teacher-playback__hint">{{ teacherFindingLabel(item) }}</p>
                           <p v-if="item.body">{{ item.body }}</p>
                           <TeacherAudioFeedbackPlayer
                             v-if="item.audio?.available"
@@ -272,7 +271,6 @@
                 <h3>{{ t('teacher.playback_feedback') }}</h3>
                 <div v-if="payload.review?.feedback" class="teacher-playback__saved-feedback">
                   <p v-if="payload.review.feedback.body" class="teacher-playback__saved">{{ payload.review.feedback.body }}</p>
-                  <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_sent') }}</p>
                 </div>
                 <label class="teacher-playback__field">
                   <span class="visually-hidden">{{ t('teacher.playback_feedback') }}</span>
@@ -288,22 +286,8 @@
 
               </section>
 
-              <details class="teacher-playback__card teacher-playback__private-note" :aria-label="t('teacher.playback_private_note')">
-                  <summary><i class="bi bi-lock" aria-hidden="true"></i> {{ t('teacher.playback_private_note') }}</summary>
-                  <p class="teacher-playback__hint">{{ t('teacher.playback_private_help') }}</p>
-                  <p v-if="payload.review?.private_note?.body" class="teacher-playback__saved teacher-playback__private">{{ payload.review.private_note.body }}</p>
-                  <label class="teacher-playback__field">
-                    <span class="visually-hidden">{{ t('teacher.playback_private_note') }}</span>
-                    <textarea v-model="privateNote" rows="2" maxlength="4000" :placeholder="t('teacher.playback_private_placeholder')" :disabled="saving"></textarea>
-                  </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="saving || !privateNote.trim()" @click="savePrivateNote">
-                    {{ saving === 'note' ? t('teacher.saving') : t('teacher.playback_save_note') }}
-                  </button>
-              </details>
-
               <section class="teacher-playback__card teacher-playback__revision" :aria-label="t('teacher.playback_assign_revision')">
                   <h3>{{ t('teacher.playback_assign_revision') }}</h3>
-                  <p class="teacher-playback__hint">{{ revisionHelp }}</p>
                   <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
                     <span v-for="ayah in revisionAyahs" :key="ayah">{{ t('teacher.ayah_n', { n: ayah }) }}</span>
                   </div>
@@ -343,6 +327,7 @@ import { learningApi, createClientMessageId } from '../../scripts/api/learning'
 import { ayahRangeLabel } from '../../scripts/teacher/formatters'
 import { normaliseTeacherWordStatus } from '../../scripts/teacher/wordReviewClass'
 import { studioHasDraft, studioWordStatusKey, studioConfidenceValue } from '../../scripts/teacher/teacherStudioState'
+import { TEACHER_FINDING_FOCI, TEACHER_FINDINGS } from '../../scripts/teacher/taskTypes'
 import { buildTeacherPlaybackMushafLines } from '../../scripts/teacher/teacherReciteMushafView'
 import {
   activeWordAt,
@@ -369,8 +354,9 @@ export default {
     studentId: { type: [Number, String], default: null },
     attemptId: { type: [Number, String], default: null },
     autoplay: { type: Boolean, default: false },
+    focusAyah: { type: [Number, String], default: null },
   },
-  emits: ['close'],
+  emits: ['close', 'reviewed'],
   data() {
     playbackUid += 1
     return {
@@ -397,6 +383,10 @@ export default {
       repeatUntil: null,
       wordNote: '',
       wordStatus: '',
+      annotationFinding: '',
+      annotationFocus: '',
+      findingOptions: TEACHER_FINDINGS,
+      focusOptions: TEACHER_FINDING_FOCI,
       attentionFilter: 'flagged',
       showAllAttention: false,
       feedback: '',
@@ -464,6 +454,23 @@ export default {
     reviewed() {
       return this.payload?.review?.status === 'reviewed'
     },
+    reviewLabel() {
+      if (this.payload?.review?.revision) return this.t('teacher.recite_revision_requested')
+      return this.reviewed ? this.t('teacher.playback_status_reviewed') : this.t('teacher.recite_status_pending')
+    },
+    reviewTone() {
+      if (this.payload?.review?.revision) return 'is-partial'
+      return this.reviewed ? 'is-score' : 'is-quiet'
+    },
+    feedbackPhrases() {
+      return [
+        this.t('teacher.playback_phrase_well_done'),
+        this.t('teacher.playback_phrase_practise'),
+        this.t('teacher.playback_phrase_focus'),
+        this.t('teacher.playback_phrase_repeat'),
+        this.t('teacher.playback_phrase_guidance'),
+      ]
+    },
     heading() {
       return this.payload?.student?.name || this.t('teacher.playback_review_title')
     },
@@ -506,9 +513,14 @@ export default {
     trackEnd() {
       return this.seekMax
     },
+    showAssignmentPill() {
+      const label = this.assignmentLabel
+      return Boolean(label && label !== this.passageLabel && label.length <= 36)
+    },
     scoreTone() {
       const score = Number(this.payload?.accuracy_percent)
       if (!Number.isFinite(score)) return 'is-quiet'
+      if (this.hasAttention) return score >= 50 ? 'is-partial' : 'is-flagged'
       if (score >= 80) return 'is-score'
       if (score >= 50) return 'is-partial'
       return 'is-flagged'
@@ -692,6 +704,8 @@ export default {
       this.selectedGlyph = { text: '', fontFamily: '' }
       this.repeatUntil = null
       this.wordNote = ''
+      this.annotationFinding = ''
+      this.annotationFocus = ''
       this.wordDrafts = {}
       this.wordStatusDrafts = {}
       this.$refs.voice?.discardRecording()
@@ -719,7 +733,10 @@ export default {
         this.showAllAttention = false
         this.loading = false
         await this.loadMushaf(token)
-        if (this.autoplay) this.$nextTick(() => this.togglePlayback())
+        if (token !== this.loadToken) return
+        const focusAyah = Number(this.focusAyah)
+        if (focusAyah > 0) this.$nextTick(() => this.selectAyah(focusAyah))
+        else if (this.autoplay) this.$nextTick(() => this.togglePlayback())
       } catch (err) {
         if (token !== this.loadToken) return
         this.loadError = this.failureMessage(err)
@@ -900,6 +917,15 @@ export default {
       })
       this.$nextTick(() => this.revealWord(this.$refs.mushaf?.querySelector(`[data-playback-key="${CSS.escape(item.key)}"]`)))
     },
+    usePhrase(phrase) {
+      const current = this.feedback.trim()
+      if (!current) {
+        this.feedback = phrase
+        return
+      }
+      if (current.includes(phrase)) return
+      this.feedback = `${current} ${phrase}`
+    },
     selectAyah(number) {
       for (const line of this.ayahs) {
         const glyph = line.parts.find(part => part.ayah === number && !part.isEnd)
@@ -928,6 +954,11 @@ export default {
       if (!Number.isInteger(ayah) || !Number.isInteger(index)) return
       if (action === 'correct' && this.$refs.wordVoice?.isRecordingActive) return
       const recording = action === 'correct' ? (this.$refs.wordVoice?.recordingPayload?.() || null) : null
+      if (action === 'correct' && Boolean(this.annotationFocus) !== Boolean(this.annotationFinding)) {
+        this.actionError = this.t('teacher.finding_pair_required')
+        this.actionMessage = ''
+        return
+      }
       if (action === 'correct' && !this.wordNote.trim() && !recording?.blob) {
         this.actionError = this.t('teacher.coaching_correction_required')
         this.actionMessage = ''
@@ -944,6 +975,8 @@ export default {
           word_index: index,
           action,
           body: action === 'correct' || action === 'practice' ? this.wordNote.trim() : undefined,
+          focus: action === 'correct' ? this.annotationFocus : undefined,
+          finding: action === 'correct' ? this.annotationFinding : undefined,
           review_status: action === 'status' ? this.wordStatus : undefined,
           due_at: action === 'practice' ? this.wordDueAt : undefined,
         }, recording)
@@ -951,6 +984,8 @@ export default {
         if (action === 'correct') {
           delete this.wordDrafts[this.selectedKey]
           this.wordNote = ''
+          this.annotationFinding = ''
+          this.annotationFocus = ''
           this.$refs.wordVoice?.discardRecording()
         }
         if (action === 'status') {
@@ -986,6 +1021,11 @@ export default {
     },
     wordStatusLabel(status) {
       return this.t(studioWordStatusKey(status))
+    },
+    teacherFindingLabel(item) {
+      const finding = item?.finding ? this.t(`teacher.finding_${item.finding}`) : ''
+      const focus = item?.focus ? this.t(`teacher.focus_${item.focus}`) : ''
+      return [this.t('teacher.finding_teacher'), finding, focus].filter(Boolean).join(' · ')
     },
     async sendFeedback() {
       if (this.saving) return
@@ -1065,6 +1105,7 @@ export default {
         const payload = await learningApi.markTeacherRecitationReviewed(this.studentId, this.attemptId)
         this.applyPayload(payload)
         this.actionMessage = this.t('teacher.playback_reviewed_saved')
+        this.$emit('reviewed')
       } catch (err) {
         this.actionError = this.failureMessage(err)
       } finally {

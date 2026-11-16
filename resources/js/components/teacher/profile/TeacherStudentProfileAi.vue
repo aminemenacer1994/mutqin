@@ -1,31 +1,41 @@
 <template>
   <div class="teacher-recite">
-    <TeacherTabGuide kind="section" :title="t('teacher.review_history')" />
-    <template v-if="attemptGroups.length">
-      <div v-if="attemptGroups.length > 1" class="teacher-review-filter">
-      <div class="teacher-learn__chips" role="group" :aria-label="t('teacher.review_filter_label')">
-        <button type="button" :class="{ 'is-active': !passageFilter }" :aria-pressed="!passageFilter ? 'true' : 'false'" @click="passageFilter = ''">
-          {{ t('teacher.learning_all_passages') }}
-        </button>
-        <button
-          v-for="group in attemptGroups"
-          :key="group.key"
-          type="button"
-          :class="{ 'is-active': passageFilter === group.key }"
-          :aria-pressed="passageFilter === group.key ? 'true' : 'false'"
-          @click="passageFilter = group.key"
-        >
-          {{ group.title }}
-          <em>{{ group.rows.length }}</em>
+    <div v-if="attempts.length" class="teacher-recite__bar">
+      <div class="teacher-recite__segments" role="group" :aria-label="t('teacher.recite_status_filter')">
+        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': statusFilter === filter.id }" :aria-pressed="statusFilter === filter.id ? 'true' : 'false'" @click="statusFilter = filter.id">
+          {{ filter.label }}<span>{{ filter.count }}</span>
         </button>
       </div>
-      </div>
-      <TeacherRecordList layout="cards" :rows="visibleAttempts" mushaf-review-modal />
-    </template>
-    <div v-else class="teacher-profile-empty teacher-profile-empty--row">
-      <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
+      <label class="teacher-recite__field">
+        <span class="visually-hidden">{{ t('teacher.recite_date_filter') }}</span>
+        <select v-model="dateFilter">
+          <option value="">{{ t('teacher.recite_date_all') }}</option>
+          <option v-for="date in dateOptions" :key="date" :value="date">{{ date }}</option>
+        </select>
+      </label>
+      <label v-if="attemptGroups.length > 1" class="teacher-recite__field">
+        <span class="visually-hidden">{{ t('teacher.review_filter_label') }}</span>
+        <select v-model="passageFilter">
+          <option value="">{{ t('teacher.learning_all_passages') }}</option>
+          <option v-for="group in attemptGroups" :key="group.key" :value="group.key">{{ group.chip }}</option>
+        </select>
+      </label>
     </div>
 
+    <section v-if="needsReview.length" class="teacher-recite__section" :aria-label="t('teacher.recite_needs_review')">
+      <h2>{{ t('teacher.recite_needs_review') }}</h2>
+      <TeacherRecordList layout="cards" :rows="needsReview" mushaf-review-modal @reviewed="markRowReviewed" />
+    </section>
+
+    <section v-if="historyRows.length" class="teacher-recite__section" :aria-label="t('teacher.recite_history')">
+      <h2>{{ t('teacher.recite_history') }}</h2>
+      <TeacherRecordList layout="cards" :rows="historyRows" mushaf-review-modal @reviewed="markRowReviewed" />
+    </section>
+
+    <div v-if="!attempts.length" class="teacher-profile-empty teacher-profile-empty--row">
+      <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
+    </div>
+    <p v-else-if="!needsReview.length && !historyRows.length" class="teacher-recite__empty">{{ t('teacher.plan_no_matches') }}</p>
   </div>
 </template>
 
@@ -34,13 +44,22 @@ import { i18nMixin } from '../../../mixins/i18nMixin'
 import { ayahRangeLabel, scoreBadgeTone, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
-import TeacherTabGuide from '../TeacherTabGuide.vue'
+
+function shortRange(attempt) {
+  const name = attempt.range?.surah_name || ''
+  const from = attempt.range?.from
+  const to = attempt.range?.to
+  if (!name) return ''
+  if (!from) return name
+  if (!to || Number(from) === Number(to)) return `${name} · ${from}`
+  return `${name} · ${from}–${to}`
+}
 
 export default {
   name: 'TeacherStudentProfileAi',
-  components: { TeacherEmpty, TeacherRecordList, TeacherTabGuide },
+  components: { TeacherEmpty, TeacherRecordList },
   mixins: [i18nMixin],
-  data() { return { passageFilter: '' } },
+  data() { return { passageFilter: '', statusFilter: 'all', dateFilter: '', query: '', reviewedIds: [] } },
   props: {
     profile: { type: Object, required: true },
     issueLabel: { type: Function, required: true },
@@ -48,63 +67,101 @@ export default {
     step: { type: [String, Number], default: 2 },
   },
   emits: ['assign-revision'],
-  watch: { 'profile.student.id'() { this.passageFilter = '' } },
+  watch: { 'profile.student.id'() { this.passageFilter = ''; this.statusFilter = 'all'; this.dateFilter = ''; this.query = ''; this.reviewedIds = [] } },
   computed: {
-    visibleAttempts() {
-      const groups = this.passageFilter
-        ? this.attemptGroups.filter((group) => group.key === this.passageFilter)
-        : this.attemptGroups
-      return groups.flatMap((group) => group.rows.map((row) => ({
-        ...row,
-        hint: [group.title, row.hint].filter(Boolean).join(' · '),
-      }))).sort((a, b) => (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0))
+    attempts() { return this.profile.payload?.attempts || [] },
+    statusFilters() {
+      const rows = this.attemptRows
+      const countOf = (id) => (id === 'all' ? rows.length : rows.filter((row) => row.reviewState === id).length)
+      return [
+        { id: 'all', label: this.t('teacher.recite_status_all') },
+        { id: 'pending', label: this.t('teacher.recite_status_pending') },
+        { id: 'reviewed', label: this.t('teacher.recite_status_reviewed') },
+        { id: 'revision', label: this.t('teacher.recite_status_revision') },
+      ].map((filter) => ({ ...filter, count: countOf(filter.id) }))
+    },
+    attemptRows() {
+      return this.attempts.map((attempt) => this.attemptRow(attempt)).sort((a, b) => (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0))
+    },
+    dateOptions() {
+      return [...new Set(this.attemptRows.map((row) => row.dateLabel).filter(Boolean))]
+    },
+    filteredRows() {
+      const query = this.query.trim().toLocaleLowerCase()
+      return this.attemptRows.filter((row) => {
+        if (this.passageFilter && row.passageKey !== this.passageFilter) return false
+        if (this.dateFilter && row.dateLabel !== this.dateFilter) return false
+        if (query && !`${row.title} ${row.hint}`.toLocaleLowerCase().includes(query)) return false
+        if (this.statusFilter === 'all') return true
+        return row.reviewState === this.statusFilter
+      })
+    },
+    needsReview() {
+      if (this.statusFilter !== 'all' && this.statusFilter !== 'pending') return []
+      return this.filteredRows.filter((row) => row.reviewState === 'pending')
+    },
+    historyRows() {
+      if (this.statusFilter === 'pending') return []
+      if (this.statusFilter === 'all') return this.filteredRows.filter((row) => row.reviewState !== 'pending')
+      return this.filteredRows
     },
     attemptGroups() {
       const groups = new Map()
-      for (const attempt of this.profile.payload.attempts || []) {
-        const name = attempt.range?.surah_name || this.t('teacher.unavailable')
-        const from = attempt.range?.from
-        const to = attempt.range?.to
-        const title = ayahRangeLabel(name, from, to, this.t)
-        const issues = attempt.issues
-        const issueHint = !issues || !Object.values(issues).some((value) => Number(value) > 0)
-          ? ''
-          : this.issueLabel(issues)
-        const assigned = attempt.evidence?.assigned_range
-        const assignedHint = assigned
-          ? this.t('teacher.assigned_task_short', {
-            range: ayahRangeLabel(assigned.surah_name, assigned.from, assigned.to, this.t),
-          })
-          : ''
-        const hint = [assignedHint, issueHint].filter(Boolean).join(' · ')
-        const hasIssues = Boolean(issues && Object.values(issues).some((value) => Number(value) > 0))
-        const when = this.formatWhen(attempt.created_at)
-        const row = teacherRecitationEvidenceRow({
-          key: attempt.id,
-          sortAt: attempt.created_at,
-          attemptId: attempt.id,
-          studentId: this.profile.student?.id,
-          icon: 'bi bi-mic',
-          iconTone: scoreBadgeTone(attempt.accuracy_percent),
-          attention: hasIssues,
-          title: when || this.t('teacher.unavailable'),
-          hint,
-          badge: typeof attempt.accuracy_percent === 'number'
-            ? this.t('teacher.score_n', { n: attempt.accuracy_percent })
-            : this.t('teacher.unavailable'),
-          badgeTone: scoreBadgeTone(attempt.accuracy_percent),
-          href: !attempt.evidence?.audio?.available && !attempt.evidence?.transcript && !attempt.evidence?.words?.length && attempt.range?.surah_number && attempt.range?.from
-            ? `/memorisation?surah=${attempt.range.surah_number}&from=${attempt.range.from}&to=${attempt.range.to || attempt.range.from}&review=1`
-            : '',
-        }, attempt.evidence, attempt.range ? {
-          surah: attempt.range.surah_number,
-          from: attempt.range.from,
-          to: attempt.range.to,
-        } : null)
-        if (!groups.has(title)) groups.set(title, { key: title, title, surah: attempt.range?.surah_number, rows: [] })
-        groups.get(title).rows.push(row)
+      for (const row of this.attemptRows) {
+        if (!groups.has(row.passageKey)) groups.set(row.passageKey, { key: row.passageKey, chip: '', rows: [] })
+        groups.get(row.passageKey).rows.push(row)
       }
-      return [...groups.values()]
+      return [...groups.values()].map((group) => ({
+        ...group,
+        chip: this.t(group.rows.length === 1 ? 'teacher.recite_attempt_one' : 'teacher.recite_attempts', { range: group.key, n: group.rows.length }),
+      }))
+    },
+  },
+  methods: {
+    markRowReviewed(row) {
+      if (!row?.attemptId || this.reviewedIds.includes(row.attemptId)) return
+      this.reviewedIds.push(row.attemptId)
+    },
+    reviewState(attempt) {
+      if (this.reviewedIds.includes(attempt.id)) return 'reviewed'
+      if (attempt.review?.has_revision) return 'revision'
+      if (attempt.review?.status === 'reviewed') return 'reviewed'
+      return 'pending'
+    },
+    attemptRow(attempt) {
+      const passage = shortRange(attempt) || ayahRangeLabel(attempt.range?.surah_name, attempt.range?.from, attempt.range?.to, this.t)
+      const state = this.reviewState(attempt)
+      const issues = attempt.issues
+      const issueHint = !issues || !Object.values(issues).some((value) => Number(value) > 0) ? '' : this.issueLabel(issues)
+      const score = typeof attempt.accuracy_percent === 'number'
+        ? this.t('teacher.playback_wording_score', { n: `${attempt.accuracy_percent}%` })
+        : this.t('teacher.recite_not_assessed')
+      const when = this.formatWhen(attempt.created_at)
+      const status = {
+        pending: ['teacher.recite_status_pending', 'warn'],
+        reviewed: ['teacher.playback_status_reviewed', 'good'],
+        revision: ['teacher.recite_revision_requested', 'warn'],
+      }[state]
+      return teacherRecitationEvidenceRow({
+        key: attempt.id,
+        sortAt: attempt.created_at,
+        attemptId: attempt.id,
+        studentId: this.profile.student?.id,
+        passageKey: passage,
+        dateLabel: when,
+        reviewState: state,
+        icon: 'bi bi-mic',
+        iconTone: scoreBadgeTone(attempt.accuracy_percent),
+        attention: state === 'pending' || Boolean(issueHint),
+        title: passage,
+        hint: [when, score, issueHint].filter(Boolean).join(' · '),
+        badge: this.t(status[0]),
+        badgeTone: status[1],
+      }, attempt.evidence, attempt.range ? {
+        surah: attempt.range.surah_number,
+        from: attempt.range.from,
+        to: attempt.range.to,
+      } : null)
     },
   },
 }

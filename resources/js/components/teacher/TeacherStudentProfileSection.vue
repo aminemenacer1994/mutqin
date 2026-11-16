@@ -4,7 +4,13 @@
 
     <template v-else-if="profile">
       <nav class="teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
-        <button type="button" @click="$emit('back')"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.nav_students') }}</span></button>
+        <button type="button" @click="requestBack"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.back_to_students') }}</span></button>
+        <span aria-hidden="true">/</span>
+        <span>{{ profile.student.name }}</span>
+        <template v-if="currentTabLabel">
+          <span aria-hidden="true">/</span>
+          <span>{{ currentTabLabel }}</span>
+        </template>
       </nav>
       <header class="card teacher-profile-hero teacher-profile-hero--compact">
         <div class="card-body teacher-profile-hero__body">
@@ -15,6 +21,7 @@
               <div class="teacher-profile-summary">
                 <span v-if="profile.student.organisation">{{ profile.student.organisation }}</span>
                 <span v-if="typeof profile.meta?.ai_success_rate === 'number'">{{ t('teacher.profile_recite_avg_with_count', { score: profile.meta.ai_success_rate, count: Number(profile.meta.ai_attempts || 0) }) }}</span>
+                <span v-if="learningPlanLabel">{{ learningPlanLabel }}</span>
               </div>
               <details class="teacher-profile-details">
                 <summary>{{ t('teacher.student_details') }}</summary>
@@ -59,6 +66,7 @@
         >
           <i :class="tab.icon" aria-hidden="true"></i>
           <span>{{ t(tab.label) }}</span>
+          <span v-if="tabCount(tab.id)" class="teacher-tabs__count">{{ tabCount(tab.id) }}</span>
         </button>
       </div>
 
@@ -78,17 +86,52 @@
           @assign-revision="$emit('assign-revision', $event)"
           @mark-reviewed="openReviewConfirm"
         />
-        <TeacherStudentProfileTasks
-          v-else-if="section === 'tasks'"
-          :profile="tabProfile"
-          :format-when="formatWhen"
-          @assign-revision="$emit('assign-revision', $event)"
-        />
-        <TeacherStudentProfileMessages v-else-if="section === 'messages'" :profile="tabProfile" :format-when="formatWhen" />
+        <KeepAlive>
+          <TeacherStudentProfileTasks
+            v-if="section === 'tasks'"
+            key="student-tasks"
+            :profile="tabProfile"
+            :format-when="formatWhen"
+            :focus-task-id="focusTaskId"
+            :ready="!sectionRefreshing"
+            @assign-revision="$emit('assign-revision', $event)"
+            @refresh="$emit('refresh')"
+            @edit-task="$emit('edit-task', $event)"
+            @open-messages="openMessages"
+            @open-plan="selectTab('plan')"
+            @unsent-change="unsent.tasks = $event"
+          />
+          <TeacherStudentProfileMessages
+            v-else-if="section === 'messages'"
+            key="student-messages"
+            :profile="tabProfile"
+            :format-when="formatWhen"
+            :task-context="messageContext"
+            @open-task="openTask"
+            @open-tasks="selectTab('tasks')"
+            @clear-context="messageContext = null"
+            @unsent-change="unsent.messages = $event"
+            @unread-change="messageUnread = $event"
+          />
+        </KeepAlive>
       </div>
     </template>
 
     <TeacherEmpty v-else :message="t('teacher.student_unavailable')" />
+
+    <TeacherDialog
+      :open="leaveConfirm"
+      size="sm"
+      :title="t('teacher.unsaved_changes')"
+      :close-label="t('teacher.close')"
+      @close="leaveConfirm = false"
+    >
+      <p class="mb-0">{{ t('teacher.leave_unsaved') }}</p>
+      <template #footer>
+        <button type="button" class="btn btn-outline-secondary" @click="leaveConfirm = false">{{ t('teacher.keep_editing') }}</button>
+        <button type="button" class="btn btn-danger" @click="confirmLeave">{{ t('teacher.leave_anyway') }}</button>
+      </template>
+    </TeacherDialog>
 
     <TeacherDialog
       :open="Boolean(reviewConfirm)"
@@ -108,6 +151,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { resolveTaskLifecycle, TASK_LIFECYCLE, taskIsOverdue } from '../../scripts/teacher/taskState'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
@@ -138,7 +182,7 @@ export default {
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed'],
+  emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed', 'refresh', 'edit-task'],
   data() {
     const uid = Math.random().toString(36).slice(2, 9)
     return {
@@ -146,6 +190,11 @@ export default {
       panelId: `teacher-profile-panel-${uid}`,
       tabPrefix: `teacher-profile-tab-${uid}`,
       reviewConfirm: null,
+      leaveConfirm: false,
+      focusTaskId: null,
+      messageContext: null,
+      unsent: { tasks: false, messages: false },
+      messageUnread: null,
     }
   },
   computed: {
@@ -197,16 +246,76 @@ export default {
       if (!this.tabHintKey || this.sectionRefreshing) return ''
       return this.t(this.tabHintKey)
     },
+    currentTabLabel() {
+      const tab = this.tabs.find((item) => item.id === this.section)
+      return tab ? this.t(tab.label) : ''
+    },
+    learningPlanLabel() {
+      const plan = this.profile?.meta?.learning_plan
+      if (!plan?.status) return ''
+      const key = `teacher.plan_status_${plan.status}`
+      const status = this.t(key)
+      const label = status && status !== key ? status : plan.status
+      return plan.title ? `${plan.title} · ${label}` : label
+    },
+    taskAttentionCount() {
+      const tasks = this.profile?.sectionPayloads?.tasks?.assignments
+      if (Array.isArray(tasks)) {
+        return tasks.filter((item) => {
+          const lifecycle = resolveTaskLifecycle(item)
+          return lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW
+            || lifecycle === TASK_LIFECYCLE.SUBMITTED
+            || taskIsOverdue(item)
+        }).length
+      }
+      return Number(this.profile?.meta?.assignments_needs_review || 0) + Number(this.profile?.meta?.assignments_overdue || 0)
+    },
+    messageAttentionCount() {
+      if (this.messageUnread !== null) return this.messageUnread
+      const messages = this.profile?.sectionPayloads?.messages?.messages
+      if (Array.isArray(messages)) {
+        return messages.filter((message) => message?.unread && message?.sender !== 'teacher').length
+      }
+      return Number(this.profile?.meta?.unread_messages || 0)
+    },
   },
   watch: {
     section() {
       this.$nextTick(this.revealActiveTab)
     },
-    profile() {
+    profile(next, previous) {
+      if (next?.student?.id !== previous?.student?.id) this.messageUnread = null
       this.$nextTick(this.revealActiveTab)
     },
   },
   methods: {
+    tabCount(id) {
+      if (id === 'tasks') return this.taskAttentionCount
+      if (id === 'messages') return this.messageAttentionCount
+      return 0
+    },
+    requestBack() {
+      if (this.unsent.tasks || this.unsent.messages) {
+        this.leaveConfirm = true
+        return
+      }
+      this.$emit('back')
+    },
+    confirmLeave() {
+      this.leaveConfirm = false
+      this.unsent = { tasks: false, messages: false }
+      this.$emit('back')
+    },
+    openMessages(context) {
+      this.messageContext = context?.title ? context : null
+      this.selectTab('messages')
+    },
+    openTask(context) {
+      const id = context?.recipientId || context?.assignmentId || null
+      this.focusTaskId = null
+      this.$nextTick(() => { this.focusTaskId = id })
+      this.selectTab('tasks')
+    },
     openReviewConfirm(payload) { this.reviewConfirm = payload },
     closeReviewConfirm() { this.reviewConfirm = null },
     confirmReview() {

@@ -9,6 +9,7 @@
         </div>
         <MadaniAyahSnippet :surah="item.surah_number" :ayah="item.ayah" :focus-index="item.word_index" inline />
         <article v-for="correction in item.corrections" :key="correction.id" class="learner-word-corrections__note">
+          <p v-if="correction.focus || correction.finding" class="learner-word-corrections__teacher">{{ teacherFindingLabel(correction) }}</p>
           <p v-if="correction.body">{{ correction.body }}</p>
           <TeacherAudioFeedbackPlayer
             v-if="correction.audio?.available && correction.audio?.url"
@@ -55,6 +56,11 @@ export default {
   methods: {
     setClip(id, node) {
       if (node) this.clips[id] = node
+    },
+    teacherFindingLabel(correction) {
+      const finding = correction.finding ? this.t(`teacher.finding_${correction.finding}`) : ''
+      const focus = correction.focus ? this.t(`teacher.focus_${correction.focus}`) : ''
+      return [this.t('teacher.finding_teacher'), finding, focus].filter(Boolean).join(' · ')
     },
     statusLabel(status) {
       if (status === 'awaiting_retry') return this.t('teacher.coaching_status_awaiting')

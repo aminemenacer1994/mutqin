@@ -117,7 +117,7 @@ class TeacherWordCoachingService
                     'reviewed_at' => $coaching->reviewed_at ?? now(),
                 ])->save();
             } elseif ($action === 'correct') {
-                $this->addCorrection($teacher, $coaching, (string) ($input['body'] ?? ''), $audio, isset($input['duration_ms']) ? (int) $input['duration_ms'] : null);
+                $this->addCorrection($teacher, $coaching, (string) ($input['body'] ?? ''), $audio, isset($input['duration_ms']) ? (int) $input['duration_ms'] : null, $input);
                 $coaching->forceFill(['reviewed_at' => $coaching->reviewed_at ?? now()])->save();
             } elseif ($action === 'retry') {
                 $coaching->forceFill([
@@ -255,6 +255,9 @@ class TeacherWordCoachingService
                 return [
                     'id' => (int) $correction->id,
                     'body' => $body !== '' ? $body : null,
+                    'focus' => $correction->focus,
+                    'finding' => $correction->finding,
+                    'source' => 'teacher',
                     'audio' => $this->audio->payload($correction),
                     'created_at' => $correction->created_at?->toIso8601String(),
                 ];
@@ -443,7 +446,10 @@ class TeacherWordCoachingService
         return $coaching;
     }
 
-    private function addCorrection(User $teacher, TeacherWordCoaching $coaching, string $body, ?UploadedFile $audio, ?int $durationMs): void
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function addCorrection(User $teacher, TeacherWordCoaching $coaching, string $body, ?UploadedFile $audio, ?int $durationMs, array $input = []): void
     {
         $body = trim($body);
         if ($body === '' && $audio === null) {
@@ -452,11 +458,21 @@ class TeacherWordCoachingService
             ]);
         }
 
+        $focus = isset($input['focus']) && $input['focus'] !== '' ? (string) $input['focus'] : null;
+        $finding = isset($input['finding']) && $input['finding'] !== '' ? (string) $input['finding'] : null;
+        if (($focus === null) !== ($finding === null)) {
+            throw ValidationException::withMessages([
+                'focus' => 'Choose both the teacher finding and what it refers to.',
+            ]);
+        }
+
         $correction = new TeacherWordCoachingCorrection;
         $correction->forceFill([
             'teacher_word_coaching_id' => $coaching->id,
             'teacher_id' => $teacher->id,
             'body' => $body !== '' ? $body : null,
+            'focus' => $focus,
+            'finding' => $finding,
         ])->save();
 
         if ($audio === null) {

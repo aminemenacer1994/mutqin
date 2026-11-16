@@ -1,211 +1,269 @@
 <template>
-  <div class="teacher-learning-plan">
-    <TeacherTabGuide kind="page" :title="t('teacher.learning_plan')">
-      <template #action>
-        <div class="teacher-learning-plan__toolbar">
-          <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="openComposer()">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_new') }}
-          </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="loadSuggestions">
-            <i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('teacher.plan_suggest_revisions') }}
-          </button>
-          <button v-if="templates.length" type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="showTemplates = !showTemplates">{{ t('teacher.plan_templates') }}</button>
-        </div>
-      </template>
-    </TeacherTabGuide>
-    <p v-if="error" class="alert alert-danger mb-2" role="alert">{{ error }}</p>
+  <div class="teacher-plan-workspace" :class="{ 'is-for-student': Boolean(studentId) }">
+    <nav v-if="(embedded && studentId) || detailPlan" class="teacher-plan-crumbs" :aria-label="t('teacher.nav_plans')">
+      <button v-if="embedded" type="button" @click="$emit('leave')">{{ t('teacher.nav_plans') }}</button>
+      <button v-if="detailPlan" type="button" @click="detailId = null">{{ studentLabel }}</button>
+      <span v-if="detailPlan">{{ detailPlan.title }}</span>
+    </nav>
+    <p v-if="error && !composerOpen" class="alert alert-danger mb-2" role="alert">{{ error }}</p>
     <p v-if="success" class="alert alert-success mb-2" role="status">{{ success }}</p>
 
-    <div v-if="showTemplates && templates.length" class="teacher-learning-plan__templates">
-      <p class="teacher-learning-plan__templates-label">{{ t('teacher.plan_templates') }}</p>
-      <div class="teacher-learning-plan__template-grid">
-        <article v-for="tpl in templates" :key="tpl.id" class="teacher-learning-plan__template">
-          <strong>{{ tpl.name }}</strong>
-          <span>{{ cadenceLabel(tpl.cadence) }}</span>
-          <button type="button" class="btn btn-sm btn-outline-primary" :disabled="busy" @click="applyTemplate(tpl)">
-            {{ t('teacher.plan_use_template') }}
-          </button>
-        </article>
-      </div>
+    <div v-if="!embedded" class="teacher-plan-workspace__toolbar">
+      <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="openComposer()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_create') }}
+      </button>
+      <button v-if="templates.length" type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="showTemplates = !showTemplates">{{ t('teacher.plan_templates') }}</button>
+    </div>
+    <div v-else-if="templates.length" class="teacher-plan-workspace__toolbar">
+      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="showTemplates = !showTemplates">{{ t('teacher.plan_templates') }}</button>
+    </div>
+
+    <div v-if="showTemplates && templates.length" class="teacher-plan-templates">
+      <article v-for="tpl in templates" :key="tpl.id">
+        <strong>{{ tpl.name }}</strong>
+        <span>{{ cadenceLabel(tpl.cadence) }}</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !studentId" @click="applyTemplate(tpl)">{{ t('teacher.plan_use_template') }}</button>
+      </article>
     </div>
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
+    <TeacherEmpty v-else-if="!visiblePlans.length && !detailPlan" class="teacher-empty-panel" icon="bi bi-calendar-week" :message="plans.length ? t('teacher.plan_no_matches') : (studentId ? t('teacher.plan_empty') : t('teacher.plans_global_empty'))" />
 
-    <TeacherEmpty v-else-if="!plans.length" class="teacher-empty-panel" icon="bi bi-calendar-week" :message="t('teacher.plan_empty')" />
-
-    <div v-else class="teacher-learning-plan__board">
-      <article
-        v-for="(plan, index) in orderedPlans"
-        :key="plan.id"
-        class="teacher-learning-plan__card"
-        :class="[`is-${plan.status}`, { 'is-featured': index === 0 }]"
-      >
-        <header class="teacher-learning-plan__card-head">
+    <article v-else-if="detailPlan" class="teacher-plan-detail">
+      <header class="teacher-plan-detail__head">
+        <div>
+          <p class="teacher-plan-card__student">{{ detailPlan.student?.name || studentLabel }}</p>
+          <h2>{{ detailPlan.title }}</h2>
+          <p class="teacher-plan-card__meta">
+            <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
+            <span>{{ formatDate(detailPlan.starts_on) }}<template v-if="detailPlan.ends_on"> – {{ formatDate(detailPlan.ends_on) }}</template></span>
+          </p>
+        </div>
+        <p class="teacher-plan-card__count">{{ t('teacher.plan_progress', { done: detailPlan.progress?.completed || 0, total: detailPlan.progress?.total || 0 }) }}</p>
+      </header>
+      <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
+        <span :style="{ width: `${planPercent(detailPlan)}%` }"></span>
+      </div>
+      <p v-if="detailPlan.notes" class="teacher-plan-detail__notes">{{ detailPlan.notes }}</p>
+      <ol class="teacher-plan-detail__list">
+        <li v-for="item in detailPlan.items" :key="item.id">
           <div>
-            <h3>{{ plan.title }}</h3>
-            <p class="teacher-learning-plan__meta">
-              <span class="teacher-learning-plan__badge" :class="`is-${plan.status}`">{{ statusLabel(plan.status) }}</span>
-              <span>{{ cadenceLabel(plan.cadence) }}</span>
-              <span v-if="plan.starts_on">{{ plan.starts_on }}{{ plan.ends_on ? ` → ${plan.ends_on}` : '' }}</span>
+            <strong>{{ item.label }}</strong>
+            <p class="teacher-plan-card__meta">
+              <span>{{ activityLabel(item) }}</span>
+              <span class="teacher-plan-card__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
+              <span v-if="item.due_on">{{ formatDate(item.due_on) }}</span>
             </p>
+            <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
+            <p v-if="item.task_status" class="teacher-plan-detail__notes">{{ t('teacher.plan_assigned') }}</p>
           </div>
-          <p class="teacher-learning-plan__progress-label">{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</p>
+          <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
+            <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
+          </div>
+          <div v-else-if="item.recipient_id" class="teacher-plan-detail__actions">
+            <a class="btn btn-sm btn-outline-secondary" :href="reviewHref">{{ t('teacher.plan_review_recitation') }}</a>
+            <label class="teacher-plan-detail__feedback">
+              <span>{{ t('teacher.plan_feedback') }}</span>
+              <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
+            </label>
+            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
+            <button v-if="item.display_status === 'submitted'" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="requestAttempt(item)">{{ t('teacher.plan_request_attempt') }}</button>
+            <button v-if="item.display_status === 'submitted'" type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="completeActivity(item)">{{ t('teacher.plan_mark_activity') }}</button>
+          </div>
+        </li>
+      </ol>
+    </article>
+
+    <div v-else class="teacher-plan-board">
+      <article v-for="plan in visiblePlans" :key="plan.id" class="teacher-plan-card">
+        <header>
+          <p class="teacher-plan-card__student">{{ plan.student?.name || studentLabel }}</p>
+          <h3>{{ plan.title }}</h3>
+          <p class="teacher-plan-card__meta">
+            <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
+            <span>{{ formatDate(plan.starts_on) }}<template v-if="plan.ends_on"> – {{ formatDate(plan.ends_on) }}</template></span>
+            <span>#{{ plan.id }}</span>
+          </p>
         </header>
-        <div class="teacher-learning-plan__progress-bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
+        <p class="teacher-plan-card__count">{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</p>
+        <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
           <span :style="{ width: `${planPercent(plan)}%` }"></span>
         </div>
-        <p v-if="plan.notes" class="teacher-learning-plan__notes">{{ plan.notes }}</p>
-        <ol v-if="plan.items?.length" class="teacher-learning-plan__activities">
-          <li
-            v-for="item in plan.items"
-            :key="item.id"
-            :class="[`is-${item.display_status}`, item.origin === 'suggested' ? 'is-suggested' : 'is-assigned']"
-          >
-            <div class="teacher-learning-plan__activity-copy">
-              <strong>{{ item.label }}</strong>
-              <p class="teacher-learning-plan__meta">
-                <span class="teacher-hifz-tag" :class="`is-${item.hifz_category}`">{{ kindLabel(item) }}</span>
-                <span class="teacher-learning-plan__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
-                <span v-if="item.due_on">{{ item.due_on }}</span>
-              </p>
-              <p v-if="item.instructions" class="teacher-learning-plan__instructions">{{ item.instructions }}</p>
+        <p v-if="nextOf(plan)" class="teacher-plan-card__next">
+          <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
+          {{ t('teacher.plan_next_activity') }}: {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
+        </p>
+        <footer>
+          <button type="button" class="btn btn-primary btn-sm" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
+          <div class="teacher-plan-menu">
+            <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
+              <i class="bi bi-three-dots" aria-hidden="true"></i>
+            </button>
+            <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
+              <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
+              <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
+              <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
+              <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
+              <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
+              <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
+              <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
+              <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
             </div>
-            <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-learning-plan__activity-actions">
-              <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
-            </div>
-          </li>
-        </ol>
-        <footer class="teacher-learning-plan__card-actions">
-          <button
-            v-if="plan.status === 'draft' || plan.status === 'paused'"
-            type="button"
-            class="btn btn-sm btn-primary"
-            :disabled="busy"
-            @click="setStatus(plan, 'active')"
-          >{{ t('teacher.plan_activate') }}</button>
-          <button
-            v-if="plan.status === 'active'"
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="busy"
-            @click="setStatus(plan, 'paused')"
-          >{{ t('teacher.plan_pause') }}</button>
-          <button
-            v-if="['active', 'paused'].includes(plan.status)"
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="busy"
-            @click="setStatus(plan, 'completed')"
-          >{{ t('teacher.plan_complete') }}</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="openComposer(plan)">
-            {{ t('teacher.plan_edit') }}
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="saveAsTemplate(plan)">
-            {{ t('teacher.plan_save_template') }}
-          </button>
+          </div>
         </footer>
       </article>
     </div>
 
     <TeacherDialog
       ref="dialog"
+      class="teacher-plan-dialog"
       :open="composerOpen"
       :busy="busy"
       :dirty="formDirty"
-      :title="editingPlan ? t('teacher.plan_edit') : t('teacher.plan_new')"
+      :title="editingPlan ? t('teacher.plan_edit') : t('teacher.plan_create')"
       compact
       :close-label="t('teacher.close')"
       @close="closeComposer"
     >
       <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
-      <div class="teacher-plan-modal__body">
-                <div class="teacher-plan-modal__fields">
-                  <label class="teacher-plan-modal__field">
-                    <span>{{ t('teacher.plan_title') }}</span>
-                    <input ref="planTitle" v-model="form.title" class="form-control" type="text" maxlength="160">
-                  </label>
-                  <label class="teacher-plan-modal__field">
-                    <span>{{ t('teacher.plan_cadence') }}</span>
-                    <select v-model="form.cadence" class="form-select">
-                      <option value="weekly">{{ t('teacher.plan_weekly') }}</option>
-                      <option value="monthly">{{ t('teacher.plan_monthly') }}</option>
-                    </select>
-                  </label>
-                  <label class="teacher-plan-modal__field">
-                    <span>{{ t('teacher.plan_starts') }}</span>
-                    <input v-model="form.starts_on" class="form-control" type="date">
-                  </label>
-                  <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
-                    <span>{{ t('teacher.plan_notes') }}</span>
-                    <textarea v-model="form.notes" class="form-control" rows="2" maxlength="2000"></textarea>
-                  </label>
-                </div>
+      <p v-if="stepError" class="alert alert-danger" role="alert">{{ stepError }}</p>
+      <ol class="teacher-plan-steps">
+        <li :class="{ 'is-current': step === 1, 'is-done': step > 1 }"><button type="button" @click="goToStep(1)">{{ t('teacher.plan_step_details') }}</button></li>
+        <li :class="{ 'is-current': step === 2, 'is-done': step > 2 }"><button type="button" :disabled="step < 2 && !stepValid(1)" @click="goToStep(2)">{{ t('teacher.plan_step_activities') }}</button></li>
+        <li :class="{ 'is-current': step === 3 }"><button type="button" :disabled="step < 3 && !(stepValid(1) && stepValid(2))" @click="goToStep(3)">{{ t('teacher.plan_step_review') }}</button></li>
+      </ol>
 
-                <details v-if="editingPlan?.items?.length" class="teacher-plan-existing">
-                  <summary>{{ t('teacher.plan_existing_activities', { n: editingPlan.items.length }) }}</summary>
-                  <ul><li v-for="item in editingPlan.items" :key="item.id">{{ item.label }} <span>{{ displayStatusLabel(item.display_status) }}</span></li></ul>
-                </details>
-                <div class="teacher-plan-modal__activities-head">
-                  <strong>{{ t(editingPlan ? 'teacher.plan_additional_activities' : 'teacher.plan_activities') }}</strong>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" @click="addDraftItem()">{{ t('teacher.plan_add_activity') }}</button>
-                </div>
-
-                <article v-for="(item, index) in form.items" :key="`draft-${index}`" class="teacher-plan-modal__activity">
-                  <header>
-                    <strong>{{ t('teacher.plan_kind') }} {{ index + 1 }}</strong>
-                    <button type="button" class="teacher-plan-modal__remove" :aria-label="t('teacher.plan_remove_activity')" @click="form.items.splice(index, 1)">
-                      <i class="bi bi-trash" aria-hidden="true"></i>
-                    </button>
-                  </header>
-                  <div class="teacher-plan-modal__activity-grid">
-                    <label>
-                      <span>{{ t('teacher.plan_kind') }}</span>
-                      <select v-model="item.kind" class="form-select form-select-sm">
-                        <option value="practice">{{ t('teacher.plan_kind_practice') }}</option>
-                        <option value="ai_recite">{{ t('teacher.plan_kind_ai') }}</option>
-                        <option value="teacher_review">{{ t('teacher.plan_kind_review') }}</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>{{ t('teacher.surah') }}</span>
-                      <TeacherSurahSelect :model-value="item.surah_number" :surahs="teacherSurahs" :disabled="busy" @update:model-value="changeSurah(item, $event)" />
-                    </label>
-                    <label>
-                      <span>{{ t('teacher.from') }}</span>
-                      <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
-                    </label>
-                    <label>
-                      <span>{{ t('teacher.to') }}</span>
-                      <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
-                    </label>
-                    <label>
-                      <span>{{ t('teacher.due') }}</span>
-                      <input v-model="item.due_on" class="form-control form-control-sm" type="date">
-                    </label>
-                  </div>
-                  <p v-if="itemError(item)" class="text-danger small mt-2 mb-0" role="alert">{{ itemError(item) }}</p>
-                  <label class="teacher-plan-modal__instructions">
-                    <span class="visually-hidden">{{ t('teacher.plan_instructions_placeholder') }}</span>
-                    <input v-model="item.instructions" class="form-control form-control-sm" type="text" :placeholder="t('teacher.plan_instructions_placeholder')">
-                  </label>
-                </article>
-
-                <section v-if="suggestions.length" class="teacher-plan-modal__suggestions">
-                  <header>
-                    <strong>{{ t('teacher.plan_suggestions') }}</strong>
-                    <p>{{ t('teacher.plan_suggestions_help') }}</p>
-                  </header>
-                  <article v-for="(suggestion, index) in suggestions" :key="`sug-${suggestion.weak_spot_id || index}`">
-                    <p>{{ suggestion.surah_name }} · {{ suggestion.ayah_start }}<span v-if="suggestion.reason"> — {{ suggestion.reason }}</span></p>
-                    <button type="button" class="btn btn-sm btn-outline-primary" @click="addSuggestion(suggestion)">{{ t('teacher.plan_add_suggestion') }}</button>
-                  </article>
-                </section>
+      <div v-show="step === 1" class="teacher-plan-modal__fields">
+        <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
+          <span>{{ t('teacher.plan_student') }}</span>
+          <select v-if="students.length && !editingPlan" v-model="form.student_id" class="form-select">
+            <option value="">{{ t('teacher.student') }}</option>
+            <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
+          </select>
+          <input v-else class="form-control" type="text" :value="selectedStudentName" readonly>
+        </label>
+        <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
+          <span>{{ t('teacher.plan_title') }}</span>
+          <input ref="planTitle" v-model="form.title" class="form-control" type="text" maxlength="160" :placeholder="t('teacher.plan_title_example')">
+        </label>
+        <label class="teacher-plan-modal__field">
+          <span>{{ t('teacher.plan_cadence') }}</span>
+          <select v-model="form.cadence" class="form-select" @change="syncEnd">
+            <option value="weekly">{{ t('teacher.plan_weekly') }}</option>
+            <option value="monthly">{{ t('teacher.plan_monthly') }}</option>
+            <option value="custom">{{ t('teacher.plan_custom') }}</option>
+          </select>
+        </label>
+        <label class="teacher-plan-modal__field">
+          <span>{{ t('teacher.plan_starts') }}</span>
+          <input v-model="form.starts_on" class="form-control" type="date" @change="syncEnd">
+        </label>
+        <label class="teacher-plan-modal__field">
+          <span>{{ t('teacher.plan_ends') }}</span>
+          <input v-model="form.ends_on" class="form-control" type="date" :readonly="form.cadence !== 'custom'">
+        </label>
+        <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
+          <span>{{ t('teacher.plan_notes') }}</span>
+          <textarea v-model="form.notes" class="form-control" rows="2" maxlength="2000"></textarea>
+        </label>
       </div>
+
+      <div v-show="step === 2">
+        <details v-if="editingPlan?.items?.length" class="teacher-plan-existing">
+          <summary>{{ t('teacher.plan_existing_activities', { n: editingPlan.items.length }) }}</summary>
+          <ul>
+            <li v-for="item in editingPlan.items" :key="item.id">{{ item.label }} <span>{{ displayStatusLabel(item.display_status) }}</span></li>
+          </ul>
+        </details>
+        <div class="teacher-plan-modal__activities-head">
+          <strong>{{ t(editingPlan ? 'teacher.plan_additional_activities' : 'teacher.plan_activities') }}</strong>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="addDraftItem()">{{ t('teacher.plan_add_activity') }}</button>
+        </div>
+        <p v-if="!form.items.length" class="teacher-plan-empty">{{ t('teacher.plan_activities_empty') }}</p>
+        <article v-for="(item, index) in form.items" :key="`draft-${index}`" class="teacher-plan-modal__activity">
+          <header>
+            <button type="button" class="teacher-plan-activity__toggle" :aria-expanded="item.open ? 'true' : 'false'" @click="item.open = !item.open">
+              {{ t('teacher.plan_activity_n', { n: index + 1 }) }} · {{ activityLabel(item) }}
+            </button>
+            <button type="button" class="teacher-plan-modal__remove" :aria-label="t('teacher.plan_remove_activity')" @click="form.items.splice(index, 1)">
+              <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div v-show="item.open" class="teacher-plan-modal__activity-grid">
+            <label>
+              <span>{{ t('teacher.plan_kind') }}</span>
+              <select v-model="item.activity" class="form-select form-select-sm" @change="applyActivity(item)">
+                <option v-for="type in activityTypes" :key="type.id" :value="type.id">{{ t(type.label) }}</option>
+              </select>
+            </label>
+            <label>
+              <span>{{ t('teacher.surah') }}</span>
+              <TeacherSurahSelect :model-value="item.surah_number" :surahs="teacherSurahs" :disabled="busy" @update:model-value="changeSurah(item, $event)" />
+            </label>
+            <label>
+              <span>{{ t('teacher.from') }}</span>
+              <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
+            </label>
+            <label>
+              <span>{{ t('teacher.to') }}</span>
+              <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :aria-invalid="itemError(item) ? 'true' : undefined">
+            </label>
+            <label>
+              <span>{{ t('teacher.due') }}</span>
+              <input v-model="item.due_on" class="form-control form-control-sm" type="date">
+            </label>
+            <label class="teacher-plan-modal__instructions">
+              <span>{{ t('teacher.plan_instructions_placeholder') }}</span>
+              <input v-model="item.instructions" class="form-control form-control-sm" type="text" maxlength="2000">
+            </label>
+          </div>
+          <p v-if="item.open && itemError(item)" class="text-danger small mt-2 mb-0" role="alert">{{ itemError(item) }}</p>
+        </article>
+
+        <section class="teacher-plan-suggestions">
+          <header>
+            <strong>{{ t('teacher.plan_suggestions') }}</strong>
+            <p>{{ t('teacher.plan_suggestion_note') }}</p>
+          </header>
+          <p v-if="suggestionsLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
+          <p v-else-if="!groupedSuggestions.length" class="teacher-plan-empty">{{ t('teacher.plan_no_suggestions') }}</p>
+          <article v-for="suggestion in groupedSuggestions" :key="suggestionKey(suggestion)">
+            <p>
+              <strong>{{ suggestion.surah_name }} · {{ suggestion.ayah_start }}<template v-if="suggestion.ayah_end !== suggestion.ayah_start">–{{ suggestion.ayah_end }}</template></strong>
+              <span>{{ suggestion.reason }}</span>
+            </p>
+            <div>
+              <button type="button" class="btn btn-sm btn-outline-primary" @click="addSuggestion(suggestion)">{{ t('teacher.plan_add_to_plan') }}</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="dismissSuggestion(suggestion)">{{ t('teacher.plan_dismiss') }}</button>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <div v-show="step === 3" class="teacher-plan-review">
+        <p><span>{{ t('teacher.plan_student') }}</span><strong>{{ selectedStudentName }}</strong></p>
+        <p><span>{{ t('teacher.plan_title') }}</span><strong>{{ form.title }}</strong></p>
+        <p><span>{{ t('teacher.plan_starts') }}</span><strong>{{ formatDate(form.starts_on) }} – {{ formatDate(form.ends_on) }}</strong></p>
+        <p v-if="form.notes"><span>{{ t('teacher.plan_notes') }}</span><strong>{{ form.notes }}</strong></p>
+        <ul>
+          <li v-for="(item, index) in form.items" :key="`review-${index}`">
+            {{ activityLabel(item) }} · {{ surahName(item) }} {{ item.ayah_start }}–{{ item.ayah_end }}
+            <template v-if="item.due_on"> · {{ formatDate(item.due_on) }}</template>
+            <template v-if="item.instructions"> · {{ item.instructions }}</template>
+          </li>
+        </ul>
+        <p v-if="!form.items.length" class="teacher-plan-empty">{{ t('teacher.plan_activities_empty') }}</p>
+      </div>
+
       <template #footer>
-        <button type="button" class="btn btn-outline-secondary" :disabled="busy" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
-        <button type="button" class="btn" :class="editingPlan ? 'btn-primary' : 'btn-outline-secondary'" :disabled="busy || !formValid" @click="savePlan(false)">{{ t(editingPlan ? 'teacher.task_save' : 'teacher.plan_save_draft') }}</button>
-        <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy || !formValid" @click="savePlan(true)">{{ t('teacher.plan_save_activate') }}</button>
+        <button v-if="step > 1" type="button" class="btn btn-outline-secondary" :disabled="busy" @click="step -= 1">{{ t('teacher.plan_back_step') }}</button>
+        <button v-else type="button" class="btn btn-outline-secondary" :disabled="busy" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
+        <button v-if="step < 3" type="button" class="btn btn-primary" :disabled="busy" @click="goNext">{{ t('teacher.plan_next') }}</button>
+        <template v-else>
+          <button type="button" class="btn btn-outline-secondary" :disabled="busy || !formValid" @click="savePlan(false)">{{ t(editingPlan ? 'teacher.task_save' : 'teacher.plan_save_draft') }}</button>
+          <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy || !formValid || !form.items.length" @click="savePlan(true)">{{ t('teacher.plan_activate') }}</button>
+        </template>
       </template>
     </TeacherDialog>
   </div>
@@ -217,10 +275,34 @@ import { learningApi } from '../../../scripts/api/learning'
 import TeacherDialog from '../TeacherDialog.vue'
 import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
-import TeacherTabGuide from '../TeacherTabGuide.vue'
+
+const ACTIVITY_TYPES = [
+  { id: 'hifz', kind: 'practice', hifz_category: 'sabaq', label: 'teacher.plan_type_hifz' },
+  { id: 'sabqi', kind: 'practice', hifz_category: 'sabqi', label: 'teacher.plan_type_sabqi' },
+  { id: 'manzil', kind: 'practice', hifz_category: 'manzil', label: 'teacher.plan_type_manzil' },
+  { id: 'nazra', kind: 'practice', hifz_category: 'sabqi', label: 'teacher.plan_type_nazra' },
+  { id: 'ai_recite', kind: 'ai_recite', hifz_category: 'sabqi', label: 'teacher.plan_type_ai' },
+]
+
+function todayIso() {
+  const date = new Date()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function addDays(iso, days) {
+  const [year, month, day] = String(iso || todayIso()).slice(0, 10).split('-').map(Number)
+  const date = new Date(year, (month || 1) - 1, day || 1)
+  date.setDate(date.getDate() + days)
+  const nextMonth = String(date.getMonth() + 1).padStart(2, '0')
+  const nextDay = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${nextMonth}-${nextDay}`
+}
 
 function blankItem() {
   return {
+    activity: 'hifz',
     kind: 'practice',
     hifz_category: 'sabaq',
     surah_number: 1,
@@ -230,28 +312,48 @@ function blankItem() {
     priority: 'normal',
     instructions: '',
     origin: 'assigned',
+    open: true,
   }
 }
 
 function blankForm(studentId) {
+  const starts = todayIso()
   return {
-    student_id: studentId,
+    student_id: studentId ? String(studentId) : '',
     title: '',
     cadence: 'weekly',
-    starts_on: new Date().toISOString().slice(0, 10),
+    starts_on: starts,
+    ends_on: addDays(starts, 7),
     notes: '',
     items: [blankItem()],
   }
 }
 
+function uniquePlans(list) {
+  const seen = new Set()
+  return (Array.isArray(list) ? list : []).filter((plan) => {
+    if (!plan || seen.has(plan.id)) return false
+    seen.add(plan.id)
+    return plan.status !== 'archived'
+  })
+}
+
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherTabGuide, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherEmpty, TeacherSurahSelect },
   inject: { teacherSurahs: { default: () => [] } },
-  emits: ['updated'],
+  emits: ['updated', 'leave', 'created'],
   mixins: [i18nMixin],
   props: {
-    studentId: { type: [Number, String], required: true },
+    studentId: { type: [Number, String], default: '' },
+    studentName: { type: String, default: '' },
+    students: { type: Array, default: () => [] },
+    embedded: { type: Boolean, default: false },
+    statusFilter: { type: String, default: 'all' },
+    query: { type: String, default: '' },
+    sort: { type: String, default: 'recent' },
+    focusPlanId: { type: [Number, String], default: null },
+    createOnMount: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -259,43 +361,112 @@ export default {
       busy: false,
       error: '',
       success: '',
+      stepError: '',
       plans: [],
       templates: [],
       suggestions: [],
+      dismissed: [],
+      suggestionsLoading: false,
       showTemplates: false,
       composerOpen: false,
       editingPlan: null,
+      step: 1,
+      detailId: null,
+      menuId: null,
+      feedbackDrafts: {},
       form: blankForm(this.studentId),
       initialForm: '',
       requestId: 0,
+      activityTypes: ACTIVITY_TYPES,
     }
   },
   computed: {
-    formDirty() { return JSON.stringify(this.form) !== this.initialForm },
-    formValid() { return Boolean(this.form.title.trim() && this.form.starts_on && (this.editingPlan || this.form.items.length) && this.form.items.every(item => !this.itemError(item))) },
-    orderedPlans() {
-      const rank = { active: 0, paused: 1, draft: 2, upcoming: 3, completed: 4, archived: 5 }
-      return [...this.plans].sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9))
+    formDirty() { return this.composerOpen && JSON.stringify(this.form) !== this.initialForm },
+    formValid() { return this.stepValid(1) && this.stepValid(2) },
+    studentLabel() { return this.studentName || this.plans[0]?.student?.name || this.t('teacher.student') },
+    selectedStudentName() {
+      const match = this.students.find((student) => String(student.id) === String(this.form.student_id))
+      return match?.name || this.studentName || ''
+    },
+    reviewHref() {
+      const id = this.form.student_id || this.studentId || this.detailPlan?.student?.id
+      return `/teacher?view=student&student=${id}&section=ai`
+    },
+    detailPlan() { return this.plans.find((plan) => Number(plan.id) === Number(this.detailId)) || null },
+    visiblePlans() {
+      const query = this.query.trim().toLowerCase()
+      const rows = this.plans.filter((plan) => {
+        if (this.statusFilter !== 'all' && plan.status !== this.statusFilter) return false
+        if (!query) return true
+        const name = String(plan.student?.name || this.studentName || '').toLowerCase()
+        return name.includes(query) || String(plan.title || '').toLowerCase().includes(query)
+      })
+      const due = (plan) => String(this.nextOf(plan)?.due_on || '9999-99-99')
+      if (this.sort === 'due') return rows.slice().sort((a, b) => due(a).localeCompare(due(b)))
+      if (this.sort === 'progress') return rows.slice().sort((a, b) => this.planPercent(a) - this.planPercent(b))
+      return rows.slice().sort((a, b) => Number(b.id) - Number(a.id))
+    },
+    groupedSuggestions() {
+      const map = new Map()
+      this.suggestions.forEach((suggestion) => {
+        const key = this.suggestionKey(suggestion)
+        if (this.dismissed.includes(key)) return
+        const count = Number(suggestion.evidence_count || 0)
+        if (!map.has(key)) {
+          map.set(key, { ...suggestion, evidence_count: count })
+          return
+        }
+        const row = map.get(key)
+        row.evidence_count += count
+        row.reason = this.t('teacher.plan_suggestion_reason', { n: row.evidence_count })
+      })
+      return [...map.values()].sort((a, b) => Number(b.evidence_count || 0) - Number(a.evidence_count || 0))
     },
   },
   watch: {
-    studentId: {
-      immediate: true,
-      handler() {
-        this.reload()
-      },
-    },
+    studentId: { immediate: true, handler() { this.reload() } },
+    focusPlanId: { immediate: true, handler(id) { if (id) this.detailId = Number(id) } },
+    statusFilter() { this.keepVisibleDetail() },
+    query() { this.keepVisibleDetail() },
+  },
+  mounted() {
+    if (this.createOnMount) this.openComposer()
   },
   methods: {
-    ayahCount(item) { return Number(this.teacherSurahs.find(surah => Number(surah.number) === Number(item.surah_number))?.ayah_count || 0) },
+    keepVisibleDetail() {
+      if (this.detailId && !this.visiblePlans.some((plan) => Number(plan.id) === Number(this.detailId))) this.detailId = null
+    },
+    ayahCount(item) { return Number(this.teacherSurahs.find((surah) => Number(surah.number) === Number(item.surah_number))?.ayah_count || 0) },
+    surahName(item) { return this.teacherSurahs.find((surah) => Number(surah.number) === Number(item.surah_number))?.name || item.surah_name || '' },
     changeSurah(item, number) { item.surah_number = number; item.ayah_start = 1; item.ayah_end = Math.min(this.ayahCount(item) || 1, 7) },
+    applyActivity(item) {
+      const type = ACTIVITY_TYPES.find((row) => row.id === item.activity) || ACTIVITY_TYPES[0]
+      item.kind = type.kind
+      item.hifz_category = type.hifz_category
+    },
     itemError(item) {
-      const from = Number(item.ayah_start), to = Number(item.ayah_end), max = this.ayahCount(item)
+      const from = Number(item.ayah_start)
+      const to = Number(item.ayah_end)
+      const max = this.ayahCount(item)
       if (!Number.isInteger(from) || from < 1) return this.t('teacher.ayah_range_from_error')
       if (!Number.isInteger(to) || to < 1) return this.t('teacher.ayah_range_to_error')
       if (from > to) return this.t('teacher.ayah_range_order_error')
       if (max && (from > max || to > max)) return this.t('teacher.ayah_range_max_error', { n: max })
+      if (item.due_on && this.form.starts_on && item.due_on < this.form.starts_on) return this.t('teacher.plan_due_before_start')
+      if (item.due_on && this.form.ends_on && item.due_on > this.form.ends_on) return this.t('teacher.plan_due_after_end')
       return ''
+    },
+    stepValid(step) {
+      if (step === 1) {
+        if (!this.form.student_id || !this.form.title.trim() || !this.form.starts_on) return false
+        if (!this.form.ends_on || this.form.ends_on < this.form.starts_on) return false
+        return true
+      }
+      return this.form.items.every((item) => !this.itemError(item))
+    },
+    syncEnd() {
+      if (this.form.cadence === 'custom' || !this.form.starts_on) return
+      this.form.ends_on = addDays(this.form.starts_on, this.form.cadence === 'monthly' ? 30 : 7)
     },
     async reload() {
       const requestId = ++this.requestId
@@ -303,12 +474,13 @@ export default {
       this.error = ''
       try {
         const [plansRes, templatesRes] = await Promise.all([
-          learningApi.getTeacherLearningPlans(this.studentId),
+          learningApi.getTeacherLearningPlans(this.studentId || null),
           learningApi.getTeacherLearningPlanTemplates(),
         ])
         if (requestId !== this.requestId) return
-        this.plans = Array.isArray(plansRes?.data) ? plansRes.data : []
+        this.plans = uniquePlans(plansRes?.data)
         this.templates = Array.isArray(templatesRes?.data) ? templatesRes.data : []
+        this.keepVisibleDetail()
       } catch (error) {
         if (requestId !== this.requestId) return
         this.error = error?.response?.data?.message || this.t('teacher.plan_load_error')
@@ -316,23 +488,29 @@ export default {
         if (requestId === this.requestId) this.loading = false
       }
     },
+    openDetail(plan) { this.menuId = null; this.detailId = plan.id },
     openComposer(plan = null) {
       if (this.busy) return
+      this.menuId = null
       this.editingPlan = plan
       this.success = ''
       this.error = ''
+      this.stepError = ''
+      this.step = 1
+      this.dismissed = []
       if (plan) {
         this.form = {
-          student_id: this.studentId,
+          student_id: String(plan.student?.id || this.studentId || ''),
           title: plan.title || '',
           cadence: plan.cadence || 'weekly',
-          starts_on: plan.starts_on || '',
+          starts_on: String(plan.starts_on || '').slice(0, 10),
+          ends_on: String(plan.ends_on || '').slice(0, 10),
           notes: plan.notes || '',
           items: [],
         }
       } else {
         this.form = blankForm(this.studentId)
-        this.form.title = this.t('teacher.plan_default_title')
+        this.form.title = ''
       }
       this.initialForm = JSON.stringify(this.form)
       this.composerOpen = true
@@ -342,65 +520,137 @@ export default {
       if (this.busy && !force) return
       this.composerOpen = false
       this.editingPlan = null
+      this.step = 1
+    },
+    goToStep(next) {
+      if (next > this.step) {
+        for (let current = this.step; current < next; current += 1) {
+          if (!this.stepValid(current)) {
+            this.stepError = this.stepHint()
+            return
+          }
+        }
+      }
+      this.stepError = ''
+      this.step = next
+      if (next === 2) this.loadSuggestions()
+    },
+    goNext() { this.goToStep(this.step + 1) },
+    stepHint() {
+      if (!this.form.student_id) return this.t('teacher.plan_student')
+      if (!this.form.title.trim()) return this.t('teacher.plan_title')
+      if (!this.form.ends_on) return this.t('teacher.plan_end_required')
+      const item = this.form.items.find((row) => this.itemError(row))
+      return item ? this.itemError(item) : this.t('teacher.plan_save_error')
     },
     addDraftItem() {
-      this.form.items.push(blankItem())
+      const item = blankItem()
+      item.due_on = this.form.ends_on || ''
+      this.form.items.push(item)
+    },
+    suggestionKey(suggestion) { return `${suggestion.surah_number}:${suggestion.ayah_start}:${suggestion.ayah_end}` },
+    sameActivity(left, right) {
+      return Number(left.surah_number) === Number(right.surah_number)
+        && Number(left.ayah_start) === Number(right.ayah_start)
+        && Number(left.ayah_end) === Number(right.ayah_end)
+        && (left.activity || 'hifz') === (right.activity || 'sabqi')
     },
     addSuggestion(suggestion) {
-      if (!this.composerOpen) this.openComposer()
-      this.form.items.push({
+      const item = {
         ...blankItem(),
+        activity: suggestion.activity || 'sabqi',
         kind: suggestion.kind || 'practice',
         hifz_category: suggestion.hifz_category || 'sabqi',
         surah_number: suggestion.surah_number,
         ayah_start: suggestion.ayah_start,
         ayah_end: suggestion.ayah_end,
-        repetition_target: suggestion.repetition_target || 3,
-        priority: suggestion.priority || 'high',
-        origin: 'suggested',
+        due_on: this.form.ends_on || '',
+        priority: 'high',
+        origin: 'assigned',
         weak_spot_id: suggestion.weak_spot_id,
-        instructions: suggestion.reason || '',
-      })
-    },
-    async loadSuggestions() {
-      this.busy = true
-      this.error = ''
-      try {
-        const data = await learningApi.getTeacherLearningPlanSuggestions(this.studentId)
-        this.suggestions = Array.isArray(data?.suggestions) ? data.suggestions : []
-        this.busy = false
-        if (!this.composerOpen) this.openComposer()
-        if (!this.suggestions.length) this.success = this.t('teacher.plan_no_suggestions')
-      } catch (error) {
-        this.error = error?.response?.data?.message || this.t('teacher.plan_load_error')
-      } finally {
-        this.busy = false
+        instructions: '',
+        open: true,
+      }
+      this.applyActivity(item)
+      if (this.form.items.some((row) => this.sameActivity(row, item))) {
+        this.stepError = this.t('teacher.plan_duplicate_activity')
+        return
+      }
+      this.stepError = ''
+      if (this.form.items.length === 1 && !this.form.items[0].instructions && this.form.items[0].activity === 'hifz' && Number(this.form.items[0].surah_number) === 1 && Number(this.form.items[0].ayah_start) === 1 && Number(this.form.items[0].ayah_end) === 7 && !this.editingPlan) {
+        this.form.items.splice(0, 1, item)
+      } else {
+        this.form.items.push(item)
       }
     },
+    dismissSuggestion(suggestion) { this.dismissed.push(this.suggestionKey(suggestion)) },
+    async loadSuggestions() {
+      const studentId = this.form.student_id || this.studentId
+      if (!studentId || this.suggestionsLoading) return
+      this.suggestionsLoading = true
+      try {
+        const data = await learningApi.getTeacherLearningPlanSuggestions(studentId)
+        this.suggestions = Array.isArray(data?.suggestions) ? data.suggestions : []
+      } catch (error) {
+        this.stepError = error?.response?.data?.message || this.t('teacher.plan_load_error')
+      } finally {
+        this.suggestionsLoading = false
+      }
+    },
+    payloadItems() {
+      return this.form.items.map((item) => ({
+        activity: item.activity,
+        kind: item.kind,
+        hifz_category: item.hifz_category,
+        surah_number: item.surah_number,
+        ayah_start: item.ayah_start,
+        ayah_end: item.ayah_end,
+        due_on: item.due_on || null,
+        priority: item.priority || 'normal',
+        instructions: item.instructions || null,
+        origin: 'assigned',
+        weak_spot_id: item.weak_spot_id || null,
+      }))
+    },
     async savePlan(activate) {
-      if (this.busy || !this.formValid) return
+      if (this.busy || !this.formValid) {
+        this.stepError = this.stepHint()
+        return
+      }
+      if (activate && !this.form.items.length) {
+        this.stepError = this.t('teacher.plan_activate_needs_activity')
+        return
+      }
       this.busy = true
       this.error = ''
       this.success = ''
       try {
         if (this.editingPlan) {
           await learningApi.updateTeacherLearningPlan(this.editingPlan.id, {
-            title: this.form.title,
+            title: this.form.title.trim(),
             cadence: this.form.cadence,
-            starts_on: this.form.starts_on || null,
+            starts_on: this.form.starts_on,
+            ends_on: this.form.ends_on,
             notes: this.form.notes,
-            items: this.form.items,
+            items: this.payloadItems(),
           })
           this.success = this.t('teacher.plan_updated')
         } else {
-          await learningApi.createTeacherLearningPlan({
-            ...this.form,
+          const created = await learningApi.createTeacherLearningPlan({
+            student_id: Number(this.form.student_id),
+            title: this.form.title.trim(),
+            cadence: this.form.cadence,
+            starts_on: this.form.starts_on,
+            ends_on: this.form.ends_on,
+            notes: this.form.notes,
             activate: Boolean(activate),
+            items: this.payloadItems(),
           })
           this.success = activate ? this.t('teacher.plan_activated') : this.t('teacher.plan_saved')
+          this.$emit('created', created?.plan || null)
         }
         this.closeComposer(true)
-        await this.reload()
+        if (String(this.form.student_id) === String(this.studentId)) await this.reload()
         this.$emit('updated')
       } catch (error) {
         this.error = error?.response?.data?.message
@@ -411,16 +661,59 @@ export default {
       }
     },
     async setStatus(plan, status) {
+      this.menuId = null
       this.busy = true
       this.error = ''
       try {
         await learningApi.setTeacherLearningPlanStatus(plan.id, status)
-        this.success = this.t('teacher.plan_status_updated')
+        this.success = status === 'archived' ? this.t('teacher.plan_deleted') : this.t('teacher.plan_status_updated')
         await this.reload()
+        this.$emit('updated')
       } catch (error) {
         this.error = error?.response?.data?.message
           || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]
           || this.t('teacher.plan_save_error')
+      } finally {
+        this.busy = false
+      }
+    },
+    async removePlan(plan) {
+      this.menuId = null
+      if (!window.confirm(this.t('teacher.plan_delete_confirm'))) return
+      await this.setStatus(plan, 'archived')
+    },
+    async duplicatePlan(plan) {
+      this.menuId = null
+      this.busy = true
+      this.error = ''
+      try {
+        await learningApi.createTeacherLearningPlan({
+          student_id: plan.student?.id || this.studentId,
+          title: `${plan.title} copy`,
+          cadence: ['weekly', 'monthly', 'custom'].includes(plan.cadence) ? plan.cadence : 'weekly',
+          starts_on: plan.starts_on,
+          ends_on: plan.ends_on,
+          notes: plan.notes || '',
+          allow_duplicate: true,
+          activate: false,
+          items: (plan.items || []).filter((item) => item.origin !== 'suggested').map((item) => ({
+            activity: item.activity,
+            kind: item.kind,
+            hifz_category: item.hifz_category,
+            surah_number: item.surah_number,
+            ayah_start: item.ayah_start,
+            ayah_end: item.ayah_end,
+            due_on: item.due_on,
+            priority: item.priority,
+            instructions: item.instructions,
+            origin: 'assigned',
+          })),
+        })
+        this.success = this.t('teacher.plan_duplicated')
+        await this.reload()
+        this.$emit('updated')
+      } catch (error) {
+        this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')
       } finally {
         this.busy = false
       }
@@ -433,9 +726,7 @@ export default {
         this.success = this.t('teacher.plan_suggestion_approved')
         await this.reload()
       } catch (error) {
-        this.error = error?.response?.data?.message
-          || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]
-          || this.t('teacher.plan_save_error')
+        this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')
       } finally {
         this.busy = false
       }
@@ -451,44 +742,93 @@ export default {
         this.busy = false
       }
     },
-    async applyTemplate(tpl) {
+    async sendFeedback(item) {
+      const body = String(this.feedbackDrafts[item.id] || '').trim()
+      if (!body || !item.recipient_id) return
       this.busy = true
       this.error = ''
       try {
-        await learningApi.applyTeacherLearningPlanTemplate(tpl.id, {
-          student_id: this.studentId,
-          starts_on: new Date().toISOString().slice(0, 10),
-        })
-        this.success = this.t('teacher.plan_from_template')
-        this.showTemplates = false
-        await this.reload()
+        await learningApi.sendTeacherAssignmentMessage(item.recipient_id, body)
+        this.feedbackDrafts[item.id] = ''
+        this.success = this.t('teacher.plan_feedback_sent')
       } catch (error) {
         this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')
       } finally {
         this.busy = false
       }
     },
+    async requestAttempt(item) {
+      this.busy = true
+      this.error = ''
+      try {
+        await learningApi.requestTeacherAssignmentCorrection(item.recipient_id, this.feedbackDrafts[item.id] || '')
+        this.success = this.t('teacher.plan_attempt_requested')
+        await this.reload()
+      } catch (error) {
+        this.error = error?.response?.data?.message
+          || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]
+          || this.t('teacher.plan_save_error')
+      } finally {
+        this.busy = false
+      }
+    },
+    async completeActivity(item) {
+      this.busy = true
+      this.error = ''
+      try {
+        await learningApi.approveTeacherAssignmentRecipient(item.recipient_id)
+        this.success = this.t('teacher.plan_activity_completed')
+        await this.reload()
+        this.$emit('updated')
+      } catch (error) {
+        this.error = error?.response?.data?.message
+          || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]
+          || this.t('teacher.plan_save_error')
+      } finally {
+        this.busy = false
+      }
+    },
+    async applyTemplate(tpl) {
+      if (!this.studentId) return
+      this.busy = true
+      this.error = ''
+      try {
+        await learningApi.applyTeacherLearningPlanTemplate(tpl.id, {
+          student_id: this.studentId,
+          starts_on: todayIso(),
+        })
+        this.success = this.t('teacher.plan_from_template')
+        this.showTemplates = false
+        await this.reload()
+        this.$emit('updated')
+      } catch (error) {
+        this.error = error?.response?.data?.message
+          || Object.values(error?.response?.data?.errors || {})?.[0]?.[0]
+          || this.t('teacher.plan_save_error')
+      } finally {
+        this.busy = false
+      }
+    },
     async saveAsTemplate(plan) {
+      this.menuId = null
       this.busy = true
       this.error = ''
       try {
         await learningApi.createTeacherLearningPlanTemplate({
           name: plan.title,
-          cadence: plan.cadence,
+          cadence: plan.cadence === 'custom' ? 'weekly' : plan.cadence,
           description: plan.notes || '',
-          items: (plan.items || [])
-            .filter((item) => item.origin !== 'suggested' || item.item_status === 'released')
-            .map((item, index) => ({
-              kind: item.kind,
-              hifz_category: item.hifz_category,
-              surah_number: item.surah_number,
-              ayah_start: item.ayah_start,
-              ayah_end: item.ayah_end,
-              repetition_target: item.repetition_target,
-              day_offset: index,
-              priority: item.priority,
-              instructions: item.instructions,
-            })),
+          items: (plan.items || []).filter((item) => item.origin !== 'suggested').map((item, index) => ({
+            kind: item.kind,
+            hifz_category: item.hifz_category,
+            surah_number: item.surah_number,
+            ayah_start: item.ayah_start,
+            ayah_end: item.ayah_end,
+            repetition_target: item.repetition_target,
+            day_offset: index,
+            priority: item.priority,
+            instructions: item.instructions,
+          })),
         })
         this.success = this.t('teacher.plan_template_saved')
         const templatesRes = await learningApi.getTeacherLearningPlanTemplates()
@@ -505,8 +845,32 @@ export default {
       if (!total) return 0
       return Math.min(100, Math.round((done / total) * 100))
     },
+    activitiesComplete(plan) {
+      const total = Number(plan.progress?.total || 0)
+      return total > 0 && Number(plan.progress?.completed || 0) >= total
+    },
+    badge(plan) {
+      if (plan.status === 'completed' && !plan.progress_complete && !this.activitiesComplete(plan)) {
+        return { key: 'closed', label: this.t('teacher.plan_status_closed') }
+      }
+      return { key: plan.status, label: this.statusLabel(plan.status) }
+    },
+    nextOf(plan) {
+      return (plan.items || [])
+        .filter((item) => ['overdue', 'submitted', 'upcoming', 'in_progress', 'planned'].includes(item.display_status))
+        .slice()
+        .sort((a, b) => String(a.due_on || '9999').localeCompare(String(b.due_on || '9999')))[0] || null
+    },
+    isOverdue(plan) { return Number(plan.progress?.overdue || 0) > 0 || this.nextOf(plan)?.display_status === 'overdue' },
+    formatDate(value) {
+      const [year, month, day] = String(value || '').slice(0, 10).split('-').map(Number)
+      if (!year || !month || !day) return ''
+      return new Date(year, month - 1, day).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    },
     cadenceLabel(value) {
-      return value === 'monthly' ? this.t('teacher.plan_monthly') : this.t('teacher.plan_weekly')
+      if (value === 'monthly') return this.t('teacher.plan_monthly')
+      if (value === 'custom') return this.t('teacher.plan_custom')
+      return this.t('teacher.plan_weekly')
     },
     statusLabel(value) {
       const key = {
@@ -526,14 +890,15 @@ export default {
         paused: 'teacher.plan_status_paused',
         planned: 'teacher.plan_status_planned',
         in_progress: 'teacher.task_filter_progress',
+        submitted: 'teacher.plan_status_submitted',
         skipped: 'teacher.plan_status_skipped',
       }[value]
       return key ? this.t(key) : value
     },
-    kindLabel(item) {
-      if (item.kind === 'ai_recite') return this.t('teacher.plan_kind_ai')
-      if (item.hifz_category === 'manzil') return this.t('teacher.plan_kind_review')
-      return this.t('teacher.plan_kind_practice')
+    activityLabel(item) {
+      const id = item.activity || (item.kind === 'ai_recite' ? 'ai_recite' : item.hifz_category === 'manzil' ? 'manzil' : item.hifz_category === 'sabqi' ? 'sabqi' : 'hifz')
+      const type = ACTIVITY_TYPES.find((row) => row.id === id)
+      return type ? this.t(type.label) : this.t('teacher.plan_kind_practice')
     },
   },
 }

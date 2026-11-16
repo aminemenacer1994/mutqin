@@ -106,6 +106,8 @@
               @change-section="onProfileSection"
               @assign-revision="openAssignRevision"
               @mark-reviewed="markReviewReviewed"
+              @refresh="refreshStudentProfile"
+              @edit-task="beginEditStudentTask"
             />
 
             <TeacherAssignmentsSection

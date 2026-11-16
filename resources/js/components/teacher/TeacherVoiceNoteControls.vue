@@ -50,6 +50,18 @@
       <span class="d-none d-sm-inline">{{ t('teacher.resume_voice_note') }}</span>
     </button>
     <button
+      v-if="recordingSupported && (recordingState === 'recording' || recordingState === 'paused')"
+      type="button"
+      class="btn btn-outline-danger btn-sm"
+      :disabled="disabled"
+      :aria-label="t('teacher.discard_recording')"
+      :title="t('teacher.discard_recording')"
+      @click="discardRecording"
+    >
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+      <span class="d-none d-sm-inline">{{ t('teacher.discard_recording') }}</span>
+    </button>
+    <button
       v-if="recordingSupported && recordingState !== 'recorded'"
       type="button"
       class="btn btn-outline-secondary btn-sm teacher-voice-note__record"
@@ -121,8 +133,17 @@ export default {
   watch: {
     recordingState: { immediate: true, handler() { this.$emit('state-change', { hasRecording: this.hasRecording, active: this.isRecordingActive }) } },
   },
+  mounted() {
+    this.onPageLeave = (event) => {
+      if (!this.hasRecording && !this.isRecordingActive) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', this.onPageLeave)
+  },
   beforeUnmount() {
     this.disposed = true
+    window.removeEventListener('beforeunload', this.onPageLeave)
     this.discardRecording()
   },
   methods: {
@@ -201,6 +222,11 @@ export default {
       try {
         const blob = await stopMediaRecorderAndCollectBlob(recorder, [], { mimeType: recorder.mimeType })
         if (this.disposed || requestId !== this.recordingRequestId) return
+        if (!blob || blob.size < 1) {
+          this.recordingState = 'idle'
+          this.recordingError = this.t('teacher.recording_empty')
+          return
+        }
         this.audioBlob = blob
         this.audioDurationMs = durationMs
         this.audioPreviewUrl = createObjectUrlFromBlob(blob)

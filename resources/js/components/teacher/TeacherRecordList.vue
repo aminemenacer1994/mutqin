@@ -121,8 +121,10 @@
     :open="Boolean(playbackRow)"
     :student-id="playbackRow?.studentId"
     :attempt-id="playbackRow?.attemptId"
+    :focus-ayah="playbackRow?.focusAyah || null"
     :autoplay="playbackAutoplay"
     @close="playbackRow = null"
+    @reviewed="onReviewed"
   />
   <TeacherReciteEvidenceModal
     v-if="mushafReviewModal"
@@ -158,7 +160,7 @@ export default {
     selectable: { type: Boolean, default: false },
     selectedKey: { type: [String, Number], default: null },
   },
-  emits: ['action', 'review', 'select'],
+  emits: ['action', 'review', 'select', 'reviewed'],
   data() {
     return {
       shown: 5,
@@ -233,6 +235,13 @@ export default {
     },
     playbackReview(row) {
       return Boolean(row?.attemptId && row?.studentId)
+    },
+    onReviewed() {
+      if (!this.playbackRow) return
+      this.playbackRow.badge = this.t('teacher.playback_status_reviewed')
+      this.playbackRow.badgeTone = 'good'
+      this.playbackRow.reviewState = 'reviewed'
+      this.$emit('reviewed', this.playbackRow)
     },
     openEvidence(row, mode) {
       if (this.playbackReview(row)) {

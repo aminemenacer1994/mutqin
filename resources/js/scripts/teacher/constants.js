@@ -32,9 +32,11 @@ export function defaultAssignmentForm(surahs = []) {
   const surahNumber = '1'
   const range = defaultAyahRange(surahs, surahNumber)
   return {
-    task_type: 'new_memorisation',
+    task_type: 'nazra',
+    activity: 'nazra',
     kind: 'practice',
-    hifz_category: 'sabaq',
+    hifz_category: 'sabqi',
+    recording_required: false,
     student_id: '',
     surah_number: surahNumber,
     ayah_start: range.ayah_start,

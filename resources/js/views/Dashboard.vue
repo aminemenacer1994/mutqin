@@ -84,6 +84,7 @@
                 <span class="learner-home__status" :class="`is-${homeTaskTone}`">{{ homeTaskStatus }}</span>
               </div>
               <p v-if="homeTask.assignment?.feedback" class="learner-home__instructions">{{ homeTask.assignment.feedback }}</p>
+              <p v-if="homeTask.assignment?.activity" class="learner-home__instructions">{{ t(homeTask.assignment.recording_required ? 'teacher.recording_required_hint' : 'teacher.recording_optional_hint') }}</p>
               <div class="learner-home__task-footer">
                 <span v-if="homeTaskDue.text" class="learner-home__due" :class="`is-${homeTaskDue.tone}`"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ homeTaskDue.text }}</span>
                 <button type="button" class="dash-btn dash-btn--primary" :disabled="Boolean(assignmentSavingId)" @click="homeTaskReadyToSubmit ? completeSupportAssignment(homeTask) : startSupportAssignment(homeTask)">
@@ -1422,7 +1423,7 @@ export default {
     },
     homeTaskType() {
       const assignment = this.homeTask?.assignment
-      return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category), this.t.bind(this))
+      return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity), this.t.bind(this))
     },
     homeTaskStatus() {
       return this.homeTask?.review_state === 'needs_correction'

@@ -472,15 +472,49 @@ export function useTeacherDashboard(authRef) {
     assignmentFormOpen.value = true
   }
 
+  function beginEditStudentTask(recipient) {
+    const source = recipient?.assignment
+    const studentId = recipient?.student_id || profile.value?.student?.id
+    if (!source || !studentId) return
+    editingAssignmentId.value = source.id
+    assignment.value = {
+      task_type: resolveTeacherTaskType(source.kind, source.hifz_category, source.activity),
+      activity: source.activity || null,
+      kind: source.kind,
+      hifz_category: source.hifz_category || 'sabaq',
+      recording_required: Boolean(source.recording_required),
+      student_id: String(studentId),
+      surah_number: String(source.surah_number),
+      ayah_start: source.ayah_start,
+      ayah_end: source.ayah_end,
+      repetition_target: source.repetition_target || 1,
+      due_at: source.due_at ? String(source.due_at).slice(0, 10) : '',
+      priority: source.priority || 'normal',
+      feedback: source.feedback || '',
+    }
+    formError.value = ''
+    formSuccess.value = ''
+    assignmentFormOpen.value = true
+    openView('assignments')
+  }
+
+  function refreshStudentProfile() {
+    const id = profile.value?.student?.id
+    if (!id) return
+    loadProfile(id, profileSection.value, false)
+  }
+
   function beginEditAssignment(row) {
     const source = row?.assignment
     const recipient = row?.recipients?.[0]
     if (!row?.can_manage || !source || !recipient) return
     editingAssignmentId.value = source.id
     assignment.value = {
-      task_type: resolveTeacherTaskType(source.kind, source.hifz_category),
+      task_type: resolveTeacherTaskType(source.kind, source.hifz_category, source.activity),
+      activity: source.activity || null,
       kind: source.kind,
       hifz_category: source.hifz_category || 'sabaq',
+      recording_required: Boolean(source.recording_required),
       student_id: String(recipient.student_id),
       surah_number: String(source.surah_number),
       ayah_start: source.ayah_start,
@@ -502,6 +536,8 @@ export function useTeacherDashboard(authRef) {
     const payload = {
       kind: assignment.value.kind,
       hifz_category: assignment.value.hifz_category || 'sabaq',
+      activity: assignment.value.activity || null,
+      recording_required: Boolean(assignment.value.recording_required),
       surah_number: Number(assignment.value.surah_number),
       ayah_start: Number(assignment.value.ayah_start),
       ayah_end: Number(assignment.value.ayah_end),
@@ -651,6 +687,8 @@ export function useTeacherDashboard(authRef) {
     metric,
     beginCreateAssignment,
     beginEditAssignment,
+    beginEditStudentTask,
+    refreshStudentProfile,
     saveAssignment,
     removeAssignment,
     sendTeacherMessage,

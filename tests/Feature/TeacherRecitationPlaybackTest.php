@@ -361,6 +361,50 @@ class TeacherRecitationPlaybackTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_teacher_finding_stays_separate_from_the_word_check(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $attempt = $this->recitation($student);
+
+        $saved = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.words', [$student, $attempt]), [
+                'ayah' => 1,
+                'word_index' => 1,
+                'action' => 'correct',
+                'body' => 'The meem needs a clearer ghunnah.',
+                'focus' => 'ghunnah',
+                'finding' => 'difficulty',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('coachings.0.ai.status', 'wrong')
+            ->assertJsonPath('coachings.0.ai.error_type', 'SUBSTITUTION')
+            ->assertJsonPath('coachings.0.corrections.0.focus', 'ghunnah')
+            ->assertJsonPath('coachings.0.corrections.0.finding', 'difficulty')
+            ->assertJsonPath('coachings.0.corrections.0.source', 'teacher')
+            ->json();
+
+        $this->assertArrayNotHasKey('tajweed_score', $saved['coachings'][0]['corrections'][0]);
+        $attempt->refresh();
+        $this->assertSame('wrong', $attempt->word_statuses[1]['status']);
+
+        $this->actingAs($student)->getJson(route('api.me.support'))
+            ->assertOk()
+            ->assertJsonPath('learning.word_corrections.0.ai.status', 'wrong')
+            ->assertJsonPath('learning.word_corrections.0.corrections.0.focus', 'ghunnah')
+            ->assertJsonPath('learning.word_corrections.0.corrections.0.source', 'teacher')
+            ->assertJsonMissingPath('learning.word_corrections.0.corrections.0.tajweed_score');
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.words', [$student, $attempt]), [
+                'ayah' => 1,
+                'word_index' => 0,
+                'action' => 'correct',
+                'body' => 'Clear articulation.',
+                'focus' => 'makharij',
+            ])
+            ->assertStatus(422);
+    }
+
     private function recitation(User $student): \App\Models\AiReciteAttempt
     {
         $assessment = MemorisationAssessment::query()->create([
