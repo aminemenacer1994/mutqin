@@ -227,7 +227,7 @@ async function main() {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
       for (const theme of ['light', 'sepia', 'dark']) {
         await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
-        await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
+        await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0; body.querySelectorAll('.teacher-playback__side, .teacher-playback__main').forEach(pane => { pane.scrollTop = 0 }) })
         const geometry = await dialog.evaluate(root => {
           const content = root.querySelector('.modal-content').getBoundingClientRect()
           const body = root.querySelector('.modal-body')
@@ -238,10 +238,21 @@ async function main() {
         })
         assert.ok(geometry.height <= (width < 768 ? 844 : 1000) * .9 + 1, `Studio ${width}px ${theme}: content stays within 90vh`)
         assert.ok(geometry.overflow <= 1, `Studio ${width}px ${theme}: no horizontal overflow`)
-        assert.ok(geometry.outerScroll <= 1, `Studio ${width}px ${theme}: a single body owns vertical scrolling`)
+        assert.ok(geometry.outerScroll <= 1, `Studio ${width}px ${theme}: scrolling stays inside the content panes`)
         if (width > 960) {
           assert.equal(geometry.columns, true, 'Desktop studio retains separate reading and coaching columns')
           assert.ok(geometry.mainFraction >= .60 && geometry.mainFraction <= .70, 'Reading area has approximately 65% of available width')
+          const scrollState = await dialog.evaluate(root => {
+            const side = root.querySelector('.teacher-playback__side')
+            const main = root.querySelector('.teacher-playback__main')
+            const header = root.querySelector('.modal-header')
+            const top = header.getBoundingClientRect().top
+            const readingTop = main.scrollTop
+            side.scrollTop = side.scrollHeight
+            return { moved: side.scrollTop > 0, readingStill: main.scrollTop === readingTop, headerStill: header.getBoundingClientRect().top === top, sideOverflow: getComputedStyle(side).overflowY }
+          })
+          assert.ok(scrollState.moved && scrollState.readingStill && scrollState.headerStill, 'Coaching scrolls independently without moving the header or Quran')
+
         } else assert.equal(geometry.columns, false, 'Tablet and mobile coaching stacks below the reading area')
         for (const selector of ['.teacher-playback__response', '.teacher-playback__private-note', '.teacher-playback__revision', '.teacher-playback__review-status']) {
           const section = dialog.locator(selector)
@@ -254,10 +265,10 @@ async function main() {
     }
     await page.setViewportSize({ width: 390, height: 844 })
     await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
-    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
+    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0; body.querySelectorAll('.teacher-playback__side, .teacher-playback__main').forEach(pane => { pane.scrollTop = 0 }) })
     await page.screenshot({ path: path.join(shots, 'coaching-390.png') })
     await page.setViewportSize({ width: 1440, height: 1000 })
-    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0 })
+    await dialog.locator('.modal-body').evaluate(body => { body.scrollTop = 0; body.querySelectorAll('.teacher-playback__side, .teacher-playback__main').forEach(pane => { pane.scrollTop = 0 }) })
     const reviewBounds = await dialog.locator('.modal-content').boundingBox()
     assert.ok(Math.abs(reviewBounds.x + reviewBounds.width / 2 - 720) <= 1, 'Desktop review is horizontally centred')
     assert.ok(reviewBounds.width >= 1100, 'Desktop review provides usable space for the Quran and feedback sidebar')

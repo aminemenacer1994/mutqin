@@ -132,11 +132,76 @@ Madani reading tools and Madani selection. These failures remain outside this
 workspace change; one requires network access and several assert older source
 structures.
 
-Real retained-recording playback still requires a consented recording; the
-local demo provides historical assessment data without retained audio.
+The earlier verification used historical assessment data without retained
+audio. Retained audio was subsequently verified in the refinement below.
 
 Advanced analytics was not exercised through a live entitled admin session;
 the ordinary learner API correctly returned 403 and exposed no Advanced entry.
 The isolated harness verified the component and export without bypassing that
 production restriction. No live messages, feedback, assignments or recordings
 were created by browser verification.
+
+## Scrolling and learning journey refinement — 16 November 2026
+
+The review studio now stays within 90% of the viewport, with a fixed header
+and review action. Desktop reading and coaching panels scroll independently;
+mobile uses one stacked content scroller. Automatic word following cannot
+scroll the desktop coaching form or pull a mobile teacher away from an active
+feedback field. Zero assessment counts use neutral colours, private notes
+are collapsible, and the summary is compact. Shared dialog height constraints
+also keep learning-plan and task form footers reachable.
+
+Student Home prioritises overdue and due-today assignments, then correction
+work. Its revision list uses connected assignments and existing assessment
+findings, excludes the promoted task and overlapping findings, and preserves
+the recipient and passage when starting practice. Empty revision columns,
+redundant assessment prose and zero warnings are hidden. Student navigation
+stays in normal document flow instead of covering progress content.
+
+Authenticated local recording responses now support byte ranges. Previously
+the browser could report an incorrect duration and could not seek. Feedback
+uses a stable request UUID for retries, including voice recordings; server
+transactions prevent repeated feedback and revision creation. Existing access
+checks and private-note visibility are preserved.
+
+Main implementation files:
+
+- `TeacherRecitationPlaybackReview.vue`, `TeacherDashboard.css`: studio,
+  modal scrolling, fixed review action and task-row button styling.
+- `Dashboard.vue`, `Dashboard.learner-teacher.css`, `learnerHome.js`,
+  `DashAiReciteAttemptCard.vue`, `LearnerTeacherSection.vue`: learner priorities,
+  compact revision/feedback views and navigation.
+- `AiReciteAttemptAudioService.php`: protected local audio range responses.
+- `TeacherRecitationPlaybackController.php`,
+  `TeacherRecitationPlaybackService.php`, `scripts/api/learning.js`: retry identity
+  and duplicate prevention. English, French and Spanish labels were updated.
+
+Verification of this refinement:
+
+- Production build, 440-file import check, theme gates and Qur'an content
+  integrity passed. Development assets were rebuilt afterward for the local
+  workspace.
+- 59 backend tests passed with 713 assertions: audio authorization/ranges,
+  review actions, private notes, plans and learner access. The persisted
+  teacher–student scenario covers assignment, practice context, assessment,
+  text/voice feedback, revision, follow-up result and completion. Completion
+  is rejected until a learning event exists. Repeated requests are checked.
+- 27 focused JavaScript tests passed, including task urgency, revision
+  deduplication, feedback retry identity, playback timing and canonical glyphs.
+- Browser checks passed: 288 teacher page/form/studio cases (including 24
+  studio cases), 96 learner page cases and 24 direct-message modal cases. These cover eight
+  widths from 320–1920px and three themes, keyboard interaction, focus return,
+  unsaved drafts, form layout and overflow. No runtime errors occurred.
+- An existing retained recording passed actual playback, seeking, speed and
+  timestamp-based word highlighting at the six requested widths plus a short
+  1440×700 desktop viewport. The header/review action stayed visible and
+  playback did not move the coaching scroll position. Final desktop, mobile
+  and plan screenshots were inspected against the reported issues.
+
+Screenshots and browser JSON are in `/private/tmp/mutqin-refinement-qa`;
+verification logs use `/private/tmp/mutqin-refinement-*`. Browser checks read
+the existing classroom without sending messages or creating assignments.
+The end-to-end backend scenario writes to its isolated test database and uses
+persisted assessment fixtures; no paid AI request was made. Remote-storage
+audio range behaviour was not verified. The pre-existing broad Node failures
+described above were not rerun or claimed resolved by this focused refinement.

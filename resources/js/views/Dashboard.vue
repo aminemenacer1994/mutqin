@@ -145,6 +145,16 @@
               </span>
             </a>
           </div>
+          <section v-if="homeRevisions.length" class="learner-home__revisions" aria-labelledby="home-revision-title">
+            <h2 id="home-revision-title">{{ t('dashboard.home_needs_revision') }}</h2>
+            <div v-for="row in homeRevisions" :key="row.key" class="learner-home__revision-row">
+              <div><strong>{{ row.task ? row.task.assignment.surah_name : row.item.surah_name }}</strong>
+                <span>{{ row.task ? revisionRangeLabel(row.task.assignment) : t('dashboard.ayah_n', { n: row.item.ayah_number }) }}</span>
+              </div>
+              <button v-if="row.task" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="assignmentSavingId === row.task.id" @click="startSupportAssignment(row.task)">{{ t('teacher.coaching_practise_again') }}</button>
+              <a v-else class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(row.item)" @click="stashReviewContext(row.item)">{{ t('teacher.coaching_practise_again') }}</a>
+            </div>
+          </section>
         </div>
 
         <div v-show="studentPane === 'learning'" class="dash-pane">
@@ -420,7 +430,7 @@
                   </span>
                   <span class="dash-section__title-copy">
                     <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
-                    <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
+
                   </span>
                 </span>
                 <i class="bi dash-section__chevron" :class="isSectionCollapsed('ai_recite') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
@@ -1094,7 +1104,7 @@ import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
-import { latestLearnerHomeFeedback, nextLearnerHomeTask } from '../scripts/teacher/learnerHome.js'
+import { latestLearnerHomeFeedback, nextLearnerHomeTask, learnerHomeRevisions } from '../scripts/teacher/learnerHome.js'
 import { isLearnerSubmitted, learnerPrimaryActionKey } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../scripts/teacher/taskTypes.js'
@@ -1436,6 +1446,9 @@ export default {
     homeWaitingReview() {
       return (this.support?.assignments || []).some(isLearnerSubmitted)
     },
+    homeRevisions() {
+      return learnerHomeRevisions(this.support?.assignments, this.revisitItems, this.homeTask?.id)
+    },
     homeFeedback() {
       return this.showLearnerTeacherSection ? latestLearnerHomeFeedback(this.support) : null
     },
@@ -1624,7 +1637,7 @@ export default {
       return true
     },
     showMurajaahSection() {
-      return true
+      return this.revisitItems.length > 0
     },
     learningMetrics() {
       const metrics = this.data?.learning?.metrics

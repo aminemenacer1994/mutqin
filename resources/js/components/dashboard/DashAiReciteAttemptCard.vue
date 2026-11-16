@@ -29,11 +29,11 @@
               <span class="dash-fb-card__count-n">{{ summary.matched }}</span>
               {{ t('dashboard.ai_recite.count_matched') }}
             </li>
-            <li v-if="summary.uncertain != null" class="is-uncertain">
+            <li v-if="summary.uncertain > 0" class="is-uncertain">
               <span class="dash-fb-card__count-n">{{ summary.uncertain }}</span>
               {{ t('dashboard.ai_recite.count_uncertain') }}
             </li>
-            <li v-if="summary.mismatch != null" class="is-mismatch">
+            <li v-if="summary.mismatch > 0" class="is-mismatch">
               <span class="dash-fb-card__count-n">{{ summary.mismatch }}</span>
               {{ t('dashboard.ai_recite.count_mismatch') }}
             </li>
@@ -52,7 +52,7 @@
             <time v-if="item.occurred_at" :datetime="item.occurred_at">{{ checkedLabel }}</time>
           </p>
 
-          <p v-if="summary.insight" class="dash-fb-card__insight">{{ summary.insight }}</p>
+          <p v-if="expanded && summary.insight" class="dash-fb-card__insight">{{ summary.insight }}</p>
         </div>
 
         <div class="dash-fb-card__actions">

@@ -7404,7 +7404,9 @@ html[data-theme="dark"] .learner-workspace {
   margin-inline: auto;
 }
 .learner-workspace .dash-jump {
-  top: calc(var(--learner-header-height, 76px) + 8px);
+  position: relative;
+  top: auto;
+  /* Keep navigation in flow so long reports never slide beneath it. */
   width: fit-content;
   max-width: 100%;
   gap: 4px;
@@ -7587,3 +7589,15 @@ html[data-theme="dark"] .learner-home__confirmation { color: var(--success); }
   .learner-workspace .dash-history__link time { grid-column: 2; grid-row: 2; }
   .learner-workspace .dash-history__go { grid-column: 3; grid-row: 1 / 3; }
 }
+
+.learner-home__revisions { padding: 16px 20px; border: 1px solid var(--dash-border); border-radius: var(--radius-card, 12px); background: var(--dash-surface); }
+.learner-home__revisions h2 { margin: 0 0 8px; font-size: 17px; }
+.learner-home__revision-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 12px; }
+.learner-home__revision-row + .learner-home__revision-row { border-top: 1px solid var(--dash-border); }
+.learner-home__revision-row > div { display: grid; gap: 4px; font-size: 14px; }
+.learner-home__revision-row span { color: var(--dash-muted); font-size: 12px; }
+.learner-home__revision-row .dash-btn { flex: 0 0 auto; min-height: 44px; }
+.learner-workspace .dash-fb-card__title { display: flex; gap: 8px; }
+.learner-workspace .dash-fb-card__summary { padding: 14px; }
+
+.learner-workspace .user-dashboard__review-row--secondary:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }

@@ -51,6 +51,13 @@ class AiReciteAttemptAudioTest extends TestCase
             ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
             ->assertOk()
             ->assertHeader('content-type', 'audio/webm');
+        $this->actingAs($user)->withHeader('Range', 'bytes=0-3')
+            ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
+            ->assertStatus(206)
+            ->assertHeader('accept-ranges', 'bytes')
+            ->assertHeader('content-length', '4');
+        $this->flushHeaders();
+
     }
 
     public function test_other_user_cannot_access_attempt_audio(): void

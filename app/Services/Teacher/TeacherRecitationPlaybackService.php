@@ -65,26 +65,41 @@ class TeacherRecitationPlaybackService
         string $body,
         ?UploadedFile $audio = null,
         ?int $durationMs = null,
+        ?string $clientMessageId = null,
     ): array {
         $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
-        $attempt->loadMissing('assignmentRecipient.assignment');
-        $recipient = $attempt->assignmentRecipient;
-        $note = $recipient instanceof TeacherAssignmentRecipient
-            ? $this->assignments->addTeacherMessage($teacher, $recipient, $body, $audio, $durationMs)
-            : $this->dashboard->addNote(
-                $teacher,
-                $student,
-                TeacherNoteKind::Feedback->value,
-                $body,
-                $audio,
-                $durationMs,
-                $this->surahNumber($attempt),
-                $this->ayahStart($attempt),
-                $this->ayahEnd($attempt),
-                null,
-            );
+        DB::transaction(function () use ($teacher, $student, $attempt, $body, $audio, $durationMs, $clientMessageId) {
+            AiReciteAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            if ($clientMessageId !== null) {
+                $existing = TeacherNote::query()->where('teacher_id', $teacher->id)
+                    ->where('student_id', $student->id)->where('client_message_id', $clientMessageId)->first();
+                if ($existing) {
+                    $this->saveReview($teacher, $student, $attempt, ['feedback_note_id' => (int) $existing->id]);
+                    return;
+                }
+            }
+            $attempt->loadMissing('assignmentRecipient.assignment');
+            $recipient = $attempt->assignmentRecipient;
+            $note = $recipient instanceof TeacherAssignmentRecipient
+                ? $this->assignments->addTeacherMessage($teacher, $recipient, $body, $audio, $durationMs, $clientMessageId)
+                : $this->dashboard->addNote(
+                    $teacher,
+                    $student,
+                    TeacherNoteKind::Feedback->value,
+                    $body,
+                    $audio,
+                    $durationMs,
+                    $this->surahNumber($attempt),
+                    $this->ayahStart($attempt),
+                    $this->ayahEnd($attempt),
+                    null,
+                );
 
-        $this->saveReview($teacher, $student, $attempt, ['feedback_note_id' => (int) $note->id]);
+            if ($clientMessageId !== null && $note->client_message_id !== $clientMessageId) {
+                $note->forceFill(['client_message_id' => $clientMessageId])->save();
+            }
+            $this->saveReview($teacher, $student, $attempt, ['feedback_note_id' => (int) $note->id]);
+        });
 
         return $this->present($teacher, $student, $attempt);
     }
@@ -125,18 +140,29 @@ class TeacherRecitationPlaybackService
             ]);
         }
 
-        $assignment = $this->assignments->create($teacher, [
-            'kind' => AssignmentKind::AiRecite->value,
-            'hifz_category' => 'sabqi',
-            'surah_number' => $range['surah_number'],
-            'ayah_start' => $range['ayah_start'],
-            'ayah_end' => $range['ayah_end'],
-            'due_at' => $input['due_at'],
-            'priority' => 'high',
-            'feedback' => $input['feedback'] ?? null,
-            'student_id' => $student->id,
-        ]);
-        $this->saveReview($teacher, $student, $attempt, ['teacher_assignment_id' => (int) $assignment->id]);
+        DB::transaction(function () use ($teacher, $student, $attempt, $range, $input) {
+            // Serialize retries even before a review row exists.
+            AiReciteAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $review = TeacherRecitationReview::query()
+                ->where('teacher_id', $teacher->id)
+                ->where('ai_recite_attempt_id', $attempt->id)
+                ->first();
+            if ($review?->teacher_assignment_id && TeacherAssignment::query()->whereKey($review->teacher_assignment_id)->exists()) {
+                return;
+            }
+            $assignment = $this->assignments->create($teacher, [
+                'kind' => AssignmentKind::AiRecite->value,
+                'hifz_category' => 'sabqi',
+                'surah_number' => $range['surah_number'],
+                'ayah_start' => $range['ayah_start'],
+                'ayah_end' => $range['ayah_end'],
+                'due_at' => $input['due_at'],
+                'priority' => 'high',
+                'feedback' => $input['feedback'] ?? null,
+                'student_id' => $student->id,
+            ]);
+            $this->saveReview($teacher, $student, $attempt, ['teacher_assignment_id' => (int) $assignment->id]);
+        });
 
         return $this->present($teacher, $student, $attempt);
     }

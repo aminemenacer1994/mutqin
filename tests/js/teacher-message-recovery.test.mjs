@@ -443,3 +443,22 @@ test('fallback message identities remain valid UUIDs accepted by the existing AP
     assert.notEqual(ids[0], ids[1])
   } finally { dispose() }
 })
+
+test('studio feedback retries keep the same message identity and edits start a new one', async () => {
+  const requests = []
+  let sequence = 0
+  const send = await actualMethod('resources/js/components/teacher/TeacherRecitationPlaybackReview.vue', 'sendFeedback', {
+    createClientMessageId: () => `request-${++sequence}`,
+    learningApi: { saveTeacherRecitationFeedback: async (_student, _attempt, payload) => { requests.push(payload); throw new Error('Connection interrupted') } },
+  })
+  const context = { saving: '', feedback: 'Practise this ayah', feedbackRequest: null, studentId: 1, attemptId: 2,
+    $refs: { voice: { isRecordingActive: false, recordingPayload: () => null } },
+    failureMessage: error => error.message,
+  }
+  await send.call(context)
+  await send.call(context)
+  assert.equal(requests[0].client_message_id, requests[1].client_message_id, 'An uncertain response can be retried without duplicating feedback')
+  context.feedback = 'A revised instruction'
+  await send.call(context)
+  assert.notEqual(requests[1].client_message_id, requests[2].client_message_id)
+})

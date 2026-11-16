@@ -158,7 +158,7 @@ export function createDebouncer(fn, wait = 1500) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function createClientMessageId() {
+export function createClientMessageId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
     const value = Math.floor(Math.random() * 16)

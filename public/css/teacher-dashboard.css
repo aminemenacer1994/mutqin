@@ -8463,7 +8463,7 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active { color:
 /* A single overlay contract, including components teleported directly to body. */
 .teacher-dialog-backdrop.modal-backdrop { z-index: 1080; background: var(--teacher-overlay, rgba(23, 18, 14, .52)); opacity: 1; }
 .teacher-dialog.modal { z-index: 1085; padding: 24px; overflow: hidden; }
-.teacher-dialog .modal-dialog { display: flex; align-items: center; min-height: 100%; max-width: 720px; margin: 0 auto; pointer-events: none; }
+.teacher-dialog .modal-dialog { display: flex; align-items: center; height: 100%; min-height: 0; max-width: 720px; margin: 0 auto; pointer-events: none; }
 .teacher-dialog .modal-dialog.modal-xl { max-width: 1240px; }
 .teacher-dialog .modal-dialog.modal-sm { max-width: 420px; }
 .teacher-dialog .modal-dialog:not(.modal-lg):not(.modal-xl):not(.modal-sm) { max-width: 560px; }
@@ -8582,12 +8582,26 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active { color:
 .teacher-direct-thread__status { margin: 0; font-size: 12px; }
 .teacher-direct-thread__status.is-error { color: var(--teacher-danger); }
 .teacher-direct-thread__status.is-success { color: var(--teacher-positive); }
-/* Coaching studio shares one scrollable body and a natural-height reading area. */
-.teacher-dialog.teacher-playback-studio .modal-content { max-height: 90dvh; }
+/* Desktop panes scroll independently; compact screens use the dialog body. */
+.teacher-dialog.teacher-playback-studio .modal-content { max-height: min(90dvh, calc(100dvh - 32px)); }
+.teacher-playback-studio .teacher-dialog__header.is-inline { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; }
+.teacher-playback-studio .teacher-dialog__pills { grid-column: 1; }
+.teacher-playback-studio .teacher-dialog__header .btn-close { grid-column: 2; grid-row: 1 / 3; }
+.teacher-playback__private-note > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.teacher-playback__private-note:not([open]) { display: block; }
+@media (min-width: 961px) {
+  .teacher-dialog.teacher-playback-studio .modal-content { height: 90dvh; }
+  .teacher-playback-studio .modal-body { display: flex; overflow: hidden; }
+  .teacher-playback { display: flex; flex: 1; min-height: 0; }
+  .teacher-playback__layout { flex: 1; min-height: 0; }
+  .teacher-playback__main, .teacher-playback__side { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--teacher-line-strong) var(--teacher-surface-soft); padding-inline-end: 10px; }
+}
+.teacher-dashboard .teacher-task-row__go { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border: 0; border-radius: 8px; color: var(--teacher-text-soft); background: transparent; }
+.teacher-dashboard .teacher-task-row__go:hover { background: var(--teacher-surface-hover); }
 .teacher-playback-studio .modal-body { scroll-padding-block: 16px; }
 .teacher-playback { min-width: 0; }
 .teacher-playback__layout { display: grid; grid-template-columns: minmax(0, 1.95fr) minmax(300px, 1fr); align-items: start; gap: 24px; }
-.teacher-playback__main { min-width: 0; display: grid; align-content: start; gap: 20px; }
+.teacher-playback__main { min-width: 0; display: grid; align-content: start; gap: 12px; }
 .teacher-playback__stage { display: grid; gap: 12px; }
 .teacher-playback__player { border: 1px solid var(--teacher-line); border-radius: 10px; padding: 12px 14px; background: var(--teacher-surface-soft); }
 .teacher-playback__player.is-empty { border: 0; padding: 0; background: transparent; }
@@ -8606,7 +8620,7 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active { color:
 .teacher-playback__legend .is-correct::before { background: var(--teacher-positive); }
 .teacher-playback__legend .is-uncertain::before { background: var(--teacher-warning); }
 .teacher-playback__legend .is-flagged::before { background: var(--teacher-danger); }
-.teacher-playback__mushaf { min-width: 0; padding: 24px 16px; border-block: 1px solid var(--teacher-line); background: var(--teacher-surface-soft); border-radius: 8px; }
+.teacher-playback__mushaf { min-width: 0; padding: 12px 16px; border-block: 1px solid var(--teacher-line); background: var(--teacher-surface-soft); border-radius: 8px; }
 .teacher-recite-mushaf { direction: rtl; text-align: right; color: var(--teacher-text); }
 .teacher-recite-mushaf__line { display: flex; flex-wrap: wrap; flex-direction: row; justify-content: flex-start; align-items: baseline; -moz-column-gap: .18em; column-gap: .18em; row-gap: .15em; margin: 0; padding: .18em 0; font-size: clamp(27px, 2.7vw, 38px); font-weight: 400; line-height: 2; direction: rtl; overflow: visible; }
 .teacher-recite-mushaf__line + .teacher-recite-mushaf__line { margin-top: .2em; }
@@ -8626,17 +8640,18 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active { color:
 .teacher-recite-mushaf__ayah { display: flex; gap: 12px; align-items: baseline; }
 .teacher-recite-mushaf__ayah-marker { color: var(--teacher-text-soft); font-size: 13px; }
 .teacher-playback__side { display: grid; min-width: 0; gap: 0; padding-inline-start: 20px; border-inline-start: 1px solid var(--teacher-line); }
-.teacher-playback__card { display: grid; min-width: 0; align-content: start; gap: 12px; padding: 20px 0; border-top: 1px solid var(--teacher-line); background: var(--teacher-surface); }
+.teacher-playback__card { display: grid; min-width: 0; align-content: start; gap: 10px; padding: 14px 0; border-top: 1px solid var(--teacher-line); background: var(--teacher-surface); }
 .teacher-playback__summary { padding-top: 0; border-top: 0; }
 .teacher-playback__section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .teacher-playback__summary-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
-.teacher-playback__summary-counts > div { display: flex; flex-direction: column-reverse; gap: 4px; padding: 10px 12px; border-radius: var(--teacher-radius-sm); background: var(--teacher-surface-soft); }
+.teacher-playback__summary-counts > div { display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--teacher-radius-sm); background: var(--teacher-surface-soft); }
 .teacher-playback__summary-counts dt { font-size: 12px; font-weight: 500; }
-.teacher-playback__summary-counts dd { margin: 0; font-size: 24px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.teacher-playback__summary-counts dd { margin: 0; font-size: 20px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .teacher-playback__summary-counts .is-correct { color: var(--teacher-positive); background: var(--teacher-positive-soft); }
 .teacher-playback__summary-counts .is-uncertain { color: var(--teacher-warning); background: var(--teacher-warning-soft); }
 .teacher-playback__summary-counts .is-flagged { color: var(--teacher-danger); background: var(--teacher-danger-soft); }
 .teacher-playback__summary-counts .is-skipped { color: var(--teacher-text-soft); }
+.teacher-playback__summary-counts .is-empty { color: var(--teacher-text-soft); background: var(--teacher-surface-soft); }
 .teacher-playback__selection-meta { font-size: 13px; }
 .teacher-playback__saved-feedback { padding: 12px; border-radius: var(--teacher-radius-sm); background: var(--teacher-positive-soft); }
 .teacher-playback__word-practice { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -8781,6 +8796,7 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active { color:
   .teacher-task-row__copy { flex: 1 1 calc(100% - 50px); }
   .teacher-task-row__aside { width: 100%; justify-content: space-between; padding-inline-start: 46px; }
   .teacher-task-row__controls { border: 0; padding: 0; }
+  .teacher-dashboard .teacher-task-row__go { flex-basis: 44px; width: 44px; height: 44px; }
   .teacher-account > .card-body { padding: 20px; }
   .teacher-account__nav { padding-inline: 20px; }
   .teacher-dialog.modal { padding: 12px; }

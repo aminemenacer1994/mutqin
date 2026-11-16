@@ -47,6 +47,12 @@ class TeacherRecitationPlaybackTest extends TestCase
             'feedback' => 'Slow the middle',
         ])->assertCreated()->json();
 
+        $recipientId = $task['recipients'][0]['id'];
+        $start = $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))
+            ->assertOk()->json();
+        $this->assertStringContainsString('assignment_recipient='.$recipientId, $start['href']);
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))->assertStatus(422);
+
         $assessment = MemorisationAssessment::query()->create([
             'user_id' => $student->id,
             'idempotency_key' => 'playback-review',
@@ -121,9 +127,17 @@ class TeacherRecitationPlaybackTest extends TestCase
         $this->actingAs($teacher)
             ->postJson(route('api.teacher.students.attempts.playback.feedback', [$student, $attempt]), [
                 'body' => 'Stretch the madd.',
+                'client_message_id' => '11111111-1111-4111-8111-111111111111',
             ])
             ->assertCreated()
             ->assertJsonPath('review.feedback.body', 'Stretch the madd.');
+        $notesBeforeRetry = \App\Models\TeacherNote::query()->count();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.feedback', [$student, $attempt]), [
+            'body' => 'Stretch the madd.',
+            'client_message_id' => '11111111-1111-4111-8111-111111111111',
+        ])->assertCreated();
+        $this->assertSame($notesBeforeRetry, \App\Models\TeacherNote::query()->count());
+
 
         $this->actingAs($teacher)
             ->post(route('api.teacher.students.attempts.playback.feedback', [$student, $attempt]), [
@@ -157,6 +171,41 @@ class TeacherRecitationPlaybackTest extends TestCase
             ->assertJsonPath('review.revision.ayah_start', 1);
 
         $this->assertTrue(TeacherAssignment::query()->where('teacher_id', $teacher->id)->where('hifz_category', 'sabqi')->exists());
+        $revision = TeacherAssignment::query()->where('teacher_id', $teacher->id)->where('hifz_category', 'sabqi')->firstOrFail();
+        $countBeforeRetry = TeacherAssignment::query()->count();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.revision', [$student, $attempt]), [
+            'due_at' => today()->addDays(3)->toDateString(),
+            'feedback' => 'Repeat ayah 1 slowly.',
+        ])->assertCreated();
+        $this->assertSame($countBeforeRetry, TeacherAssignment::query()->count(), 'Retry must not duplicate the revision');
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk();
+        $this->assertStringNotContainsString('Only the teacher should see this.', $support->getContent());
+        $this->assertStringContainsString('Listen once more.', $support->getContent());
+        $revisionRow = collect($support->json('assignments'))->firstWhere('assignment.id', $revision->id);
+        $this->assertNotNull($revisionRow, 'The assigned revision reaches the original student');
+        $revisionStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $revisionRow['id']))->assertOk()->json();
+        $this->assertStringContainsString('assignment_recipient='.$revisionRow['id'], $revisionStart['href']);
+        $this->assertSame(114, $revisionRow['assignment']['surah_number']);
+        $this->assertSame(1, $revisionRow['assignment']['ayah_start']);
+        $this->assertSame(2, $revisionRow['assignment']['ayah_end']);
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $revisionRow['id']))->assertStatus(422);
+        $retry = $attempt->replicate();
+        $retry->forceFill([
+            'teacher_assignment_recipient_id' => $revisionRow['id'],
+            'memorisation_assessment_id' => null,
+            'attempt_number' => 2,
+            'accuracy_percent' => 100,
+            'word_statuses' => [
+                ['ayah' => 1, 'word_index' => 0, 'status' => 'correct'],
+                ['ayah' => 1, 'word_index' => 1, 'status' => 'correct'],
+                ['ayah' => 1, 'word_index' => 2, 'status' => 'correct'],
+                ['ayah' => 2, 'word_index' => 0, 'status' => 'correct'],
+            ],
+        ])->save();
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $revisionRow['id']))->assertOk();
+        $this->actingAs($teacher)->getJson(route('api.teacher.students.attempts.playback', [$student, $retry]))
+            ->assertOk()->assertJsonPath('accuracy_percent', 100);
+
 
         $this->actingAs($teacher)
             ->postJson(route('api.teacher.students.attempts.playback.review', [$student, $attempt]))
@@ -166,7 +215,8 @@ class TeacherRecitationPlaybackTest extends TestCase
         $listed = $this->actingAs($teacher)
             ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
             ->assertOk()
-            ->json('payload.attempts.0.evidence.words');
+            ->json('payload.attempts');
+        $listed = collect($listed)->firstWhere('id', $attempt->id)['evidence']['words'];
         $this->assertSame(0.1, $listed[0]['start']);
         $this->assertArrayNotHasKey('start', $listed[2]);
     }

@@ -6010,6 +6010,7 @@
       "modeRevise": "Revise",
       "modeTest": "Test recitation"
     },
+    "home_needs_revision": "Needs revision",
     "home_today": "Today's learning",
     "home_all_tasks": "View all tasks",
     "home_no_tasks": "You're up to date",
@@ -7913,8 +7914,8 @@
     "playback_revision_note_placeholder": "Optional focus for this revision…",
     "playback_assign": "Assign revision",
     "playback_revision_sent": "Revision assigned",
-    "playback_revision_focus": "Sabqi revision for the ayahs the checker marked: {range}.",
-    "playback_revision_passage": "Sabqi revision for the recited passage: {range}.",
+    "playback_revision_focus": "Suggested ayahs: {range}.",
+    "playback_revision_passage": "Passage: {range}.",
     "playback_no_passage": "This recitation has no passage to assign.",
     "playback_mark_reviewed": "Mark as reviewed",
     "playback_reviewed_saved": "Marked as reviewed",

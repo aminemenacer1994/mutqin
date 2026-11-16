@@ -10,6 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AiReciteAttemptAudioService
 {
@@ -143,12 +144,19 @@ class AiReciteAttemptAudioService
 
         $disk = Storage::disk($attempt->audio_disk ?: self::DISK);
 
-        return $disk->response($attempt->audio_path, 'recitation', [
+        $headers = [
             'Content-Type' => $attempt->audio_mime ?: 'application/octet-stream',
             'Content-Disposition' => 'inline',
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ];
+        if (config('filesystems.disks.'.($attempt->audio_disk ?: self::DISK).'.driver') === 'local') {
+            // BinaryFileResponse honours authenticated byte-range requests used by
+            // browsers to seek and determine the duration of retained recordings.
+            return new BinaryFileResponse($disk->path($attempt->audio_path), 200, $headers, false);
+        }
+
+        return $disk->response($attempt->audio_path, 'recitation', $headers);
     }
 
     public function canView(User $viewer, AiReciteAttempt $attempt): bool

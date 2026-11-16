@@ -28,6 +28,7 @@ class TeacherRecitationPlaybackController extends Controller
     {
         $data = $request->validate([
             'body' => ['nullable', 'string', 'max:2000'],
+            'client_message_id' => ['nullable', 'uuid'],
             'audio' => ['nullable', 'file', 'max:8192'],
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
         ]);
@@ -39,6 +40,7 @@ class TeacherRecitationPlaybackController extends Controller
             (string) ($data['body'] ?? ''),
             $request->file('audio'),
             isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+            $data['client_message_id'] ?? null,
         ), 201);
     }
 

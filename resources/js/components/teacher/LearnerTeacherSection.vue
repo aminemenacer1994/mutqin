@@ -37,7 +37,7 @@
         <header class="learner-teacher__intro" aria-labelledby="learner-teacher-heading">
           <div class="learner-teacher__intro-top">
             <div class="learner-teacher__intro-identity">
-              <span class="learner-teacher__section-avatar" aria-hidden="true">{{ teacherInitials }}</span>
+              <span class="learner-teacher__section-avatar" aria-hidden="true"><i v-if="teacherNames.length > 1" class="bi bi-people"></i><template v-else>{{ teacherInitials }}</template></span>
               <div class="learner-teacher__intro-copy">
                 <p class="learner-teacher__section-eyebrow">{{ t('teacher.learner_section_from_label') }}</p>
                 <h2 id="learner-teacher-heading" class="learner-teacher__section-name">
