@@ -15,12 +15,22 @@
         </li>
       </ul>
     </section>
-    <section class="teacher-priorities" :aria-label="t('teacher.today_priorities')">
-      <p>{{ t('teacher.today_priorities_summary', deskCounts) }}</p>
-      <div class="teacher-priorities__actions">
-        <button v-if="deskCounts.reviews" type="button" class="btn btn-primary btn-sm" @click="$emit('open-assignments', 'submitted')">{{ t('teacher.today_review_submissions') }}</button>
-        <button v-if="deskCounts.overdue" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-assignments', 'overdue')">{{ t('teacher.today_overdue_tasks') }}</button>
-        <button v-if="deskCounts.plans" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-plans')">{{ t('teacher.today_review_plans') }}</button>
+    <section class="teacher-today" :aria-label="t('teacher.today_priorities')">
+      <h3>{{ t('teacher.today_priorities') }}</h3>
+      <div class="teacher-today__items">
+        <button
+          v-for="item in todayItems"
+          :key="item.id"
+          type="button"
+          class="teacher-today__item"
+          :class="[item.count ? 'is-attention' : 'is-clear', item.count ? item.tone : '']"
+          :aria-label="item.aria"
+          @click="openToday(item.id)"
+        >
+          <strong aria-hidden="true">{{ item.count }}</strong>
+          <span aria-hidden="true">{{ item.label }}</span>
+          <small aria-hidden="true">{{ item.count ? item.action : t('teacher.today_chip_clear') }}</small>
+        </button>
       </div>
     </section>
     <div class="teacher-overview-columns">
@@ -51,13 +61,13 @@
       </div>
     </div>
     <div class="teacher-overview-columns">
-      <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" icon="bi bi-arrow-repeat" flat>
+      <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" :hint="t('teacher.overview_revision_hint')" icon="bi bi-arrow-repeat" flat>
         <ul v-if="outstandingRevision.length" class="teacher-activity-list">
           <li v-for="row in outstandingRevision" :key="row.recipient_id">
             <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
               <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-              <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
-              <span></span>
+              <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ revisionDetail(row) }}</small></span>
+              <span class="teacher-activity-list__score" :class="{ 'teacher-activity-list__score--warn': row.overdue }">{{ revisionStatus(row) }}</span>
               <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
           </li>
@@ -196,7 +206,39 @@ export default {
       return { count: Number(this.overview?.kpis?.outstanding_assignments || 0), label: this.t('teacher.kpi_open_tasks') }
     },
     outstandingRevision() {
-      return this.overview?.outstanding_revision || []
+      return [...(this.overview?.outstanding_revision || [])].sort((a, b) => {
+        if (Boolean(a.overdue) !== Boolean(b.overdue)) return a.overdue ? -1 : 1
+        return String(a.due_at || '9999').localeCompare(String(b.due_at || '9999'))
+      })
+    },
+    todayItems() {
+      const counts = this.deskCounts
+      return [
+        {
+          id: 'reviews',
+          count: counts.reviews,
+          label: this.t('teacher.today_chip_reviews'),
+          action: this.t('teacher.today_chip_go_reviews'),
+          aria: this.t('teacher.today_chip_reviews_label', { count: counts.reviews }),
+          tone: '',
+        },
+        {
+          id: 'overdue',
+          count: counts.overdue,
+          label: this.t('teacher.today_chip_overdue'),
+          action: this.t('teacher.today_chip_go_overdue'),
+          aria: this.t('teacher.today_chip_overdue_label', { count: counts.overdue }),
+          tone: 'is-overdue',
+        },
+        {
+          id: 'plans',
+          count: counts.plans,
+          label: this.t('teacher.today_chip_plans'),
+          action: this.t('teacher.today_chip_go_plans'),
+          aria: this.t('teacher.today_chip_plans_label', { count: counts.plans }),
+          tone: '',
+        },
+      ]
     },
     planRows() {
       return this.overview?.plan_progress?.rows || []
@@ -234,6 +276,31 @@ export default {
     },
     openStudent(id, section = 'ai', focus = null) {
       this.$emit('open-student', id, section, focus)
+    },
+    openToday(id) {
+      if (id === 'plans') {
+        this.$emit('open-plans')
+        return
+      }
+      this.$emit('open-assignments', id === 'reviews' ? 'submitted' : 'overdue')
+    },
+    revisionWhen(row) {
+      if (row.overdue && row.due_at) return this.t('teacher.reviews_revision_was_due', { date: this.formatWhen(row.due_at) })
+      if (row.due_at) return this.t('teacher.task_due_date', { date: this.formatWhen(row.due_at) })
+      return this.t('teacher.no_due_date')
+    },
+    revisionDetail(row) {
+      const when = this.revisionWhen(row)
+      return when ? `${row.label} · ${when}` : row.label
+    },
+    revisionStatus(row) {
+      if (row.overdue || row.status === 'overdue') return this.t('teacher.status_overdue')
+      const key = {
+        pending: 'teacher.status_pending',
+        in_progress: 'teacher.status_in_progress',
+        awaiting_confirmation: 'teacher.status_awaiting_confirmation',
+      }[row.status]
+      return this.t(key || 'teacher.status_pending')
     },
     openSnapshot(item) {
       if (item.id === 'overdue') {

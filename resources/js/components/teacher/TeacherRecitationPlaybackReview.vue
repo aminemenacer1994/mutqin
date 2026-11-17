@@ -64,20 +64,26 @@
                   <p>{{ t('teacher.recording_play_failed') }}</p>
                 </div>
                 <div v-else-if="!hasAudio" class="teacher-playback__missing">
-                  <p><i class="bi bi-mic" aria-hidden="true"></i><strong>{{ audioGap.title }}</strong></p>
-                  <p>{{ audioGap.body }}</p>
+                  <p>
+                    <i class="bi bi-mic" aria-hidden="true"></i>
+                    <strong>{{ audioGap.title }}</strong>
+                    <span>{{ t('teacher.recording_unavailable_short') }}</span>
+                  </p>
                   <button v-if="canRequestRecording" type="button" class="btn btn-outline-secondary btn-sm" @click="requestAnotherRecording">{{ t('teacher.recording_request') }}</button>
                 </div>
-              </div>
                 <div class="teacher-playback__legend" :aria-label="t('teacher.playback_follow')">
                   <span class="is-correct">{{ t('teacher.word_status_correct') }}</span>
                   <span class="is-uncertain">
                     {{ t('teacher.playback_legend_uncertain') }}
                     <span class="visually-hidden">{{ t('teacher.playback_uncertain_help') }}</span>
                   </span>
-                  <span class="is-flagged">{{ t('teacher.playback_legend_flagged') }}</span>
+                  <span class="is-flagged" :title="t('teacher.playback_legend_flagged')">
+                    {{ t('teacher.playback_legend_flagged_short') }}
+                    <span class="visually-hidden">{{ t('teacher.playback_legend_flagged') }}</span>
+                  </span>
                   <span class="is-skipped">{{ t('teacher.word_status_skipped') }}</span>
                 </div>
+              </div>
               </div>
 
               <div ref="mushaf" class="teacher-playback__mushaf">
