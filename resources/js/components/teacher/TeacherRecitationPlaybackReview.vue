@@ -58,6 +58,7 @@
                     <span>{{ formatTime(trackEnd) }}</span>
                   </p>
                 </div>
+                <p v-if="hasAudio && !audioError && !audioReady" class="teacher-playback__hint" role="status">{{ t('teacher.recording_state_loading') }}</p>
                 <div v-if="hasAudio && audioError" class="teacher-playback__missing">
                   <p><i class="bi bi-exclamation-circle" aria-hidden="true"></i><strong>{{ t('teacher.recording_state_unavailable') }}</strong></p>
                   <p>{{ t('teacher.recording_play_failed') }}</p>
@@ -255,6 +256,9 @@
                           <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
                             {{ t('teacher.coaching_delete_audio') }}
                           </button>
+                          <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="editCorrection(item)">
+                            {{ t('teacher.coaching_correct_note') }}
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -277,6 +281,42 @@
                     </label>
                     <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
                   </details>
+              </section>
+
+              <section v-if="payload.history?.previous_review" class="teacher-playback__card" :aria-label="t('teacher.playback_previous_review')">
+                <h3>{{ t('teacher.playback_previous_review') }}</h3>
+                <p v-if="payload.history.previous_review.accuracy_percent != null" class="teacher-playback__hint">{{ t('teacher.playback_previous_wording', { n: payload.history.previous_review.accuracy_percent }) }}</p>
+                <p v-if="payload.history.previous_review.feedback">{{ payload.history.previous_review.feedback }}</p>
+                <ul v-if="observationLines(payload.history.previous_review.observations).length" class="teacher-playback__history">
+                  <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
+                </ul>
+              </section>
+
+              <section class="teacher-playback__card teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
+                <h3>{{ t('teacher.playback_teacher_assessment') }}</h3>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_teacher_assessment_help') }}</p>
+                <div v-for="area in assessmentAreas" :key="area.id" class="teacher-playback__assessment-row">
+                  <label class="teacher-playback__field">
+                    <span>{{ t(area.label) }}</span>
+                    <select v-model="assessment[area.id].rating" :disabled="Boolean(saving)" @change="assessmentDirty = true">
+                      <option value="">{{ t('teacher.assessment_rating_unset') }}</option>
+                      <option value="needs_work">{{ t('teacher.assessment_needs_work') }}</option>
+                      <option value="sound">{{ t('teacher.assessment_sound') }}</option>
+                      <option value="strong">{{ t('teacher.assessment_strong') }}</option>
+                    </select>
+                  </label>
+                  <label class="teacher-playback__field">
+                    <span class="visually-hidden">{{ t('teacher.assessment_note_placeholder') }}</span>
+                    <input v-model="assessment[area.id].note" type="text" maxlength="500" :disabled="Boolean(saving)" :placeholder="t('teacher.assessment_note_placeholder')" @input="assessmentDirty = true">
+                  </label>
+                </div>
+                <label class="teacher-playback__field">
+                  <span>{{ t('teacher.playback_general_feedback') }}</span>
+                  <textarea v-model="assessmentGeneral" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_feedback_placeholder')" @input="assessmentDirty = true"></textarea>
+                </label>
+                <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || !assessmentReady" @click="saveAssessment">
+                  {{ saving === 'assessment' ? t('teacher.saving') : t('teacher.playback_save_assessment') }}
+                </button>
               </section>
 
               <section class="teacher-playback__card teacher-playback__response" :aria-label="t('teacher.playback_actions')">
@@ -331,6 +371,7 @@
                     {{ saving === 'revision' ? t('teacher.saving') : t('teacher.playback_assign') }}
                   </button>
                   <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<span v-if="assignedRevisionLabel"> · {{ assignedRevisionLabel }}</span></p>
+                  <p v-if="followUpLabel" class="teacher-playback__hint">{{ followUpLabel }}</p>
               </section>
 
 
@@ -420,6 +461,22 @@ export default {
       duration: 0,
       playing: false,
       audioError: false,
+      audioReady: false,
+      assessment: {
+        memorisation: { rating: '', note: '' },
+        tajweed: { rating: '', note: '' },
+        pronunciation: { rating: '', note: '' },
+        fluency: { rating: '', note: '' },
+      },
+      assessmentAreas: [
+        { id: 'memorisation', label: 'teacher.assessment_memorisation' },
+        { id: 'tajweed', label: 'teacher.assessment_tajweed' },
+        { id: 'pronunciation', label: 'teacher.assessment_pronunciation' },
+        { id: 'fluency', label: 'teacher.assessment_fluency' },
+      ],
+      assessmentGeneral: '',
+      assessmentDirty: false,
+      editingCorrectionId: null,
       voiceState: { hasRecording: false, active: false },
       wordVoiceState: { hasRecording: false, active: false },
       wordDrafts: {},
@@ -497,6 +554,20 @@ export default {
     },
     hasAudio() {
       return Boolean(this.payload?.audio?.available && this.payload?.audio?.url)
+    },
+    assessmentReady() {
+      if (this.assessmentGeneral.trim()) return true
+      return this.assessmentAreas.some((area) => {
+        const entry = this.assessment[area.id] || {}
+        return Boolean(entry.rating || String(entry.note || '').trim())
+      })
+    },
+    followUpLabel() {
+      const followUp = this.payload?.review?.revision?.follow_up
+      if (!followUp) return ''
+      if (followUp.approved) return this.t('teacher.playback_follow_up_approved')
+      if (followUp.submitted) return this.t('teacher.playback_follow_up_submitted')
+      return this.t('teacher.playback_follow_up_open')
     },
     words() {
       return this.payload?.words || []
@@ -827,6 +898,9 @@ export default {
       this.duration = 0
       this.playing = false
       this.audioError = false
+      this.audioReady = false
+      this.assessmentDirty = false
+      this.editingCorrectionId = null
       this.feedback = ''
       this.privateNote = ''
       this.revisionNote = ''
@@ -840,6 +914,7 @@ export default {
         const payload = await learningApi.getTeacherRecitationPlayback(this.studentId, this.attemptId)
         if (token !== this.loadToken) return
         this.payload = payload
+        this.hydrateAssessment(payload)
         const counts = this.summary.counts
         this.attentionFilter = ['flagged', 'uncertain', 'skipped'].find(key => counts[key] > 0) || 'flagged'
         this.showAllAttention = false
@@ -895,6 +970,7 @@ export default {
       }
     },
     onMetadata() {
+      this.audioReady = true
       if (this.$refs.player) this.$refs.player.playbackRate = this.playbackRate
       const seconds = Number(this.$refs.player?.duration)
       if (Number.isFinite(seconds) && seconds > 0) this.duration = seconds
@@ -1095,6 +1171,7 @@ export default {
           finding: action === 'correct' ? this.annotationFinding : undefined,
           review_status: action === 'status' ? this.wordStatus : undefined,
           due_at: action === 'practice' ? this.wordDueAt : undefined,
+          correction_id: action === 'correct' ? this.editingCorrectionId || undefined : undefined,
         }, recording)
         this.applyPayload(payload)
         if (action === 'correct') {
@@ -1102,6 +1179,7 @@ export default {
           this.wordNote = ''
           this.annotationFinding = ''
           this.annotationFocus = ''
+          this.editingCorrectionId = null
           this.$refs.wordVoice?.discardRecording()
         }
         if (action === 'status') {
@@ -1142,6 +1220,66 @@ export default {
       const finding = item?.finding ? this.t(`teacher.finding_${item.finding}`) : ''
       const focus = item?.focus ? this.t(`teacher.focus_${item.focus}`) : ''
       return [this.t('teacher.finding_teacher'), finding, focus].filter(Boolean).join(' · ')
+    },
+    hydrateAssessment(payload) {
+      const saved = payload?.assessment?.observations || {}
+      const next = {
+        memorisation: { rating: '', note: '' },
+        tajweed: { rating: '', note: '' },
+        pronunciation: { rating: '', note: '' },
+        fluency: { rating: '', note: '' },
+      }
+      for (const area of Object.keys(next)) {
+        next[area] = {
+          rating: saved[area]?.rating || '',
+          note: saved[area]?.note || '',
+        }
+      }
+      this.assessment = next
+      this.assessmentGeneral = saved.general || ''
+      this.assessmentDirty = false
+    },
+    observationLines(observations) {
+      if (!observations || typeof observations !== 'object') return []
+      return this.assessmentAreas.map((area) => {
+        const entry = observations[area.id]
+        if (!entry?.rating && !entry?.note) return null
+        const rating = entry.rating ? this.t(`teacher.assessment_${entry.rating === 'needs_work' ? 'needs_work' : entry.rating}`) : ''
+        return { id: area.id, text: [this.t(area.label), rating, entry.note].filter(Boolean).join(' · ') }
+      }).filter(Boolean)
+    },
+    async saveAssessment() {
+      if (this.saving || !this.assessmentReady) return
+      this.saving = 'assessment'
+      this.actionError = ''
+      this.actionMessage = ''
+      const body = { general: this.assessmentGeneral.trim() || null }
+      for (const area of this.assessmentAreas) {
+        const entry = this.assessment[area.id] || {}
+        body[area.id] = {
+          rating: entry.rating || null,
+          note: String(entry.note || '').trim() || null,
+        }
+      }
+      try {
+        const data = await learningApi.saveTeacherRecitationAssessment(this.studentId, this.attemptId, body)
+        if (data?.playback) this.applyPayload(data.playback)
+        else if (data?.assessment) this.payload = { ...this.payload, assessment: data.assessment }
+        this.hydrateAssessment(this.payload)
+        this.actionMessage = this.t('teacher.playback_assessment_saved')
+      } catch (err) {
+        this.actionError = this.failureMessage(err)
+      } finally {
+        this.saving = ''
+      }
+    },
+    editCorrection(item) {
+      if (!item?.id) return
+      this.editingCorrectionId = item.id
+      this.wordNote = item.body || ''
+      this.annotationFinding = item.finding || ''
+      this.annotationFocus = item.focus || ''
+      this.assessmentDirty = false
     },
     async sendFeedback() {
       if (this.saving) return

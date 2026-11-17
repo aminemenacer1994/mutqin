@@ -775,11 +775,11 @@ export const learningApi = {
     const { data } = await http.delete(`/teacher/students/${studentId}/messages/${messageId}`)
     return data
   },
-  async saveTeacherRecitationAssessment(studentId, attemptId, score, annotation) {
-    const { data } = await http.put(`/teacher/students/${studentId}/attempts/${attemptId}/assessment`, {
-      tajweed_score: score,
-      annotation,
-    })
+  async saveTeacherRecitationAssessment(studentId, attemptId, payload, annotation) {
+    const body = payload && typeof payload === 'object'
+      ? payload
+      : { tajweed_score: payload, annotation }
+    const { data } = await http.put(`/teacher/students/${studentId}/attempts/${attemptId}/assessment`, body)
     return data
   },
   async deleteTeacherStudent(studentId, confirmation) {

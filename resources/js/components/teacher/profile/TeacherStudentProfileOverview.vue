@@ -121,6 +121,20 @@
             <p v-else class="mb-0">{{ t('teacher.profile_practice_empty') }}</p>
           </div>
         </div>
+        <div class="teacher-profile-observations">
+          <h3>{{ t('teacher.profile_practice_observations') }}</h3>
+          <p>{{ t('teacher.profile_practice_observations_help') }}</p>
+          <ul v-if="practiceAreas.teacher_observations.length" class="teacher-activity-list">
+            <li v-for="row in practiceAreas.teacher_observations" :key="row.id">
+              <span class="teacher-activity-list__copy">
+                <strong>{{ row.label }}</strong>
+                <small>{{ observationMeta(row) }}</small>
+              </span>
+              <span v-if="row.improved" class="teacher-fact teacher-fact--good">{{ t('teacher.profile_practice_improved') }}</span>
+            </li>
+          </ul>
+          <p v-else class="mb-0">{{ t('teacher.profile_practice_observations_empty') }}</p>
+        </div>
       </section>
 
       <section class="teacher-profile-sheet" :aria-label="t('teacher.profile_history_title')">
@@ -252,6 +266,7 @@ export default {
       return {
         word_match: areas.word_match || [],
         teacher_confirmed: areas.teacher_confirmed || [],
+        teacher_observations: areas.teacher_observations || [],
         resolved: areas.resolved || [],
       }
     },
@@ -323,6 +338,16 @@ export default {
         difficult: 'dashboard.home_reflection_difficult',
       }[feeling]
       return key ? this.t(key) : feeling
+    },
+    observationMeta(row) {
+      const category = row?.category ? this.observationCategory(row.category) : ''
+      const count = this.t('teacher.profile_practice_count', { count: Number(row?.count || 0) })
+      return [category, row?.note, count].filter(Boolean).join(' · ')
+    },
+    observationCategory(category) {
+      const area = this.t(`teacher.assessment_${category}`)
+      if (area && area !== `teacher.assessment_${category}`) return area
+      return this.focusLabel(category)
     },
     statusLabel(status) {
       if (status === 'present') return this.t('teacher.attendance_present')

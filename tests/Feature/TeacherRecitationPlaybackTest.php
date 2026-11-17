@@ -35,6 +35,8 @@ class TeacherRecitationPlaybackTest extends TestCase
     public function test_teacher_playback_uses_stored_word_timings_and_review_actions(): void
     {
         Storage::fake('user_files');
+        Storage::fake('local');
+        config(['mutqin.audio_privacy.raw_recording_retention' => 'retain']);
         [$teacher, $student, $hidden] = $this->classroom();
         $task = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'ai_recite',
@@ -202,6 +204,13 @@ class TeacherRecitationPlaybackTest extends TestCase
                 ['ayah' => 2, 'word_index' => 0, 'status' => 'correct'],
             ],
         ])->save();
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $revisionRow['id']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('audio');
+        $this->actingAs($student)->post('/api/ai-recite-attempts/'.$retry->id.'/audio', [
+            'audio' => UploadedFile::fake()->createWithContent('recitation.webm', str_repeat('R', 2048)),
+            'duration_ms' => 1800,
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('audio.available', true);
         $this->actingAs($student)->postJson(route('api.me.assignments.complete', $revisionRow['id']))->assertOk();
         $this->actingAs($teacher)->getJson(route('api.teacher.students.attempts.playback', [$student, $retry]))
             ->assertOk()->assertJsonPath('accuracy_percent', 100);
@@ -359,6 +368,176 @@ class TeacherRecitationPlaybackTest extends TestCase
                 'action' => 'reviewed',
             ])
             ->assertStatus(422);
+    }
+
+    public function test_teaching_workflow_keeps_audio_assessment_and_ai_flags_distinct(): void
+    {
+        Storage::fake('local');
+        config(['mutqin.audio_privacy.raw_recording_retention' => 'retain']);
+        [$teacher, $student] = $this->classroom();
+        $attempt = $this->recitation($student);
+        $attempt->forceFill([
+            'teacher_assignment_recipient_id' => $this->openTask($teacher, $student),
+        ])->save();
+
+        $this->actingAs($student)->post('/api/ai-recite-attempts/'.$attempt->id.'/audio', [
+            'audio' => UploadedFile::fake()->createWithContent('recitation.webm', str_repeat('R', 4096)),
+            'duration_ms' => 2200,
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('audio.available', true);
+
+        $this->actingAs($teacher)->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')->assertOk();
+        $playback = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.attempts.playback', [$student, $attempt]))
+            ->assertOk()
+            ->assertJsonPath('audio.available', true)
+            ->assertJsonPath('audio.reason', 'available')
+            ->json();
+        $this->assertSame('wrong', $playback['words'][1]['status']);
+
+        $words = $attempt->word_statuses;
+        $saved = $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'memorisation' => ['rating' => 'needs_work', 'note' => 'The second word dropped out.'],
+            'tajweed' => ['rating' => 'sound', 'note' => 'Madd length is acceptable.'],
+            'pronunciation' => ['rating' => 'needs_work', 'note' => 'Clarify the qaf.'],
+            'fluency' => ['rating' => 'strong', 'note' => null],
+            'general' => 'Repeat ayah 1 slowly.',
+        ])->assertOk()
+            ->assertJsonPath('assessment.source', 'teacher')
+            ->assertJsonPath('assessment.observations.memorisation.rating', 'needs_work')
+            ->assertJsonPath('assessment.observations.tajweed.rating', 'sound')
+            ->assertJsonPath('assessment.score', 4)
+            ->json();
+        $this->assertArrayNotHasKey('tajweed_score', $saved['assessment']['observations']['pronunciation']);
+        $attempt->refresh();
+        $this->assertSame($words, $attempt->word_statuses);
+        $this->assertSame(80, (int) $attempt->accuracy_percent);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'memorisation' => ['rating' => 'needs_work', 'note' => 'The second word dropped out.'],
+            'tajweed' => ['rating' => 'sound', 'note' => 'Madd length is acceptable.'],
+            'pronunciation' => ['rating' => 'needs_work', 'note' => 'Keep the qaf clear.'],
+            'fluency' => ['rating' => 'strong'],
+            'general' => 'Repeat ayah 1 slowly.',
+        ])->assertOk();
+        $this->assertSame(1, \App\Models\TeacherRecitationAssessment::query()->count());
+        $this->assertSame(1, \App\Models\TeacherNote::query()->where('kind', 'feedback')->count());
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.words', [$student, $attempt]), [
+                'ayah' => 1,
+                'word_index' => 1,
+                'action' => 'confirm',
+            ])->assertOk();
+        $noted = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.words', [$student, $attempt]), [
+                'ayah' => 1,
+                'word_index' => 1,
+                'action' => 'correct',
+                'body' => 'Hold the ghunnah.',
+                'focus' => 'ghunnah',
+                'finding' => 'difficulty',
+            ])->assertCreated()->json();
+        $correctionId = $noted['coachings'][0]['corrections'][0]['id'];
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.words', [$student, $attempt]), [
+                'ayah' => 1,
+                'word_index' => 1,
+                'action' => 'correct',
+                'correction_id' => $correctionId,
+                'body' => 'Hold the ghunnah a little longer.',
+                'focus' => 'ghunnah',
+                'finding' => 'difficulty',
+            ])->assertCreated();
+        $this->assertSame(1, \App\Models\TeacherWordCoachingCorrection::query()->count());
+
+        $profile = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', $student))->assertOk()->json();
+        $observations = collect($profile['payload']['teaching']['practice_areas']['teacher_observations']);
+        $ghunnah = $observations->firstWhere('category', 'ghunnah');
+        $this->assertNotNull($ghunnah);
+        $this->assertSame(1, $ghunnah['count']);
+        $this->assertFalse($ghunnah['ai_wording_flag']);
+        $this->assertSame('teacher_observation', $ghunnah['kind']);
+        $this->assertNotNull($observations->firstWhere('category', 'memorisation'));
+        $this->assertNotNull($observations->firstWhere('category', 'pronunciation'));
+        foreach ($profile['payload']['teaching']['practice_areas']['teacher_confirmed'] as $row) {
+            $this->assertNotSame('teacher_observation', $row['kind']);
+        }
+
+        $revision = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.revision', [$student, $attempt]), [
+                'due_at' => today()->addDays(4)->toDateString(),
+                'feedback' => 'Revise the dropped word.',
+            ])->assertCreated()
+            ->assertJsonPath('review.revision.source_attempt_id', $attempt->id)
+            ->assertJsonPath('review.revision.follow_up.submitted', false)
+            ->json();
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.revision', [$student, $attempt]), [
+                'due_at' => today()->addDays(2)->toDateString(),
+                'feedback' => 'Revise the dropped word.',
+            ])->assertCreated();
+        $this->assertSame(1, \App\Models\TeacherAssignment::query()->whereNotNull('source_ai_recite_attempt_id')->count());
+
+        $recipientId = \App\Models\TeacherAssignmentRecipient::query()
+            ->where('teacher_assignment_id', $revision['review']['revision']['id'])
+            ->value('id');
+        $followUp = $attempt->replicate();
+        $followUp->forceFill([
+            'teacher_assignment_recipient_id' => $recipientId,
+            'memorisation_assessment_id' => null,
+            'attempt_number' => 2,
+            'accuracy_percent' => 96,
+            'band' => 'strong',
+            'audio_disk' => null,
+            'audio_path' => null,
+            'audio_mime' => null,
+            'audio_bytes' => null,
+            'audio_expires_at' => null,
+            'ayah_range' => [
+                'surah' => 114,
+                'from' => $revision['review']['revision']['ayah_start'],
+                'to' => $revision['review']['revision']['ayah_end'],
+                'surah_name' => 'An-Nas',
+            ],
+        ])->save();
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('audio');
+        $this->actingAs($student)->post('/api/ai-recite-attempts/'.$followUp->id.'/audio', [
+            'audio' => UploadedFile::fake()->createWithContent('revision.webm', str_repeat('R', 3000)),
+            'duration_ms' => 1600,
+        ], ['Accept' => 'application/json'])->assertOk();
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))->assertOk();
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.review', [$student, $attempt]))->assertOk();
+        $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.attempts.playback', [$student, $attempt]))
+            ->assertOk()
+            ->assertJsonPath('review.revision.follow_up.submitted', true)
+            ->assertJsonPath('review.status', 'reviewed');
+        $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.attempts.playback', [$student, $followUp]))
+            ->assertOk()
+            ->assertJsonPath('history.previous_review.attempt_id', $attempt->id)
+            ->assertJsonPath('history.previous_review.feedback', 'Repeat ayah 1 slowly.')
+            ->assertJsonPath('history.previous_review.observations.pronunciation.note', 'Keep the qaf clear.')
+            ->assertJsonPath('history.previous_review.wording_only', true)
+            ->assertJsonPath('accuracy_percent', 96);
+    }
+
+    private function openTask(User $teacher, User $student): int
+    {
+        $task = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 114,
+            'ayah_start' => 1,
+            'ayah_end' => 2,
+            'due_at' => today()->addDays(3)->toDateString(),
+        ])->assertCreated()->json();
+
+        return (int) $task['recipients'][0]['id'];
     }
 
     public function test_teacher_finding_stays_separate_from_the_word_check(): void

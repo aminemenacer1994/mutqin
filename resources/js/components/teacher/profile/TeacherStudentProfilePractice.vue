@@ -38,8 +38,8 @@
 
       <template v-else-if="isReview">
         <section v-if="weakRows.length" class="teacher-review-block" :aria-label="t('teacher.review_requires_attention')">
-          <TeacherTabGuide kind="section" :title="t('teacher.review_requires_attention')" />
-          <TeacherRecordList v-if="weakRows.length" layout="cards" :rows="weakRows" @action="$emit('assign-revision', $event)" />
+          <TeacherTabGuide kind="section" :title="t('teacher.recite_practise')" />
+          <TeacherRecordList v-if="weakRows.length" layout="cards" line :rows="weakRows" @action="$emit('assign-revision', $event)" />
         </section>
 
 
@@ -61,6 +61,7 @@
           <TeacherTabGuide kind="section" :title="t('teacher.review_revision_followup')" />
           <TeacherRecordList
             layout="cards"
+            line
             :rows="planRows"
             @action="$emit('assign-revision', $event)"
             @review="$emit('mark-reviewed', $event)"
@@ -221,25 +222,12 @@ export default {
     },
     weakRows() {
       const items = this.focusSource?.items || []
-      return groupAyahFindings(items, this.t).map((group) => teacherRecitationEvidenceRow({
+      return groupAyahFindings(items, this.t).map((group) => ({
         key: `fix-${group.key}`,
-        studentId: this.profile.student.id,
-        icon: 'bi bi-exclamation-triangle',
-        iconTone: 'warn',
         title: group.title,
-        arabicName: this.arabicNames[group.first?.surah_number] || '',
-        arabicText: this.arabicAyahs[`${group.first?.surah_number}:${group.first?.ayah_number}`] || '',
-        hint: [
-          this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks }),
-          this.formatWhen(group.first?.last_identified_at),
-        ].filter(Boolean).join(' · '),
         pills: [
-          { label: this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks }), tone: 'danger' },
-          this.formatWhen(group.first?.last_identified_at) ? { label: this.formatWhen(group.first?.last_identified_at), tone: 'neutral' } : null,
-        ].filter(Boolean),
-        focusAyah: group.first?.ayah_number || null,
-        reviewable: Boolean(group.first?.evidence),
-        href: group.first?.evidence ? '' : (group.first?.evidence_url || ''),
+          { label: this.t(group.maxChecks === 1 ? 'teacher.weak_spot_short_one' : 'teacher.weak_spot_short', { n: group.maxChecks }), tone: 'danger' },
+        ],
         actionLabel: this.t('teacher.assign_revision'),
         actionPayload: {
           id: this.profile.student.id,
@@ -248,10 +236,6 @@ export default {
             ayah_number: group.first?.ayah_number,
           },
         },
-      }, group.first?.evidence, {
-        surah: group.first?.surah_number,
-        from: group.first?.ayah_number,
-        to: group.first?.ayah_number,
       }))
     },
     planRows() {

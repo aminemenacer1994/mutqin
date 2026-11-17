@@ -302,6 +302,29 @@ html[data-theme] .teacher-profile-stack > .teacher-pane {
     justify-self: end;
   }
 
+  .teacher-profile-sheet .teacher-record-card.is-line {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px 14px;
+    min-height: 56px;
+    padding: 12px 18px;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line :is(.teacher-record-card__title, .teacher-record-card__pills, .teacher-record-card__hint, .teacher-badge, .teacher-record-card__controls) {
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 1 auto;
+    width: auto;
+    justify-self: auto;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__pills,
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__hint {
+    margin-inline-start: auto;
+    text-align: end;
+  }
+
   .teacher-profile-table--records {
     width: 100%;
   }
@@ -567,6 +590,47 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
     flex: 1 1 calc(50% - 8px);
     min-width: 0;
     min-height: 44px;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 12px 14px;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__controls {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+    align-self: center;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__pills,
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__hint {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    margin-inline-start: 0;
+    justify-self: end;
+    text-align: end;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-badge {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+  }
+
+  .teacher-profile-sheet .teacher-record-card.is-line .teacher-record-card__controls .btn {
+    flex: 0 0 auto;
+    width: auto;
   }
 
   .teacher-profile-table__item { grid-column: 1; grid-row: 1; }

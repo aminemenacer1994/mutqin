@@ -29,6 +29,7 @@ class TeacherAssignment extends Model
             'repetition_target' => 'integer',
             'due_at' => 'datetime',
             'priority' => 'string',
+            'source_ai_recite_attempt_id' => 'integer',
         ];
     }
 

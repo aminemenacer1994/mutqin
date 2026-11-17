@@ -28,7 +28,6 @@ use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
-use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\DashboardService;
@@ -1371,7 +1370,7 @@ class TeacherDashboardService
             ];
         }
 
-        if ($humanAssessment !== null && (int) $humanAssessment->tajweed_score >= 4 && $metric['active_30']) {
+        if ($humanAssessment?->tajweed_score !== null && (int) $humanAssessment->tajweed_score >= 4 && $metric['active_30']) {
             return $base + [
                 'type' => 'ready_next',
                 'reason' => sprintf(
@@ -1810,31 +1809,7 @@ class TeacherDashboardService
             ];
         };
 
-        $findings = TeacherWordCoachingCorrection::query()
-            ->where('finding', 'difficulty')
-            ->where('teacher_id', $teacher->id)
-            ->whereHas('coaching', fn ($query) => $query->where('student_id', $student->id)->where('teacher_id', $teacher->id))
-            ->with('coaching:id,surah_number,ayah_number')
-            ->latest('id')
-            ->limit(6)
-            ->get()
-            ->map(function (TeacherWordCoachingCorrection $correction) {
-                $coaching = $correction->coaching;
-                if ($coaching === null) {
-                    return null;
-                }
-
-                return [
-                    'id' => (int) $correction->id,
-                    'label' => QuranMetadata::name((int) $coaching->surah_number).' · '.(int) $coaching->ayah_number,
-                    'focus' => (string) ($correction->focus ?? 'other'),
-                    'kind' => 'teacher_finding',
-                    'is_tajweed_assessment' => false,
-                ];
-            })
-            ->filter()
-            ->values()
-            ->all();
+        $observations = $this->wordCoachings->recurringTeacherMistakes($teacher, $student);
 
         return [
             'upcoming' => $recipients->reject($isCompleted)->take(5)->map($presentTask)->values()->all(),
@@ -1856,8 +1831,8 @@ class TeacherDashboardService
                         ->map(fn (MemorisationWeakSpot $spot) => $compactSpot($spot, 'teacher_confirmed'))
                         ->values()
                         ->all(),
-                    ...$findings,
                 ]),
+                'teacher_observations' => $observations,
                 'resolved' => $spots
                     ->filter(fn (MemorisationWeakSpot $spot) => $spot->status === MemorisationWeakSpot::STATUS_RESOLVED
                         || $spot->teacher_review_status === MemorisationWeakSpot::REVIEW_DISMISSED)
@@ -2254,8 +2229,10 @@ class TeacherDashboardService
                         'has_revision' => $review?->teacher_assignment_id !== null,
                     ],
                     'teacher_assessment' => $human ? [
-                        'score' => (int) $human->tajweed_score,
+                        'score' => $human->tajweed_score !== null ? (int) $human->tajweed_score : null,
                         'annotation' => $human->annotation,
+                        'observations' => is_array($human->observations) ? array_diff_key($human->observations, ['published_feedback' => true]) : null,
+                        'source' => 'teacher',
                         'updated_at' => $human->updated_at?->toIso8601String(),
                     ] : null,
                     'accuracy_percent' => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true)

@@ -20,7 +20,6 @@ use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\TeacherPrivateNote;
-use App\Models\TeacherRecitationAssessment;
 use App\Models\User;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\GroupMembershipService;
@@ -34,6 +33,7 @@ use App\Services\Teacher\TeacherAttendanceService;
 use App\Services\Teacher\TeacherDashboardService;
 use App\Services\Teacher\TeacherDirectMessageService;
 use App\Services\Teacher\TeacherPrivateNoteService;
+use App\Services\Teacher\TeacherRecitationPlaybackService;
 use App\Services\Teacher\TeacherReportService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
@@ -197,31 +197,27 @@ class TeacherDashboardController extends Controller
         return $this->json(['deleted' => true]);
     }
 
-    public function assessRecitation(Request $request, User $student, AiReciteAttempt $attempt, StudentAccessAuthorizer $access): JsonResponse
+    public function assessRecitation(Request $request, User $student, AiReciteAttempt $attempt, TeacherRecitationPlaybackService $playback): JsonResponse
     {
-        $teacher = $this->teacher($request);
-        abort_unless($access->allows($teacher, $student) && (int) $attempt->user_id === (int) $student->id, 404);
         $data = $request->validate([
-            'tajweed_score' => ['required', 'integer', 'between:1,5'],
+            'tajweed_score' => ['nullable', 'integer', 'between:1,5', 'required_without_all:memorisation,tajweed,pronunciation,fluency,general'],
             'annotation' => ['nullable', 'string', 'max:2000'],
+            'general' => ['nullable', 'string', 'max:2000'],
+            'memorisation' => ['nullable', 'array'],
+            'memorisation.rating' => ['nullable', 'string', 'in:needs_work,sound,strong'],
+            'memorisation.note' => ['nullable', 'string', 'max:2000'],
+            'tajweed' => ['nullable', 'array'],
+            'tajweed.rating' => ['nullable', 'string', 'in:needs_work,sound,strong'],
+            'tajweed.note' => ['nullable', 'string', 'max:2000'],
+            'pronunciation' => ['nullable', 'array'],
+            'pronunciation.rating' => ['nullable', 'string', 'in:needs_work,sound,strong'],
+            'pronunciation.note' => ['nullable', 'string', 'max:2000'],
+            'fluency' => ['nullable', 'array'],
+            'fluency.rating' => ['nullable', 'string', 'in:needs_work,sound,strong'],
+            'fluency.note' => ['nullable', 'string', 'max:2000'],
         ]);
-        $assessment = TeacherRecitationAssessment::query()
-            ->where('teacher_id', $teacher->id)
-            ->where('ai_recite_attempt_id', $attempt->id)
-            ->first() ?: new TeacherRecitationAssessment;
-        $assessment->forceFill([
-            'teacher_id' => $teacher->id,
-            'student_id' => $student->id,
-            'ai_recite_attempt_id' => $attempt->id,
-            'tajweed_score' => $data['tajweed_score'],
-            'annotation' => trim((string) ($data['annotation'] ?? '')) ?: null,
-        ])->save();
 
-        return $this->json(['assessment' => [
-            'score' => (int) $assessment->tajweed_score,
-            'annotation' => $assessment->annotation,
-            'updated_at' => $assessment->updated_at?->toIso8601String(),
-        ]]);
+        return $this->json($playback->storeAssessment($this->teacher($request), $student, $attempt, $data));
     }
 
     public function completeReview(Request $request, User $student, MemorisationPracticePlan $practicePlan, StudentAccessAuthorizer $access): JsonResponse

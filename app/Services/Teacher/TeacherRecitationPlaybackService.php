@@ -3,6 +3,7 @@
 namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
+use App\Enums\AssignmentStatus;
 use App\Enums\TeacherNoteKind;
 use App\Enums\TeacherPrivateNoteCategory;
 use App\Models\AiReciteAttempt;
@@ -10,6 +11,7 @@ use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\TeacherPrivateNote;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
 use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
@@ -52,6 +54,7 @@ class TeacherRecitationPlaybackService
     {
         $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
         $this->saveReview($teacher, $student, $attempt, ['status' => TeacherRecitationReview::REVIEWED]);
+        $this->rememberTaskReview($attempt);
         TeacherOverviewCache::forget((int) $teacher->id);
 
         return $this->present($teacher, $student, $attempt);
@@ -155,6 +158,8 @@ class TeacherRecitationPlaybackService
             $assignment = $this->assignments->create($teacher, [
                 'kind' => AssignmentKind::AiRecite->value,
                 'hifz_category' => 'sabqi',
+                'activity' => 'revision',
+                'recording_required' => true,
                 'surah_number' => $range['surah_number'],
                 'ayah_start' => $range['ayah_start'],
                 'ayah_end' => $range['ayah_end'],
@@ -162,11 +167,71 @@ class TeacherRecitationPlaybackService
                 'priority' => 'high',
                 'feedback' => $input['feedback'] ?? null,
                 'student_id' => $student->id,
+                'source_ai_recite_attempt_id' => (int) $attempt->id,
             ]);
             $this->saveReview($teacher, $student, $attempt, ['teacher_assignment_id' => (int) $assignment->id]);
         });
 
         return $this->present($teacher, $student, $attempt);
+    }
+
+    /**
+     * Teacher observations stay on their own record. They never alter the
+     * checker's wording flags or invent a Tajweed result from word matching.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function storeAssessment(User $teacher, User $student, AiReciteAttempt $attempt, array $input): array
+    {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $structured = $this->hasStructuredObservation($input);
+        if (! $structured && ! isset($input['tajweed_score']) && trim((string) ($input['annotation'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'assessment' => 'Record an observation before saving.',
+            ]);
+        }
+
+        DB::transaction(function () use ($teacher, $student, $attempt, $input, $structured) {
+            AiReciteAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $row = TeacherRecitationAssessment::query()
+                ->where('teacher_id', $teacher->id)
+                ->where('ai_recite_attempt_id', $attempt->id)
+                ->lockForUpdate()
+                ->first() ?: new TeacherRecitationAssessment;
+
+            $previous = is_array($row->observations) ? $row->observations : [];
+            if ($structured) {
+                $observations = $this->normaliseObservations($input);
+                $general = $observations['general'];
+                $tajweedRating = $observations['tajweed']['rating'] ?? null;
+                $row->forceFill([
+                    'teacher_id' => $teacher->id,
+                    'student_id' => $student->id,
+                    'ai_recite_attempt_id' => $attempt->id,
+                    'tajweed_score' => $this->tajweedScoreFromRating(is_string($tajweedRating) ? $tajweedRating : null),
+                    'annotation' => $general,
+                    'observations' => $observations,
+                ])->save();
+                $this->publishGeneralFeedback($teacher, $student, $attempt, $row, $previous, (string) $general);
+            } else {
+                $row->forceFill([
+                    'teacher_id' => $teacher->id,
+                    'student_id' => $student->id,
+                    'ai_recite_attempt_id' => $attempt->id,
+                    'tajweed_score' => (int) $input['tajweed_score'],
+                    'annotation' => $this->nullableAssessmentText($input['annotation'] ?? null),
+                ])->save();
+            }
+        });
+
+        TeacherOverviewCache::forget((int) $teacher->id);
+        $presented = $this->present($teacher, $student, $attempt);
+
+        return [
+            'assessment' => $presented['assessment'],
+            'playback' => $presented,
+        ];
     }
 
     /**
@@ -302,7 +367,7 @@ class TeacherRecitationPlaybackService
         $review = TeacherRecitationReview::query()
             ->where('teacher_id', $teacher->id)
             ->where('ai_recite_attempt_id', $attempt->id)
-            ->with(['feedbackNote', 'privateNote', 'assignment'])
+            ->with(['feedbackNote', 'privateNote', 'assignment.recipients'])
             ->first();
 
         $timed = 0;
@@ -344,6 +409,8 @@ class TeacherRecitationPlaybackService
             ],
             'suggested_revision' => $this->revisionRange($attempt, $words),
             'review' => $this->presentReview($review),
+            'assessment' => $this->presentAssessment($teacher, $attempt),
+            'history' => $this->presentHistory($teacher, $student, $attempt),
             'coachings' => $this->coachings->forAttempt($teacher, $attempt, $words),
             'transcript' => $this->transcript($attempt),
         ];
@@ -381,6 +448,9 @@ class TeacherRecitationPlaybackService
                 'ayah_start' => (int) $revision->ayah_start,
                 'ayah_end' => (int) $revision->ayah_end,
                 'due_at' => $revision->due_at?->toIso8601String(),
+                'source_attempt_id' => $revision->source_ai_recite_attempt_id ? (int) $revision->source_ai_recite_attempt_id : null,
+                'recording_required' => (bool) $revision->recording_required,
+                'follow_up' => $this->presentFollowUp($revision, (int) ($review?->student_id ?? 0)),
             ] : null,
         ];
     }
@@ -495,6 +565,274 @@ class TeacherRecitationPlaybackService
         }
 
         return null;
+    }
+
+    private function rememberTaskReview(AiReciteAttempt $attempt): void
+    {
+        $recipient = $attempt->assignmentRecipient;
+        if (! $recipient instanceof TeacherAssignmentRecipient) {
+            return;
+        }
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        $evidence['teacher_reviewed_at'] = now()->toIso8601String();
+        $evidence['teacher_reviewed_attempt_id'] = (int) $attempt->id;
+        $recipient->forceFill(['completion_evidence' => $evidence])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function hasStructuredObservation(array $input): bool
+    {
+        foreach ([...TeacherRecitationAssessment::AREAS, 'general'] as $key) {
+            if (array_key_exists($key, $input)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function normaliseObservations(array $input): array
+    {
+        $observations = [];
+        $filled = false;
+        foreach (TeacherRecitationAssessment::AREAS as $area) {
+            $value = is_array($input[$area] ?? null) ? $input[$area] : [];
+            $rating = isset($value['rating']) && in_array($value['rating'], TeacherRecitationAssessment::RATINGS, true)
+                ? (string) $value['rating']
+                : null;
+            $note = $this->nullableAssessmentText($value['note'] ?? null);
+            if ($rating !== null || $note !== null) {
+                $filled = true;
+            }
+            $observations[$area] = ['rating' => $rating, 'note' => $note];
+        }
+        $general = $this->nullableAssessmentText($input['general'] ?? null);
+        if ($general !== null) {
+            $filled = true;
+        }
+        if (! $filled) {
+            throw ValidationException::withMessages([
+                'assessment' => 'Record an observation before saving.',
+            ]);
+        }
+        $observations['general'] = $general;
+
+        return $observations;
+    }
+
+    private function nullableAssessmentText(mixed $value): ?string
+    {
+        $text = trim((string) $value);
+
+        return $text === '' ? null : mb_substr($text, 0, 2000);
+    }
+
+    private function tajweedScoreFromRating(?string $rating): ?int
+    {
+        return match ($rating) {
+            'needs_work' => 2,
+            'sound' => 4,
+            'strong' => 5,
+            default => null,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $previous
+     */
+    private function publishGeneralFeedback(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationAssessment $row,
+        array $previous,
+        string $body,
+    ): void {
+        $body = trim($body);
+        if ($body === '') {
+            return;
+        }
+
+        $review = TeacherRecitationReview::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('ai_recite_attempt_id', $attempt->id)
+            ->first();
+        $note = $review?->feedback_note_id
+            ? TeacherNote::query()->whereKey($review->feedback_note_id)->where('teacher_id', $teacher->id)->first()
+            : null;
+        $published = trim((string) ($previous['published_feedback'] ?? ''));
+        if ($note instanceof TeacherNote && $published !== '' && trim((string) $note->body) === $published) {
+            if (trim((string) $note->body) !== $body) {
+                $note->forceFill(['body' => $body])->save();
+            }
+        } elseif (! $note instanceof TeacherNote) {
+            $attempt->loadMissing('assignmentRecipient.assignment');
+            $recipient = $attempt->assignmentRecipient;
+            $note = $recipient instanceof TeacherAssignmentRecipient
+                ? $this->assignments->addTeacherMessage($teacher, $recipient, $body)
+                : $this->dashboard->addNote(
+                    $teacher,
+                    $student,
+                    TeacherNoteKind::Feedback->value,
+                    $body,
+                    null,
+                    null,
+                    $this->surahNumber($attempt),
+                    $this->ayahStart($attempt),
+                    $this->ayahEnd($attempt),
+                    null,
+                );
+            $this->saveReview($teacher, $student, $attempt, ['feedback_note_id' => (int) $note->id]);
+        } else {
+            return;
+        }
+
+        $observations = is_array($row->observations) ? $row->observations : [];
+        $observations['published_feedback'] = $body;
+        $row->forceFill(['observations' => $observations])->save();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function presentAssessment(User $teacher, AiReciteAttempt $attempt): ?array
+    {
+        $row = TeacherRecitationAssessment::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('ai_recite_attempt_id', $attempt->id)
+            ->first();
+        if (! $row instanceof TeacherRecitationAssessment) {
+            return null;
+        }
+
+        $observations = is_array($row->observations) ? $row->observations : null;
+        if (is_array($observations)) {
+            unset($observations['published_feedback']);
+        }
+
+        return [
+            'source' => 'teacher',
+            'score' => $row->tajweed_score !== null ? (int) $row->tajweed_score : null,
+            'annotation' => $row->annotation,
+            'observations' => $observations,
+            'updated_at' => $row->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentHistory(User $teacher, User $student, AiReciteAttempt $attempt): array
+    {
+        $range = $this->presentRange($attempt);
+        $surah = (int) ($range['surah'] ?? 0);
+        $attempts = [];
+        if ($surah > 0) {
+            $rows = AiReciteAttempt::query()
+                ->validScored()
+                ->where('user_id', $student->id)
+                ->where('id', '!=', $attempt->id)
+                ->latest('created_at')
+                ->latest('id')
+                ->limit(12)
+                ->get();
+            foreach ($rows as $row) {
+                if (! $row instanceof AiReciteAttempt || ! $this->samePassage($row, $range)) {
+                    continue;
+                }
+                $attempts[] = [
+                    'attempt_id' => (int) $row->id,
+                    'submitted_at' => $row->created_at?->toIso8601String(),
+                    'accuracy_percent' => (int) $row->accuracy_percent,
+                    'wording_only' => true,
+                ];
+                if (count($attempts) >= 5) {
+                    break;
+                }
+            }
+        }
+
+        return [
+            'previous_review' => $this->previousReview($teacher, $attempt),
+            'attempts' => $attempts,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function previousReview(User $teacher, AiReciteAttempt $attempt): ?array
+    {
+        $sourceId = (int) ($attempt->assignmentRecipient?->assignment?->source_ai_recite_attempt_id ?? 0);
+        if ($sourceId < 1 || $sourceId === (int) $attempt->id) {
+            return null;
+        }
+        $source = AiReciteAttempt::query()->whereKey($sourceId)->where('user_id', $attempt->user_id)->first();
+        if (! $source instanceof AiReciteAttempt) {
+            return null;
+        }
+        $review = TeacherRecitationReview::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('ai_recite_attempt_id', $source->id)
+            ->with('feedbackNote')
+            ->first();
+        $assessment = $this->presentAssessment($teacher, $source);
+        $feedback = $review?->feedbackNote;
+
+        return [
+            'attempt_id' => (int) $source->id,
+            'submitted_at' => $source->created_at?->toIso8601String(),
+            'accuracy_percent' => $source->accuracy_percent !== null && in_array($source->band, ['strong', 'mixed', 'weak'], true)
+                ? (int) $source->accuracy_percent
+                : null,
+            'wording_only' => true,
+            'feedback' => $feedback && trim((string) $feedback->body) !== '' ? trim((string) $feedback->body) : null,
+            'observations' => $assessment['observations'] ?? null,
+        ];
+    }
+
+    /**
+     * @param  array{surah: int|null, surah_name: string|null, from: int|null, to: int|null}  $range
+     */
+    private function samePassage(AiReciteAttempt $attempt, array $range): bool
+    {
+        $other = $this->presentRange($attempt);
+
+        return (int) ($other['surah'] ?? 0) === (int) ($range['surah'] ?? 0)
+            && (int) ($other['from'] ?? 0) === (int) ($range['from'] ?? 0)
+            && (int) ($other['to'] ?? 0) === (int) ($range['to'] ?? 0);
+    }
+
+    /**
+     * @return array{status: string|null, submitted: bool, approved: bool, submitted_at: string|null}|null
+     */
+    private function presentFollowUp(TeacherAssignment $revision, int $studentId): ?array
+    {
+        if ($studentId < 1) {
+            return null;
+        }
+        $recipient = $revision->relationLoaded('recipients')
+            ? $revision->recipients->firstWhere('student_id', $studentId)
+            : $revision->recipients()->where('student_id', $studentId)->first();
+        if (! $recipient instanceof TeacherAssignmentRecipient) {
+            return null;
+        }
+        $status = $recipient->status instanceof AssignmentStatus
+            ? $recipient->status->value
+            : (string) $recipient->status;
+
+        return [
+            'status' => $status,
+            'submitted' => $recipient->student_completed_at !== null,
+            'approved' => $status === AssignmentStatus::Completed->value,
+            'submitted_at' => $recipient->student_completed_at?->toIso8601String(),
+        ];
     }
 
     private function surahNumber(AiReciteAttempt $attempt): ?int

@@ -1,7 +1,7 @@
 <template>
   <div class="teacher-recite">
-    <div v-if="attempts.length" class="teacher-recite__bar">
-      <div class="teacher-recite__segments" role="group" :aria-label="t('teacher.recite_status_filter')">
+    <div v-if="showFilters" class="teacher-recite__bar">
+      <div v-if="statusFilters.length" class="teacher-recite__segments" role="group" :aria-label="t('teacher.recite_status_filter')">
         <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="['is-' + filter.id, { 'is-active': statusFilter === filter.id }]" :aria-pressed="statusFilter === filter.id ? 'true' : 'false'" @click="statusFilter = filter.id">
           {{ filter.label }}<span>{{ filter.count }}</span>
         </button>
@@ -26,14 +26,17 @@
       </label>
     </div>
 
-    <section v-if="needsReview.length" class="teacher-recite__section" :aria-label="t('teacher.recite_needs_review')">
-      <h2>{{ t('teacher.recite_needs_review') }}</h2>
-      <TeacherRecordList layout="cards" :rows="needsReview" mushaf-review-modal @reviewed="markRowReviewed" />
+    <section v-if="needsReview.length" class="teacher-recite__section" :aria-label="listenTitle">
+      <header class="teacher-recite__section-head">
+        <h2>{{ listenTitle }}</h2>
+        <p>{{ listenNote }}</p>
+      </header>
+      <TeacherRecordList layout="cards" line :rows="listenRows" mushaf-review-modal @reviewed="markRowReviewed" />
     </section>
 
     <section v-if="historyRows.length" class="teacher-recite__section" :aria-label="t('teacher.recite_history')">
       <h2>{{ t('teacher.recite_history') }}</h2>
-      <TeacherRecordList layout="cards" :rows="historyRows" mushaf-review-modal @reviewed="markRowReviewed" />
+      <TeacherRecordList layout="cards" line :rows="historyRows" mushaf-review-modal @reviewed="markRowReviewed" />
     </section>
 
     <div v-if="!attempts.length" class="teacher-profile-empty teacher-profile-empty--row">
@@ -91,12 +94,14 @@ export default {
     statusFilters() {
       const rows = this.attemptRows
       const countOf = (id) => (id === 'all' ? rows.length : rows.filter((row) => row.reviewState === id).length)
-      return [
+      const filters = [
         { id: 'all', label: this.t('teacher.recite_status_all') },
         { id: 'pending', label: this.t('teacher.recite_status_pending') },
         { id: 'reviewed', label: this.t('teacher.recite_status_reviewed') },
         { id: 'revision', label: this.t('teacher.recite_status_revision') },
       ].map((filter) => ({ ...filter, count: countOf(filter.id) })).filter((filter) => filter.id === 'all' || filter.count > 0)
+      const choices = filters.filter((filter) => filter.id !== 'all' && filter.count > 0)
+      return choices.length > 1 ? filters : []
     },
     attemptRows() {
       return this.attempts.map((attempt) => this.attemptRow(attempt)).sort((a, b) => (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0))
@@ -117,6 +122,29 @@ export default {
     needsReview() {
       if (this.statusFilter !== 'all' && this.statusFilter !== 'pending') return []
       return this.filteredRows.filter((row) => row.reviewState === 'pending')
+    },
+    showFilters() {
+      return this.statusFilters.length > 0 || this.attemptGroups.length > 1 || this.attempts.length > 6
+    },
+    singlePassage() {
+      const titles = new Set(this.needsReview.map((row) => row.title).filter(Boolean))
+      return titles.size === 1
+    },
+    listenTitle() {
+      if (this.singlePassage) return this.needsReview[0].title
+      return this.t('teacher.recite_listen')
+    },
+    listenNote() {
+      const count = this.needsReview.length
+      return this.t(count === 1 ? 'teacher.recite_listen_one' : 'teacher.recite_listen_count', { n: count })
+    },
+    listenRows() {
+      if (!this.singlePassage) return this.needsReview
+      return this.needsReview.map((row) => ({
+        ...row,
+        title: row.dateLabel || row.title,
+        pills: (row.pills || []).filter((pill) => pill.label !== row.dateLabel),
+      }))
     },
     historyRows() {
       if (this.statusFilter === 'pending') return []
@@ -170,13 +198,13 @@ export default {
       const issues = attempt.issues
       const issueHint = !issues || !Object.values(issues).some((value) => Number(value) > 0) ? '' : this.issueLabel(issues)
       const score = typeof attempt.accuracy_percent === 'number'
-        ? this.t('teacher.playback_wording_score', { n: `${attempt.accuracy_percent}%` })
+        ? this.t('teacher.recite_words_matched', { n: attempt.accuracy_percent })
         : this.t('teacher.recite_not_assessed')
       const when = this.formatWhen(attempt.created_at)
       const scoreTone = { good: 'good', mid: 'warn', warn: 'danger' }[scoreBadgeTone(attempt.accuracy_percent)] || 'neutral'
       const pills = [
         when ? { label: when, tone: 'neutral' } : null,
-        { label: score, tone: typeof attempt.accuracy_percent === 'number' ? scoreTone : 'neutral', wording: typeof attempt.accuracy_percent === 'number' },
+        { label: score, tone: typeof attempt.accuracy_percent === 'number' ? scoreTone : 'neutral' },
         issueHint ? { label: issueHint, tone: 'warn' } : null,
       ].filter(Boolean)
       const status = {
@@ -198,7 +226,7 @@ export default {
         title: passage,
         hint: [when, score, issueHint].filter(Boolean).join(' · '),
         pills,
-        badge: this.t(status[0]),
+        badge: state === 'pending' ? '' : this.t(status[0]),
         badgeTone: status[1],
       }, attempt.evidence, attempt.range ? {
         surah: attempt.range.surah_number,

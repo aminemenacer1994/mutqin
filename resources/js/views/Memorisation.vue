@@ -3897,6 +3897,8 @@
       :save-state="workspaceReciteSaveState"
       :saved-label="translateOrFallback('dashboard.ai_recite.attempt_saved', 'Test has been saved.')"
       :retrying-label="translateOrFallback('dashboard.ai_recite.attempt_retrying', 'Couldn\'t save yet. Retrying…')"
+      :failed-label="translateOrFallback('dashboard.ai_recite.attempt_upload_failed', 'The recording could not be saved.')"
+      :retry-save-label="translateOrFallback('dashboard.ai_recite.retry_upload', 'Retry upload')"
       :results-href="aiReciteResultsHref"
       :results-label="translateOrFallback('dashboard.ai_recite.see_all_results', 'See all results')"
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
@@ -3907,6 +3909,7 @@
       :progress-href="progressPageUrl"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
+      @retry-save="retryWorkspaceReciteSaveInBackground"
       @back-to-progress="exitToProgressPage"
       @mutashabihat-compare="onWorkspaceReciteMutashabihatCompare"
     />

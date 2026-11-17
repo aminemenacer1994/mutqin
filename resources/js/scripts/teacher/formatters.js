@@ -111,7 +111,11 @@ export function issueLabel(issues, t) {
     ['extra', 'teacher.issue_extra'],
     ['repeated', 'teacher.issue_repeated'],
   ].filter(([key]) => Number(issues[key]) > 0)
-    .map(([key, label]) => `${Number(issues[key])} ${t(label)}`)
+    .map(([key, label]) => {
+      const count = Number(issues[key])
+      if (key === 'wrong') return t(count === 1 ? 'teacher.issue_word_missed_one' : 'teacher.issue_word_missed', { n: count })
+      return `${count} ${t(label)}`
+    })
     .join(' · ')
 }
 

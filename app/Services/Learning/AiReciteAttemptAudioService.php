@@ -50,29 +50,99 @@ class AiReciteAttemptAudioService
             return false;
         }
 
-        $mime = $this->normaliseMime($file);
         $contents = $this->readUploadedContents($file);
+        $mime = $this->normaliseMime($file);
+        if ($mime === '') {
+            $mime = $this->sniffMime($contents);
+        }
         if ($mime === '' || $contents === '' || strlen($contents) > self::MAX_BYTES) {
             return false;
         }
 
-        $this->deleteStored($attempt);
-
         $extension = $this->extensionForMime($mime);
         $path = sprintf('%s/%d/%d.%s', self::PREFIX, $user->id, $attempt->id, $extension);
+        $disk = Storage::disk(self::DISK);
+        $temporary = $path.'.partial';
+        $previousPath = $attempt->audio_path;
+        $previousDisk = $attempt->audio_disk ?: self::DISK;
+        $previousMime = $attempt->audio_mime;
+        $previousBytes = $attempt->audio_bytes;
+        $previousDuration = $attempt->audio_duration_ms;
+        $previousExpires = $attempt->audio_expires_at;
 
-        Storage::disk(self::DISK)->put($path, $contents);
+        try {
+            $disk->put($temporary, $contents);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to stage AI Recite audio', [
+                'attempt_id' => $attempt->id,
+                'error' => $e->getMessage(),
+            ]);
 
-        $attempt->forceFill([
-            'audio_disk' => self::DISK,
-            'audio_path' => $path,
-            'audio_mime' => $mime,
-            'audio_bytes' => strlen($contents),
-            'audio_duration_ms' => $durationMs && $durationMs > 0 ? $durationMs : $attempt->duration_ms,
-            'audio_expires_at' => AudioPrivacy::rawRecordingRetention() === AudioPrivacy::RETENTION_TEMPORARY
-                ? now()->addHours(AudioPrivacy::temporaryTtlHours())
-                : null,
-        ])->save();
+            return false;
+        }
+
+        try {
+            $attempt->forceFill([
+                'audio_disk' => self::DISK,
+                'audio_path' => $path,
+                'audio_mime' => $mime,
+                'audio_bytes' => strlen($contents),
+                'audio_duration_ms' => $durationMs && $durationMs > 0 ? $durationMs : $attempt->duration_ms,
+                'audio_expires_at' => AudioPrivacy::rawRecordingRetention() === AudioPrivacy::RETENTION_TEMPORARY
+                    ? now()->addHours(AudioPrivacy::temporaryTtlHours())
+                    : null,
+            ])->save();
+        } catch (\Throwable $e) {
+            $this->deletePath($disk, $temporary);
+            Log::warning('Failed to record AI Recite audio reference', [
+                'attempt_id' => $attempt->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        try {
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
+            $disk->move($temporary, $path);
+        } catch (\Throwable $e) {
+            try {
+                $disk->put($path, $contents);
+                $this->deletePath($disk, $temporary);
+            } catch (\Throwable $inner) {
+                $this->deletePath($disk, $temporary);
+                $attempt->forceFill([
+                    'audio_disk' => $previousPath ? $previousDisk : null,
+                    'audio_path' => $previousPath,
+                    'audio_mime' => $previousPath ? $previousMime : null,
+                    'audio_bytes' => $previousPath ? $previousBytes : null,
+                    'audio_duration_ms' => $previousDuration,
+                    'audio_expires_at' => $previousExpires,
+                ])->save();
+                Log::warning('Failed to publish AI Recite audio', [
+                    'attempt_id' => $attempt->id,
+                    'error' => $inner->getMessage(),
+                ]);
+
+                return false;
+            }
+        }
+
+        if (is_string($previousPath) && $previousPath !== '' && $previousPath !== $path) {
+            try {
+                $old = Storage::disk($previousDisk);
+                if ($old->exists($previousPath)) {
+                    $old->delete($previousPath);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to remove replaced AI Recite audio', [
+                    'attempt_id' => $attempt->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return true;
     }
@@ -336,6 +406,41 @@ class AiReciteAttemptAudioService
         }
 
         return is_string($contents) ? $contents : '';
+    }
+
+    private function deletePath(\Illuminate\Contracts\Filesystem\Filesystem $disk, string $path): void
+    {
+        try {
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
+        } catch (\Throwable) {
+            // The staged file is disposable. A later successful upload replaces it.
+        }
+    }
+
+    private function sniffMime(string $contents): string
+    {
+        if ($contents === '') {
+            return '';
+        }
+        if (str_starts_with($contents, 'RIFF') && str_contains(substr($contents, 0, 16), 'WAVE')) {
+            return 'audio/wav';
+        }
+        if (str_starts_with($contents, 'OggS')) {
+            return 'audio/ogg';
+        }
+        if (str_starts_with($contents, 'ID3')) {
+            return 'audio/mpeg';
+        }
+        if (str_starts_with($contents, "\x1A\x45\xDF\xA3")) {
+            return 'audio/webm';
+        }
+        if (strlen($contents) > 11 && substr($contents, 4, 4) === 'ftyp') {
+            return 'audio/mp4';
+        }
+
+        return '';
     }
 
     private function normaliseMime(UploadedFile $file): string

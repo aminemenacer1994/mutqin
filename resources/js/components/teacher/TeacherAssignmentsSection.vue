@@ -334,7 +334,9 @@ export default {
             statusIcon: `bi ${taskStateIcon(displayState)}`,
             statusLabel: recipient.review_state === 'needs_correction'
               ? this.t('teacher.status_needs_correction')
-              : this.t(taskStateLabelKey(displayState)),
+              : (recipient.completion_evidence?.teacher_reviewed_at && recipient.review_state === 'submitted'
+                ? this.t('teacher.task_reviewed_approve')
+                : this.t(taskStateLabelKey(displayState))),
             dueText: assignment.due_at ? this.t('teacher.task_due_date', { date: formatTeacherWhen(assignment.due_at) }) : '',
             dueTone: dueUrgency.tone,
             due: dueUrgency.text,

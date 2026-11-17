@@ -118,8 +118,22 @@ class TeacherAssignmentService
         }
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? 'normal')->value;
+        $sourceAttemptId = isset($input['source_ai_recite_attempt_id']) ? (int) $input['source_ai_recite_attempt_id'] : 0;
+        if ($sourceAttemptId > 0) {
+            $sourceOwned = $studentId !== null && AiReciteAttempt::query()
+                ->whereKey($sourceAttemptId)
+                ->where('user_id', $studentId)
+                ->exists();
+            if (! $sourceOwned) {
+                throw ValidationException::withMessages([
+                    'source_ai_recite_attempt_id' => 'The revision must follow this student\'s own recitation.',
+                ]);
+            }
+        } else {
+            $sourceAttemptId = null;
+        }
 
-        $created = DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired) {
+        $created = DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired, $sourceAttemptId) {
             $assignment = new TeacherAssignment;
             $assignment->forceFill([
                 'teacher_id' => $teacher->id,
@@ -138,6 +152,7 @@ class TeacherAssignmentService
                 'due_at' => $input['due_at'] ?? null,
                 'priority' => $priority,
                 'feedback' => $this->nullableText($input['feedback'] ?? null),
+                'source_ai_recite_attempt_id' => $sourceAttemptId,
             ])->save();
 
             foreach ($recipients as $studentId) {
@@ -380,6 +395,11 @@ class TeacherAssignmentService
             if ((int) $progress['activity_count'] < (int) $progress['target']) {
                 throw ValidationException::withMessages([
                     'assignment' => 'Complete the required linked activity before marking this task complete.',
+                ]);
+            }
+            if ($recipient->assignment->recording_required && ! $this->recipientHasPlayableRecording($recipient)) {
+                throw ValidationException::withMessages([
+                    'audio' => 'Submit a recording before completing this task.',
                 ]);
             }
             $completedAt = now();
@@ -877,6 +897,7 @@ class TeacherAssignmentService
             'due_at' => $assignment->due_at?->toIso8601String(),
             'priority' => RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value,
             'feedback' => $assignment->feedback,
+            'source_attempt_id' => $assignment->source_ai_recite_attempt_id ? (int) $assignment->source_ai_recite_attempt_id : null,
             'learning_group_id' => $assignment->learning_group_id ? (int) $assignment->learning_group_id : null,
             'created_at' => $assignment->created_at?->toIso8601String(),
         ];
@@ -1196,6 +1217,17 @@ class TeacherAssignmentService
         }
 
         return null;
+    }
+
+    private function recipientHasPlayableRecording(TeacherAssignmentRecipient $recipient): bool
+    {
+        $attempts = AiReciteAttempt::query()
+            ->where('user_id', $recipient->student_id)
+            ->where('teacher_assignment_recipient_id', $recipient->id)
+            ->whereNotNull('audio_path')
+            ->get();
+
+        return $attempts->contains(fn (AiReciteAttempt $attempt) => $this->attemptAudio->hasPlayableAudio($attempt));
     }
 
     private function nullableText(mixed $value): ?string

@@ -5,6 +5,7 @@ namespace App\Services\Teacher;
 use App\Enums\AssignmentKind;
 use App\Models\AiReciteAttempt;
 use App\Models\TeacherAssignment;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherWordCoaching;
 use App\Models\TeacherWordCoachingCorrection;
 use App\Models\TeacherWordCoachingRetry;
@@ -89,6 +90,131 @@ class TeacherWordCoachingService
             ->filter(fn (array $row) => $row['visible_to_student'])
             ->values()
             ->all();
+    }
+
+    /**
+     * Teacher-confirmed mistakes only. AI wording flags are not included,
+     * even when a teacher has agreed with one.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recurringTeacherMistakes(User $teacher, User $student): array
+    {
+        $groups = [];
+        $corrections = TeacherWordCoachingCorrection::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('finding', 'difficulty')
+            ->whereHas('coaching', fn ($query) => $query->where('teacher_id', $teacher->id)->where('student_id', $student->id))
+            ->with('coaching')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($corrections as $correction) {
+            if (! $correction instanceof TeacherWordCoachingCorrection || ! $correction->coaching instanceof TeacherWordCoaching) {
+                continue;
+            }
+            $coaching = $correction->coaching;
+            $category = (string) ($correction->focus ?: 'other');
+            $key = implode(':', ['word', (int) $coaching->surah_number, (int) $coaching->ayah_number, (int) $coaching->word_index, $category]);
+            $this->accumulateMistake($groups, $key, [
+                'id' => $key,
+                'kind' => 'teacher_observation',
+                'source' => 'teacher',
+                'category' => $category,
+                'label' => QuranMetadata::name((int) $coaching->surah_number).' · '.(int) $coaching->ayah_number,
+                'surah_number' => (int) $coaching->surah_number,
+                'ayah' => (int) $coaching->ayah_number,
+                'word_index' => (int) $coaching->word_index,
+                'note' => trim((string) $correction->body) !== '' ? trim((string) $correction->body) : null,
+                'ai_wording_flag' => false,
+                'is_tajweed_assessment' => false,
+            ], (int) $coaching->ai_recite_attempt_id, $correction->created_at, in_array($coaching->review_status, [TeacherWordCoaching::IMPROVED, TeacherWordCoaching::RESOLVED], true));
+        }
+
+        $assessments = TeacherRecitationAssessment::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->whereNotNull('observations')
+            ->with('attempt:id,user_id,ayah_range,created_at')
+            ->orderBy('id')
+            ->get();
+        foreach ($assessments as $assessment) {
+            if (! $assessment instanceof TeacherRecitationAssessment) {
+                continue;
+            }
+            $observations = is_array($assessment->observations) ? $assessment->observations : [];
+            $attempt = $assessment->relationLoaded('attempt') ? $assessment->attempt : null;
+            $range = $attempt instanceof AiReciteAttempt && is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+            $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
+            $from = (int) ($range['from'] ?? $range['start'] ?? 0);
+            $to = (int) ($range['to'] ?? $range['end'] ?? $from);
+            if ($surah < 1 || $from < 1) {
+                continue;
+            }
+            foreach (TeacherRecitationAssessment::AREAS as $area) {
+                $entry = is_array($observations[$area] ?? null) ? $observations[$area] : [];
+                if (($entry['rating'] ?? null) !== 'needs_work') {
+                    continue;
+                }
+                $key = implode(':', ['passage', $surah, $from, max($from, $to), $area]);
+                $note = trim((string) ($entry['note'] ?? ''));
+                $this->accumulateMistake($groups, $key, [
+                    'id' => $key,
+                    'kind' => 'teacher_observation',
+                    'source' => 'teacher',
+                    'category' => $area,
+                    'label' => trim(QuranMetadata::name($surah).' '.$from.($to > $from ? '–'.$to : '')),
+                    'surah_number' => $surah,
+                    'ayah' => $from,
+                    'word_index' => null,
+                    'note' => $note !== '' ? $note : null,
+                    'ai_wording_flag' => false,
+                    'is_tajweed_assessment' => false,
+                ], (int) $assessment->ai_recite_attempt_id, $assessment->updated_at, false);
+            }
+        }
+
+        $rows = array_values($groups);
+        usort($rows, fn (array $left, array $right) => strcmp((string) ($right['last_at'] ?? ''), (string) ($left['last_at'] ?? '')));
+        $rows = array_slice($rows, 0, 12);
+
+        return array_map(function (array $row) {
+            unset($row['attempt_ids']);
+
+            return $row;
+        }, $rows);
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $groups
+     * @param  array<string, mixed>  $seed
+     */
+    private function accumulateMistake(array &$groups, string $key, array $seed, int $attemptId, mixed $at, bool $improved): void
+    {
+        if (! isset($groups[$key])) {
+            $groups[$key] = $seed + [
+                'attempt_ids' => [],
+                'count' => 0,
+                'first_at' => null,
+                'last_at' => null,
+                'improved' => $improved,
+            ];
+        }
+        if ($attemptId > 0 && ! in_array($attemptId, $groups[$key]['attempt_ids'], true)) {
+            $groups[$key]['attempt_ids'][] = $attemptId;
+        }
+        $groups[$key]['count'] = count($groups[$key]['attempt_ids']);
+        $stamp = $at instanceof \DateTimeInterface ? $at->format('c') : null;
+        if ($stamp !== null && ($groups[$key]['first_at'] === null || $stamp < $groups[$key]['first_at'])) {
+            $groups[$key]['first_at'] = $stamp;
+        }
+        if ($stamp !== null && ($groups[$key]['last_at'] === null || $stamp > $groups[$key]['last_at'])) {
+            $groups[$key]['last_at'] = $stamp;
+            if ($seed['note'] !== null) {
+                $groups[$key]['note'] = $seed['note'];
+            }
+        }
+        $groups[$key]['improved'] = $improved;
     }
 
     /**
@@ -452,12 +578,6 @@ class TeacherWordCoachingService
     private function addCorrection(User $teacher, TeacherWordCoaching $coaching, string $body, ?UploadedFile $audio, ?int $durationMs, array $input = []): void
     {
         $body = trim($body);
-        if ($body === '' && $audio === null) {
-            throw ValidationException::withMessages([
-                'body' => 'Write a correction or record a demonstration.',
-            ]);
-        }
-
         $focus = isset($input['focus']) && $input['focus'] !== '' ? (string) $input['focus'] : null;
         $finding = isset($input['finding']) && $input['finding'] !== '' ? (string) $input['finding'] : null;
         if (($focus === null) !== ($finding === null)) {
@@ -466,11 +586,29 @@ class TeacherWordCoachingService
             ]);
         }
 
-        $correction = new TeacherWordCoachingCorrection;
+        $correction = null;
+        if (! empty($input['correction_id'])) {
+            $correction = TeacherWordCoachingCorrection::query()
+                ->whereKey((int) $input['correction_id'])
+                ->where('teacher_word_coaching_id', $coaching->id)
+                ->where('teacher_id', $teacher->id)
+                ->first();
+            abort_unless($correction instanceof TeacherWordCoachingCorrection, 404);
+        }
+        if ($body === '' && $audio === null && ! ($correction instanceof TeacherWordCoachingCorrection && trim((string) $correction->body) !== '')) {
+            throw ValidationException::withMessages([
+                'body' => 'Write a correction or record a demonstration.',
+            ]);
+        }
+
+        $replacing = $correction instanceof TeacherWordCoachingCorrection;
+        if (! $replacing) {
+            $correction = new TeacherWordCoachingCorrection;
+        }
         $correction->forceFill([
             'teacher_word_coaching_id' => $coaching->id,
             'teacher_id' => $teacher->id,
-            'body' => $body !== '' ? $body : null,
+            'body' => $body !== '' ? $body : $correction->body,
             'focus' => $focus,
             'finding' => $finding,
         ])->save();
@@ -480,7 +618,9 @@ class TeacherWordCoachingService
         }
 
         if (! $this->audio->store($correction, $audio, $durationMs)) {
-            $correction->delete();
+            if (! $replacing) {
+                $correction->delete();
+            }
             throw ValidationException::withMessages([
                 'audio' => 'Use a supported voice recording smaller than 8 MB.',
             ]);

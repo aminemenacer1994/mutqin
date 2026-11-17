@@ -3,7 +3,7 @@
   <button
     v-if="remaining > 0"
     type="button"
-    class="dash-text-link teacher-more"
+    class="teacher-more"
     :disabled="loading"
     @click="$emit('more')"
   >
@@ -12,7 +12,7 @@
   <button
     v-if="shown > initial"
     type="button"
-    class="dash-text-link teacher-more teacher-more--less"
+    class="teacher-more teacher-more--less"
     :disabled="loading"
     @click="$emit('less')"
   >

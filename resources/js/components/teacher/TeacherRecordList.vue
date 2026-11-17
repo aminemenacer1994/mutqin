@@ -5,10 +5,10 @@
       v-for="(row, index) in visibleRows"
       :key="row.key ?? index"
       class="teacher-record-card"
-      :class="{ 'is-interactive': playbackReview(row), 'is-selected': isSelected(row) }"
+      :class="{ 'is-line': line, 'is-interactive': playbackReview(row), 'is-selected': isSelected(row) }"
       @click="onCardClick($event, row)"
     >
-      <button v-if="hasReviewEvidence(row)" type="button" class="teacher-record-card__title" @click="openEvidence(row, preferredEvidenceMode(row))">{{ row.title }}</button>
+      <button v-if="hasReviewEvidence(row) && !playbackReview(row)" type="button" class="teacher-record-card__title" @click="openEvidence(row, preferredEvidenceMode(row))">{{ row.title }}</button>
       <strong v-else class="teacher-record-card__title">{{ row.title }}</strong>
       <div v-if="row.pills?.length" class="teacher-record-card__pills">
         <span v-for="(pill, pillIndex) in row.pills" :key="`${row.key}-pill-${pillIndex}`" class="teacher-fact" :class="`teacher-fact--${pill.tone || 'neutral'}`">
@@ -163,6 +163,7 @@ export default {
   props: {
     rows: { type: Array, default: () => [] },
     layout: { type: String, default: 'table' },
+    line: { type: Boolean, default: false },
     inlineEvidence: { type: Boolean, default: true },
     mushafReviewModal: { type: Boolean, default: false },
     headings: { type: Object, default: () => ({}) },

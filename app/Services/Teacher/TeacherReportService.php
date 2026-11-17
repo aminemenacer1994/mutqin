@@ -56,7 +56,9 @@ class TeacherReportService
             ->pluck('id');
         $teacherScores = TeacherRecitationAssessment::query()
             ->where('teacher_id', $teacher->id)->where('student_id', $student->id)
-            ->whereIn('ai_recite_attempt_id', $assessmentAttemptIds)->pluck('tajweed_score');
+            ->whereIn('ai_recite_attempt_id', $assessmentAttemptIds)
+            ->whereNotNull('tajweed_score')
+            ->pluck('tajweed_score');
 
         $attendanceCounts = TeacherAttendanceRecord::query()->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)

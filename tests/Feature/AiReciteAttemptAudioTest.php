@@ -60,6 +60,29 @@ class AiReciteAttemptAudioTest extends TestCase
 
     }
 
+    public function test_rejected_upload_keeps_the_existing_recording(): void
+    {
+        Storage::fake('local');
+        config(['mutqin.audio_privacy.raw_recording_retention' => 'retain']);
+        $user = User::factory()->pro()->create();
+        $attempt = $this->makeAttempt($user);
+
+        $this->actingAs($user)->post('/api/ai-recite-attempts/'.$attempt->id.'/audio', [
+            'audio' => $this->audioFile(),
+            'duration_ms' => 1200,
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->actingAs($user)->post('/api/ai-recite-attempts/'.$attempt->id.'/audio', [
+            'audio' => UploadedFile::fake()->createWithContent('notes.bin', 'not-audio'),
+            'duration_ms' => 1200,
+        ], ['Accept' => 'application/json'])->assertStatus(422);
+
+        $this->actingAs($user)
+            ->get('/api/ai-recite-attempts/'.$attempt->id.'/audio')
+            ->assertOk()
+            ->assertHeader('content-type', 'audio/webm');
+    }
+
     public function test_other_user_cannot_access_attempt_audio(): void
     {
         Storage::fake('local');

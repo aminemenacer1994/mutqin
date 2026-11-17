@@ -1,10 +1,17 @@
 <template>
   <section class="teacher-stack">
-    <header class="teacher-page-header"><div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_settings') }}</h1></div></header>
+    <header class="teacher-page-header">
+      <div>
+        <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('teacher.nav_settings') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('teacher.account_hint') }}</p>
+      </div>
+    </header>
     <div class="card teacher-account teacher-account--flat">
       <div class="teacher-account__identity">
         <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(teacherName) }}</span>
         <div>
+          <p class="teacher-account__role">{{ t('teacher.account_role') }}</p>
           <h2>{{ teacher?.name || teacherName }}</h2>
           <p v-if="teacher?.email" class="teacher-account__email">{{ teacher.email }}</p>
           <p v-if="teacher?.organisation?.name" class="teacher-account__org">
@@ -49,7 +56,7 @@
           <h2>{{ t('teacher.account_export') }}</h2>
           <p>{{ t('teacher.account_export_help') }}</p>
         </div>
-        <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('export')">{{ t('teacher.account_export') }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('export')">{{ t('teacher.account_export_action') }}</button>
       </section>
     </div>
   </section>

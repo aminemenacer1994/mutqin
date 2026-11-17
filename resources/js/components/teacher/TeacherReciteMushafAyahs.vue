@@ -67,7 +67,37 @@ export default {
     lines: { type: Boolean, default: false },
   },
   emits: ['select-word'],
+  mounted() {
+    this.fitLines()
+    this.resizeObserver = new ResizeObserver(() => this.fitLines())
+    if (this.$el) this.resizeObserver.observe(this.$el)
+    document.fonts?.ready?.then(() => this.fitLines())
+  },
+  beforeUnmount() {
+    this.resizeObserver?.disconnect()
+  },
+  watch: {
+    ayahs() {
+      this.$nextTick(() => this.fitLines())
+    },
+  },
   methods: {
+    fitLines() {
+      if (!this.lines || !this.$el || this.fitting) return
+      const lines = [...this.$el.querySelectorAll(':scope > .teacher-recite-mushaf__line')]
+      const available = this.$el.clientWidth
+      if (!lines.length || available < 48) return
+      const packed = Math.max(...lines.map((line) => (
+        [...line.children].reduce((sum, kid) => sum + kid.getBoundingClientRect().width, 0)
+      )))
+      if (packed < 24) return
+      const current = parseFloat(getComputedStyle(lines[0]).fontSize) || 24
+      const next = Math.min(80, Math.max(18, current * (available / packed) * 0.992))
+      if (Math.abs(next - current) < 0.6) return
+      this.fitting = true
+      this.$el.style.setProperty('--mushaf-fit', `${next.toFixed(2)}px`)
+      this.fitting = false
+    },
     accessibleLabel(ayah, part) {
       const number = part?.ayah || ayah?.ayah
       if (part?.isEnd) return this.t('teacher.ayah_n', { n: number })

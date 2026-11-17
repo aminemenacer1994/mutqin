@@ -390,12 +390,16 @@
 
             <footer v-if="!loading && !error && !empty" class="post-session-simple__footer post-session-simple__footer--compact">
               <p
-                v-if="attemptSaved || saveState === 'retrying' || saveState === 'saved' || resultsHref"
+                v-if="attemptSaved || saveState === 'retrying' || saveState === 'saved' || saveState === 'failed' || resultsHref"
                 class="workspace-recite-saved"
                 data-testid="workspace-recite-saved"
                 aria-live="polite"
               >
                 <span v-if="saveState === 'retrying'" class="workspace-recite-saved__retrying">{{ retryingLabel }}</span>
+                <template v-else-if="saveState === 'failed'">
+                  <span class="workspace-recite-saved__retrying">{{ failedLabel }}</span>
+                  <button type="button" class="btn btn-link btn-sm" @click="$emit('retry-save')">{{ retrySaveLabel }}</button>
+                </template>
                 <span v-else-if="attemptSaved || saveState === 'saved'">{{ savedLabel }}</span>
                 <a
                   v-if="resultsHref"
@@ -486,6 +490,8 @@ export default {
     saveState: { type: String, default: '' },
     savedLabel: { type: String, default: 'Test has been saved.' },
     retryingLabel: { type: String, default: "Couldn't save yet. Retrying…" },
+    failedLabel: { type: String, default: "The recording could not be saved." },
+    retrySaveLabel: { type: String, default: 'Retry upload' },
     resultsHref: { type: String, default: '' },
     resultsLabel: { type: String, default: 'See all results' },
     theme: { type: String, default: '' },
@@ -496,7 +502,7 @@ export default {
     backToProgressLabel: { type: String, default: 'Check progress' },
     progressHref: { type: String, default: '/progress' },
   },
-  emits: ['close', 'try-again', 'mutashabihat-compare', 'back-to-progress'],
+  emits: ['close', 'try-again', 'retry-save', 'mutashabihat-compare', 'back-to-progress'],
   data() {
     return {
       returnFocusEl: null,

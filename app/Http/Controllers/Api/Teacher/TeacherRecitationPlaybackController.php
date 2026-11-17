@@ -86,6 +86,7 @@ class TeacherRecitationPlaybackController extends Controller
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
             'review_status' => ['required_if:action,status', 'nullable', 'string', 'in:awaiting_retry,needs_practice,improved,resolved'],
             'due_at' => ['required_if:action,practice', 'nullable', 'date', 'after_or_equal:today'],
+            'correction_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         return $this->json($playback->coachWord(

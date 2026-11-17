@@ -35,4 +35,5 @@ export function studioHasDraft(state = {}) {
     || Boolean(state.initialWordDueAt && state.wordDueAt !== state.initialWordDueAt)
     || hasVoice(state.voiceState)
     || hasVoice(state.wordVoiceState)
+    || Boolean(state.assessmentDirty)
 }

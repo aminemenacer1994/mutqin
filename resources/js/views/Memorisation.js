@@ -13423,8 +13423,8 @@ export default {
             audioBlob,
             Math.round(Number(canonicalResult?.durationSeconds || 0) * 1000),
           )
-          if (!savedAudio?.url) throw new Error('audio_reference_not_saved')
-          audioUrl = String(savedAudio.url)
+          if (savedAudio?.reason !== 'privacy_never' && !savedAudio?.url) throw new Error('audio_reference_not_saved')
+          if (savedAudio?.url) audioUrl = String(savedAudio.url)
         }
 
         this._workspaceReciteRetryPayload = null
@@ -13442,6 +13442,8 @@ export default {
         const status = Number(error?.response?.status || 0)
         if (status >= 400 && status < 500 && status !== 419 && status !== 429) {
           console.warn('AI Recite background save stopped after a non-retryable response', { status })
+          this.workspaceReciteSaveState = 'failed'
+          this.postSessionSaveFailed = true
           return
         }
         this._workspaceReciteRetryCount = Math.min(8, Number(this._workspaceReciteRetryCount || 0) + 1)
@@ -29404,8 +29406,8 @@ export default {
                 capturedBlob,
                 Math.round(Number(result?.durationSeconds || 0) * 1000),
               )
-              if (!savedAudio?.url) throw new Error('audio_reference_not_saved')
-              capturedAudioUrl = String(savedAudio.url)
+              if (savedAudio?.reason !== 'privacy_never' && !savedAudio?.url) throw new Error('audio_reference_not_saved')
+              if (savedAudio?.url) capturedAudioUrl = String(savedAudio.url)
             } catch (error) {
               persistenceComplete = false
               console.warn('AI Recite audio upload will retry', {
