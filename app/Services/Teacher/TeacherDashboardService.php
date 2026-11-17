@@ -172,6 +172,9 @@ class TeacherDashboardService
                 'needs_attention' => $metric['needs_attention'],
                 'repeated_absence' => $metric['repeated_absence'],
                 'active_7' => (bool) ($metric['active_7'] ?? false),
+                'attention_awaiting_recipient_id' => $metric['attention_awaiting_recipient_id'] ?? null,
+                'attention_awaiting_attempt_id' => $metric['attention_awaiting_attempt_id'] ?? null,
+                'attention_overdue_recipient_id' => $metric['attention_overdue_recipient_id'] ?? null,
                 'recommendation' => $metric['recommendation'],
             ];
         })->filter()->values();
@@ -1024,6 +1027,9 @@ class TeacherDashboardService
                 'needs_attention' => false,
                 'repeated_absence' => false,
                 'absence_weeks' => 0,
+                'attention_awaiting_recipient_id' => null,
+                'attention_awaiting_attempt_id' => null,
+                'attention_overdue_recipient_id' => null,
                 'recommendation' => [
                     'type' => 'insufficient_data',
                     'reason' => 'No authorised practice or recitation evidence is available yet.',
@@ -1199,11 +1205,32 @@ class TeacherDashboardService
                 if (isset($metrics[$id]['assignments']['awaiting_confirmation'])) {
                     $metrics[$id]['assignments']['awaiting_confirmation']++;
                 }
+                if ((int) $recipient->id > (int) ($metrics[$id]['attention_awaiting_recipient_id'] ?? 0)) {
+                    $metrics[$id]['attention_awaiting_recipient_id'] = (int) $recipient->id;
+                }
 
                 continue;
             }
+            if ($status === AssignmentStatus::Overdue->value && (int) $recipient->id > (int) ($metrics[$id]['attention_overdue_recipient_id'] ?? 0)) {
+                $metrics[$id]['attention_overdue_recipient_id'] = (int) $recipient->id;
+            }
             if (isset($metrics[$id]['assignments'][$status])) {
                 $metrics[$id]['assignments'][$status]++;
+            }
+        }
+
+        $awaitingIds = collect($metrics)->pluck('attention_awaiting_recipient_id')->filter()->values();
+        if ($awaitingIds->isNotEmpty()) {
+            $latestAttempts = AiReciteAttempt::query()
+                ->selectRaw('MAX(id) as id, teacher_assignment_recipient_id')
+                ->whereIn('teacher_assignment_recipient_id', $awaitingIds->all())
+                ->groupBy('teacher_assignment_recipient_id')
+                ->pluck('id', 'teacher_assignment_recipient_id');
+            foreach ($metrics as $id => $row) {
+                $recipientId = $row['attention_awaiting_recipient_id'] ?? null;
+                if ($recipientId && isset($latestAttempts[$recipientId])) {
+                    $metrics[$id]['attention_awaiting_attempt_id'] = (int) $latestAttempts[$recipientId];
+                }
             }
         }
 
@@ -1407,6 +1434,13 @@ class TeacherDashboardService
                 'needs_attention' => $metric['needs_attention'],
                 'repeated_absence' => $metric['repeated_absence'],
                 'ai_success_rate' => $metric['ai_success_rate'],
+                'ai_attempts' => $metric['ai_attempts'],
+                'recurring_weak' => $metric['recurring_weak'],
+                'revision_overdue' => $metric['revision_overdue'],
+                'assignments' => $metric['assignments'],
+                'attention_awaiting_recipient_id' => $metric['attention_awaiting_recipient_id'] ?? null,
+                'attention_awaiting_attempt_id' => $metric['attention_awaiting_attempt_id'] ?? null,
+                'attention_overdue_recipient_id' => $metric['attention_overdue_recipient_id'] ?? null,
             ];
         })->filter(fn (array $row) => $row['name']);
 

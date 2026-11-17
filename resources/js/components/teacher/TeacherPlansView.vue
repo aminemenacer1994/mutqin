@@ -51,6 +51,7 @@
       :focus-plan-id="focusPlanId"
       @leave="clearStudent"
       @created="onCreated"
+      @open-task="openLinkedTask"
     />
   </section>
 </template>
@@ -62,6 +63,9 @@ export default {
   name: 'TeacherPlansView',
   components: { TeacherStudentProfilePlan },
   mixins: [i18nMixin],
+  inject: {
+    openTeacherStudent: { default: null },
+  },
   data() {
     return {
       loading: true,
@@ -117,6 +121,11 @@ export default {
       if (plan?.id) this.focusPlanId = plan.id
     },
     studentName(id) { return this.students.find((student) => String(student.id) === String(id))?.name || '' },
+    openLinkedTask(payload) {
+      const studentId = payload?.studentId
+      if (!studentId || typeof this.openTeacherStudent !== 'function') return
+      this.openTeacherStudent(studentId, 'tasks', { taskId: payload.assignmentId || null })
+    },
   },
 }
 </script>

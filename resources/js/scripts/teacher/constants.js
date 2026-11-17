@@ -13,7 +13,6 @@ export const TEACHER_NAV = [
 
 /** One profile tab row. Review is the working page: listen, then clear what is due. */
 export const TEACHER_PROFILE_TABS = [
-  { id: 'profile', label: 'teacher.tab_profile', icon: 'bi bi-person-lines-fill' },
   { id: 'ai', label: 'teacher.tab_recitations', icon: 'bi bi-ear' },
   { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-clipboard-check' },
   { id: 'plan', label: 'teacher.tab_learning_plan', icon: 'bi bi-calendar-week' },

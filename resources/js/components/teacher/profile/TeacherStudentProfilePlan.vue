@@ -22,12 +22,13 @@
       <ol v-else class="teacher-plan-detail__list">
         <li v-for="row in recommendations" :key="row.id">
           <div>
+            <p class="teacher-plan-card__student">{{ t('teacher.plan_recommendation_student', { name: studentLabel }) }}</p>
             <strong>{{ row.label }}</strong>
             <p class="teacher-plan-card__meta">
               <span class="teacher-fact teacher-fact--info">{{ activityLabel(row) }}</span>
               <span class="teacher-plan-card__badge" :class="`is-${row.status}`">{{ recommendationStatusLabel(row.status) }}</span>
             </p>
-            <p class="teacher-plan-detail__reason">{{ row.reason }}</p>
+            <p class="teacher-plan-detail__reason">{{ recommendationSummary(row) }}</p>
             <div v-if="editingRecommendationId === row.id" class="teacher-plan-modal__activity-grid">
               <label>
                 <span>{{ t('teacher.plan_kind') }}</span>
@@ -45,12 +46,16 @@
               </label>
             </div>
           </div>
-          <div class="teacher-plan-detail__actions">
-            <button v-if="editingRecommendationId !== row.id" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="editingRecommendationId = row.id">{{ t('teacher.plan_edit_recommendation') }}</button>
-            <button v-else type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="saveRecommendation(row)">{{ t('teacher.plan_edit') }}</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="acceptRecommendation(row)">{{ t('teacher.plan_accept') }}</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="dismissRecommendation(row)">{{ t('teacher.plan_dismiss') }}</button>
-            <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="assignRecommendation(row)">{{ t('teacher.plan_assign') }}</button>
+          <div class="teacher-plan-detail__actions teacher-plan-detail__actions--primary">
+            <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="runRecommendationPrimary(row)">{{ recommendationPrimary(row).label }}</button>
+            <div v-if="recommendationMenu(row).length" class="teacher-plan-menu">
+              <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="recommendationMenuId === row.id ? 'true' : 'false'" :aria-label="t('teacher.plan_recommendation_menu')" @click.stop="recommendationMenuId = recommendationMenuId === row.id ? null : row.id">
+                <i class="bi bi-three-dots" aria-hidden="true"></i>
+              </button>
+              <div v-if="recommendationMenuId === row.id" class="teacher-plan-menu__list" role="menu">
+                <button v-for="item in recommendationMenu(row)" :key="item.id" type="button" role="menuitem" :disabled="busy" @click="runRecommendationMenu(row, item.id)">{{ item.label }}</button>
+              </div>
+            </div>
           </div>
         </li>
       </ol>
@@ -312,6 +317,14 @@
         </template>
       </template>
     </TeacherDialog>
+
+    <TeacherRecitationPlaybackReview
+      :open="Boolean(reviewAttemptId)"
+      :student-id="studentId"
+      :attempt-id="reviewAttemptId"
+      @close="reviewAttemptId = null"
+      @reviewed="onRecommendationReviewed"
+    />
   </div>
 </template>
 
@@ -319,6 +332,7 @@
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
 import TeacherDialog from '../TeacherDialog.vue'
+import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.vue'
 import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
 
@@ -390,9 +404,9 @@ function uniquePlans(list) {
 
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherEmpty, TeacherRecitationPlaybackReview, TeacherSurahSelect },
   inject: { teacherSurahs: { default: () => [] } },
-  emits: ['updated', 'leave', 'created'],
+  emits: ['updated', 'leave', 'created', 'open-task'],
   mixins: [i18nMixin],
   props: {
     studentId: { type: [Number, String], default: '' },
@@ -427,6 +441,8 @@ export default {
       rescheduleDrafts: {},
       recommendations: [],
       editingRecommendationId: null,
+      recommendationMenuId: null,
+      reviewAttemptId: null,
       form: blankForm(this.studentId),
       initialForm: '',
       requestId: 0,
@@ -484,6 +500,15 @@ export default {
   },
   mounted() {
     if (this.createOnMount) this.openComposer()
+    this.onRecommendationMenuPointer = (event) => {
+      if (!this.recommendationMenuId) return
+      if (event.target?.closest?.('.teacher-plan-menu')) return
+      this.recommendationMenuId = null
+    }
+    document.addEventListener('click', this.onRecommendationMenuPointer)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.onRecommendationMenuPointer)
   },
   methods: {
     keepVisibleDetail() {
@@ -656,6 +681,90 @@ export default {
         this.busy = false
       }
     },
+    recommendationSummary(row) {
+      const reason = String(row?.reason || '').trim()
+      if (reason && !/still open\.?$/i.test(reason)) return reason
+      const range = row?.label || ''
+      if (row?.reason_code === 'previous_feedback') {
+        return range
+          ? `${this.studentLabel} still has written feedback on ${range} that has not been turned into a completed task.`
+          : reason
+      }
+      if (row?.reason_code === 'previous_revision') {
+        return range
+          ? `${range} still needs practice after your last review. This follow-up is not a Tajweed assessment.`
+          : reason
+      }
+      return reason
+    },
+    recommendationPrimary(row) {
+      const assignmentId = row?.teacher_assignment_id || row?.evidence?.teacher_assignment_id || row?.evidence?.practice_assignment_id || null
+      const attemptId = row?.evidence?.attempt_id || null
+      if (assignmentId && row.status !== 'dismissed') {
+        return { id: 'view_task', label: this.t('teacher.task_view'), assignmentId }
+      }
+      if (attemptId && row.status === 'pending' && ['previous_revision', 'previous_feedback'].includes(row.reason_code)) {
+        return { id: 'review_recitation', label: this.t('teacher.overview_action_review'), attemptId }
+      }
+      if (this.editingRecommendationId === row.id && row.status !== 'assigned') {
+        return { id: 'save', label: this.t('teacher.plan_recommendation_save') }
+      }
+      if (row.status === 'accepted') return { id: 'assign', label: this.t('teacher.playback_assign_revision') }
+      return { id: 'review', label: this.t('teacher.plan_recommendation_review') }
+    },
+    recommendationMenu(row) {
+      const primary = this.recommendationPrimary(row).id
+      const items = []
+      if (!['save', 'review'].includes(primary) && row.status !== 'assigned' && row.status !== 'dismissed') {
+        items.push({ id: 'edit', label: this.editingRecommendationId === row.id ? this.t('teacher.plan_recommendation_save') : this.t('teacher.plan_edit_recommendation') })
+      }
+      if (primary !== 'accept' && row.status === 'pending') items.push({ id: 'accept', label: this.t('teacher.plan_accept') })
+      const linkedTask = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
+      if (primary !== 'assign' && row.status === 'accepted' && !linkedTask) {
+        items.push({ id: 'assign', label: this.t('teacher.playback_assign_revision') })
+      }
+      if (row.status === 'pending' || row.status === 'accepted') items.push({ id: 'dismiss', label: this.t('teacher.plan_dismiss') })
+      if (primary !== 'view_task') {
+        const assignmentId = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
+        if (assignmentId) items.push({ id: 'view_task', label: this.t('teacher.task_view') })
+      }
+      return items
+    },
+    runRecommendationPrimary(row) {
+      const action = this.recommendationPrimary(row)
+      this.recommendationMenuId = null
+      if (action.id === 'review') {
+        this.editingRecommendationId = row.id
+        return
+      }
+      if (action.id === 'save') return this.saveRecommendation(row)
+      if (action.id === 'assign') return this.assignRecommendation(row)
+      if (action.id === 'view_task') {
+        this.$emit('open-task', { studentId: this.studentId || row.student_id, assignmentId: action.assignmentId })
+        return
+      }
+      if (action.id === 'review_recitation') this.reviewAttemptId = action.attemptId
+    },
+    runRecommendationMenu(row, id) {
+      this.recommendationMenuId = null
+      if (id === 'edit') {
+        if (this.editingRecommendationId === row.id) return this.saveRecommendation(row)
+        this.editingRecommendationId = row.id
+        return
+      }
+      if (id === 'accept') return this.acceptRecommendation(row)
+      if (id === 'dismiss') return this.dismissRecommendation(row)
+      if (id === 'assign') return this.assignRecommendation(row)
+      if (id === 'view_task') {
+        const assignmentId = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
+        this.$emit('open-task', { studentId: this.studentId || row.student_id, assignmentId })
+      }
+    },
+    onRecommendationReviewed() {
+      this.reviewAttemptId = null
+      this.reload()
+      this.$emit('updated')
+    },
     async saveRecommendation(row) {
       this.busy = true
       this.error = ''
@@ -677,23 +786,34 @@ export default {
       }
     },
     async acceptRecommendation(row) {
-      await this.runRecommendation(learningApi.acceptTeacherRevisionRecommendation(row.id))
-    },
-    async dismissRecommendation(row) {
-      await this.runRecommendation(learningApi.dismissTeacherRevisionRecommendation(row.id))
-    },
-    async assignRecommendation(row) {
+      if (this.busy || row?.status === 'assigned') return
       if (this.editingRecommendationId === row.id) {
         await this.saveRecommendation(row)
         if (this.error) return
       }
-      await this.runRecommendation(learningApi.assignTeacherRevisionRecommendation(row.id))
+      await this.runRecommendation(learningApi.acceptTeacherRevisionRecommendation(row.id), this.t('teacher.plan_recommendation_accepted'))
     },
-    async runRecommendation(request) {
+    async dismissRecommendation(row) {
+      if (this.busy || row?.status === 'assigned' || row?.status === 'dismissed') return
+      await this.runRecommendation(learningApi.dismissTeacherRevisionRecommendation(row.id), this.t('teacher.plan_recommendation_dismissed'))
+    },
+    async assignRecommendation(row) {
+      if (this.busy || row?.status === 'assigned' || row?.teacher_assignment_id) return
+      if (this.editingRecommendationId === row.id) {
+        await this.saveRecommendation(row)
+        if (this.error) return
+      }
+      await this.runRecommendation(learningApi.assignTeacherRevisionRecommendation(row.id), this.t('teacher.playback_revision_sent'))
+    },
+    async runRecommendation(request, message = '') {
+      if (this.busy) return
       this.busy = true
       this.error = ''
+      this.success = ''
       try {
         await request
+        this.editingRecommendationId = null
+        this.success = message || this.t('teacher.plan_status_updated')
         await this.reload()
         this.$emit('updated')
       } catch (error) {

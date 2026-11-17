@@ -92,6 +92,7 @@
               :profile="profile"
               :section="profileSection"
               :learning-subview="profileLearningSubview"
+              :task-focus="profileFocus"
               :tabs="TEACHER_PROFILE_TABS"
               :loading="profileLoading"
               :metric="metric"
@@ -103,6 +104,7 @@
               :format-when="formatWhen"
               @back="openView('students')"
               @change-section="onProfileSection"
+              @clear-focus="profileFocus = null"
               @assign-revision="openAssignRevision"
               @mark-reviewed="markReviewReviewed"
               @refresh="refreshStudentProfile"
@@ -192,12 +194,14 @@ export default {
   setup(props) {
     const dashboard = useTeacherDashboard(props.auth)
     provide('teacherSurahs', dashboard.surahs)
+    provide('openTeacherStudent', dashboard.openStudent)
     function updateFilters(next) {
       dashboard.filters.value = next
       dashboard.syncUrl()
     }
     function onProfileSection(tab) {
       if (!dashboard.profile.value?.student?.id) return
+      dashboard.profileFocus.value = null
       dashboard.loadProfile(dashboard.profile.value.student.id, tab, true)
     }
     function openAssignments(filter = 'all') {

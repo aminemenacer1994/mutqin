@@ -75,26 +75,20 @@
         <div v-if="tabHint" class="teacher-profile-tab-meta">
           <p class="teacher-profile-tab-meta__hint">{{ tabHint }}</p>
         </div>
-        <TeacherStudentProfileOverview
-          v-if="section === 'profile'"
-          :profile="tabProfile"
-          :metric="metric"
-          :practice-time="practiceTime"
-          :session-label="sessionLabel"
-          :format-when="formatWhen"
-          @assign-revision="$emit('assign-revision', $event)"
-          @change-section="selectTab"
-        />
         <TeacherStudentProfilePractice
-          v-else-if="isLearningSection"
+          v-if="isLearningSection"
           :profile="tabProfile"
           :focus-payload="section === 'revision' ? tabProfile.payload : (profile.sectionPayloads?.focus ?? null)"
           :session-label="sessionLabel"
           :issue-label="issueLabel"
           :format-when="formatWhen"
           :initial-subview="learningSubview"
+          :focus-attempt-id="section === 'ai' ? (taskFocus && taskFocus.attemptId) : null"
           @assign-revision="$emit('assign-revision', $event)"
           @mark-reviewed="openReviewConfirm"
+          @open-task="openTask"
+          @clear-focus="$emit('clear-focus')"
+          @refresh="$emit('refresh')"
         />
         <KeepAlive>
           <TeacherStudentProfileTasks
@@ -102,7 +96,8 @@
             key="student-tasks"
             :profile="tabProfile"
             :format-when="formatWhen"
-            :focus-task-id="focusTaskId"
+            :focus-task-id="resolvedFocusTaskId"
+            :initial-filter="taskFocus && taskFocus.filter ? taskFocus.filter : ''"
             :ready="!sectionRefreshing"
             @assign-revision="$emit('assign-revision', $event)"
             @refresh="$emit('refresh')"
@@ -164,7 +159,6 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { resolveTaskLifecycle, TASK_LIFECYCLE, taskIsOverdue } from '../../scripts/teacher/taskState'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
-import TeacherStudentProfileOverview from './profile/TeacherStudentProfileOverview.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
@@ -174,7 +168,6 @@ export default {
   components: {
     TeacherDialog,
     TeacherEmpty,
-    TeacherStudentProfileOverview,
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
@@ -193,8 +186,9 @@ export default {
     sessionLabel: { type: Function, required: true },
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
+    taskFocus: { type: Object, default: null },
   },
-  emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed', 'refresh', 'edit-task'],
+  emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed', 'refresh', 'edit-task', 'clear-focus'],
   data() {
     const uid = Math.random().toString(36).slice(2, 9)
     return {
@@ -222,6 +216,9 @@ export default {
     },
     isLearningSection() {
       return ['ai', 'revision', 'plan'].includes(this.section)
+    },
+    resolvedFocusTaskId() {
+      return this.taskFocus?.taskId || this.focusTaskId
     },
     metaPills() {
       const student = this.profile?.student || {}
@@ -323,6 +320,7 @@ export default {
       this.selectTab('messages')
     },
     openTask(context) {
+      this.$emit('clear-focus')
       const id = context?.recipientId || context?.assignmentId || null
       this.focusTaskId = null
       this.$nextTick(() => { this.focusTaskId = id })

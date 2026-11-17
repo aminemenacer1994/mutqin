@@ -1,5 +1,5 @@
 <template>
-  <section class="teacher-student-tasks" :class="{ 'is-open': Boolean(selectedAssignment) }" :aria-label="t('teacher.student_tasks_title')">
+  <section class="teacher-student-tasks" :aria-label="t('teacher.student_tasks_title')">
     <p v-if="!ready" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
     <header v-else class="teacher-student-tasks__head">
       <div class="teacher-student-tasks__intro">
@@ -63,17 +63,16 @@
       </ul>
     </div>
 
+    <TeacherDialog
+      :open="Boolean(selectedAssignment)"
+      :title="selectedTitle"
+      size="lg"
+      :close-label="t('teacher.close')"
+      @close="closeTask"
+    >
     <article v-if="selectedAssignment" class="teacher-student-tasks__detail" :aria-label="selectedTitle">
-      <button type="button" class="teacher-student-tasks__back" @click="closeTask">
-        <i class="bi bi-arrow-left" aria-hidden="true"></i>
-        {{ t('teacher.back_to_tasks') }}
-      </button>
       <header class="teacher-student-tasks__detail-head">
-        <div>
-          <p class="teacher-student-tasks__type"><i :class="selectedView.icon" aria-hidden="true"></i>{{ selectedView.typeLabel }}</p>
-          <h3>{{ selectedTitle }}</h3>
-          <p>{{ selectedView.meta }}</p>
-        </div>
+        <p class="teacher-student-tasks__type"><i :class="selectedView.icon" aria-hidden="true"></i>{{ selectedView.typeLabel }}</p>
         <div class="teacher-student-tasks__status">
           <span class="teacher-badge" :class="`teacher-badge--${selectedView.tone}`">{{ selectedView.statusLabel }}</span>
           <span v-if="selectedView.overdue" class="teacher-badge teacher-badge--danger">{{ t('teacher.overdue') }}</span>
@@ -82,16 +81,16 @@
 
       <dl class="teacher-student-tasks__facts">
         <div>
-          <dt>{{ t('teacher.student') }}</dt>
+          <dt><i class="bi bi-person" aria-hidden="true"></i>{{ t('teacher.student') }}</dt>
           <dd>{{ profile.student.name }}</dd>
         </div>
         <div>
-          <dt>{{ t('teacher.due') }}</dt>
+          <dt><i class="bi bi-calendar-event" aria-hidden="true"></i>{{ t('teacher.due') }}</dt>
           <dd>{{ selectedDue }}</dd>
         </div>
         <div v-if="selectedView.progress">
-          <dt>{{ t('teacher.repetitions') }}</dt>
-          <dd>{{ selectedView.progress }}</dd>
+          <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ t('teacher.repetitions') }}</dt>
+          <dd>{{ selectedView.progress }}<span v-if="selectedView.progressHelp" class="teacher-student-tasks__empty">{{ selectedView.progressHelp }}</span></dd>
         </div>
       </dl>
 
@@ -140,8 +139,8 @@
       <p v-else-if="actionNotice" class="teacher-student-tasks__notice" role="status">{{ actionNotice }}</p>
 
       <div class="teacher-student-tasks__actions">
-        <button v-if="reviewAttemptId" type="button" class="btn btn-primary btn-sm" @click="openReview(reviewAttemptId)">{{ t('teacher.task_review_submission') }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" :aria-expanded="composing ? 'true' : 'false'" @click="toggleFeedback">{{ t('teacher.task_give_feedback') }}</button>
+        <button v-if="canReviewSubmission" type="button" class="btn btn-primary btn-sm" @click="openReview(reviewAttemptId)">{{ t('teacher.task_review_submission') }}</button>
+        <button v-if="canGiveFeedback" type="button" class="btn btn-outline-secondary btn-sm" :aria-expanded="composing ? 'true' : 'false'" @click="toggleFeedback">{{ t('teacher.task_give_feedback') }}</button>
         <button v-if="canRequestRevision" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(actionBusy)" @click="requestRevision">{{ t('teacher.task_request_revision') }}</button>
         <button v-if="canComplete" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(actionBusy)" @click="markComplete">{{ t('teacher.task_mark_complete') }}</button>
         <button v-if="canEdit" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('edit-task', selectedAssignment)">{{ t('teacher.task_edit') }}</button>
@@ -176,6 +175,7 @@
         @draft-change="onDraftChange"
       />
     </article>
+    </TeacherDialog>
 
     <TeacherRecitationPlaybackReview
       :open="Boolean(playbackAttemptId)"
@@ -198,7 +198,7 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
-import { assignmentProgressLabel } from '../../../scripts/teacher/formatters'
+import { assignmentAttemptHelp, assignmentProgressLabel } from '../../../scripts/teacher/formatters'
 import { normaliseTeacherWordStatus } from '../../../scripts/teacher/wordReviewClass'
 import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../../../scripts/teacher/taskTypes'
 import {
@@ -232,6 +232,7 @@ export default {
     profile: { type: Object, required: true },
     formatWhen: { type: Function, required: true },
     focusTaskId: { type: [Number, String], default: null },
+    initialFilter: { type: String, default: '' },
     ready: { type: Boolean, default: true },
   },
   emits: ['assign-revision', 'refresh', 'edit-task', 'open-messages', 'open-plan', 'unsent-change'],
@@ -248,6 +249,7 @@ export default {
       actionError: '',
       actionNotice: '',
       playbackAttemptId: null,
+      filterReady: false,
       pendingTaskId: null,
       pendingClose: false,
       dueFieldId: `teacher-task-due-${Math.random().toString(36).slice(2, 8)}`,
@@ -317,6 +319,15 @@ export default {
     canRequestRevision() {
       return this.canComplete && this.lifecycle !== TASK_LIFECYCLE.REVISION_REQUESTED
     },
+    hasSubmission() {
+      return this.submissions.length > 0
+    },
+    canReviewSubmission() {
+      return Boolean(this.reviewAttemptId)
+    },
+    canGiveFeedback() {
+      return this.hasSubmission
+    },
     learningPlanLabel() {
       const plan = this.profile?.meta?.learning_plan
       if (!plan?.title && !plan?.status) return ''
@@ -340,10 +351,13 @@ export default {
     },
     focusTaskId: {
       immediate: true,
-      handler(id) {
-        if (id === null || id === undefined || id === '') return
-        const match = this.assignments.find((item) => String(item.id) === String(id) || String(item.assignment?.id) === String(id))
-        if (match) this.openTask(match.id)
+      handler() { this.openFocusedTask(true) },
+    },
+    assignments() { this.openFocusedTask(false) },
+    initialFilter: {
+      immediate: true,
+      handler(value) {
+        if (value) this.activeFilter = value
       },
     },
     feedbackUnsent() { this.reportUnsent() },
@@ -359,9 +373,10 @@ export default {
       const assignment = item.assignment || {}
       const lifecycle = resolveTaskLifecycle(item)
       const typeId = resolveTeacherTaskType(assignment.kind, assignment.hifz_category, assignment.activity)
-      const primary = lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW && item.evidence?.attempt_id
-        ? 'review'
-        : (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW || lifecycle === TASK_LIFECYCLE.SUBMITTED ? 'feedback' : 'view')
+      const submitted = Boolean(item.student_submitted_at || item.evidence?.attempt_id || (Array.isArray(item.attempts) && item.attempts.length))
+      let primary = 'view'
+      if (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW && item.evidence?.attempt_id) primary = 'review'
+      else if (submitted && (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW || lifecycle === TASK_LIFECYCLE.SUBMITTED)) primary = 'feedback'
       const assigned = assignment.created_at ? this.t('teacher.task_assigned_on', { date: this.formatWhen(assignment.created_at) }) : ''
       const due = assignment.due_at ? this.t('teacher.task_due_date', { date: this.formatWhen(assignment.due_at) }) : this.t('teacher.no_due_date')
       return {
@@ -375,6 +390,7 @@ export default {
         meta: [assigned, due].filter(Boolean).join(' · '),
         instructions: String(assignment.feedback || '').trim(),
         progress: item.progress ? assignmentProgressLabel(item, this.t.bind(this)) : '',
+        progressHelp: item.progress ? assignmentAttemptHelp(item, this.t.bind(this)) : '',
         tone: taskLifecycleTone(lifecycle),
         statusLabel: this.t(taskLifecycleLabelKey(lifecycle)),
         overdue: taskIsOverdue(item),
@@ -410,6 +426,13 @@ export default {
       if (!Array.isArray(words) || !words.length) return null
       const matched = words.filter((word) => normaliseTeacherWordStatus(word) === 'correct').length
       return { matched, total: words.length }
+    },
+    openFocusedTask(force = false) {
+      const id = this.focusTaskId
+      if (id === null || id === undefined || id === '') return
+      if (!force && this.selectedTaskKey) return
+      const match = this.assignments.find((item) => String(item.id) === String(id) || String(item.assignment?.id) === String(id))
+      if (match) this.openTask(match.id)
     },
     chooseTask(id) {
       if (String(id) === String(this.selectedTaskKey)) return

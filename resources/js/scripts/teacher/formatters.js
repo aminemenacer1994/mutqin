@@ -13,17 +13,23 @@ export function practiceMinutes(seconds) {
 export function assignmentProgressLabel(item, t) {
   const progress = item?.progress
   const target = Math.max(1, Number(progress?.target || 1))
-  const completed = Math.min(target, Math.max(0, Number(progress?.completed || 0)))
+  const raw = Math.max(0, Number(progress?.activity_count ?? progress?.completed ?? 0))
+  const completed = Math.min(target, raw)
 
   if (item?.assignment?.kind === 'ai_recite') {
-    const attempts = Math.max(completed, Number(progress?.attempt_count ?? progress?.activity_count ?? 0))
     return t(
-      attempts === 1 ? 'teacher.assignment_progress_attempt_one' : 'teacher.assignment_progress_attempt_other',
-      { count: attempts, target },
+      completed === 1 ? 'teacher.assignment_progress_attempt_one' : 'teacher.assignment_progress_attempt_other',
+      { count: completed, target },
     )
   }
 
   return t('teacher.assignment_progress_repetitions', { completed, target })
+}
+
+/** Explains the counter the teacher and student already share. */
+export function assignmentAttemptHelp(item, t) {
+  if (item?.assignment?.kind === 'ai_recite') return t('teacher.attempt_help_wording')
+  return t('teacher.attempt_help_practice')
 }
 
 export function studentInitial(name) {
@@ -225,6 +231,77 @@ export function attentionReasonTags(student, t) {
 
 export function attentionReasons(student, t) {
   return attentionReasonTags(student, t).map((tag) => tag.label)
+}
+
+/** Lower rank is more urgent. Overdue stays a date signal and does not outrank a waiting review. */
+export function teacherAttentionRank(student) {
+  const pending = Number(student?.assignments?.awaiting_confirmation || 0)
+  const overdue = Number(student?.assignments?.overdue || 0)
+  const revision = Number(student?.revision_overdue || 0)
+  const weak = Number(student?.recurring_weak || 0)
+  const low = typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65 && Number(student?.ai_attempts || 0) >= 2
+  if (pending > 0) return 0
+  if (overdue > 0) return 1
+  if (revision > 0) return 2
+  if (weak > 0) return 3
+  if (low) return 4
+  if (student?.repeated_absence || student?.active_7 === false) return 5
+  return 6
+}
+
+/** One real next step. Focus ids come from the dashboard payload when the server has them. */
+export function teacherAttentionAction(student, t) {
+  const pending = Number(student?.assignments?.awaiting_confirmation || 0)
+  const overdue = Number(student?.assignments?.overdue || 0)
+  const revision = Number(student?.revision_overdue || 0)
+  const weak = Number(student?.recurring_weak || 0)
+  const low = typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65 && Number(student?.ai_attempts || 0) >= 2
+  if (pending > 0 && student?.attention_awaiting_attempt_id) {
+    return {
+      id: 'review_recitation',
+      label: t('teacher.overview_action_review'),
+      section: 'ai',
+      focus: { attemptId: student.attention_awaiting_attempt_id },
+    }
+  }
+  if (pending > 0) {
+    return {
+      id: 'review_submission',
+      label: t('teacher.task_review_submission'),
+      section: 'tasks',
+      focus: student.attention_awaiting_recipient_id
+        ? { taskId: student.attention_awaiting_recipient_id }
+        : { filter: 'needs_review' },
+    }
+  }
+  if (overdue > 0) {
+    return {
+      id: 'overdue',
+      label: t('teacher.overview_action_overdue'),
+      section: 'tasks',
+      focus: student.attention_overdue_recipient_id
+        ? { taskId: student.attention_overdue_recipient_id }
+        : { filter: 'overdue' },
+    }
+  }
+  if (revision > 0) {
+    return {
+      id: 'revision',
+      label: t('teacher.overview_action_revision'),
+      section: 'plan',
+      focus: null,
+    }
+  }
+  if (weak > 0) {
+    return { id: 'assign', label: t('teacher.assign_revision'), assign: true }
+  }
+  if (low) {
+    return { id: 'progress', label: t('teacher.overview_action_progress'), section: 'ai', focus: null }
+  }
+  if (student?.repeated_absence || student?.active_7 === false || !student?.last_activity_at) {
+    return { id: 'message', label: t('teacher.message_student'), section: 'messages', focus: null }
+  }
+  return { id: 'progress', label: t('teacher.overview_action_progress'), section: 'ai', focus: null }
 }
 
 export function scoreBadgeTone(score) {

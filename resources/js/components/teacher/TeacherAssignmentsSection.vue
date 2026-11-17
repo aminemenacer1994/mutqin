@@ -254,7 +254,7 @@ export default {
     }
   },
   mounted() {
-    this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1'
+    try { this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1' } catch { /* Storage is optional. */ }
   },
   beforeUnmount() {
     if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
@@ -370,7 +370,7 @@ export default {
     },
     toggleCompactView() {
       this.compactView = !this.compactView
-      window.localStorage.setItem('mutqin.teacher.tasks.compact', this.compactView ? '1' : '0')
+      try { window.localStorage.setItem('mutqin.teacher.tasks.compact', this.compactView ? '1' : '0') } catch { /* Storage is optional. */ }
     },
     openRemove(item) {
       this.removeItem = item

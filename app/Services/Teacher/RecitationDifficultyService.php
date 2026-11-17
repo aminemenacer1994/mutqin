@@ -54,20 +54,60 @@ class RecitationDifficultyService
             ->whereIn('id', $rows->pluck('user_id'))
             ->get(['id', 'name', 'email'])
             ->keyBy('id');
+        $passages = $this->queuePassages($rows->pluck('user_id')->map(fn ($id) => (int) $id)->all());
 
-        return $rows->map(function ($row) use ($students) {
-            $student = $students->get((int) $row->user_id);
+        return $rows->map(function ($row) use ($students, $passages) {
+            $studentId = (int) $row->user_id;
+            $student = $students->get($studentId);
 
             return [
-                'student_id' => (int) $row->user_id,
+                'student_id' => $studentId,
                 'student_name' => $student?->name,
                 'student_email' => $student?->email,
                 'difficulty_count' => (int) $row->difficulty_count,
+                'passages' => $passages[$studentId] ?? [],
                 'last_identified_at' => $row->last_at
                     ? Carbon::parse($row->last_at)->toIso8601String()
                     : null,
             ];
         })->values()->all();
+    }
+
+    /**
+     * Up to three latest ayah labels per student, newest first.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, list<string>>
+     */
+    private function queuePassages(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        $spots = MemorisationWeakSpot::query()
+            ->whereIn('user_id', $userIds)
+            ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+            ->where('affected_attempt_count', '>=', 2)
+            ->where(function ($query) {
+                $query->whereNull('teacher_review_status')
+                    ->orWhere('teacher_review_status', MemorisationWeakSpot::REVIEW_CONFIRMED);
+            })
+            ->orderByDesc('last_identified_at')
+            ->get(['user_id', 'surah_number', 'ayah_number']);
+
+        $passages = [];
+        foreach ($spots as $spot) {
+            $id = (int) $spot->user_id;
+            $label = trim(QuranMetadata::name((int) $spot->surah_number).' '.(int) $spot->ayah_number);
+            $passages[$id] ??= [];
+            if ($label === '' || in_array($label, $passages[$id], true) || count($passages[$id]) >= 3) {
+                continue;
+            }
+            $passages[$id][] = $label;
+        }
+
+        return $passages;
     }
 
     public function listForStudent(

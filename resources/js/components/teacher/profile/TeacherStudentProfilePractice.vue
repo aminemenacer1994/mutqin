@@ -50,7 +50,10 @@
             :issue-label="issueLabel"
             :format-when="formatWhen"
             :step="planRows.length ? 3 : 2"
+            :focus-attempt-id="focusAttemptId"
             @assign-revision="$emit('assign-revision', $event)"
+            @clear-focus="$emit('clear-focus')"
+            @reviewed="$emit('refresh')"
           />
         </section>
 
@@ -65,7 +68,7 @@
         </section>
       </template>
 
-      <TeacherStudentProfilePlan v-else-if="activeSubview === 'plan'" :student-id="profile.student.id" :student-name="profile.student.name" />
+      <TeacherStudentProfilePlan v-else-if="activeSubview === 'plan'" :student-id="profile.student.id" :student-name="profile.student.name" @open-task="$emit('open-task', $event)" @updated="$emit('refresh')" />
     </div>
   </TeacherSectionPane>
 </template>
@@ -94,8 +97,9 @@ export default {
     formatWhen: { type: Function, required: true },
     focusPayload: { type: Object, default: null },
     initialSubview: { type: String, default: 'memorisation' },
+    focusAttemptId: { type: [Number, String], default: null },
   },
-  emits: ['assign-revision', 'mark-reviewed'],
+  emits: ['assign-revision', 'mark-reviewed', 'open-task', 'clear-focus', 'refresh'],
   data() {
     return {
       subviewOptions: TEACHER_LEARNING_SUBVIEWS,

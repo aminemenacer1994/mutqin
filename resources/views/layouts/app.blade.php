@@ -4580,8 +4580,6 @@
             line-height: 1;
             opacity: 0.8;
             flex-shrink: 0;
-            -webkit-text-stroke: 0.35px currentColor;
-            paint-order: stroke fill;
         }
 
         .app-user-toggle > .bi-chevron-down {
@@ -4589,8 +4587,6 @@
             font-size: 0.72rem;
             line-height: 1;
             opacity: 0.8;
-            -webkit-text-stroke: 0.35px currentColor;
-            paint-order: stroke fill;
         }
 
         .app-lang-toggle:hover,
@@ -8364,6 +8360,24 @@
                 <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
                     <div class="navbar-nav-shell d-flex justify-content-lg-center">
                         <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
+                            @auth
+                            @unless ($authAwaitingVerification)
+                            @if (Auth::user()->showsAdminNavigation())
+                            <a class="nav-link nav-link-dashboard nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
+                                <i class="bi bi-shield-check nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('ui.admin_dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endif
+                            @if (Auth::user()->isTeacher())
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}" data-tour="nav-dashboard">
+                                <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('admin.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endif
+                            @endunless
+                            @endauth
                             <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
                                 <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong><small class="d-lg-none">{{ __('ui.nav_home_sub') }}</small></span>
@@ -8395,24 +8409,6 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
-                            @auth
-                            @unless ($authAwaitingVerification)
-                            @if (Auth::user()->showsAdminNavigation())
-                            <a class="nav-link nav-link-dashboard nav-link-admin {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
-                                <i class="bi bi-shield-check nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>{{ __('ui.admin_dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endif
-                            @if (Auth::user()->isTeacher())
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}" data-tour="nav-dashboard">
-                                <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>{{ __('admin.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endif
-                            @endunless
-                            @endauth
                         </div>
                     </div>
 

@@ -4,16 +4,16 @@
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
     <div class="teacher-overview-columns">
       <TeacherSectionPane :title="t('teacher.overview_need_look')" icon="bi bi-exclamation-circle" tone="warn" flat>
-        <TeacherAttentionList :rows="attentionRows" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
+        <TeacherAttentionList :rows="attentionRows" :format-when="formatWhen" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
         <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
       </TeacherSectionPane>
       <div class="teacher-overview-secondary">
         <TeacherSectionPane :title="t('teacher.overview_recent_activity')" icon="bi bi-activity" flat>
           <ul v-if="recentActivity.length" class="teacher-activity-list">
             <li v-for="student in recentActivity" :key="student.id">
-              <button type="button" @click="openStudent(student.id)">
+              <button type="button" @click="openActivity(student)">
                 <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
-                <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ t('teacher.activity_recorded', { when: formatWhen(student.last_activity_at) }) }}</small></span>
+                <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ activityLabel(student) }}</small></span>
                 <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></span>
                 <i class="bi bi-chevron-right" aria-hidden="true"></i>
               </button>
@@ -32,7 +32,7 @@
       <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" icon="bi bi-arrow-repeat" flat>
         <ul v-if="outstandingRevision.length" class="teacher-activity-list">
           <li v-for="row in outstandingRevision" :key="row.recipient_id">
-            <button type="button" @click="openStudent(row.student_id, 'tasks')">
+            <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
               <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
               <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
               <span></span>
@@ -59,7 +59,7 @@
         <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
           <ul v-if="recentCompletions.length" class="teacher-activity-list">
             <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
-              <button type="button" @click="openStudent(row.student_id, 'tasks')">
+              <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
                 <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
                 <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
                 <span></span>
@@ -76,7 +76,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
+import { scoreBadgeTone, studentInitial, teacherAttentionAction, teacherAttentionRank } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -147,14 +147,27 @@ export default {
         if (!student?.needs_attention || seen.has(student.id)) return false
         seen.add(student.id)
         return true
-      })
+      }).sort((a, b) => teacherAttentionRank(a) - teacherAttentionRank(b))
     },
   },
   methods: {
     initial: studentInitial,
     scoreTone: scoreBadgeTone,
-    openStudent(id, section = 'ai') {
-      this.$emit('open-student', id, section)
+    activityLabel(student) {
+      const action = teacherAttentionAction(student, this.t)
+      const when = this.formatWhen(student.last_activity_at)
+      return when ? `${action.label} · ${when}` : action.label
+    },
+    openActivity(student) {
+      const action = teacherAttentionAction(student, this.t)
+      if (action.assign) {
+        this.$emit('assign-revision', student)
+        return
+      }
+      this.openStudent(student.id, action.section || 'ai', action.focus || null)
+    },
+    openStudent(id, section = 'ai', focus = null) {
+      this.$emit('open-student', id, section, focus)
     },
   },
 }

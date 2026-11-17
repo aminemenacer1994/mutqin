@@ -207,7 +207,7 @@ html[data-theme="dark"] :is(.teacher-metric, .teacher-pane, .teacher-dashboard .
 
 :is(.teacher-dashboard, .teacher-dialog) :is(.form-control, .form-select, textarea, input:not([type="range"]):not([type="checkbox"])) {
   border-radius: 12px;
-  background: var(--workspace-surface);
+  background-color: var(--workspace-surface);
 }
 
 .learner-workspace .dash-jump {

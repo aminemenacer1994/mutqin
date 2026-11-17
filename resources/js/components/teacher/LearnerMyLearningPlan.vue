@@ -4,13 +4,25 @@
       <div>
         <p class="learner-my-plan__eyebrow">{{ t('teacher.learner_my_plan') }}</p>
         <h3 class="learner-my-plan__title">{{ plan?.title || t('teacher.learner_my_plan_empty_title') }}</h3>
-        <p v-if="plan?.student_goal" class="learner-my-plan__teacher mb-0">{{ plan.student_goal }}</p>
-        <p v-if="plan?.teacher_name" class="learner-my-plan__teacher mb-0">{{ plan.teacher_name }}</p>
-        <p v-else-if="!plan" class="learner-my-plan__teacher mb-0">{{ t('teacher.learner_my_plan_empty') }}</p>
       </div>
       <span v-if="plan" class="learner-my-plan__status" :class="`is-${plan.status}`">{{ statusLabel(plan.status) }}</span>
     </header>
+    <p v-if="!plan" class="learner-my-plan__empty">{{ t('teacher.learner_my_plan_empty') }}</p>
     <template v-if="plan">
+    <dl class="learner-my-plan__facts">
+      <div v-if="plan.student_goal">
+        <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ t('teacher.learner_plan_goal') }}</dt>
+        <dd>{{ plan.student_goal }}</dd>
+      </div>
+      <div v-if="plan.teacher_name">
+        <dt><i class="bi bi-person" aria-hidden="true"></i>{{ t('teacher.teacher') }}</dt>
+        <dd>{{ plan.teacher_name }}</dd>
+      </div>
+      <div>
+        <dt><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.learner_plan_progress') }}</dt>
+        <dd>{{ progressLabel }}</dd>
+      </div>
+    </dl>
 
     <div
       class="learner-my-plan__meter"
@@ -22,14 +34,13 @@
     >
       <span class="learner-my-plan__meter-fill" :style="{ width: `${progressPercent}%` }"></span>
     </div>
-    <p class="learner-my-plan__progress-label">{{ progressLabel }}</p>
 
-    <p v-if="plan.status === 'paused'" class="learner-my-plan__teacher mb-2">{{ t('teacher.plan_paused_student') }}</p>
+    <p v-if="plan.status === 'paused'" class="learner-my-plan__note">{{ t('teacher.plan_paused_student') }}</p>
     <div v-else-if="nextAction" class="learner-my-plan__next">
       <div class="learner-my-plan__next-copy">
-        <strong>{{ t('teacher.learner_continue_learning') }}</strong>
-        <span>{{ nextAction.label }}</span>
-        <small v-if="nextAction.due_on">{{ t('teacher.due') }}: {{ nextAction.due_on }}</small>
+        <p class="learner-my-plan__next-kicker">{{ t('teacher.learner_continue_learning') }}</p>
+        <p class="learner-my-plan__next-label">{{ nextAction.label }}</p>
+        <p v-if="nextAction.due_on" class="learner-my-plan__next-due">{{ t('teacher.due') }} · {{ nextAction.due_on }}</p>
       </div>
       <button
         v-if="showContinue && nextRecipient"

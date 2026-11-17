@@ -184,6 +184,24 @@ class RevisionRecommendationService
         return $row->fresh() ?? $row;
     }
 
+    private function nextAction(RevisionRecommendation $row): string
+    {
+        $evidence = is_array($row->evidence) ? $row->evidence : [];
+        $status = $this->status($row);
+        $assignmentId = (int) ($row->teacher_assignment_id ?: ($evidence['teacher_assignment_id'] ?? $evidence['practice_assignment_id'] ?? 0));
+        if ($assignmentId > 0 && $status !== RevisionRecommendationStatus::Dismissed->value) {
+            return 'view_task';
+        }
+        if (! empty($evidence['attempt_id']) && $status === RevisionRecommendationStatus::Pending->value && in_array($row->reason_code, ['previous_revision', 'previous_feedback'], true)) {
+            return 'review_recitation';
+        }
+        if ($status === RevisionRecommendationStatus::Accepted->value) {
+            return 'assign_revision';
+        }
+
+        return 'review_recommendation';
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -210,6 +228,7 @@ class RevisionRecommendationService
             'is_tajweed_assessment' => false,
             'teacher_assignment_id' => $row->teacher_assignment_id ? (int) $row->teacher_assignment_id : null,
             'published' => $this->status($row) === RevisionRecommendationStatus::Assigned->value,
+            'next_action' => $this->nextAction($row),
         ];
     }
 
@@ -422,20 +441,31 @@ class RevisionRecommendationService
             ->latest('id')
             ->limit(8)
             ->get()
-            ->map(fn (TeacherWordCoaching $coaching) => $this->candidate(
-                'coaching-open:'.$coaching->id,
-                'revision',
-                (int) $coaching->surah_number,
-                (int) $coaching->ayah_number,
-                (int) $coaching->ayah_number,
-                'previous_revision',
-                'A previous revision is still open after teacher review.',
-                [
-                    'kind' => 'previous_revision',
-                    'coaching_id' => (int) $coaching->id,
-                    'is_tajweed_assessment' => false,
-                ],
-            ))
+            ->map(function (TeacherWordCoaching $coaching) {
+                $passage = QuranMetadata::name((int) $coaching->surah_number).' '.(int) $coaching->ayah_number;
+                $waiting = $coaching->review_status === TeacherWordCoaching::AWAITING_RETRY
+                    ? 'is waiting for another recitation'
+                    : 'still needs practice';
+                $attemptId = $coaching->latest_retry_attempt_id ?: $coaching->ai_recite_attempt_id;
+
+                return $this->candidate(
+                    'coaching-open:'.$coaching->id,
+                    'revision',
+                    (int) $coaching->surah_number,
+                    (int) $coaching->ayah_number,
+                    (int) $coaching->ayah_number,
+                    'previous_revision',
+                    $passage.' '.$waiting.' after your review. This follow-up is not a Tajweed or pronunciation assessment.',
+                    [
+                        'kind' => 'previous_revision',
+                        'coaching_id' => (int) $coaching->id,
+                        'attempt_id' => $attemptId ? (int) $attemptId : null,
+                        'practice_assignment_id' => $coaching->practice_assignment_id ? (int) $coaching->practice_assignment_id : null,
+                        'is_tajweed_assessment' => false,
+                    ],
+                    assignmentId: $coaching->practice_assignment_id ? (int) $coaching->practice_assignment_id : null,
+                );
+            })
             ->all();
     }
 
@@ -468,6 +498,10 @@ class RevisionRecommendationService
                     return null;
                 }
                 $activity = $this->activityFromAssignment($assignment) ?? 'revision';
+                $passage = QuranMetadata::name($surah).' '.$start.($end !== $start ? '–'.$end : '');
+                $reason = $assignment
+                    ? 'Written feedback on '.$passage.' for '.$student->name.' is still attached to an unfinished task.'
+                    : 'Written feedback on '.$passage.' for '.$student->name.' has not been turned into a task yet.';
 
                 return $this->candidate(
                     'feedback-note:'.$note->id,
@@ -476,7 +510,7 @@ class RevisionRecommendationService
                     $start,
                     $end,
                     'previous_feedback',
-                    'Previous teacher feedback on this passage is still open.',
+                    $reason,
                     [
                         'kind' => 'teacher_feedback',
                         'teacher_note_id' => (int) $note->id,
@@ -595,7 +629,7 @@ class RevisionRecommendationService
                     (int) $assignment->ayah_start,
                     (int) $assignment->ayah_end,
                     'outstanding_assignment',
-                    'This revision is overdue.',
+                    'Revision for '.QuranMetadata::name((int) $assignment->surah_number).' '.(int) $assignment->ayah_start.'–'.(int) $assignment->ayah_end.' is past its due date.',
                     [
                         'kind' => 'outstanding_assignment',
                         'teacher_assignment_id' => (int) $assignment->id,

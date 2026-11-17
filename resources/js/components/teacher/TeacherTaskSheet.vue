@@ -68,7 +68,8 @@
         </div>
         <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-reps`">{{ t('teacher.repetitions') }}</label>
-          <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required @input="patch('repetition_target', $event.target.value)">
+          <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required :aria-describedby="`${formId}-reps-help`" @input="patch('repetition_target', $event.target.value)">
+          <p :id="`${formId}-reps-help`" class="text-body-secondary small mb-0 mt-1">{{ attemptHelp }}</p>
         </div>
         <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_date') }}</label>
@@ -188,6 +189,11 @@ export default {
     },
     selectedTaskType() {
       return TEACHER_TASK_TYPES.find((type) => type.id === this.form.task_type) || null
+    },
+    attemptHelp() {
+      return this.selectedTaskType?.kind === 'ai_recite'
+        ? this.t('teacher.attempt_help_wording')
+        : this.t('teacher.attempt_help_practice')
     },
     minDueDate() {
       const today = new Date()

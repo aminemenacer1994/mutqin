@@ -3,7 +3,6 @@
     <section class="teacher-direct-thread teacher-direct-thread--chat" :aria-label="t('teacher.messages')">
       <header class="teacher-direct-thread__head">
         <div class="teacher-direct-thread__head-copy">
-          <h2>{{ profile.student.name }}</h2>
           <p>{{ t('teacher.messages_context') }}</p>
         </div>
         <button v-if="hasTaskLink" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-tasks')">

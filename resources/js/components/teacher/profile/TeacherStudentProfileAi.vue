@@ -36,6 +36,13 @@
       <TeacherEmpty icon="bi bi-mic" :message="t('teacher.ai_empty')" />
     </div>
     <p v-else-if="!needsReview.length && !historyRows.length" class="teacher-recite__empty">{{ t('teacher.plan_no_matches') }}</p>
+    <TeacherRecitationPlaybackReview
+      :open="Boolean(focusAttemptId)"
+      :student-id="profile.student && profile.student.id"
+      :attempt-id="focusAttemptId"
+      @close="$emit('clear-focus')"
+      @reviewed="onFocusedReviewed"
+    />
   </div>
 </template>
 
@@ -43,6 +50,7 @@
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { ayahRangeLabel, scoreBadgeTone, teacherRecitationEvidenceRow } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
+import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.vue'
 import TeacherRecordList from '../TeacherRecordList.vue'
 
 function shortRange(attempt) {
@@ -57,7 +65,7 @@ function shortRange(attempt) {
 
 export default {
   name: 'TeacherStudentProfileAi',
-  components: { TeacherEmpty, TeacherRecordList },
+  components: { TeacherEmpty, TeacherRecitationPlaybackReview, TeacherRecordList },
   mixins: [i18nMixin],
   data() { return { passageFilter: '', statusFilter: 'all', dateFilter: '', query: '', reviewedIds: [] } },
   props: {
@@ -65,8 +73,9 @@ export default {
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
     step: { type: [String, Number], default: 2 },
+    focusAttemptId: { type: [Number, String], default: null },
   },
-  emits: ['assign-revision'],
+  emits: ['assign-revision', 'clear-focus', 'reviewed'],
   watch: { 'profile.student.id'() { this.passageFilter = ''; this.statusFilter = 'all'; this.dateFilter = ''; this.query = ''; this.reviewedIds = [] } },
   computed: {
     attempts() { return this.profile.payload?.attempts || [] },
@@ -118,6 +127,10 @@ export default {
     },
   },
   methods: {
+    onFocusedReviewed() {
+      this.$emit('reviewed')
+      this.$emit('clear-focus')
+    },
     markRowReviewed(row) {
       if (!row?.attemptId || this.reviewedIds.includes(row.attemptId)) return
       this.reviewedIds.push(row.attemptId)

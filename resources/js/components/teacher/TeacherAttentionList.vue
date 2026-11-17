@@ -1,7 +1,7 @@
 <template>
   <ul v-if="rows.length" class="list-group list-group-flush teacher-attention-list">
     <li v-for="student in visibleRows" :key="student.id" class="list-group-item teacher-attention-list__item d-flex align-items-center" :class="`is-${reason(student)?.tone || 'quiet'}`">
-      <button type="button" class="btn btn-link teacher-attention-list__main d-flex align-items-center gap-3 flex-grow-1 text-start text-decoration-none p-0" @click="$emit('open-student', student.id)">
+      <button type="button" class="btn btn-link teacher-attention-list__main d-flex align-items-center gap-3 flex-grow-1 text-start text-decoration-none p-0" @click="openRow(student)">
         <span class="teacher-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
@@ -11,7 +11,9 @@
               {{ item.label }}
             </span>
           </span>
+          <span v-if="student.last_activity_at && formatWhen" class="teacher-attention-list__when">{{ formatWhen(student.last_activity_at) }}</span>
         </span>
+        <span class="teacher-attention-list__action">{{ action(student).label }}</span>
       </button>
 
     </li>
@@ -22,7 +24,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { attentionReasonTags, studentInitial } from '../../scripts/teacher/formatters'
+import { attentionReasonTags, studentInitial, teacherAttentionAction, teacherAttentionRank } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
 
@@ -32,6 +34,7 @@ export default {
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
+    formatWhen: { type: Function, default: null },
   },
   emits: ['open-student', 'assign-revision'],
   data() {
@@ -39,11 +42,22 @@ export default {
   },
   computed: {
     visibleRows() {
-      return this.rows.slice(0, this.shown)
+      return [...this.rows].sort((a, b) => teacherAttentionRank(a) - teacherAttentionRank(b)).slice(0, this.shown)
     },
   },
   methods: {
     initial: studentInitial,
+    action(student) {
+      return teacherAttentionAction(student, this.t)
+    },
+    openRow(student) {
+      const next = this.action(student)
+      if (next.assign) {
+        this.$emit('assign-revision', student)
+        return
+      }
+      this.$emit('open-student', student.id, next.section || 'ai', next.focus || null)
+    },
     reason(student) {
       return attentionReasonTags(student, this.t)[0] || null
     },

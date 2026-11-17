@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherRecitationEvidenceRow } from '../../resources/js/scripts/teacher/formatters.js'
+import { assignmentAttemptHelp, assignmentProgressLabel, attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherAttentionAction, teacherAttentionRank, teacherRecitationEvidenceRow } from '../../resources/js/scripts/teacher/formatters.js'
 
 const t = (key, params = {}) => {
   if (key === 'teacher.ayahs_range') return `Ayahs ${params.from}–${params.to}`
@@ -39,6 +39,24 @@ const tags = attentionReasonTags({
 assert.equal(tags[0].label, '2 overdue tasks')
 assert.equal(tags[1].label, '3 reviews due')
 assert.equal(tags[2].label, 'Low recitation score (50%)')
+
+const waiting = {
+  assignments: { awaiting_confirmation: 1, overdue: 2 },
+  attention_awaiting_attempt_id: 44,
+  attention_awaiting_recipient_id: 9,
+}
+const late = { assignments: { overdue: 1 }, attention_overdue_recipient_id: 12 }
+assert.equal(teacherAttentionRank(waiting) < teacherAttentionRank(late), true)
+assert.deepEqual(teacherAttentionAction(waiting, tTeacher), {
+  id: 'review_recitation',
+  label: 'teacher.overview_action_review',
+  section: 'ai',
+  focus: { attemptId: 44 },
+})
+assert.equal(teacherAttentionAction(late, tTeacher).focus.taskId, 12)
+assert.equal(teacherAttentionAction({ repeated_absence: true }, tTeacher).section, 'messages')
+assert.equal(assignmentProgressLabel({ assignment: { kind: 'ai_recite' }, progress: { target: 3, activity_count: 5, completed: 3 } }, tTeacher), 'teacher.assignment_progress_attempt_other')
+assert.equal(assignmentAttemptHelp({ assignment: { kind: 'practice' } }, tTeacher), 'teacher.attempt_help_practice')
 
 const drawerRow = teacherRecitationEvidenceRow({ title: 'Check' }, {
   transcript: 'hello',

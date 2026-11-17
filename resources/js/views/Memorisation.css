@@ -28013,7 +28013,7 @@ word {
 
 .input,
 .select,
-input,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
 textarea {
   max-width: 100%;

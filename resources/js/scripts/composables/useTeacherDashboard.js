@@ -44,10 +44,11 @@ export function useTeacherDashboard(authRef) {
   const filters = ref(defaultStudentFilters())
   const searchTimer = ref(null)
   const profile = ref(null)
-  const profileSection = ref('profile')
+  const profileSection = ref('ai')
   const profileLearningSubview = ref('recite')
   const profileLoading = ref(false)
   const profileSectionPayloads = ref({})
+  const profileFocus = ref(null)
   const assignmentRows = ref([])
   const assignmentEntryFilter = ref('all')
   const assignmentsLoading = ref(false)
@@ -192,6 +193,9 @@ export function useTeacherDashboard(authRef) {
     if (view.value === 'student' && profile.value?.student?.id) {
       params.set('student', String(profile.value.student.id))
       params.set('section', profileSection.value)
+      if (profileFocus.value?.taskId) params.set('task', String(profileFocus.value.taskId))
+      if (profileFocus.value?.attemptId) params.set('attempt', String(profileFocus.value.attemptId))
+      if (profileFocus.value?.filter) params.set('task_filter', String(profileFocus.value.filter))
     }
     const query = params.toString()
     const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}`
@@ -261,6 +265,7 @@ export function useTeacherDashboard(authRef) {
       loadAssignments()
     }
     if (nextView === 'reviews' && !overview.value) loadOverview()
+    if (nextView === 'overview') loadOverview()
   }
 
   function openStudentsFromKpi(key) {
@@ -388,9 +393,9 @@ export function useTeacherDashboard(authRef) {
 
   function canonicalProfileSection(section) {
     if (section === 'recite' || section === 'recitation' || section === 'revision' || section === 'focus' || section === 'weak') return 'ai'
-    if (section === 'profile' || section === 'overview' || section === 'notes' || section === 'history' || section === 'practice' || section === 'memorisation' || section === 'learning') return 'profile'
+    if (section === 'profile' || section === 'overview' || section === 'notes' || section === 'history' || section === 'practice' || section === 'memorisation' || section === 'learning') return 'ai'
     if (profileTabIds().includes(section)) return section
-    return 'profile'
+    return 'ai'
   }
 
   function learningSubviewFor(section) {
@@ -408,20 +413,34 @@ export function useTeacherDashboard(authRef) {
 
   function profileFetchSection(section) {
     if (section === 'revision') return 'focus'
-    if (section === 'plan' || section === 'profile') return 'overview'
+    if (section === 'plan') return 'overview'
     return section
   }
 
-  async function openStudent(id, section = 'profile') {
+  async function openStudent(id, section = 'ai', focus = null) {
+    profileFocus.value = focus && typeof focus === 'object' ? focus : null
     view.value = 'student'
-    await loadProfile(id, section, true)
+    await loadProfile(id, section, true, { force: Boolean(profileFocus.value) })
   }
 
-  async function loadProfile(id, section = 'profile', pushHistory = false) {
+  async function loadProfile(id, section = 'ai', pushHistory = false, options = {}) {
     const requestId = ++profileRequestId
     const resolved = resolveProfileSection(section)
     const studentKey = String(id)
     const sameStudent = profile.value?.student?.id === Number(id)
+    const cached = profileSectionPayloads.value[studentKey]?.[resolved]
+    if (sameStudent && cached && !options.force) {
+      profileSection.value = resolved
+      profile.value = {
+        ...profile.value,
+        section: resolved,
+        payload: cached,
+        sectionPayloads: profileSectionPayloads.value[studentKey],
+      }
+      view.value = 'student'
+      syncUrl(pushHistory)
+      return
+    }
     profileLoading.value = !sameStudent
     profileSection.value = resolved
     if (!sameStudent) {
@@ -502,7 +521,7 @@ export function useTeacherDashboard(authRef) {
   function refreshStudentProfile() {
     const id = profile.value?.student?.id
     if (!id) return
-    loadProfile(id, profileSection.value, false)
+    loadProfile(id, profileSection.value, false, { force: true })
   }
 
   function beginEditAssignment(row) {
@@ -591,7 +610,13 @@ export function useTeacherDashboard(authRef) {
     const params = new URLSearchParams(window.location.search)
     const urlView = params.get('view') || 'overview'
     view.value = TEACHER_VIEWS.includes(urlView) ? urlView : 'overview'
-    profileSection.value = resolveProfileSection(params.get('section') || 'profile')
+    profileSection.value = resolveProfileSection(params.get('section') || 'ai')
+    const taskId = Number(params.get('task') || 0)
+    const attemptId = Number(params.get('attempt') || 0)
+    const taskFilter = params.get('task_filter') || ''
+    profileFocus.value = (taskId || attemptId || taskFilter)
+      ? { taskId: taskId || null, attemptId: attemptId || null, filter: taskFilter }
+      : null
     const days = Number(params.get('days'))
     chartDays.value = TEACHER_CHART_DAY_OPTIONS.includes(days) ? days : 30
     filters.value = Object.fromEntries(
@@ -605,7 +630,7 @@ export function useTeacherDashboard(authRef) {
     if (view.value === 'assignments') await Promise.all([loadAssignments(), loadAssignmentRoster()])
     const params = new URLSearchParams(window.location.search)
     if (view.value === 'student' && params.get('student')) {
-      await loadProfile(params.get('student'), params.get('section') || 'profile')
+      await loadProfile(params.get('student'), params.get('section') || 'ai', false, { force: Boolean(profileFocus.value) })
     }
   }
 
@@ -654,6 +679,7 @@ export function useTeacherDashboard(authRef) {
     profileSection,
     profileLearningSubview,
     profileLoading,
+    profileFocus,
     assignmentRows,
     assignmentEntryFilter,
     assignmentsLoading,
