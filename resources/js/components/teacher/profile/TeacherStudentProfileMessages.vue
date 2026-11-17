@@ -60,6 +60,10 @@
         </template>
       </div>
 
+      <div class="teacher-direct-thread__replies" role="group" :aria-label="t('teacher.message_replies')">
+        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="saving" @click="useReply('teacher.message_reply_well_done')">{{ t('teacher.message_reply_well_done') }}</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="saving" @click="useReply('teacher.message_reply_repeat')">{{ t('teacher.message_reply_repeat') }}</button>
+      </div>
       <form class="teacher-direct-thread__composer" :aria-busy="saving ? 'true' : 'false'" @submit.prevent="send">
         <label class="visually-hidden" for="teacher-direct-reply">{{ t('teacher.message') }}</label>
         <textarea
@@ -239,6 +243,10 @@ export default {
     },
     onVoiceChange(state) {
       this.voiceState = state || { hasRecording: false, active: false }
+    },
+    useReply(key) {
+      this.draft = this.t(key)
+      this.$nextTick(() => document.getElementById('teacher-direct-reply')?.focus())
     },
     clearComposer() {
       this.draft = ''

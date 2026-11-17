@@ -2,6 +2,14 @@
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    <section class="teacher-priorities" :aria-label="t('teacher.today_priorities')">
+      <p>{{ t('teacher.today_priorities_summary', deskCounts) }}</p>
+      <div class="teacher-priorities__actions">
+        <button v-if="deskCounts.reviews" type="button" class="btn btn-primary btn-sm" @click="$emit('open-assignments', 'submitted')">{{ t('teacher.today_review_submissions') }}</button>
+        <button v-if="deskCounts.overdue" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-assignments', 'overdue')">{{ t('teacher.today_overdue_tasks') }}</button>
+        <button v-if="deskCounts.plans" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-plans')">{{ t('teacher.today_review_plans') }}</button>
+      </div>
+    </section>
     <div class="teacher-overview-columns">
       <TeacherSectionPane :title="t('teacher.overview_need_look')" icon="bi bi-exclamation-circle" tone="warn" flat>
         <TeacherAttentionList :rows="attentionRows" :format-when="formatWhen" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
@@ -76,7 +84,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { scoreBadgeTone, studentInitial, teacherAttentionAction, teacherAttentionRank } from '../../scripts/teacher/formatters'
+import { scoreBadgeTone, studentInitial, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -103,8 +111,11 @@ export default {
     chartData: { type: Object, required: true },
     chartOptions: { type: Object, required: true },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'create-assignment'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'create-assignment'],
   computed: {
+    deskCounts() {
+      return teacherDeskCounts(this.overview)
+    },
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
     },

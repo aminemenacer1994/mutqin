@@ -27,6 +27,7 @@
           <TeacherNav
             variant="desktop"
             :items="TEACHER_NAV"
+            :counts="deskCounts"
             :active-view="view"
             style="--dash-delay: 40ms"
             @select="openView"
@@ -65,6 +66,7 @@
               @assign-revision="openAssignRevision"
               @set-chart-days="setDays"
               @open-assignments="openAssignments"
+              @open-plans="openView('plans')"
               @create-assignment="startAssignment"
             />
 
@@ -82,6 +84,7 @@
               @queue-search="queueStudentSearch"
               @page="loadStudents"
               @open-student="openStudent"
+              @assign-selected="beginAssignStudents"
               @assign-revision="openAssignRevision"
             />
 
@@ -140,6 +143,7 @@
               :overview="overview"
               :format-when="formatWhen"
               @open-student="openStudent"
+              @open-assignments="openAssignments"
             />
 
             <TeacherSettingsSection
@@ -149,19 +153,21 @@
               :student-initial="studentInitial"
               :practice-url="practiceUrl"
               :profile-url="profileUrl"
+              :groups="teacherGroups"
+              @export="exportStudentProgress"
             />
               </div>
           </div>
         </div>
 
-        <TeacherNav variant="mobile" :items="TEACHER_NAV" :active-view="view" @select="openView" />
+        <TeacherNav variant="mobile" :items="TEACHER_NAV" :counts="deskCounts" :active-view="view" @select="openView" />
       </template>
     </div>
   </div>
 </template>
 
 <script>
-import { provide } from 'vue'
+import { computed, provide } from 'vue'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
 import TeacherPlansView from '../components/teacher/TeacherPlansView.vue'
@@ -173,6 +179,7 @@ import TeacherSettingsSection from '../components/teacher/TeacherSettingsSection
 import TeacherStudentProfileSection from '../components/teacher/TeacherStudentProfileSection.vue'
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
 import { useTeacherDashboard } from '../scripts/composables/useTeacherDashboard'
+import { teacherDeskCounts } from '../scripts/teacher/formatters'
 
 export default {
   name: 'TeacherDashboard',
@@ -193,6 +200,7 @@ export default {
   },
   setup(props) {
     const dashboard = useTeacherDashboard(props.auth)
+    const deskCounts = computed(() => teacherDeskCounts(dashboard.overview.value))
     provide('teacherSurahs', dashboard.surahs)
     provide('openTeacherStudent', dashboard.openStudent)
     function updateFilters(next) {
@@ -215,6 +223,7 @@ export default {
     }
     return {
       ...dashboard,
+      deskCounts,
       updateFilters,
       onProfileSection,
       openAssignments,

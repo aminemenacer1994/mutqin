@@ -31,6 +31,21 @@
           <i class="bi bi-chevron-right teacher-account__link-chevron ms-auto" aria-hidden="true"></i>
         </a>
       </nav>
+      <div class="card-body border-top">
+        <h2 class="h6">{{ t('teacher.account_classes') }}</h2>
+        <ul v-if="classes.length" class="list-unstyled mb-0">
+          <li v-for="group in classes" :key="group.id">
+            <strong>{{ group.name }}</strong>
+            <span> · {{ t('teacher.account_class_students', { n: group.authorised_students || 0 }) }}</span>
+          </li>
+        </ul>
+        <p v-else class="mb-0">{{ t('teacher.account_classes_empty') }}</p>
+      </div>
+      <div class="card-body border-top">
+        <h2 class="h6">{{ t('teacher.account_export') }}</h2>
+        <p>{{ t('teacher.account_export_help') }}</p>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('export')">{{ t('teacher.account_export') }}</button>
+      </div>
     </div>
   </section>
 </template>
@@ -47,6 +62,13 @@ export default {
     studentInitial: { type: Function, required: true },
     practiceUrl: { type: String, required: true },
     profileUrl: { type: String, required: true },
+    groups: { type: Array, default: () => [] },
+  },
+  emits: ['export'],
+  computed: {
+    classes() {
+      return this.groups.filter((group) => group.teaches !== false)
+    },
   },
 }
 </script>

@@ -77,6 +77,8 @@
               <span class="teacher-task-row__meta d-flex flex-wrap gap-1">
                 <span class="badge rounded-pill text-bg-light border">{{ item.categoryLabel }}</span>
                 <span class="badge rounded-pill text-bg-light border">{{ item.actionLabel }}</span>
+                <span v-if="item.assignedOn" class="badge rounded-pill text-bg-light border">{{ item.assignedOn }}</span>
+                <span v-if="item.samePassageCount > 1" class="badge rounded-pill text-bg-light border">{{ t('teacher.task_same_passage', { n: item.samePassageCount - 1 }) }}</span>
                 <span v-if="item.status === 'completed' && item.completionEvidence" class="badge rounded-pill text-bg-success">{{ item.completionEvidence }}</span>
                 <template v-else>
                   <span v-if="item.dueText" class="badge rounded-pill text-bg-light border">{{ item.dueText }}</span>
@@ -94,19 +96,17 @@
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                 <span class="visually-hidden">{{ t('teacher.conversation') }}</span>
               </button>
-              <button v-if="canReviewPlayback(item)" type="button" class="btn btn-sm btn-primary teacher-task-row__review" :aria-label="`${t('teacher.playback_open')}: ${item.studentName}`" @click="openPlayback(item)">{{ t('teacher.playback_open') }}</button>
-              <button v-else-if="item.evidence?.audio?.available || item.evidence?.transcript" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="t('teacher.open_session_review')" :title="t('teacher.open_session_review')" @click="openMessages(item)"><i class="bi bi-play-circle" aria-hidden="true"></i></button>
-              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_edit')} ${item.studentName}`" :title="t('teacher.task_edit')" @click="$emit('edit', item.sourceRow)">
-                <i class="bi bi-pencil" aria-hidden="true"></i>
-                <span class="visually-hidden">{{ t('teacher.task_edit') }}</span>
-              </button>
-              <button v-if="item.canManage" type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_remove_prompt')} ${item.studentName}`" :title="t('teacher.task_remove_prompt')" @click="openRemove(item)">
-                <i class="bi bi-trash" aria-hidden="true"></i>
-                <span class="visually-hidden">{{ t('teacher.task_remove_prompt') }}</span>
-              </button>
-              <button v-else-if="item.studentId" type="button" class="teacher-task-row__go" :aria-label="`${t('teacher.open')} ${item.studentName}`" @click="$emit('open-student', item.studentId)">
-                <i class="bi bi-chevron-right teacher-task-row__chev" aria-hidden="true"></i>
-              </button>
+              <button v-if="canReviewPlayback(item)" type="button" class="btn btn-sm btn-primary teacher-task-row__review" :aria-label="`${t('teacher.task_review_submission')}: ${item.studentName}`" @click="openPlayback(item)">{{ t('teacher.task_review_submission') }}</button>
+              <button v-else-if="item.studentId" type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('open-student', item.studentId, 'tasks', { taskId: item.recipientId })">{{ item.taskStateDisplay === 'DONE' ? t('teacher.task_view_results') : t('teacher.task_view') }}</button>
+              <div v-if="item.canManage" class="teacher-plan-menu">
+                <button type="button" class="btn btn-sm teacher-task-row__manage teacher-task-row__manage--icon teacher-plan-menu__toggle" :aria-expanded="taskMenuKey === item.key ? 'true' : 'false'" :aria-label="t('teacher.task_more')" @click.stop="taskMenuKey = taskMenuKey === item.key ? null : item.key">
+                  <i class="bi bi-three-dots" aria-hidden="true"></i>
+                </button>
+                <div v-if="taskMenuKey === item.key" class="teacher-plan-menu__list" role="menu">
+                  <button type="button" role="menuitem" @click="taskMenuKey = null; $emit('edit', item.sourceRow)">{{ t('teacher.task_edit') }}</button>
+                  <button type="button" role="menuitem" @click="taskMenuKey = null; openRemove(item)">{{ t('teacher.task_remove') }}</button>
+                </div>
+              </div>
               </span>
             </span>
           </div>
@@ -194,7 +194,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
+import { assignmentPassageKey, assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
   formatTaskDueUrgency,
@@ -251,13 +251,17 @@ export default {
       reviewSaving: false,
       playbackItem: null,
       compactView: false,
+      taskMenuKey: null,
     }
   },
   mounted() {
     try { this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1' } catch { /* Storage is optional. */ }
+    this.closeTaskMenu = () => { this.taskMenuKey = null }
+    document.addEventListener('click', this.closeTaskMenu)
   },
   beforeUnmount() {
     if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+    document.removeEventListener('click', this.closeTaskMenu)
   },
   computed: {
     hasActiveTaskFilters() { return Boolean(this.query || this.statusFilter !== 'all') },
@@ -322,9 +326,17 @@ export default {
             evidence: recipient.evidence || null,
             messages: Array.isArray(recipient.messages) ? recipient.messages : [],
             occurredAt: recipient.updated_at || assignment.created_at || '',
+            assignedOn: assignment.created_at ? formatTeacherWhen(assignment.created_at) : '',
+            passageKey: assignmentPassageKey({ studentId: recipient.student_id, assignment }),
           }
         })
       })
+    },
+    passageCounts() {
+      return this.flatItems.reduce((counts, item) => {
+        counts.set(item.passageKey, (counts.get(item.passageKey) || 0) + 1)
+        return counts
+      }, new Map())
     },
     filteredItems() {
       const needle = this.query.trim().toLowerCase()
@@ -354,7 +366,7 @@ export default {
         const dateA = Date.parse(a.occurredAt || '') || 0
         const dateB = Date.parse(b.occurredAt || '') || 0
         return dateB - dateA || String(b.key).localeCompare(String(a.key), undefined, { numeric: true })
-      })
+      }).map((item) => ({ ...item, samePassageCount: this.passageCounts.get(item.passageKey) || 1 }))
     },
     visibleItems() {
       return this.filteredItems.slice(0, this.shown)

@@ -7,6 +7,13 @@
         <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
       </div>
     </header>
+    <section v-if="deskCounts.reviews || deskCounts.overdue" class="teacher-priorities">
+      <p>{{ t('teacher.today_priorities_summary', deskCounts) }}</p>
+      <div class="teacher-priorities__actions">
+        <button v-if="deskCounts.reviews" type="button" class="btn btn-primary btn-sm" @click="$emit('open-assignments', 'submitted')">{{ t('teacher.today_review_submissions') }}</button>
+        <button v-if="deskCounts.overdue" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-assignments', 'overdue')">{{ t('teacher.today_overdue_tasks') }}</button>
+      </div>
+    </section>
 
     <div v-if="!overview" class="teacher-skeletons" role="status">
       <div class="teacher-skeleton"></div>
@@ -80,7 +87,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { studentInitial } from '../../scripts/teacher/formatters'
+import { studentInitial, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 
 export default {
@@ -91,8 +98,11 @@ export default {
     overview: { type: Object, default: null },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['open-student'],
+  emits: ['open-student', 'open-assignments'],
   computed: {
+    deskCounts() {
+      return teacherDeskCounts(this.overview)
+    },
     recent() {
       return this.overview?.recent_ai || []
     },

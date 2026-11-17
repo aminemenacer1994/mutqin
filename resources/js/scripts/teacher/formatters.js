@@ -229,6 +229,28 @@ export function attentionReasonTags(student, t) {
   return tags
 }
 
+/** Shared overview counts. Reviews are submitted tasks waiting for the teacher. */
+export function teacherDeskCounts(overview = {}) {
+  const assignments = overview?.assignments || {}
+  const kpis = overview?.kpis || {}
+  return {
+    reviews: Number(assignments.awaiting_confirmation || 0),
+    overdue: Number(kpis.overdue_assignments ?? assignments.overdue ?? 0),
+    plans: Number(kpis.open_recommendations || 0),
+  }
+}
+
+export function assignmentPassageKey(item) {
+  const assignment = item?.assignment || {}
+  return [
+    item?.studentId || '',
+    assignment.surah_number || '',
+    assignment.ayah_start || '',
+    assignment.ayah_end || '',
+    assignment.kind || '',
+  ].join(':')
+}
+
 export function attentionReasons(student, t) {
   return attentionReasonTags(student, t).map((tag) => tag.label)
 }

@@ -46,8 +46,10 @@
               </label>
             </div>
           </div>
+          <p v-if="row.status === 'pending'" class="teacher-plan-detail__notes">{{ t('teacher.plan_accept_help') }}</p>
           <div class="teacher-plan-detail__actions teacher-plan-detail__actions--primary">
             <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="runRecommendationPrimary(row)">{{ recommendationPrimary(row).label }}</button>
+            <button v-if="recommendationPrimary(row).id !== 'save' && row.status !== 'assigned' && row.status !== 'dismissed'" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="runRecommendationMenu(row, 'edit')">{{ editingRecommendationId === row.id ? t('teacher.plan_recommendation_save') : t('teacher.plan_edit_recommendation') }}</button>
             <div v-if="recommendationMenu(row).length" class="teacher-plan-menu">
               <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="recommendationMenuId === row.id ? 'true' : 'false'" :aria-label="t('teacher.plan_recommendation_menu')" @click.stop="recommendationMenuId = recommendationMenuId === row.id ? null : row.id">
                 <i class="bi bi-three-dots" aria-hidden="true"></i>
@@ -703,31 +705,18 @@ export default {
       if (assignmentId && row.status !== 'dismissed') {
         return { id: 'view_task', label: this.t('teacher.task_view'), assignmentId }
       }
-      if (attemptId && row.status === 'pending' && ['previous_revision', 'previous_feedback'].includes(row.reason_code)) {
-        return { id: 'review_recitation', label: this.t('teacher.overview_action_review'), attemptId }
-      }
       if (this.editingRecommendationId === row.id && row.status !== 'assigned') {
         return { id: 'save', label: this.t('teacher.plan_recommendation_save') }
       }
-      if (row.status === 'accepted') return { id: 'assign', label: this.t('teacher.playback_assign_revision') }
-      return { id: 'review', label: this.t('teacher.plan_recommendation_review') }
+      return { id: 'assign', label: this.t('teacher.playback_assign_revision'), attemptId }
     },
     recommendationMenu(row) {
       const primary = this.recommendationPrimary(row).id
       const items = []
-      if (!['save', 'review'].includes(primary) && row.status !== 'assigned' && row.status !== 'dismissed') {
-        items.push({ id: 'edit', label: this.editingRecommendationId === row.id ? this.t('teacher.plan_recommendation_save') : this.t('teacher.plan_edit_recommendation') })
-      }
-      if (primary !== 'accept' && row.status === 'pending') items.push({ id: 'accept', label: this.t('teacher.plan_accept') })
-      const linkedTask = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
-      if (primary !== 'assign' && row.status === 'accepted' && !linkedTask) {
-        items.push({ id: 'assign', label: this.t('teacher.playback_assign_revision') })
-      }
+      const attemptId = row?.evidence?.attempt_id || null
+      if (row.status === 'pending') items.push({ id: 'accept', label: this.t('teacher.plan_accept') })
+      if (attemptId && primary !== 'review_recitation') items.push({ id: 'review_recitation', label: this.t('teacher.overview_action_review') })
       if (row.status === 'pending' || row.status === 'accepted') items.push({ id: 'dismiss', label: this.t('teacher.plan_dismiss') })
-      if (primary !== 'view_task') {
-        const assignmentId = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
-        if (assignmentId) items.push({ id: 'view_task', label: this.t('teacher.task_view') })
-      }
       return items
     },
     runRecommendationPrimary(row) {
@@ -755,6 +744,10 @@ export default {
       if (id === 'accept') return this.acceptRecommendation(row)
       if (id === 'dismiss') return this.dismissRecommendation(row)
       if (id === 'assign') return this.assignRecommendation(row)
+      if (id === 'review_recitation') {
+        this.reviewAttemptId = row?.evidence?.attempt_id || null
+        return
+      }
       if (id === 'view_task') {
         const assignmentId = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
         this.$emit('open-task', { studentId: this.studentId || row.student_id, assignmentId })

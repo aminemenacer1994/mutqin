@@ -12,7 +12,14 @@
     <form :id="formId" class="teacher-task-form" @submit.prevent="submit">
       <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
       <div class="teacher-form-grid teacher-form-grid--task">
-        <div class="teacher-form-field teacher-form-field--half">
+        <div v-if="bulkStudents.length" class="teacher-form-field teacher-form-field--full">
+          <p class="form-label mb-1">{{ t('teacher.task_bulk_selected', { n: bulkStudents.length }) }}</p>
+          <p class="mb-2">{{ t('teacher.task_bulk_confirm') }}</p>
+          <ul class="mb-0">
+            <li v-for="student in bulkStudents" :key="student.id">{{ student.name }}</li>
+          </ul>
+        </div>
+        <div v-else class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-student`">{{ t('teacher.student') }}</label>
           <div class="teacher-task-modal__student-picker">
             <input
@@ -168,7 +175,7 @@ export default {
       this.initialForm = JSON.stringify(this.form)
       this.syncStudentQuery()
       this.studentOptionsOpen = false
-      this.$nextTick(() => (this.editing ? this.$refs.categoryField : this.$refs.studentField)?.focus({ preventScroll: true }))
+      this.$nextTick(() => (this.editing || this.bulkStudents.length ? this.$refs.categoryField : this.$refs.studentField)?.focus({ preventScroll: true }))
     },
   },
   beforeUnmount() { window.clearTimeout(this.studentBlurTimer) },
@@ -177,6 +184,11 @@ export default {
     filteredStudents() {
       const needle = this.studentQuery.trim().toLocaleLowerCase()
       return this.students.filter((student) => student.name.toLocaleLowerCase().includes(needle)).slice(0, 10)
+    },
+    bulkStudents() {
+      const ids = Array.isArray(this.form.student_ids) ? this.form.student_ids : []
+      if (ids.length < 2) return []
+      return ids.map((id) => this.students.find((student) => String(student.id) === String(id)) || { id, name: String(id) })
     },
     selectedSurah() {
       return this.surahs.find((surah) => String(surah.number) === String(this.form.surah_number)) || null
@@ -223,7 +235,7 @@ export default {
     canSubmit() {
       const target = Number(this.form.repetition_target)
       return Boolean(
-        this.form.student_id
+        (this.form.student_id || this.bulkStudents.length)
         && this.form.task_type
         && this.form.hifz_category
         && this.form.surah_number

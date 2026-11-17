@@ -266,6 +266,7 @@ export function useTeacherDashboard(authRef) {
     }
     if (nextView === 'reviews' && !overview.value) loadOverview()
     if (nextView === 'overview') loadOverview()
+    if (nextView === 'settings') loadTeacherGroups()
   }
 
   function openStudentsFromKpi(key) {
@@ -566,15 +567,50 @@ export function useTeacherDashboard(authRef) {
       priority: assignment.value.priority || 'normal',
       feedback: assignment.value.feedback || null,
     }
-    if (!editingAssignmentId.value) payload.student_id = Number(assignment.value.student_id)
+    const studentIds = !editingAssignmentId.value && Array.isArray(assignment.value.student_ids) && assignment.value.student_ids.length
+      ? [...new Set(assignment.value.student_ids.map((id) => Number(id)).filter((id) => id > 0))]
+      : [Number(assignment.value.student_id)]
     try {
-      if (editingAssignmentId.value) await learningApi.updateTeacherAssignment(editingAssignmentId.value, payload)
-      else await learningApi.createTeacherAssignment(payload)
+      if (editingAssignmentId.value) {
+        await learningApi.updateTeacherAssignment(editingAssignmentId.value, payload)
+      } else {
+        const failures = []
+        let created = 0
+        for (const studentId of studentIds) {
+          const name = assignmentRoster.value.find((student) => Number(student.id) === studentId)?.name
+            || students.value.find((student) => Number(student.id) === studentId)?.name
+            || String(studentId)
+          const duplicate = assignmentRows.value.some((row) => {
+            const source = row.assignment || {}
+            return source.kind === payload.kind
+              && Number(source.surah_number) === payload.surah_number
+              && Number(source.ayah_start) === payload.ayah_start
+              && Number(source.ayah_end) === payload.ayah_end
+              && (row.recipients || []).some((recipient) => Number(recipient.student_id) === studentId && recipient.status !== 'completed')
+          })
+          if (duplicate) {
+            failures.push(t('teacher.task_bulk_skipped', { name }))
+            continue
+          }
+          try {
+            await learningApi.createTeacherAssignment({ ...payload, student_id: studentId })
+            created += 1
+          } catch (err) {
+            failures.push(teacherErrorMessage(err, t) || t('teacher.task_bulk_failed', { name }))
+          }
+        }
+        if (!created && failures.length) {
+          formError.value = failures.join(' ')
+          return
+        }
+        formSuccess.value = studentIds.length > 1 ? t('teacher.task_bulk_done', { n: created }) : t('teacher.assign_success')
+        if (failures.length) formError.value = failures.join(' ')
+      }
       const wasEditing = Boolean(editingAssignmentId.value)
       editingAssignmentId.value = null
       assignment.value = { ...defaultAssignmentForm(surahs.value), surah_number: assignment.value.surah_number }
       assignmentFormOpen.value = false
-      formSuccess.value = wasEditing ? t('teacher.task_updated') : t('teacher.assign_success')
+      if (wasEditing) formSuccess.value = t('teacher.task_updated')
       await loadAssignments()
       await loadOverview()
     } catch (err) {
@@ -582,6 +618,51 @@ export function useTeacherDashboard(authRef) {
     } finally {
       assignmentSaving.value = false
     }
+  }
+
+  function beginAssignStudents(ids = []) {
+    const unique = [...new Set((ids || []).map((id) => String(id)).filter(Boolean))]
+    if (!unique.length) return
+    beginCreateAssignment()
+    assignment.value = { ...assignment.value, student_id: unique[0], student_ids: unique }
+    openView('assignments')
+  }
+
+  async function exportStudentProgress() {
+    const rows = []
+    let page = 1
+    let lastPage = 1
+    do {
+      const payload = await learningApi.getTeacherStudents({ page, per_page: 50 })
+      rows.push(...(payload.data || []))
+      lastPage = Number(payload.meta?.last_page || 1)
+      page += 1
+    } while (page <= lastPage)
+    const lines = [[
+      'Name',
+      'AI wording match',
+      'Wording checks',
+      'Overdue tasks',
+      'Submissions awaiting review',
+      'Last activity',
+    ].join(',')]
+    rows.forEach((student) => {
+      const cells = [
+        student.name || '',
+        student.ai_success_rate ?? '',
+        student.ai_attempts ?? '',
+        student.assignments?.overdue ?? 0,
+        student.assignments?.awaiting_confirmation ?? 0,
+        student.last_activity_at || '',
+      ].map((value) => `"${String(value).replaceAll('"', '""')}"`)
+      lines.push(cells.join(','))
+    })
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'mutqin-student-progress.csv'
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   async function removeAssignment(id) {
@@ -713,6 +794,8 @@ export function useTeacherDashboard(authRef) {
     loadProfile,
     metric,
     beginCreateAssignment,
+    beginAssignStudents,
+    exportStudentProgress,
     beginEditAssignment,
     beginEditStudentTask,
     refreshStudentProfile,

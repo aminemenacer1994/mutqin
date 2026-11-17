@@ -12,6 +12,7 @@
       >
         <i :class="item.icon" aria-hidden="true"></i>
         <span>{{ t(variant === 'mobile' && item.shortLabel ? item.shortLabel : item.label) }}</span>
+        <span v-if="countFor(item.id)" class="teacher-nav__badge" :aria-label="t('teacher.nav_count', { n: countFor(item.id) })">{{ countFor(item.id) }}</span>
       </button>
       <button
         type="button"
@@ -41,6 +42,7 @@ export default {
     },
     items: { type: Array, default: () => [] },
     activeView: { type: String, required: true },
+    counts: { type: Object, default: () => ({}) },
     navLabelKey: { type: String, default: 'teacher.nav_label' },
   },
   emits: ['select'],
@@ -55,6 +57,11 @@ export default {
     },
   },
   methods: {
+    countFor(id) {
+      if (id === 'reviews') return Number(this.counts.reviews || 0)
+      if (id === 'assignments') return Number(this.counts.overdue || 0)
+      return 0
+    },
     isActive(id) {
       if (id === 'students') return this.activeView === 'students' || this.activeView === 'student'
       return this.activeView === id

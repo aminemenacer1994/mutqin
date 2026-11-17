@@ -10,6 +10,7 @@ use App\Enums\LearningPlanStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationType;
+use App\Enums\RevisionRecommendationStatus;
 use App\Enums\TeacherNoteKind;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
@@ -20,6 +21,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
+use App\Models\RevisionRecommendation;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
@@ -103,6 +105,13 @@ class TeacherDashboardService
                     'overdue_revisions' => collect($metrics)->sum('revision_overdue'),
                     'outstanding_assignments' => $outstanding,
                     'overdue_assignments' => $assignments['overdue'],
+                    'open_recommendations' => RevisionRecommendation::query()
+                        ->where('teacher_id', $teacher->id)
+                        ->whereIn('status', [
+                            RevisionRecommendationStatus::Pending->value,
+                            RevisionRecommendationStatus::Accepted->value,
+                        ])
+                        ->count(),
                     'completion_rate' => $completionRate,
                 ],
                 'stage_distribution' => $this->stageDistribution($metrics),

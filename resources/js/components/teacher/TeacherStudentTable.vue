@@ -2,6 +2,9 @@
   <div class="teacher-table-shell" :class="{ 'is-compact': compact }">
     <div class="teacher-student-cards" role="list" :aria-label="t('teacher.nav_students')">
       <article v-for="student in students" :key="`mobile-${student.id}`" class="teacher-student-card" :class="rowClasses(student)" role="listitem">
+        <label class="teacher-student-card__select">
+          <input type="checkbox" :checked="isSelected(student.id)" :aria-label="t('teacher.select_student', { name: student.name })" @change="$emit('toggle', student.id)">
+        </label>
         <button type="button" class="teacher-student-card__main" :aria-label="rowLabel(student)" @click="$emit('open', student.id)">
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
           <span class="teacher-student-card__identity">
@@ -37,6 +40,7 @@
     <table class="table align-middle mb-0 teacher-table teacher-table--students" :aria-label="t('teacher.nav_students')">
       <thead class="table-light">
         <tr>
+          <th scope="col"><span class="visually-hidden">{{ t('teacher.select_student', { name: '' }) }}</span></th>
           <th scope="col">{{ t('teacher.col_name') }}</th>
           <th scope="col" class="text-center">{{ t('teacher.ai_check_average') }}</th>
           <th scope="col" class="text-center">{{ t('teacher.follow_up_reason') }}</th>
@@ -57,6 +61,9 @@
         @keydown.enter.prevent="$emit('open', student.id)"
         @keydown.space.prevent="$emit('open', student.id)"
       >
+        <td class="teacher-table__cell" @click.stop>
+          <input type="checkbox" :checked="isSelected(student.id)" :aria-label="t('teacher.select_student', { name: student.name })" @change="$emit('toggle', student.id)">
+        </td>
         <td class="teacher-table__cell teacher-table__cell--name">
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
           <span class="teacher-table__identity">
@@ -109,8 +116,9 @@ export default {
     students: { type: Array, default: () => [] },
     formatWhen: { type: Function, required: true },
     compact: { type: Boolean, default: false },
+    selected: { type: Array, default: () => [] },
   },
-  emits: ['open'],
+  emits: ['open', 'toggle'],
   data() {
     return { hasOverflow: false, canScrollLeft: false, canScrollRight: false }
   },
@@ -177,6 +185,9 @@ export default {
       const wrap = this.$refs.tableWrap
       if (!wrap) return
       wrap.scrollBy({ left: direction * Math.max(240, wrap.clientWidth * 0.65), behavior: 'smooth' })
+    },
+    isSelected(id) {
+      return this.selected.map(String).includes(String(id))
     },
     updateOverflow() {
       const wrap = this.$refs.tableWrap

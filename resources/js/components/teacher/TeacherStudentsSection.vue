@@ -72,13 +72,23 @@
       {{ t('teacher.loading') }}
     </p>
     <TeacherEmpty v-else-if="!students.length" icon="bi bi-people" :message="t(hasFilters ? 'teacher.students_filter_empty' : 'teacher.students_empty')" />
+    <template v-else>
+    <div v-if="selectedIds.length" class="teacher-priorities">
+      <p>{{ t('teacher.task_bulk_selected', { n: selectedIds.length }) }}</p>
+      <div class="teacher-priorities__actions">
+        <button type="button" class="btn btn-primary btn-sm" @click="$emit('assign-selected', selectedIds)">{{ t('teacher.task_bulk_assign') }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @click="selectedIds = []">{{ t('teacher.clear') }}</button>
+      </div>
+    </div>
     <TeacherStudentTable
-      v-else
       :students="students"
       :format-when="formatWhen"
       :compact="compactView"
+      :selected="selectedIds"
       @open="$emit('open-student', $event)"
+      @toggle="toggleStudent"
     />
+    </template>
     <nav v-if="pageCount > 1" class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2" :aria-label="t('teacher.pagination_label')">
       <span class="teacher-pagination__summary">
         {{ t('teacher.pagination_summary', { page: currentPage, pages: pageCount, total: meta.total || 0 }) }}
@@ -110,9 +120,9 @@ export default {
     loadingMore: { type: Boolean, default: false },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision'],
+  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision', 'assign-selected'],
   data() {
-    return { compactView: true }
+    return { compactView: true, selectedIds: [] }
   },
   mounted() {
     try {
@@ -144,6 +154,12 @@ export default {
     resetFilters() {
       this.$emit('update:filters', { ...this.filters, q: '', activity: '', performance: '', attention: '', sort: 'name' })
       this.$emit('search')
+    },
+    toggleStudent(id) {
+      const key = String(id)
+      this.selectedIds = this.selectedIds.includes(key)
+        ? this.selectedIds.filter((item) => item !== key)
+        : [...this.selectedIds, key]
     },
     onQueryInput(event) {
       this.$emit('update:filters', { ...this.filters, q: event.target.value })
