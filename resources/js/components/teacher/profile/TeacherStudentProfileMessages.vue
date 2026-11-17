@@ -129,6 +129,7 @@ export default {
       threadRequest: 0,
       disposed: false,
       stickToBottom: true,
+      savedScroll: 0,
       visibleCount: PAGE_SIZE,
       restoring: false,
       voiceState: { hasRecording: false, active: false },
@@ -192,6 +193,15 @@ export default {
   updated() {
     if (this.stickToBottom) this.scrollThread()
   },
+  deactivated() {
+    this.savedScroll = this.$refs.thread?.scrollTop || 0
+  },
+  activated() {
+    this.$nextTick(() => {
+      const thread = this.$refs.thread
+      if (thread && Number.isFinite(this.savedScroll)) thread.scrollTop = this.savedScroll
+    })
+  },
   beforeUnmount() {
     this.disposed = true
     this.threadRequest += 1
@@ -241,13 +251,16 @@ export default {
       const recording = this.$refs.voice?.recordingPayload?.() || null
       if ((!body && !recording) || this.saving) return
       const studentId = this.profile.student.id
+      const recipientId = this.taskContext?.recipientId || null
       this.saving = true
       this.error = ''
       this.success = ''
       try {
-        const payload = await learningApi.sendTeacherStudentMessage(studentId, body, recording)
+        const payload = recipientId
+          ? await learningApi.sendTeacherAssignmentMessage(recipientId, body, recording)
+          : await learningApi.sendTeacherStudentMessage(studentId, body, recording)
         if (this.disposed || studentId !== this.profile.student.id) return
-        if (payload?.message) this.sent.push(payload.message)
+        if (!recipientId && payload?.message) this.sent.push(payload.message)
         this.draft = ''
         this.$refs.voice?.discardRecording()
         this.success = this.t('teacher.message_sent')
@@ -257,6 +270,7 @@ export default {
       } finally {
         if (!this.disposed && studentId === this.profile.student.id) this.saving = false
       }
+      if (recipientId && !this.disposed && studentId === this.profile.student.id) this.refreshThread()
     },
     async deleteMessage(message) {
       if (!message?.id || this.deletingId) return

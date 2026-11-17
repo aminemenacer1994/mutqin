@@ -99,11 +99,13 @@
             :focus-task-id="resolvedFocusTaskId"
             :initial-filter="taskFocus && taskFocus.filter ? taskFocus.filter : ''"
             :ready="!sectionRefreshing"
+            :return-to-messages="messageReturn"
             @assign-revision="$emit('assign-revision', $event)"
             @refresh="$emit('refresh')"
             @edit-task="$emit('edit-task', $event)"
             @open-messages="openMessages"
             @open-plan="selectTab('plan')"
+            @return-to-messages="returnToMessages"
             @unsent-change="unsent.tasks = $event"
           />
           <TeacherStudentProfileMessages
@@ -199,6 +201,7 @@ export default {
       leaveConfirm: false,
       focusTaskId: null,
       messageContext: null,
+      messageReturn: false,
       unsent: { tasks: false, messages: false },
       messageUnread: null,
     }
@@ -320,11 +323,17 @@ export default {
       this.selectTab('messages')
     },
     openTask(context) {
+      const fromMessages = this.section === 'messages'
       this.$emit('clear-focus')
       const id = context?.recipientId || context?.assignmentId || null
       this.focusTaskId = null
       this.$nextTick(() => { this.focusTaskId = id })
       this.selectTab('tasks')
+      this.messageReturn = fromMessages
+    },
+    returnToMessages() {
+      this.messageReturn = false
+      this.selectTab('messages')
     },
     openReviewConfirm(payload) { this.reviewConfirm = payload },
     closeReviewConfirm() { this.reviewConfirm = null },
@@ -358,6 +367,7 @@ export default {
       this.selectTab(nextTab.id, true)
     },
     selectTab(id, focus = false) {
+      if (id !== 'tasks') this.messageReturn = false
       this.$emit('change-section', id)
       this.$nextTick(() => {
         this.revealActiveTab(id)

@@ -30,6 +30,7 @@
     </header>
 
     <div v-if="ready" class="teacher-student-tasks__list">
+      <p v-if="missingTask" class="teacher-student-tasks__alert" role="status">{{ t('teacher.task_missing') }}</p>
       <p v-if="taskRows.length && !visibleRows.length" class="teacher-student-tasks__empty">{{ t('teacher.no_tasks_in_filter') }}</p>
       <div v-else-if="!taskRows.length" class="teacher-empty-panel teacher-empty-with-action">
         <TeacherEmpty inline icon="bi bi-clipboard-check" :message="t('teacher.student_tasks_empty')" />
@@ -129,6 +130,7 @@
 
       <TeacherTaskConversation
         v-if="selectedMessages.length"
+        id="teacher-task-feedback"
         :messages="selectedMessages"
         variant="teacher"
         viewer-role="teacher"
@@ -139,8 +141,10 @@
       <p v-else-if="actionNotice" class="teacher-student-tasks__notice" role="status">{{ actionNotice }}</p>
 
       <div class="teacher-student-tasks__actions">
+        <button v-if="returnToMessages" type="button" class="btn btn-outline-secondary btn-sm" @click="backToConversation">{{ t('teacher.task_back_to_messages') }}</button>
         <button v-if="canReviewSubmission" type="button" class="btn btn-primary btn-sm" @click="openReview(reviewAttemptId)">{{ t('teacher.task_review_submission') }}</button>
         <button v-if="canGiveFeedback" type="button" class="btn btn-outline-secondary btn-sm" :aria-expanded="composing ? 'true' : 'false'" @click="toggleFeedback">{{ t('teacher.task_give_feedback') }}</button>
+        <button v-if="canViewFeedback" type="button" class="btn btn-outline-secondary btn-sm" @click="showFeedback">{{ t('teacher.task_view_feedback') }}</button>
         <button v-if="canRequestRevision" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(actionBusy)" @click="requestRevision">{{ t('teacher.task_request_revision') }}</button>
         <button v-if="canComplete" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(actionBusy)" @click="markComplete">{{ t('teacher.task_mark_complete') }}</button>
         <button v-if="canEdit" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('edit-task', selectedAssignment)">{{ t('teacher.task_edit') }}</button>
@@ -234,8 +238,9 @@ export default {
     focusTaskId: { type: [Number, String], default: null },
     initialFilter: { type: String, default: '' },
     ready: { type: Boolean, default: true },
+    returnToMessages: { type: Boolean, default: false },
   },
-  emits: ['assign-revision', 'refresh', 'edit-task', 'open-messages', 'open-plan', 'unsent-change'],
+  emits: ['assign-revision', 'refresh', 'edit-task', 'open-messages', 'open-plan', 'unsent-change', 'return-to-messages'],
   data() {
     return {
       activeFilter: 'all',
@@ -252,6 +257,7 @@ export default {
       filterReady: false,
       pendingTaskId: null,
       pendingClose: false,
+      missingTask: false,
       dueFieldId: `teacher-task-due-${Math.random().toString(36).slice(2, 8)}`,
     }
   },
@@ -322,11 +328,17 @@ export default {
     hasSubmission() {
       return this.submissions.length > 0
     },
+    reviewableLifecycle() {
+      return [TASK_LIFECYCLE.SUBMITTED, TASK_LIFECYCLE.NEEDS_REVIEW, TASK_LIFECYCLE.REVISION_REQUESTED].includes(this.lifecycle)
+    },
     canReviewSubmission() {
-      return Boolean(this.reviewAttemptId)
+      return this.reviewableLifecycle && Boolean(this.reviewAttemptId)
     },
     canGiveFeedback() {
-      return this.hasSubmission
+      return this.reviewableLifecycle && this.hasSubmission
+    },
+    canViewFeedback() {
+      return this.lifecycle === TASK_LIFECYCLE.COMPLETED && this.selectedMessages.length > 0
     },
     learningPlanLabel() {
       const plan = this.profile?.meta?.learning_plan
@@ -375,8 +387,10 @@ export default {
       const typeId = resolveTeacherTaskType(assignment.kind, assignment.hifz_category, assignment.activity)
       const submitted = Boolean(item.student_submitted_at || item.evidence?.attempt_id || (Array.isArray(item.attempts) && item.attempts.length))
       let primary = 'view'
-      if (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW && item.evidence?.attempt_id) primary = 'review'
-      else if (submitted && (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW || lifecycle === TASK_LIFECYCLE.SUBMITTED)) primary = 'feedback'
+      if (lifecycle === TASK_LIFECYCLE.COMPLETED) primary = 'results'
+      else if (lifecycle === TASK_LIFECYCLE.IN_PROGRESS) primary = 'progress'
+      else if (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW && item.evidence?.attempt_id) primary = 'review'
+      else if (submitted && (lifecycle === TASK_LIFECYCLE.NEEDS_REVIEW || lifecycle === TASK_LIFECYCLE.SUBMITTED || lifecycle === TASK_LIFECYCLE.REVISION_REQUESTED)) primary = 'feedback'
       const assigned = assignment.created_at ? this.t('teacher.task_assigned_on', { date: this.formatWhen(assignment.created_at) }) : ''
       const due = assignment.due_at ? this.t('teacher.task_due_date', { date: this.formatWhen(assignment.due_at) }) : this.t('teacher.no_due_date')
       return {
@@ -395,7 +409,12 @@ export default {
         statusLabel: this.t(taskLifecycleLabelKey(lifecycle)),
         overdue: taskIsOverdue(item),
         primary,
-        primaryLabel: this.t(primary === 'review' ? 'teacher.task_review_submission' : primary === 'feedback' ? 'teacher.task_give_feedback' : 'teacher.task_view'),
+        primaryLabel: this.t({
+          review: 'teacher.task_review_submission',
+          feedback: 'teacher.task_give_feedback',
+          progress: 'teacher.task_view_progress',
+          results: 'teacher.task_view_results',
+        }[primary] || 'teacher.task_view'),
       }
     },
     submissionRows(item) {
@@ -432,7 +451,19 @@ export default {
       if (id === null || id === undefined || id === '') return
       if (!force && this.selectedTaskKey) return
       const match = this.assignments.find((item) => String(item.id) === String(id) || String(item.assignment?.id) === String(id))
-      if (match) this.openTask(match.id)
+      if (match) {
+        this.missingTask = false
+        this.openTask(match.id)
+        return
+      }
+      if (force && this.ready) this.missingTask = true
+    },
+    backToConversation() {
+      this.closeTask()
+      this.$emit('return-to-messages')
+    },
+    showFeedback() {
+      document.getElementById('teacher-task-feedback')?.scrollIntoView({ block: 'nearest' })
     },
     chooseTask(id) {
       if (String(id) === String(this.selectedTaskKey)) return
