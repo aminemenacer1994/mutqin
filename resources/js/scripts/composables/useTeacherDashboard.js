@@ -44,7 +44,7 @@ export function useTeacherDashboard(authRef) {
   const filters = ref(defaultStudentFilters())
   const searchTimer = ref(null)
   const profile = ref(null)
-  const profileSection = ref('ai')
+  const profileSection = ref('profile')
   const profileLearningSubview = ref('recite')
   const profileLoading = ref(false)
   const profileSectionPayloads = ref({})
@@ -260,6 +260,7 @@ export function useTeacherDashboard(authRef) {
       loadTeacherGroups()
       loadAssignments()
     }
+    if (nextView === 'reviews' && !overview.value) loadOverview()
   }
 
   function openStudentsFromKpi(key) {
@@ -387,9 +388,9 @@ export function useTeacherDashboard(authRef) {
 
   function canonicalProfileSection(section) {
     if (section === 'recite' || section === 'recitation' || section === 'revision' || section === 'focus' || section === 'weak') return 'ai'
-    if (section === 'overview' || section === 'practice' || section === 'memorisation' || section === 'learning' || section === 'history') return 'ai'
+    if (section === 'profile' || section === 'overview' || section === 'notes' || section === 'history' || section === 'practice' || section === 'memorisation' || section === 'learning') return 'profile'
     if (profileTabIds().includes(section)) return section
-    return 'ai'
+    return 'profile'
   }
 
   function learningSubviewFor(section) {
@@ -407,16 +408,16 @@ export function useTeacherDashboard(authRef) {
 
   function profileFetchSection(section) {
     if (section === 'revision') return 'focus'
-    if (section === 'plan') return 'overview'
+    if (section === 'plan' || section === 'profile') return 'overview'
     return section
   }
 
-  async function openStudent(id, section = 'ai') {
+  async function openStudent(id, section = 'profile') {
     view.value = 'student'
     await loadProfile(id, section, true)
   }
 
-  async function loadProfile(id, section = 'ai', pushHistory = false) {
+  async function loadProfile(id, section = 'profile', pushHistory = false) {
     const requestId = ++profileRequestId
     const resolved = resolveProfileSection(section)
     const studentKey = String(id)
@@ -590,7 +591,7 @@ export function useTeacherDashboard(authRef) {
     const params = new URLSearchParams(window.location.search)
     const urlView = params.get('view') || 'overview'
     view.value = TEACHER_VIEWS.includes(urlView) ? urlView : 'overview'
-    profileSection.value = resolveProfileSection(params.get('section') || 'ai')
+    profileSection.value = resolveProfileSection(params.get('section') || 'profile')
     const days = Number(params.get('days'))
     chartDays.value = TEACHER_CHART_DAY_OPTIONS.includes(days) ? days : 30
     filters.value = Object.fromEntries(
@@ -604,7 +605,7 @@ export function useTeacherDashboard(authRef) {
     if (view.value === 'assignments') await Promise.all([loadAssignments(), loadAssignmentRoster()])
     const params = new URLSearchParams(window.location.search)
     if (view.value === 'student' && params.get('student')) {
-      await loadProfile(params.get('student'), params.get('section') || 'ai')
+      await loadProfile(params.get('student'), params.get('section') || 'profile')
     }
   }
 

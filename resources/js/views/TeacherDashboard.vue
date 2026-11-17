@@ -36,7 +36,6 @@
             <p v-if="formError && view !== 'assignments'" class="alert alert-danger mb-0" role="alert">{{ formError }}</p>
             <p v-if="formSuccess && view !== 'assignments'" class="alert alert-success mb-0" role="status">{{ formSuccess }}</p>
 
-            <Transition name="teacher-view" mode="out-in">
               <div :key="view" class="teacher-view-stage">
             <TeacherHero
               v-if="view === 'overview'"
@@ -134,6 +133,13 @@
               @open-student="openStudent"
             />
 
+            <TeacherReviewsSection
+              v-else-if="view === 'reviews'"
+              :overview="overview"
+              :format-when="formatWhen"
+              @open-student="openStudent"
+            />
+
             <TeacherSettingsSection
               v-else
               :teacher="overview?.teacher"
@@ -143,7 +149,6 @@
               :profile-url="profileUrl"
             />
               </div>
-            </Transition>
           </div>
         </div>
 
@@ -161,6 +166,7 @@ import TeacherPlansView from '../components/teacher/TeacherPlansView.vue'
 import TeacherHero from '../components/teacher/TeacherHero.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import TeacherOverviewSection from '../components/teacher/TeacherOverviewSection.vue'
+import TeacherReviewsSection from '../components/teacher/TeacherReviewsSection.vue'
 import TeacherSettingsSection from '../components/teacher/TeacherSettingsSection.vue'
 import TeacherStudentProfileSection from '../components/teacher/TeacherStudentProfileSection.vue'
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
@@ -175,6 +181,7 @@ export default {
     TeacherHero,
     TeacherNav,
     TeacherOverviewSection,
+    TeacherReviewsSection,
     TeacherSettingsSection,
     TeacherStudentProfileSection,
     TeacherStudentsSection,

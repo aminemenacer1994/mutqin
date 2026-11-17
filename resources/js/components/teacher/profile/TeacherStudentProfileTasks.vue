@@ -10,7 +10,7 @@
           v-for="filter in progressFilters"
           :key="filter.id"
           type="button"
-          :class="{ 'is-active': activeFilter === filter.id }"
+          :class="['is-' + filter.id, { 'is-active': activeFilter === filter.id }]"
           :aria-pressed="activeFilter === filter.id ? 'true' : 'false'"
           @click="activeFilter = filter.id"
         >
@@ -41,22 +41,19 @@
         <li v-for="row in visibleRows" :key="row.key">
           <article class="teacher-student-tasks__row" :class="{ 'is-selected': String(row.key) === String(selectedTaskKey) }">
             <button type="button" class="teacher-student-tasks__open" @click="chooseTask(row.key)">
-              <span class="teacher-student-tasks__what">
-                <span class="teacher-student-tasks__type">
-                  <i :class="row.icon" aria-hidden="true"></i>
-                  {{ row.typeLabel }}
-                </span>
-                <strong>{{ row.title }}</strong>
+              <span class="teacher-student-tasks__type">
+                <i :class="row.icon" aria-hidden="true"></i>
+                {{ row.typeLabel }}
               </span>
-              <span class="teacher-student-tasks__note-col">
-                <span class="teacher-student-tasks__meta">{{ row.meta }}</span>
-                <span v-if="row.instructions" class="teacher-student-tasks__note">{{ row.instructions }}</span>
-              </span>
+              <strong>{{ row.title }}</strong>
+              <span v-if="row.instructions" class="teacher-student-tasks__note">{{ row.instructions }}</span>
             </button>
-            <div class="teacher-student-tasks__status">
+            <div class="teacher-student-tasks__pills">
+              <span v-if="row.assigned" class="teacher-fact teacher-fact--neutral">{{ row.assigned }}</span>
+              <span class="teacher-fact" :class="row.overdue ? 'teacher-fact--danger' : 'teacher-fact--warn'">{{ row.due }}</span>
+              <span v-if="row.progress" class="teacher-fact teacher-fact--info">{{ row.progress }}</span>
               <span class="teacher-badge" :class="`teacher-badge--${row.tone}`">{{ row.statusLabel }}</span>
               <span v-if="row.overdue" class="teacher-badge teacher-badge--danger">{{ t('teacher.overdue') }}</span>
-              <span v-if="row.progress" class="teacher-student-tasks__progress">{{ row.progress }}</span>
             </div>
             <button type="button" class="btn btn-sm" :class="row.primary === 'view' ? 'btn-outline-secondary' : 'btn-primary'" @click="runPrimary(row)">
               {{ row.primaryLabel }}
@@ -98,12 +95,12 @@
         </div>
       </dl>
 
-      <p v-if="selectedInstructions" class="teacher-student-tasks__instructions">
-        <strong>{{ t('teacher.assignment_instructions_label') }}</strong>
-        {{ selectedInstructions }}
-      </p>
+      <div v-if="selectedInstructions" class="teacher-student-tasks__instructions">
+        <span>{{ t('teacher.assignment_instructions_label') }}</span>
+        <p>{{ selectedInstructions }}</p>
+      </div>
       <p v-if="learningPlanLabel" class="teacher-student-tasks__plan">
-        {{ learningPlanLabel }}
+        <span>{{ learningPlanLabel }}</span>
         <button type="button" class="btn btn-link btn-sm" @click="$emit('open-plan')">{{ t('teacher.task_open_plan') }}</button>
       </p>
 
@@ -112,10 +109,10 @@
         <p v-if="!submissions.length" class="teacher-student-tasks__empty">{{ t('teacher.task_no_submission') }}</p>
         <ul v-else>
           <li v-for="submission in submissions" :key="submission.id">
-            <div>
+            <div class="teacher-student-tasks__submission-meta">
               <strong>{{ submission.when }}</strong>
-              <span v-if="submission.score !== null">{{ submission.score }}%</span>
-              <span v-if="submission.match">{{ t('teacher.task_words_matched', submission.match) }}</span>
+              <span v-if="submission.score !== null" class="teacher-fact" :class="submission.score >= 85 ? 'teacher-fact--good' : (submission.score >= 65 ? 'teacher-fact--warn' : 'teacher-fact--danger')">{{ submission.score }}%</span>
+              <span v-if="submission.match" class="teacher-fact teacher-fact--info">{{ t('teacher.task_words_matched', submission.match) }}</span>
             </div>
             <TeacherAudioFeedbackPlayer
               v-if="submission.audio?.available && submission.audio?.url"
@@ -373,6 +370,8 @@ export default {
         icon: assignment.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text',
         typeLabel: teacherTaskTypeLabel(typeId, this.t.bind(this)),
         title: `${assignment.surah_name || this.t('teacher.surah')} ${assignment.ayah_start}–${assignment.ayah_end}`,
+        assigned,
+        due,
         meta: [assigned, due].filter(Boolean).join(' · '),
         instructions: String(assignment.feedback || '').trim(),
         progress: item.progress ? assignmentProgressLabel(item, this.t.bind(this)) : '',

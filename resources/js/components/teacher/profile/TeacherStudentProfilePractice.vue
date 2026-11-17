@@ -65,7 +65,7 @@
         </section>
       </template>
 
-      <TeacherStudentProfilePlan v-else-if="activeSubview === 'plan'" :student-id="profile.student.id" />
+      <TeacherStudentProfilePlan v-else-if="activeSubview === 'plan'" :student-id="profile.student.id" :student-name="profile.student.name" />
     </div>
   </TeacherSectionPane>
 </template>
@@ -229,6 +229,10 @@ export default {
           this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks }),
           this.formatWhen(group.first?.last_identified_at),
         ].filter(Boolean).join(' · '),
+        pills: [
+          { label: this.t(group.maxChecks === 1 ? 'teacher.weak_spot_hint_one' : 'teacher.weak_spot_hint', { n: group.maxChecks }), tone: 'danger' },
+          this.formatWhen(group.first?.last_identified_at) ? { label: this.formatWhen(group.first?.last_identified_at), tone: 'neutral' } : null,
+        ].filter(Boolean),
         focusAyah: group.first?.ayah_number || null,
         reviewable: Boolean(group.first?.evidence),
         href: group.first?.evidence ? '' : (group.first?.evidence_url || ''),

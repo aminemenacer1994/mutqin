@@ -10,6 +10,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class RecitationDifficultyService
@@ -63,7 +64,7 @@ class RecitationDifficultyService
                 'student_email' => $student?->email,
                 'difficulty_count' => (int) $row->difficulty_count,
                 'last_identified_at' => $row->last_at
-                    ? \Illuminate\Support\Carbon::parse($row->last_at)->toIso8601String()
+                    ? Carbon::parse($row->last_at)->toIso8601String()
                     : null,
             ];
         })->values()->all();
@@ -176,6 +177,9 @@ class RecitationDifficultyService
         }
 
         // Never mutate AI attempt word_statuses / assessments from teacher review.
+        if ($status === MemorisationWeakSpot::REVIEW_CONFIRMED) {
+            app(RevisionRecommendationService::class)->sync($teacher, $student);
+        }
         $spot->loadCount('occurrences');
 
         return $this->present($spot->fresh(), includeHistory: true);

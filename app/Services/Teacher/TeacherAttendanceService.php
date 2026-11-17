@@ -9,6 +9,7 @@ use App\Models\LearningGroup;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherLesson;
 use App\Models\User;
+use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -123,6 +124,13 @@ class TeacherAttendanceService
             'lesson_date' => $date,
             'title' => $trimmed === '' ? ($existing?->title) : mb_substr($trimmed, 0, 120),
         ])->save();
+
+        $studentIds = GroupMembership::query()
+            ->where('learning_group_id', $group->id)
+            ->where('membership_role', MembershipRole::Student->value)
+            ->where('status', MembershipStatus::Approved->value)
+            ->pluck('user_id');
+        app(LearningTaskNotifier::class)->lessonScheduled($lesson, $studentIds);
 
         return $lesson->fresh();
     }

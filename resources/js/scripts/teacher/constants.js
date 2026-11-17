@@ -1,23 +1,23 @@
 import { defaultAyahRange } from './taskTypes'
 
-export const TEACHER_VIEWS = ['overview', 'students', 'student', 'plans', 'assignments', 'settings']
+export const TEACHER_VIEWS = ['overview', 'students', 'student', 'plans', 'assignments', 'reviews', 'settings']
 
 export const TEACHER_CHART_DAY_OPTIONS = [30, 90]
 
 export const TEACHER_NAV = [
   { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },
   { id: 'students', label: 'teacher.nav_students', icon: 'bi bi-people' },
-  { id: 'assignments', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
-  { id: 'plans', label: 'teacher.nav_plans', shortLabel: 'teacher.nav_plans_short', icon: 'bi bi-calendar-week' },
-  { id: 'settings', label: 'teacher.nav_settings', icon: 'bi bi-person' },
+  { id: 'assignments', label: 'teacher.nav_assignments_desk', shortLabel: 'teacher.nav_assignments_short', icon: 'bi bi-journal-text' },
+  { id: 'reviews', label: 'teacher.nav_reviews', shortLabel: 'teacher.nav_reviews_short', icon: 'bi bi-ear' },
 ]
 
 /** One profile tab row. Review is the working page: listen, then clear what is due. */
 export const TEACHER_PROFILE_TABS = [
+  { id: 'profile', label: 'teacher.tab_profile', icon: 'bi bi-person-lines-fill' },
   { id: 'ai', label: 'teacher.tab_recitations', icon: 'bi bi-ear' },
   { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-clipboard-check' },
-  { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
   { id: 'plan', label: 'teacher.tab_learning_plan', icon: 'bi bi-calendar-week' },
+  { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
 ]
 
 /** Views inside the Learning tab. Recite covers the old Recitation tab. */

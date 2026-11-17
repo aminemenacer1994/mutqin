@@ -13,6 +13,16 @@
         <i :class="item.icon" aria-hidden="true"></i>
         <span>{{ t(variant === 'mobile' && item.shortLabel ? item.shortLabel : item.label) }}</span>
       </button>
+      <button
+        type="button"
+        class="teacher-nav__link teacher-nav__account nav-link d-flex align-items-center gap-2 text-start"
+        :class="{ 'is-active': isActive('settings'), active: isActive('settings') }"
+        :aria-current="isActive('settings') ? 'page' : null"
+        @click="$emit('select', 'settings')"
+      >
+        <i class="bi bi-person" aria-hidden="true"></i>
+        <span>{{ t('teacher.nav_settings') }}</span>
+      </button>
     </nav>
   </aside>
 </template>

@@ -2,21 +2,25 @@
 
 namespace App\Providers;
 
+use App\Enums\TeacherNoteKind;
 use App\Listeners\LogBackupEvents;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\Organisation;
+use App\Models\TeacherNote;
+use App\Models\TeacherPrivateNote;
 use App\Models\User;
 use App\Policies\GroupMembershipPolicy;
 use App\Policies\LearningGroupPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\TeacherPrivateNotePolicy;
+use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
 use App\Support\PublicAppUrl;
 use App\Support\Registration\OrganisationRegistrationCatalog;
-use Illuminate\Support\Facades\View;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -24,6 +28,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Backup\Events\BackupHasFailed;
@@ -69,10 +74,19 @@ class AppServiceProvider extends ServiceProvider
             return $user instanceof User && $user->isSuperAdmin();
         });
 
+        TeacherNote::created(function (TeacherNote $note): void {
+            $kind = $note->kind instanceof TeacherNoteKind
+                ? $note->kind
+                : TeacherNoteKind::tryFrom((string) $note->kind);
+            if ($kind === TeacherNoteKind::Feedback) {
+                app(LearningTaskNotifier::class)->publishedFeedback($note);
+            }
+        });
+
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);
-        Gate::policy(\App\Models\TeacherPrivateNote::class, \App\Policies\TeacherPrivateNotePolicy::class);
+        Gate::policy(TeacherPrivateNote::class, TeacherPrivateNotePolicy::class);
         Gate::define('view-student-analytics', function (User $actor, User $student): bool {
             return app(StudentAccessAuthorizer::class)->allows($actor, $student);
         });

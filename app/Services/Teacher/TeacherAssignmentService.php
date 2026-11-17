@@ -4,10 +4,9 @@ namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
-use App\Enums\RevisionReminderPriority;
-use App\Support\TeacherTaskState;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\RevisionReminderPriority;
 use App\Enums\TeacherNoteKind;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
@@ -19,13 +18,17 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
-use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Services\Learning\LearningTaskNotifier;
+use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\RevisionReminders\RevisionReminderSyncService;
 use App\Support\LearnerCompletionAttempt;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use App\Support\TeacherRecitationWordEvidence;
+use App\Support\TeacherTaskState;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -147,6 +150,7 @@ class TeacherAssignmentService
 
             $loaded = $assignment->load('recipients');
             $this->syncRevisionRemindersForAssignment($loaded);
+            app(LearningTaskNotifier::class)->assignmentPublished($loaded);
 
             return $loaded;
         });
@@ -188,6 +192,7 @@ class TeacherAssignmentService
         return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind) {
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
+            $previousDue = $locked->due_at?->toDateString();
             $locked->forceFill([
                 'kind' => $kind->value,
                 'hifz_category' => $input['hifz_category'],
@@ -204,6 +209,9 @@ class TeacherAssignmentService
 
             $loaded = $locked->refresh()->load('recipients');
             $this->syncRevisionRemindersForAssignment($loaded);
+            if ($previousDue !== $loaded->due_at?->toDateString()) {
+                app(LearningTaskNotifier::class)->deadlineMoved($loaded);
+            }
 
             return $loaded;
         });
@@ -417,7 +425,7 @@ class TeacherAssignmentService
 
         $fresh = $recipient->refresh();
         try {
-            app(\App\Services\RevisionReminders\RevisionReminderSyncService::class)
+            app(RevisionReminderSyncService::class)
                 ->completeAssignmentReminder($fresh, 'assignment');
         } catch (\Throwable $error) {
             report($error);
@@ -1049,8 +1057,7 @@ class TeacherAssignmentService
         int $studentId,
         ?int $viewerId = null,
         bool $markRead = true,
-    ): array
-    {
+    ): array {
         $notes = $assignment->relationLoaded('notes')
             ? $assignment->notes
             : $assignment->notes()->with('teacher:id,name')->get();
@@ -1091,7 +1098,7 @@ class TeacherAssignmentService
             'audio' => $this->messageAudio->payload($note),
             'passage' => $surah && $from ? [
                 'surah_number' => $surah,
-                'surah_name' => \App\Support\QuranMetadata::name($surah),
+                'surah_name' => QuranMetadata::name($surah),
                 'ayah_start' => $from,
                 'ayah_end' => $to,
             ] : null,
@@ -1356,7 +1363,7 @@ class TeacherAssignmentService
     /**
      * @param  Collection<int, array<string, mixed>>  $teacherMessages
      */
-    private function teacherNoteAtOrBefore(Collection $teacherMessages, ?\Illuminate\Support\Carbon $at): ?string
+    private function teacherNoteAtOrBefore(Collection $teacherMessages, ?Carbon $at): ?string
     {
         if ($at === null || $teacherMessages->isEmpty()) {
             return null;
@@ -1365,7 +1372,7 @@ class TeacherAssignmentService
         $note = null;
         foreach ($teacherMessages as $message) {
             $created = isset($message['created_at'])
-                ? \Illuminate\Support\Carbon::parse($message['created_at'])
+                ? Carbon::parse($message['created_at'])
                 : null;
             if ($created !== null && $created->lte($at)) {
                 $note = trim((string) ($message['body'] ?? ''));
@@ -1433,7 +1440,7 @@ class TeacherAssignmentService
     private function syncRevisionRemindersForAssignment(TeacherAssignment $assignment): void
     {
         try {
-            $sync = app(\App\Services\RevisionReminders\RevisionReminderSyncService::class);
+            $sync = app(RevisionReminderSyncService::class);
             foreach ($assignment->recipients as $recipient) {
                 $sync->syncTeacherAssignmentRecipient($recipient);
             }

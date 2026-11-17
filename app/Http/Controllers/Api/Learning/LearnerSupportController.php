@@ -9,6 +9,7 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\GroupMembershipService;
+use App\Services\Teacher\StudentSelfAssessmentService;
 use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Services\Teacher\TeacherDashboardService;
@@ -16,6 +17,7 @@ use App\Services\Teacher\TeacherDirectMessageService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 class LearnerSupportController extends Controller
@@ -78,9 +80,34 @@ class LearnerSupportController extends Controller
         abort_unless($user instanceof User, 401);
 
         $assignments->completeByStudent($user, $recipient);
+        if (is_array($request->input('self_assessment'))) {
+            app(StudentSelfAssessmentService::class)->record($user, array_merge(
+                $request->input('self_assessment'),
+                ['teacher_assignment_recipient_id' => $recipient->id],
+            ));
+        }
 
         return response()->json($dashboard->learnerSupport($user))
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
+    public function storeSelfAssessment(Request $request, StudentSelfAssessmentService $reflections): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+        $data = $request->validate([
+            'feeling' => ['required', Rule::in(['easy', 'manageable', 'difficult'])],
+            'help_request' => ['nullable', 'string', 'max:1000'],
+            'teacher_assignment_recipient_id' => ['nullable', 'integer'],
+            'teacher_lesson_id' => ['nullable', 'integer'],
+            'surah_number' => ['nullable', 'integer', 'between:1,114'],
+            'ayah_start' => ['nullable', 'integer', 'min:1'],
+            'ayah_end' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        return response()->json([
+            'self_assessment' => $reflections->present($reflections->record($user, $data)),
+        ])->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
     public function assignmentMessages(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse

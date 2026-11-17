@@ -4,6 +4,7 @@
       <div>
         <p class="learner-my-plan__eyebrow">{{ t('teacher.learner_my_plan') }}</p>
         <h3 class="learner-my-plan__title">{{ plan?.title || t('teacher.learner_my_plan_empty_title') }}</h3>
+        <p v-if="plan?.student_goal" class="learner-my-plan__teacher mb-0">{{ plan.student_goal }}</p>
         <p v-if="plan?.teacher_name" class="learner-my-plan__teacher mb-0">{{ plan.teacher_name }}</p>
         <p v-else-if="!plan" class="learner-my-plan__teacher mb-0">{{ t('teacher.learner_my_plan_empty') }}</p>
       </div>
@@ -31,7 +32,7 @@
         <small v-if="nextAction.due_on">{{ t('teacher.due') }}: {{ nextAction.due_on }}</small>
       </div>
       <button
-        v-if="nextRecipient"
+        v-if="showContinue && nextRecipient"
         type="button"
         class="btn btn-primary btn-sm"
         @click="$emit('continue', nextRecipient)"
@@ -64,6 +65,7 @@ export default {
   props: {
     plan: { type: Object, default: null },
     assignments: { type: Array, default: () => [] },
+    showContinue: { type: Boolean, default: true },
   },
   emits: ['continue'],
   computed: {

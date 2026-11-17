@@ -159,6 +159,43 @@
               <button type="button" class="dash-text-link" @click="openHomeFeedback">{{ t('dashboard.home_open_feedback') }}<i class="bi bi-arrow-right-short" aria-hidden="true"></i></button>
             </div>
           </aside>
+
+          <LearnerMyLearningPlan
+            v-if="showLearnerTeacherSection && support"
+            :plan="homePlan"
+            :assignments="support.assignments || []"
+            :show-continue="homePlanContinue"
+            @continue="startSupportAssignment"
+          />
+
+          <section v-if="showLearnerTeacherSection && support" class="learner-home__revisions" aria-labelledby="home-upcoming-title">
+            <h2 id="home-upcoming-title">{{ t('dashboard.home_upcoming') }}</h2>
+            <p v-if="!homeUpcoming.length" class="learner-home__instructions">{{ t('dashboard.home_upcoming_empty') }}</p>
+            <div v-for="task in homeUpcoming" :key="task.id" class="learner-home__revision-row">
+              <div>
+                <strong>{{ task.assignment?.surah_name }}</strong>
+                <span>{{ homeTaskTypeFor(task) }}</span>
+              </div>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="startSupportAssignment(task)">{{ t('teacher.learner_upcoming_start') }}</button>
+            </div>
+          </section>
+
+          <section v-if="reflectionPrompt" class="learner-home__feedback" aria-labelledby="home-reflection-title">
+            <h2 id="home-reflection-title">{{ t('dashboard.home_reflection_title') }}</h2>
+            <p class="learner-home__instructions">{{ t('dashboard.home_reflection_help') }}</p>
+            <div class="learner-home__task-footer">
+              <button v-for="feeling in reflectionFeelings" :key="feeling" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionFeeling === feeling }" @click="reflectionFeeling = feeling">{{ t(`dashboard.home_reflection_${feeling}`) }}</button>
+            </div>
+            <label class="learner-home__instructions">
+              {{ t('dashboard.home_reflection_help_label') }}
+              <textarea v-model="reflectionHelp" class="form-control" rows="2" maxlength="1000"></textarea>
+            </label>
+            <div class="learner-home__task-footer">
+              <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="!reflectionFeeling || reflectionSaving" @click="saveReflection">{{ t('dashboard.home_reflection_save') }}</button>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="reflectionPrompt = null">{{ t('dashboard.home_reflection_skip') }}</button>
+            </div>
+            <p v-if="reflectionSaved" class="learner-home__confirmation" role="status">{{ t('dashboard.home_reflection_saved') }}</p>
+          </section>
         </div>
         </div>
 
@@ -749,6 +786,7 @@
                 >
                   <div class="dash-drawer__analysis-copy">
                     <span class="dash-drawer__type">{{ activityTypeLabel(item.type) }}</span>
+                    <span v-if="activityAuthority(item)" class="dash-drawer__row-meta">{{ activityAuthority(item) }}</span>
                     <span class="dash-drawer__row-title">{{ activityTitle(item) }}</span>
                     <span v-if="activityOutcome(item)" class="dash-drawer__row-meta">{{ activityOutcome(item) }}</span>
                     <time class="dash-drawer__row-time" :datetime="item.occurred_at">
@@ -1112,6 +1150,7 @@ import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThrea
 import { latestLearnerHomeFeedback, nextLearnerHomeTask, learnerHomeRevisions } from '../scripts/teacher/learnerHome.js'
 import { isLearnerSubmitted, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
+import LearnerMyLearningPlan from '../components/teacher/LearnerMyLearningPlan.vue'
 import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../scripts/teacher/taskTypes.js'
 import { formatLearnerDisplayDate } from '../utils/learnerDisplayDate.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
@@ -1244,6 +1283,7 @@ export default {
   components: {
     NetworkFallback,
     LearnerTeacherSection,
+    LearnerMyLearningPlan,
     DashAnimatedNumber,
     DashAiReciteAttemptCard,
     SessionAnalysisModal,
@@ -1321,6 +1361,11 @@ export default {
       assignmentSavingId: 0,
       feedbackReadVersion: 0,
       assignmentCompletionMessage: '',
+      reflectionPrompt: null,
+      reflectionFeeling: '',
+      reflectionHelp: '',
+      reflectionSaving: false,
+      reflectionSaved: false,
       assignmentCompletionTimer: null,
       assignmentFailedItem: null,
       historyItems: [],
@@ -1474,6 +1519,24 @@ export default {
     },
     homeFeedbackWhen() {
       return formatLearnerDisplayDate(this.homeFeedback?.created_at, this.t.bind(this), this.localeCode)
+    },
+    homePlan() {
+      return this.support?.learning_plan || null
+    },
+    homePlanContinue() {
+      const recipientId = Number(this.homePlan?.next_action?.recipient_id || 0)
+      return recipientId > 0 && recipientId !== Number(this.homeTask?.id || 0)
+    },
+    homeUpcoming() {
+      const rows = Array.isArray(this.support?.assignments) ? this.support.assignments : []
+      const primary = Number(this.homeTask?.id || 0)
+      return rows.filter((row) => {
+        if (Number(row?.id) === primary) return false
+        return ['pending', 'in_progress', 'overdue'].includes(String(row?.status || ''))
+      }).slice(0, 4)
+    },
+    reflectionFeelings() {
+      return ['easy', 'manageable', 'difficult']
     },
     showHomeContinue() {
       if (this.showLearnerTeacherSection && this.supportLoading && !this.support) return false
@@ -2901,6 +2964,7 @@ export default {
         if (params.accuracy != null && params.accuracy !== '') {
           parts.push(this.t('dashboard.drawer_accuracy', { n: Number(params.accuracy) }))
         }
+        if (item.authority === 'ai_word_match') parts.push(this.t('dashboard.activity_word_match_not_tajweed'))
         return parts.join(' · ') || this.t('dashboard.activity_type_ai_check')
       }
       if (key === 'ai_check') return this.t('dashboard.activity_type_ai_check')
@@ -2919,6 +2983,18 @@ export default {
       if (key === 'assessment') return this.t('dashboard.activity_type_assessment')
       if (key === 'recommendation') return this.t('dashboard.activity_type_recommendation')
       if (key === 'ayah_memorised') return this.t('dashboard.activity_type_memorised')
+      if (key === 'assignment') return this.t('dashboard.activity_type_assignment')
+      if (key === 'teacher_feedback') return this.t('dashboard.activity_type_feedback')
+      if (key === 'teacher_finding') return this.t('dashboard.activity_type_finding')
+      if (key === 'self_assessment') return this.t('dashboard.activity_type_reflection')
+      if (key === 'milestone') return this.t('dashboard.activity_type_milestone')
+      if (key === 'improvement') return this.t('dashboard.activity_type_improvement')
+      return ''
+    },
+    activityAuthority(item) {
+      if (item?.authority === 'ai_word_match') return this.t('dashboard.activity_authority_ai')
+      if (item?.authority === 'teacher' && item?.verified_mistake) return this.t('dashboard.activity_authority_teacher')
+      if (item?.type === 'self_assessment') return this.t('dashboard.activity_authority_student')
       return ''
     },
     ayahRangeLabel(row) {
@@ -3897,6 +3973,15 @@ export default {
       try {
         this.support = await learningApi.completeLearnerAssignment(item.id)
         this.assignmentCompletionMessage = this.t('teacher.learner_assignments_submitted_success')
+        this.reflectionPrompt = {
+          recipientId: Number(item.id),
+          surah_number: item.assignment?.surah_number || null,
+          ayah_start: item.assignment?.ayah_start || null,
+          ayah_end: item.assignment?.ayah_end || null,
+        }
+        this.reflectionFeeling = ''
+        this.reflectionHelp = ''
+        this.reflectionSaved = false
         clearTimeout(this.assignmentCompletionTimer)
         this.assignmentCompletionTimer = setTimeout(() => this.dismissAssignmentCompletion(), 5000)
       } catch (error) {
@@ -3904,6 +3989,30 @@ export default {
         this.assignmentFailedItem = item
       } finally {
         this.assignmentSavingId = 0
+      }
+    },
+    homeTaskTypeFor(task) {
+      const assignment = task?.assignment
+      return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity), this.t.bind(this))
+    },
+    async saveReflection() {
+      if (!this.reflectionPrompt || !this.reflectionFeeling || this.reflectionSaving) return
+      this.reflectionSaving = true
+      try {
+        await learningApi.saveLearnerSelfAssessment({
+          feeling: this.reflectionFeeling,
+          help_request: this.reflectionHelp,
+          teacher_assignment_recipient_id: this.reflectionPrompt.recipientId,
+          surah_number: this.reflectionPrompt.surah_number,
+          ayah_start: this.reflectionPrompt.ayah_start,
+          ayah_end: this.reflectionPrompt.ayah_end,
+        })
+        this.reflectionSaved = true
+        this.reflectionPrompt = null
+      } catch (error) {
+        this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        this.reflectionSaving = false
       }
     },
     async sendSupportNote(item, body, recording = null, clientMessageId = null) {

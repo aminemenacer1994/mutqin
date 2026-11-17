@@ -157,10 +157,16 @@ final class RevisionReminderSyncService
 
         $dueAt = $assignment->due_at?->copy() ?? now()->addDay()->startOfDay();
         $priority = RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value;
+        $sourceKey = 'assignment:'.$recipient->id;
+        $existing = RevisionReminder::query()
+            ->where('user_id', $student->id)
+            ->where('source_key', $sourceKey)
+            ->first();
+        $dueMoved = $existing?->due_at && ! $existing->due_at->equalTo($dueAt);
 
         return $this->upsertOpen($student, [
             'source_type' => RevisionReminderSource::TeacherAssignment->value,
-            'source_key' => 'assignment:'.$recipient->id,
+            'source_key' => $sourceKey,
             'surah_number' => (int) $assignment->surah_number,
             'ayah_start' => (int) $assignment->ayah_start,
             'ayah_end' => (int) $assignment->ayah_end,
@@ -171,6 +177,7 @@ final class RevisionReminderSyncService
                 'review' => true,
                 'assignment_recipient' => (int) $recipient->id,
             ],
+            ...($dueMoved ? ['notified_in_app_at' => null, 'emailed_at' => null] : []),
         ]);
     }
 

@@ -2,35 +2,39 @@
 
 namespace App\Http\Controllers\Api\Teacher;
 
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
+use App\Enums\TeacherNoteKind;
+use App\Enums\TeacherPrivateNoteCategory;
 use App\Http\Controllers\Controller;
+use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\LearningPlan;
+use App\Models\LearningPlanItem;
+use App\Models\LearningPlanTemplate;
 use App\Models\MemorisationPracticePlan;
+use App\Models\MemorisationWeakSpot;
+use App\Models\RevisionRecommendation;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
-use App\Models\AiReciteAttempt;
-use App\Enums\TeacherPrivateNoteCategory;
 use App\Models\TeacherNote;
 use App\Models\TeacherPrivateNote;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\User;
-use App\Enums\MembershipRole;
-use App\Enums\MembershipStatus;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
-use App\Models\LearningPlan;
-use App\Models\LearningPlanItem;
-use App\Models\LearningPlanTemplate;
 use App\Services\Teacher\LearningPlanService;
 use App\Services\Teacher\RecitationDifficultyService;
+use App\Services\Teacher\RevisionRecommendationService;
+use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAssignmentService;
-use App\Models\MemorisationWeakSpot;
 use App\Services\Teacher\TeacherAttendanceService;
+use App\Services\Teacher\TeacherDashboardService;
 use App\Services\Teacher\TeacherDirectMessageService;
 use App\Services\Teacher\TeacherPrivateNoteService;
 use App\Services\Teacher\TeacherReportService;
-use App\Services\Teacher\TeacherDashboardService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -467,11 +471,11 @@ class TeacherDashboardController extends Controller
             isset($data['teacher_assignment_id']) ? (int) $data['teacher_assignment_id'] : null,
         );
 
-        $audio = app(\App\Services\Teacher\TeacherAssignmentMessageAudioService::class)->payload($note);
+        $audio = app(TeacherAssignmentMessageAudioService::class)->payload($note);
 
         return $this->json([
             'id' => (int) $note->id,
-            'kind' => $note->kind instanceof \App\Enums\TeacherNoteKind ? $note->kind->value : (string) $note->kind,
+            'kind' => $note->kind instanceof TeacherNoteKind ? $note->kind->value : (string) $note->kind,
             'body' => $note->body,
             'audio' => $audio,
             'passage' => $note->surah_number ? [
@@ -666,12 +670,13 @@ class TeacherDashboardController extends Controller
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'student_goal' => ['nullable', 'string', 'max:500'],
             'source_template_id' => ['nullable', 'integer'],
             'activate' => ['nullable', 'boolean'],
             'allow_duplicate' => ['nullable', 'boolean'],
             'items' => ['nullable', 'array'],
             'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
-            'items.*.activity' => ['nullable', Rule::in(['hifz', 'sabqi', 'manzil', 'nazra', 'ai_recite'])],
+            'items.*.activity' => ['nullable', Rule::in(['nazra', 'hifz', 'tajweed', 'revision', 'sabqi', 'manzil', 'ai_recite'])],
             'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
             'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
             'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
@@ -682,6 +687,7 @@ class TeacherDashboardController extends Controller
             'items.*.instructions' => ['nullable', 'string', 'max:2000'],
             'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
             'items.*.weak_spot_id' => ['nullable', 'integer'],
+            'items.*.is_milestone' => ['nullable', 'boolean'],
         ]);
 
         $plan = $plans->createPlan($teacher, $data);
@@ -698,10 +704,11 @@ class TeacherDashboardController extends Controller
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'student_goal' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', Rule::in(['draft', 'active', 'paused', 'completed', 'archived'])],
             'items' => ['nullable', 'array'],
             'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
-            'items.*.activity' => ['nullable', Rule::in(['hifz', 'sabqi', 'manzil', 'nazra', 'ai_recite'])],
+            'items.*.activity' => ['nullable', Rule::in(['nazra', 'hifz', 'tajweed', 'revision', 'sabqi', 'manzil', 'ai_recite'])],
             'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
             'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
             'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
@@ -712,6 +719,7 @@ class TeacherDashboardController extends Controller
             'items.*.instructions' => ['nullable', 'string', 'max:2000'],
             'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
             'items.*.id' => ['nullable', 'integer'],
+            'items.*.is_milestone' => ['nullable', 'boolean'],
         ]);
         $updated = $plans->updatePlan($teacher, $plan, $data);
 
@@ -766,7 +774,7 @@ class TeacherDashboardController extends Controller
             'is_shared' => ['nullable', 'boolean'],
             'items' => ['nullable', 'array'],
             'items.*.kind' => ['required_with:items', Rule::in(['practice', 'ai_recite', 'teacher_review'])],
-            'items.*.activity' => ['nullable', Rule::in(['hifz', 'sabqi', 'manzil', 'nazra', 'ai_recite'])],
+            'items.*.activity' => ['nullable', Rule::in(['nazra', 'hifz', 'tajweed', 'revision', 'sabqi', 'manzil', 'ai_recite'])],
             'items.*.hifz_category' => ['nullable', Rule::in(['sabaq', 'sabqi', 'manzil'])],
             'items.*.surah_number' => ['required_with:items', 'integer', 'between:1,114'],
             'items.*.ayah_start' => ['required_with:items', 'integer', 'min:1'],
@@ -792,6 +800,59 @@ class TeacherDashboardController extends Controller
         $plan = $plans->createFromTemplate($teacher, $template, (int) $data['student_id'], $data['starts_on'] ?? null);
 
         return $this->json(['plan' => $plans->presentPlan($plan)], 201);
+    }
+
+    public function rescheduleLearningPlanItem(Request $request, LearningPlanItem $item, LearningPlanService $plans): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'due_on' => ['required', 'date'],
+        ]);
+
+        return $this->json(['item' => $plans->presentItem($plans->rescheduleItem($teacher, $item, $data['due_on']))]);
+    }
+
+    public function revisionRecommendations(Request $request, User $student, RevisionRecommendationService $recommendations): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['recommendations' => $recommendations->syncAndList($teacher, $student)]);
+    }
+
+    public function updateRevisionRecommendation(Request $request, RevisionRecommendation $recommendation, RevisionRecommendationService $recommendations): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'activity' => ['sometimes', Rule::in(['nazra', 'hifz', 'tajweed', 'revision'])],
+            'surah_number' => ['sometimes', 'integer', 'between:1,114'],
+            'ayah_start' => ['sometimes', 'integer', 'min:1'],
+            'ayah_end' => ['sometimes', 'integer', 'min:1'],
+            'due_on' => ['nullable', 'date'],
+            'instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        return $this->json(['recommendation' => $recommendations->present($recommendations->update($teacher, $recommendation, $data))]);
+    }
+
+    public function acceptRevisionRecommendation(Request $request, RevisionRecommendation $recommendation, RevisionRecommendationService $recommendations): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['recommendation' => $recommendations->present($recommendations->accept($teacher, $recommendation))]);
+    }
+
+    public function dismissRevisionRecommendation(Request $request, RevisionRecommendation $recommendation, RevisionRecommendationService $recommendations): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['recommendation' => $recommendations->present($recommendations->dismiss($teacher, $recommendation))]);
+    }
+
+    public function assignRevisionRecommendation(Request $request, RevisionRecommendation $recommendation, RevisionRecommendationService $recommendations): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+
+        return $this->json(['recommendation' => $recommendations->present($recommendations->assign($teacher, $recommendation))]);
     }
 
     private function teacher(Request $request): User

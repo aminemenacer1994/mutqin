@@ -28,6 +28,49 @@
         </TeacherSectionPane>
       </div>
     </div>
+    <div class="teacher-overview-columns">
+      <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" icon="bi bi-arrow-repeat" flat>
+        <ul v-if="outstandingRevision.length" class="teacher-activity-list">
+          <li v-for="row in outstandingRevision" :key="row.recipient_id">
+            <button type="button" @click="openStudent(row.student_id, 'tasks')">
+              <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+              <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
+              <span></span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
+          </li>
+        </ul>
+        <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.overview_revision_empty')" />
+      </TeacherSectionPane>
+      <div class="teacher-overview-secondary">
+        <TeacherSectionPane :title="t('teacher.overview_plan_progress')" icon="bi bi-calendar-week" flat>
+          <ul v-if="planRows.length" class="teacher-activity-list">
+            <li v-for="row in planRows" :key="row.id">
+              <button type="button" @click="openStudent(row.student_id, 'plan')">
+                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.title }} · {{ row.completed }}/{{ row.total }}</small></span>
+                <span></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <TeacherEmpty v-else inline icon="bi bi-calendar-week" :message="t('teacher.overview_plan_empty')" />
+        </TeacherSectionPane>
+        <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
+          <ul v-if="recentCompletions.length" class="teacher-activity-list">
+            <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
+              <button type="button" @click="openStudent(row.student_id, 'tasks')">
+                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
+                <span></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <TeacherEmpty v-else inline icon="bi bi-inbox" :message="t('teacher.overview_completions_empty')" />
+        </TeacherSectionPane>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -85,6 +128,15 @@ export default {
       const overdue = Number(counts.overdue || 0)
       if (overdue > 0) return { count: overdue, label: this.t('teacher.task_filter_overdue') }
       return { count: Number(this.overview?.kpis?.outstanding_assignments || 0), label: this.t('teacher.kpi_open_tasks') }
+    },
+    outstandingRevision() {
+      return this.overview?.outstanding_revision || []
+    },
+    planRows() {
+      return this.overview?.plan_progress?.rows || []
+    },
+    recentCompletions() {
+      return this.overview?.recent_completions || []
     },
     attentionRows() {
       if (this.attentionPreview.length) return this.attentionPreview

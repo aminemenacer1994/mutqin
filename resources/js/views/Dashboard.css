@@ -35,7 +35,7 @@
   --dash-gutter: var(--gutter, clamp(1rem, 3.5vw, 2.25rem));
   --dash-tap: var(--tap, 44px);
   --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --dash-section-gap: clamp(0.85rem, 2vw, 1.25rem);
+  --dash-section-gap: clamp(1.1rem, 2.4vw, 1.6rem);
   --dash-content-max: 100%;
 
   width: 100%;
@@ -57,9 +57,9 @@
 
 html[data-theme="light"] .user-dashboard {
   --dash-card-bg: #ffffff;
-  --dash-border: #d9d2c8;
-  --dash-border-strong: #c4b9ab;
-  --dash-muted: #5c534a;
+  --dash-border: #cfc6bb;
+  --dash-border-strong: #b7ab9e;
+  --dash-muted: #3f3832;
   --dash-teal: #3d6e6b;
   --dash-gold: #b58a35;
   --dash-sky: #4a6f91;
@@ -68,9 +68,9 @@ html[data-theme="light"] .user-dashboard {
 html[data-theme="sepia"] .user-dashboard {
   --dash-card-bg: #fff8ed;
   --dash-surface: #fff8ed;
-  --dash-border: #dccdb8;
-  --dash-border-strong: #d0bea5;
-  --dash-muted: #6f5f4f;
+  --dash-border: #cbbba4;
+  --dash-border-strong: #b9a58c;
+  --dash-muted: #4e4338;
   --dash-teal: #5a6e58;
   --dash-gold: #a67c32;
   --dash-sky: #6a5e4a;
@@ -7236,14 +7236,14 @@ a.dash-ai-results__attempt {
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  padding: 8px 12px;
-  color: var(--dash-muted);
+  padding: 8px 14px;
+  color: var(--dash-ink);
   border: 0;
   border-radius: 10px;
   background: transparent;
   font: inherit;
-  font-size: 0.875rem;
-  font-weight: 650;
+  font-size: 0.9375rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -7260,7 +7260,7 @@ a.dash-ai-results__attempt {
 .user-dashboard .dash-pane {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.4rem;
 }
 
 .user-dashboard .learner-learning-greeting {
@@ -7272,9 +7272,9 @@ a.dash-ai-results__attempt {
   margin: 0;
   color: var(--dash-ink);
   font-size: clamp(1.45rem, 3.8vw, 1.85rem);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .user-dashboard .dash-pane__empty {

@@ -1,0 +1,115 @@
+<template>
+  <section class="teacher-stack" aria-labelledby="teacher-reviews-heading">
+    <header class="teacher-page-header">
+      <div>
+        <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
+        <h1 id="teacher-reviews-heading" class="teacher-page-header__title">{{ t('teacher.nav_reviews') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
+      </div>
+    </header>
+
+    <div v-if="!overview" class="teacher-skeletons" role="status">
+      <div class="teacher-skeleton"></div>
+      <span class="visually-hidden">{{ t('teacher.loading') }}</span>
+    </div>
+
+    <div v-else class="teacher-overview-columns">
+      <TeacherSectionPane :title="t('teacher.reviews_recent')" icon="bi bi-ear" flat>
+        <p class="teacher-support-note">{{ t('teacher.reviews_word_match_note') }}</p>
+        <ul v-if="recent.length" class="teacher-activity-list">
+          <li v-for="row in recent" :key="row.id">
+            <button type="button" @click="openStudent(row.student_id, 'ai')">
+              <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+              <span class="teacher-activity-list__copy">
+                <strong>{{ row.student_name }}</strong>
+                <small>{{ rangeLabel(row) }} · {{ formatWhen(row.created_at) }}</small>
+              </span>
+              <span v-if="typeof row.accuracy_percent === 'number'" class="teacher-activity-list__score">{{ row.accuracy_percent }}%<small>{{ t('teacher.ai_word_match_short') }}</small></span>
+              <span v-else></span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
+          </li>
+        </ul>
+        <p v-else class="mb-0">{{ t('teacher.reviews_recent_empty') }}</p>
+      </TeacherSectionPane>
+
+      <div class="teacher-overview-secondary">
+        <TeacherSectionPane :title="t('teacher.reviews_flags')" icon="bi bi-bullseye" tone="warn" flat>
+          <ul v-if="flags.length" class="teacher-activity-list">
+            <li v-for="row in flags" :key="row.student_id">
+              <button type="button" @click="openStudent(row.student_id, 'profile')">
+                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                <span class="teacher-activity-list__copy">
+                  <strong>{{ row.student_name }}</strong>
+                  <small>{{ t('teacher.reviews_flag_count', { count: row.difficulty_count }) }}</small>
+                </span>
+                <span></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <p v-else class="mb-0">{{ t('teacher.reviews_flags_empty') }}</p>
+        </TeacherSectionPane>
+
+        <TeacherSectionPane :title="t('teacher.reviews_revision')" icon="bi bi-arrow-repeat" flat>
+          <ul v-if="revision.length" class="teacher-activity-list">
+            <li v-for="row in revision" :key="row.recipient_id">
+              <button type="button" @click="openStudent(row.student_id, 'tasks')">
+                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                <span class="teacher-activity-list__copy">
+                  <strong>{{ row.student_name }}</strong>
+                  <small>{{ row.label }}</small>
+                </span>
+                <span></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <p v-else class="mb-0">{{ t('teacher.reviews_revision_empty') }}</p>
+        </TeacherSectionPane>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+import { i18nMixin } from '../../mixins/i18nMixin'
+import { studentInitial } from '../../scripts/teacher/formatters'
+import TeacherSectionPane from './TeacherSectionPane.vue'
+
+export default {
+  name: 'TeacherReviewsSection',
+  components: { TeacherSectionPane },
+  mixins: [i18nMixin],
+  props: {
+    overview: { type: Object, default: null },
+    formatWhen: { type: Function, required: true },
+  },
+  emits: ['open-student'],
+  computed: {
+    recent() {
+      return this.overview?.recent_ai || []
+    },
+    flags() {
+      return this.overview?.difficulty_queue || []
+    },
+    revision() {
+      return this.overview?.outstanding_revision || []
+    },
+  },
+  methods: {
+    initial(name) {
+      return studentInitial(name)
+    },
+    openStudent(id, section) {
+      this.$emit('open-student', id, section)
+    },
+    rangeLabel(row) {
+      const name = row.surah_name || ''
+      if (!row.ayah_start) return name
+      const end = row.ayah_end && row.ayah_end !== row.ayah_start ? `–${row.ayah_end}` : ''
+      return `${name} · ${row.ayah_start}${end}`
+    },
+  },
+}
+</script>

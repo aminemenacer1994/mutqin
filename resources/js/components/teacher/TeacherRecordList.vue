@@ -10,7 +10,10 @@
     >
       <button v-if="hasReviewEvidence(row)" type="button" class="teacher-record-card__title" @click="openEvidence(row, preferredEvidenceMode(row))">{{ row.title }}</button>
       <strong v-else class="teacher-record-card__title">{{ row.title }}</strong>
-      <p v-if="row.hint" class="teacher-record-card__hint">{{ row.hint }}</p>
+      <div v-if="row.pills?.length" class="teacher-record-card__pills">
+        <span v-for="(pill, pillIndex) in row.pills" :key="`${row.key}-pill-${pillIndex}`" class="teacher-fact" :class="`teacher-fact--${pill.tone || 'neutral'}`">{{ pill.label }}</span>
+      </div>
+      <p v-else-if="row.hint" class="teacher-record-card__hint">{{ row.hint }}</p>
       <span
         v-if="row.badge"
         class="teacher-badge"

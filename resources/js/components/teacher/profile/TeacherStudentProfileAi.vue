@@ -2,7 +2,7 @@
   <div class="teacher-recite">
     <div v-if="attempts.length" class="teacher-recite__bar">
       <div class="teacher-recite__segments" role="group" :aria-label="t('teacher.recite_status_filter')">
-        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': statusFilter === filter.id }" :aria-pressed="statusFilter === filter.id ? 'true' : 'false'" @click="statusFilter = filter.id">
+        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="['is-' + filter.id, { 'is-active': statusFilter === filter.id }]" :aria-pressed="statusFilter === filter.id ? 'true' : 'false'" @click="statusFilter = filter.id">
           {{ filter.label }}<span>{{ filter.count }}</span>
         </button>
       </div>
@@ -137,6 +137,12 @@ export default {
         ? this.t('teacher.playback_wording_score', { n: `${attempt.accuracy_percent}%` })
         : this.t('teacher.recite_not_assessed')
       const when = this.formatWhen(attempt.created_at)
+      const scoreTone = { good: 'good', mid: 'warn', warn: 'danger' }[scoreBadgeTone(attempt.accuracy_percent)] || 'neutral'
+      const pills = [
+        when ? { label: when, tone: 'neutral' } : null,
+        { label: score, tone: typeof attempt.accuracy_percent === 'number' ? scoreTone : 'neutral' },
+        issueHint ? { label: issueHint, tone: 'warn' } : null,
+      ].filter(Boolean)
       const status = {
         pending: ['teacher.recite_status_pending', 'warn'],
         reviewed: ['teacher.playback_status_reviewed', 'good'],
@@ -155,6 +161,7 @@ export default {
         attention: state === 'pending' || Boolean(issueHint),
         title: passage,
         hint: [when, score, issueHint].filter(Boolean).join(' · '),
+        pills,
         badge: this.t(status[0]),
         badgeTone: status[1],
       }, attempt.evidence, attempt.range ? {

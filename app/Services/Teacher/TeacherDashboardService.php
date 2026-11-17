@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Enums\AccountRole;
 use App\Enums\AnalyticsConsentStatus;
+use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
 use App\Enums\LearningPlanStatus;
 use App\Enums\MembershipRole;
@@ -22,11 +23,13 @@ use App\Models\MemorisationWeakSpot;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
-use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherNote;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
+use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\DashboardService;
 use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -34,6 +37,7 @@ use App\Support\QuranMetadata;
 use App\Support\Registration\OrganisationName;
 use App\Support\TeacherFeatures;
 use App\Support\TeacherRecitationWordEvidence;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -114,6 +118,9 @@ class TeacherDashboardService
                 'inactive' => $recent['inactive'],
                 'recent_ai' => $this->recentAi($ids),
                 'assignments' => $assignments,
+                'outstanding_revision' => $this->outstandingRevision($teacher, $ids),
+                'plan_progress' => $this->planProgress($teacher),
+                'recent_completions' => $this->recentCompletions($teacher, $ids),
                 'surahs' => $this->surahCatalog(),
                 'roster' => $this->organisationRoster($teacher, $ids),
                 'difficulty_queue' => $this->difficulties->reviewQueue($teacher, 10),
@@ -397,7 +404,7 @@ class TeacherDashboardService
         User $student,
         string $kind,
         string $body,
-        ?\Illuminate\Http\UploadedFile $audio = null,
+        ?UploadedFile $audio = null,
         ?int $durationMs = null,
         ?int $surahNumber = null,
         ?int $ayahStart = null,
@@ -421,7 +428,7 @@ class TeacherDashboardService
         }
 
         if ($assignmentId !== null) {
-            $assignment = \App\Models\TeacherAssignment::query()
+            $assignment = TeacherAssignment::query()
                 ->whereKey($assignmentId)
                 ->where('teacher_id', $teacher->id)
                 ->first();
@@ -864,7 +871,7 @@ class TeacherDashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, TeacherAssignmentRecipient>  $assignments
+     * @param  Collection<int, TeacherAssignmentRecipient>  $assignments
      * @return array<string, mixed>
      */
     private function learnerOverview(User $user, $assignments): array
@@ -906,7 +913,7 @@ class TeacherDashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, TeacherAssignmentRecipient>  $assignments
+     * @param  Collection<int, TeacherAssignmentRecipient>  $assignments
      * @return array{weekly_completed: int, weekly_goal: int, active_days_this_week: int, practice_streak_days: int}
      */
     private function learnerWeeklyEngagement(User $user, Collection $assignments): array
@@ -1212,7 +1219,9 @@ class TeacherDashboardService
             $weeks = $records->map(fn (TeacherAttendanceRecord $record) => $record->attendance_date
                 ->copy()->startOfWeek(Carbon::MONDAY)->toDateString())->unique()->sortDesc()->values();
             $consecutive = $weeks->sliding(2)->contains(function (Collection $pair): bool {
-                if ($pair->count() !== 2) return false;
+                if ($pair->count() !== 2) {
+                    return false;
+                }
 
                 return (int) Carbon::parse($pair[1])->diffInDays(Carbon::parse($pair[0])) === 7;
             });
@@ -1472,7 +1481,7 @@ class TeacherDashboardService
 
     private function assignmentCounts(User $teacher, array $ids): array
     {
-        $counts = ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'awaiting_confirmation' => 0, 'outstanding' => 0];
+        $counts = ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'awaiting_confirmation' => 0, 'outstanding' => 0, 'revision_outstanding' => 0];
         if ($ids === []) {
             return $counts;
         }
@@ -1480,11 +1489,18 @@ class TeacherDashboardService
         $recipients = TeacherAssignmentRecipient::query()
             ->whereIn('student_id', $ids)
             ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
-            ->with('assignment:id,teacher_id,learning_group_id,due_at')
+            ->with('assignment:id,teacher_id,learning_group_id,due_at,activity,hifz_category')
             ->get();
 
         foreach ($recipients as $recipient) {
             $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
+            $activity = (string) ($recipient->assignment?->activity ?? '');
+            $category = (string) ($recipient->assignment?->hifz_category ?? '');
+            $isRevision = $activity === 'revision'
+                || ($activity === '' && in_array($category, ['sabqi', 'manzil'], true));
+            if ($isRevision && $status !== AssignmentStatus::Completed->value) {
+                $counts['revision_outstanding']++;
+            }
             if ($status === AssignmentStatus::AwaitingConfirmation->value) {
                 $counts['awaiting_confirmation']++;
                 $counts['outstanding']++;
@@ -1500,6 +1516,123 @@ class TeacherDashboardService
         }
 
         return $counts;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array<string, mixed>>
+     */
+    private function outstandingRevision(User $teacher, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return TeacherAssignmentRecipient::query()
+            ->whereIn('student_id', $ids)
+            ->where('status', '!=', AssignmentStatus::Completed->value)
+            ->whereHas('assignment', function ($query) use ($teacher) {
+                $query->where('teacher_id', $teacher->id)
+                    ->where(function ($inner) {
+                        $inner->where('activity', 'revision')
+                            ->orWhere(function ($legacy) {
+                                $legacy->whereNull('activity')->whereIn('hifz_category', ['sabqi', 'manzil']);
+                            });
+                    });
+            })
+            ->with(['assignment:id,surah_number,ayah_start,ayah_end,due_at,activity', 'student:id,name'])
+            ->latest('id')
+            ->limit(6)
+            ->get()
+            ->map(function (TeacherAssignmentRecipient $recipient) {
+                $assignment = $recipient->assignment;
+                $surah = (int) ($assignment->surah_number ?? 0);
+
+                return [
+                    'recipient_id' => (int) $recipient->id,
+                    'student_id' => (int) $recipient->student_id,
+                    'student_name' => $recipient->student?->name,
+                    'label' => QuranMetadata::name($surah).' · '.(int) ($assignment->ayah_start ?? 0).'–'.(int) ($assignment->ayah_end ?? 0),
+                    'due_at' => $assignment?->due_at?->toIso8601String(),
+                    'overdue' => $assignment?->due_at !== null && $assignment->due_at->isPast(),
+                    'status' => $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status,
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * @return array{active: int, average_percent: int|null, rows: list<array<string, mixed>>}
+     */
+    private function planProgress(User $teacher): array
+    {
+        $plans = LearningPlan::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('status', LearningPlanStatus::Active->value)
+            ->with(['student:id,name', 'items.assignment.recipients'])
+            ->latest('id')
+            ->limit(20)
+            ->get();
+
+        $rows = $plans->map(function (LearningPlan $plan) {
+            $presented = $this->learningPlans->presentPlan($plan);
+
+            return [
+                'id' => (int) $plan->id,
+                'student_id' => (int) $plan->student_id,
+                'student_name' => $plan->student?->name,
+                'title' => $plan->title,
+                'percent' => (int) ($presented['progress']['percent'] ?? 0),
+                'completed' => (int) ($presented['progress']['completed'] ?? 0),
+                'total' => (int) ($presented['progress']['total'] ?? 0),
+                'overdue' => (int) ($presented['progress']['overdue'] ?? 0),
+            ];
+        })->sortBy([
+            ['overdue', 'desc'],
+            ['percent', 'asc'],
+        ])->values();
+
+        $average = $rows->isEmpty() ? null : (int) round((float) $rows->avg('percent'));
+
+        return [
+            'active' => $rows->count(),
+            'average_percent' => $average,
+            'rows' => $rows->take(5)->all(),
+        ];
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array<string, mixed>>
+     */
+    private function recentCompletions(User $teacher, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return TeacherAssignmentRecipient::query()
+            ->whereIn('student_id', $ids)
+            ->where('status', AssignmentStatus::Completed->value)
+            ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
+            ->with(['assignment:id,surah_number,ayah_start,ayah_end,activity', 'student:id,name'])
+            ->orderByDesc('completed_at')
+            ->limit(6)
+            ->get()
+            ->map(function (TeacherAssignmentRecipient $recipient) {
+                $assignment = $recipient->assignment;
+                $surah = (int) ($assignment->surah_number ?? 0);
+
+                return [
+                    'recipient_id' => (int) $recipient->id,
+                    'student_id' => (int) $recipient->student_id,
+                    'student_name' => $recipient->student?->name,
+                    'label' => QuranMetadata::name($surah).' · '.(int) ($assignment->ayah_start ?? 0).'–'.(int) ($assignment->ayah_end ?? 0),
+                    'activity' => $assignment?->activity,
+                    'completed_at' => $recipient->completed_at?->toIso8601String(),
+                ];
+            })
+            ->all();
     }
 
     /**
@@ -1562,6 +1695,124 @@ class TeacherDashboardService
             ...$this->attendanceOverviewPayload($teacher, $student),
             'hifz_this_week' => $this->hifzThisWeek($teacher, $student),
             'latest_saved' => $saved ? $this->presentSession($saved) : null,
+            'learning_history' => app(DashboardService::class)->activityLog($student, 20),
+            'self_assessments' => app(StudentSelfAssessmentService::class)->forTeacher($teacher, $student),
+            'teaching' => $this->teachingSupport($teacher, $student),
+        ];
+    }
+
+    /**
+     * Compact profile blocks. Reuses assignments, word-match spots, and teacher findings.
+     *
+     * @return array<string, mixed>
+     */
+    private function teachingSupport(User $teacher, User $student): array
+    {
+        $recipients = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
+            ->with('assignment:id,surah_number,ayah_start,ayah_end,activity,due_at,hifz_category')
+            ->latest('id')
+            ->limit(40)
+            ->get();
+
+        $presentTask = function (TeacherAssignmentRecipient $recipient): array {
+            $assignment = $recipient->assignment;
+            $surah = (int) ($assignment->surah_number ?? 0);
+            $start = (int) ($assignment->ayah_start ?? 0);
+            $end = (int) ($assignment->ayah_end ?: $start);
+            $status = $recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status;
+
+            return [
+                'id' => (int) $recipient->id,
+                'label' => QuranMetadata::name($surah).' · '.$start.($end !== $start ? '–'.$end : ''),
+                'activity' => (string) ($assignment->activity ?: ($assignment->hifz_category ?: 'revision')),
+                'status' => $status,
+                'due_on' => $assignment?->due_at?->toDateString(),
+                'overdue' => $status !== AssignmentStatus::Completed->value
+                    && $assignment?->due_at !== null
+                    && $assignment->due_at->isPast(),
+            ];
+        };
+
+        $isCompleted = fn (TeacherAssignmentRecipient $recipient): bool => ($recipient->status instanceof AssignmentStatus
+            ? $recipient->status
+            : AssignmentStatus::tryFrom((string) $recipient->status)) === AssignmentStatus::Completed;
+
+        $spots = MemorisationWeakSpot::query()
+            ->where('user_id', $student->id)
+            ->orderByDesc('last_identified_at')
+            ->limit(40)
+            ->get();
+
+        $compactSpot = function (MemorisationWeakSpot $spot, string $kind): array {
+            return [
+                'id' => (int) $spot->id,
+                'label' => QuranMetadata::name((int) $spot->surah_number).' · '.(int) $spot->ayah_number,
+                'kind' => $kind,
+                'count' => (int) $spot->affected_attempt_count,
+                'is_tajweed_assessment' => false,
+                'status' => (string) $spot->status,
+                'review' => $spot->teacher_review_status,
+            ];
+        };
+
+        $findings = TeacherWordCoachingCorrection::query()
+            ->where('finding', 'difficulty')
+            ->where('teacher_id', $teacher->id)
+            ->whereHas('coaching', fn ($query) => $query->where('student_id', $student->id)->where('teacher_id', $teacher->id))
+            ->with('coaching:id,surah_number,ayah_number')
+            ->latest('id')
+            ->limit(6)
+            ->get()
+            ->map(function (TeacherWordCoachingCorrection $correction) {
+                $coaching = $correction->coaching;
+                if ($coaching === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => (int) $correction->id,
+                    'label' => QuranMetadata::name((int) $coaching->surah_number).' · '.(int) $coaching->ayah_number,
+                    'focus' => (string) ($correction->focus ?? 'other'),
+                    'kind' => 'teacher_finding',
+                    'is_tajweed_assessment' => false,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        return [
+            'upcoming' => $recipients->reject($isCompleted)->take(5)->map($presentTask)->values()->all(),
+            'completed' => $recipients->filter($isCompleted)->take(4)->map($presentTask)->values()->all(),
+            'practice_areas' => [
+                'word_match' => $spots
+                    ->filter(fn (MemorisationWeakSpot $spot) => $spot->status === MemorisationWeakSpot::STATUS_ACTIVE
+                        && $spot->teacher_review_status === null
+                        && (int) $spot->affected_attempt_count >= 2)
+                    ->take(6)
+                    ->map(fn (MemorisationWeakSpot $spot) => $compactSpot($spot, 'word_match'))
+                    ->values()
+                    ->all(),
+                'teacher_confirmed' => array_values([
+                    ...$spots
+                        ->filter(fn (MemorisationWeakSpot $spot) => $spot->teacher_review_status === MemorisationWeakSpot::REVIEW_CONFIRMED
+                            && $spot->status !== MemorisationWeakSpot::STATUS_RESOLVED)
+                        ->take(6)
+                        ->map(fn (MemorisationWeakSpot $spot) => $compactSpot($spot, 'teacher_confirmed'))
+                        ->values()
+                        ->all(),
+                    ...$findings,
+                ]),
+                'resolved' => $spots
+                    ->filter(fn (MemorisationWeakSpot $spot) => $spot->status === MemorisationWeakSpot::STATUS_RESOLVED
+                        || $spot->teacher_review_status === MemorisationWeakSpot::REVIEW_DISMISSED)
+                    ->take(6)
+                    ->map(fn (MemorisationWeakSpot $spot) => $compactSpot($spot, 'resolved'))
+                    ->values()
+                    ->all(),
+            ],
         ];
     }
 
@@ -1659,9 +1910,13 @@ class TeacherDashboardService
             ->with('assignmentRecipient.assignment')
             ->get();
         foreach ($sessions as $session) {
-            if ($session->assignmentRecipient?->assignment?->kind !== \App\Enums\AssignmentKind::Practice) continue;
+            if ($session->assignmentRecipient?->assignment?->kind !== AssignmentKind::Practice) {
+                continue;
+            }
             $category = $session->assignmentRecipient->assignment->hifz_category;
-            if (isset($counts[$category])) $counts[$category]++;
+            if (isset($counts[$category])) {
+                $counts[$category]++;
+            }
         }
 
         $attempts = AiReciteAttempt::query()
@@ -1672,9 +1927,13 @@ class TeacherDashboardService
             ->with('assignmentRecipient.assignment')
             ->get();
         foreach ($this->dedupeScoredAttempts($attempts) as $attempt) {
-            if ($attempt->assignmentRecipient?->assignment?->kind !== \App\Enums\AssignmentKind::AiRecite) continue;
+            if ($attempt->assignmentRecipient?->assignment?->kind !== AssignmentKind::AiRecite) {
+                continue;
+            }
             $category = $attempt->assignmentRecipient->assignment->hifz_category;
-            if (isset($counts[$category])) $counts[$category]++;
+            if (isset($counts[$category])) {
+                $counts[$category]++;
+            }
         }
 
         $total = array_sum($counts);
@@ -1936,30 +2195,30 @@ class TeacherDashboardService
                 $review = $reviews->get($attempt->id);
 
                 return [
-                'id' => (int) $attempt->id,
-                'review' => [
-                    'status' => $review?->status === TeacherRecitationReview::REVIEWED ? 'reviewed' : 'pending',
-                    'has_revision' => $review?->teacher_assignment_id !== null,
-                ],
-                'teacher_assessment' => $human ? [
-                    'score' => (int) $human->tajweed_score,
-                    'annotation' => $human->annotation,
-                    'updated_at' => $human->updated_at?->toIso8601String(),
-                ] : null,
-                'accuracy_percent' => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true)
-                    ? (int) $attempt->accuracy_percent : null,
-                'band' => $attempt->band,
-                'created_at' => $attempt->created_at?->toIso8601String(),
-                'range' => is_array($attempt->ayah_range) ? [
-                    'surah_number' => (int) ($attempt->ayah_range['surah'] ?? $attempt->ayah_range['surah_number'] ?? 0) ?: null,
-                    'surah_name' => $attempt->ayah_range['surah_name'] ?? QuranMetadata::name((int) ($attempt->ayah_range['surah'] ?? 0)),
-                    'from' => isset($attempt->ayah_range['from']) ? (int) $attempt->ayah_range['from'] : null,
-                    'to' => isset($attempt->ayah_range['to']) ? (int) $attempt->ayah_range['to'] : null,
-                ] : null,
-                'issues' => $this->wordIssues($attempt),
-                'assessment_status' => $attempt->assessment?->status,
-                'evidence' => $this->presentAttemptEvidence($attempt),
-            ];
+                    'id' => (int) $attempt->id,
+                    'review' => [
+                        'status' => $review?->status === TeacherRecitationReview::REVIEWED ? 'reviewed' : 'pending',
+                        'has_revision' => $review?->teacher_assignment_id !== null,
+                    ],
+                    'teacher_assessment' => $human ? [
+                        'score' => (int) $human->tajweed_score,
+                        'annotation' => $human->annotation,
+                        'updated_at' => $human->updated_at?->toIso8601String(),
+                    ] : null,
+                    'accuracy_percent' => $attempt->accuracy_percent !== null && in_array($attempt->band, ['strong', 'mixed', 'weak'], true)
+                        ? (int) $attempt->accuracy_percent : null,
+                    'band' => $attempt->band,
+                    'created_at' => $attempt->created_at?->toIso8601String(),
+                    'range' => is_array($attempt->ayah_range) ? [
+                        'surah_number' => (int) ($attempt->ayah_range['surah'] ?? $attempt->ayah_range['surah_number'] ?? 0) ?: null,
+                        'surah_name' => $attempt->ayah_range['surah_name'] ?? QuranMetadata::name((int) ($attempt->ayah_range['surah'] ?? 0)),
+                        'from' => isset($attempt->ayah_range['from']) ? (int) $attempt->ayah_range['from'] : null,
+                        'to' => isset($attempt->ayah_range['to']) ? (int) $attempt->ayah_range['to'] : null,
+                    ] : null,
+                    'issues' => $this->wordIssues($attempt),
+                    'assessment_status' => $attempt->assessment?->status,
+                    'evidence' => $this->presentAttemptEvidence($attempt),
+                ];
             })->all(),
             'trend' => $scored->sortByDesc('created_at')->take(30)->sortBy('created_at')->map(fn (AiReciteAttempt $attempt) => [
                 'at' => $attempt->created_at?->toIso8601String(),
@@ -2024,7 +2283,7 @@ class TeacherDashboardService
     /** @return array{surah: int, from: int, to: int, surah_name: string}|null */
     private function presentAssignmentRange(?TeacherAssignment $assignment): ?array
     {
-        if (!$assignment) {
+        if (! $assignment) {
             return null;
         }
 

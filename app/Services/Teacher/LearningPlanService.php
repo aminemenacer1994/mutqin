@@ -11,9 +11,10 @@ use App\Models\LearningPlanItem;
 use App\Models\LearningPlanTemplate;
 use App\Models\LearningPlanTemplateItem;
 use App\Models\MemorisationWeakSpot;
-use App\Models\TeacherAssignmentRecipient;
 use App\Models\User;
+use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\RevisionReminders\RevisionReminderSyncService;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
@@ -93,6 +94,7 @@ class LearningPlanService
             'starts_on' => $startsOn->toDateString(),
             'ends_on' => $endsOn->toDateString(),
             'notes' => $this->nullableText($input['notes'] ?? null),
+            'student_goal' => $this->nullableGoal($input['student_goal'] ?? null),
         ])->save();
 
         $items = is_array($input['items'] ?? null) ? $input['items'] : [];
@@ -119,6 +121,9 @@ class LearningPlanService
         if (isset($input['notes'])) {
             $plan->notes = $this->nullableText($input['notes']);
         }
+        if (array_key_exists('student_goal', $input)) {
+            $plan->student_goal = $this->nullableGoal($input['student_goal']);
+        }
         if (isset($input['cadence']) && in_array($input['cadence'], ['weekly', 'monthly', 'custom'], true)) {
             $plan->cadence = $input['cadence'];
         }
@@ -143,6 +148,8 @@ class LearningPlanService
             $nextOrder = ((int) $plan->items()->max('sort_order')) + 1;
             foreach (array_values($input['items']) as $item) {
                 if (! empty($item['id'])) {
+                    $this->adjustItem($teacher, $plan, $item);
+
                     continue;
                 }
                 $this->addItem($teacher, $plan, $item, $nextOrder, persist: true);
@@ -242,14 +249,17 @@ class LearningPlanService
     {
         $this->assertOwns($teacher, $plan);
         $activity = (string) ($item['activity'] ?? '');
-        $allowedActivities = ['hifz', 'sabqi', 'manzil', 'nazra', 'ai_recite'];
+        $allowedActivities = ['nazra', 'hifz', 'tajweed', 'revision', 'sabqi', 'manzil', 'ai_recite'];
         if (! in_array($activity, $allowedActivities, true)) {
             $activity = null;
         }
         if ($activity === 'hifz') {
-            $item['kind'] = 'practice';
+            $item['kind'] = 'ai_recite';
             $item['hifz_category'] = 'sabaq';
-        } elseif ($activity === 'sabqi' || $activity === 'nazra') {
+        } elseif ($activity === 'tajweed') {
+            $item['kind'] = 'ai_recite';
+            $item['hifz_category'] = 'sabqi';
+        } elseif ($activity === 'nazra' || $activity === 'revision' || $activity === 'sabqi') {
             $item['kind'] = 'practice';
             $item['hifz_category'] = 'sabqi';
         } elseif ($activity === 'manzil') {
@@ -290,6 +300,7 @@ class LearningPlanService
             'repetition_target' => isset($item['repetition_target']) ? (int) $item['repetition_target'] : null,
             'due_on' => ! empty($item['due_on']) ? Carbon::parse((string) $item['due_on'])->toDateString() : null,
             'priority' => in_array(($item['priority'] ?? 'normal'), ['low', 'normal', 'high'], true) ? (string) ($item['priority'] ?? 'normal') : 'normal',
+            'is_milestone' => (bool) ($item['is_milestone'] ?? false),
             'instructions' => $this->nullableText($item['instructions'] ?? null),
             'weak_spot_id' => isset($item['weak_spot_id']) ? (int) $item['weak_spot_id'] : null,
         ]);
@@ -310,7 +321,7 @@ class LearningPlanService
         }
 
         try {
-            $assignment = $this->assignments->create($teacher, [
+            $payload = [
                 'kind' => $item->kind,
                 'hifz_category' => $item->hifz_category,
                 'student_id' => $plan->student_id,
@@ -322,7 +333,12 @@ class LearningPlanService
                 'feedback' => $item->instructions,
                 'learning_plan_id' => $plan->id,
                 'learning_plan_item_id' => $item->id,
-            ]);
+            ];
+            if (in_array((string) $item->activity, ['nazra', 'hifz', 'tajweed', 'revision'], true)) {
+                $payload['activity'] = $item->activity;
+                $payload['recording_required'] = in_array($item->activity, ['hifz', 'tajweed'], true);
+            }
+            $assignment = $this->assignments->create($teacher, $payload);
         } catch (ValidationException $exception) {
             // An equivalent open task already exists — keep the plan item planned with a note.
             throw ValidationException::withMessages([
@@ -366,7 +382,7 @@ class LearningPlanService
                     $grouped[$key] = [
                         'origin' => 'suggested',
                         'kind' => 'practice',
-                        'activity' => 'sabqi',
+                        'activity' => 'revision',
                         'hifz_category' => 'sabqi',
                         'surah_number' => $surah,
                         'surah_name' => QuranMetadata::name($surah),
@@ -380,7 +396,7 @@ class LearningPlanService
                 } else {
                     $grouped[$key]['evidence_count'] += $count;
                 }
-                $grouped[$key]['reason'] = 'This ayah did not match the expected wording in '.$grouped[$key]['evidence_count'].' recent checks.';
+                $grouped[$key]['reason'] = 'The expected wording did not match in '.$grouped[$key]['evidence_count'].' recent checks. Word matching is not a Tajweed or pronunciation assessment.';
             });
 
         $suggestions = array_values($grouped);
@@ -501,6 +517,7 @@ class LearningPlanService
             'starts_on' => $plan->starts_on?->toDateString(),
             'ends_on' => $plan->ends_on?->toDateString(),
             'notes' => $plan->notes,
+            'student_goal' => $plan->student_goal,
             'student' => [
                 'id' => (int) $plan->student_id,
                 'name' => $plan->student?->name,
@@ -543,6 +560,7 @@ class LearningPlanService
             'repetition_target' => $item->repetition_target,
             'due_on' => $item->due_on?->toDateString(),
             'priority' => $item->priority,
+            'is_milestone' => (bool) $item->is_milestone,
             'instructions' => $item->instructions,
             'teacher_assignment_id' => $item->teacher_assignment_id ? (int) $item->teacher_assignment_id : null,
             'recipient_id' => $recipient ? (int) $recipient->id : null,
@@ -717,10 +735,89 @@ class LearningPlanService
         $this->assertAuthorised($teacher, (int) $plan->student_id);
     }
 
+    public function rescheduleItem(User $teacher, LearningPlanItem $item, string $dueOn): LearningPlanItem
+    {
+        $item->loadMissing('plan.student');
+        $plan = $item->plan;
+        abort_if($plan === null, 404);
+        $this->assertOwns($teacher, $plan);
+        $due = Carbon::parse($dueOn)->startOfDay();
+        if ($plan->starts_on && $due->lt($plan->starts_on->copy()->startOfDay())) {
+            throw ValidationException::withMessages(['due_on' => 'Choose a date inside the plan.']);
+        }
+        $item->due_on = $due->toDateString();
+        $item->save();
+
+        $assignment = $item->teacher_assignment_id
+            ? $item->assignment()->with('recipients')->first()
+            : null;
+        if ($assignment) {
+            $previous = $assignment->due_at?->toDateString();
+            $assignment->due_at = $due->toDateString();
+            $assignment->save();
+            $assignment->load('recipients');
+            $sync = app(RevisionReminderSyncService::class);
+            foreach ($assignment->recipients as $recipient) {
+                $sync->syncTeacherAssignmentRecipient($recipient);
+            }
+            if ($previous !== $due->toDateString()) {
+                app(LearningTaskNotifier::class)->deadlineMoved($assignment);
+            }
+        }
+
+        return $item->fresh('assignment.recipients') ?? $item;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function adjustItem(User $teacher, LearningPlan $plan, array $input): void
+    {
+        $item = $plan->items()->whereKey((int) $input['id'])->first();
+        if (! $item instanceof LearningPlanItem) {
+            return;
+        }
+        $released = $item->teacher_assignment_id !== null
+            || $item->item_status === LearningPlanItemStatus::Released;
+        if ($released) {
+            if (! empty($input['due_on'])) {
+                $this->rescheduleItem($teacher, $item, (string) $input['due_on']);
+            }
+            if (array_key_exists('is_milestone', $input)) {
+                $item->is_milestone = (bool) $input['is_milestone'];
+                $item->save();
+            }
+
+            return;
+        }
+
+        $draft = $this->addItem($teacher, $plan, $input, (int) $item->sort_order, persist: false);
+        $item->forceFill([
+            'kind' => $draft->kind,
+            'activity' => $draft->activity,
+            'hifz_category' => $draft->hifz_category,
+            'surah_number' => $draft->surah_number,
+            'ayah_start' => $draft->ayah_start,
+            'ayah_end' => $draft->ayah_end,
+            'repetition_target' => $draft->repetition_target,
+            'due_on' => $draft->due_on,
+            'priority' => $draft->priority,
+            'is_milestone' => $draft->is_milestone,
+            'instructions' => $draft->instructions,
+        ])->save();
+    }
+
     private function nullableText(mixed $value): ?string
     {
         $text = trim((string) $value);
 
         return $text === '' ? null : mb_substr($text, 0, 2000);
+    }
+
+    private function nullableGoal(mixed $value): ?string
+    {
+        $text = trim((string) $value);
+
+        return $text === '' ? null : mb_substr($text, 0, 500);
     }
 }

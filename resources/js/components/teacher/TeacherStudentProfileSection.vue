@@ -75,8 +75,18 @@
         <div v-if="tabHint" class="teacher-profile-tab-meta">
           <p class="teacher-profile-tab-meta__hint">{{ tabHint }}</p>
         </div>
+        <TeacherStudentProfileOverview
+          v-if="section === 'profile'"
+          :profile="tabProfile"
+          :metric="metric"
+          :practice-time="practiceTime"
+          :session-label="sessionLabel"
+          :format-when="formatWhen"
+          @assign-revision="$emit('assign-revision', $event)"
+          @change-section="selectTab"
+        />
         <TeacherStudentProfilePractice
-          v-if="isLearningSection"
+          v-else-if="isLearningSection"
           :profile="tabProfile"
           :focus-payload="section === 'revision' ? tabProfile.payload : (profile.sectionPayloads?.focus ?? null)"
           :session-label="sessionLabel"
@@ -154,6 +164,7 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { resolveTaskLifecycle, TASK_LIFECYCLE, taskIsOverdue } from '../../scripts/teacher/taskState'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
+import TeacherStudentProfileOverview from './profile/TeacherStudentProfileOverview.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
@@ -163,6 +174,7 @@ export default {
   components: {
     TeacherDialog,
     TeacherEmpty,
+    TeacherStudentProfileOverview,
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,

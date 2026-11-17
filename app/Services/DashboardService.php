@@ -17,9 +17,12 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Services\Achievements\AchievementService;
+use App\Services\Learning\LearningHistoryComposer;
 use App\Services\Learning\ProgressOverviewService;
 use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\Memorisation\RecitationScoringThresholds;
+use App\Services\RevisionReminders\RevisionReminderQueryService;
 use App\Support\QuranMetadata;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -210,7 +213,7 @@ class DashboardService
                 'last_activity_at' => null,
                 'chips' => [],
             ],
-            'achievements' => app(\App\Services\Achievements\AchievementService::class)->emptyWidget(),
+            'achievements' => app(AchievementService::class)->emptyWidget(),
         ];
     }
 
@@ -264,21 +267,21 @@ class DashboardService
         $journey = $this->buildJourney($user, $main, $continue, $retention, $weaknesses);
         $aiReciteStats = $this->sessionAnalysis->dashboardStats($user);
         try {
-            $learning = (new ProgressOverviewService())->build($user, $chartDays, $weaknesses, $dailyRevision);
+            $learning = (new ProgressOverviewService)->build($user, $chartDays, $weaknesses, $dailyRevision);
         } catch (\Throwable $e) {
             report($e);
             $learning = ProgressOverviewService::empty($chartDays);
         }
 
         try {
-            $achievements = app(\App\Services\Achievements\AchievementService::class)->dashboardWidget($user);
+            $achievements = app(AchievementService::class)->dashboardWidget($user);
         } catch (\Throwable $e) {
             report($e);
-            $achievements = app(\App\Services\Achievements\AchievementService::class)->emptyWidget();
+            $achievements = app(AchievementService::class)->emptyWidget();
         }
 
         try {
-            $revisionReminders = app(\App\Services\RevisionReminders\RevisionReminderQueryService::class)
+            $revisionReminders = app(RevisionReminderQueryService::class)
                 ->dashboardCard($user);
         } catch (\Throwable $e) {
             report($e);
@@ -366,7 +369,7 @@ class DashboardService
             return $this->buildActivityLog($user, $limit);
         }
 
-        $cacheKey = 'dashboard:activity:v2:'.$user->id.':'.$limit;
+        $cacheKey = 'dashboard:activity:v3:'.$user->id.':'.$limit;
 
         return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $limit) {
             return $this->utf8Safe($this->buildActivityLog($user, $limit));
@@ -557,6 +560,10 @@ class DashboardService
                 ]));
             });
 
+        foreach (app(LearningHistoryComposer::class)->events($user, $limit) as $event) {
+            $events->push($this->activityEvent($event));
+        }
+
         $events = $events
             ->filter(fn ($event) => ! empty($event['occurred_at']))
             ->sortByDesc('occurred_at')
@@ -603,6 +610,15 @@ class DashboardService
         $event['ayah_start'] = isset($event['ayah_start']) ? (int) $event['ayah_start'] ?: null : null;
         $event['ayah_end'] = isset($event['ayah_end']) ? (int) $event['ayah_end'] ?: null : null;
 
+        $type = (string) ($event['type'] ?? '');
+        if (in_array($type, ['ai_check', 'ai_recite'], true)) {
+            $event['authority'] = 'ai_word_match';
+            $event['verified_mistake'] = false;
+            $params = is_array($event['outcome_params'] ?? null) ? $event['outcome_params'] : [];
+            $params['word_match'] = true;
+            $event['outcome_params'] = $params;
+        }
+
         // English fallbacks kept for older clients / debugging.
         $event['title'] = $event['title'] ?? $this->activityTitleFallback($event);
         $event['outcome'] = $event['outcome'] ?? $this->activityOutcomeFallback($event);
@@ -610,6 +626,11 @@ class DashboardService
             (string) ($event['type'] ?? ''),
             (string) ($event['practice_mode'] ?? '')
         );
+        $event['authority'] = (string) ($event['authority'] ?? 'record');
+        $event['is_tajweed_assessment'] = false;
+        $event['verified_mistake'] = $event['authority'] === 'ai_word_match'
+            ? false
+            : (bool) ($event['verified_mistake'] ?? false);
 
         return $event;
     }
@@ -672,6 +693,12 @@ class DashboardService
             'assessment' => 'Assessment',
             'recommendation' => 'Recommendation',
             'ayah_memorised' => 'Memorised ayah',
+            'assignment' => 'Assignment',
+            'teacher_feedback' => 'Teacher feedback',
+            'teacher_finding' => 'Teacher finding',
+            'self_assessment' => 'Student reflection',
+            'milestone' => 'Milestone',
+            'improvement' => 'Improvement',
             default => 'Activity',
         };
     }
@@ -690,14 +717,28 @@ class DashboardService
             'session_resumed' => 'Resumed',
             'ai_result' => trim(implode(' · ', array_filter([
                 isset($params['band']) ? ucfirst((string) $params['band']) : null,
-                isset($params['accuracy']) ? ((int) $params['accuracy']).'%' : null,
+                isset($params['accuracy']) ? ((int) $params['accuracy']).'% word match' : null,
+                'Not a Tajweed assessment',
             ]))),
-            'ai_check' => 'AI check',
+            'ai_check' => 'Word match. Not a Tajweed assessment.',
             'note_body' => (string) ($params['body'] ?? ''),
             'note_saved' => 'Note saved',
             'assessment_completed' => 'Assessment completed',
             'recommendation_ready' => 'Recommendation ready',
             'ayah_memorised' => 'Memorised',
+            'assignment_completed' => 'Completed task',
+            'revision_attempt' => 'Revision submitted',
+            'teacher_feedback' => trim((string) ($params['body'] ?? 'Teacher feedback')),
+            'teacher_finding' => trim(implode(' · ', array_filter([
+                isset($params['focus']) ? (string) $params['focus'] : null,
+                isset($params['finding']) ? (string) $params['finding'] : null,
+            ]))),
+            'self_assessment' => trim(implode(' · ', array_filter([
+                isset($params['feeling']) ? (string) $params['feeling'] : null,
+                isset($params['help']) ? (string) $params['help'] : null,
+            ]))),
+            'milestone' => 'Milestone reached',
+            'improvement' => 'Teacher recorded an improvement',
             default => '',
         };
     }

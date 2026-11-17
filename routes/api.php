@@ -2,16 +2,14 @@
 
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
+use App\Http\Controllers\Api\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Api\Admin\RegisteredUserBroadcastController as AdminRegisteredUserBroadcastController;
 use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
-use App\Http\Middleware\ForwardMarketingClientErrors;
 use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AchievementController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
-use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
@@ -26,14 +24,16 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\ProductEventController;
+use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
 use App\Http\Controllers\Api\Teacher\TeacherRecitationPlaybackController;
 use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
-use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\ForwardMarketingClientErrors;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/product-events', [ProductEventController::class, 'store'])
@@ -165,6 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
+            Route::post('/me/self-assessments', [LearnerSupportController::class, 'storeSelfAssessment'])->name('api.me.self-assessments.store');
             Route::get('/me/assignments/{recipient}/messages', [LearnerSupportController::class, 'assignmentMessages'])->name('api.me.assignments.messages.index');
             Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
             Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1')->name('api.me.teachers.messages.store');
@@ -228,6 +229,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/learning-plans/{plan}/status', [TeacherDashboardController::class, 'setLearningPlanStatus'])->name('api.teacher.learning-plans.status');
                 Route::post('/learning-plan-items/{item}/approve', [TeacherDashboardController::class, 'approveLearningPlanItem'])->name('api.teacher.learning-plan-items.approve');
                 Route::post('/learning-plan-items/{item}/skip', [TeacherDashboardController::class, 'skipLearningPlanItem'])->name('api.teacher.learning-plan-items.skip');
+                Route::post('/learning-plan-items/{item}/reschedule', [TeacherDashboardController::class, 'rescheduleLearningPlanItem'])->name('api.teacher.learning-plan-items.reschedule');
+                Route::post('/students/{student}/revision-recommendations', [TeacherDashboardController::class, 'revisionRecommendations'])->name('api.teacher.students.revision-recommendations');
+                Route::patch('/revision-recommendations/{recommendation}', [TeacherDashboardController::class, 'updateRevisionRecommendation'])->name('api.teacher.revision-recommendations.update');
+                Route::post('/revision-recommendations/{recommendation}/accept', [TeacherDashboardController::class, 'acceptRevisionRecommendation'])->name('api.teacher.revision-recommendations.accept');
+                Route::post('/revision-recommendations/{recommendation}/dismiss', [TeacherDashboardController::class, 'dismissRevisionRecommendation'])->name('api.teacher.revision-recommendations.dismiss');
+                Route::post('/revision-recommendations/{recommendation}/assign', [TeacherDashboardController::class, 'assignRevisionRecommendation'])->name('api.teacher.revision-recommendations.assign');
                 Route::get('/students/{student}/learning-plan-suggestions', [TeacherDashboardController::class, 'learningPlanSuggestions'])->name('api.teacher.students.learning-plan-suggestions');
                 Route::get('/learning-plan-templates', [TeacherDashboardController::class, 'learningPlanTemplates'])->name('api.teacher.learning-plan-templates.index');
                 Route::post('/learning-plan-templates', [TeacherDashboardController::class, 'storeLearningPlanTemplate'])->name('api.teacher.learning-plan-templates.store');

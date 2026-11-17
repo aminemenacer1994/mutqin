@@ -681,8 +681,8 @@ export const learningApi = {
     const { data } = await http.post(`/me/assignments/${recipientId}/start`)
     return data
   },
-  async completeLearnerAssignment(recipientId) {
-    const { data } = await http.post(`/me/assignments/${recipientId}/complete`)
+  async completeLearnerAssignment(recipientId, reflection = null) {
+    const { data } = await http.post(`/me/assignments/${recipientId}/complete`, reflection ? { self_assessment: reflection } : {})
     return data
   },
   async sendLearnerAssignmentMessage(recipientId, body, recording = null, clientMessageId = null) {
@@ -973,6 +973,34 @@ export const learningApi = {
   },
   async applyTeacherLearningPlanTemplate(templateId, payload) {
     const { data } = await http.post(`/teacher/learning-plan-templates/${templateId}/apply`, payload)
+    return data
+  },
+  async rescheduleTeacherLearningPlanItem(itemId, dueOn) {
+    const { data } = await http.post(`/teacher/learning-plan-items/${itemId}/reschedule`, { due_on: dueOn })
+    return data
+  },
+  async syncTeacherRevisionRecommendations(studentId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/revision-recommendations`)
+    return data
+  },
+  async updateTeacherRevisionRecommendation(id, payload) {
+    const { data } = await http.patch(`/teacher/revision-recommendations/${id}`, payload)
+    return data
+  },
+  async acceptTeacherRevisionRecommendation(id) {
+    const { data } = await http.post(`/teacher/revision-recommendations/${id}/accept`)
+    return data
+  },
+  async dismissTeacherRevisionRecommendation(id) {
+    const { data } = await http.post(`/teacher/revision-recommendations/${id}/dismiss`)
+    return data
+  },
+  async assignTeacherRevisionRecommendation(id) {
+    const { data } = await http.post(`/teacher/revision-recommendations/${id}/assign`)
+    return data
+  },
+  async saveLearnerSelfAssessment(payload) {
+    const { data } = await http.post('/me/self-assessments', payload)
     return data
   },
   async getTeacherRecitationDifficultyQueue(limit = 12) {
