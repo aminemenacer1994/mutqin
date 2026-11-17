@@ -28,7 +28,10 @@
               <div v-for="item in summaryItems" :key="item.key" :class="`is-${item.tone || 'neutral'}`">
                 <i :class="item.icon" aria-hidden="true"></i>
                 <span>{{ item.label }}</span>
-                <strong>{{ item.value }}</strong>
+                <strong>
+                  <TeacherWordingMatch v-if="item.key === 'average' && item.wording">{{ item.value }}</TeacherWordingMatch>
+                  <template v-else>{{ item.value }}</template>
+                </strong>
               </div>
             </div>
           </section>
@@ -63,12 +66,13 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { cssThemeColor } from '../../scripts/teacher/formatters'
 import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip)
 
 export default {
   name: 'TeacherStudentReport',
-  components: { Bar, Doughnut },
+  components: { Bar, Doughnut, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: { open: { type: Boolean, default: false }, mode: { type: String, default: 'parent' }, profile: { type: Object, required: true } },
   emits: ['close'],
@@ -92,7 +96,7 @@ export default {
       return [
         { key: 'sessions', icon: 'bi bi-play-circle', label: this.t('teacher.sessions'), value: Number(this.summary.sessions_recorded || 0) },
         { key: 'checks', icon: 'bi bi-mic', label: this.t('teacher.scored_checks'), value: Number(this.summary.scored_checks || 0) },
-        { key: 'average', icon: 'bi bi-graph-up', label: this.t('teacher.report_average_score'), value: this.summary.ai_word_match_average == null ? '—' : `${this.summary.ai_word_match_average}%` },
+        { key: 'average', icon: 'bi bi-graph-up', label: this.t('teacher.report_average_score'), value: this.summary.ai_word_match_average == null ? '—' : `${this.summary.ai_word_match_average}%`, wording: this.summary.ai_word_match_average != null },
         { key: 'tasks', icon: 'bi bi-journal-check', label: this.t('teacher.report_tasks'), value: Number(this.summary.tasks_assigned || 0) },
         { key: 'rate', tone: 'good', icon: 'bi bi-percent', label: this.t('teacher.attendance_rate_label'), value: this.attendanceRate == null ? '—' : `${this.attendanceRate}%` },
         { key: 'present', tone: 'good', icon: 'bi bi-check-lg', label: this.t('teacher.attendance_present'), value: Number(this.summary.attendance?.present || 0) },

@@ -11,7 +11,10 @@
       <button v-if="hasReviewEvidence(row)" type="button" class="teacher-record-card__title" @click="openEvidence(row, preferredEvidenceMode(row))">{{ row.title }}</button>
       <strong v-else class="teacher-record-card__title">{{ row.title }}</strong>
       <div v-if="row.pills?.length" class="teacher-record-card__pills">
-        <span v-for="(pill, pillIndex) in row.pills" :key="`${row.key}-pill-${pillIndex}`" class="teacher-fact" :class="`teacher-fact--${pill.tone || 'neutral'}`">{{ pill.label }}</span>
+        <span v-for="(pill, pillIndex) in row.pills" :key="`${row.key}-pill-${pillIndex}`" class="teacher-fact" :class="`teacher-fact--${pill.tone || 'neutral'}`">
+          <TeacherWordingMatch v-if="pill.wording">{{ pill.label }}</TeacherWordingMatch>
+          <template v-else>{{ pill.label }}</template>
+        </span>
       </div>
       <p v-else-if="row.hint" class="teacher-record-card__hint">{{ row.hint }}</p>
       <span
@@ -126,7 +129,9 @@
     :attempt-id="playbackRow?.attemptId"
     :focus-ayah="playbackRow?.focusAyah || null"
     :autoplay="playbackAutoplay"
+    :queue="playbackQueue"
     @close="playbackRow = null"
+    @navigate="onPlaybackNavigate"
     @reviewed="onReviewed"
   />
   <TeacherReciteEvidenceModal
@@ -150,9 +155,10 @@ import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
 import TeacherRecordEvidenceMushafInline from './TeacherRecordEvidenceMushafInline.vue'
 import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.vue'
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { QuranAyahDisplay, TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal },
+  components: { QuranAyahDisplay, TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
@@ -179,6 +185,11 @@ export default {
   computed: {
     visibleRows() {
       return this.rows.slice(0, this.shown)
+    },
+    playbackQueue() {
+      return this.rows
+        .filter((row) => row?.attemptId && row?.studentId)
+        .map((row) => ({ studentId: row.studentId, attemptId: row.attemptId }))
     },
     columnHeadings() {
       return {
@@ -238,6 +249,10 @@ export default {
     },
     playbackReview(row) {
       return Boolean(row?.attemptId && row?.studentId)
+    },
+    onPlaybackNavigate(item) {
+      const row = this.rows.find((entry) => Number(entry.attemptId) === Number(item?.attemptId))
+      if (row) this.playbackRow = row
     },
     onReviewed() {
       if (!this.playbackRow) return

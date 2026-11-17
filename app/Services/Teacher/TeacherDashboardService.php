@@ -68,7 +68,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v2.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -91,6 +91,8 @@ class TeacherDashboardService
 
             $strong = collect($metrics)->filter(fn (array $row) => ($row['recommendation']['type'] ?? null) === 'ready_next')->count();
             $developing = collect($metrics)->filter(fn (array $row) => in_array(($row['recommendation']['type'] ?? null), ['focus', 'needs_help'], true))->count();
+            $reviewSnapshot = $this->recitationsAwaitingReview($teacher, $ids);
+            $unreadSnapshot = $this->unreadMessageSnapshot($teacher, $ids);
 
             return [
                 'teacher' => $this->teacherProfile($teacher),
@@ -133,6 +135,14 @@ class TeacherDashboardService
                 'surahs' => $this->surahCatalog(),
                 'roster' => $this->organisationRoster($teacher, $ids),
                 'difficulty_queue' => $this->difficulties->reviewQueue($teacher, 10),
+                'snapshot' => [
+                    'recitations_awaiting_review' => $reviewSnapshot['count'],
+                    'review_student_id' => $reviewSnapshot['student_id'],
+                    'review_attempt_id' => $reviewSnapshot['attempt_id'],
+                    'overdue_tasks' => (int) ($assignments['overdue'] ?? 0),
+                    'unread_messages' => $unreadSnapshot['count'],
+                    'unread_student_id' => $unreadSnapshot['student_id'],
+                ],
             ];
         });
     }
@@ -2502,12 +2512,100 @@ class TeacherDashboardService
 
     private function unreadStudentMessageCount(User $teacher, User $student): int
     {
-        return (int) TeacherNote::query()
+        return $this->unreadMessageSnapshot($teacher, [(int) $student->id])['count'];
+    }
+
+    /**
+     * Scored recitations with no reviewed mark for this teacher.
+     * Repeated identical checks are counted once, matching the student recitation list.
+     *
+     * @param  list<int>  $studentIds
+     * @return array{count: int, student_id: int|null, attempt_id: int|null}
+     */
+    private function recitationsAwaitingReview(User $teacher, array $studentIds): array
+    {
+        $empty = ['count' => 0, 'student_id' => null, 'attempt_id' => null];
+        if ($studentIds === []) {
+            return $empty;
+        }
+
+        $attempts = $this->dedupeScoredAttempts(
+            AiReciteAttempt::query()
+                ->validScored()
+                ->whereIn('user_id', $studentIds)
+                ->get([
+                    'id',
+                    'user_id',
+                    'user_session_id',
+                    'memorisation_assessment_id',
+                    'teacher_assignment_recipient_id',
+                    'session_recommendation_id',
+                    'attempt_number',
+                    'ayah_range',
+                    'accuracy_percent',
+                    'band',
+                    'created_at',
+                ])
+        );
+        if ($attempts->isEmpty()) {
+            return $empty;
+        }
+
+        $reviewed = TeacherRecitationReview::query()
             ->where('teacher_id', $teacher->id)
-            ->where('student_id', $student->id)
+            ->where('status', TeacherRecitationReview::REVIEWED)
+            ->whereIn('ai_recite_attempt_id', $attempts->pluck('id')->all())
+            ->pluck('ai_recite_attempt_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+        $reviewedLookup = array_fill_keys($reviewed, true);
+        $pending = $attempts
+            ->filter(fn (AiReciteAttempt $attempt) => ! isset($reviewedLookup[(int) $attempt->id]))
+            ->sortByDesc(fn (AiReciteAttempt $attempt) => $attempt->created_at?->getTimestamp() ?? 0)
+            ->values();
+        $first = $pending->first();
+
+        return [
+            'count' => $pending->count(),
+            'student_id' => $first ? (int) $first->user_id : null,
+            'attempt_id' => $first ? (int) $first->id : null,
+        ];
+    }
+
+    /**
+     * Unread student messages visible in a direct thread or a task thread.
+     * Each note is counted once. Overdue tasks stay on the assignment status,
+     * which is refreshed from the due date's end of day in the application timezone.
+     *
+     * @param  list<int>  $studentIds
+     * @return array{count: int, student_id: int|null}
+     */
+    private function unreadMessageSnapshot(User $teacher, array $studentIds): array
+    {
+        if ($studentIds === []) {
+            return ['count' => 0, 'student_id' => null];
+        }
+
+        $notes = TeacherNote::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('student_id', $studentIds)
             ->whereNull('read_at')
-            ->whereIn('kind', [TeacherNoteKind::StudentMessage->value, TeacherNoteKind::Note->value])
-            ->count();
+            ->where(function ($query) {
+                $query->where(function ($direct) {
+                    $direct->whereNull('teacher_assignment_id')
+                        ->where('kind', TeacherNoteKind::StudentMessage->value);
+                })->orWhere(function ($task) {
+                    $task->whereNotNull('teacher_assignment_id')
+                        ->where('kind', TeacherNoteKind::Note->value);
+                });
+            })
+            ->orderByDesc('id')
+            ->get(['id', 'student_id']);
+
+        return [
+            'count' => $notes->unique('id')->count(),
+            'student_id' => $notes->first() ? (int) $notes->first()->student_id : null,
+        ];
     }
 
     /**

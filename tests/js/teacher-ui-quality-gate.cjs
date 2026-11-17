@@ -21,7 +21,7 @@ async function main() {
       await page.evaluate((value) => {
         document.documentElement.dataset.theme = value
       }, theme)
-      for (const view of ['Overview', 'Students', 'Attendance', 'Tasks', 'Account']) {
+      for (const view of ['Overview', 'Students', 'Attendance', 'Assignments', 'Account']) {
         const nav = page.locator(width <= 960 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop')
         await nav.getByRole('button', { name: view, exact: true }).click()
         await page.waitForTimeout(350)
@@ -55,7 +55,7 @@ async function main() {
           }
         })
         results.push({ width, theme, view, ...data })
-        if ((width === 390 || width === 1440) && (theme === 'sepia' || view === 'Tasks')) {
+        if ((width === 390 || width === 1440) && (theme === 'sepia' || view === 'Assignments')) {
           await page.screenshot({ path: `/private/tmp/mutqin-${view.toLowerCase()}-${width}-${theme}.png`, fullPage: false })
         }
       }
@@ -67,7 +67,7 @@ async function main() {
     if (result.filterClipped) issues.push('task filter hidden or clipped')
     if (result.view === 'Attendance' && !result.attendance) issues.push('attendance grid missing')
     if (result.main && result.navbar && result.main.y - (result.navbar.y + result.navbar.height) < 12) issues.push('navbar gutter under 12px')
-    if (result.view === 'Tasks' && result.filters && result.search) {
+    if (result.view === 'Assignments' && result.filters && result.search) {
       const horizontal = result.filters.x >= result.search.x + result.search.width
       const gap = horizontal
         ? result.filters.x - (result.search.x + result.search.width)
@@ -77,7 +77,7 @@ async function main() {
     }
     return issues.map((issue) => `${result.width}px ${result.theme} ${result.view}: ${issue}`)
   })
-  await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Assignments', exact: true }).click()
   await page.locator('.teacher-loading-inline').waitFor({ state: 'hidden' })
   for (const filter of await page.locator('.teacher-task-filters button:has(.teacher-task-filter__count)').all()) {
     const expected = Number(await filter.locator('.teacher-task-filter__count').innerText())
@@ -89,7 +89,7 @@ async function main() {
   }
   await page.locator('.teacher-search--tasks input').fill('qa-no-matching-task-zzzz')
   await page.locator('.teacher-task-empty').waitFor()
-  if (!await page.locator('.teacher-task-empty').getByText('No tasks match these filters.').count()) defects.push('Tasks search empty state missing')
+  if (!await page.locator('.teacher-task-empty').getByText('No assignments match these filters.').count()) defects.push('Assignments search empty state missing')
   await page.locator('.teacher-task-filters__clear').click()
   await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Students', exact: true }).click()
   await page.locator('.teacher-student-toolbar .teacher-search input').waitFor({ state: 'visible' })

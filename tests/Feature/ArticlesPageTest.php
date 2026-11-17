@@ -40,9 +40,8 @@ class ArticlesPageTest extends TestCase
         $this->assertStringContainsString('rel="canonical"', $html);
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/articles', 'marketing'), $html);
         $this->assertStringContainsString('BreadcrumbList', $html);
-        $this->assertStringContainsString('<a class="nav-link nav-link-guides', $html);
-        $this->assertStringContainsString('>Articles</strong>', $html);
-        $this->assertStringContainsString('<a class="nav-link nav-link-features', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-features', $html);
         $this->assertStringNotContainsString('data-tour="nav-dashboard"', $html);
     }
 
@@ -73,7 +72,7 @@ class ArticlesPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString(SeoCatalog::absoluteUrl('/articles/how-to-memorise-the-quran-beginners-guide', 'marketing'), $html);
-        $this->assertStringContainsString('<a class="nav-link nav-link-guides', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
     }
 
     public function test_complete_hifz_guide_article_is_published_with_verified_references(): void
@@ -103,16 +102,19 @@ class ArticlesPageTest extends TestCase
         $this->get('/articles/not-a-real-article')->assertNotFound();
     }
 
-    public function test_articles_and_how_it_works_nav_links_are_visible_when_enabled(): void
+    public function test_donate_articles_and_how_it_works_stay_out_of_navbar_when_enabled(): void
     {
+        $this->enableDonation();
+
         $html = $this->get('/articles')
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('<a class="nav-link nav-link-guides', $html);
-        $this->assertStringContainsString('>Articles</strong>', $html);
-        $this->assertStringContainsString('>How it works</strong>', $html);
-        $this->assertStringContainsString('href="'.url('/features').'"', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-donate', $html);
+        $this->assertStringNotContainsString('<a class="nav-link nav-link-features', $html);
+        $this->assertStringNotContainsString('>Articles</strong>', $html);
+        $this->assertStringNotContainsString('>How it works</strong>', $html);
     }
 
     public function test_articles_are_hidden_from_nav_sitemap_and_routes_when_disabled(): void
@@ -134,6 +136,6 @@ class ArticlesPageTest extends TestCase
         $html = $this->get('/')->assertOk()->getContent();
         $this->assertStringNotContainsString('<a class="nav-link nav-link-guides', $html);
         $this->assertStringNotContainsString('>Articles</strong>', $html);
-        $this->assertStringContainsString('>How it works</strong>', $html);
+        $this->assertStringNotContainsString('>How it works</strong>', $html);
     }
 }

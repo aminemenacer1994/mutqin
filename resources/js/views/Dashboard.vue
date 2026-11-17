@@ -199,8 +199,8 @@
         </div>
         </div>
 
-        <div v-show="studentPane === 'learning'" class="dash-pane">
-        <header class="learner-learning-greeting"><h1 id="dash-welcome-heading" tabindex="-1">{{ t('dashboard.jump_learning') }}</h1></header>
+        <div v-show="studentPane === 'learning'" id="dash-welcome-heading" class="dash-pane" tabindex="-1">
+        <h1 class="visually-hidden">{{ t('dashboard.jump_learning') }}</h1>
         <LearnerTeacherSection
           ref="learnerTeacherSection"
           v-if="showLearnerTeacherSection"

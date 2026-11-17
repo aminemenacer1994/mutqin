@@ -2,6 +2,19 @@
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    <section class="teacher-snapshot" aria-labelledby="teacher-snapshot-title">
+      <h3 id="teacher-snapshot-title">{{ t('teacher.snapshot_title') }}</h3>
+      <p v-if="!snapshot" class="teacher-snapshot__clear" role="status">{{ t('teacher.snapshot_unavailable') }}</p>
+      <p v-else-if="!snapshotItems.length" class="teacher-snapshot__clear" role="status">{{ t('teacher.snapshot_clear') }}</p>
+      <ul v-else class="teacher-snapshot__list">
+        <li v-for="item in snapshotItems" :key="item.id" class="teacher-snapshot__item" :class="{ 'is-priority': item.priority }">
+          <i :class="item.icon" aria-hidden="true"></i>
+          <strong class="teacher-snapshot__count">{{ item.count }}</strong>
+          <span class="teacher-snapshot__label">{{ item.label }}</span>
+          <button type="button" class="btn btn-sm" :class="item.priority ? 'btn-primary' : 'btn-outline-secondary'" @click="openSnapshot(item)">{{ item.action }}</button>
+        </li>
+      </ul>
+    </section>
     <section class="teacher-priorities" :aria-label="t('teacher.today_priorities')">
       <p>{{ t('teacher.today_priorities_summary', deskCounts) }}</p>
       <div class="teacher-priorities__actions">
@@ -18,13 +31,14 @@
       <div class="teacher-overview-secondary">
         <TeacherSectionPane :title="t('teacher.overview_recent_activity')" icon="bi bi-activity" flat>
           <ul v-if="recentActivity.length" class="teacher-activity-list">
-            <li v-for="student in recentActivity" :key="student.id">
+            <li v-for="student in recentActivity" :key="student.id" :class="{ 'has-wording': typeof student.ai_success_rate === 'number' }">
               <button type="button" @click="openActivity(student)">
                 <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
                 <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ activityLabel(student) }}</small></span>
-                <span v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></span>
-                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                <i v-if="typeof student.ai_success_rate !== 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
               </button>
+              <TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></TeacherWordingMatch>
+              <i v-if="typeof student.ai_success_rate === 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
             </li>
           </ul>
           <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
@@ -89,6 +103,7 @@ import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 export default {
   name: 'TeacherOverviewSection',
@@ -97,6 +112,7 @@ export default {
     TeacherEmpty,
     TeacherKpiGrid,
     TeacherSectionPane,
+    TeacherWordingMatch,
   },
   mixins: [i18nMixin],
   props: {
@@ -115,6 +131,45 @@ export default {
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
+    },
+    snapshot() {
+      const snapshot = this.overview?.snapshot
+      return snapshot && typeof snapshot.recitations_awaiting_review === 'number' ? snapshot : null
+    },
+    snapshotItems() {
+      const snapshot = this.snapshot
+      if (!snapshot) return []
+      return [
+        {
+          id: 'reviews',
+          count: Number(snapshot.recitations_awaiting_review || 0),
+          label: this.t('teacher.snapshot_reviews'),
+          action: this.t('teacher.snapshot_review'),
+          icon: 'bi bi-ear',
+          priority: true,
+          studentId: snapshot.review_student_id,
+          section: 'ai',
+          focus: snapshot.review_attempt_id ? { attemptId: snapshot.review_attempt_id } : null,
+        },
+        {
+          id: 'overdue',
+          count: Number(snapshot.overdue_tasks || 0),
+          label: this.t('teacher.snapshot_overdue'),
+          action: this.t('teacher.snapshot_tasks'),
+          icon: 'bi bi-journal-text',
+          priority: true,
+        },
+        {
+          id: 'messages',
+          count: Number(snapshot.unread_messages || 0),
+          label: this.t('teacher.snapshot_messages'),
+          action: this.t('teacher.snapshot_open_messages'),
+          icon: 'bi bi-chat-dots',
+          priority: false,
+          studentId: snapshot.unread_student_id,
+          section: 'messages',
+        },
+      ].filter((item) => item.count > 0)
     },
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
@@ -179,6 +234,13 @@ export default {
     },
     openStudent(id, section = 'ai', focus = null) {
       this.$emit('open-student', id, section, focus)
+    },
+    openSnapshot(item) {
+      if (item.id === 'overdue') {
+        this.$emit('open-assignments', 'overdue')
+        return
+      }
+      if (item.studentId) this.openStudent(item.studentId, item.section || 'ai', item.focus || null)
     },
   },
 }

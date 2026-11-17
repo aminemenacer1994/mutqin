@@ -2,12 +2,12 @@
   <section class="teacher-stack">
     <header class="teacher-page-header"><div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_settings') }}</h1></div></header>
     <div class="card teacher-account teacher-account--flat">
-      <div class="card-body teacher-profile-hero teacher-profile-hero--compact d-flex align-items-center gap-3">
+      <div class="teacher-account__identity">
         <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(teacherName) }}</span>
-        <div class="teacher-profile-hero__copy">
+        <div>
           <h2>{{ teacher?.name || teacherName }}</h2>
           <p v-if="teacher?.email" class="teacher-account__email">{{ teacher.email }}</p>
-          <p v-if="teacher?.organisation?.name" class="teacher-meta">
+          <p v-if="teacher?.organisation?.name" class="teacher-account__org">
             <i class="bi bi-building" aria-hidden="true"></i>
             {{ teacher.organisation.name }}
           </p>
@@ -15,7 +15,7 @@
       </div>
       <nav class="list-group list-group-flush teacher-account__nav" :aria-label="t('teacher.account_links_label')">
         <a class="list-group-item list-group-item-action teacher-account__link d-flex align-items-center gap-3" :href="practiceUrl">
-          <span class="teacher-account__link-icon teacher-account__link-icon--practice"><i class="bi bi-book" aria-hidden="true"></i></span>
+          <span class="teacher-account__link-icon"><i class="bi bi-book" aria-hidden="true"></i></span>
           <span class="teacher-account__link-text">
             <span class="teacher-account__link-title">{{ t('teacher.my_practice') }}</span>
             <span class="teacher-account__link-desc">{{ t('teacher.account_practice_hint') }}</span>
@@ -23,7 +23,7 @@
           <i class="bi bi-chevron-right teacher-account__link-chevron ms-auto" aria-hidden="true"></i>
         </a>
         <a class="list-group-item list-group-item-action teacher-account__link d-flex align-items-center gap-3" :href="profileUrl">
-          <span class="teacher-account__link-icon teacher-account__link-icon--profile"><i class="bi bi-person" aria-hidden="true"></i></span>
+          <span class="teacher-account__link-icon"><i class="bi bi-person" aria-hidden="true"></i></span>
           <span class="teacher-account__link-text">
             <span class="teacher-account__link-title">{{ t('teacher.profile') }}</span>
             <span class="teacher-account__link-desc">{{ t('teacher.account_profile_hint') }}</span>
@@ -31,21 +31,26 @@
           <i class="bi bi-chevron-right teacher-account__link-chevron ms-auto" aria-hidden="true"></i>
         </a>
       </nav>
-      <div class="card-body border-top">
-        <h2 class="h6">{{ t('teacher.account_classes') }}</h2>
-        <ul v-if="classes.length" class="list-unstyled mb-0">
+      <section class="teacher-account__panel">
+        <h2>{{ t('teacher.account_classes') }}</h2>
+        <ul v-if="classes.length" class="teacher-account__classes">
           <li v-for="group in classes" :key="group.id">
-            <strong>{{ group.name }}</strong>
-            <span> · {{ t('teacher.account_class_students', { n: group.authorised_students || 0 }) }}</span>
+            <span class="teacher-account__link-icon" aria-hidden="true"><i class="bi bi-people"></i></span>
+            <span class="teacher-account__link-text">
+              <span class="teacher-account__link-title">{{ group.name }}</span>
+              <span class="teacher-account__link-desc">{{ t('teacher.account_class_students', { n: group.authorised_students || 0 }) }}</span>
+            </span>
           </li>
         </ul>
-        <p v-else class="mb-0">{{ t('teacher.account_classes_empty') }}</p>
-      </div>
-      <div class="card-body border-top">
-        <h2 class="h6">{{ t('teacher.account_export') }}</h2>
-        <p>{{ t('teacher.account_export_help') }}</p>
+        <p v-else class="teacher-account__empty">{{ t('teacher.account_classes_empty') }}</p>
+      </section>
+      <section class="teacher-account__panel teacher-account__export">
+        <div>
+          <h2>{{ t('teacher.account_export') }}</h2>
+          <p>{{ t('teacher.account_export_help') }}</p>
+        </div>
         <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('export')">{{ t('teacher.account_export') }}</button>
-      </div>
+      </section>
     </div>
   </section>
 </template>

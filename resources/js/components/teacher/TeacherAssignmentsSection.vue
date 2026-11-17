@@ -96,6 +96,9 @@
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                 <span class="visually-hidden">{{ t('teacher.conversation') }}</span>
               </button>
+              <button v-if="item.taskStateDisplay === 'OVERDUE' && item.studentId" type="button" class="btn btn-sm btn-outline-secondary teacher-task-row__manage teacher-task-row__manage--icon" :aria-label="`${t('teacher.task_remind')}: ${item.studentName}`" :title="t('teacher.task_remind')" @click="remindItem = item">
+                <i class="bi bi-bell" aria-hidden="true"></i>
+              </button>
               <button v-if="canReviewPlayback(item)" type="button" class="btn btn-sm btn-primary teacher-task-row__review" :aria-label="`${t('teacher.task_review_submission')}: ${item.studentName}`" @click="openPlayback(item)">{{ t('teacher.task_review_submission') }}</button>
               <button v-else-if="item.studentId" type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('open-student', item.studentId, 'tasks', { taskId: item.recipientId })">{{ item.taskStateDisplay === 'DONE' ? t('teacher.task_view_results') : t('teacher.task_view') }}</button>
               <div v-if="item.canManage" class="teacher-plan-menu">
@@ -182,12 +185,25 @@
         />
       </template>
     </TeacherDialog>
+    <TeacherTaskReminder
+      :open="Boolean(remindItem)"
+      :student-name="remindItem?.studentName || ''"
+      :task-title="remindItem?.title || ''"
+      :due-label="remindItem?.dueText || ''"
+      :due-at="remindItem?.assignment?.due_at || ''"
+      :recipient-id="remindItem?.recipientId || null"
+      @close="remindItem = null"
+      @sent="onReminded"
+    />
     <TeacherRecitationPlaybackReview
       :open="Boolean(playbackItem)"
       :student-id="playbackItem?.studentId"
       :attempt-id="playbackItem?.evidence?.attempt_id"
+      :queue="playbackQueue"
       autoplay
       @close="playbackItem = null"
+      @navigate="onPlaybackNavigate"
+      @reviewed="$emit('refresh')"
     />
   </section>
 </template>
@@ -210,6 +226,7 @@ import TeacherMore from './TeacherMore.vue'
 import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
+import TeacherTaskReminder from './TeacherTaskReminder.vue'
 import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { learningApi } from '../../scripts/api/learning'
 
@@ -217,7 +234,7 @@ const STEP = 25
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskSheet },
+  components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskReminder, TeacherTaskSheet },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
@@ -250,6 +267,7 @@ export default {
       messageSentTimer: null,
       reviewSaving: false,
       playbackItem: null,
+      remindItem: null,
       compactView: false,
       taskMenuKey: null,
     }
@@ -371,6 +389,11 @@ export default {
     visibleItems() {
       return this.filteredItems.slice(0, this.shown)
     },
+    playbackQueue() {
+      return this.filteredItems
+        .filter((item) => item.studentId && item.evidence?.attempt_id)
+        .map((item) => ({ studentId: item.studentId, attemptId: item.evidence.attempt_id }))
+    },
   },
   methods: {
     normalizedStatus(status) {
@@ -395,8 +418,15 @@ export default {
       this.$emit('remove', this.removeItem.assignment.id)
       this.closeRemove()
     },
+    onReminded(result) {
+      if (result?.fresh) this.$emit('refresh')
+    },
     openPlayback(item) {
       this.playbackItem = item
+    },
+    onPlaybackNavigate(item) {
+      const match = this.filteredItems.find((entry) => Number(entry.evidence?.attempt_id) === Number(item?.attemptId))
+      if (match) this.playbackItem = match
     },
     canReviewPlayback(item) {
       return Boolean(item?.studentId && item?.evidence?.attempt_id)

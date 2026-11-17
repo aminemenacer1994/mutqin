@@ -69,11 +69,12 @@ assert.equal(drawerRow.range.surah, 1)
 assert.equal(drawerRow.words.length, 1)
 assert.equal(drawerRow.evidenceState, 'ready')
 
-assert.deepEqual(teacherDeskCounts({}), { reviews: 0, overdue: 0, plans: 0 })
+assert.deepEqual(teacherDeskCounts({}), { reviews: 0, recitations: 0, overdue: 0, plans: 0, unread: 0 })
 assert.deepEqual(teacherDeskCounts({
   assignments: { awaiting_confirmation: 2, overdue: 4 },
   kpis: { overdue_assignments: 4, open_recommendations: 1 },
-}), { reviews: 2, overdue: 4, plans: 1 })
+  snapshot: { recitations_awaiting_review: 5, overdue_tasks: 4, unread_messages: 2 },
+}), { reviews: 2, recitations: 5, overdue: 4, plans: 1, unread: 2 })
 assert.equal(assignmentPassageKey({
   studentId: 9,
   assignment: { surah_number: 1, ayah_start: 1, ayah_end: 7, kind: 'ai_recite' },

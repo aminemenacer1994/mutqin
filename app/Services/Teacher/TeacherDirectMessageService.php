@@ -9,6 +9,7 @@ use App\Models\GroupMembership;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Support\TeacherOverviewCache;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
@@ -51,6 +52,7 @@ class TeacherDirectMessageService
             ->pluck('id');
         if ($unreadIds->isNotEmpty()) {
             TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
+            TeacherOverviewCache::forget((int) $teacher->id);
         }
 
         return $presented;
@@ -127,6 +129,10 @@ class TeacherDirectMessageService
             throw ValidationException::withMessages([
                 'audio' => 'Use a supported voice recording smaller than 8 MB.',
             ]);
+        }
+
+        if ((int) $sender->id === (int) $student->id) {
+            TeacherOverviewCache::forget((int) $teacher->id);
         }
 
         return $note->refresh();

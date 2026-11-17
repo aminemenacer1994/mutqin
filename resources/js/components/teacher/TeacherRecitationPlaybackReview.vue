@@ -13,7 +13,7 @@
   >
     <template #pills>
       <span v-if="passageLabel" class="teacher-playback__crumb">{{ passageLabel }}</span>
-      <span v-if="payload && checkerScore" class="teacher-playback__crumb" :class="scoreTone">{{ t('teacher.playback_wording_score', { n: checkerScore }) }}</span>
+      <TeacherWordingMatch v-if="payload && checkerScore" class="teacher-playback__crumb" :class="scoreTone">{{ t('teacher.playback_wording_score', { n: checkerScore }) }}</TeacherWordingMatch>
       <span v-if="payload" class="teacher-playback__crumb" :class="reviewTone">{{ reviewLabel }}</span>
     </template>
     <div class="teacher-playback">
@@ -36,7 +36,7 @@
                   @ended="playing = false"
                   @error="audioError = true"
                 ></audio>
-                <div v-if="hasAudio" class="teacher-playback__transport" role="group" :aria-label="t('teacher.playback_review_title')">
+                <div v-if="hasAudio && !audioError" class="teacher-playback__transport" role="group" :aria-label="t('teacher.playback_review_title')">
                   <button type="button" class="teacher-playback__play" :disabled="!hasAudio" :aria-label="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" :title="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" @click="togglePlayback">
                     <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                   </button>
@@ -58,8 +58,15 @@
                     <span>{{ formatTime(trackEnd) }}</span>
                   </p>
                 </div>
-                <p v-if="hasAudio && audioError" class="teacher-playback__hint teacher-playback__hint--solo"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ t('teacher.recording_unavailable') }}</p>
-                <p v-else-if="!hasAudio" class="teacher-playback__hint teacher-playback__hint--solo"><i class="bi bi-mic" aria-hidden="true"></i>{{ audioUnavailableLabel }}</p>
+                <div v-if="hasAudio && audioError" class="teacher-playback__missing">
+                  <p><i class="bi bi-exclamation-circle" aria-hidden="true"></i><strong>{{ t('teacher.recording_state_unavailable') }}</strong></p>
+                  <p>{{ t('teacher.recording_play_failed') }}</p>
+                </div>
+                <div v-else-if="!hasAudio" class="teacher-playback__missing">
+                  <p><i class="bi bi-mic" aria-hidden="true"></i><strong>{{ audioGap.title }}</strong></p>
+                  <p>{{ audioGap.body }}</p>
+                  <button v-if="canRequestRecording" type="button" class="btn btn-outline-secondary btn-sm" @click="requestAnotherRecording">{{ t('teacher.recording_request') }}</button>
+                </div>
               </div>
                 <div class="teacher-playback__legend" :aria-label="t('teacher.playback_follow')">
                   <span class="is-correct">{{ t('teacher.word_status_correct') }}</span>
@@ -279,7 +286,7 @@
                 </div>
                 <label class="teacher-playback__field">
                   <span class="visually-hidden">{{ t('teacher.playback_feedback') }}</span>
-                  <textarea v-model="feedback" rows="2" maxlength="2000" :placeholder="t('teacher.playback_feedback_placeholder')" :disabled="saving"></textarea>
+                  <textarea v-model="feedback" rows="2" maxlength="2000" :placeholder="t('teacher.playback_feedback_placeholder')" :disabled="Boolean(saving)"></textarea>
                 </label>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_optional') }}</p>
                 <div class="teacher-playback__action-row">
@@ -332,15 +339,30 @@
     </div>
     <template #footer>
       <div v-if="payload && !loading" class="teacher-playback__review-status">
-        <p>
+        <p v-if="queuePosition" class="teacher-playback__queue">{{ queuePosition }}</p>
+        <p class="teacher-playback__review-copy">
           <strong>{{ reviewStatusHeading }}</strong>
           <span v-if="reviewedAtLabel"> · {{ reviewedAtLabel }}</span>
         </p>
-        <button v-if="!reviewed" type="button" class="btn btn-primary teacher-playback__mark" :disabled="Boolean(saving) || voiceState.active || wordVoiceState.active" @click="completeReview">
-          <i class="bi" :class="saving === 'review' ? 'bi-arrow-repeat' : 'bi-check2-circle'" aria-hidden="true"></i>
-          {{ saving === 'review' ? t('teacher.saving') : t('teacher.playback_complete_review') }}
-        </button>
-        <span v-else class="teacher-playback__saved">{{ t('teacher.playback_follow_up') }}</span>
+        <div class="teacher-playback__review-actions">
+          <button type="button" class="btn btn-outline-secondary" :disabled="!hasNext || Boolean(saving) || moving || loading" @click="requestNext">
+            {{ t('teacher.playback_next') }}
+          </button>
+          <button v-if="!reviewed" type="button" class="btn btn-primary teacher-playback__mark" :disabled="Boolean(saving) || voiceState.active || wordVoiceState.active" @click="completeReview">
+            <i class="bi" :class="saving === 'review' ? 'bi-arrow-repeat' : 'bi-check2-circle'" aria-hidden="true"></i>
+            {{ saving === 'review' ? t('teacher.saving') : t('teacher.playback_complete_review') }}
+          </button>
+          <span v-else class="teacher-playback__saved">{{ t('teacher.playback_follow_up') }}</span>
+        </div>
+        <div v-if="navPrompt" class="teacher-playback__nav-prompt" role="group" :aria-label="t('teacher.playback_unsaved_prompt')">
+          <p>{{ t('teacher.playback_unsaved_prompt') }}</p>
+          <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
+          <div class="teacher-playback__nav-actions">
+            <button ref="navSave" type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving)" @click="saveAndNext">{{ saving === 'next' ? t('teacher.saving') : t('teacher.playback_unsaved_save') }}</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="discardAndNext">{{ t('teacher.playback_unsaved_discard') }}</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="navPrompt = false">{{ t('teacher.playback_unsaved_cancel') }}</button>
+          </div>
+        </div>
       </div>
     </template>
   </TeacherDialog>
@@ -367,12 +389,13 @@ import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherReciteMushafAyahs from './TeacherReciteMushafAyahs.vue'
 import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 let playbackUid = 0
 
 export default {
   name: 'TeacherRecitationPlaybackReview',
-  components: { TeacherAudioFeedbackPlayer, TeacherDialog, TeacherReciteMushafAyahs, TeacherVoiceNoteControls },
+  components: { TeacherAudioFeedbackPlayer, TeacherDialog, TeacherReciteMushafAyahs, TeacherVoiceNoteControls, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -380,8 +403,9 @@ export default {
     attemptId: { type: [Number, String], default: null },
     autoplay: { type: Boolean, default: false },
     focusAyah: { type: [Number, String], default: null },
+    queue: { type: Array, default: () => [] },
   },
-  emits: ['close', 'reviewed'],
+  emits: ['close', 'reviewed', 'navigate'],
   data() {
     playbackUid += 1
     return {
@@ -425,11 +449,35 @@ export default {
       saving: '',
       actionError: '',
       actionMessage: '',
+      navPrompt: false,
+      moving: false,
+      queueScroll: false,
+      queueSnapshot: [],
     }
   },
   computed: {
     hasUnsavedWork() {
       return studioHasDraft(this)
+    },
+    queueItems() {
+      const seen = new Set()
+      return (this.queue || []).map((item) => ({
+        studentId: Number(item.studentId || item.student_id),
+        attemptId: Number(item.attemptId || item.attempt_id),
+      })).filter((item) => item.studentId > 0 && item.attemptId > 0 && !seen.has(item.attemptId) && seen.add(item.attemptId))
+    },
+    activeQueue() {
+      return this.queueSnapshot.length ? this.queueSnapshot : this.queueItems
+    },
+    queueIndex() {
+      return this.activeQueue.findIndex((item) => item.attemptId === Number(this.attemptId))
+    },
+    queuePosition() {
+      if (!this.activeQueue.length || this.queueIndex < 0) return ''
+      return this.t('teacher.playback_queue_position', { n: this.queueIndex + 1, total: this.activeQueue.length })
+    },
+    hasNext() {
+      return this.queueIndex >= 0 && this.queueIndex < this.activeQueue.length - 1
     },
     ayahNumbers() {
       return [...new Set(this.ayahs.flatMap(line => line.parts.map(part => part.ayah)).filter(ayah => Number.isInteger(ayah) && ayah > 0))].sort((a, b) => a - b)
@@ -580,10 +628,18 @@ export default {
       if (timing.timed_words < timing.total_words) return this.t('teacher.playback_partial_timing')
       return ''
     },
-    audioUnavailableLabel() {
+    audioGap() {
       const reason = this.payload?.audio?.reason
-      if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
-      return this.t('teacher.recording_unavailable')
+      const title = {
+        none: 'teacher.recording_state_not_recorded',
+        expired: 'teacher.recording_state_expired',
+        purged: 'teacher.recording_state_not_retained',
+        missing: 'teacher.recording_state_unavailable',
+      }[reason] || 'teacher.recording_state_unavailable'
+      return { title: this.t(title), body: this.t('teacher.recording_unavailable_body') }
+    },
+    canRequestRecording() {
+      return Boolean(this.payload?.suggested_revision && !this.payload?.review?.revision)
     },
     currentAyah() {
       return ayahAtTime(this.words, this.currentTime)
@@ -673,6 +729,7 @@ export default {
   watch: {
     open(value) {
       if (value) {
+        this.captureQueue()
         this.load()
         window.addEventListener('keydown', this.onShortcut)
       } else {
@@ -682,7 +739,16 @@ export default {
       }
     },
     attemptId() {
+      this.moving = false
+      this.navPrompt = false
       if (this.open) this.load()
+    },
+    queue: {
+      deep: true,
+      handler() {
+        if (!this.open) return
+        if (this.queueItems.some((item) => item.attemptId === Number(this.attemptId))) this.captureQueue()
+      },
     },
     activeKey(key) {
       if (!key) return
@@ -739,6 +805,8 @@ export default {
         return
       }
       const token = ++this.loadToken
+      const resetScroll = this.queueScroll
+      this.queueScroll = false
       this.loading = true
       this.loadError = ''
       this.payload = null
@@ -778,9 +846,13 @@ export default {
         this.loading = false
         await this.loadMushaf(token)
         if (token !== this.loadToken) return
-        const focusAyah = Number(this.focusAyah)
-        if (focusAyah > 0) this.$nextTick(() => this.selectAyah(focusAyah))
-        else if (this.autoplay) this.$nextTick(() => this.togglePlayback())
+        if (resetScroll) {
+          this.$nextTick(() => this.resetPlaybackScroll())
+        } else {
+          const focusAyah = Number(this.focusAyah)
+          if (focusAyah > 0) this.$nextTick(() => this.selectAyah(focusAyah))
+          else if (this.autoplay) this.$nextTick(() => this.togglePlayback())
+        }
       } catch (err) {
         if (token !== this.loadToken) return
         this.loadError = this.failureMessage(err)
@@ -1126,6 +1198,13 @@ export default {
         this.saving = ''
       }
     },
+    requestAnotherRecording() {
+      if (!this.canRequestRecording) return
+      if (!this.revisionNote.trim()) this.revisionNote = this.t('teacher.recording_request_note')
+      this.$nextTick(() => {
+        document.querySelector('.teacher-dialog.teacher-playback-studio .teacher-playback__revision textarea')?.focus()
+      })
+    },
     async assignRevision() {
       if (this.saving || this.payload?.review?.revision || !this.payload?.suggested_revision || !this.dueAt || this.dueAt < this.today) return
       this.saving = 'revision'
@@ -1159,8 +1238,109 @@ export default {
         return false
       }
     },
+    resetPlaybackScroll() {
+      const dialog = document.querySelector('.teacher-dialog.teacher-playback-studio')
+      if (!dialog) return
+      dialog.querySelectorAll('.modal-body, .teacher-playback__main, .teacher-playback__side').forEach((node) => {
+        node.scrollTop = 0
+      })
+    },
+    requestNext() {
+      if (!this.hasNext || this.saving || this.moving || this.loading) return
+      if (this.hasUnsavedWork) {
+        this.navPrompt = true
+        this.$nextTick(() => this.$refs.navSave?.focus())
+        return
+      }
+      this.moveToNext()
+    },
+    async saveAndNext() {
+      if (this.saving || this.moving || !this.hasNext) return
+      this.saving = 'next'
+      this.actionError = ''
+      this.actionMessage = ''
+      const saved = await this.savePendingWork()
+      this.saving = ''
+      if (!saved) return
+      this.navPrompt = false
+      this.moveToNext()
+    },
+    discardAndNext() {
+      if (this.saving || !this.hasNext) return
+      this.discardDrafts()
+      this.navPrompt = false
+      this.actionError = ''
+      this.moveToNext()
+    },
+    discardDrafts() {
+      this.feedback = ''
+      this.feedbackRequest = null
+      this.privateNote = ''
+      this.revisionNote = ''
+      this.dueAt = this.initialDueAt || this.defaultDue()
+      this.wordNote = ''
+      this.wordStatus = ''
+      this.annotationFinding = ''
+      this.annotationFocus = ''
+      this.wordDrafts = {}
+      this.wordStatusDrafts = {}
+      this.wordDueAt = this.initialWordDueAt || this.dueAt
+      this.$refs.voice?.discardRecording()
+      this.$refs.wordVoice?.discardRecording()
+      this.voiceState = { hasRecording: false, active: false }
+      this.wordVoiceState = { hasRecording: false, active: false }
+    },
+    async savePendingWork() {
+      if (this.voiceState.active || this.wordVoiceState.active || this.$refs.voice?.isRecordingActive || this.$refs.wordVoice?.isRecordingActive) {
+        this.actionError = this.t('teacher.playback_finish_recording')
+        this.actionMessage = ''
+        return false
+      }
+      if (this.pendingFeedback) {
+        const savedFeedback = await this.persistFeedback()
+        if (!savedFeedback) return false
+      }
+      if (this.pendingRevision) {
+        const savedRevision = await this.persistRevision()
+        if (!savedRevision) return false
+      }
+      const note = this.privateNote.trim()
+      if (note) {
+        try {
+          const payload = await learningApi.saveTeacherRecitationPrivateNote(this.studentId, this.attemptId, note)
+          this.applyPayload(payload)
+          this.privateNote = ''
+        } catch (err) {
+          this.actionError = this.failureMessage(err)
+          this.actionMessage = ''
+          return false
+        }
+      }
+      if (studioHasDraft(this)) {
+        this.actionError = this.t('teacher.playback_word_unsaved')
+        this.actionMessage = ''
+        return false
+      }
+      return true
+    },
+    captureQueue() {
+      this.queueSnapshot = this.queueItems
+    },
+    moveToNext() {
+      const next = this.activeQueue[this.queueIndex + 1]
+      if (!next) return
+      this.moving = true
+      this.navPrompt = false
+      this.queueScroll = true
+      this.$refs.player?.pause()
+      this.$emit('navigate', next)
+      this.$nextTick(() => {
+        if (Number(this.attemptId) !== next.attemptId) this.moving = false
+      })
+    },
     async completeReview() {
       if (this.saving || this.reviewed) return
+      this.navPrompt = false
       if (this.voiceState.active || this.wordVoiceState.active || this.$refs.voice?.isRecordingActive) {
         this.actionError = this.t('teacher.playback_finish_recording')
         this.actionMessage = ''

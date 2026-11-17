@@ -4,7 +4,6 @@
       <div>
         <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
         <h1 id="teacher-reviews-heading" class="teacher-page-header__title">{{ t('teacher.nav_reviews') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
       </div>
     </header>
     <section v-if="deskCounts.reviews || deskCounts.overdue" class="teacher-priorities">
@@ -21,30 +20,30 @@
     </div>
 
     <div v-else class="teacher-overview-columns">
-      <TeacherSectionPane :title="t('teacher.reviews_recent')" :hint="t('teacher.reviews_recent_hint')" icon="bi bi-ear" flat>
+      <TeacherSectionPane :title="t('teacher.reviews_recent')" icon="bi bi-ear" flat>
         <ul v-if="recent.length" class="teacher-activity-list">
-          <li v-for="row in recent" :key="row.id">
+          <li v-for="row in recent" :key="row.id" :class="{ 'has-wording': typeof row.accuracy_percent === 'number' }">
             <button type="button" @click="openStudent(row.student_id, 'ai')">
               <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
               <span class="teacher-activity-list__copy">
                 <strong>{{ row.student_name }}</strong>
                 <small>{{ rangeLabel(row) }} · {{ formatWhen(row.created_at) }}</small>
-                <small v-if="bandLabel(row.band)">{{ bandLabel(row.band) }}</small>
               </span>
-              <span v-if="typeof row.accuracy_percent === 'number'" class="teacher-activity-list__score" :class="scoreClass(row.accuracy_percent)">
-                {{ row.accuracy_percent }}%
-                <small>{{ t('teacher.reviews_words_matched') }}</small>
-              </span>
-              <span v-else></span>
-              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              <span v-if="typeof row.accuracy_percent !== 'number'"></span>
+              <i v-if="typeof row.accuracy_percent !== 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
+            <TeacherWordingMatch v-if="typeof row.accuracy_percent === 'number'" class="teacher-activity-list__score" :class="scoreClass(row.accuracy_percent)">
+              {{ row.accuracy_percent }}%
+              <small>{{ t('teacher.reviews_words_matched') }}</small>
+            </TeacherWordingMatch>
+            <i v-if="typeof row.accuracy_percent === 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
           </li>
         </ul>
         <p v-else class="mb-0">{{ t('teacher.reviews_recent_empty') }}</p>
       </TeacherSectionPane>
 
       <div class="teacher-overview-secondary">
-        <TeacherSectionPane :title="t('teacher.reviews_flags')" :hint="t('teacher.reviews_flags_hint')" icon="bi bi-bullseye" tone="warn" flat>
+        <TeacherSectionPane :title="t('teacher.reviews_flags')" icon="bi bi-bullseye" tone="warn" flat>
           <ul v-if="flags.length" class="teacher-activity-list">
             <li v-for="row in flags" :key="row.student_id">
               <button type="button" @click="openStudent(row.student_id, 'ai')">
@@ -62,7 +61,7 @@
           <p v-else class="mb-0">{{ t('teacher.reviews_flags_empty') }}</p>
         </TeacherSectionPane>
 
-        <TeacherSectionPane :title="t('teacher.reviews_revision')" :hint="t('teacher.reviews_revision_hint')" icon="bi bi-arrow-repeat" flat>
+        <TeacherSectionPane :title="t('teacher.reviews_revision')" icon="bi bi-arrow-repeat" flat>
           <ul v-if="revision.length" class="teacher-activity-list">
             <li v-for="row in revision" :key="row.recipient_id">
               <button type="button" @click="openStudent(row.student_id, 'tasks')">
@@ -89,10 +88,11 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { studentInitial, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherSectionPane from './TeacherSectionPane.vue'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 export default {
   name: 'TeacherReviewsSection',
-  components: { TeacherSectionPane },
+  components: { TeacherSectionPane, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     overview: { type: Object, default: null },
@@ -128,12 +128,6 @@ export default {
       if (!row.ayah_start) return name
       const end = row.ayah_end && row.ayah_end !== row.ayah_start ? `–${row.ayah_end}` : ''
       return `${name} · ${row.ayah_start}${end}`
-    },
-    bandLabel(band) {
-      if (band === 'strong') return this.t('teacher.reviews_band_strong')
-      if (band === 'mixed') return this.t('teacher.reviews_band_mixed')
-      if (band === 'weak') return this.t('teacher.reviews_band_weak')
-      return ''
     },
     scoreClass(percent) {
       if (percent >= 80) return 'teacher-activity-list__score--good'

@@ -521,8 +521,8 @@ export function useTeacherDashboard(authRef) {
 
   function refreshStudentProfile() {
     const id = profile.value?.student?.id
-    if (!id) return
-    loadProfile(id, profileSection.value, false, { force: true })
+    if (id) loadProfile(id, profileSection.value, false, { force: true })
+    loadOverview()
   }
 
   function beginEditAssignment(row) {
@@ -709,6 +709,7 @@ export function useTeacherDashboard(authRef) {
     await loadOverview()
     if (view.value === 'students' || view.value === 'assignments') await loadStudents(1)
     if (view.value === 'assignments') await Promise.all([loadAssignments(), loadAssignmentRoster()])
+    if (view.value === 'settings') await loadTeacherGroups()
     const params = new URLSearchParams(window.location.search)
     if (view.value === 'student' && params.get('student')) {
       await loadProfile(params.get('student'), params.get('section') || 'ai', false, { force: Boolean(profileFocus.value) })

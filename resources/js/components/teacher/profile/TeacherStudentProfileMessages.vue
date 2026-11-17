@@ -1,13 +1,23 @@
 <template>
   <TeacherSectionPane tone="neutral" flat>
+    <div class="teacher-messages-layout">
     <section class="teacher-direct-thread teacher-direct-thread--chat" :aria-label="t('teacher.messages')">
       <header class="teacher-direct-thread__head">
         <div class="teacher-direct-thread__head-copy">
           <p>{{ t('teacher.messages_context') }}</p>
         </div>
-        <button v-if="hasTaskLink" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-tasks')">
-          {{ t('teacher.messages_related_tasks') }}
-        </button>
+        <label class="teacher-direct-thread__search">
+          <span class="visually-hidden">{{ t('teacher.message_search') }}</span>
+          <input v-model="search" type="search" :placeholder="t('teacher.message_search')">
+        </label>
+        <div class="teacher-direct-thread__tools">
+          <button v-if="unreadCount" type="button" class="btn btn-outline-secondary btn-sm" @click="jumpToUnread">
+            {{ t('teacher.message_unread_jump', { n: unreadCount }) }}
+          </button>
+          <button v-if="hasTaskLink" type="button" class="btn btn-outline-secondary btn-sm teacher-direct-thread__related" @click="$emit('open-tasks')">
+            {{ t('teacher.messages_related_tasks') }}
+          </button>
+        </div>
       </header>
 
       <p v-if="taskContext?.title" class="teacher-direct-thread__context">
@@ -21,6 +31,7 @@
           <span aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
           <p>{{ t('teacher.messages_start') }}</p>
         </div>
+        <p v-else-if="search.trim() && !visibleMessages.length" class="teacher-direct-thread__empty">{{ t('teacher.message_search_empty') }}</p>
         <button v-if="hiddenCount > 0" type="button" class="teacher-direct-thread__earlier" @click="loadEarlier">
           {{ t('teacher.messages_load_earlier') }}
         </button>
@@ -45,6 +56,16 @@
               <time :datetime="message.created_at">{{ formatMessageWhen(message.created_at) }}</time>
               <small v-if="showReceipt(message)">{{ t('teacher.message_read') }}</small>
               <button
+                v-if="message.body"
+                type="button"
+                class="teacher-direct-thread__tool"
+                :aria-label="copiedId === message.id ? t('teacher.message_copied') : t('teacher.message_copy')"
+                :title="copiedId === message.id ? t('teacher.message_copied') : t('teacher.message_copy')"
+                @click="copyMessage(message)"
+              >
+                <i class="bi" :class="copiedId === message.id ? 'bi-check2' : 'bi-clipboard'" aria-hidden="true"></i>
+              </button>
+              <button
                 v-if="message.sender === 'teacher' && !message.task"
                 type="button"
                 class="teacher-direct-thread__delete"
@@ -60,11 +81,10 @@
         </template>
       </div>
 
-      <div class="teacher-direct-thread__replies" role="group" :aria-label="t('teacher.message_replies')">
-        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="saving" @click="useReply('teacher.message_reply_well_done')">{{ t('teacher.message_reply_well_done') }}</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="saving" @click="useReply('teacher.message_reply_repeat')">{{ t('teacher.message_reply_repeat') }}</button>
-      </div>
       <form class="teacher-direct-thread__composer" :aria-busy="saving ? 'true' : 'false'" @submit.prevent="send">
+        <div class="teacher-direct-thread__replies" role="group" :aria-label="t('teacher.message_replies')">
+          <button v-for="key in quickReplies" :key="key" type="button" class="btn btn-sm btn-outline-secondary" :disabled="saving" @click="useReply(key)">{{ t(key) }}</button>
+        </div>
         <label class="visually-hidden" for="teacher-direct-reply">{{ t('teacher.message') }}</label>
         <textarea
           id="teacher-direct-reply"
@@ -93,6 +113,30 @@
         </div>
       </form>
     </section>
+    <aside v-if="showMessageContext" class="teacher-messages-context" :aria-label="t('teacher.messages_context_title')">
+      <h3>{{ profile.student?.name }}</h3>
+      <p v-if="latestRecitation" class="teacher-messages-context__line">
+        <span>{{ t('teacher.messages_context_latest') }}</span>
+        <strong>{{ latestRecitation.range }}</strong>
+        <span>{{ latestRecitation.status }}</span>
+      </p>
+      <p v-if="wordingLabel" class="teacher-messages-context__line">
+        <span>{{ t('teacher.ai_word_match_short') }}</span>
+        <strong>{{ wordingLabel }}</strong>
+      </p>
+      <p v-if="overdueCount" class="teacher-messages-context__line">
+        <span>{{ t('teacher.snapshot_overdue') }}</span>
+        <strong>{{ overdueCount }}</strong>
+      </p>
+      <ul v-if="contextTasks.length">
+        <li v-for="task in contextTasks" :key="task.id">{{ task.title }}</li>
+      </ul>
+      <div class="teacher-messages-context__links">
+        <button type="button" class="btn btn-link btn-sm" @click="$emit('open-tasks')">{{ t('teacher.messages_context_tasks') }}</button>
+        <button type="button" class="btn btn-link btn-sm" @click="$emit('open-recitations')">{{ t('teacher.messages_context_recitations') }}</button>
+      </div>
+    </aside>
+    </div>
   </TeacherSectionPane>
 </template>
 
@@ -104,6 +148,7 @@ import TeacherSectionPane from '../TeacherSectionPane.vue'
 import TeacherVoiceNoteControls from '../TeacherVoiceNoteControls.vue'
 import autoGrow from '../../../directives/autoGrow.js'
 import { formatLearnerDisplayDate } from '../../../utils/learnerDisplayDate.js'
+import { taskIsOverdue } from '../../../scripts/teacher/taskState'
 
 const PAGE_SIZE = 40
 
@@ -117,7 +162,7 @@ export default {
     formatWhen: { type: Function, required: true },
     taskContext: { type: Object, default: null },
   },
-  emits: ['open-task', 'open-tasks', 'clear-context', 'unsent-change', 'unread-change'],
+  emits: ['open-task', 'open-tasks', 'open-recitations', 'clear-context', 'unsent-change', 'unread-change', 'marked-read'],
   data() {
     return {
       draft: '',
@@ -137,6 +182,9 @@ export default {
       visibleCount: PAGE_SIZE,
       restoring: false,
       voiceState: { hasRecording: false, active: false },
+      search: '',
+      copiedId: null,
+      announcedUnread: 0,
     }
   },
   watch: {
@@ -154,6 +202,8 @@ export default {
       handler(list) {
         const unread = (list || []).filter((message) => message?.unread && message?.sender !== 'teacher').length
         this.$emit('unread-change', unread)
+        if (unread > this.announcedUnread) this.$emit('marked-read')
+        this.announcedUnread = unread
       },
     },
   },
@@ -165,16 +215,69 @@ export default {
         .filter((message) => !removed.has(message.id))
         .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
     },
+    quickReplies() {
+      return [
+        'teacher.message_reply_well_done',
+        'teacher.message_reply_repeat',
+        'teacher.message_reply_record',
+        'teacher.message_reply_keep_going',
+      ]
+    },
+    filteredMessages() {
+      const needle = this.search.trim().toLocaleLowerCase()
+      if (!needle) return this.messages
+      return this.messages.filter((message) => `${message.body || ''} ${this.taskTitle(message.task)}`.toLocaleLowerCase().includes(needle))
+    },
     hiddenCount() {
-      return Math.max(0, this.messages.length - this.visibleCount)
+      if (this.search.trim()) return 0
+      return Math.max(0, this.filteredMessages.length - this.visibleCount)
     },
     visibleMessages() {
-      return this.messages.slice(this.hiddenCount)
+      return this.filteredMessages.slice(this.hiddenCount)
+    },
+    unreadCount() {
+      return this.messages.filter((message) => message?.unread && message?.sender !== 'teacher').length
     },
     hasTaskLink() {
       return this.messages.some((message) => message.task?.id)
     },
     hasVoiceNote() { return this.voiceState.hasRecording },
+    overdueCount() {
+      return Number(this.profile?.meta?.assignments_overdue || 0)
+    },
+    wordingLabel() {
+      const rate = this.profile?.meta?.ai_success_rate
+      return typeof rate === 'number' ? `${rate}%` : ''
+    },
+    latestRecitation() {
+      const attempt = this.profile?.sectionPayloads?.ai?.attempts?.[0]
+      if (!attempt) return null
+      const range = attempt.range
+      const label = range?.surah_name && range.from
+        ? `${range.surah_name} ${range.from}–${range.to || range.from}`
+        : ''
+      if (!label) return null
+      return {
+        range: label,
+        status: attempt.review?.status === 'reviewed'
+          ? this.t('teacher.messages_context_reviewed')
+          : this.t('teacher.messages_context_pending'),
+      }
+    },
+    contextTasks() {
+      const items = this.profile?.sectionPayloads?.tasks?.assignments
+      if (!Array.isArray(items)) return []
+      return items.filter((item) => taskIsOverdue(item)).slice(0, 3).map((item) => {
+        const assignment = item.assignment || {}
+        return {
+          id: item.id,
+          title: `${assignment.surah_name || ''} ${assignment.ayah_start}–${assignment.ayah_end}`.trim(),
+        }
+      }).filter((item) => item.title)
+    },
+    showMessageContext() {
+      return Boolean(this.latestRecitation || this.wordingLabel || this.overdueCount || this.contextTasks.length)
+    },
     canSend() {
       if (this.saving || this.voiceState.active) return false
       return Boolean(this.draft.trim() || this.voiceState.hasRecording)
@@ -234,6 +337,9 @@ export default {
       this.sent = []
       this.synced = []
       this.removed = []
+      this.search = ''
+      this.copiedId = null
+      this.announcedUnread = 0
       this.error = ''
       this.success = ''
       this.loadError = ''
@@ -243,6 +349,26 @@ export default {
     },
     onVoiceChange(state) {
       this.voiceState = state || { hasRecording: false, active: false }
+    },
+    async copyMessage(message) {
+      const body = String(message?.body || '').trim()
+      if (!body) return
+      try {
+        await navigator.clipboard.writeText(body)
+        this.copiedId = message.id
+        window.setTimeout(() => { if (this.copiedId === message.id) this.copiedId = null }, 1600)
+      } catch (_) {
+        this.error = this.t('teacher.action_failed')
+      }
+    },
+    jumpToUnread() {
+      const index = this.messages.findIndex((message) => message?.unread && message?.sender !== 'teacher')
+      if (index < 0) return
+      this.search = ''
+      const needed = this.messages.length - index
+      if (needed > this.visibleCount) this.visibleCount = needed
+      this.stickToBottom = false
+      this.$nextTick(() => this.$refs.thread?.querySelector('.is-unread')?.scrollIntoView({ block: 'center' }))
     },
     useReply(key) {
       this.draft = this.t(key)

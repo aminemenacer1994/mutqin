@@ -8,7 +8,7 @@ async function main() {
   await page.locator('input[type=password]').fill('OrganisationDemo1!')
   await page.getByRole('button', { name: /login/i }).click()
   await page.waitForURL('**/teacher')
-  await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Tasks' }).click()
+  await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Assignments' }).click()
   await page.getByRole('button', { name: /add task/i }).click()
 
   const dialog = page.getByRole('dialog')

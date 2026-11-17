@@ -27,7 +27,10 @@
       <article class="dash-glance-stat">
         <span class="dash-glance-stat__icon" aria-hidden="true"><i class="bi bi-mic"></i></span>
         <span class="dash-glance-stat__copy">
-          <span class="dash-glance-stat__value">{{ score }}</span>
+          <span class="dash-glance-stat__value">
+            <TeacherWordingMatch v-if="hasWordingScore">{{ score }}</TeacherWordingMatch>
+            <template v-else>{{ score }}</template>
+          </span>
           <span class="dash-glance-stat__label">{{ t('teacher.ai_rate') }}</span>
         </span>
       </article>
@@ -72,12 +75,13 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import TeacherMore from '../TeacherMore.vue'
+import TeacherWordingMatch from '../TeacherWordingMatch.vue'
 
 const STEP = 3
 
 export default {
   name: 'TeacherStudentProfileAnalytics',
-  components: { TeacherMore },
+  components: { TeacherMore, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
@@ -106,9 +110,15 @@ export default {
     visibleSessions() {
       return this.sessions.slice(0, this.shownSessions)
     },
-    score() {
+    wordingRate() {
       const rate = this.profile.payload?.success_rate ?? this.profile.payload?.metrics?.ai_success_rate
-      return typeof rate === 'number' ? this.t('teacher.score_n', { n: rate }) : this.t('teacher.unavailable')
+      return typeof rate === 'number' ? rate : null
+    },
+    hasWordingScore() {
+      return this.wordingRate !== null
+    },
+    score() {
+      return this.hasWordingScore ? this.t('teacher.score_n', { n: this.wordingRate }) : this.t('teacher.unavailable')
     },
     nowOn() {
       const saved = this.profile.payload?.latest_saved

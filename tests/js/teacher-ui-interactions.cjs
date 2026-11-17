@@ -54,7 +54,7 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Messages' }).waitFor()
   await page.goBack({ waitUntil: 'domcontentloaded' })
-  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Tasks' }).waitFor()
+  await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Assignments' }).waitFor()
   await page.goForward({ waitUntil: 'domcontentloaded' })
   await page.locator('[role=tab][aria-selected=true]').filter({ hasText: 'Messages' }).waitFor()
   await page.screenshot({ path: '/private/tmp/mutqin-profile-360-sepia.png', fullPage: false })
@@ -103,7 +103,7 @@ async function main() {
 
   await page.goto(`${base}/teacher`, { waitUntil: 'domcontentloaded' })
   await page.locator('.teacher-dashboard').waitFor()
-  await page.locator('.teacher-nav-shell--mobile').getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.locator('.teacher-nav-shell--mobile').getByRole('button', { name: 'Assignments', exact: true }).click()
   await page.locator('.teacher-toolbar--tasks').waitFor({ state: 'visible' })
   await page.waitForTimeout(500)
   const taskRowOverlap = await page.locator('.teacher-task-row').first().evaluate((row) => {

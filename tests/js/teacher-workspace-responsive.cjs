@@ -115,7 +115,7 @@ async function main() {
     await dialog.locator('.teacher-surah-select__options').getByRole('option').first().click()
     await dialog.locator('input[id$="-from"]').fill('4')
     await dialog.locator('input[id$="-to"]').fill('2')
-    assert.equal(await dialog.getByRole('button', { name: 'Assign task', exact: true }).isDisabled(), true)
+    assert.equal(await dialog.getByRole('button', { name: 'New assignment', exact: true }).isDisabled(), true)
     assert.ok(await dialog.locator('[aria-invalid=true]').count())
     await page.keyboard.press('Escape')
     await dialog.getByRole('button', { name: 'Keep editing', exact: true }).waitFor()
@@ -164,7 +164,7 @@ async function main() {
       await page.goto(`${base}/teacher?view=student&student=${unassigned.id}&section=tasks`)
       await page.locator('.teacher-empty-panel').waitFor()
       assert.equal(await page.locator('.teacher-audio-feedback').count(), 0, 'No feedback composer without an assignment')
-      await page.locator('.teacher-empty-panel').getByRole('button', { name: 'Assign task', exact: true }).click()
+      await page.locator('.teacher-empty-panel').getByRole('button', { name: 'New assignment', exact: true }).click()
       await page.locator('.teacher-dialog[role=dialog]').waitFor()
       await page.keyboard.press('Escape')
     }

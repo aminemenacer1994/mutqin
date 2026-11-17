@@ -134,7 +134,7 @@
               @edit="beginEditAssignment"
               @save="saveAssignment"
               @remove="removeAssignment"
-              @refresh="loadAssignments"
+              @refresh="refreshAssignments"
               @open-student="openStudent"
             />
 
@@ -216,6 +216,10 @@ export default {
       dashboard.assignmentEntryFilter.value = typeof filter === 'string' && filter ? filter : 'all'
       dashboard.openView('assignments')
     }
+    function refreshAssignments() {
+      dashboard.loadAssignments()
+      dashboard.loadOverview()
+    }
     function startAssignment() {
       dashboard.assignmentEntryFilter.value = 'all'
       dashboard.beginCreateAssignment()
@@ -227,6 +231,7 @@ export default {
       updateFilters,
       onProfileSection,
       openAssignments,
+      refreshAssignments,
       startAssignment,
     }
   },

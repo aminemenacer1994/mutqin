@@ -18,6 +18,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
 use App\Support\RecitationAlignmentStatus;
 use App\Support\TeacherFeatures;
+use App\Support\TeacherOverviewCache;
 use App\Support\TeacherRecitationWordEvidence;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,7 @@ class TeacherRecitationPlaybackService
     {
         $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
         $this->saveReview($teacher, $student, $attempt, ['status' => TeacherRecitationReview::REVIEWED]);
+        TeacherOverviewCache::forget((int) $teacher->id);
 
         return $this->present($teacher, $student, $attempt);
     }

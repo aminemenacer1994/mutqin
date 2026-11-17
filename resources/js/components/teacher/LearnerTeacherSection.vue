@@ -316,7 +316,7 @@
                     />
                   </div>
 
-                  <div v-if="showCardProgress(item)" class="learner-teacher__card-progress" :aria-label="progressLabel(item)" :title="progressHelp(item)">
+                  <div v-if="showCardProgress(item)" class="learner-teacher__card-progress" :aria-label="progressLabel(item)">
                     <span>{{ progressLabel(item) }}</span>
                     <span v-if="showProgressBar(item)" class="learner-teacher__progress" aria-hidden="true"><span :style="{ width: `${progressPercent(item)}%` }"></span></span>
                   </div>
@@ -638,7 +638,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
-import { assignmentAttemptHelp, assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
+import { assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
   formatTaskDueUrgency,
@@ -1553,9 +1553,6 @@ export default {
     },
     progressLabel(row) {
       return row?.progress ? assignmentProgressLabel(row, this.t.bind(this)) : ''
-    },
-    progressHelp(row) {
-      return row?.progress ? assignmentAttemptHelp(row, this.t.bind(this)) : ''
     },
     progressPercent(row) {
       const completed = Number(row?.progress?.completed || 0)

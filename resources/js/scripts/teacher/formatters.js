@@ -229,14 +229,17 @@ export function attentionReasonTags(student, t) {
   return tags
 }
 
-/** Shared overview counts. Reviews are submitted tasks waiting for the teacher. */
+/** Shared overview counts. Reviews are submitted tasks. Recitations are scored attempts still awaiting a teacher review. */
 export function teacherDeskCounts(overview = {}) {
   const assignments = overview?.assignments || {}
   const kpis = overview?.kpis || {}
+  const snapshot = overview?.snapshot || {}
   return {
     reviews: Number(assignments.awaiting_confirmation || 0),
-    overdue: Number(kpis.overdue_assignments ?? assignments.overdue ?? 0),
+    recitations: Number(snapshot.recitations_awaiting_review || 0),
+    overdue: Number(snapshot.overdue_tasks ?? kpis.overdue_assignments ?? assignments.overdue ?? 0),
     plans: Number(kpis.open_recommendations || 0),
+    unread: Number(snapshot.unread_messages || 0),
   }
 }
 

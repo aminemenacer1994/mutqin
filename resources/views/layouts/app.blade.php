@@ -8388,27 +8388,6 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">{{ __('ui.nav_memorisation_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            @if (\App\Support\DonationVisibility::enabled())
-                            <a class="nav-link nav-link-donate {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}" @if (request()->routeIs('donate')) aria-current="page" @endif>
-                                <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="donate">{{ __('ui.donate') }}</strong><small class="d-lg-none">{{ __('ui.nav_donate_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endif
-                            @if (\App\Support\ArticlesVisibility::enabled())
-                            <a class="nav-link nav-link-guides {{ request()->routeIs('articles', 'articles.show') ? 'active' : '' }}" href="{{ route('articles') }}" @if (request()->routeIs('articles', 'articles.show')) aria-current="page" @endif>
-                                <i class="bi bi-journal-text nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="guides">{{ __('ui.guides') }}</strong><small class="d-lg-none">{{ __('ui.nav_guides_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endif
-                            @if (\App\Support\HowItWorksVisibility::enabled())
-                            <a class="nav-link nav-link-features {{ request()->routeIs('seo.launch.features', 'seo.launch.features.*') ? 'active' : '' }}" href="{{ route('seo.launch.features') }}" @if (request()->routeIs('seo.launch.features', 'seo.launch.features.*')) aria-current="page" @endif>
-                                <i class="bi bi-play-circle nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="features">{{ __('ui.features') }}</strong><small class="d-lg-none">{{ __('ui.nav_features_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endif
                         </div>
                     </div>
 

@@ -1,6 +1,6 @@
 <template>
   <div class="teacher-plan-workspace" :class="{ 'is-for-student': Boolean(studentId) }">
-    <nav v-if="(embedded && studentId) || detailPlan" class="teacher-plan-crumbs" :aria-label="t('teacher.nav_plans')">
+    <nav v-if="detailPlan" class="teacher-plan-crumbs" :aria-label="t('teacher.nav_plans')">
       <button v-if="embedded" type="button" @click="$emit('leave')">{{ t('teacher.nav_plans') }}</button>
       <button v-if="detailPlan" type="button" @click="detailId = null">{{ studentLabel }}</button>
       <span v-if="detailPlan">{{ detailPlan.title }}</span>
@@ -46,7 +46,7 @@
               </label>
             </div>
           </div>
-          <p v-if="row.status === 'pending'" class="teacher-plan-detail__notes">{{ t('teacher.plan_accept_help') }}</p>
+          <p v-if="row.status === 'pending'" class="visually-hidden">{{ t('teacher.plan_accept_help') }}</p>
           <div class="teacher-plan-detail__actions teacher-plan-detail__actions--primary">
             <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="runRecommendationPrimary(row)">{{ recommendationPrimary(row).label }}</button>
             <button v-if="recommendationPrimary(row).id !== 'save' && row.status !== 'assigned' && row.status !== 'dismissed'" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="runRecommendationMenu(row, 'edit')">{{ editingRecommendationId === row.id ? t('teacher.plan_recommendation_save') : t('teacher.plan_edit_recommendation') }}</button>
@@ -64,7 +64,9 @@
     </section>
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
-    <TeacherEmpty v-else-if="!visiblePlans.length && !detailPlan" class="teacher-empty-panel" icon="bi bi-calendar-week" :message="plans.length ? t('teacher.plan_no_matches') : (studentId ? t('teacher.plan_empty') : t('teacher.plans_global_empty'))" />
+    <div v-else-if="!visiblePlans.length && !detailPlan" class="teacher-empty-panel">
+      <TeacherEmpty icon="bi bi-calendar-week" :message="plans.length ? t('teacher.plan_no_matches') : (studentId ? t('teacher.plan_empty') : t('teacher.plans_global_empty'))" />
+    </div>
 
     <article v-else-if="detailPlan" class="teacher-plan-detail">
       <header class="teacher-plan-detail__head">
@@ -689,7 +691,7 @@ export default {
       const range = row?.label || ''
       if (row?.reason_code === 'previous_feedback') {
         return range
-          ? `${this.studentLabel} still has written feedback on ${range} that has not been turned into a completed task.`
+          ? `${this.studentLabel} still has written feedback on ${range} that has not been turned into a completed assignment.`
           : reason
       }
       if (row?.reason_code === 'previous_revision') {

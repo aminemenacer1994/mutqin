@@ -50,14 +50,14 @@ async function main() {
     await page.setViewportSize({ width, height: 900 })
     for (const theme of ['light', 'sepia', 'dark']) {
       await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
-      for (const view of ['Overview', 'Students', 'Tasks', ...(studentId ? ['Profile'] : [])]) {
+      for (const view of ['Overview', 'Students', 'Assignments', ...(studentId ? ['Profile'] : [])]) {
       if (view === 'Profile') {
         await page.goto(`http://localhost:8000/teacher?view=student&student=${studentId}&section=ai`)
         await page.locator('.teacher-tabs__tab.is-active').waitFor()
       } else await page.locator(width < 768 ? '.teacher-nav-shell--mobile' : '.teacher-nav-shell--desktop').getByRole('button', { name: view, exact: true }).click()
       await page.evaluate((value) => { document.documentElement.dataset.theme = value }, theme)
       await page.waitForTimeout(200)
-      if (view === 'Tasks') await page.locator('.teacher-task-row__meta').first().waitFor({ state: 'visible' })
+      if (view === 'Assignments') await page.locator('.teacher-task-row__meta').first().waitFor({ state: 'visible' })
       for (const selector of selectors) {
         if (!await page.locator(selector).count()) continue
         const sample = await page.locator(selector).first().evaluate((element) => {

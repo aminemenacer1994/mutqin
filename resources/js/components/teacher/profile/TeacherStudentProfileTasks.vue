@@ -42,23 +42,23 @@
         <li v-for="row in visibleRows" :key="row.key">
           <article class="teacher-student-tasks__row" :class="{ 'is-selected': String(row.key) === String(selectedTaskKey) }">
             <button type="button" class="teacher-student-tasks__open" @click="chooseTask(row.key)">
-              <span class="teacher-student-tasks__type">
-                <i :class="row.icon" aria-hidden="true"></i>
-                {{ row.typeLabel }}
-              </span>
-              <strong>{{ row.title }}</strong>
+              <strong><i :class="row.icon" aria-hidden="true"></i>{{ row.title }}</strong>
               <span v-if="row.instructions" class="teacher-student-tasks__note">{{ row.instructions }}</span>
             </button>
             <div class="teacher-student-tasks__pills">
-              <span v-if="row.assigned" class="teacher-fact teacher-fact--neutral">{{ row.assigned }}</span>
+              <span class="teacher-fact teacher-fact--neutral">{{ row.typeLabel }}</span>
               <span class="teacher-fact" :class="row.overdue ? 'teacher-fact--danger' : 'teacher-fact--warn'">{{ row.due }}</span>
               <span v-if="row.progress" class="teacher-fact teacher-fact--info">{{ row.progress }}</span>
               <span class="teacher-badge" :class="`teacher-badge--${row.tone}`">{{ row.statusLabel }}</span>
-              <span v-if="row.overdue" class="teacher-badge teacher-badge--danger">{{ t('teacher.overdue') }}</span>
             </div>
-            <button type="button" class="btn btn-sm" :class="row.primary === 'view' ? 'btn-outline-secondary' : 'btn-primary'" @click="runPrimary(row)">
-              {{ row.primaryLabel }}
-            </button>
+            <div class="teacher-student-tasks__row-actions">
+              <button v-if="row.overdue" type="button" class="btn btn-sm btn-outline-secondary" @click="remindRow = row">
+                {{ reminded[row.key] ? t('teacher.task_reminded') : t('teacher.task_remind') }}
+              </button>
+              <button type="button" class="btn btn-sm" :class="row.primary === 'view' ? 'btn-outline-secondary' : 'btn-primary'" @click="runPrimary(row)">
+                {{ row.primaryLabel }}
+              </button>
+            </div>
           </article>
         </li>
       </ul>
@@ -91,7 +91,7 @@
         </div>
         <div v-if="selectedView.progress">
           <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ t('teacher.repetitions') }}</dt>
-          <dd>{{ selectedView.progress }}<span v-if="selectedView.progressHelp" class="teacher-student-tasks__empty">{{ selectedView.progressHelp }}</span></dd>
+          <dd>{{ selectedView.progress }}</dd>
         </div>
       </dl>
 
@@ -189,6 +189,17 @@
       @reviewed="onReviewed"
     />
 
+    <TeacherTaskReminder
+      :open="Boolean(remindRow)"
+      :student-name="profile.student?.name || ''"
+      :task-title="remindRow?.title || ''"
+      :due-label="remindRow?.due || ''"
+      :due-at="remindRow?.source?.assignment?.due_at || ''"
+      :recipient-id="remindRow?.key || null"
+      @close="remindRow = null"
+      @sent="onReminded"
+    />
+
     <TeacherDialog :open="pendingTaskId !== null || pendingClose" :title="t('teacher.unsaved_changes')" size="sm" :close-label="t('teacher.close')" @close="cancelPending">
       <p>{{ t('teacher.unsaved_changes') }}</p>
       <template #footer>
@@ -202,7 +213,7 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
-import { assignmentAttemptHelp, assignmentProgressLabel } from '../../../scripts/teacher/formatters'
+import { assignmentProgressLabel } from '../../../scripts/teacher/formatters'
 import { normaliseTeacherWordStatus } from '../../../scripts/teacher/wordReviewClass'
 import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../../../scripts/teacher/taskTypes'
 import {
@@ -220,6 +231,7 @@ import TeacherDialog from '../TeacherDialog.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.vue'
 import TeacherTaskConversation from '../TeacherTaskConversation.vue'
+import TeacherTaskReminder from '../TeacherTaskReminder.vue'
 
 export default {
   name: 'TeacherStudentProfileTasks',
@@ -230,6 +242,7 @@ export default {
     TeacherEmpty,
     TeacherRecitationPlaybackReview,
     TeacherTaskConversation,
+    TeacherTaskReminder,
   },
   mixins: [i18nMixin],
   props: {
@@ -258,6 +271,8 @@ export default {
       pendingTaskId: null,
       pendingClose: false,
       missingTask: false,
+      remindRow: null,
+      reminded: {},
       dueFieldId: `teacher-task-due-${Math.random().toString(36).slice(2, 8)}`,
     }
   },
@@ -404,7 +419,6 @@ export default {
         meta: [assigned, due].filter(Boolean).join(' · '),
         instructions: String(assignment.feedback || '').trim(),
         progress: item.progress ? assignmentProgressLabel(item, this.t.bind(this)) : '',
-        progressHelp: item.progress ? assignmentAttemptHelp(item, this.t.bind(this)) : '',
         tone: taskLifecycleTone(lifecycle),
         statusLabel: this.t(taskLifecycleLabelKey(lifecycle)),
         overdue: taskIsOverdue(item),
@@ -508,6 +522,11 @@ export default {
       if (next === null) this.selectedTaskKey = null
       else this.openTask(next)
       this.composing = false
+    },
+    onReminded(result) {
+      const key = this.remindRow?.key
+      if (key !== null && key !== undefined) this.reminded = { ...this.reminded, [key]: true }
+      if (result?.fresh) this.$emit('refresh')
     },
     runPrimary(row) {
       if (row.primary === 'review') this.openTask(row.key, { review: row.source?.evidence?.attempt_id })

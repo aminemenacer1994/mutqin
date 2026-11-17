@@ -6,12 +6,13 @@
         <span class="teacher-attention-list__copy">
           <span class="teacher-attention-list__name">{{ student.name }}</span>
           <span class="teacher-attention-list__reasons">
-            <span v-for="item in reasons(student)" :key="item.key" class="teacher-attention-list__reason" :class="`is-${item.tone}`" :title="item.help || item.label">
-              <i :class="item.icon" aria-hidden="true"></i>
-              {{ item.label }}
+            <span v-if="reason(student)" class="teacher-attention-list__reason" :class="`is-${reason(student).tone}`" :title="reasonTitle(student)">
+              <i :class="reason(student).icon" aria-hidden="true"></i>
+              {{ reason(student).label }}
             </span>
+            <span v-if="extraReasonCount(student)" class="teacher-attention-list__reason is-quiet">+{{ extraReasonCount(student) }}</span>
+            <span v-if="student.last_activity_at && formatWhen" class="teacher-attention-list__when">{{ formatWhen(student.last_activity_at) }}</span>
           </span>
-          <span v-if="student.last_activity_at && formatWhen" class="teacher-attention-list__when">{{ formatWhen(student.last_activity_at) }}</span>
         </span>
         <span class="teacher-attention-list__action">{{ action(student).label }}</span>
       </button>
@@ -62,7 +63,13 @@ export default {
       return attentionReasonTags(student, this.t)[0] || null
     },
     reasons(student) {
-      return attentionReasonTags(student, this.t).slice(0, 3)
+      return attentionReasonTags(student, this.t)
+    },
+    extraReasonCount(student) {
+      return Math.max(0, this.reasons(student).length - 1)
+    },
+    reasonTitle(student) {
+      return this.reasons(student).map((item) => item.label).join(' · ')
     },
   },
 }

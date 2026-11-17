@@ -6,6 +6,10 @@
           {{ filter.label }}<span>{{ filter.count }}</span>
         </button>
       </div>
+      <label class="teacher-recite__search">
+        <span class="visually-hidden">{{ t('teacher.recite_search') }}</span>
+        <input v-model="query" type="search" :placeholder="t('teacher.recite_search')">
+      </label>
       <label class="teacher-recite__field">
         <span class="visually-hidden">{{ t('teacher.recite_date_filter') }}</span>
         <select v-model="dateFilter">
@@ -37,10 +41,12 @@
     </div>
     <p v-else-if="!needsReview.length && !historyRows.length" class="teacher-recite__empty">{{ t('teacher.plan_no_matches') }}</p>
     <TeacherRecitationPlaybackReview
-      :open="Boolean(focusAttemptId)"
+      :open="Boolean(activeFocusId)"
       :student-id="profile.student && profile.student.id"
-      :attempt-id="focusAttemptId"
-      @close="$emit('clear-focus')"
+      :attempt-id="activeFocusId"
+      :queue="reviewQueue"
+      @close="closeFocus"
+      @navigate="queuedAttemptId = $event.attemptId"
       @reviewed="onFocusedReviewed"
     />
   </div>
@@ -67,7 +73,7 @@ export default {
   name: 'TeacherStudentProfileAi',
   components: { TeacherEmpty, TeacherRecitationPlaybackReview, TeacherRecordList },
   mixins: [i18nMixin],
-  data() { return { passageFilter: '', statusFilter: 'all', dateFilter: '', query: '', reviewedIds: [] } },
+  data() { return { passageFilter: '', statusFilter: 'all', dateFilter: '', query: '', reviewedIds: [], queuedAttemptId: null } },
   props: {
     profile: { type: Object, required: true },
     issueLabel: { type: Function, required: true },
@@ -76,7 +82,10 @@ export default {
     focusAttemptId: { type: [Number, String], default: null },
   },
   emits: ['assign-revision', 'clear-focus', 'reviewed'],
-  watch: { 'profile.student.id'() { this.passageFilter = ''; this.statusFilter = 'all'; this.dateFilter = ''; this.query = ''; this.reviewedIds = [] } },
+  watch: {
+    'profile.student.id'() { this.passageFilter = ''; this.statusFilter = 'all'; this.dateFilter = ''; this.query = ''; this.reviewedIds = []; this.queuedAttemptId = null },
+    focusAttemptId() { this.queuedAttemptId = null },
+  },
   computed: {
     attempts() { return this.profile.payload?.attempts || [] },
     statusFilters() {
@@ -87,7 +96,7 @@ export default {
         { id: 'pending', label: this.t('teacher.recite_status_pending') },
         { id: 'reviewed', label: this.t('teacher.recite_status_reviewed') },
         { id: 'revision', label: this.t('teacher.recite_status_revision') },
-      ].map((filter) => ({ ...filter, count: countOf(filter.id) }))
+      ].map((filter) => ({ ...filter, count: countOf(filter.id) })).filter((filter) => filter.id === 'all' || filter.count > 0)
     },
     attemptRows() {
       return this.attempts.map((attempt) => this.attemptRow(attempt)).sort((a, b) => (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0))
@@ -114,6 +123,14 @@ export default {
       if (this.statusFilter === 'all') return this.filteredRows.filter((row) => row.reviewState !== 'pending')
       return this.filteredRows
     },
+    activeFocusId() {
+      return this.queuedAttemptId || this.focusAttemptId
+    },
+    reviewQueue() {
+      return [...this.needsReview, ...this.historyRows]
+        .filter((row) => row.attemptId && row.studentId)
+        .map((row) => ({ studentId: row.studentId, attemptId: row.attemptId }))
+    },
     attemptGroups() {
       const groups = new Map()
       for (const row of this.attemptRows) {
@@ -128,12 +145,18 @@ export default {
   },
   methods: {
     onFocusedReviewed() {
+      this.queuedAttemptId = null
       this.$emit('reviewed')
+      this.$emit('clear-focus')
+    },
+    closeFocus() {
+      this.queuedAttemptId = null
       this.$emit('clear-focus')
     },
     markRowReviewed(row) {
       if (!row?.attemptId || this.reviewedIds.includes(row.attemptId)) return
       this.reviewedIds.push(row.attemptId)
+      this.$emit('reviewed')
     },
     reviewState(attempt) {
       if (this.reviewedIds.includes(attempt.id)) return 'reviewed'
@@ -153,7 +176,7 @@ export default {
       const scoreTone = { good: 'good', mid: 'warn', warn: 'danger' }[scoreBadgeTone(attempt.accuracy_percent)] || 'neutral'
       const pills = [
         when ? { label: when, tone: 'neutral' } : null,
-        { label: score, tone: typeof attempt.accuracy_percent === 'number' ? scoreTone : 'neutral' },
+        { label: score, tone: typeof attempt.accuracy_percent === 'number' ? scoreTone : 'neutral', wording: typeof attempt.accuracy_percent === 'number' },
         issueHint ? { label: issueHint, tone: 'warn' } : null,
       ].filter(Boolean)
       const status = {

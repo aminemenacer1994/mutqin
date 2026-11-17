@@ -3,15 +3,6 @@
     <div v-if="loading" class="teacher-skeletons"><div class="teacher-skeleton"></div></div>
 
     <template v-else-if="profile">
-      <nav class="teacher-profile-hero__crumb" :aria-label="t('teacher.breadcrumb')">
-        <button type="button" @click="requestBack"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>{{ t('teacher.back_to_students') }}</span></button>
-        <span aria-hidden="true">/</span>
-        <span>{{ profile.student.name }}</span>
-        <template v-if="currentTabLabel">
-          <span aria-hidden="true">/</span>
-          <span>{{ currentTabLabel }}</span>
-        </template>
-      </nav>
       <header class="card teacher-profile-hero teacher-profile-hero--compact">
         <div class="card-body teacher-profile-hero__body">
           <div class="teacher-profile-hero__identity">
@@ -20,7 +11,7 @@
               <h2>{{ profile.student.name }}</h2>
               <div class="teacher-profile-summary">
                 <span v-if="profile.student.organisation">{{ profile.student.organisation }}</span>
-                <span v-if="typeof profile.meta?.ai_success_rate === 'number'">{{ t('teacher.profile_recite_avg_with_count', { score: profile.meta.ai_success_rate, count: Number(profile.meta.ai_attempts || 0) }) }}</span>
+                <TeacherWordingMatch v-if="typeof profile.meta?.ai_success_rate === 'number'">{{ t('teacher.profile_recite_avg_with_count', { score: profile.meta.ai_success_rate, count: Number(profile.meta.ai_attempts || 0) }) }}</TeacherWordingMatch>
                 <span v-if="learningPlanLabel">{{ learningPlanLabel }}</span>
               </div>
               <details class="teacher-profile-details">
@@ -31,6 +22,9 @@
             </div>
           </div>
           <div class="teacher-profile-hero__actions">
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="requestBack">
+              <i class="bi bi-arrow-left" aria-hidden="true"></i> {{ t('teacher.back_to_students') }}
+            </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" @click="selectTab('messages')">
               <i class="bi bi-chat-dots" aria-hidden="true"></i> {{ t('teacher.message_student') }}
             </button>
@@ -116,9 +110,11 @@
             :task-context="messageContext"
             @open-task="openTask"
             @open-tasks="selectTab('tasks')"
+            @open-recitations="selectTab('ai')"
             @clear-context="messageContext = null"
             @unsent-change="unsent.messages = $event"
             @unread-change="messageUnread = $event"
+            @marked-read="$emit('refresh')"
           />
         </KeepAlive>
       </div>
@@ -164,6 +160,7 @@ import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
+import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 export default {
   name: 'TeacherStudentProfileSection',
@@ -173,6 +170,7 @@ export default {
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
+    TeacherWordingMatch,
   },
   mixins: [i18nMixin],
   props: {
@@ -257,10 +255,6 @@ export default {
     tabHint() {
       if (!this.tabHintKey || this.sectionRefreshing) return ''
       return this.t(this.tabHintKey)
-    },
-    currentTabLabel() {
-      const tab = this.tabs.find((item) => item.id === this.section)
-      return tab ? this.t(tab.label) : ''
     },
     learningPlanLabel() {
       const plan = this.profile?.meta?.learning_plan

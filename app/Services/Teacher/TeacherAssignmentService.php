@@ -23,6 +23,7 @@ use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
 use App\Support\LearnerCompletionAttempt;
+use App\Support\TeacherOverviewCache;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use App\Support\TeacherRecitationWordEvidence;
@@ -118,7 +119,7 @@ class TeacherAssignmentService
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? 'normal')->value;
 
-        return DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired) {
+        $created = DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired) {
             $assignment = new TeacherAssignment;
             $assignment->forceFill([
                 'teacher_id' => $teacher->id,
@@ -154,6 +155,9 @@ class TeacherAssignmentService
 
             return $loaded;
         });
+        TeacherOverviewCache::forget((int) $teacher->id);
+
+        return $created;
     }
 
     public function canManage(TeacherAssignment $assignment, bool $forUpdate = false): bool
@@ -189,7 +193,7 @@ class TeacherAssignmentService
         $kind = AssignmentKind::tryFrom((string) ($input['kind'] ?? '')) ?? $assignment->kind;
         [$activity, $recordingRequired, $kind] = $this->coachingActivity($input, $kind instanceof AssignmentKind ? $kind : AssignmentKind::Practice);
 
-        return DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind) {
+        $updated = DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind) {
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
             $previousDue = $locked->due_at?->toDateString();
@@ -215,6 +219,9 @@ class TeacherAssignmentService
 
             return $loaded;
         });
+        TeacherOverviewCache::forget((int) $teacher->id);
+
+        return $updated;
     }
 
     public function remove(User $teacher, TeacherAssignment $assignment): void
@@ -224,6 +231,7 @@ class TeacherAssignmentService
             $this->assertManageable($teacher, $locked, true);
             $locked->delete();
         });
+        TeacherOverviewCache::forget((int) $teacher->id);
     }
 
     private function assertManageable(User $teacher, TeacherAssignment $assignment, bool $forUpdate = false): void
@@ -393,6 +401,7 @@ class TeacherAssignmentService
                     'submissions' => $submissions,
                 ]),
             ])->save();
+            TeacherOverviewCache::forget((int) $recipient->assignment->teacher_id);
         }
 
         return $recipient->refresh();
@@ -431,6 +440,8 @@ class TeacherAssignmentService
             report($error);
         }
 
+        TeacherOverviewCache::forget((int) $teacher->id);
+
         return $fresh;
     }
 
@@ -466,6 +477,7 @@ class TeacherAssignmentService
             'status' => AssignmentStatus::InProgress->value,
             'completion_evidence' => $evidence,
         ])->save();
+        TeacherOverviewCache::forget((int) $teacher->id);
 
         return $recipient->refresh();
     }
@@ -490,7 +502,10 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        return $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body, $audio, $durationMs, $clientMessageId);
+        $note = $this->createAssignmentMessage($assignment, $student, TeacherNoteKind::Note, $body, $audio, $durationMs, $clientMessageId);
+        TeacherOverviewCache::forget((int) $teacher->id);
+
+        return $note;
     }
 
     public function addTeacherMessage(
@@ -1074,6 +1089,7 @@ class TeacherAssignmentService
             $unreadIds = $thread->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId))->pluck('id');
             if ($unreadIds->isNotEmpty()) {
                 TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
+                TeacherOverviewCache::forget((int) $assignment->teacher_id);
             }
         }
 

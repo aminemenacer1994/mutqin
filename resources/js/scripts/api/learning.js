@@ -167,6 +167,20 @@ export function createClientMessageId() {
   })
 }
 
+export async function stableClientMessageId(seed) {
+  try {
+    const subtle = globalThis.crypto?.subtle
+    if (!subtle?.digest) return createClientMessageId()
+    const digest = new Uint8Array(await subtle.digest('SHA-1', new TextEncoder().encode(String(seed))))
+    digest[6] = (digest[6] & 0x0f) | 0x50
+    digest[8] = (digest[8] & 0x3f) | 0x80
+    const hex = [...digest.slice(0, 16)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`
+  } catch {
+    return createClientMessageId()
+  }
+}
+
 function isRetryable(error) {
   // Never retry intentional cancellations / aborts.
   if (
@@ -914,10 +928,10 @@ export const learningApi = {
     const { data } = await http.delete(`/teacher/assignments/${id}`)
     return data
   },
-  async sendTeacherAssignmentMessage(recipientId, body, recording = null) {
+  async sendTeacherAssignmentMessage(recipientId, body, recording = null, clientMessageId = null) {
     const form = new FormData()
     if (String(body || '').trim()) form.append('body', String(body).trim())
-    form.append('client_message_id', createClientMessageId())
+    form.append('client_message_id', clientMessageId || createClientMessageId())
     if (recording?.blob) {
       form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
       if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))

@@ -58,7 +58,7 @@ export default {
   },
   methods: {
     countFor(id) {
-      if (id === 'reviews') return Number(this.counts.reviews || 0)
+      if (id === 'reviews') return Number(this.counts.recitations || 0)
       if (id === 'assignments') return Number(this.counts.overdue || 0)
       return 0
     },
