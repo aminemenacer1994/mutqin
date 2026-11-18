@@ -4,6 +4,7 @@ export const TASK_STATE = {
   NOT_STARTED: 'NOT_STARTED',
   IN_PROGRESS: 'IN_PROGRESS',
   WAITING_REVIEW: 'WAITING_REVIEW',
+  NEEDS_CORRECTION: 'NEEDS_CORRECTION',
   DONE: 'DONE',
   OVERDUE: 'OVERDUE',
 }
@@ -51,11 +52,15 @@ export function resolveBaseTaskState(row) {
     return TASK_STATE.WAITING_REVIEW
   }
 
-  if (
-    reviewState === 'needs_correction'
-    || status === 'in_progress'
-    || status === 'overdue'
-  ) {
+  if (reviewState === 'needs_correction') {
+    return TASK_STATE.NEEDS_CORRECTION
+  }
+
+  if (status === 'in_progress') {
+    return TASK_STATE.IN_PROGRESS
+  }
+
+  if (status === 'overdue') {
     return row?.started_at ? TASK_STATE.IN_PROGRESS : TASK_STATE.NOT_STARTED
   }
 
@@ -96,6 +101,7 @@ const TASK_STATE_LABEL_KEYS = {
   [TASK_STATE.NOT_STARTED]: 'teacher.task_state_not_started',
   [TASK_STATE.IN_PROGRESS]: 'teacher.task_state_in_progress',
   [TASK_STATE.WAITING_REVIEW]: 'teacher.task_state_waiting_review',
+  [TASK_STATE.NEEDS_CORRECTION]: 'teacher.status_needs_correction',
   [TASK_STATE.DONE]: 'teacher.task_state_done',
   [TASK_STATE.OVERDUE]: 'teacher.task_state_overdue',
 }
@@ -108,6 +114,7 @@ export function taskStateTone(displayState) {
   if (displayState === TASK_STATE.DONE) return 'approved'
   if (displayState === TASK_STATE.OVERDUE) return 'overdue'
   if (displayState === TASK_STATE.WAITING_REVIEW) return 'submitted'
+  if (displayState === TASK_STATE.NEEDS_CORRECTION) return 'correction'
   if (displayState === TASK_STATE.IN_PROGRESS) return 'active'
   return 'default'
 }
@@ -116,6 +123,7 @@ export function taskStateIcon(displayState) {
   if (displayState === TASK_STATE.DONE) return 'bi-check2-circle'
   if (displayState === TASK_STATE.OVERDUE) return 'bi-exclamation-circle'
   if (displayState === TASK_STATE.WAITING_REVIEW) return 'bi-hourglass-split'
+  if (displayState === TASK_STATE.NEEDS_CORRECTION) return 'bi-arrow-counterclockwise'
   if (displayState === TASK_STATE.IN_PROGRESS) return 'bi-arrow-repeat'
   return 'bi-circle'
 }
@@ -179,6 +187,7 @@ export function taskStateCardClass(displayState) {
     [TASK_STATE.DONE]: 'is-approved',
     [TASK_STATE.OVERDUE]: 'is-overdue',
     [TASK_STATE.WAITING_REVIEW]: 'is-submitted',
+    [TASK_STATE.NEEDS_CORRECTION]: 'is-correction',
     [TASK_STATE.IN_PROGRESS]: 'is-active',
     [TASK_STATE.NOT_STARTED]: 'is-default',
   }
@@ -189,6 +198,7 @@ export function teacherStatusToneFromDisplay(displayState) {
   if (displayState === TASK_STATE.DONE) return 'good'
   if (displayState === TASK_STATE.OVERDUE) return 'danger'
   if (displayState === TASK_STATE.WAITING_REVIEW) return 'mid'
+  if (displayState === TASK_STATE.NEEDS_CORRECTION) return 'danger'
   if (displayState === TASK_STATE.IN_PROGRESS) return 'mid'
   return 'muted'
 }

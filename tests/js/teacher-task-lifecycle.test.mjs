@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import {
+  TASK_STATE,
   TASK_LIFECYCLE,
+  resolveBaseTaskState,
   resolveTaskLifecycle,
   studentTaskMatchesFilter,
   summarizeStudentTaskCounts,
@@ -28,6 +30,7 @@ assert.equal(resolveTaskLifecycle(inProgress), TASK_LIFECYCLE.IN_PROGRESS)
 assert.equal(resolveTaskLifecycle(submitted), TASK_LIFECYCLE.SUBMITTED)
 assert.equal(resolveTaskLifecycle(needsReview), TASK_LIFECYCLE.NEEDS_REVIEW)
 assert.equal(resolveTaskLifecycle(revision), TASK_LIFECYCLE.REVISION_REQUESTED)
+assert.equal(resolveBaseTaskState(revision), TASK_STATE.NEEDS_CORRECTION)
 assert.equal(resolveTaskLifecycle(completedLate), TASK_LIFECYCLE.COMPLETED)
 assert.equal(taskIsOverdue(completedLate), false)
 assert.equal(studentTaskMatchesFilter(needsReview, 'needs_review'), true)
@@ -41,5 +44,6 @@ assert.equal(counts.needs_review, 1)
 assert.equal(counts.submitted, 1)
 assert.equal(counts.completed, 1)
 assert.equal(counts.overdue, 4)
+
 
 console.log('teacher-task-lifecycle.test.mjs: ok')

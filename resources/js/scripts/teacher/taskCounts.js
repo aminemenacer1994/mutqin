@@ -48,10 +48,10 @@ export function flattenTeacherAssignmentRows(rows = []) {
 export function summarizeTeacherTaskCounts(flat = []) {
   const counts = flat.reduce((result, item) => {
     result.all += 1
-    if (item.status === 'completed') result.done += 1
-    else if (item.status === 'overdue') result.overdue += 1
-    else if (item.status === 'in_progress') result.progress += 1
-    else if (item.status === 'awaiting_confirmation') result.submitted += 1
+    if (item.taskStateDisplay === TASK_STATE.DONE) result.done += 1
+    else if (item.taskStateDisplay === TASK_STATE.OVERDUE) result.overdue += 1
+    else if (item.taskStateDisplay === TASK_STATE.WAITING_REVIEW) result.submitted += 1
+    else if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS || item.taskStateDisplay === TASK_STATE.NEEDS_CORRECTION) result.progress += 1
     else result.waiting += 1
     return result
   }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
@@ -111,6 +111,7 @@ export function sortTeacherTasksByUrgency(items = []) {
     if (item.taskStateDisplay === TASK_STATE.OVERDUE) return 0
     if (dueToday(item)) return 1
     if (item.taskStateDisplay === TASK_STATE.WAITING_REVIEW) return 2
+    if (item.taskStateDisplay === TASK_STATE.NEEDS_CORRECTION) return 3
     if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS) return 3
     if (item.taskStateDisplay === TASK_STATE.NOT_STARTED) return 4
     return 5

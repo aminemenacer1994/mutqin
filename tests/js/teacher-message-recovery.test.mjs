@@ -288,6 +288,25 @@ test('teacher message failure retains text and audio until confirmed delivery', 
   } finally { dispose() }
 })
 
+test('teacher direct-message retries reuse their delivery identity, while edits create a new one', async () => {
+  const env = await environment()
+  const ids = []
+  env.api.sendTeacherStudentMessage = async (_studentId, _body, _recording, clientId) => {
+    ids.push(clientId)
+    throw new Error('Connection interrupted')
+  }
+  const { instance: thread, dispose } = env.instantiate(env.direct, { profile: { student: { id: 7 }, payload: { messages: [] } } })
+  try {
+    thread.draft = 'Please repeat the last ayah.'
+    await thread.send()
+    await thread.send()
+    assert.equal(ids[0], ids[1], 'An uncertain response is retried with the same server idempotency key')
+    thread.draft = 'Please repeat the last two ayat.'
+    await thread.send()
+    assert.notEqual(ids[1], ids[2], 'Editing a failed draft creates a distinct message')
+  } finally { dispose() }
+})
+
 
 test('a poll started before or during a send cannot erase its confirmed message', async () => {
   for (const pollBeforeSend of [true, false]) {
@@ -447,7 +466,7 @@ test('fallback message identities remain valid UUIDs accepted by the existing AP
 test('studio feedback retries keep the same message identity and edits start a new one', async () => {
   const requests = []
   let sequence = 0
-  const send = await actualMethod('resources/js/components/teacher/TeacherRecitationPlaybackReview.vue', 'sendFeedback', {
+  const send = await actualMethod('resources/js/components/teacher/TeacherRecitationPlaybackReview.vue', 'persistFeedback', {
     createClientMessageId: () => `request-${++sequence}`,
     learningApi: { saveTeacherRecitationFeedback: async (_student, _attempt, payload) => { requests.push(payload); throw new Error('Connection interrupted') } },
   })

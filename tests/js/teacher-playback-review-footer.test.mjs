@@ -163,6 +163,7 @@ const viewports = [
   { width: 1280, height: 640, name: 'short laptop' },
   { width: 1024, height: 768, name: 'tablet landscape' },
   { width: 768, height: 1024, name: 'tablet' },
+  { width: 640, height: 360, name: 'desktop at 200% zoom' },
   { width: 390, height: 700, name: 'mobile' },
 ]
 
@@ -203,6 +204,7 @@ try {
       const complete = document.querySelector('#review-complete').getBoundingClientRect()
       const glyph = document.querySelector('.teacher-playback__glyph').getBoundingClientRect()
       const sideBox = side.getBoundingClientRect()
+      const mushaf = document.querySelector('.teacher-playback__mushaf')
       return {
         hits,
         bodyScrolls: body.scrollHeight > body.clientHeight + 1,
@@ -214,6 +216,8 @@ try {
         nextVisible: next.top >= footerBox.top - 1 && next.bottom <= footerBox.bottom + 1 && next.width > 0,
         completeVisible: complete.top >= footerBox.top - 1 && complete.bottom <= footerBox.bottom + 1 && complete.width > 0,
         glyphInside: glyph.right <= sideBox.right + 1 && glyph.left >= sideBox.left - 1,
+        mushafHorizontal: mushaf.scrollWidth - mushaf.clientWidth,
+        mushafVisible: mushaf.getBoundingClientRect().height >= 150,
         wordNote: document.querySelector('#word-note').value,
         feedbackNote: document.querySelector('#feedback-note').value,
         revisionNote: document.querySelector('#revision-note').value,
@@ -229,6 +233,8 @@ try {
     assert.equal(report.nextVisible, true, `${viewport.name}: Next stays in the footer`)
     assert.equal(report.completeVisible, true, `${viewport.name}: Complete review stays in the footer`)
     assert.equal(report.glyphInside, true, `${viewport.name}: long Arabic stays inside the coaching column`)
+    assert.ok(report.mushafHorizontal <= 1, `${viewport.name}: Arabic passage has no horizontal overflow`)
+    assert.equal(report.mushafVisible, true, `${viewport.name}: the Qur'an panel keeps usable reading space`)
     assert.equal(report.wordNote, 'unsaved correction')
     assert.equal(report.feedbackNote, 'Practise the ayah slowly.')
     assert.equal(report.revisionNote, 'Repeat the flagged words.')

@@ -67,7 +67,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.v7.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v8.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -77,6 +77,7 @@ class TeacherDashboardService
 
             $chart = $this->activityChart($ids, $start, $days);
             $insights = $this->classInsights($teacher, $ids, $start, $days);
+            $trends = $this->assignmentTrends($teacher, $ids, $start, $days);
             $rates = collect($metrics)->pluck('ai_success_rate')->filter(fn ($rate) => $rate !== null);
             $attention = collect($metrics)->filter(fn (array $row) => $row['needs_attention'])->count();
             $active7 = collect($metrics)->filter(fn (array $row) => $row['active_7'])->count();
@@ -127,6 +128,7 @@ class TeacherDashboardService
                 ],
                 'chart' => $chart,
                 'insights' => $insights,
+                'trends' => $trends,
                 'recently_active' => $recent['active'],
                 'inactive' => $recent['inactive'],
                 'recent_ai' => $this->recentAi($ids),
@@ -1545,6 +1547,113 @@ class TeacherDashboardService
                 'average' => $sampleTotal > 0 ? round($sampleSum / $sampleTotal, 1) : null,
             ],
         ];
+    }
+
+    /**
+     * Daily assignment-recipient outcomes for the overview charts.
+     *
+     * A completion belongs to the date the recipient was marked complete. A due or
+     * scheduled revision belongs to the assignment's due date. Both measures are
+     * deliberately recipient-based so that a task assigned to several students is
+     * represented in the same way as the assignment counts elsewhere in the desk.
+     *
+     * @param  list<int>  $ids
+     * @return array{assignment_completion: array<string, mixed>, revision_consistency: array<string, mixed>}
+     */
+    private function assignmentTrends(User $teacher, array $ids, Carbon $start, int $days): array
+    {
+        $dates = [];
+        for ($offset = 0; $offset < $days; $offset++) {
+            $dates[] = $start->copy()->addDays($offset)->toDateString();
+        }
+
+        $assignment = $this->emptyAssignmentTrend($dates, $days, 'assignments_due');
+        $revision = $this->emptyAssignmentTrend($dates, $days, 'revisions_scheduled');
+        if ($ids === []) {
+            return [
+                'assignment_completion' => $assignment,
+                'revision_consistency' => $revision,
+            ];
+        }
+
+        $end = $start->copy()->addDays($days)->subSecond();
+        $recipients = TeacherAssignmentRecipient::query()
+            ->whereIn('student_id', $ids)
+            ->where(function ($query) use ($start, $end): void {
+                $query->whereBetween('completed_at', [$start, $end])
+                    ->orWhereHas('assignment', fn ($assignment) => $assignment->whereBetween('due_at', [$start, $end]));
+            })
+            ->whereHas('assignment', fn ($assignment) => $assignment->where('teacher_id', $teacher->id))
+            ->with(['assignment:id,teacher_id,due_at,activity,hifz_category'])
+            ->get(['id', 'teacher_assignment_id', 'student_id', 'completed_at']);
+
+        foreach ($recipients as $recipient) {
+            $assignmentDate = $recipient->assignment?->due_at?->toDateString();
+            $completedDate = $recipient->completed_at?->toDateString();
+            $isRevision = $recipient->assignment?->activity === 'revision'
+                || (in_array($recipient->assignment?->activity, [null, ''], true)
+                    && in_array($recipient->assignment?->hifz_category, ['sabqi', 'manzil'], true));
+
+            $this->addAssignmentTrendPoint($assignment, $completedDate, $assignmentDate);
+            if ($isRevision) {
+                $this->addAssignmentTrendPoint($revision, $completedDate, $assignmentDate);
+            }
+        }
+
+        return [
+            'assignment_completion' => $this->finaliseAssignmentTrend($assignment),
+            'revision_consistency' => $this->finaliseAssignmentTrend($revision),
+        ];
+    }
+
+    /**
+     * @param  list<string>  $dates
+     * @return array<string, mixed>
+     */
+    private function emptyAssignmentTrend(array $dates, int $days, string $secondaryMetric): array
+    {
+        return [
+            'days' => $days,
+            'unit' => 'assignment_recipients',
+            'secondary_metric' => $secondaryMetric,
+            'definition' => [
+                'completed' => 'Recipient records completed on that date.',
+                'scheduled' => 'Recipient records whose assignment was due on that date.',
+            ],
+            'points' => array_map(fn (string $date) => ['date' => $date, 'completed' => 0, 'scheduled' => 0], $dates),
+            'completed_sample_size' => 0,
+            'scheduled_sample_size' => 0,
+            'is_empty' => true,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $trend
+     */
+    private function addAssignmentTrendPoint(array &$trend, ?string $completedDate, ?string $scheduledDate): void
+    {
+        foreach ($trend['points'] as &$point) {
+            if ($point['date'] === $completedDate) {
+                $point['completed']++;
+                $trend['completed_sample_size']++;
+            }
+            if ($point['date'] === $scheduledDate) {
+                $point['scheduled']++;
+                $trend['scheduled_sample_size']++;
+            }
+        }
+        unset($point);
+    }
+
+    /**
+     * @param  array<string, mixed>  $trend
+     * @return array<string, mixed>
+     */
+    private function finaliseAssignmentTrend(array $trend): array
+    {
+        $trend['is_empty'] = $trend['completed_sample_size'] === 0 && $trend['scheduled_sample_size'] === 0;
+
+        return $trend;
     }
 
     /**

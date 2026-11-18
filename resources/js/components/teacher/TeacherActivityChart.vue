@@ -25,7 +25,13 @@
       </div>
     </div>
     <div class="dash-section__body">
-      <div v-if="isEmpty" class="dash-chart__empty">
+      <div v-if="errorMessage" class="dash-chart__empty dash-chart__empty--error" role="alert">
+        <strong>{{ errorMessage }}</strong>
+      </div>
+      <div v-else-if="loading" class="dash-chart__empty" role="status" aria-live="polite">
+        <strong>{{ t('teacher.loading') }}</strong>
+      </div>
+      <div v-else-if="isEmpty" class="dash-chart__empty">
         <strong>{{ emptyMessage || t('teacher.activity_empty') }}</strong>
       </div>
       <div v-else class="dash-chart__wrap">
@@ -36,11 +42,11 @@
 </template>
 
 <script>
-import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js'
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import { i18nMixin } from '../../mixins/i18nMixin'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Legend, Tooltip)
 
 export default {
   name: 'TeacherActivityChart',
@@ -53,6 +59,8 @@ export default {
     showRange: { type: Boolean, default: true },
     chartDays: { type: Number, required: true },
     dayOptions: { type: Array, default: () => [30, 90] },
+    loading: { type: Boolean, default: false },
+    errorMessage: { type: String, default: '' },
     isEmpty: { type: Boolean, default: false },
     chartReady: { type: Boolean, default: true },
     chartData: { type: Object, required: true },

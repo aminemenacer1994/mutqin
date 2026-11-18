@@ -6,11 +6,13 @@ const template = source.slice(source.indexOf('<template>'), source.indexOf('<scr
 const css = readFileSync(new URL('../../resources/js/views/TeacherDashboard.css', import.meta.url), 'utf8')
 
 const ai = template.indexOf('teacher-playback__ai')
+const attention = template.indexOf('teacher-playback__attention')
 const assessment = template.indexOf('teacher-playback__assessment')
 const revision = template.indexOf('teacher-playback__revision')
 const feedback = template.indexOf('teacher-playback__response')
-assert.ok(ai > 0 && assessment > ai && feedback > assessment && revision > feedback, 'Summary, assessment, feedback, then revision')
+assert.ok(ai > 0 && attention > ai && assessment > attention && feedback > assessment && revision > feedback, 'Summary, attention, assessment, feedback, then revision')
 assert.match(template, /class="teacher-playback__section teacher-playback__ai"/, 'The wording summary stays visible')
+assert.match(template, /class="teacher-playback__section teacher-playback__attention"/, 'Words needing attention has its own visible section')
 assert.match(template, /class="teacher-playback__section teacher-playback__assessment"/, 'Teacher ratings stay visible')
 assert.doesNotMatch(template.slice(assessment, feedback), /teacher-playback__assessment-fold/, 'Rating fields are not hidden behind extra disclosures')
 assert.doesNotMatch(template, /teacher-playback__private-note/, 'Private note is not shown in the review')
@@ -32,5 +34,7 @@ assert.match(css, /\.teacher-dialog\.teacher-playback-studio \.modal-body \{[^}]
 assert.match(css, /\.teacher-dialog\.teacher-playback-studio \.modal-body \{[^}]*padding-bottom:\s*40px/, 'The review body keeps clearance above the footer')
 assert.doesNotMatch(css, /\.teacher-playback__side[^{]*\{[^}]*overflow-y:\s*auto/, 'The coaching column is not a nested scroller')
 assert.match(css, /\.teacher-playback-studio \.modal-footer \{ flex: 0 0 auto; \}/, 'The review footer stays visible')
+assert.match(css, /grid-template-columns: minmax\(0, 65fr\) minmax\(280px, 35fr\)/, 'Desktop keeps the reading and review panels at 65/35')
+assert.match(css, /\.teacher-playback__main \{ position: sticky; top: 0; align-self: start; max-height: none; overflow: visible; \}/, 'Long passages are not clipped by the reading panel')
 
 console.log('teacher playback review layout ok')

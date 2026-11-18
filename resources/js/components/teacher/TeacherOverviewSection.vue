@@ -61,13 +61,67 @@
         <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
       </TeacherSectionPane>
     </div>
+
+    <section class="teacher-insights teacher-overview-trends" :aria-labelledby="trendHeadingId">
+      <header class="teacher-insights__head">
+        <div class="teacher-insights__copy">
+          <h3 :id="trendHeadingId" class="teacher-insights__title">{{ t('teacher.overview_trends') }}</h3>
+          <p class="teacher-insights__hint">{{ t('teacher.overview_trends_hint') }}</p>
+        </div>
+        <div class="dash-range-toggle" role="group" :aria-label="t('teacher.chart_range')">
+          <button
+            v-for="days in chartDayOptions"
+            :key="days"
+            type="button"
+            class="dash-btn dash-btn--ghost dash-btn--sm"
+            :class="{ 'is-active': chartDays === days }"
+            :aria-pressed="chartDays === days ? 'true' : 'false'"
+            :disabled="trendLoading"
+            @click="$emit('set-chart-days', days)"
+          >
+            {{ t('teacher.days', { n: days }) }}
+          </button>
+        </div>
+      </header>
+      <div class="teacher-insights__body">
+        <div class="teacher-insights__charts">
+          <TeacherActivityChart
+            :title="t('teacher.assignment_completion_trend')"
+            :caption="assignmentCaption"
+            :empty-message="t('teacher.assignment_completion_empty')"
+            :show-range="false"
+            :chart-days="chartDays"
+            :loading="trendLoading"
+            :error-message="trendError"
+            :is-empty="assignmentTrend.is_empty"
+            :chart-ready="!trendLoading"
+            :chart-data="assignmentChartData"
+            :chart-options="trendChartOptions"
+          />
+          <TeacherActivityChart
+            :title="t('teacher.revision_consistency')"
+            :caption="revisionCaption"
+            :empty-message="t('teacher.revision_consistency_empty')"
+            :show-range="false"
+            :chart-days="chartDays"
+            :loading="trendLoading"
+            :error-message="trendError"
+            :is-empty="revisionTrend.is_empty"
+            :chart-ready="!trendLoading"
+            :chart-data="revisionChartData"
+            :chart-options="trendChartOptions"
+          />
+        </div>
+      </div>
+    </section>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { scoreBadgeTone, studentInitial, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
+import { cssThemeColor, scoreBadgeTone, studentInitial, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
+import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
@@ -77,6 +131,7 @@ export default {
   name: 'TeacherOverviewSection',
   components: {
     TeacherAttentionList,
+    TeacherActivityChart,
     TeacherEmpty,
     TeacherKpiGrid,
     TeacherSectionPane,
@@ -90,47 +145,71 @@ export default {
     formatWhen: { type: Function, required: true },
     chartDays: { type: Number, default: 30 },
     chartDayOptions: { type: Array, default: () => [30, 90] },
-    chartEmpty: { type: Boolean, default: false },
-    chartReady: { type: Boolean, default: true },
-    chartData: { type: Object, required: true },
-    chartOptions: { type: Object, required: true },
+    trendLoading: { type: Boolean, default: false },
+    trendError: { type: String, default: '' },
   },
   emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'create-assignment'],
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
     },
-    insights() {
-      return this.overview?.insights || {}
+    trendHeadingId() {
+      return 'teacher-overview-trends-heading'
     },
-    completionPoints() {
-      return this.insights.completions?.points || []
+    assignmentTrend() {
+      return this.overview?.trends?.assignment_completion || { points: [], is_empty: true, completed_sample_size: 0, scheduled_sample_size: 0 }
     },
-    wordingPoints() {
-      return this.insights.wording?.points || []
+    revisionTrend() {
+      return this.overview?.trends?.revision_consistency || { points: [], is_empty: true, completed_sample_size: 0, scheduled_sample_size: 0 }
     },
-    completionEmpty() {
-      return Number(this.insights.completions?.total || 0) === 0
-    },
-    wordingEmpty() {
-      return Number(this.insights.wording?.samples || 0) === 0
-    },
-    completionCaption() {
-      if (this.completionEmpty) return ''
-      return this.t('teacher.insight_completions_help', { n: this.insights.completions.total, days: this.chartDays })
-    },
-    wordingCaption() {
-      if (this.wordingEmpty) return ''
-      return this.t('teacher.insight_wording_help', {
-        n: this.insights.wording.samples,
-        average: this.insights.wording.average,
+    assignmentCaption() {
+      return this.t('teacher.assignment_completion_caption', {
+        completed: this.assignmentTrend.completed_sample_size || 0,
+        scheduled: this.assignmentTrend.scheduled_sample_size || 0,
       })
     },
-    completionChartData() {
-      return this.barSeries(this.completionPoints, 'completed', this.t('teacher.insight_completions'))
+    revisionCaption() {
+      return this.t('teacher.revision_consistency_caption', {
+        completed: this.revisionTrend.completed_sample_size || 0,
+        scheduled: this.revisionTrend.scheduled_sample_size || 0,
+      })
     },
-    wordingChartData() {
-      return this.barSeries(this.wordingPoints, 'average', this.t('teacher.insight_wording'))
+    assignmentChartData() {
+      return this.trendSeries(this.assignmentTrend.points, this.t('teacher.trend_due'))
+    },
+    revisionChartData() {
+      return this.trendSeries(this.revisionTrend.points, this.t('teacher.trend_scheduled'))
+    },
+    trendChartOptions() {
+      const ink = cssThemeColor('--text', '#1c1917')
+      const muted = cssThemeColor('--text-muted', '#6b635a')
+      const grid = cssThemeColor('--border', 'rgba(120, 100, 70, 0.2)')
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 420, easing: 'easeOutQuart' },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { color: muted, boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11, weight: '600' } },
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: cssThemeColor('--surface-strong', '#fffaf3'),
+            titleColor: ink,
+            bodyColor: ink,
+            borderColor: grid,
+            borderWidth: 1,
+            padding: 10,
+            displayColors: true,
+          },
+        },
+        scales: {
+          x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, font: { size: 11, weight: '600' } }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: muted, precision: 0, font: { size: 11, weight: '600' } }, grid: { color: grid, drawBorder: false } },
+        },
+      }
     },
     classHifz() {
       const hifz = this.overview?.hifz
@@ -225,17 +304,31 @@ export default {
     },
   },
   methods: {
-    barSeries(points, field, label) {
+    trendSeries(points, secondaryLabel) {
+      const completed = cssThemeColor('--teacher-accent', cssThemeColor('--accent', '#3f6f6d'))
+      const scheduled = cssThemeColor('--teacher-warning', '#a66d2c')
       return {
         labels: points.map((point) => String(point.date || '').slice(5)),
-        datasets: [{
-          label,
-          data: points.map((point) => point[field] == null ? null : Number(point[field])),
-          backgroundColor: '#7a5436',
-          borderRadius: 6,
-          borderSkipped: false,
-          maxBarThickness: this.chartDays <= 30 ? 16 : 10,
-        }],
+        datasets: [
+          {
+            label: this.t('teacher.trend_completed'),
+            data: points.map((point) => Number(point.completed || 0)),
+            backgroundColor: completed,
+            hoverBackgroundColor: cssThemeColor('--teacher-accent-strong', completed),
+            borderRadius: 5,
+            borderSkipped: false,
+            maxBarThickness: this.chartDays <= 30 ? 14 : 9,
+          },
+          {
+            label: secondaryLabel,
+            data: points.map((point) => Number(point.scheduled || 0)),
+            backgroundColor: scheduled,
+            hoverBackgroundColor: cssThemeColor('--teacher-warning-strong', scheduled),
+            borderRadius: 5,
+            borderSkipped: false,
+            maxBarThickness: this.chartDays <= 30 ? 14 : 9,
+          },
+        ],
       }
     },
     initial: studentInitial,

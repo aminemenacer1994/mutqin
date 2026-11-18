@@ -93,6 +93,20 @@ async function main() {
           assert.equal(state.desktop, width >= 992, `${name}: desktop nav`)
           assert.equal(state.mobile, width < 992, `${name}: mobile nav`)
           assert.equal(state.clipped, false, `${name}: clipped tab`)
+          if (name === 'overview' && theme === 'light') {
+            const trends = await page.evaluate(() => {
+              const root = document.querySelector('.teacher-overview-trends')
+              const charts = root?.querySelector('.teacher-insights__charts')
+              return {
+                count: root?.querySelectorAll('.dash-section').length || 0,
+                columns: charts ? getComputedStyle(charts).gridTemplateColumns.split(' ').filter(Boolean).length : 0,
+                overflow: root ? root.scrollWidth - root.clientWidth : 0,
+              }
+            })
+            assert.equal(trends.count, 2, `overview ${width}px: exactly two assignment trend charts`)
+            assert.equal(trends.columns, width <= 860 ? 1 : 2, `overview ${width}px: trend chart layout`)
+            assert.ok(trends.overflow <= 1, `overview ${width}px: trend charts have no horizontal overflow`)
+          }
           results.push({ name, width, theme, ...state })
           if ([390, 1440].includes(width) && (theme === 'light' || ['overview', 'profile-ai'].includes(name))) {
             await page.waitForTimeout(220)

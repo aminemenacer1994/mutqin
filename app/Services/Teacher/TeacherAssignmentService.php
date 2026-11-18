@@ -389,7 +389,10 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        if ($recipient->student_completed_at === null) {
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        $resubmittingAfterCorrection = $this->reviewState($recipient) === 'needs_correction';
+
+        if ($recipient->student_completed_at === null || $resubmittingAfterCorrection) {
             $progress = $this->progressForRecipient($recipient);
             if ((int) $progress['activity_count'] < (int) $progress['target']) {
                 throw ValidationException::withMessages([
@@ -402,7 +405,6 @@ class TeacherAssignmentService
                 ]);
             }
             $completedAt = now();
-            $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
             $submissions = is_array($evidence['submissions'] ?? null) ? $evidence['submissions'] : [];
             $submissions[] = [
                 'activity_count' => (int) $progress['activity_count'],
@@ -442,6 +444,16 @@ class TeacherAssignmentService
         if ($recipient->student_completed_at === null) {
             throw ValidationException::withMessages([
                 'assignment' => 'The student has not submitted this task yet.',
+            ]);
+        }
+
+        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
+            return $recipient->refresh();
+        }
+
+        if ($this->lifecycleStatus($recipient) !== AssignmentStatus::AwaitingConfirmation->value) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This task must be submitted again before it can be approved.',
             ]);
         }
 
@@ -487,6 +499,22 @@ class TeacherAssignmentService
         }
 
         $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
+            throw ValidationException::withMessages([
+                'assignment' => 'Completed tasks cannot be returned for correction.',
+            ]);
+        }
+
+        if ($this->reviewState($recipient) === 'needs_correction') {
+            return $recipient->refresh();
+        }
+
+        if ($this->lifecycleStatus($recipient) !== AssignmentStatus::AwaitingConfirmation->value) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This task is not awaiting teacher review.',
+            ]);
+        }
+
         $evidence['correction_requested_at'] = now()->toIso8601String();
         if ($note !== null && trim($note) !== '') {
             $evidence['correction_note'] = trim($note);
@@ -831,6 +859,10 @@ class TeacherAssignmentService
                 $scoredAttempts,
                 $unfinishedSessions,
             );
+            $payload['assignment_state'] = $this->assignmentWorkflowState($status, $payload['review_state']);
+            $payload['ai_practice_state'] = $this->aiPracticeState($assignment, $payload['progress'], $recipient);
+            $payload['teacher_review_state'] = $this->teacherReviewWorkflowState($assignment, $recipient);
+            $payload['revision_state'] = $this->revisionWorkflowState($assignment, $recipient);
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
             $payload['messages'] = $this->assignmentMessages(
                 $assignment,
@@ -1247,6 +1279,84 @@ class TeacherAssignmentService
         }
 
         return null;
+    }
+
+    /**
+     * Assignment state is intentionally independent of a due-date overlay and AI result.
+     */
+    private function assignmentWorkflowState(string $status, ?string $reviewState): string
+    {
+        return match (true) {
+            $reviewState === 'needs_correction' => 'needs_correction',
+            $status === AssignmentStatus::Completed->value => 'completed',
+            $status === AssignmentStatus::AwaitingConfirmation->value || $reviewState === 'submitted' => 'submitted',
+            $status === AssignmentStatus::InProgress->value => 'in_progress',
+            default => 'not_started',
+        };
+    }
+
+    /**
+     * A scored AI check only proves progress against its configured target; it never approves an assignment.
+     *
+     * @param  array{completed: int, target: int, activity_count: int, attempt_count: int|null, completion_count: int|null, resume_available: bool}  $progress
+     */
+    private function aiPracticeState(TeacherAssignment $assignment, array $progress, TeacherAssignmentRecipient $recipient): ?string
+    {
+        if ($assignment->kind !== AssignmentKind::AiRecite) {
+            return null;
+        }
+
+        if ((int) $progress['activity_count'] >= (int) $progress['target']) {
+            return 'target_met';
+        }
+
+        if ((int) $progress['activity_count'] > 0 || $recipient->started_at !== null) {
+            return 'in_progress';
+        }
+
+        return 'not_started';
+    }
+
+    /** Teacher review is separate from an assignment submission or approval. */
+    private function teacherReviewWorkflowState(TeacherAssignment $assignment, TeacherAssignmentRecipient $recipient): ?string
+    {
+        if ($assignment->kind !== AssignmentKind::AiRecite) {
+            return null;
+        }
+
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        if (! empty($evidence['teacher_reviewed_at'])) {
+            return 'reviewed';
+        }
+
+        return $recipient->student_completed_at !== null ? 'awaiting_review' : null;
+    }
+
+    /**
+     * Revision uses its own timing state while retaining the assignment workflow state above.
+     */
+    private function revisionWorkflowState(TeacherAssignment $assignment, TeacherAssignmentRecipient $recipient): ?string
+    {
+        $isRevision = $assignment->activity === 'revision'
+            || (in_array($assignment->activity, [null, ''], true)
+                && in_array($assignment->hifz_category, ['sabqi', 'manzil'], true));
+        if (! $isRevision) {
+            return null;
+        }
+
+        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
+            return 'completed';
+        }
+
+        if ($this->isDateOverdue($recipient, $assignment)) {
+            return 'overdue';
+        }
+
+        if ($assignment->due_at?->isToday()) {
+            return 'due';
+        }
+
+        return 'scheduled';
     }
 
     private function recipientHasPlayableRecording(TeacherAssignmentRecipient $recipient): bool

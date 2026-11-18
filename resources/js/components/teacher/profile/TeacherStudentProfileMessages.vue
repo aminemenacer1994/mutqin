@@ -163,6 +163,7 @@ export default {
       copiedId: null,
       announcedUnread: 0,
       noticeTimer: null,
+      pendingDelivery: null,
     }
   },
   watch: {
@@ -328,6 +329,7 @@ export default {
       this.removed = []
       this.search = ''
       this.copiedId = null
+      this.pendingDelivery = null
       this.announcedUnread = 0
       this.error = ''
       this.success = ''
@@ -366,8 +368,22 @@ export default {
     clearComposer() {
       this.draft = ''
       this.$refs.voice?.discardRecording()
+      this.pendingDelivery = null
       this.error = ''
       this.success = ''
+    },
+    deliveryIdFor(body, recording) {
+      const prior = this.pendingDelivery
+      // A retry of the same text and Blob must retain its idempotency key. A
+      // changed draft (or a re-recorded note) is intentionally a new message.
+      if (prior && prior.body === body && prior.audio === (recording?.blob || null)) return prior.id
+      const id = globalThis.crypto?.randomUUID?.()
+        || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+          const value = Math.floor(Math.random() * 16)
+          return (character === 'x' ? value : ((value & 0x3) | 0x8)).toString(16)
+        })
+      this.pendingDelivery = { id, body, audio: recording?.blob || null }
+      return id
     },
     async send() {
       const body = this.draft.trim()
@@ -375,17 +391,19 @@ export default {
       if ((!body && !recording) || this.saving) return
       const studentId = this.profile.student.id
       const recipientId = this.taskContext?.recipientId || null
+      const clientMessageId = this.deliveryIdFor(body, recording)
       this.saving = true
       this.error = ''
       this.success = ''
       try {
         const payload = recipientId
-          ? await learningApi.sendTeacherAssignmentMessage(recipientId, body, recording)
-          : await learningApi.sendTeacherStudentMessage(studentId, body, recording)
+          ? await learningApi.sendTeacherAssignmentMessage(recipientId, body, recording, clientMessageId)
+          : await learningApi.sendTeacherStudentMessage(studentId, body, recording, clientMessageId)
         if (this.disposed || studentId !== this.profile.student.id) return
         if (!recipientId && payload?.message) this.sent.push(payload.message)
         this.draft = ''
         this.$refs.voice?.discardRecording()
+        this.pendingDelivery = null
         this.showNotice('success', this.t('teacher.message_sent'))
         this.stickToBottom = true
         this.$emit('sent')

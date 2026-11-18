@@ -14,6 +14,9 @@ final class TeacherTaskState
 
     public const WAITING_REVIEW = 'WAITING_REVIEW';
 
+    /** The teacher has returned a submitted task to the student. */
+    public const NEEDS_CORRECTION = 'NEEDS_CORRECTION';
+
     public const DONE = 'DONE';
 
     /** Display overlay when past due and not done. */
@@ -39,14 +42,16 @@ final class TeacherTaskState
             return self::WAITING_REVIEW;
         }
 
-        if ($reviewState === 'needs_correction'
-            || $status === AssignmentStatus::InProgress->value
-            || $status === AssignmentStatus::Overdue->value) {
-            if ($startedAt !== null) {
-                return self::IN_PROGRESS;
-            }
+        if ($reviewState === 'needs_correction') {
+            return self::NEEDS_CORRECTION;
+        }
 
-            return self::NOT_STARTED;
+        if ($status === AssignmentStatus::InProgress->value) {
+            return self::IN_PROGRESS;
+        }
+
+        if ($status === AssignmentStatus::Overdue->value) {
+            return $startedAt !== null ? self::IN_PROGRESS : self::NOT_STARTED;
         }
 
         if ($startedAt !== null || $status === AssignmentStatus::InProgress->value) {

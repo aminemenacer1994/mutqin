@@ -57,10 +57,8 @@
               :format-when="formatWhen"
               :chart-days="chartDays"
               :chart-day-options="TEACHER_CHART_DAY_OPTIONS"
-              :chart-empty="Boolean(overview?.chart?.is_empty)"
-              :chart-ready="true"
-              :chart-data="chartData"
-              :chart-options="chartOptions"
+              :trend-loading="overviewRefreshing"
+              :trend-error="overviewError"
               @open-student="openStudent"
               @select-kpi="openStudentsFromKpi"
               @assign-revision="openAssignRevision"
@@ -156,6 +154,7 @@
               :profile-url="profileUrl"
               :groups="teacherGroups"
               @export="exportStudentProgress"
+              @refresh-classes="loadTeacherGroups"
             />
               </div>
           </div>

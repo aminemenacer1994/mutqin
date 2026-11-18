@@ -277,7 +277,7 @@ export default {
         if (item.status === 'awaiting_confirmation') result.submitted += 1
         if (item.taskStateDisplay === TASK_STATE.DONE) result.done += 1
         else if (item.taskStateDisplay === TASK_STATE.OVERDUE) result.overdue += 1
-        else if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS) result.progress += 1
+        else if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS || item.taskStateDisplay === TASK_STATE.NEEDS_CORRECTION) result.progress += 1
         else result.waiting += 1
         return result
       }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
@@ -355,7 +355,7 @@ export default {
         : items.filter((item) => {
           if (this.statusFilter === 'done') return item.taskStateDisplay === TASK_STATE.DONE
           if (this.statusFilter === 'overdue') return item.taskStateDisplay === TASK_STATE.OVERDUE
-          if (this.statusFilter === 'progress') return item.taskStateDisplay === TASK_STATE.IN_PROGRESS
+          if (this.statusFilter === 'progress') return item.taskStateDisplay === TASK_STATE.IN_PROGRESS || item.taskStateDisplay === TASK_STATE.NEEDS_CORRECTION
           if (this.statusFilter === 'submitted') return item.status === 'awaiting_confirmation'
           return item.taskStateDisplay === TASK_STATE.NOT_STARTED
         })
@@ -363,7 +363,7 @@ export default {
         const rank = (item) => {
           if (item.taskStateDisplay === TASK_STATE.OVERDUE) return 0
           if (item.taskStateDisplay === TASK_STATE.NOT_STARTED) return 1
-          if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS) return 2
+          if (item.taskStateDisplay === TASK_STATE.IN_PROGRESS || item.taskStateDisplay === TASK_STATE.NEEDS_CORRECTION) return 2
           if (item.taskStateDisplay === TASK_STATE.WAITING_REVIEW) return 3
           return 4
         }

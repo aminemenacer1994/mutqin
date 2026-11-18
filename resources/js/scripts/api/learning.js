@@ -756,10 +756,10 @@ export const learningApi = {
     const { data } = await http.get(`/teacher/students/${studentId}/report`, { params })
     return data
   },
-  async sendTeacherStudentMessage(studentId, body, recording = null) {
+  async sendTeacherStudentMessage(studentId, body, recording = null, clientMessageId = null) {
     const form = new FormData()
     if (String(body || '').trim()) form.append('body', String(body).trim())
-    form.append('client_message_id', createClientMessageId())
+    form.append('client_message_id', clientMessageId || createClientMessageId())
     if (recording?.blob) {
       form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
       if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))

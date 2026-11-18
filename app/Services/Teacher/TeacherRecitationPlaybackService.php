@@ -576,6 +576,10 @@ class TeacherRecitationPlaybackService
             return;
         }
         $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        if ((int) ($evidence['teacher_reviewed_attempt_id'] ?? 0) === (int) $attempt->id
+            && ! empty($evidence['teacher_reviewed_at'])) {
+            return;
+        }
         $evidence['teacher_reviewed_at'] = now()->toIso8601String();
         $evidence['teacher_reviewed_attempt_id'] = (int) $attempt->id;
         $recipient->forceFill(['completion_evidence' => $evidence])->save();

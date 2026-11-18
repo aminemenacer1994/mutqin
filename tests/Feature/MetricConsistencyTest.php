@@ -132,10 +132,20 @@ class MetricConsistencyTest extends TestCase
         $this->assertSame([], $otherOverview['review_queue']['history']);
 
         $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.review', [$student, $linked]))->assertOk();
+        $reviewedAt = TeacherAssignmentRecipient::query()->findOrFail($recipientId)->completion_evidence['teacher_reviewed_at'];
         $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.review', [$student, $linked]))->assertOk();
         $this->assertSame(1, TeacherRecitationReview::query()->where('ai_recite_attempt_id', $linked->id)->count());
+        $this->assertSame($reviewedAt, TeacherAssignmentRecipient::query()->findOrFail($recipientId)->completion_evidence['teacher_reviewed_at']);
         $this->assertSame(81, $linked->fresh()->accuracy_percent);
         $this->assertSame('reviewed', TeacherRecitationReview::query()->where('ai_recite_attempt_id', $linked->id)->value('status'));
+
+        // Hearing a recitation is a teacher-review state, not an assignment approval.
+        $recipientPayload = $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))
+            ->assertOk()->json('data.0.recipients.0');
+        $this->assertSame(AssignmentStatus::InProgress->value, $recipientPayload['status']);
+        $this->assertSame('in_progress', $recipientPayload['assignment_state']);
+        $this->assertSame('target_met', $recipientPayload['ai_practice_state']);
+        $this->assertSame('reviewed', $recipientPayload['teacher_review_state']);
 
         $after = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
         $this->assertSame([], $after['review_queue']['actionable']);

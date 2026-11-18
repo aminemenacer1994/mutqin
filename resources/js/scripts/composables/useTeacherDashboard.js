@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { learningApi } from '../api/learning'
 import { classifyRequestFailure } from '../../utils/networkStatus'
@@ -12,7 +12,6 @@ import {
 } from '../teacher/constants'
 import {
   assignmentLabel,
-  cssThemeColor,
   formatTeacherWhen,
   isTeacherNavActive,
   issueLabel,
@@ -35,7 +34,8 @@ export function useTeacherDashboard(authRef) {
   const formError = ref('')
   const overview = ref(null)
   const chartDays = ref(30)
-  const chartReady = ref(true)
+  const overviewRefreshing = ref(false)
+  const overviewError = ref('')
   const students = ref([])
   const assignmentRoster = ref([])
   const studentsLoading = ref(false)
@@ -67,6 +67,7 @@ export function useTeacherDashboard(authRef) {
   let profileRequestId = 0
   let studentRequestId = 0
   let navigationEpoch = 0
+  let overviewRequestId = 0
 
   function noteNavigation() {
     navigationEpoch += 1
@@ -125,58 +126,6 @@ export function useTeacherDashboard(authRef) {
     ]
   })
 
-  const chartData = computed(() => {
-    const points = overview.value?.chart?.points || []
-    const color = cssThemeColor('--accent', '#3f6f6d')
-    return {
-      labels: points.map((point) => point.date.slice(5)),
-      datasets: [{
-        label: t('teacher.sessions'),
-        data: points.map((point) => point.sessions),
-        backgroundColor: color,
-        hoverBackgroundColor: cssThemeColor('--accent-strong', color),
-        borderRadius: 8,
-        borderSkipped: false,
-        maxBarThickness: chartDays.value <= 30 ? 16 : 12,
-      }],
-    }
-  })
-
-  const chartOptions = computed(() => {
-    const ink = cssThemeColor('--text', '#1c1917')
-    const muted = cssThemeColor('--text-muted', '#6b635a')
-    const grid = cssThemeColor('--border', 'rgba(120, 100, 70, 0.2)')
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 420, easing: 'easeOutQuart' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: true,
-          backgroundColor: cssThemeColor('--surface-strong', '#fffaf3'),
-          titleColor: ink,
-          bodyColor: ink,
-          borderColor: grid,
-          borderWidth: 1,
-          padding: 10,
-          displayColors: false,
-        },
-      },
-      scales: {
-        x: {
-          ticks: { color: muted, maxRotation: 0, autoSkip: true, font: { size: 11, weight: '600' } },
-          grid: { display: false },
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { color: muted, precision: 0, font: { size: 11, weight: '600' } },
-          grid: { color: grid, drawBorder: false },
-        },
-      },
-    }
-  })
-
   const practiceTime = computed(() => {
     const seconds = profile.value?.payload?.metrics?.practice_seconds
     const minutes = practiceMinutes(seconds)
@@ -228,24 +177,32 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function loadOverview() {
+    const requestId = ++overviewRequestId
     loading.value = !overview.value
+    overviewRefreshing.value = true
+    overviewError.value = ''
     error.value = false
     try {
-      overview.value = await learningApi.getTeacherOverview(chartDays.value)
-      chartReady.value = false
-      await nextTick()
-      chartReady.value = true
+      const payload = await learningApi.getTeacherOverview(chartDays.value)
+      if (requestId !== overviewRequestId) return
+      overview.value = payload
       await loadAttentionPreview()
     } catch (err) {
+      if (requestId !== overviewRequestId) return
       error.value = !overview.value
       failureKind.value = classifyRequestFailure(err)
-      formError.value = teacherErrorMessage(err, t)
+      overviewError.value = teacherErrorMessage(err, t)
+      formError.value = overviewError.value
     } finally {
-      loading.value = false
+      if (requestId === overviewRequestId) {
+        loading.value = false
+        overviewRefreshing.value = false
+      }
     }
   }
 
   function setDays(days) {
+    if (!TEACHER_CHART_DAY_OPTIONS.includes(days) || chartDays.value === days || overviewRefreshing.value) return
     chartDays.value = days
     syncUrl()
     loadOverview()
@@ -819,7 +776,8 @@ export function useTeacherDashboard(authRef) {
     formError,
     overview,
     chartDays,
-    chartReady,
+    overviewRefreshing,
+    overviewError,
     students,
     assignmentRoster,
     studentsLoading,
@@ -847,8 +805,6 @@ export function useTeacherDashboard(authRef) {
     profileUrl,
     surahs,
     kpiCards,
-    chartData,
-    chartOptions,
     practiceTime,
     comparisons,
     loadOverview,

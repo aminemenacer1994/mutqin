@@ -14,6 +14,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
+use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
@@ -448,6 +449,85 @@ class TeacherDashboardTest extends TestCase
         $this->assertArrayHasKey('weak', $analytics);
         $this->assertArrayHasKey('attempts', $analytics);
         $this->assertArrayHasKey('calendar', $analytics);
+    }
+
+    public function test_overview_assignment_trends_reconcile_authorised_assignment_recipients(): void
+    {
+        [$teacher, $student, $hidden, $group] = $this->classroom();
+        $organisation = $teacher->organisation;
+
+        $assignment = TeacherAssignment::factory()->create([
+            'teacher_id' => $teacher->id,
+            'organisation_id' => $organisation->id,
+            'learning_group_id' => $group->id,
+            'due_at' => now()->subDays(3)->setTime(9, 0),
+            'activity' => 'practice',
+        ]);
+        TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'status' => AssignmentStatus::Completed->value,
+            'completed_at' => now()->subDays(2)->setTime(10, 0),
+        ]);
+
+        $revision = TeacherAssignment::factory()->create([
+            'teacher_id' => $teacher->id,
+            'organisation_id' => $organisation->id,
+            'learning_group_id' => $group->id,
+            'due_at' => now()->subDay()->setTime(9, 0),
+            'activity' => 'revision',
+        ]);
+        TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $revision->id,
+            'student_id' => $student->id,
+            'status' => AssignmentStatus::Completed->value,
+            'completed_at' => now()->setTime(10, 0),
+        ]);
+
+        $hiddenRevision = TeacherAssignment::factory()->create([
+            'teacher_id' => $teacher->id,
+            'organisation_id' => $organisation->id,
+            'due_at' => now()->subDay()->setTime(9, 0),
+            'activity' => 'revision',
+        ]);
+        TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $hiddenRevision->id,
+            'student_id' => $hidden->id,
+            'status' => AssignmentStatus::Completed->value,
+            'completed_at' => now()->setTime(10, 0),
+        ]);
+
+        $overview = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.overview', ['days' => 7]))
+            ->assertOk()
+            ->json();
+
+        $assignmentTrend = $overview['trends']['assignment_completion'];
+        $revisionTrend = $overview['trends']['revision_consistency'];
+        $this->assertSame(7, $assignmentTrend['days']);
+        $this->assertSame('assignment_recipients', $assignmentTrend['unit']);
+        $this->assertSame(2, $assignmentTrend['completed_sample_size']);
+        $this->assertSame(2, $assignmentTrend['scheduled_sample_size']);
+        $this->assertSame(1, $revisionTrend['completed_sample_size']);
+        $this->assertSame(1, $revisionTrend['scheduled_sample_size']);
+
+        $assignmentPoints = collect($assignmentTrend['points'])->keyBy('date');
+        $revisionPoints = collect($revisionTrend['points'])->keyBy('date');
+        $this->assertSame(1, $assignmentPoints[now()->subDays(3)->toDateString()]['scheduled']);
+        $this->assertSame(1, $assignmentPoints[now()->subDays(2)->toDateString()]['completed']);
+        $this->assertSame(1, $revisionPoints[now()->subDay()->toDateString()]['scheduled']);
+        $this->assertSame(1, $revisionPoints[now()->toDateString()]['completed']);
+
+        foreach ([30, 90] as $days) {
+            $filtered = $this->actingAs($teacher)
+                ->getJson(route('api.teacher.overview', ['days' => $days]))
+                ->assertOk()
+                ->json('trends');
+            $this->assertSame($days, $filtered['assignment_completion']['days']);
+            $this->assertCount($days, $filtered['assignment_completion']['points']);
+            $this->assertSame($days, $filtered['revision_consistency']['days']);
+            $this->assertCount($days, $filtered['revision_consistency']['points']);
+        }
     }
 
     public function test_duplicate_weak_rows_are_collapsed_without_hiding_distinct_word_findings(): void
@@ -1078,6 +1158,11 @@ class TeacherDashboardTest extends TestCase
         $this->assertNotNull($learnerRow);
         $this->assertSame(AssignmentStatus::InProgress->value, $learnerRow['status']);
         $this->assertSame('needs_correction', $learnerRow['review_state']);
+        $this->assertSame('NEEDS_CORRECTION', $learnerRow['task_state']);
+        $this->assertSame('needs_correction', $learnerRow['assignment_state']);
+        $this->assertNull($learnerRow['ai_practice_state']);
+        $this->assertNull($learnerRow['teacher_review_state']);
+        $this->assertNull($learnerRow['revision_state']);
 
         $teacherRows = $this->actingAs($teacher)
             ->getJson(route('api.teacher.assignments'))
@@ -1087,6 +1172,31 @@ class TeacherDashboardTest extends TestCase
         $teacherRecipient = $teacherRows[0]['recipients'][0];
         $this->assertSame(AssignmentStatus::InProgress->value, $teacherRecipient['status']);
         $this->assertSame('needs_correction', $teacherRecipient['review_state']);
+        $this->assertSame('NEEDS_CORRECTION', $teacherRecipient['task_state']);
+        $this->assertSame('needs_correction', $teacherRecipient['assignment_state']);
+
+        // A correction returns the task to the student; it must be possible to submit it again.
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.complete', $recipientId))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.status', AssignmentStatus::AwaitingConfirmation->value)
+            ->assertJsonPath('assignments.0.review_state', 'submitted');
+        $recipient = TeacherAssignmentRecipient::query()->findOrFail($recipientId);
+        $this->assertCount(2, $recipient->completion_evidence['submissions']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.approve', $recipientId))
+            ->assertOk();
+        $approvedAt = $recipient->fresh()->completed_at?->toISOString();
+        $this->assertNotNull($approvedAt);
+        // Repeated clicks are idempotent and cannot advance completion history.
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.approve', $recipientId))
+            ->assertOk();
+        $this->assertSame($approvedAt, $recipient->fresh()->completed_at?->toISOString());
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.correction', $recipientId))
+            ->assertStatus(422);
     }
 
     public function test_student_and_teacher_can_exchange_messages_on_the_assigned_task(): void
@@ -1737,6 +1847,8 @@ class TeacherDashboardTest extends TestCase
 
         $practiceRecipientId = $practice['recipients'][0]['id'];
         $this->assertSame('NOT_STARTED', $practice['recipients'][0]['task_state_display']);
+        $this->assertSame('not_started', $practice['recipients'][0]['assignment_state']);
+        $this->assertSame('scheduled', $practice['recipients'][0]['revision_state']);
 
         AiReciteAttempt::query()->create([
             'user_id' => $student->id,
@@ -1770,7 +1882,7 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $practiceProgress['completion_count']);
         $this->assertSame(1, $practiceProgress['activity_count']);
         $this->assertNull($practiceProgress['attempt_count']);
-        $this->assertSame('NOT_STARTED', $practiceSupport['assignments'][0]['task_state_display']);
+        $this->assertSame('IN_PROGRESS', $practiceSupport['assignments'][0]['task_state_display']);
 
         $started = $this->actingAs($student)
             ->postJson(route('api.me.assignments.start', $practiceRecipientId))
@@ -1838,7 +1950,10 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $reciteSupport['progress']['attempt_count']);
         $this->assertSame(1, $reciteSupport['progress']['activity_count']);
         $this->assertNull($reciteSupport['progress']['completion_count']);
-        $this->assertSame('NOT_STARTED', $reciteSupport['task_state_display']);
+        $this->assertSame('IN_PROGRESS', $reciteSupport['task_state_display']);
+        $this->assertSame('target_met', $reciteSupport['ai_practice_state']);
+        $this->assertSame('in_progress', $reciteSupport['assignment_state']);
+        $this->assertNull($reciteSupport['teacher_review_state']);
 
         $hifzNotice = $student->fresh()->notifications
             ->pluck('data')

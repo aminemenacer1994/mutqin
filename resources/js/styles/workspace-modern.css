@@ -910,3 +910,119 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
   flex: 0 0 auto;
   margin-inline-start: auto;
 }
+
+/* Profile messaging keeps the existing card treatment, but reads as a focused
+   conversation rather than a full-width data panel. The rail also prevents a
+   long unbroken message or audio preview from widening the page. */
+.teacher-profile .teacher-direct-thread--chat {
+  --teacher-thread-reading-width: 52rem;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__context,
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer {
+  padding-inline: max(1rem, calc((100% - var(--teacher-thread-reading-width)) / 2));
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__list {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: clamp(10rem, 20dvh, 14rem);
+  max-height: clamp(20rem, 48dvh, 34rem);
+  padding-inline: max(1rem, calc((100% - var(--teacher-thread-reading-width)) / 2));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__bubble {
+  width: fit-content;
+  max-width: min(100%, 46rem);
+  min-width: 0;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__bubble p,
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__task {
+  max-inline-size: 66ch;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.teacher-profile .teacher-direct-thread--chat textarea {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer-foot {
+  min-width: 0;
+  align-items: center;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-voice-note {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-voice-note__preview {
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-voice-note__preview-actions {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-voice-note .teacher-audio-feedback-player {
+  min-width: min(100%, 12rem);
+}
+
+@media (max-width: 991.98px) {
+  .teacher-profile .teacher-direct-thread--chat {
+    max-height: none;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__list {
+    min-height: clamp(10rem, 24dvh, 14rem);
+    max-height: min(46dvh, 28rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__search,
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__tools {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__tools {
+    justify-content: flex-start;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__replies {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    overscroll-behavior-inline: contain;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__replies .btn {
+    flex: 0 0 auto;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-voice-note.is-recorded,
+  .teacher-profile .teacher-direct-thread--chat .teacher-voice-note:has(.teacher-voice-note__status) {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .teacher-profile .teacher-direct-thread--chat .teacher-voice-note__preview-actions {
+    width: 100%;
+  }
+}

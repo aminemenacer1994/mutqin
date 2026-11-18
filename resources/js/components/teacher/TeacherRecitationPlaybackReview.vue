@@ -138,8 +138,6 @@
                 <p v-if="checkerScore" class="teacher-playback__score">{{ checkerScore }}</p>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_ai_wording_only') }}</p>
                 <p v-if="hasAudio && !audioError" class="teacher-playback__hint">{{ t('teacher.playback_listen_first') }}</p>
-                <p v-else-if="audioError" class="teacher-playback__hint">{{ t('teacher.playback_flags_failed') }}</p>
-                <p v-else class="teacher-playback__hint">{{ t('teacher.playback_flags_unverified') }}</p>
                 <div class="teacher-playback__summary" :aria-label="t('teacher.playback_wording_summary')">
                   <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
                     <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
@@ -159,39 +157,6 @@
                   <p v-else class="teacher-empty-line">{{ t('teacher.playback_no_assessment') }}</p>
                   <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
                 </div>
-                <div v-if="hasAttention" class="teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
-                  <h3>{{ t('teacher.playback_attention_title') }}</h3>
-                  <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
-                    <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
-                      <button
-                        v-for="ayah in summary.ayahs"
-                        :key="ayah.ayah"
-                        type="button"
-                        :class="{ 'is-current': ayah.ayah === currentAyah }"
-                        @click="selectAyah(ayah.ayah)"
-                      >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
-                    </div>
-                  </div>
-                  <ul v-if="visibleItems.length" class="teacher-playback__words">
-                    <li v-for="item in visibleItems" :key="item.key">
-                      <button
-                        type="button"
-                        :class="[attentionTone(item), { 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }]"
-                        :aria-pressed="item.key === selectedKey"
-                        :aria-label="attentionLabel(item)"
-                        :disabled="Boolean(saving)"
-                        @click="selectAttention(item)"
-                      >
-                        <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
-                        <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
-                      </button>
-                    </li>
-                  </ul>
-                  <p v-else class="teacher-empty-line">{{ attentionEmpty }}</p>
-                  <button v-if="filteredItems.length > visibleItems.length" type="button" class="teacher-playback__more" @click="showAllAttention = true">
-                    {{ t('teacher.playback_show_all') }}
-                  </button>
-                </div>
                 <details v-if="payload.history?.previous_review" class="teacher-playback__panel">
                   <summary>{{ t('teacher.playback_previous_review') }}</summary>
                   <p v-if="payload.history.previous_review.accuracy_percent != null" class="teacher-playback__hint">{{ t('teacher.playback_previous_wording', { n: payload.history.previous_review.accuracy_percent }) }}</p>
@@ -200,6 +165,40 @@
                     <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
                   </ul>
                 </details>
+              </section>
+
+              <section v-if="hasAttention" class="teacher-playback__section teacher-playback__attention" :aria-label="t('teacher.playback_attention_title')">
+                <h2>{{ t('teacher.playback_attention_title') }}</h2>
+                <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
+                  <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
+                    <button
+                      v-for="ayah in summary.ayahs"
+                      :key="ayah.ayah"
+                      type="button"
+                      :class="{ 'is-current': ayah.ayah === currentAyah }"
+                      @click="selectAyah(ayah.ayah)"
+                    >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
+                  </div>
+                </div>
+                <ul v-if="visibleItems.length" class="teacher-playback__words">
+                  <li v-for="item in visibleItems" :key="item.key">
+                    <button
+                      type="button"
+                      :class="[attentionTone(item), { 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }]"
+                      :aria-pressed="item.key === selectedKey"
+                      :aria-label="attentionLabel(item)"
+                      :disabled="Boolean(saving)"
+                      @click="selectAttention(item)"
+                    >
+                      <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
+                      <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
+                    </button>
+                  </li>
+                </ul>
+                <p v-else class="teacher-empty-line">{{ attentionEmpty }}</p>
+                <button v-if="filteredItems.length > visibleItems.length" type="button" class="teacher-playback__more" @click="showAllAttention = true">
+                  {{ t('teacher.playback_show_all') }}
+                </button>
               </section>
 
               <section class="teacher-playback__section teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
