@@ -76,7 +76,7 @@
         <p class="teacher-student-tasks__type"><i :class="selectedView.icon" aria-hidden="true"></i>{{ selectedView.typeLabel }}</p>
         <div class="teacher-student-tasks__status">
           <span class="teacher-badge" :class="`teacher-badge--${selectedView.tone}`">{{ selectedView.statusLabel }}</span>
-          <span v-if="selectedView.overdue" class="teacher-badge teacher-badge--danger">{{ t('teacher.overdue') }}</span>
+          <span v-if="selectedView.showOverdueBadge" class="teacher-badge teacher-badge--danger">{{ t('teacher.overdue') }}</span>
         </div>
       </header>
 
@@ -90,8 +90,11 @@
           <dd>{{ selectedDue }}</dd>
         </div>
         <div v-if="selectedView.progress">
-          <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ t('teacher.repetitions') }}</dt>
-          <dd>{{ selectedView.progress }}</dd>
+          <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ selectedView.requirementLabel }}</dt>
+          <dd>
+            {{ selectedView.progress }}
+            <p class="text-body-secondary small mb-0">{{ selectedView.requirementHelp }}</p>
+          </dd>
         </div>
       </dl>
 
@@ -227,16 +230,17 @@
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import { learningApi } from '../../../scripts/api/learning'
-import { assignmentProgressLabel } from '../../../scripts/teacher/formatters'
+import { assignmentAttemptHelp, assignmentProgressLabel, assignmentRequirementLabel } from '../../../scripts/teacher/formatters'
 import { normaliseTeacherWordStatus } from '../../../scripts/teacher/wordReviewClass'
-import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../../../scripts/teacher/taskTypes'
+import { assignmentDisplayLabel } from '../../../scripts/teacher/taskTypes'
 import {
+  resolveDisplayTaskState,
   resolveTaskLifecycle,
   studentTaskMatchesFilter,
   summarizeStudentTaskCounts,
   taskIsOverdue,
-  taskLifecycleLabelKey,
   taskLifecycleTone,
+  taskStateLabelKey,
   TASK_LIFECYCLE,
 } from '../../../scripts/teacher/taskState'
 import TeacherAudioFeedbackComposer from '../TeacherAudioFeedbackComposer.vue'
@@ -302,8 +306,8 @@ export default {
         { id: 'all', label: this.t('teacher.task_filter_all'), count: this.counts.all },
         { id: 'todo', label: this.t('teacher.task_filter_todo'), count: this.counts.todo },
         { id: 'submitted', label: this.t('teacher.task_filter_submitted'), count: this.counts.submitted },
-        { id: 'needs_review', label: this.t('teacher.task_filter_needs_review'), count: this.counts.needs_review },
-        { id: 'completed', label: this.t('teacher.task_lifecycle_completed'), count: this.counts.completed },
+        { id: 'needs_review', label: this.t('teacher.task_state_waiting_review'), count: this.counts.needs_review },
+        { id: 'completed', label: this.t('teacher.task_state_done'), count: this.counts.completed },
       ]
     },
     taskRows() {
@@ -416,7 +420,6 @@ export default {
     presentRow(item) {
       const assignment = item.assignment || {}
       const lifecycle = resolveTaskLifecycle(item)
-      const typeId = resolveTeacherTaskType(assignment.kind, assignment.hifz_category, assignment.activity)
       const submitted = Boolean(item.student_submitted_at || item.evidence?.attempt_id || (Array.isArray(item.attempts) && item.attempts.length))
       let primary = 'view'
       if (lifecycle === TASK_LIFECYCLE.COMPLETED) primary = 'results'
@@ -429,15 +432,20 @@ export default {
         key: item.id,
         source: item,
         icon: assignment.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text',
-        typeLabel: teacherTaskTypeLabel(typeId, this.t.bind(this)),
+        typeLabel: assignmentDisplayLabel(assignment, this.t.bind(this)),
         title: `${assignment.surah_name || this.t('teacher.surah')} ${assignment.ayah_start}–${assignment.ayah_end}`,
         assigned,
         due,
         meta: [assigned, due].filter(Boolean).join(' · '),
         instructions: String(assignment.feedback || '').trim(),
         progress: item.progress ? assignmentProgressLabel(item, this.t.bind(this)) : '',
+        requirementLabel: assignmentRequirementLabel(assignment, this.t.bind(this)),
+        requirementHelp: assignmentAttemptHelp(item, this.t.bind(this)),
         tone: taskLifecycleTone(lifecycle),
-        statusLabel: this.t(taskLifecycleLabelKey(lifecycle)),
+        statusLabel: item.review_state === 'needs_correction'
+          ? this.t('teacher.status_needs_correction')
+          : this.t(taskStateLabelKey(resolveDisplayTaskState(item))),
+        showOverdueBadge: item.review_state === 'needs_correction' && taskIsOverdue(item),
         overdue: taskIsOverdue(item),
         primary,
         primaryLabel: this.t({

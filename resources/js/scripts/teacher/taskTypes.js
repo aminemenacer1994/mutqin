@@ -136,3 +136,30 @@ export function teacherTaskTypeLabel(typeId, t) {
   const type = TEACHER_TASK_TYPES.find((entry) => entry.id === typeId)
   return type ? t(type.labelKey) : t('teacher.hifz_uncategorized')
 }
+
+const HIFZ_STAGE_KEYS = {
+  sabaq: 'teacher.hifz_sabaq',
+  sabqi: 'teacher.hifz_sabqi',
+  manzil: 'teacher.hifz_manzil',
+}
+
+/** Sabaq, Sabqi, and Manzil are Hifz stages, not Nazra, Revision, or Recitation check. */
+export function assignmentUsesHifzStage(kind, hifzCategory, activity = null) {
+  const typeId = resolveTeacherTaskType(kind, hifzCategory, activity)
+  return typeId === 'hifz' || typeId === 'new_memorisation'
+}
+
+export function hifzStageLabel(category, t) {
+  const key = HIFZ_STAGE_KEYS[category]
+  return key ? t(key) : ''
+}
+
+/** Task type, with the Hifz stage only when this assignment is Hifz. */
+export function assignmentDisplayLabel(assignment, t) {
+  if (!assignment) return ''
+  const typeId = resolveTeacherTaskType(assignment.kind, assignment.hifz_category, assignment.activity)
+  const type = teacherTaskTypeLabel(typeId, t)
+  if (!assignmentUsesHifzStage(assignment.kind, assignment.hifz_category, assignment.activity)) return type
+  const stage = hifzStageLabel(assignment.hifz_category, t)
+  return stage ? `${type} · ${stage}` : type
+}

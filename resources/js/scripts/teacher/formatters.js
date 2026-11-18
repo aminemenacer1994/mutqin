@@ -10,13 +10,24 @@ export function practiceMinutes(seconds) {
   return Math.ceil(Math.max(0, Number(seconds) || 0) / 60)
 }
 
+/** Scored AI wording checks are the only completions for a recitation-check assignment. */
+export function assignmentCountsScoredChecks(assignment) {
+  return assignment?.kind === 'ai_recite'
+}
+
+export function assignmentRequirementLabel(assignment, t) {
+  return t(assignmentCountsScoredChecks(assignment)
+    ? 'teacher.required_ai_wording_checks'
+    : 'teacher.repetitions')
+}
+
 export function assignmentProgressLabel(item, t) {
   const progress = item?.progress
   const target = Math.max(1, Number(progress?.target || 1))
   const raw = Math.max(0, Number(progress?.activity_count ?? progress?.completed ?? 0))
   const completed = Math.min(target, raw)
 
-  if (item?.assignment?.kind === 'ai_recite') {
+  if (assignmentCountsScoredChecks(item?.assignment)) {
     return t(
       completed === 1 ? 'teacher.assignment_progress_attempt_one' : 'teacher.assignment_progress_attempt_other',
       { count: completed, target },
@@ -28,8 +39,17 @@ export function assignmentProgressLabel(item, t) {
 
 /** Explains the counter the teacher and student already share. */
 export function assignmentAttemptHelp(item, t) {
-  if (item?.assignment?.kind === 'ai_recite') return t('teacher.attempt_help_wording')
+  if (!item?.assignment?.kind) return t('teacher.attempt_help')
+  if (assignmentCountsScoredChecks(item.assignment)) return t('teacher.attempt_help_wording')
   return t('teacher.attempt_help_practice')
+}
+
+export function assignmentCountLabel(assignment, count, t) {
+  const n = Math.max(0, Number(count) || 0)
+  if (assignmentCountsScoredChecks(assignment)) {
+    return t(n === 1 ? 'teacher.assignment_count_checks_one' : 'teacher.assignment_count_checks_other', { n })
+  }
+  return t(n === 1 ? 'teacher.assignment_count_attempts_one' : 'teacher.assignment_count_attempts_other', { n })
 }
 
 export function studentInitial(name) {
@@ -236,18 +256,40 @@ export function attentionReasonTags(student, t) {
 /**
  * Shared overview counts.
  * reviews: task submissions awaiting the teacher.
- * recitations: scored checks linked to this teacher that are not yet marked reviewed.
+ * recitations: scored checks that still need this teacher. Matches the Reviews badge.
+ * reviewedRecitations: checks this teacher has already heard.
+ * recitationHistory: earlier AI checks that are not waiting for this teacher.
  * reviewsDueToday: scheduled revision whose date is today.
  * legacyRecitations: earlier AI-only checks kept on record and left out of the queue.
  */
+export function teacherReviewLists(overview = {}) {
+  const queue = overview?.review_queue || {}
+  return {
+    awaiting: Array.isArray(queue.actionable) ? queue.actionable : [],
+    reviewed: Array.isArray(queue.reviewed) ? queue.reviewed : [],
+    history: Array.isArray(queue.history) ? queue.history : [],
+  }
+}
+
+export function teacherReviewView(overview = {}, filter = 'awaiting') {
+  const lists = teacherReviewLists(overview)
+  if (filter === 'reviewed' || filter === 'history') return lists[filter]
+  return lists.awaiting
+}
+
 export function teacherDeskCounts(overview = {}) {
   const assignments = overview?.assignments || {}
   const kpis = overview?.kpis || {}
   const snapshot = overview?.snapshot || {}
-  const queue = Array.isArray(overview?.review_queue?.actionable) ? overview.review_queue.actionable : null
+  const lists = teacherReviewLists(overview)
+  const hasActionable = Array.isArray(overview?.review_queue?.actionable)
+  const hasReviewed = Array.isArray(overview?.review_queue?.reviewed)
+  const hasHistory = Array.isArray(overview?.review_queue?.history)
   return {
     reviews: Number(assignments.awaiting_confirmation ?? snapshot.submissions_awaiting_review ?? 0),
-    recitations: queue ? queue.length : Number(snapshot.recitations_awaiting_review || 0),
+    recitations: hasActionable ? lists.awaiting.length : Number(snapshot.recitations_awaiting_review || 0),
+    reviewedRecitations: hasReviewed ? lists.reviewed.length : Number(snapshot.reviewed_recitations || 0),
+    recitationHistory: hasHistory ? lists.history.length : Number(snapshot.recitation_history || 0),
     reviewsDueToday: Number(snapshot.reviews_due_today || 0),
     legacyRecitations: Number(snapshot.legacy_ai_only_unreviewed || 0),
     overdue: Number(snapshot.overdue_tasks ?? kpis.overdue_assignments ?? assignments.overdue ?? 0),

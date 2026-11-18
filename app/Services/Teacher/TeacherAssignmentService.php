@@ -606,7 +606,7 @@ class TeacherAssignmentService
         $allowed = ['nazra', 'hifz', 'tajweed', 'revision'];
         if ($activity !== null && ! in_array($activity, $allowed, true)) {
             throw ValidationException::withMessages([
-                'activity' => 'Choose Nazra, Hifz, Tajweed practice, or Revision.',
+                'activity' => 'Choose Nazra, Hifz, Tajweed, or Revision.',
             ]);
         }
 

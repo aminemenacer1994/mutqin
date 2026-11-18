@@ -1719,6 +1719,139 @@ class TeacherDashboardTest extends TestCase
         ], $overrides);
     }
 
+    public function test_completion_counts_and_notices_follow_the_assignment_kind(): void
+    {
+        [$teacher, $student] = $this->classroom();
+
+        $practice = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'activity' => 'revision',
+            'hifz_category' => 'sabqi',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'repetition_target' => 2,
+            'due_at' => today()->addDays(3)->toDateString(),
+        ])->assertCreated()->json();
+
+        $practiceRecipientId = $practice['recipients'][0]['id'];
+        $this->assertSame('NOT_STARTED', $practice['recipients'][0]['task_state_display']);
+
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $practiceRecipientId,
+            'attempt_number' => 1,
+            'accuracy_percent' => 90,
+            'band' => 'strong',
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 7],
+        ]);
+
+        $practiceSupport = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $practiceProgress = $practiceSupport['assignments'][0]['progress'];
+        $this->assertSame(0, $practiceProgress['completed']);
+        $this->assertSame(0, $practiceProgress['activity_count']);
+        $this->assertNull($practiceProgress['attempt_count']);
+        $this->assertSame(0, $practiceProgress['completion_count']);
+
+        UserSession::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $practiceRecipientId,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => 'completed',
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'ended_at' => now(),
+        ]);
+
+        $practiceSupport = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $practiceProgress = $practiceSupport['assignments'][0]['progress'];
+        $this->assertSame(1, $practiceProgress['completion_count']);
+        $this->assertSame(1, $practiceProgress['activity_count']);
+        $this->assertNull($practiceProgress['attempt_count']);
+        $this->assertSame('NOT_STARTED', $practiceSupport['assignments'][0]['task_state_display']);
+
+        $started = $this->actingAs($student)
+            ->postJson(route('api.me.assignments.start', $practiceRecipientId))
+            ->assertOk()
+            ->json();
+        $this->assertSame('IN_PROGRESS', $started['recipient']['task_state_display']);
+
+        $notices = $student->fresh()->notifications->pluck('data');
+        $revisionNotice = $notices->first(fn ($data) => ($data['type'] ?? null) === 'revision');
+        $deadlineNotice = $notices->first(fn ($data) => ($data['type'] ?? null) === 'deadline');
+        $this->assertNotNull($revisionNotice);
+        $this->assertNotNull($deadlineNotice);
+        $this->assertStringContainsString('2 required practice attempts', $revisionNotice['body']);
+        $this->assertStringContainsString('One completed practice session counts.', $deadlineNotice['body']);
+
+        $recite = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite',
+            'activity' => 'hifz',
+            'hifz_category' => 'sabaq',
+            'recording_required' => true,
+            'student_id' => $student->id,
+            'surah_number' => 2,
+            'ayah_start' => 1,
+            'ayah_end' => 5,
+            'repetition_target' => 1,
+            'due_at' => today()->addDays(4)->toDateString(),
+        ])->assertCreated()->json();
+
+        $reciteRecipientId = $recite['recipients'][0]['id'];
+        UserSession::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $reciteRecipientId,
+            'surah_number' => 2,
+            'ayah_number' => 1,
+            'status' => 'completed',
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'ended_at' => now(),
+        ]);
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $reciteRecipientId,
+            'attempt_number' => 1,
+            'accuracy_percent' => null,
+            'band' => 'unavailable',
+            'ayah_range' => ['surah' => 2, 'from' => 1, 'to' => 5],
+        ]);
+
+        $reciteSupport = collect($this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json('assignments'))
+            ->first(fn ($row) => (int) $row['id'] === (int) $reciteRecipientId);
+        $this->assertSame(0, $reciteSupport['progress']['attempt_count']);
+        $this->assertNull($reciteSupport['progress']['completion_count']);
+
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $reciteRecipientId,
+            'attempt_number' => 2,
+            'accuracy_percent' => 80,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 2, 'from' => 1, 'to' => 5],
+        ]);
+
+        $reciteSupport = collect($this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json('assignments'))
+            ->first(fn ($row) => (int) $row['id'] === (int) $reciteRecipientId);
+        $this->assertSame(1, $reciteSupport['progress']['attempt_count']);
+        $this->assertSame(1, $reciteSupport['progress']['activity_count']);
+        $this->assertNull($reciteSupport['progress']['completion_count']);
+        $this->assertSame('NOT_STARTED', $reciteSupport['task_state_display']);
+
+        $hifzNotice = $student->fresh()->notifications
+            ->pluck('data')
+            ->first(fn ($data) => ($data['teacher_assignment_recipient_id'] ?? null) === $reciteRecipientId && ($data['type'] ?? null) === 'deadline');
+        $this->assertNotNull($hifzNotice);
+        $this->assertStringContainsString('1 required AI wording check', $hifzNotice['body']);
+        $this->assertStringContainsString('Only a scored check on this passage counts.', $hifzNotice['body']);
+        $this->assertFalse($student->fresh()->notifications->contains(
+            fn ($notification) => ($notification->data['teacher_assignment_recipient_id'] ?? null) === $reciteRecipientId
+                && ($notification->data['type'] ?? null) === 'revision'
+        ));
+    }
+
     /**
      * @return array{0: User, 1: User, 2: User, 3: LearningGroup}
      */

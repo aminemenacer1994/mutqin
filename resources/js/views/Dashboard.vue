@@ -84,6 +84,7 @@
                 <span class="learner-home__status" :class="`is-${homeTaskTone}`">{{ homeTaskStatus }}</span>
               </div>
               <p v-if="homeTask.assignment?.feedback" class="learner-home__instructions">{{ homeTask.assignment.feedback }}</p>
+              <p v-if="homeTaskRequirement" class="learner-home__instructions">{{ homeTaskRequirement }}</p>
               <p v-if="homeTask.assignment?.activity" class="learner-home__instructions">{{ t(homeTask.assignment.recording_required ? 'teacher.recording_required_hint' : 'teacher.recording_optional_hint') }}</p>
               <div class="learner-home__task-footer">
                 <span v-if="homeTaskDue.text" class="learner-home__due" :class="`is-${homeTaskDue.tone}`"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ homeTaskDue.text }}</span>
@@ -1160,7 +1161,8 @@ import { latestLearnerHomeFeedback, nextLearnerHomeTask, learnerHomeRevisions } 
 import { isLearnerSubmitted, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import LearnerMyLearningPlan from '../components/teacher/LearnerMyLearningPlan.vue'
-import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../scripts/teacher/taskTypes.js'
+import { assignmentAttemptHelp } from '../scripts/teacher/formatters.js'
+import { assignmentDisplayLabel } from '../scripts/teacher/taskTypes.js'
 import { formatLearnerDisplayDate } from '../utils/learnerDisplayDate.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
@@ -1479,8 +1481,10 @@ export default {
       return `${assignment.surah_name} · ${range}`
     },
     homeTaskType() {
-      const assignment = this.homeTask?.assignment
-      return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity), this.t.bind(this))
+      return assignmentDisplayLabel(this.homeTask?.assignment, this.t.bind(this))
+    },
+    homeTaskRequirement() {
+      return assignmentAttemptHelp(this.homeTask, this.t.bind(this))
     },
     homeTaskStatus() {
       return this.homeTask?.review_state === 'needs_correction'
@@ -4007,8 +4011,7 @@ export default {
       }
     },
     homeTaskTypeFor(task) {
-      const assignment = task?.assignment
-      return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity), this.t.bind(this))
+      return assignmentDisplayLabel(task?.assignment, this.t.bind(this))
     },
     async saveReflection() {
       if (!this.reflectionPrompt || !this.reflectionConfidence || this.reflectionSaving) return

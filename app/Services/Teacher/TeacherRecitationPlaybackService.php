@@ -489,6 +489,8 @@ class TeacherRecitationPlaybackService
             'id' => (int) $assignment->id,
             'recipient_id' => (int) $attempt->teacher_assignment_recipient_id,
             'title' => $title !== '' ? mb_substr($title, 0, 200) : null,
+            'kind' => $assignment->kind instanceof \App\Enums\AssignmentKind ? $assignment->kind->value : (string) $assignment->kind,
+            'activity' => $assignment->activity,
             'hifz_category' => (string) $assignment->hifz_category,
             'surah_name' => QuranMetadata::name((int) $assignment->surah_number),
             'ayah_start' => (int) $assignment->ayah_start,

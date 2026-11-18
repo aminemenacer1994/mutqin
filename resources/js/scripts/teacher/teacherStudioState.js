@@ -31,6 +31,7 @@ export function studioHasDraft(state = {}) {
   return [state.feedback, state.privateNote, state.wordNote, state.wordStatus, state.revisionNote, state.annotationFinding, state.annotationFocus].some(hasText)
     || Object.values(state.wordDrafts || {}).some(hasText)
     || Object.values(state.wordStatusDrafts || {}).some(hasText)
+    || Object.values(state.wordMetaDrafts || {}).some((meta) => hasText(meta?.finding) || hasText(meta?.focus))
     || Boolean(state.initialDueAt && state.dueAt !== state.initialDueAt)
     || Boolean(state.initialWordDueAt && state.wordDueAt !== state.initialWordDueAt)
     || hasVoice(state.voiceState)

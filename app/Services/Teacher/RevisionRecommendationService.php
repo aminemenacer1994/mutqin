@@ -110,7 +110,7 @@ class RevisionRecommendationService
         $this->assertOpen($row);
         $activity = (string) ($input['activity'] ?? $row->activity);
         if (! in_array($activity, self::ACTIVITIES, true)) {
-            throw ValidationException::withMessages(['activity' => 'Choose Nazra, Hifz, Tajweed practice, or Revision.']);
+            throw ValidationException::withMessages(['activity' => 'Choose Nazra, Hifz, Tajweed, or Revision.']);
         }
         $surah = (int) ($input['surah_number'] ?? $row->surah_number);
         $start = (int) ($input['ayah_start'] ?? $row->ayah_start);

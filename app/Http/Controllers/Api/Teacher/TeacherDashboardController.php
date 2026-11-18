@@ -715,6 +715,7 @@ class TeacherDashboardController extends Controller
             'items.*.priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'items.*.instructions' => ['nullable', 'string', 'max:2000'],
             'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
+            'items.*.weak_spot_id' => ['nullable', 'integer'],
             'items.*.id' => ['nullable', 'integer'],
             'items.*.is_milestone' => ['nullable', 'boolean'],
         ]);

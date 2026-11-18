@@ -298,6 +298,90 @@ class LearningPlansTest extends TestCase
         $this->assertSame('paused', $summary['learning_plan']['items'][0]['display_status']);
     }
 
+    public function test_draft_edit_and_activation_keep_assignments_intentional(): void
+    {
+        [$teacher, $student] = $this->classroom();
+
+        $plan = $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Draft week',
+            'student_goal' => 'Finish Al-Fatihah',
+            'notes' => 'Listen first',
+            'activate' => false,
+            'items' => [[
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 7,
+                'repetition_target' => 3,
+            ]],
+        ])->assertCreated()->json('plan');
+
+        $this->assertSame('draft', $plan['status']);
+        $this->assertNull($plan['items'][0]['teacher_assignment_id']);
+        $itemId = $plan['items'][0]['id'];
+
+        $updated = $this->actingAs($teacher)->putJson(route('api.teacher.learning-plans.update', $plan['id']), [
+            'notes' => 'Listen first, then recite',
+            'items' => [[
+                'id' => $itemId,
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 7,
+                'repetition_target' => 4,
+                'instructions' => 'Slow',
+            ]],
+        ])->assertOk()->json('plan');
+
+        $this->assertSame('draft', $updated['status']);
+        $this->assertCount(1, $updated['items']);
+        $this->assertSame(4, (int) $updated['items'][0]['repetition_target']);
+        $this->assertSame('Slow', $updated['items'][0]['instructions']);
+        $this->assertNull($updated['items'][0]['teacher_assignment_id']);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.learning-plans.update', $plan['id']), [
+            'items' => [[
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 7,
+            ]],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['items']);
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Invalid range',
+            'items' => [[
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 99,
+            ]],
+        ])->assertUnprocessable();
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plan-items.skip', $itemId))
+            ->assertOk();
+        $this->assertSame('skipped', LearningPlanItem::query()->find($itemId)?->item_status?->value);
+        $this->assertNull(LearningPlanItem::query()->find($itemId)?->teacher_assignment_id);
+
+        $activated = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.status', $plan['id']), ['status' => 'active'])
+            ->assertOk()
+            ->json('plan');
+        $this->assertSame('active', $activated['status']);
+        $this->assertNull(collect($activated['items'])->firstWhere('id', $itemId)['teacher_assignment_id']);
+    }
+
     public function test_other_teacher_cannot_manage_plan(): void
     {
         [$teacher, $student] = $this->classroom();

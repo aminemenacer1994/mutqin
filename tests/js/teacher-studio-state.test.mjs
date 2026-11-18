@@ -31,6 +31,8 @@ test('all teacher composers protect unsent text, recordings and revision dates',
   assert.equal(studioHasDraft({ ...clean, wordDueAt: '2026-11-23', initialWordDueAt: '2026-11-22' }), true)
   assert.equal(studioHasDraft({ ...clean, wordStatusDrafts: { '1:2': 'needs_practice' } }), true)
   assert.equal(studioHasDraft({ ...clean, wordDrafts: { '1:2': 'a correction' } }), true)
+  assert.equal(studioHasDraft({ ...clean, wordMetaDrafts: { '1:2': { finding: 'makhraj', focus: '' } } }), true)
+  assert.equal(studioHasDraft({ ...clean, wordMetaDrafts: { '1:2': { finding: ' ', focus: '' } } }), false)
   assert.equal(studioHasDraft({ ...clean, wordDrafts: { '1:2': ' \n' }, revisionNote: '  ' }), false)
   for (const key of ['voiceState', 'wordVoiceState']) {
     assert.equal(studioHasDraft({ ...clean, [key]: { hasRecording: true, active: false } }), true, key)

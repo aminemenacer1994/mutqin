@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { assignmentAttemptHelp, assignmentPassageKey, assignmentProgressLabel, attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts, teacherRecitationEvidenceRow } from '../../resources/js/scripts/teacher/formatters.js'
+import { assignmentAttemptHelp, assignmentCountLabel, assignmentPassageKey, assignmentProgressLabel, assignmentRequirementLabel, attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts, teacherRecitationEvidenceRow, teacherReviewLists, teacherReviewView } from '../../resources/js/scripts/teacher/formatters.js'
+import { assignmentDisplayLabel } from '../../resources/js/scripts/teacher/taskTypes.js'
 
 const t = (key, params = {}) => {
   if (key === 'teacher.ayahs_range') return `Ayahs ${params.from}–${params.to}`
@@ -58,7 +59,20 @@ assert.deepEqual(teacherAttentionAction(waiting, tTeacher), {
 assert.equal(teacherAttentionAction(late, tTeacher).focus.taskId, 12)
 assert.equal(teacherAttentionAction({ repeated_absence: true }, tTeacher).section, 'messages')
 assert.equal(assignmentProgressLabel({ assignment: { kind: 'ai_recite' }, progress: { target: 3, activity_count: 5, completed: 3 } }, tTeacher), 'teacher.assignment_progress_attempt_other')
+assert.equal(assignmentProgressLabel({ assignment: { kind: 'ai_recite' }, progress: { target: 2, activity_count: 1, completed: 1 } }, tTeacher), 'teacher.assignment_progress_attempt_one')
+assert.equal(assignmentProgressLabel({ assignment: { kind: 'practice' }, progress: { target: 2, activity_count: 1, completed: 1 } }, tTeacher), 'teacher.assignment_progress_repetitions')
 assert.equal(assignmentAttemptHelp({ assignment: { kind: 'practice' } }, tTeacher), 'teacher.attempt_help_practice')
+assert.equal(assignmentAttemptHelp({ assignment: { kind: 'ai_recite' } }, tTeacher), 'teacher.attempt_help_wording')
+assert.equal(assignmentAttemptHelp({ assignment: {} }, tTeacher), 'teacher.attempt_help')
+assert.equal(assignmentRequirementLabel({ kind: 'ai_recite' }, tTeacher), 'teacher.required_ai_wording_checks')
+assert.equal(assignmentRequirementLabel({ kind: 'practice' }, tTeacher), 'teacher.repetitions')
+assert.equal(assignmentCountLabel({ kind: 'ai_recite' }, 1, tTeacher), 'teacher.assignment_count_checks_one')
+assert.equal(assignmentCountLabel({ kind: 'practice' }, 2, tTeacher), 'teacher.assignment_count_attempts_other')
+assert.equal(assignmentDisplayLabel({ kind: 'ai_recite', activity: 'hifz', hifz_category: 'sabaq' }, tTeacher), 'teacher.activity_hifz · teacher.hifz_sabaq')
+assert.equal(assignmentDisplayLabel({ kind: 'practice', activity: 'revision', hifz_category: 'sabqi' }, tTeacher), 'teacher.activity_revision')
+assert.equal(assignmentDisplayLabel({ kind: 'ai_recite', activity: 'tajweed', hifz_category: 'sabqi' }, tTeacher), 'teacher.activity_tajweed')
+assert.equal(assignmentDisplayLabel({ kind: 'ai_recite', hifz_category: 'manzil' }, tTeacher), 'teacher.task_type_recite')
+assert.equal(assignmentDisplayLabel({ kind: 'practice', activity: 'nazra', hifz_category: 'sabqi' }, tTeacher), 'teacher.activity_nazra')
 
 const drawerRow = teacherRecitationEvidenceRow({ title: 'Check' }, {
   transcript: 'hello',
@@ -72,25 +86,49 @@ assert.equal(drawerRow.words.length, 1)
 assert.equal(drawerRow.evidenceState, 'ready')
 
 assert.deepEqual(teacherDeskCounts({}), {
-  reviews: 0, recitations: 0, reviewsDueToday: 0, legacyRecitations: 0, overdue: 0, plans: 0, unread: 0,
+  reviews: 0, recitations: 0, reviewedRecitations: 0, recitationHistory: 0, reviewsDueToday: 0, legacyRecitations: 0, overdue: 0, plans: 0, unread: 0,
 })
 assert.deepEqual(teacherDeskCounts({
   assignments: { awaiting_confirmation: 2, overdue: 4 },
   kpis: { overdue_assignments: 4, open_recommendations: 1 },
   snapshot: {
     recitations_awaiting_review: 5,
+    reviewed_recitations: 3,
+    recitation_history: 7,
     reviews_due_today: 1,
     legacy_ai_only_unreviewed: 7,
     overdue_tasks: 4,
     unread_messages: 2,
   },
 }), {
-  reviews: 2, recitations: 5, reviewsDueToday: 1, legacyRecitations: 7, overdue: 4, plans: 1, unread: 2,
+  reviews: 2, recitations: 5, reviewedRecitations: 3, recitationHistory: 7, reviewsDueToday: 1, legacyRecitations: 7, overdue: 4, plans: 1, unread: 2,
 })
 assert.equal(teacherDeskCounts({
   review_queue: { actionable: [{ id: 1 }, { id: 2 }] },
   snapshot: { recitations_awaiting_review: 9 },
 }).recitations, 2)
+const classified = {
+  review_queue: {
+    actionable: [{ id: 1, review_status: 'awaiting' }],
+    reviewed: [{ id: 2, review_status: 'reviewed' }],
+    history: [{ id: 3, review_status: 'history' }, { id: 4, review_status: 'history' }],
+  },
+  snapshot: {
+    recitations_awaiting_review: 9,
+    reviewed_recitations: 9,
+    recitation_history: 9,
+    legacy_ai_only_unreviewed: 2,
+  },
+}
+const classifiedCounts = teacherDeskCounts(classified)
+assert.equal(classifiedCounts.recitations, teacherReviewLists(classified).awaiting.length)
+assert.equal(classifiedCounts.reviewedRecitations, teacherReviewLists(classified).reviewed.length)
+assert.equal(classifiedCounts.recitationHistory, teacherReviewLists(classified).history.length)
+assert.equal(classifiedCounts.legacyRecitations, 2)
+assert.deepEqual(teacherReviewView(classified, 'awaiting').map((row) => row.id), [1])
+assert.deepEqual(teacherReviewView(classified, 'reviewed').map((row) => row.id), [2])
+assert.deepEqual(teacherReviewView(classified, 'history').map((row) => row.id), [3, 4])
+assert.deepEqual(teacherReviewView(classified, 'unknown').map((row) => row.id), [1])
 assert.equal(assignmentPassageKey({
   studentId: 9,
   assignment: { surah_number: 1, ayah_start: 1, ayah_end: 7, kind: 'ai_recite' },

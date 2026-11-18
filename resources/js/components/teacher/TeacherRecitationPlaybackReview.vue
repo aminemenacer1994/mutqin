@@ -132,6 +132,7 @@
             <aside ref="coachingPanel" tabindex="0" :aria-label="t('teacher.playback_actions')" class="teacher-playback__side" :class="{ 'has-selection': Boolean(selectedKey) }">
               <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
               <p v-else-if="actionMessage" class="teacher-playback__saved" role="status">{{ actionMessage }}</p>
+
               <section class="teacher-playback__section teacher-playback__ai" :aria-label="t('teacher.playback_wording_summary')">
                 <h2>{{ t('teacher.playback_wording_summary') }}</h2>
                 <p v-if="checkerScore" class="teacher-playback__score">{{ checkerScore }}</p>
@@ -139,74 +140,107 @@
                 <p v-if="hasAudio && !audioError" class="teacher-playback__hint">{{ t('teacher.playback_listen_first') }}</p>
                 <p v-else-if="audioError" class="teacher-playback__hint">{{ t('teacher.playback_flags_failed') }}</p>
                 <p v-else class="teacher-playback__hint">{{ t('teacher.playback_flags_unverified') }}</p>
-              <section class="teacher-playback__card teacher-playback__summary" :aria-label="t('teacher.playback_wording_summary')">
-                <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
-                  <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
-                  <div class="is-uncertain" :class="{ 'is-empty': !summary.counts.uncertain, 'is-active': attentionFilter === 'uncertain' && summary.counts.uncertain > 0 }">
-                    <dt aria-hidden="true">{{ t('teacher.playback_uncertain_count') }}</dt><dd aria-hidden="true">{{ summary.counts.uncertain }}</dd>
-                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'uncertain'" :aria-label="attentionCountLabel('uncertain')" :disabled="summary.counts.uncertain === 0 || Boolean(saving)" @click="setAttention('uncertain')"></button>
-                  </div>
-                  <div class="is-flagged" :class="{ 'is-empty': !summary.counts.flagged, 'is-active': attentionFilter === 'flagged' && summary.counts.flagged > 0 }">
-                    <dt aria-hidden="true">{{ t('teacher.playback_flagged_count') }}</dt><dd aria-hidden="true">{{ summary.counts.flagged }}</dd>
-                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'flagged'" :aria-label="attentionCountLabel('flagged')" :disabled="summary.counts.flagged === 0 || Boolean(saving)" @click="setAttention('flagged')"></button>
-                  </div>
-                  <div class="is-skipped" :class="{ 'is-empty': !summary.counts.skipped, 'is-active': attentionFilter === 'skipped' && summary.counts.skipped > 0 }">
-                    <dt aria-hidden="true">{{ t('teacher.playback_skipped_count') }}</dt><dd aria-hidden="true">{{ summary.counts.skipped }}</dd>
-                    <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'skipped'" :aria-label="attentionCountLabel('skipped')" :disabled="summary.counts.skipped === 0 || Boolean(saving)" @click="setAttention('skipped')"></button>
-                  </div>
-                </dl>
-                <p v-else class="teacher-playback__hint">{{ t('teacher.playback_no_assessment') }}</p>
-                <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
-              </section>
-              <section v-if="hasAttention" class="teacher-playback__card teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
-                <h3>{{ t('teacher.playback_attention_title') }}</h3>
-                <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
-                  <span>{{ t('teacher.playback_weak_ayahs') }}</span>
-                  <div class="teacher-playback__chips">
-                    <button
-                      v-for="ayah in summary.ayahs"
-                      :key="ayah.ayah"
-                      type="button"
-                      :class="{ 'is-current': ayah.ayah === currentAyah }"
-                      @click="selectAyah(ayah.ayah)"
-                    >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
-                  </div>
+                <div class="teacher-playback__summary" :aria-label="t('teacher.playback_wording_summary')">
+                  <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
+                    <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
+                    <div class="is-uncertain" :class="{ 'is-empty': !summary.counts.uncertain, 'is-active': attentionFilter === 'uncertain' && summary.counts.uncertain > 0 }">
+                      <dt aria-hidden="true">{{ t('teacher.playback_uncertain_count') }}</dt><dd aria-hidden="true">{{ summary.counts.uncertain }}</dd>
+                      <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'uncertain'" :aria-label="attentionCountLabel('uncertain')" :disabled="summary.counts.uncertain === 0 || Boolean(saving)" @click="setAttention('uncertain')"></button>
+                    </div>
+                    <div class="is-flagged" :class="{ 'is-empty': !summary.counts.flagged, 'is-active': attentionFilter === 'flagged' && summary.counts.flagged > 0 }">
+                      <dt aria-hidden="true">{{ t('teacher.playback_flagged_count') }}</dt><dd aria-hidden="true">{{ summary.counts.flagged }}</dd>
+                      <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'flagged'" :aria-label="attentionCountLabel('flagged')" :disabled="summary.counts.flagged === 0 || Boolean(saving)" @click="setAttention('flagged')"></button>
+                    </div>
+                    <div class="is-skipped" :class="{ 'is-empty': !summary.counts.skipped, 'is-active': attentionFilter === 'skipped' && summary.counts.skipped > 0 }">
+                      <dt aria-hidden="true">{{ t('teacher.playback_skipped_count') }}</dt><dd aria-hidden="true">{{ summary.counts.skipped }}</dd>
+                      <button type="button" class="teacher-playback__count-hit" :aria-pressed="attentionFilter === 'skipped'" :aria-label="attentionCountLabel('skipped')" :disabled="summary.counts.skipped === 0 || Boolean(saving)" @click="setAttention('skipped')"></button>
+                    </div>
+                  </dl>
+                  <p v-else class="teacher-empty-line">{{ t('teacher.playback_no_assessment') }}</p>
+                  <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
                 </div>
-                <ul v-if="visibleItems.length" class="teacher-playback__words">
-                  <li v-for="item in visibleItems" :key="item.key">
-                    <button
-                      type="button"
-                      :class="{ 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }"
-                      :aria-pressed="item.key === selectedKey"
-                      :aria-label="attentionLabel(item)"
-                      :disabled="Boolean(saving)"
-                      @click="selectAttention(item)"
-                    >
-                      <span v-if="item.ayah" class="teacher-playback__word-ayah">{{ item.ayah }}</span>
-                      <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
-                      <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
-                      <small>{{ wordStatusLabel(item.status) }}</small>
-                    </button>
-
-                  </li>
-                </ul>
-                <p v-else class="teacher-playback__hint">{{ t('teacher.playback_no_flags') }}</p>
-                <button v-if="filteredItems.length > visibleItems.length" type="button" class="teacher-playback__more" @click="showAllAttention = true">
-                  {{ t('teacher.playback_show_all') }}
-                </button>
+                <div v-if="hasAttention" class="teacher-playback__follow" :aria-label="t('teacher.playback_attention_title')">
+                  <h3>{{ t('teacher.playback_attention_title') }}</h3>
+                  <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
+                    <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
+                      <button
+                        v-for="ayah in summary.ayahs"
+                        :key="ayah.ayah"
+                        type="button"
+                        :class="{ 'is-current': ayah.ayah === currentAyah }"
+                        @click="selectAyah(ayah.ayah)"
+                      >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
+                    </div>
+                  </div>
+                  <ul v-if="visibleItems.length" class="teacher-playback__words">
+                    <li v-for="item in visibleItems" :key="item.key">
+                      <button
+                        type="button"
+                        :class="[attentionTone(item), { 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }]"
+                        :aria-pressed="item.key === selectedKey"
+                        :aria-label="attentionLabel(item)"
+                        :disabled="Boolean(saving)"
+                        @click="selectAttention(item)"
+                      >
+                        <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
+                        <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
+                      </button>
+                    </li>
+                  </ul>
+                  <p v-else class="teacher-empty-line">{{ attentionEmpty }}</p>
+                  <button v-if="filteredItems.length > visibleItems.length" type="button" class="teacher-playback__more" @click="showAllAttention = true">
+                    {{ t('teacher.playback_show_all') }}
+                  </button>
+                </div>
+                <details v-if="payload.history?.previous_review" class="teacher-playback__panel">
+                  <summary>{{ t('teacher.playback_previous_review') }}</summary>
+                  <p v-if="payload.history.previous_review.accuracy_percent != null" class="teacher-playback__hint">{{ t('teacher.playback_previous_wording', { n: payload.history.previous_review.accuracy_percent }) }}</p>
+                  <p v-if="payload.history.previous_review.feedback">{{ payload.history.previous_review.feedback }}</p>
+                  <ul v-if="observationLines(payload.history.previous_review.observations).length" class="teacher-playback__history">
+                    <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
+                  </ul>
+                </details>
               </section>
 
-              <section v-if="selectedKey" class="teacher-playback__card teacher-playback__word" :aria-label="t('teacher.coaching_word')">
-                <h3>{{ t('teacher.coaching_word') }}</h3>
+              <section class="teacher-playback__section teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
+                <h2>
+                  {{ t('teacher.playback_teacher_assessment') }}
+                  <span v-if="!soundEvidenceReady" class="teacher-playback__fold-state">{{ t('teacher.playback_sound_unverified') }}</span>
+                </h2>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_teacher_assessment_help') }}</p>
+                <p v-if="!soundEvidenceReady" class="teacher-playback__hint">{{ t('teacher.playback_sound_needs_evidence') }}</p>
+                <label v-if="!soundEvidenceReady" class="teacher-playback__heard-live">
+                  <input v-model="heardLive" type="checkbox" :disabled="Boolean(saving)" @change="assessmentDirty = true">
+                  <span>{{ t('teacher.playback_heard_live') }}</span>
+                </label>
+                <div class="teacher-playback__ratings">
+                  <label v-for="area in assessmentAreas" :key="area.id" class="teacher-playback__rating">
+                    <span>{{ t(area.label) }}</span>
+                    <select v-model="assessment[area.id].rating" class="form-select" :disabled="Boolean(saving)" @change="assessmentDirty = true">
+                      <option value="">{{ t('teacher.assessment_rating_unset') }}</option>
+                      <option value="needs_work">{{ t('teacher.assessment_needs_work') }}</option>
+                      <option value="sound">{{ t('teacher.assessment_sound') }}</option>
+                      <option value="strong">{{ t('teacher.assessment_strong') }}</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="teacher-playback__field">
+                  <span>{{ t('teacher.playback_general_feedback') }}</span>
+                  <textarea v-model="assessmentGeneral" class="form-control" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_feedback_placeholder')" @input="assessmentDirty = true"></textarea>
+                </label>
+                <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || !assessmentReady" @click="saveAssessment">
+                  {{ saving === 'assessment' ? t('teacher.saving') : t('teacher.playback_save_assessment') }}
+                </button>
+
+                <div v-if="selectedKey" class="teacher-playback__word" :aria-label="t('teacher.coaching_word')">
+                  <h3>{{ t('teacher.coaching_word') }}</h3>
                   <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
                   <p v-if="selectedReference || selectedWord || selectedCoaching" class="teacher-playback__selection-meta">
-                    <template v-if="selectedReference">{{ selectedReference }}</template>
-                    <br v-if="selectedReference">
-                    {{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}
+                    <template v-if="selectedReference">{{ selectedReference }}<br></template>
+                    <span class="teacher-playback__ai-result">{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</span>
                   </p>
                   <p v-if="selectedWord?.recognised || selectedCoaching?.ai?.recognised" class="teacher-playback__heard">
                     <span>{{ t('teacher.playback_heard') }}</span>
-                    <br>
                     <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
                   </p>
                   <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
@@ -214,6 +248,10 @@
                     <i class="bi bi-play-fill" aria-hidden="true"></i>
                     {{ t('teacher.coaching_play_segment') }}
                   </button>
+                  <div v-if="selectedNeedsAttention" class="teacher-playback__action-row">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
+                  </div>
                   <div class="teacher-playback__action-row">
                     <label class="teacher-playback__field">
                       <span>{{ t('teacher.finding_label') }}</span>
@@ -241,12 +279,10 @@
                       {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
                     </button>
                   </div>
-                  <details class="teacher-playback__fold">
+                  <details class="teacher-playback__panel">
                     <summary>{{ t('teacher.playback_actions') }}</summary>
                     <div class="teacher-playback__action-row">
                       <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
-                      <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
-                      <button v-if="selectedNeedsAttention" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
                       <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
                     </div>
                     <div v-if="selectedCoaching?.corrections?.length">
@@ -289,49 +325,12 @@
                     </label>
                     <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
                   </details>
-              </section>
-
-              <details v-if="payload.history?.previous_review" class="teacher-playback__card teacher-playback__fold-card">
-                <summary>{{ t('teacher.playback_previous_review') }}</summary>
-                <p v-if="payload.history.previous_review.accuracy_percent != null" class="teacher-playback__hint">{{ t('teacher.playback_previous_wording', { n: payload.history.previous_review.accuracy_percent }) }}</p>
-                <p v-if="payload.history.previous_review.feedback">{{ payload.history.previous_review.feedback }}</p>
-                <ul v-if="observationLines(payload.history.previous_review.observations).length" class="teacher-playback__history">
-                  <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
-                </ul>
-              </details>
-              </section>
-
-              <section class="teacher-playback__section teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
-                <h2>
-                  {{ t('teacher.playback_teacher_assessment') }}
-                  <span v-if="!soundEvidenceReady" class="teacher-playback__fold-state">{{ t('teacher.playback_sound_unverified') }}</span>
-                </h2>
-                <p v-if="!soundEvidenceReady" class="teacher-playback__hint">{{ t('teacher.playback_sound_needs_evidence') }}</p>
-                <label v-if="!soundEvidenceReady" class="teacher-playback__heard-live">
-                  <input v-model="heardLive" type="checkbox" :disabled="Boolean(saving)" @change="assessmentDirty = true">
-                  <span>{{ t('teacher.playback_heard_live') }}</span>
-                </label>
-                <div class="teacher-playback__ratings">
-                  <label v-for="area in assessmentAreas" :key="area.id" class="teacher-playback__rating">
-                    <span>{{ t(area.label) }}</span>
-                    <select v-model="assessment[area.id].rating" class="form-select" :disabled="Boolean(saving)" @change="assessmentDirty = true">
-                      <option value="">{{ t('teacher.assessment_rating_unset') }}</option>
-                      <option value="needs_work">{{ t('teacher.assessment_needs_work') }}</option>
-                      <option value="sound">{{ t('teacher.assessment_sound') }}</option>
-                      <option value="strong">{{ t('teacher.assessment_strong') }}</option>
-                    </select>
-                  </label>
                 </div>
-                <label class="teacher-playback__field">
-                  <span>{{ t('teacher.playback_general_feedback') }}</span>
-                  <textarea v-model="assessmentGeneral" class="form-control" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_feedback_placeholder')" @input="assessmentDirty = true"></textarea>
-                </label>
-                <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || !assessmentReady" @click="saveAssessment">
-                  {{ saving === 'assessment' ? t('teacher.saving') : t('teacher.playback_save_assessment') }}
-                </button>
               </section>
+
               <section class="teacher-playback__section teacher-playback__response" :aria-label="t('teacher.playback_feedback')">
                 <h2>{{ t('teacher.playback_feedback') }}</h2>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_optional') }}</p>
                 <div v-if="payload.review?.feedback" class="teacher-playback__saved-feedback">
                   <p v-if="payload.review.feedback.body" class="teacher-playback__saved">{{ payload.review.feedback.body }}</p>
                 </div>
@@ -349,27 +348,27 @@
               </section>
 
               <section class="teacher-playback__section teacher-playback__revision" :aria-label="t('teacher.playback_revision_section')">
-                  <h2>{{ t('teacher.playback_revision_section') }}</h2>
-                  <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
-                    <span v-for="ayah in revisionAyahs" :key="ayah">{{ t('teacher.ayah_n', { n: ayah }) }}</span>
-                  </div>
-                  <label class="teacher-playback__field">
-                    <span>{{ t('teacher.playback_revision_due') }}</span>
-                    <input v-model="dueAt" type="date" :min="today" :disabled="saving || !payload.suggested_revision">
-                  </label>
-                  <label class="teacher-playback__field">
-                    <span>{{ t('teacher.playback_revision_note') }}</span>
-                    <textarea v-model="revisionNote" rows="2" maxlength="2000" :placeholder="t('teacher.playback_revision_note_placeholder')" :disabled="saving || !payload.suggested_revision"></textarea>
-                  </label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || Boolean(payload.review?.revision) || !payload.suggested_revision || !dueAt || dueAt < today" @click="assignRevision">
-                    <i class="bi bi-journal-check" aria-hidden="true"></i>
-                    {{ saving === 'revision' ? t('teacher.saving') : t('teacher.playback_assign') }}
-                  </button>
-                  <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<template v-if="assignedRevisionLabel"><br>{{ assignedRevisionLabel }}</template></p>
-                  <p v-if="followUpLabel" class="teacher-playback__hint">{{ followUpLabel }}</p>
+                <h2>{{ t('teacher.playback_revision_section') }}</h2>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_revision_optional') }}</p>
+                <p class="teacher-playback__hint">{{ revisionHelp }}</p>
+                <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
+                  <span v-for="ayah in revisionAyahs" :key="ayah">{{ t('teacher.ayah_n', { n: ayah }) }}</span>
+                </div>
+                <label class="teacher-playback__field">
+                  <span>{{ t('teacher.playback_revision_due') }}</span>
+                  <input v-model="dueAt" type="date" :min="today" :disabled="saving || !payload.suggested_revision">
+                </label>
+                <label class="teacher-playback__field">
+                  <span>{{ t('teacher.playback_revision_note') }}</span>
+                  <textarea v-model="revisionNote" rows="2" maxlength="2000" :placeholder="t('teacher.playback_revision_note_placeholder')" :disabled="saving || !payload.suggested_revision"></textarea>
+                </label>
+                <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || Boolean(payload.review?.revision) || !payload.suggested_revision || !dueAt || dueAt < today" @click="assignRevision">
+                  <i class="bi bi-journal-check" aria-hidden="true"></i>
+                  {{ saving === 'revision' ? t('teacher.saving') : t('teacher.playback_assign') }}
+                </button>
+                <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<template v-if="assignedRevisionLabel"><br>{{ assignedRevisionLabel }}</template></p>
+                <p v-if="followUpLabel" class="teacher-playback__hint">{{ followUpLabel }}</p>
               </section>
-
-
             </aside>
           </div>
     </div>
@@ -411,6 +410,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi, createClientMessageId } from '../../scripts/api/learning'
 import { ayahRangeLabel } from '../../scripts/teacher/formatters'
+import { assignmentDisplayLabel } from '../../scripts/teacher/taskTypes'
 import { normaliseTeacherWordStatus } from '../../scripts/teacher/wordReviewClass'
 import { studioHasDraft, studioWordStatusKey, studioConfidenceValue } from '../../scripts/teacher/teacherStudioState'
 import { TEACHER_FINDING_FOCI, TEACHER_FINDINGS } from '../../scripts/teacher/taskTypes'
@@ -480,6 +480,7 @@ export default {
       wordVoiceState: { hasRecording: false, active: false },
       wordDrafts: {},
       wordStatusDrafts: {},
+      wordMetaDrafts: {},
       playbackRate: 1,
       speeds: [0.5, 0.75, 1, 1.25],
       activeKey: '',
@@ -592,6 +593,13 @@ export default {
       const counts = this.summary?.counts || {}
       return ['flagged', 'uncertain', 'skipped'].some((key) => Number(counts[key]) > 0)
     },
+    attentionEmpty() {
+      const key = {
+        uncertain: 'teacher.playback_no_uncertain',
+        skipped: 'teacher.playback_no_skipped',
+      }[this.attentionFilter] || 'teacher.playback_no_flags'
+      return this.t(key)
+    },
     filteredItems() {
       return this.summary.items.filter((item) => {
         if (this.attentionFilter === 'uncertain') return item.status === 'partial'
@@ -659,11 +667,8 @@ export default {
     assignmentLabel() {
       const assignment = this.payload?.assignment
       if (!assignment) return ''
-      if (assignment.title) return assignment.title
-      const kindKey = `teacher.hifz_${assignment.hifz_category}`
-      const kind = this.t(kindKey)
-      const kindLabel = kind && kind !== kindKey ? kind : ''
-      return [kindLabel, ayahRangeLabel(assignment.surah_name, assignment.ayah_start, assignment.ayah_end, this.t)]
+      const type = assignmentDisplayLabel(assignment, this.t.bind(this))
+      return [type, ayahRangeLabel(assignment.surah_name, assignment.ayah_start, assignment.ayah_end, this.t)]
         .filter(Boolean)
         .join(' · ')
     },
@@ -878,14 +883,15 @@ export default {
     revealWord(node, automatic = false) {
       if (!node) return
       const reading = this.$refs.readingPanel
+      const mushaf = this.$refs.mushaf
       const desktop = window.matchMedia('(min-width: 961px)').matches
-      const scroller = desktop ? reading : reading?.closest('.modal-body')
-      if (!scroller) return
-      // Playback must never pull a teacher away from the mobile coaching form.
-      if (automatic && !desktop) {
+      const body = reading?.closest('.modal-body')
+      if (automatic && !desktop && body) {
         const side = this.$refs.coachingPanel
-        if (side?.contains(document.activeElement) || reading.getBoundingClientRect().bottom <= scroller.getBoundingClientRect().top) return
+        if (side?.contains(document.activeElement) || reading.getBoundingClientRect().bottom <= body.getBoundingClientRect().top) return
       }
+      const scroller = mushaf || body
+      if (!scroller) return
       const bounds = scroller.getBoundingClientRect()
       const word = node.getBoundingClientRect()
       if (word.top < bounds.top + 12) scroller.scrollTop += word.top - bounds.top - 12
@@ -920,6 +926,7 @@ export default {
       this.annotationFocus = ''
       this.wordDrafts = {}
       this.wordStatusDrafts = {}
+      this.wordMetaDrafts = {}
       this.$refs.voice?.discardRecording()
       this.$refs.wordVoice?.discardRecording()
       this.wordStatus = ''
@@ -1065,10 +1072,7 @@ export default {
         this.actionError = this.t('teacher.coaching_finish_recording')
         return
       }
-      if (this.selectedKey) {
-        this.wordDrafts[this.selectedKey] = this.wordNote
-        this.wordStatusDrafts[this.selectedKey] = this.wordStatus
-      }
+      if (this.selectedKey && this.selectedKey !== key) this.stashWordDraft()
       this.selectedKey = key
       this.selectedGlyph = {
         text: part?.isEnd ? '' : (part?.text || ''),
@@ -1076,34 +1080,38 @@ export default {
         accessibleText: part?.accessibleText || '',
         ayah: part?.ayah,
       }
-      this.wordStatus = this.wordStatusDrafts[key] || ''
-      this.wordNote = this.wordDrafts[key] || ''
+      this.applyWordDraft(key)
       const match = this.words.find((word) => wordKey(word) === key)
       const start = wordWindow(match)?.start ?? (Number.isFinite(part?.start) ? part.start : null)
       if (start != null) this.seekTo(start, this.hasAudio)
       this.$nextTick(() => this.revealCoachingField())
     },
+    stashWordDraft() {
+      const key = this.selectedKey
+      if (!key) return
+      this.wordDrafts[key] = this.wordNote
+      this.wordStatusDrafts[key] = this.wordStatus
+      this.wordMetaDrafts[key] = { finding: this.annotationFinding, focus: this.annotationFocus }
+    },
+    applyWordDraft(key) {
+      const meta = this.wordMetaDrafts[key] || {}
+      this.wordNote = this.wordDrafts[key] || ''
+      this.wordStatus = this.wordStatusDrafts[key] || ''
+      this.annotationFinding = meta.finding || ''
+      this.annotationFocus = meta.focus || ''
+    },
     revealCoachingField() {
       const panel = this.$refs.coachingPanel
       const card = panel?.querySelector('.teacher-playback__word')
       const field = card?.querySelector('textarea')
-      if (!card || !field) return
-      const desktop = window.matchMedia('(min-width: 961px)').matches
-      const scroller = desktop ? panel : panel.closest('.modal-body')
-      if (!scroller) return
+      const scroller = panel?.closest('.modal-body')
+      if (!card || !scroller) return
       const bounds = scroller.getBoundingClientRect()
-      const cardBox = card.getBoundingClientRect()
-      const fieldBox = field.getBoundingClientRect()
-      const cardFits = cardBox.height <= bounds.height - 16
-      if (cardFits) {
-        if (cardBox.top < bounds.top + 4 || cardBox.bottom > bounds.bottom - 4) {
-          scroller.scrollTop += cardBox.top - bounds.top - 4
-        }
-        return
-      }
-      if (fieldBox.top < bounds.top + 8 || fieldBox.bottom > bounds.bottom - 8) {
-        scroller.scrollTop += fieldBox.top - bounds.top - 12
-      }
+      const target = field || card
+      const box = target.getBoundingClientRect()
+      const padding = 16
+      if (box.bottom > bounds.bottom - padding) scroller.scrollTop += box.bottom - bounds.bottom + padding
+      else if (box.top < bounds.top + padding) scroller.scrollTop += box.top - bounds.top - padding
     },
     glyphForKey(key) {
       return this.glyphByKey.get(key) || null
@@ -1205,6 +1213,7 @@ export default {
         this.applyPayload(payload)
         if (action === 'correct') {
           delete this.wordDrafts[this.selectedKey]
+          delete this.wordMetaDrafts[this.selectedKey]
           this.wordNote = ''
           this.annotationFinding = ''
           this.annotationFocus = ''
@@ -1244,6 +1253,12 @@ export default {
     },
     wordStatusLabel(status) {
       return this.t(studioWordStatusKey(status))
+    },
+    attentionTone(item) {
+      if (item?.status === 'partial') return 'is-uncertain'
+      if (item?.status === 'skipped' || item?.status === 'omitted') return 'is-skipped'
+      if (item?.status === 'correct') return 'is-correct'
+      return 'is-flagged'
     },
     teacherFindingLabel(item) {
       const finding = item?.finding ? this.t(`teacher.finding_${item.finding}`) : ''
@@ -1315,7 +1330,6 @@ export default {
       this.wordNote = item.body || ''
       this.annotationFinding = item.finding || ''
       this.annotationFocus = item.focus || ''
-      this.assessmentDirty = false
     },
     async sendFeedback() {
       if (this.saving) return
@@ -1415,7 +1429,7 @@ export default {
     resetPlaybackScroll() {
       const dialog = document.querySelector('.teacher-dialog.teacher-playback-studio')
       if (!dialog) return
-      dialog.querySelectorAll('.modal-body, .teacher-playback__main, .teacher-playback__side').forEach((node) => {
+      dialog.querySelectorAll('.modal-body, .teacher-playback__main, .teacher-playback__side, .teacher-playback__mushaf').forEach((node) => {
         node.scrollTop = 0
       })
     },
@@ -1470,6 +1484,7 @@ export default {
       this.annotationFocus = ''
       this.wordDrafts = {}
       this.wordStatusDrafts = {}
+      this.wordMetaDrafts = {}
       this.wordDueAt = this.initialWordDueAt || this.dueAt
       this.$refs.voice?.discardRecording()
       this.$refs.wordVoice?.discardRecording()

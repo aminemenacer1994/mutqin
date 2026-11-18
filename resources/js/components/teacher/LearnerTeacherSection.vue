@@ -316,6 +316,7 @@
                     />
                   </div>
 
+                  <p class="text-body-secondary small mb-2">{{ requirementHelp(item) }}</p>
                   <div v-if="showCardProgress(item)" class="learner-teacher__card-progress" :aria-label="progressLabel(item)">
                     <span>{{ progressLabel(item) }}</span>
                     <span v-if="showProgressBar(item)" class="learner-teacher__progress" aria-hidden="true"><span :style="{ width: `${progressPercent(item)}%` }"></span></span>
@@ -536,7 +537,7 @@
               <div><dt>{{ t('teacher.learner_submitted_on') }}</dt><dd>{{ submissionWhen(selectedSubmission.submitted_at) }}</dd></div>
               <div><dt>{{ t('teacher.teacher') }}</dt><dd>{{ selectedSubmission.teacher_name || t('teacher.unavailable') }}</dd></div>
               <div><dt>{{ t('teacher.learner_submission_range') }}</dt><dd>{{ submissionRangeLabel(selectedSubmission) }}</dd></div>
-              <div><dt>{{ t('teacher.learner_submission_attempts_label') }}</dt><dd>{{ t('teacher.learner_submission_attempts', { n: selectedSubmission.attempt_count || 0, s: selectedSubmission.submission_count || 1 }) }}</dd></div>
+              <div><dt>{{ t('teacher.learner_submission_attempts_label') }}</dt><dd>{{ submissionAttemptsLabel(selectedSubmission) }}</dd></div>
             </dl>
             <p v-if="selectedSubmission.review_state !== 'approved'" class="learner-teacher__submission-note">
               {{ t('teacher.learner_submission_not_approved') }}
@@ -638,7 +639,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
-import { assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
+import { assignmentAttemptHelp, assignmentCountLabel, assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
   formatTaskDueUrgency,
@@ -670,7 +671,7 @@ import {
   learnerWeeklyProgressFromAssignments,
 } from '../../scripts/teacher/learnerDashboard.js'
 import { shouldShowUpcomingPanel } from '../../scripts/teacher/learnerUpcoming.js'
-import { resolveTeacherTaskType, teacherTaskTypeLabel } from '../../scripts/teacher/taskTypes.js'
+import { assignmentDisplayLabel } from '../../scripts/teacher/taskTypes.js'
 import {
   cardHasExpandableContent as learnerCardHasExpandableContent,
   resolveCardExpanded,
@@ -1232,7 +1233,14 @@ export default {
     taskAttemptCountLabel(row) {
       const n = this.taskAttemptCount(row)
       if (!n) return ''
-      return this.ldtp('teacher.learner_task_attempts_count', n)
+      return assignmentCountLabel(row?.assignment, n, this.t.bind(this))
+    },
+    submissionAttemptsLabel(item) {
+      const attempts = assignmentCountLabel({ kind: item?.kind }, Number(item?.attempt_count || 0), this.t.bind(this))
+      const submissions = Number(item?.submission_count || 1) === 1
+        ? this.t('teacher.learner_submission_count_one', { n: 1 })
+        : this.t('teacher.learner_submission_count_other', { n: Number(item?.submission_count || 0) })
+      return `${attempts} · ${submissions}`
     },
     completedPerformanceLabel(row) {
       if (!this.isTeacherApproved(row)) return ''
@@ -1420,7 +1428,7 @@ export default {
     submissionStateLabel(item) {
       if (item?.review_state === 'approved') return this.t('teacher.status_teacher_approved')
       if (item?.review_state === 'needs_correction') return this.t('teacher.status_needs_correction')
-      return this.t('teacher.status_submitted')
+      return this.t('teacher.task_state_waiting_review')
     },
     submissionWhen(value) {
       if (!value) return this.t('teacher.unavailable')
@@ -1445,7 +1453,7 @@ export default {
       return this.taskTypeLabel(row)
     },
     taskTypeLabel(row) {
-      return teacherTaskTypeLabel(resolveTeacherTaskType(row?.assignment?.kind, row?.assignment?.hifz_category, row?.assignment?.activity), this.t.bind(this))
+      return assignmentDisplayLabel(row?.assignment, this.t.bind(this))
     },
     cardMetaTail(row) {
       if (this.isTeacherApproved(row)) {
@@ -1453,7 +1461,7 @@ export default {
         return date ? { text: date, tone: 'success' } : { text: '', tone: 'neutral' }
       }
       if (this.isSubmitted(row)) {
-        return { text: this.t('teacher.status_submitted'), tone: 'submitted' }
+        return { text: this.t('teacher.task_state_waiting_review'), tone: 'submitted' }
       }
       if (this.needsCorrection(row)) {
         return { text: this.t('teacher.status_needs_correction'), tone: 'warning' }
@@ -1549,17 +1557,16 @@ export default {
       return `${assignment.surah_name} · ${assignment.ayah_start}–${assignment.ayah_end}`
     },
     kindLabel(row) {
-      const action = row?.assignment?.kind === 'ai_recite'
-        ? this.t('teacher.kind_ai')
-        : this.t('teacher.kind_practice')
-      const category = row?.assignment?.hifz_category
-      return category ? `${this.t(`teacher.hifz_${category}`)} · ${action}` : action
+      return this.taskTypeLabel(row)
     },
     kindIcon(row) {
       return row?.assignment?.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-book'
     },
     progressLabel(row) {
       return row?.progress ? assignmentProgressLabel(row, this.t.bind(this)) : ''
+    },
+    requirementHelp(row) {
+      return assignmentAttemptHelp(row, this.t.bind(this))
     },
     progressPercent(row) {
       const completed = Number(row?.progress?.completed || 0)

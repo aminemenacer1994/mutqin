@@ -76,7 +76,6 @@
               <span class="teacher-task-row__range">{{ item.title }}</span>
               <span class="teacher-task-row__meta d-flex flex-wrap gap-1">
                 <span class="badge rounded-pill text-bg-light border">{{ item.categoryLabel }}</span>
-                <span class="badge rounded-pill text-bg-light border">{{ item.actionLabel }}</span>
                 <span v-if="item.recordingRequired" class="badge rounded-pill text-bg-light border">{{ t('teacher.recording_required') }}</span>
                 <span v-if="item.assignedOn" class="badge rounded-pill text-bg-light border">{{ item.assignedOn }}</span>
                 <span v-if="item.samePassageCount > 1" class="badge rounded-pill text-bg-light border">{{ t('teacher.task_same_passage', { n: item.samePassageCount - 1 }) }}</span>
@@ -199,6 +198,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { assignmentDisplayLabel } from '../../scripts/teacher/taskTypes'
 import { assignmentPassageKey, assignmentProgressLabel, formatTeacherWhen } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
@@ -283,7 +283,7 @@ export default {
       }, { all: 0, waiting: 0, progress: 0, submitted: 0, overdue: 0, done: 0 })
       return [
         { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
-        ...(counts.submitted ? [{ id: 'submitted', label: this.t('teacher.status_awaiting_confirmation'), count: counts.submitted }] : []),
+        ...(counts.submitted ? [{ id: 'submitted', label: this.t('teacher.task_state_waiting_review'), count: counts.submitted }] : []),
         { id: 'progress', label: this.t('teacher.task_filter_progress'), count: counts.progress },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
         { id: 'done', label: this.t('teacher.task_filter_completed'), count: counts.done },
@@ -296,7 +296,6 @@ export default {
         const recipients = row.recipients || []
         return recipients.map((recipient, recipientIndex) => {
           const status = this.normalizedStatus(recipient.status)
-          const category = this.taskCategory(assignment)
           const snapshot = taskStateFromTeacherItem(recipient, assignment)
           const displayState = snapshot.display
           const dueUrgency = formatTaskDueUrgency(assignment.due_at, {
@@ -307,9 +306,7 @@ export default {
           return {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
-            category,
-            categoryLabel: this.taskCategoryLabel(category),
-            actionLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
+            categoryLabel: assignmentDisplayLabel(assignment, this.t.bind(this)),
             recordingRequired: Boolean(assignment.recording_required) || assignment.kind === 'ai_recite',
             title,
             studentId: recipient.student_id,
@@ -389,24 +386,6 @@ export default {
   methods: {
     normalizedStatus(status) {
       return status || 'pending'
-    },
-    taskCategory(assignment) {
-      const stored = assignment?.hifz_category
-      if (stored === 'sabaq' || stored === 'sabqi' || stored === 'manzil') return stored
-      const activity = assignment?.activity
-      if (activity === 'hifz') return 'sabaq'
-      if (activity === 'sabqi') return 'sabqi'
-      if (activity === 'manzil') return 'manzil'
-      if (activity === 'revision') return 'revision'
-      if (activity === 'nazra') return 'nazra'
-      if (activity === 'tajweed') return 'tajweed'
-      return 'revision'
-    },
-    taskCategoryLabel(category) {
-      if (category === 'sabaq' || category === 'sabqi' || category === 'manzil') return this.t(`teacher.hifz_${category}`)
-      if (category === 'nazra') return this.t('teacher.activity_nazra')
-      if (category === 'tajweed') return this.t('teacher.activity_tajweed')
-      return this.t('teacher.activity_revision')
     },
     toggleCompactView() {
       this.compactView = !this.compactView

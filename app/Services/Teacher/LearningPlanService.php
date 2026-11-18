@@ -288,7 +288,8 @@ class LearningPlanService
             throw ValidationException::withMessages(['ayah_end' => 'Choose a valid surah and ayah range.']);
         }
         $dueOn = ! empty($item['due_on']) ? Carbon::parse((string) $item['due_on'])->toDateString() : null;
-        $this->assertUniqueItem($plan, $activity, $surah, $start, $end, $dueOn);
+        $exceptId = isset($item['id']) ? (int) $item['id'] : null;
+        $this->assertUniqueItem($plan, $activity, $surah, $start, $end, $dueOn, $exceptId > 0 ? $exceptId : null);
 
         $row = new LearningPlanItem;
         $row->forceFill([
@@ -857,7 +858,7 @@ class LearningPlanService
         return in_array($stage, ['sabaq', 'sabqi', 'manzil'], true) ? $stage : $fallback;
     }
 
-    private function assertUniqueItem(LearningPlan $plan, ?string $activity, int $surah, int $start, int $end, ?string $dueOn): void
+    private function assertUniqueItem(LearningPlan $plan, ?string $activity, int $surah, int $start, int $end, ?string $dueOn, ?int $exceptId = null): void
     {
         $query = LearningPlanItem::query()
             ->where('learning_plan_id', $plan->id)
@@ -865,6 +866,9 @@ class LearningPlanService
             ->where('ayah_start', $start)
             ->where('ayah_end', $end)
             ->where('item_status', '!=', LearningPlanItemStatus::Skipped->value);
+        if ($exceptId) {
+            $query->where('id', '!=', $exceptId);
+        }
         if ($activity === null || $activity === '') {
             $query->whereNull('activity');
         } else {

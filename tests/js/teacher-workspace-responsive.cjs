@@ -243,15 +243,38 @@ async function main() {
           assert.equal(geometry.columns, true, 'Desktop studio retains separate reading and coaching columns')
           assert.ok(geometry.mainFraction >= .60 && geometry.mainFraction <= .70, 'Reading area has approximately 65% of available width')
           const scrollState = await dialog.evaluate(root => {
+            const body = root.querySelector('.modal-body')
             const side = root.querySelector('.teacher-playback__side')
-            const main = root.querySelector('.teacher-playback__main')
             const header = root.querySelector('.modal-header')
-            const top = header.getBoundingClientRect().top
-            const readingTop = main.scrollTop
-            side.scrollTop = side.scrollHeight
-            return { moved: side.scrollTop > 0, readingStill: main.scrollTop === readingTop, headerStill: header.getBoundingClientRect().top === top, sideOverflow: getComputedStyle(side).overflowY }
+            const footer = root.querySelector('.modal-footer')
+            const headerTop = header.getBoundingClientRect().top
+            const footerTop = footer.getBoundingClientRect().top
+            const before = body.scrollTop
+            body.scrollTop = body.scrollHeight
+            const footerBox = footer.getBoundingClientRect()
+            const bodyBox = body.getBoundingClientRect()
+            const overlap = [...side.querySelectorAll('button, input, textarea, select, summary')].some(el => {
+              const style = getComputedStyle(el)
+              if (style.display === 'none' || style.visibility === 'hidden') return false
+              const rect = el.getBoundingClientRect()
+              const top = Math.max(rect.top, bodyBox.top)
+              const bottom = Math.min(rect.bottom, bodyBox.bottom)
+              const left = Math.max(rect.left, bodyBox.left)
+              const right = Math.min(rect.right, bodyBox.right)
+              if (bottom - top < 1 || right - left < 1) return false
+              return bottom > footerBox.top + 1 && top < footerBox.bottom - 1
+            })
+            return {
+              scrolled: body.scrollTop > before,
+              headerStill: header.getBoundingClientRect().top === headerTop,
+              footerStill: Math.abs(footer.getBoundingClientRect().top - footerTop) <= 1,
+              sideNested: ['auto', 'scroll'].includes(getComputedStyle(side).overflowY),
+              overlap,
+            }
           })
-          assert.ok(scrollState.moved && scrollState.readingStill && scrollState.headerStill, 'Coaching scrolls independently without moving the header or Quran')
+          assert.ok(scrollState.scrolled && scrollState.headerStill && scrollState.footerStill, 'The review body scrolls while the header and footer stay put')
+          assert.equal(scrollState.sideNested, false, 'The coaching column is not a nested scroller')
+          assert.equal(scrollState.overlap, false, 'No coaching control overlaps the footer')
 
         } else assert.equal(geometry.columns, false, 'Tablet and mobile coaching stacks below the reading area')
         for (const selector of ['.teacher-playback__ai', '.teacher-playback__assessment', '.teacher-playback__revision', '.teacher-playback__review-status']) {

@@ -67,7 +67,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.v6.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v7.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -143,9 +143,13 @@ class TeacherDashboardService
                 'difficulty_queue' => $this->difficulties->reviewQueue($teacher, 10),
                 'review_queue' => [
                     'actionable' => $reviewSnapshot['actionable'],
+                    'reviewed' => $reviewSnapshot['reviewed'],
+                    'history' => $reviewSnapshot['history'],
                 ],
                 'snapshot' => [
                     'recitations_awaiting_review' => $reviewSnapshot['count'],
+                    'reviewed_recitations' => $reviewSnapshot['reviewed_count'],
+                    'recitation_history' => $reviewSnapshot['history_count'],
                     'legacy_ai_only_unreviewed' => $reviewSnapshot['legacy_ai_only_unreviewed'],
                     'reviews_due_today' => (int) collect($metrics)->sum('revision_due_today'),
                     'submissions_awaiting_review' => (int) ($assignments['awaiting_confirmation'] ?? 0),
@@ -738,6 +742,7 @@ class TeacherDashboardService
                 'review_state' => $row['review_state'] ?? null,
                 'status' => $row['status'] ?? null,
                 'teacher_name' => $row['teacher_name'] ?? null,
+                'kind' => $assignment['kind'] ?? null,
                 'attempt_count' => (int) ($row['progress']['activity_count'] ?? $row['completion_evidence']['activity_count'] ?? 0),
                 'submission_count' => is_array($row['completion_evidence']['submissions'] ?? null)
                     ? count($row['completion_evidence']['submissions'])
@@ -2645,12 +2650,23 @@ class TeacherDashboardService
     }
 
     /**
-     * Actionable recitations are scored checks tied to this teacher's assignment
-     * or an open review, and not yet marked reviewed. Historical AI-only checks
-     * stay out of that queue and are not rewritten.
+     * Classifies each scored recitation for this teacher without writing review rows.
+     * Awaiting: linked to this teacher's assignment, or already opened for review, and not reviewed.
+     * Reviewed: this teacher has marked the check heard.
+     * History: earlier AI checks that do not need this teacher, including legacy AI-only sessions.
      *
      * @param  list<int>  $studentIds
-     * @return array{count: int, student_id: int|null, attempt_id: int|null, actionable: list<array<string, mixed>>, legacy_ai_only_unreviewed: int}
+     * @return array{
+     *     count: int,
+     *     student_id: int|null,
+     *     attempt_id: int|null,
+     *     actionable: list<array<string, mixed>>,
+     *     reviewed: list<array<string, mixed>>,
+     *     history: list<array<string, mixed>>,
+     *     reviewed_count: int,
+     *     history_count: int,
+     *     legacy_ai_only_unreviewed: int
+     * }
      */
     private function recitationsAwaitingReview(User $teacher, array $studentIds): array
     {
@@ -2659,6 +2675,10 @@ class TeacherDashboardService
             'student_id' => null,
             'attempt_id' => null,
             'actionable' => [],
+            'reviewed' => [],
+            'history' => [],
+            'reviewed_count' => 0,
+            'history_count' => 0,
             'legacy_ai_only_unreviewed' => 0,
         ];
         if ($studentIds === []) {
@@ -2679,6 +2699,8 @@ class TeacherDashboardService
                 'ayah_range',
                 'accuracy_percent',
                 'band',
+                'audio_path',
+                'audio_expires_at',
                 'created_at',
             ]);
         if ($attempts->isEmpty()) {
@@ -2716,50 +2738,40 @@ class TeacherDashboardService
             true
         );
         $names = User::query()->whereIn('id', $studentIds)->pluck('name', 'id');
+        $latestIn = fn ($group) => $group->sortByDesc(fn (AiReciteAttempt $row) => $row->created_at?->getTimestamp() ?? 0)->first();
 
         $actionable = [];
+        $reviewedRows = [];
+        $historyRows = [];
         $legacy = 0;
         foreach ($attempts->groupBy(fn (AiReciteAttempt $attempt) => $this->scoredAttemptEventKey($attempt)) as $group) {
-            $reviewed = $group->contains(fn (AiReciteAttempt $attempt) => isset($reviewedLookup[(int) $attempt->id]));
-            if ($reviewed) {
-                continue;
-            }
-            /** @var AiReciteAttempt $attempt */
-            $attempt = $group->sortByDesc(fn (AiReciteAttempt $row) => $row->created_at?->getTimestamp() ?? 0)->first();
-            $recipientId = (int) ($attempt->teacher_assignment_recipient_id ?? 0);
+            /** @var AiReciteAttempt $latest */
+            $latest = $latestIn($group);
+            $reviewedAttempt = $latestIn($group->filter(fn (AiReciteAttempt $row) => isset($reviewedLookup[(int) $row->id])));
+            $recipientId = (int) ($latest->teacher_assignment_recipient_id ?? 0);
             $linked = $recipientId > 0 && isset($ownRecipients[$recipientId]);
-            $opened = isset($openReviewLookup[(int) $attempt->id])
-                || $group->contains(fn (AiReciteAttempt $row) => isset($openReviewLookup[(int) $row->id]));
-            if (! $linked && ! $opened) {
-                if ($recipientId === 0) {
-                    $legacy++;
-                }
+            $opened = $group->contains(fn (AiReciteAttempt $row) => isset($openReviewLookup[(int) $row->id]));
+
+            if ($reviewedAttempt instanceof AiReciteAttempt) {
+                $reviewedRows[] = $this->presentRecitationQueueRow($reviewedAttempt, $names, 'reviewed');
 
                 continue;
             }
-            $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
-            $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
-            $actionable[] = [
-                'id' => (int) $attempt->id,
-                'student_id' => (int) $attempt->user_id,
-                'student_name' => $names->get((int) $attempt->user_id),
-                'accuracy_percent' => (int) $attempt->accuracy_percent,
-                'band' => $attempt->band,
-                'surah_number' => $surah ?: null,
-                'surah_name' => $range['surah_name'] ?? QuranMetadata::name($surah),
-                'ayah_start' => isset($range['from']) ? (int) $range['from'] : (isset($range['start']) ? (int) $range['start'] : null),
-                'ayah_end' => isset($range['to']) ? (int) $range['to'] : (isset($range['end']) ? (int) $range['end'] : null),
-                'created_at' => $attempt->created_at?->toIso8601String(),
-                'created_ts' => $attempt->created_at?->getTimestamp() ?? 0,
-            ];
+            if ($linked || $opened) {
+                $actionable[] = $this->presentRecitationQueueRow($latest, $names, 'awaiting');
+
+                continue;
+            }
+
+            if ($recipientId === 0) {
+                $legacy++;
+            }
+            $historyRows[] = $this->presentRecitationQueueRow($latest, $names, 'history');
         }
 
-        usort($actionable, fn (array $a, array $b) => $b['created_ts'] <=> $a['created_ts']);
-        $actionable = array_map(function (array $row) {
-            unset($row['created_ts']);
-
-            return $row;
-        }, $actionable);
+        $actionable = $this->sortRecitationQueue($actionable);
+        $reviewedRows = $this->sortRecitationQueue($reviewedRows);
+        $historyRows = $this->sortRecitationQueue($historyRows);
         $first = $actionable[0] ?? null;
 
         return [
@@ -2767,8 +2779,53 @@ class TeacherDashboardService
             'student_id' => $first ? (int) $first['student_id'] : null,
             'attempt_id' => $first ? (int) $first['id'] : null,
             'actionable' => $actionable,
+            'reviewed' => $reviewedRows,
+            'history' => $historyRows,
+            'reviewed_count' => count($reviewedRows),
+            'history_count' => count($historyRows),
             'legacy_ai_only_unreviewed' => $legacy,
         ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, string>  $names
+     * @return array<string, mixed>
+     */
+    private function presentRecitationQueueRow(AiReciteAttempt $attempt, $names, string $status): array
+    {
+        $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+        $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
+
+        return [
+            'id' => (int) $attempt->id,
+            'student_id' => (int) $attempt->user_id,
+            'student_name' => $names->get((int) $attempt->user_id),
+            'accuracy_percent' => (int) $attempt->accuracy_percent,
+            'band' => $attempt->band,
+            'surah_number' => $surah ?: null,
+            'surah_name' => $range['surah_name'] ?? QuranMetadata::name($surah),
+            'ayah_start' => isset($range['from']) ? (int) $range['from'] : (isset($range['start']) ? (int) $range['start'] : null),
+            'ayah_end' => isset($range['to']) ? (int) $range['to'] : (isset($range['end']) ? (int) $range['end'] : null),
+            'created_at' => $attempt->created_at?->toIso8601String(),
+            'created_ts' => $attempt->created_at?->getTimestamp() ?? 0,
+            'review_status' => $status,
+            'has_recording' => $this->audio->hasPlayableAudio($attempt),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function sortRecitationQueue(array $rows): array
+    {
+        usort($rows, fn (array $a, array $b) => ($b['created_ts'] ?? 0) <=> ($a['created_ts'] ?? 0));
+
+        return array_map(function (array $row) {
+            unset($row['created_ts']);
+
+            return $row;
+        }, $rows);
     }
 
     private function scoredAttemptEventKey(AiReciteAttempt $attempt): string

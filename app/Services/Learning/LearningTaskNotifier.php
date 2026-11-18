@@ -2,6 +2,7 @@
 
 namespace App\Services\Learning;
 
+use App\Enums\AssignmentKind;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherLesson;
 use App\Models\TeacherNote;
@@ -28,8 +29,9 @@ final class LearningTaskNotifier
         $assignment->loadMissing('recipients');
         $activity = (string) ($assignment->activity ?? '');
         $category = (string) $assignment->hifz_category;
+        $kind = $assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind;
         $isRevision = $activity === 'revision'
-            || ($activity === '' && in_array($category, ['sabqi', 'manzil'], true));
+            || ($activity === '' && $kind !== AssignmentKind::AiRecite->value && in_array($category, ['sabqi', 'manzil'], true));
 
         foreach ($assignment->recipients as $recipient) {
             $student = User::query()->find($recipient->student_id);
@@ -40,7 +42,7 @@ final class LearningTaskNotifier
                 $this->once($student, 'revision:'.$recipient->id, [
                     'type' => 'revision',
                     'title' => 'Revision assigned',
-                    'body' => $this->passageLabel($assignment->surah_number, $assignment->ayah_start, $assignment->ayah_end),
+                    'body' => $this->noticeBody($assignment),
                     'href' => $this->hrefs->memorisationHref([
                         'surah' => (int) $assignment->surah_number,
                         'from' => (int) $assignment->ayah_start,
@@ -61,7 +63,7 @@ final class LearningTaskNotifier
                 $this->once($student, 'deadline:'.$recipient->id.':'.$due, [
                     'type' => 'deadline',
                     'title' => 'Task deadline',
-                    'body' => $this->passageLabel($assignment->surah_number, $assignment->ayah_start, $assignment->ayah_end),
+                    'body' => $this->noticeBody($assignment),
                     'href' => route('dashboard'),
                     'surah_number' => (int) $assignment->surah_number,
                     'ayah_start' => (int) $assignment->ayah_start,
@@ -88,7 +90,7 @@ final class LearningTaskNotifier
             $this->once($student, 'deadline:'.$recipient->id.':'.$due, [
                 'type' => 'deadline',
                 'title' => 'Deadline updated',
-                'body' => $this->passageLabel($assignment->surah_number, $assignment->ayah_start, $assignment->ayah_end),
+                'body' => $this->noticeBody($assignment),
                 'href' => route('dashboard'),
                 'due_on' => $due,
                 'surah_number' => (int) $assignment->surah_number,
@@ -166,6 +168,27 @@ final class LearningTaskNotifier
         }
 
         $student->notify(new LearningTaskNotification($sourceKey, $payload));
+    }
+
+    private function noticeBody(TeacherAssignment $assignment): string
+    {
+        return $this->passageLabel($assignment->surah_number, $assignment->ayah_start, $assignment->ayah_end)
+            .' · '.$this->requirementPhrase($assignment);
+    }
+
+    private function requirementPhrase(TeacherAssignment $assignment): string
+    {
+        $target = max(1, (int) ($assignment->repetition_target ?? 1));
+        $kind = $assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind;
+        if ($kind === AssignmentKind::AiRecite->value) {
+            $label = $target === 1 ? '1 required AI wording check' : "{$target} required AI wording checks";
+
+            return $label.'. Only a scored check on this passage counts.';
+        }
+
+        $label = $target === 1 ? '1 required practice attempt' : "{$target} required practice attempts";
+
+        return $label.'. One completed practice session counts.';
     }
 
     private function passageLabel(int $surah, int $start, int $end): string

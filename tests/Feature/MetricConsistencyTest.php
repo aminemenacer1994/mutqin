@@ -14,7 +14,9 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\Organisation;
+use App\Enums\AssignmentKind;
 use App\Models\TeacherAssignment;
+use App\Models\TeacherAssignmentRecipient;
 use App\Models\RevisionRecommendation;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
@@ -45,14 +47,41 @@ class MetricConsistencyTest extends TestCase
         ])->assertCreated()->json();
         $recipientId = $created['recipients'][0]['id'];
 
-        $linked = $this->attempt($student, ['teacher_assignment_recipient_id' => $recipientId, 'accuracy_percent' => 81, 'band' => 'mixed']);
+        $linked = $this->attempt($student, [
+            'teacher_assignment_recipient_id' => $recipientId,
+            'accuracy_percent' => 81,
+            'band' => 'mixed',
+            'audio_path' => 'recitations/linked.webm',
+            'audio_expires_at' => now()->addDay(),
+        ]);
         $duplicate = $this->attempt($student, [
             'teacher_assignment_recipient_id' => $recipientId,
             'accuracy_percent' => 81,
             'band' => 'mixed',
             'attempt_number' => 1,
+            'audio_path' => 'recitations/duplicate.webm',
+            'audio_expires_at' => now()->addDay(),
         ]);
         $legacy = $this->attempt($student, ['accuracy_percent' => 70, 'band' => 'weak']);
+        $otherTeacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $teacher->organisation_id,
+        ]);
+        $foreignRecipient = TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => TeacherAssignment::factory()->create([
+                'teacher_id' => $otherTeacher->id,
+                'organisation_id' => $teacher->organisation_id,
+                'kind' => AssignmentKind::AiRecite->value,
+            ])->id,
+            'student_id' => $student->id,
+            'status' => AssignmentStatus::Pending->value,
+        ]);
+        $foreign = $this->attempt($student, [
+            'teacher_assignment_recipient_id' => $foreignRecipient->id,
+            'accuracy_percent' => 64,
+            'band' => 'weak',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+        ]);
         $invalid = $this->attempt($student, [
             'teacher_assignment_recipient_id' => $recipientId,
             'accuracy_percent' => null,
@@ -65,14 +94,28 @@ class MetricConsistencyTest extends TestCase
 
         $overview = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
         $queue = $overview['review_queue']['actionable'];
+        $reviewed = $overview['review_queue']['reviewed'];
+        $history = $overview['review_queue']['history'];
         $this->assertCount(1, $queue);
         $this->assertSame($overview['snapshot']['recitations_awaiting_review'], count($queue));
         $this->assertContains($queue[0]['id'], [$linked->id, $duplicate->id]);
+        $this->assertSame('awaiting', $queue[0]['review_status']);
+        $this->assertTrue($queue[0]['has_recording']);
+        $this->assertSame([], $reviewed);
+        $this->assertSame(0, $overview['snapshot']['reviewed_recitations']);
+        $this->assertEqualsCanonicalizing([$legacy->id, $foreign->id], array_column($history, 'id'));
+        $this->assertSame($overview['snapshot']['recitation_history'], count($history));
         $this->assertSame(1, $overview['snapshot']['legacy_ai_only_unreviewed']);
+        $this->assertContains($legacy->id, array_column($history, 'id'));
+        $historyLegacy = collect($history)->firstWhere('id', $legacy->id);
+        $this->assertSame('history', $historyLegacy['review_status']);
+        $this->assertFalse($historyLegacy['has_recording']);
         $this->assertSame(0, $overview['snapshot']['submissions_awaiting_review']);
         $this->assertSame(0, $overview['assignments']['awaiting_confirmation']);
         $this->assertDatabaseMissing('teacher_recitation_reviews', ['ai_recite_attempt_id' => $legacy->id]);
+        $this->assertDatabaseMissing('teacher_recitation_reviews', ['ai_recite_attempt_id' => $foreign->id]);
         $this->assertSame(70, $legacy->fresh()->accuracy_percent);
+        $this->assertSame(64, $foreign->fresh()->accuracy_percent);
 
         $this->actingAs($student)->getJson(route('api.teacher.overview'))->assertForbidden();
         $other = User::factory()->create([
@@ -80,7 +123,13 @@ class MetricConsistencyTest extends TestCase
             'organisation_id' => $teacher->organisation_id,
         ]);
         $this->actingAs($other)->getJson(route('api.teacher.students.show', $student))->assertNotFound();
-        $this->assertSame(0, $this->actingAs($other)->getJson(route('api.teacher.overview'))->assertOk()->json('snapshot.recitations_awaiting_review'));
+        $otherOverview = $this->actingAs($other)->getJson(route('api.teacher.overview'))->assertOk()->json();
+        $this->assertSame(0, $otherOverview['snapshot']['recitations_awaiting_review']);
+        $this->assertSame(0, $otherOverview['snapshot']['reviewed_recitations']);
+        $this->assertSame(0, $otherOverview['snapshot']['recitation_history']);
+        $this->assertSame([], $otherOverview['review_queue']['actionable']);
+        $this->assertSame([], $otherOverview['review_queue']['reviewed']);
+        $this->assertSame([], $otherOverview['review_queue']['history']);
 
         $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.review', [$student, $linked]))->assertOk();
         $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.review', [$student, $linked]))->assertOk();
@@ -91,8 +140,36 @@ class MetricConsistencyTest extends TestCase
         $after = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
         $this->assertSame([], $after['review_queue']['actionable']);
         $this->assertSame(0, $after['snapshot']['recitations_awaiting_review']);
+        $this->assertSame([$linked->id], array_column($after['review_queue']['reviewed'], 'id'));
+        $this->assertSame(1, $after['snapshot']['reviewed_recitations']);
+        $this->assertSame('reviewed', $after['review_queue']['reviewed'][0]['review_status']);
+        $this->assertTrue($after['review_queue']['reviewed'][0]['has_recording']);
+        $this->assertEqualsCanonicalizing([$legacy->id, $foreign->id], array_column($after['review_queue']['history'], 'id'));
+        $this->assertSame(2, $after['snapshot']['recitation_history']);
         $this->assertSame(1, $after['snapshot']['legacy_ai_only_unreviewed']);
         $this->assertDatabaseMissing('teacher_recitation_reviews', ['ai_recite_attempt_id' => $legacy->id]);
+        $this->assertDatabaseMissing('teacher_recitation_reviews', ['ai_recite_attempt_id' => $foreign->id]);
+    }
+
+    public function test_an_open_legacy_review_is_actionable_without_rewriting_history(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $legacy = $this->attempt($student, ['accuracy_percent' => 55, 'band' => 'weak']);
+        TeacherRecitationReview::query()->forceCreate([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'ai_recite_attempt_id' => $legacy->id,
+            'status' => TeacherRecitationReview::PENDING,
+        ]);
+
+        $overview = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
+        $this->assertSame([$legacy->id], array_column($overview['review_queue']['actionable'], 'id'));
+        $this->assertSame(1, $overview['snapshot']['recitations_awaiting_review']);
+        $this->assertSame([], $overview['review_queue']['history']);
+        $this->assertSame(0, $overview['snapshot']['recitation_history']);
+        $this->assertSame(0, $overview['snapshot']['legacy_ai_only_unreviewed']);
+        $this->assertSame(TeacherRecitationReview::PENDING, TeacherRecitationReview::query()->where('ai_recite_attempt_id', $legacy->id)->value('status'));
+        $this->assertSame(55, $legacy->fresh()->accuracy_percent);
     }
 
     public function test_overdue_is_a_date_and_invalid_attempts_do_not_count(): void
@@ -216,10 +293,14 @@ class MetricConsistencyTest extends TestCase
 
         $overview = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
         $this->assertSame(0, $overview['snapshot']['recitations_awaiting_review']);
+        $this->assertSame(0, $overview['snapshot']['reviewed_recitations']);
+        $this->assertSame(0, $overview['snapshot']['recitation_history']);
         $this->assertSame(0, $overview['snapshot']['legacy_ai_only_unreviewed']);
         $this->assertSame(0, $overview['snapshot']['reviews_due_today']);
         $this->assertSame(0, $overview['snapshot']['submissions_awaiting_review']);
         $this->assertSame([], $overview['review_queue']['actionable']);
+        $this->assertSame([], $overview['review_queue']['reviewed']);
+        $this->assertSame([], $overview['review_queue']['history']);
         $this->assertSame(0, $overview['hifz']['memorised_ayahs']);
         $this->assertSame(0, $overview['hifz']['unique_memorised_ayahs']);
         $this->assertSame('sum_of_student_ayahs', $overview['hifz']['counting']);
