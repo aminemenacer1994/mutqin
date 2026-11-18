@@ -67,7 +67,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.v5.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v6.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -76,6 +76,7 @@ class TeacherDashboardService
             $start = now()->subDays($days - 1)->startOfDay();
 
             $chart = $this->activityChart($ids, $start, $days);
+            $insights = $this->classInsights($teacher, $ids, $start, $days);
             $rates = collect($metrics)->pluck('ai_success_rate')->filter(fn ($rate) => $rate !== null);
             $attention = collect($metrics)->filter(fn (array $row) => $row['needs_attention'])->count();
             $active7 = collect($metrics)->filter(fn (array $row) => $row['active_7'])->count();
@@ -125,6 +126,7 @@ class TeacherDashboardService
                     'developing' => $developing,
                 ],
                 'chart' => $chart,
+                'insights' => $insights,
                 'recently_active' => $recent['active'],
                 'inactive' => $recent['inactive'],
                 'recent_ai' => $this->recentAi($ids),
@@ -1460,6 +1462,83 @@ class TeacherDashboardService
             'points' => $points,
             'total' => $total,
             'is_empty' => $total === 0,
+        ];
+    }
+
+    /**
+     * Daily assignment completions and wording-match averages.
+     * Wording averages are the scored checks recorded that day. They are not a passage-by-passage comparison.
+     *
+     * @param  list<int>  $ids
+     * @return array{completions: array<string, mixed>, wording: array<string, mixed>}
+     */
+    private function classInsights(User $teacher, array $ids, Carbon $start, int $days): array
+    {
+        $completed = [];
+        TeacherAssignmentRecipient::query()
+            ->whereNotNull('completed_at')
+            ->where('completed_at', '>=', $start)
+            ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
+            ->get(['completed_at'])
+            ->each(function (TeacherAssignmentRecipient $recipient) use (&$completed): void {
+                $key = $recipient->completed_at?->toDateString();
+                if ($key === null) {
+                    return;
+                }
+                $completed[$key] = ($completed[$key] ?? 0) + 1;
+            });
+
+        $wordingTotals = [];
+        $wordingCounts = [];
+        if ($ids !== []) {
+            AiReciteAttempt::query()
+                ->whereIn('user_id', $ids)
+                ->whereNotNull('accuracy_percent')
+                ->whereIn('band', ['strong', 'mixed', 'weak'])
+                ->where('created_at', '>=', $start)
+                ->get(['created_at', 'accuracy_percent'])
+                ->each(function (AiReciteAttempt $attempt) use (&$wordingTotals, &$wordingCounts): void {
+                    $key = $attempt->created_at?->toDateString();
+                    if ($key === null || $attempt->accuracy_percent === null) {
+                        return;
+                    }
+                    $wordingTotals[$key] = ($wordingTotals[$key] ?? 0) + (float) $attempt->accuracy_percent;
+                    $wordingCounts[$key] = ($wordingCounts[$key] ?? 0) + 1;
+                });
+        }
+
+        $completionPoints = [];
+        $wordingPoints = [];
+        $completionTotal = 0;
+        $sampleTotal = 0;
+        $sampleSum = 0.0;
+        for ($offset = 0; $offset < $days; $offset++) {
+            $date = $start->copy()->addDays($offset)->toDateString();
+            $count = (int) ($completed[$date] ?? 0);
+            $completionTotal += $count;
+            $completionPoints[] = ['date' => $date, 'completed' => $count];
+            $samples = (int) ($wordingCounts[$date] ?? 0);
+            $average = $samples > 0 ? round($wordingTotals[$date] / $samples, 1) : null;
+            $sampleTotal += $samples;
+            $sampleSum += $samples > 0 ? $wordingTotals[$date] : 0;
+            $wordingPoints[] = ['date' => $date, 'average' => $average, 'samples' => $samples];
+        }
+
+        return [
+            'completions' => [
+                'days' => $days,
+                'metric' => 'assignments_completed',
+                'points' => $completionPoints,
+                'total' => $completionTotal,
+            ],
+            'wording' => [
+                'days' => $days,
+                'metric' => 'daily_wording_match_average',
+                'comparable_passages' => false,
+                'points' => $wordingPoints,
+                'samples' => $sampleTotal,
+                'average' => $sampleTotal > 0 ? round($sampleSum / $sampleTotal, 1) : null,
+            ],
         ];
     }
 

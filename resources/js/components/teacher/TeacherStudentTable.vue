@@ -13,7 +13,7 @@
           </span>
         </div>
         <dl class="teacher-student-card__metrics">
-          <div><dt>{{ t('teacher.ai_check_average') }}</dt><dd :title="scoreHelp(student)"><TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'">{{ score(student) }}</TeacherWordingMatch><template v-else>{{ score(student) }}</template></dd></div>
+          <div><dt>{{ t('teacher.ai_check_average') }}</dt><dd>{{ score(student) }}</dd></div>
         </dl>
         <div class="teacher-student-card__follow-up">
           <span>{{ t('teacher.follow_up_reason') }}</span>
@@ -68,8 +68,7 @@
           </span>
         </td>
         <td class="teacher-table__cell teacher-table__cell--num text-center">
-          <TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'" class="badge rounded-pill teacher-table__score" :class="scoreClass(student)" :title="scoreHelp(student)">{{ score(student) }}</TeacherWordingMatch>
-          <span v-else class="badge rounded-pill teacher-table__score" :class="scoreClass(student)" :title="scoreHelp(student)">{{ score(student) }}</span>
+          <span class="badge rounded-pill teacher-table__score" :class="scoreClass(student)">{{ score(student) }}</span>
         </td>
         <td class="teacher-table__cell teacher-table__cell--concern">
           <span v-if="concern(student)" class="teacher-table__concern" :class="`is-${concern(student).tone}`">
@@ -102,11 +101,8 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { attentionReasonTags, scoreBadgeTone, studentInitial } from '../../scripts/teacher/formatters'
-import TeacherWordingMatch from './TeacherWordingMatch.vue'
-
 export default {
   name: 'TeacherStudentTable',
-  components: { TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     students: { type: Array, default: () => [] },

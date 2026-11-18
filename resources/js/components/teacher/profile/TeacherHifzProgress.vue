@@ -10,22 +10,44 @@
       <div>
         <p v-if="passageLine" class="teacher-hifz__lead">{{ passageLine }}</p>
         <p v-else class="teacher-hifz__quiet">{{ t('teacher.hifz_ranges_empty') }}</p>
-        <p v-if="coverage.learning_ayahs" class="teacher-hifz__quiet">{{ t('teacher.hifz_still_learning', { n: coverage.learning_ayahs }) }}</p>
+        <p v-if="coverage.memorised_ayahs" class="teacher-hifz__quiet">{{ t('teacher.hifz_of_mushaf', { percent: coverage.coverage_percent, total: coverage.mushaf_ayahs }) }}</p>
       </div>
     </div>
 
     <div class="teacher-hifz__line">
-      <span class="teacher-hifz__label">{{ t('teacher.hifz_step_next') }}</span>
+      <span class="teacher-hifz__label">{{ t('teacher.hifz_sabaq') }}</span>
+      <p v-if="sabaqLine" class="teacher-hifz__lead">{{ sabaqLine }}</p>
+      <p v-else class="teacher-hifz__quiet">{{ t('teacher.hifz_sabaq_empty') }}</p>
+    </div>
+
+    <div v-if="sabqiLine" class="teacher-hifz__line">
+      <span class="teacher-hifz__label">{{ t('teacher.hifz_sabqi') }}</span>
+      <p class="teacher-hifz__lead">{{ sabqiLine }}</p>
+    </div>
+
+    <div v-if="manzilLine" class="teacher-hifz__line">
+      <span class="teacher-hifz__label">{{ t('teacher.hifz_manzil') }}</span>
+      <p class="teacher-hifz__lead">{{ manzilLine }}</p>
+    </div>
+
+    <div v-if="weak.length" class="teacher-hifz__line">
+      <span class="teacher-hifz__label">{{ t('teacher.hifz_weak') }}</span>
+      <div>
+        <ul class="teacher-hifz__passages">
+          <li v-for="spot in weak" :key="spot.id">{{ spot.label }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="teacher-hifz__line">
+      <span class="teacher-hifz__label">{{ t('teacher.hifz_next_lesson') }}</span>
       <div class="teacher-hifz__row">
         <div>
-          <p v-if="next" class="teacher-hifz__lead">{{ next.label }}</p>
-          <p v-else-if="lessons.next" class="teacher-hifz__lead">{{ lessons.next.label }}</p>
+          <p v-if="nextLesson" class="teacher-hifz__lead">{{ nextLesson.label }}</p>
           <p v-else class="teacher-hifz__quiet">{{ t('teacher.hifz_next_none') }}</p>
-          <ul v-if="weak.length" class="teacher-hifz__passages">
-            <li v-for="spot in weak" :key="spot.id">{{ spot.label }}</li>
-          </ul>
+          <p v-if="lessonLine" class="teacher-hifz__quiet">{{ lessonLine }}</p>
         </div>
-        <button v-if="next" type="button" class="btn btn-primary btn-sm" @click="$emit('assign', next)">{{ t('teacher.hifz_assign_next') }}</button>
+        <button v-if="!lessons.next && next" type="button" class="btn btn-primary btn-sm" @click="$emit('assign', next)">{{ t('teacher.hifz_assign_next') }}</button>
       </div>
     </div>
 
@@ -104,11 +126,25 @@ export default {
       return this.hifz?.next || null
     },
     passageLine() {
-      const items = this.coverage.ranges?.items || []
-      if (!items.length) return ''
-      const shown = items.map((range) => this.rangeLabel(range))
-      if (this.coverage.ranges.omitted) shown.push(this.t('teacher.hifz_ranges_more', { n: this.coverage.ranges.omitted }))
-      return shown.join(', ')
+      return this.bucketLine(this.coverage.ranges)
+    },
+    sabaqLine() {
+      return this.bucketLine(this.coverage.new_memorisation)
+    },
+    sabqiLine() {
+      return this.bucketLine(this.coverage.recent_revision)
+    },
+    manzilLine() {
+      return this.bucketLine(this.coverage.older_revision)
+    },
+    nextLesson() {
+      return this.lessons.next || this.next
+    },
+    lessonLine() {
+      const done = Number(this.lessons.completed || 0)
+      const open = Number(this.lessons.pending || 0)
+      if (!done && !open) return ''
+      return this.t('teacher.hifz_lessons_count', { done, open })
     },
     periodLine() {
       const tasks = this.report?.tasks || {}
@@ -149,6 +185,13 @@ export default {
     period() { this.loadReport() },
   },
   methods: {
+    bucketLine(bucket) {
+      const items = bucket?.items || []
+      if (!items.length) return ''
+      const shown = items.map((range) => this.rangeLabel(range))
+      if (bucket.omitted) shown.push(this.t('teacher.hifz_ranges_more', { n: bucket.omitted }))
+      return shown.join(', ')
+    },
     rangeLabel(range) {
       const end = range.ayah_end !== range.ayah_start ? `–${range.ayah_end}` : ''
       return `${range.surah_name} · ${range.ayah_start}${end}`

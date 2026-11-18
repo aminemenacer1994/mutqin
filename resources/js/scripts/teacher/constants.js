@@ -2,7 +2,7 @@ import { defaultAyahRange } from './taskTypes'
 
 export const TEACHER_VIEWS = ['overview', 'students', 'student', 'plans', 'assignments', 'reviews', 'settings']
 
-export const TEACHER_CHART_DAY_OPTIONS = [30, 90]
+export const TEACHER_CHART_DAY_OPTIONS = [7, 30, 90]
 
 export const TEACHER_NAV = [
   { id: 'overview', label: 'teacher.nav_overview', icon: 'bi bi-grid-1x2' },

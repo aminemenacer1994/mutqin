@@ -132,10 +132,14 @@
             <aside ref="coachingPanel" tabindex="0" :aria-label="t('teacher.playback_actions')" class="teacher-playback__side" :class="{ 'has-selection': Boolean(selectedKey) }">
               <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
               <p v-else-if="actionMessage" class="teacher-playback__saved" role="status">{{ actionMessage }}</p>
-              <section class="teacher-playback__card teacher-playback__summary" :aria-label="t('teacher.playback_assessment_summary')">
-                <div class="teacher-playback__section-head">
-                  <h3>{{ t('teacher.playback_assessment_summary') }}</h3>
-                </div>
+              <section class="teacher-playback__section teacher-playback__ai" :aria-label="t('teacher.playback_wording_summary')">
+                <h2>{{ t('teacher.playback_wording_summary') }}</h2>
+                <p v-if="checkerScore" class="teacher-playback__score">{{ checkerScore }}</p>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_ai_wording_only') }}</p>
+                <p v-if="hasAudio && !audioError" class="teacher-playback__hint">{{ t('teacher.playback_listen_first') }}</p>
+                <p v-else-if="audioError" class="teacher-playback__hint">{{ t('teacher.playback_flags_failed') }}</p>
+                <p v-else class="teacher-playback__hint">{{ t('teacher.playback_flags_unverified') }}</p>
+              <section class="teacher-playback__card teacher-playback__summary" :aria-label="t('teacher.playback_wording_summary')">
                 <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
                   <div class="is-correct" :class="{ 'is-empty': !summary.counts.correct }"><dt>{{ t('teacher.playback_matched_count') }}</dt><dd>{{ summary.counts.correct }}</dd></div>
                   <div class="is-uncertain" :class="{ 'is-empty': !summary.counts.uncertain, 'is-active': attentionFilter === 'uncertain' && summary.counts.uncertain > 0 }">
@@ -295,39 +299,39 @@
                   <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
                 </ul>
               </details>
+              </section>
 
-              <section class="teacher-playback__card teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
-                <h3>{{ t('teacher.playback_teacher_assessment') }}</h3>
-                <details v-for="area in assessmentAreas" :key="area.id" class="teacher-playback__assessment-fold">
-                  <summary>
+              <section class="teacher-playback__section teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
+                <h2>
+                  {{ t('teacher.playback_teacher_assessment') }}
+                  <span v-if="!soundEvidenceReady" class="teacher-playback__fold-state">{{ t('teacher.playback_sound_unverified') }}</span>
+                </h2>
+                <p v-if="!soundEvidenceReady" class="teacher-playback__hint">{{ t('teacher.playback_sound_needs_evidence') }}</p>
+                <label v-if="!soundEvidenceReady" class="teacher-playback__heard-live">
+                  <input v-model="heardLive" type="checkbox" :disabled="Boolean(saving)" @change="assessmentDirty = true">
+                  <span>{{ t('teacher.playback_heard_live') }}</span>
+                </label>
+                <div class="teacher-playback__ratings">
+                  <label v-for="area in assessmentAreas" :key="area.id" class="teacher-playback__rating">
                     <span>{{ t(area.label) }}</span>
-                    <span class="teacher-playback__fold-state">{{ assessmentState(area) }}</span>
-                  </summary>
-                  <label class="teacher-playback__field">
-                    <span class="visually-hidden">{{ t(area.label) }}</span>
-                    <select v-model="assessment[area.id].rating" :disabled="Boolean(saving)" @change="assessmentDirty = true">
+                    <select v-model="assessment[area.id].rating" class="form-select" :disabled="Boolean(saving)" @change="assessmentDirty = true">
                       <option value="">{{ t('teacher.assessment_rating_unset') }}</option>
                       <option value="needs_work">{{ t('teacher.assessment_needs_work') }}</option>
                       <option value="sound">{{ t('teacher.assessment_sound') }}</option>
                       <option value="strong">{{ t('teacher.assessment_strong') }}</option>
                     </select>
                   </label>
-                  <label class="teacher-playback__field">
-                    <span class="visually-hidden">{{ t('teacher.assessment_note_placeholder') }}</span>
-                    <input v-model="assessment[area.id].note" type="text" maxlength="500" :disabled="Boolean(saving)" :placeholder="t('teacher.assessment_note_placeholder')" @input="assessmentDirty = true">
-                  </label>
-                </details>
+                </div>
                 <label class="teacher-playback__field">
-                  <span class="visually-hidden">{{ t('teacher.playback_general_feedback') }}</span>
-                  <textarea v-model="assessmentGeneral" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_feedback_placeholder')" @input="assessmentDirty = true"></textarea>
+                  <span>{{ t('teacher.playback_general_feedback') }}</span>
+                  <textarea v-model="assessmentGeneral" class="form-control" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_feedback_placeholder')" @input="assessmentDirty = true"></textarea>
                 </label>
                 <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || !assessmentReady" @click="saveAssessment">
                   {{ saving === 'assessment' ? t('teacher.saving') : t('teacher.playback_save_assessment') }}
                 </button>
               </section>
-
-              <details class="teacher-playback__card teacher-playback__response teacher-playback__fold-card">
-                <summary>{{ t('teacher.playback_feedback') }}</summary>
+              <section class="teacher-playback__section teacher-playback__response" :aria-label="t('teacher.playback_feedback')">
+                <h2>{{ t('teacher.playback_feedback') }}</h2>
                 <div v-if="payload.review?.feedback" class="teacher-playback__saved-feedback">
                   <p v-if="payload.review.feedback.body" class="teacher-playback__saved">{{ payload.review.feedback.body }}</p>
                 </div>
@@ -342,23 +346,10 @@
                     {{ saving === 'feedback' ? t('teacher.saving') : t('teacher.playback_send_feedback') }}
                   </button>
                 </div>
+              </section>
 
-              </details>
-
-              <details class="teacher-playback__card teacher-playback__private-note">
-                <summary>{{ t('teacher.playback_private_note') }}</summary>
-                <p v-if="payload.review?.private_note?.body" class="teacher-playback__saved">{{ payload.review.private_note.body }}</p>
-                <label class="teacher-playback__field">
-                  <span class="visually-hidden">{{ t('teacher.playback_private_note') }}</span>
-                  <textarea v-model="privateNote" rows="2" maxlength="2000" :placeholder="t('teacher.playback_private_placeholder')" :disabled="Boolean(saving)"></textarea>
-                </label>
-                <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !privateNote.trim()" @click="savePrivateNote">
-                  {{ saving === 'note' ? t('teacher.saving') : t('teacher.playback_save_note') }}
-                </button>
-              </details>
-
-              <details class="teacher-playback__card teacher-playback__revision teacher-playback__fold-card">
-                  <summary>{{ t('teacher.playback_assign_revision') }}</summary>
+              <section class="teacher-playback__section teacher-playback__revision" :aria-label="t('teacher.playback_revision_section')">
+                  <h2>{{ t('teacher.playback_revision_section') }}</h2>
                   <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
                     <span v-for="ayah in revisionAyahs" :key="ayah">{{ t('teacher.ayah_n', { n: ayah }) }}</span>
                   </div>
@@ -376,7 +367,7 @@
                   </button>
                   <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<template v-if="assignedRevisionLabel"><br>{{ assignedRevisionLabel }}</template></p>
                   <p v-if="followUpLabel" class="teacher-playback__hint">{{ followUpLabel }}</p>
-              </details>
+              </section>
 
 
             </aside>
@@ -483,6 +474,7 @@ export default {
       ],
       assessmentGeneral: '',
       assessmentDirty: false,
+      heardLive: false,
       editingCorrectionId: null,
       voiceState: { hasRecording: false, active: false },
       wordVoiceState: { hasRecording: false, active: false },
@@ -513,6 +505,7 @@ export default {
       saving: '',
       actionError: '',
       actionMessage: '',
+      actionTimer: null,
       navPrompt: false,
       navDirection: 1,
       moving: false,
@@ -565,6 +558,9 @@ export default {
     },
     hasAudio() {
       return Boolean(this.payload?.audio?.available && this.payload?.audio?.url)
+    },
+    soundEvidenceReady() {
+      return (this.hasAudio && !this.audioError) || this.heardLive
     },
     assessmentReady() {
       if (this.assessmentGeneral.trim()) return true
@@ -820,6 +816,11 @@ export default {
         this.$refs.player?.pause()
       }
     },
+    actionMessage(message) {
+      window.clearTimeout(this.actionTimer)
+      if (!message) return
+      this.actionTimer = window.setTimeout(() => { this.actionMessage = '' }, 4000)
+    },
     attemptId() {
       this.moving = false
       this.navPrompt = false
@@ -853,10 +854,14 @@ export default {
   },
   beforeUnmount() {
     this.loadToken += 1
+    window.clearTimeout(this.actionTimer)
     this.$refs.player?.pause()
     window.removeEventListener('keydown', this.onShortcut)
   },
   methods: {
+    areaNeedsEvidence(area) {
+      return area?.id === 'tajweed' || area?.id === 'pronunciation'
+    },
     assessmentState(area) {
       const rating = this.assessment?.[area.id]?.rating
       const labels = {
@@ -864,7 +869,11 @@ export default {
         sound: 'teacher.assessment_sound',
         strong: 'teacher.assessment_strong',
       }
-      return this.t(labels[rating] || 'teacher.assessment_rating_unset')
+      const label = this.t(labels[rating] || 'teacher.assessment_rating_unset')
+      if (this.areaNeedsEvidence(area) && !this.soundEvidenceReady) {
+        return rating ? `${label} · ${this.t('teacher.playback_sound_unverified')}` : this.t('teacher.playback_sound_unverified')
+      }
+      return label
     },
     revealWord(node, automatic = false) {
       if (!node) return
@@ -1257,6 +1266,7 @@ export default {
       }
       this.assessment = next
       this.assessmentGeneral = saved.general || ''
+      this.heardLive = Boolean(saved.heard_live)
       this.assessmentDirty = false
     },
     observationLines(observations) {
@@ -1270,10 +1280,16 @@ export default {
     },
     async saveAssessment() {
       if (this.saving || !this.assessmentReady) return
+      const soundRating = this.assessmentAreas.some((area) => this.areaNeedsEvidence(area) && this.assessment[area.id]?.rating)
+      if (soundRating && !this.soundEvidenceReady) {
+        this.actionError = this.t('teacher.playback_sound_needs_evidence')
+        this.actionMessage = ''
+        return
+      }
       this.saving = 'assessment'
       this.actionError = ''
       this.actionMessage = ''
-      const body = { general: this.assessmentGeneral.trim() || null }
+      const body = { general: this.assessmentGeneral.trim() || null, heard_live: this.heardLive }
       for (const area of this.assessmentAreas) {
         const entry = this.assessment[area.id] || {}
         body[area.id] = {

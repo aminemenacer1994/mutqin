@@ -99,8 +99,8 @@
         ></textarea>
         <div class="teacher-direct-thread__composer-foot">
           <TeacherVoiceNoteControls ref="voice" :disabled="saving" @state-change="onVoiceChange" />
-          <p v-if="error" role="alert" class="teacher-direct-thread__status is-error">{{ error }}</p>
-          <p v-else-if="success" role="status" class="teacher-direct-thread__status is-success">{{ success }}</p>
+          <p v-if="error" role="alert" class="teacher-direct-thread__status is-error">{{ error }}<span class="teacher-direct-thread__status-timer" aria-hidden="true"></span></p>
+          <p v-else-if="success" role="status" class="teacher-direct-thread__status is-success">{{ success }}<span class="teacher-direct-thread__status-timer" aria-hidden="true"></span></p>
           <div class="teacher-direct-thread__composer-actions">
             <button v-if="draft || hasVoiceNote" type="button" class="teacher-direct-thread__tool" :disabled="saving" :aria-label="t('teacher.clear_message')" :title="t('teacher.clear_message')" @click="clearComposer">
               <i class="bi bi-eraser" aria-hidden="true"></i>
@@ -113,29 +113,6 @@
         </div>
       </form>
     </section>
-    <aside v-if="showMessageContext" class="teacher-messages-context" :aria-label="t('teacher.messages_context_title')">
-      <h3>{{ profile.student?.name }}</h3>
-      <p v-if="latestRecitation" class="teacher-messages-context__line">
-        <span>{{ t('teacher.messages_context_latest') }}</span>
-        <strong>{{ latestRecitation.range }}</strong>
-        <span>{{ latestRecitation.status }}</span>
-      </p>
-      <p v-if="wordingLabel" class="teacher-messages-context__line">
-        <span>{{ t('teacher.ai_word_match_short') }}</span>
-        <strong>{{ wordingLabel }}</strong>
-      </p>
-      <p v-if="overdueCount" class="teacher-messages-context__line">
-        <span>{{ t('teacher.snapshot_overdue') }}</span>
-        <strong>{{ overdueCount }}</strong>
-      </p>
-      <ul v-if="contextTasks.length">
-        <li v-for="task in contextTasks" :key="task.id">{{ task.title }}</li>
-      </ul>
-      <div class="teacher-messages-context__links">
-        <button type="button" class="btn btn-link btn-sm" @click="$emit('open-tasks')">{{ t('teacher.messages_context_tasks') }}</button>
-        <button type="button" class="btn btn-link btn-sm" @click="$emit('open-recitations')">{{ t('teacher.messages_context_recitations') }}</button>
-      </div>
-    </aside>
     </div>
   </TeacherSectionPane>
 </template>
@@ -185,6 +162,7 @@ export default {
       search: '',
       copiedId: null,
       announcedUnread: 0,
+      noticeTimer: null,
     }
   },
   watch: {
@@ -313,10 +291,21 @@ export default {
     this.disposed = true
     this.threadRequest += 1
     window.clearInterval(this.pollTimer)
+    window.clearTimeout(this.noticeTimer)
   },
   methods: {
     reportUnsent() {
       this.$emit('unsent-change', Boolean(this.draft.trim() || this.voiceState.hasRecording || this.voiceState.active))
+    },
+    showNotice(field, message) {
+      window.clearTimeout(this.noticeTimer)
+      this.success = field === 'success' ? message : ''
+      this.error = field === 'error' ? message : ''
+      if (!message) return
+      this.noticeTimer = window.setTimeout(() => {
+        if (field === 'success') this.success = ''
+        else this.error = ''
+      }, 4000)
     },
     persistDraft(value) {
       try {
@@ -358,7 +347,7 @@ export default {
         this.copiedId = message.id
         window.setTimeout(() => { if (this.copiedId === message.id) this.copiedId = null }, 1600)
       } catch (_) {
-        this.error = this.t('teacher.action_failed')
+        this.showNotice('error', this.t('teacher.action_failed'))
       }
     },
     jumpToUnread() {
@@ -397,11 +386,11 @@ export default {
         if (!recipientId && payload?.message) this.sent.push(payload.message)
         this.draft = ''
         this.$refs.voice?.discardRecording()
-        this.success = this.t('teacher.message_sent')
+        this.showNotice('success', this.t('teacher.message_sent'))
         this.stickToBottom = true
         this.$emit('sent')
       } catch (error) {
-        if (!this.disposed && studentId === this.profile.student.id) this.error = error?.response?.data?.message || this.t('teacher.action_failed')
+        if (!this.disposed && studentId === this.profile.student.id) this.showNotice('error', error?.response?.data?.message || this.t('teacher.action_failed'))
       } finally {
         if (!this.disposed && studentId === this.profile.student.id) this.saving = false
       }
@@ -416,7 +405,7 @@ export default {
         await learningApi.deleteTeacherStudentMessage(studentId, message.id)
         if (!this.disposed && studentId === this.profile.student.id) this.removed.push(message.id)
       } catch (error) {
-        if (!this.disposed && studentId === this.profile.student.id) this.error = error?.response?.data?.message || this.t('teacher.action_failed')
+        if (!this.disposed && studentId === this.profile.student.id) this.showNotice('error', error?.response?.data?.message || this.t('teacher.action_failed'))
       } finally {
         if (!this.disposed && studentId === this.profile.student.id) this.deletingId = null
       }

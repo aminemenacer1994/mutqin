@@ -66,6 +66,11 @@ export function useTeacherDashboard(authRef) {
   const teacherGroups = ref([])
   let profileRequestId = 0
   let studentRequestId = 0
+  let navigationEpoch = 0
+
+  function noteNavigation() {
+    navigationEpoch += 1
+  }
 
   const featuresEnabled = computed(() => authRef?.teacher_features_enabled === true)
 
@@ -247,6 +252,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function openView(nextView) {
+    noteNavigation()
     if (nextView !== 'assignments') assignmentEntryFilter.value = 'all'
     if (nextView !== 'student') profileRequestId += 1
     const changed = view.value !== nextView
@@ -432,12 +438,14 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function openStudent(id, section = 'ai', focus = null) {
+    noteNavigation()
     profileFocus.value = focus && typeof focus === 'object' ? focus : null
     view.value = 'student'
     await loadProfile(id, section, true, { force: Boolean(profileFocus.value) })
   }
 
   async function loadProfile(id, section = 'ai', pushHistory = false, options = {}) {
+    const epoch = navigationEpoch
     const requestId = ++profileRequestId
     const resolved = resolveProfileSection(section)
     const studentKey = String(id)
@@ -463,7 +471,7 @@ export function useTeacherDashboard(authRef) {
     formError.value = ''
     try {
       const nextProfile = await learningApi.getTeacherStudent(id, profileFetchSection(resolved))
-      if (requestId !== profileRequestId) return
+      if (requestId !== profileRequestId || epoch !== navigationEpoch) return
       const payloads = {
         ...(profileSectionPayloads.value[studentKey] || {}),
         [resolved]: nextProfile.payload,
@@ -480,7 +488,7 @@ export function useTeacherDashboard(authRef) {
       view.value = 'student'
       syncUrl(pushHistory)
     } catch (err) {
-      if (requestId !== profileRequestId) return
+      if (requestId !== profileRequestId || epoch !== navigationEpoch) return
       if (!sameStudent) profile.value = null
       else {
         profileSection.value = profile.value.section
@@ -761,11 +769,16 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function bootstrapData() {
+    const epoch = navigationEpoch
     await loadOverview()
+    if (epoch !== navigationEpoch) return
     if (view.value === 'students' || view.value === 'assignments') await loadStudents(1)
+    if (epoch !== navigationEpoch) return
     if (view.value === 'assignments') await Promise.all([loadAssignments(), loadAssignmentRoster()])
+    if (epoch !== navigationEpoch) return
     if (view.value === 'settings') await loadTeacherGroups()
     const params = new URLSearchParams(window.location.search)
+    if (epoch !== navigationEpoch) return
     if (view.value === 'student' && params.get('student')) {
       await loadProfile(params.get('student'), params.get('section') || 'ai', false, { force: Boolean(profileFocus.value) })
     }
@@ -788,6 +801,7 @@ export function useTeacherDashboard(authRef) {
   })
 
   function onHistoryNavigation() {
+    noteNavigation()
     profileRequestId += 1
     bootstrapFromUrl()
     bootstrapData()
@@ -839,6 +853,7 @@ export function useTeacherDashboard(authRef) {
     comparisons,
     loadOverview,
     setDays,
+    noteNavigation,
     syncUrl,
     openView,
     openStudentsFromKpi,

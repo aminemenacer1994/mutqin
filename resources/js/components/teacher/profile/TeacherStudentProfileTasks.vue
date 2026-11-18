@@ -146,6 +146,12 @@
       <p v-if="actionError" class="teacher-student-tasks__alert" role="alert">{{ actionError }}</p>
       <p v-else-if="actionNotice" class="teacher-student-tasks__notice" role="status">{{ actionNotice }}</p>
 
+      <form v-if="rescheduleOpen" class="teacher-student-tasks__reschedule" @submit.prevent="saveDueDate">
+        <label :for="dueFieldId">{{ t('teacher.due') }}</label>
+        <input :id="dueFieldId" v-model="dueDraft" type="date" required>
+        <button type="submit" class="btn btn-primary btn-sm" :disabled="actionBusy === 'due' || !dueDraft">{{ t('teacher.task_reschedule_save') }}</button>
+      </form>
+
       <div class="teacher-student-tasks__actions">
         <button v-if="returnToMessages" type="button" class="btn btn-outline-secondary btn-sm" @click="backToConversation">{{ t('teacher.task_back_to_messages') }}</button>
         <button v-if="canReviewSubmission" type="button" class="btn btn-primary btn-sm" @click="openReview(reviewAttemptId)">{{ t('teacher.task_review_submission') }}</button>
@@ -157,21 +163,26 @@
         <button v-if="canEdit" type="button" class="btn btn-outline-secondary btn-sm" @click="toggleReschedule">{{ t('teacher.task_reschedule') }}</button>
         <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-messages', messageContext)">{{ t('teacher.task_message_about') }}</button>
       </div>
+    </article>
+    </TeacherDialog>
 
-      <form v-if="rescheduleOpen" class="teacher-student-tasks__reschedule" @submit.prevent="saveDueDate">
-        <label :for="dueFieldId">{{ t('teacher.due') }}</label>
-        <input :id="dueFieldId" v-model="dueDraft" type="date" required>
-        <button type="submit" class="btn btn-primary btn-sm" :disabled="actionBusy === 'due' || !dueDraft">{{ t('teacher.task_reschedule_save') }}</button>
-      </form>
-
+    <TeacherDialog
+      class="teacher-feedback-dialog"
+      :open="composing"
+      :title="t('teacher.task_give_feedback')"
+      :eyebrow="selectedTitle"
+      size="md"
+      compact
+      :dirty="feedbackUnsent"
+      :close-label="t('teacher.close')"
+      @close="composing = false"
+    >
       <TeacherAudioFeedbackComposer
-        v-if="composerReady"
-        v-show="composing"
+        v-if="composerReady && selectedAssignment"
         :key="selectedAssignment.id"
         ref="composer"
         :show-heading="false"
         :show-history="false"
-        show-ayah-reference
         :messages="selectedMessages"
         :student-id="profile.student.id"
         :recipient-id="selectedAssignment.id"
@@ -179,11 +190,9 @@
         :surah-number="selectedAssignment.assignment?.surah_number"
         :ayah-start="selectedAssignment.assignment?.ayah_start"
         :ayah-end="selectedAssignment.assignment?.ayah_end"
-        :passage-label="selectedTitle"
         @sent="onFeedbackSent"
         @draft-change="onDraftChange"
       />
-    </article>
     </TeacherDialog>
 
     <TeacherRecitationPlaybackReview
@@ -523,6 +532,8 @@ export default {
     },
     discardAndSwitch() {
       this.$refs.composer?.clear()
+      const draftId = this.selectedAssignment?.id
+      if (draftId) sessionStorage.removeItem(`mutqin-teacher-task-draft:${draftId}`)
       this.feedbackUnsent = false
       const next = this.pendingTaskId
       this.pendingTaskId = null
@@ -550,6 +561,7 @@ export default {
     },
     onFeedbackSent() {
       this.feedbackUnsent = false
+      this.composing = false
       this.actionNotice = this.t('teacher.audio_feedback_sent')
       this.$emit('refresh')
     },

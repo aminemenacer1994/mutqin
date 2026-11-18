@@ -202,7 +202,7 @@ class TeacherRecitationPlaybackService
 
             $previous = is_array($row->observations) ? $row->observations : [];
             if ($structured) {
-                $observations = $this->normaliseObservations($input);
+                $observations = $this->normaliseObservations($input, $attempt);
                 $general = $observations['general'];
                 $tajweedRating = $observations['tajweed']['rating'] ?? null;
                 $row->forceFill([
@@ -597,7 +597,7 @@ class TeacherRecitationPlaybackService
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    private function normaliseObservations(array $input): array
+    private function normaliseObservations(array $input, AiReciteAttempt $attempt): array
     {
         $observations = [];
         $filled = false;
@@ -622,6 +622,22 @@ class TeacherRecitationPlaybackService
             ]);
         }
         $observations['general'] = $general;
+        $heardLive = filter_var($input['heard_live'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $audio = $this->audio->payload($attempt);
+        $playable = (bool) ($audio['available'] ?? false);
+        if (! $playable && ! $heardLive) {
+            $missing = [];
+            foreach (['tajweed', 'pronunciation'] as $area) {
+                if (($observations[$area]['rating'] ?? null) !== null) {
+                    $missing[$area] = 'A recording or a live hearing is required before this rating can be saved.';
+                }
+            }
+            if ($missing !== []) {
+                throw ValidationException::withMessages($missing);
+            }
+        }
+        $observations['heard_live'] = $heardLive;
+        $observations['evidence'] = $playable ? 'recording' : ($heardLive ? 'heard_live' : 'unverified');
 
         return $observations;
     }

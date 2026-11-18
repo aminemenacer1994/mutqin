@@ -254,7 +254,7 @@ async function main() {
           assert.ok(scrollState.moved && scrollState.readingStill && scrollState.headerStill, 'Coaching scrolls independently without moving the header or Quran')
 
         } else assert.equal(geometry.columns, false, 'Tablet and mobile coaching stacks below the reading area')
-        for (const selector of ['.teacher-playback__response', '.teacher-playback__private-note', '.teacher-playback__revision', '.teacher-playback__review-status']) {
+        for (const selector of ['.teacher-playback__ai', '.teacher-playback__assessment', '.teacher-playback__revision', '.teacher-playback__review-status']) {
           const section = dialog.locator(selector)
           await section.scrollIntoViewIfNeeded()
           assert.ok(await section.isVisible(), `Studio section ${selector} is accessible without expansion`)

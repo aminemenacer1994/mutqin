@@ -5,10 +5,11 @@
         <div class="dash-section__title">
           <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true"><i class="bi bi-bar-chart"></i></span>
           <div class="dash-section__title-copy">
-            <h2>{{ t('teacher.activity') }}</h2>
+            <h2>{{ title || t('teacher.activity') }}</h2>
+            <p v-if="caption" class="teacher-insights__caption">{{ caption }}</p>
           </div>
         </div>
-        <div class="dash-range-toggle" role="group" :aria-label="t('teacher.chart_range')">
+        <div v-if="showRange" class="dash-range-toggle" role="group" :aria-label="t('teacher.chart_range')">
           <button
             v-for="days in dayOptions"
             :key="days"
@@ -25,10 +26,10 @@
     </div>
     <div class="dash-section__body">
       <div v-if="isEmpty" class="dash-chart__empty">
-        <strong>{{ t('teacher.activity_empty') }}</strong>
+        <strong>{{ emptyMessage || t('teacher.activity_empty') }}</strong>
       </div>
       <div v-else class="dash-chart__wrap">
-        <Bar v-if="chartReady" :data="chartData" :options="chartOptions" :aria-label="t('teacher.activity')" />
+        <Bar v-if="chartReady" :data="chartData" :options="chartOptions" :aria-label="title || t('teacher.activity')" role="img" />
       </div>
     </div>
   </section>
@@ -46,6 +47,10 @@ export default {
   components: { Bar },
   mixins: [i18nMixin],
   props: {
+    title: { type: String, default: '' },
+    caption: { type: String, default: '' },
+    emptyMessage: { type: String, default: '' },
+    showRange: { type: Boolean, default: true },
     chartDays: { type: Number, required: true },
     dayOptions: { type: Array, default: () => [30, 90] },
     isEmpty: { type: Boolean, default: false },

@@ -403,6 +403,11 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $overview['kpis']['active_7_days']);
         $this->assertEquals(80, $overview['kpis']['ai_success_rate']);
         $this->assertSame(1, $overview['chart']['total']);
+        $this->assertSame(7, $overview['insights']['wording']['days']);
+        $this->assertSame(1, $overview['insights']['wording']['samples']);
+        $this->assertEquals(80, $overview['insights']['wording']['average']);
+        $this->assertFalse($overview['insights']['wording']['comparable_passages']);
+        $this->assertSame(0, $overview['insights']['completions']['total']);
         $this->assertSame($student->name, $overview['recent_ai'][0]['student_name']);
         $this->assertSame(80, $overview['recent_ai'][0]['accuracy_percent']);
         $this->assertSame($organisation->name, $overview['roster']['organisation']['name']);

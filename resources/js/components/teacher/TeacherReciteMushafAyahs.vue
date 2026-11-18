@@ -85,14 +85,17 @@ export default {
     fitLines() {
       if (!this.lines || !this.$el || this.fitting) return
       const lines = [...this.$el.querySelectorAll(':scope > .teacher-recite-mushaf__line')]
+      if (lines[0] && getComputedStyle(lines[0]).display === 'contents') return
       const available = this.$el.clientWidth
       if (!lines.length || available < 48) return
       const packed = Math.max(...lines.map((line) => (
         [...line.children].reduce((sum, kid) => sum + kid.getBoundingClientRect().width, 0)
       )))
       if (packed < 24) return
-      const current = parseFloat(getComputedStyle(lines[0]).fontSize) || 24
-      const next = Math.min(80, Math.max(18, current * (available / packed) * 0.992))
+      if (!this.fitCap) this.fitCap = parseFloat(getComputedStyle(lines[0]).fontSize) || 24
+      const current = parseFloat(getComputedStyle(lines[0]).fontSize) || this.fitCap
+      const fitted = current * (available / packed) * 0.992
+      const next = Math.min(this.fitCap, Math.max(16, fitted))
       if (Math.abs(next - current) < 0.6) return
       this.fitting = true
       this.$el.style.setProperty('--mushaf-fit', `${next.toFixed(2)}px`)

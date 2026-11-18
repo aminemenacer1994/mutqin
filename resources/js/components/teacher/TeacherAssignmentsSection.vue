@@ -77,6 +77,7 @@
               <span class="teacher-task-row__meta d-flex flex-wrap gap-1">
                 <span class="badge rounded-pill text-bg-light border">{{ item.categoryLabel }}</span>
                 <span class="badge rounded-pill text-bg-light border">{{ item.actionLabel }}</span>
+                <span v-if="item.recordingRequired" class="badge rounded-pill text-bg-light border">{{ t('teacher.recording_required') }}</span>
                 <span v-if="item.assignedOn" class="badge rounded-pill text-bg-light border">{{ item.assignedOn }}</span>
                 <span v-if="item.samePassageCount > 1" class="badge rounded-pill text-bg-light border">{{ t('teacher.task_same_passage', { n: item.samePassageCount - 1 }) }}</span>
                 <span v-if="item.status === 'completed' && item.completionEvidence" class="badge rounded-pill text-bg-success">{{ item.completionEvidence }}</span>
@@ -295,7 +296,7 @@ export default {
         const recipients = row.recipients || []
         return recipients.map((recipient, recipientIndex) => {
           const status = this.normalizedStatus(recipient.status)
-          const category = assignment.hifz_category || this.inferHifzCategory(assignment)
+          const category = this.taskCategory(assignment)
           const snapshot = taskStateFromTeacherItem(recipient, assignment)
           const displayState = snapshot.display
           const dueUrgency = formatTaskDueUrgency(assignment.due_at, {
@@ -307,8 +308,9 @@ export default {
             key: `${assignment.id}-${recipient.id}`,
             kind: assignment.kind,
             category,
-            categoryLabel: this.t(`teacher.hifz_${category}`),
+            categoryLabel: this.taskCategoryLabel(category),
             actionLabel: assignment.kind === 'ai_recite' ? this.t('teacher.kind_ai') : this.t('teacher.kind_practice'),
+            recordingRequired: Boolean(assignment.recording_required) || assignment.kind === 'ai_recite',
             title,
             studentId: recipient.student_id,
             studentName: recipient.student_name || this.t('teacher.unavailable'),
@@ -388,9 +390,23 @@ export default {
     normalizedStatus(status) {
       return status || 'pending'
     },
-    inferHifzCategory(assignment) {
-      if (assignment.kind === 'ai_recite') return 'sabqi'
-      return Number(assignment.repetition_target || 0) >= 5 ? 'manzil' : 'sabaq'
+    taskCategory(assignment) {
+      const stored = assignment?.hifz_category
+      if (stored === 'sabaq' || stored === 'sabqi' || stored === 'manzil') return stored
+      const activity = assignment?.activity
+      if (activity === 'hifz') return 'sabaq'
+      if (activity === 'sabqi') return 'sabqi'
+      if (activity === 'manzil') return 'manzil'
+      if (activity === 'revision') return 'revision'
+      if (activity === 'nazra') return 'nazra'
+      if (activity === 'tajweed') return 'tajweed'
+      return 'revision'
+    },
+    taskCategoryLabel(category) {
+      if (category === 'sabaq' || category === 'sabqi' || category === 'manzil') return this.t(`teacher.hifz_${category}`)
+      if (category === 'nazra') return this.t('teacher.activity_nazra')
+      if (category === 'tajweed') return this.t('teacher.activity_tajweed')
+      return this.t('teacher.activity_revision')
     },
     toggleCompactView() {
       this.compactView = !this.compactView

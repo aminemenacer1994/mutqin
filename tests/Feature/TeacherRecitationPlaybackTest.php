@@ -584,6 +584,51 @@ class TeacherRecitationPlaybackTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_sound_ratings_need_a_recording_or_a_live_hearing(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $attempt = $this->recitation($student);
+        $words = $attempt->word_statuses;
+        $accuracy = (int) $attempt->accuracy_percent;
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'memorisation' => ['rating' => 'sound', 'note' => 'The wording is in place.'],
+            'tajweed' => ['rating' => 'needs_work', 'note' => 'Inferred from the missed word.'],
+            'pronunciation' => ['rating' => 'sound'],
+        ])->assertStatus(422)->assertJsonValidationErrors(['tajweed', 'pronunciation']);
+        $this->assertSame(0, \App\Models\TeacherRecitationAssessment::query()->count());
+        $attempt->refresh();
+        $this->assertSame($words, $attempt->word_statuses);
+        $this->assertSame($accuracy, (int) $attempt->accuracy_percent);
+
+        $saved = $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'memorisation' => ['rating' => 'sound', 'note' => 'The wording is in place.'],
+            'fluency' => ['rating' => 'sound'],
+            'heard_live' => false,
+        ])->assertOk()
+            ->assertJsonPath('assessment.observations.evidence', 'unverified')
+            ->assertJsonPath('assessment.observations.heard_live', false)
+            ->assertJsonPath('assessment.observations.tajweed.rating', null)
+            ->assertJsonPath('assessment.observations.memorisation.rating', 'sound')
+            ->json();
+        $this->assertSame($words, $attempt->fresh()->word_statuses);
+        $this->assertArrayNotHasKey('tajweed_score', $saved['assessment']['observations']['memorisation']);
+
+        $this->actingAs($teacher)->putJson(route('api.teacher.students.attempts.assess', [$student, $attempt]), [
+            'memorisation' => ['rating' => 'sound'],
+            'tajweed' => ['rating' => 'needs_work', 'note' => 'Heard the madd shorten.'],
+            'pronunciation' => ['rating' => 'sound', 'note' => 'Heard the qaf.'],
+            'heard_live' => true,
+        ])->assertOk()
+            ->assertJsonPath('assessment.observations.evidence', 'heard_live')
+            ->assertJsonPath('assessment.observations.heard_live', true)
+            ->assertJsonPath('assessment.observations.tajweed.rating', 'needs_work')
+            ->assertJsonPath('assessment.source', 'teacher');
+        $this->assertSame($words, $attempt->fresh()->word_statuses);
+        $this->assertSame($accuracy, (int) $attempt->fresh()->accuracy_percent);
+        $this->assertSame(1, \App\Models\TeacherRecitationAssessment::query()->count());
+    }
+
     private function recitation(User $student): \App\Models\AiReciteAttempt
     {
         $assessment = MemorisationAssessment::query()->create([

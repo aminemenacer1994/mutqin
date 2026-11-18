@@ -12,6 +12,7 @@ use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
+use App\Models\RevisionRecommendation;
 use App\Models\Organisation;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
@@ -68,6 +69,8 @@ class StudentHifzProgressTest extends TestCase
         $this->assertSame(3, $coverage['ranges']['items'][0]['ayah_end']);
         $this->assertSame(2, $coverage['recent_revision']['ayahs']);
         $this->assertSame(1, $coverage['older_revision']['ayahs']);
+        $this->assertSame(1, $coverage['new_memorisation']['ayahs']);
+        $this->assertLessThan(1, $coverage['coverage_percent']);
         $this->assertSame('teacher_confirmed', $hifz['next']['source']);
         $this->assertSame('manzil', $hifz['next']['hifz_category']);
         $this->assertSame(112, $hifz['weak_passages'][0]['surah_number']);
@@ -89,6 +92,38 @@ class StudentHifzProgressTest extends TestCase
         $this->assertSame(3, $overview['hifz']['unique_memorised_ayahs']);
         $this->assertSame('sum_of_student_ayahs', $overview['hifz']['counting']);
         $this->assertSame(1, $overview['hifz']['students_with_memorised_ayahs']);
+    }
+
+    public function test_snoozing_a_recommendation_does_not_assign_it(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $this->progress($student, 1, 1, 'memorised', ['last_review_at' => now()->subDays(3)->toIso8601String()]);
+        $row = RevisionRecommendation::query()->forceCreate([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'status' => 'pending',
+            'activity' => 'revision',
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 1,
+            'reason_code' => 'teacher_confirmed_difficulty',
+            'reason' => 'Teacher confirmed this ayah needs more practice.',
+            'source_key' => 'phase4-snooze',
+            'evidence' => ['kind' => 'teacher_confirmed_difficulty', 'is_tajweed_assessment' => false],
+        ]);
+        $due = now()->addDays(7)->toDateString();
+
+        $saved = $this->actingAs($teacher)
+            ->patchJson(route('api.teacher.revision-recommendations.update', $row), ['due_on' => $due])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame($due, $saved['due_on']);
+        $this->assertSame('pending', $saved['status']);
+        $this->assertNull($saved['teacher_assignment_id']);
+        $this->assertTrue($saved['teacher_confirmed']);
+        $this->assertNotNull($saved['last_reviewed_at']);
+        $this->assertSame(0, TeacherAssignment::query()->count());
     }
 
     public function test_overlapping_progress_is_counted_once_and_assignments_do_not_memorise(): void

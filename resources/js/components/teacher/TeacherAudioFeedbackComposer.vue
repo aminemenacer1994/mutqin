@@ -107,6 +107,9 @@ export default {
   mounted() { this.restoreDraft() },
   beforeUnmount() {
     if (this.successTimer) clearTimeout(this.successTimer)
+    if (this.draftStorageKey && (this.draft || this.ayahReference)) {
+      sessionStorage.setItem(this.draftStorageKey, JSON.stringify({ draft: this.draft, ayah: this.ayahReference }))
+    }
   },
   methods: {
     restoreDraft() {

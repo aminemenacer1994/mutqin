@@ -8,6 +8,7 @@ use App\Enums\LearningPlanStatus;
 use App\Enums\RevisionRecommendationStatus;
 use App\Enums\TeacherNoteKind;
 use App\Models\LearningPlan;
+use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
 use App\Models\RevisionRecommendation;
 use App\Models\TeacherAssignment;
@@ -184,6 +185,19 @@ class RevisionRecommendationService
         return $row->fresh() ?? $row;
     }
 
+    private function lastReviewedAt(RevisionRecommendation $row): ?string
+    {
+        $progress = MemorisationProgress::query()
+            ->where('user_id', $row->student_id)
+            ->where('surah_number', (int) $row->surah_number)
+            ->where('ayah_number', (int) $row->ayah_start)
+            ->first(['metadata']);
+        $meta = is_array($progress?->metadata) ? $progress->metadata : [];
+        $value = trim((string) ($meta['last_review_at'] ?? ''));
+
+        return $value !== '' ? $value : null;
+    }
+
     private function nextAction(RevisionRecommendation $row): string
     {
         $evidence = is_array($row->evidence) ? $row->evidence : [];
@@ -225,6 +239,10 @@ class RevisionRecommendationService
             'reason_code' => $row->reason_code,
             'reason' => $row->reason,
             'evidence' => $evidence,
+            'last_reviewed_at' => $this->lastReviewedAt($row),
+            'teacher_confirmed' => (bool) $row->weak_spot_id
+                || ($evidence['kind'] ?? null) === 'teacher_confirmed_difficulty'
+                || $row->reason_code === 'teacher_confirmed_difficulty',
             'is_tajweed_assessment' => false,
             'teacher_assignment_id' => $row->teacher_assignment_id ? (int) $row->teacher_assignment_id : null,
             'published' => $this->status($row) === RevisionRecommendationStatus::Assigned->value,

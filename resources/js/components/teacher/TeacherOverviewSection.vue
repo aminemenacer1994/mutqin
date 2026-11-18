@@ -61,79 +61,6 @@
         <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
       </TeacherSectionPane>
     </div>
-
-    <details class="teacher-insights">
-      <summary>
-        <span class="teacher-insights__copy">
-          <span class="teacher-insights__title">{{ t('teacher.overview_insights') }}</span>
-        </span>
-        <i class="bi bi-chevron-down" aria-hidden="true"></i>
-      </summary>
-      <div class="teacher-insights__body">
-        <div class="teacher-overview-columns">
-          <TeacherSectionPane :title="t('teacher.hifz_class_title')" :hint="t('teacher.hifz_class_help')" icon="bi bi-journal-bookmark" flat>
-            <div v-if="classHifz" class="teacher-overview-facts__grid">
-              <div class="teacher-overview-facts__card">
-                <strong>{{ classHifz.students_with_memorised_ayahs }} of {{ classHifz.students }}</strong>
-                <span>{{ t('teacher.hifz_class_students') }}</span>
-              </div>
-              <div class="teacher-overview-facts__card">
-                <strong>{{ classHifz.memorised_ayahs }}</strong>
-                <span>{{ t('teacher.hifz_class_memorised') }}</span>
-                <small>{{ t('teacher.hifz_class_memorised_help', { unique: Number(classHifz.unique_memorised_ayahs || 0) }) }}</small>
-              </div>
-              <div class="teacher-overview-facts__card">
-                <strong>{{ classHifz.in_progress_ayahs }}</strong>
-                <span>{{ t('teacher.hifz_class_progress') }}</span>
-                <small>{{ t('teacher.hifz_class_progress_help') }}</small>
-              </div>
-            </div>
-            <TeacherEmpty v-else inline icon="bi bi-journal" :message="t('teacher.overview_hifz_empty')" />
-          </TeacherSectionPane>
-          <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" :hint="t('teacher.overview_revision_hint')" icon="bi bi-arrow-repeat" flat>
-            <ul v-if="outstandingRevision.length" class="teacher-activity-list">
-              <li v-for="row in outstandingRevision" :key="row.recipient_id">
-                <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
-                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ revisionDetail(row) }}</small></span>
-                  <span class="teacher-activity-list__score" :class="{ 'teacher-activity-list__score--warn': row.overdue }">{{ revisionStatus(row) }}</span>
-                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                </button>
-              </li>
-            </ul>
-            <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.overview_revision_empty')" />
-          </TeacherSectionPane>
-        </div>
-        <div class="teacher-overview-columns">
-          <TeacherSectionPane :title="t('teacher.overview_plan_progress')" icon="bi bi-signpost" flat>
-            <ul v-if="planRows.length" class="teacher-activity-list">
-              <li v-for="row in planRows" :key="`plan-${row.id}`">
-                <button type="button" @click="openStudent(row.student_id, 'plan')">
-                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ planDetail(row) }}</small></span>
-                  <span class="teacher-activity-list__score">{{ Number(row.percent || 0) }}%</span>
-                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                </button>
-              </li>
-            </ul>
-            <TeacherEmpty v-else inline icon="bi bi-signpost" :message="t('teacher.overview_plan_empty')" />
-          </TeacherSectionPane>
-          <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
-            <ul v-if="recentCompletions.length" class="teacher-activity-list">
-              <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
-                <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
-                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
-                  <span></span>
-                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                </button>
-              </li>
-            </ul>
-            <TeacherEmpty v-else inline icon="bi bi-inbox" :message="t('teacher.overview_completions_empty')" />
-          </TeacherSectionPane>
-        </div>
-      </div>
-    </details>
   </section>
 </template>
 
@@ -172,6 +99,38 @@ export default {
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
+    },
+    insights() {
+      return this.overview?.insights || {}
+    },
+    completionPoints() {
+      return this.insights.completions?.points || []
+    },
+    wordingPoints() {
+      return this.insights.wording?.points || []
+    },
+    completionEmpty() {
+      return Number(this.insights.completions?.total || 0) === 0
+    },
+    wordingEmpty() {
+      return Number(this.insights.wording?.samples || 0) === 0
+    },
+    completionCaption() {
+      if (this.completionEmpty) return ''
+      return this.t('teacher.insight_completions_help', { n: this.insights.completions.total, days: this.chartDays })
+    },
+    wordingCaption() {
+      if (this.wordingEmpty) return ''
+      return this.t('teacher.insight_wording_help', {
+        n: this.insights.wording.samples,
+        average: this.insights.wording.average,
+      })
+    },
+    completionChartData() {
+      return this.barSeries(this.completionPoints, 'completed', this.t('teacher.insight_completions'))
+    },
+    wordingChartData() {
+      return this.barSeries(this.wordingPoints, 'average', this.t('teacher.insight_wording'))
     },
     classHifz() {
       const hifz = this.overview?.hifz
@@ -266,6 +225,19 @@ export default {
     },
   },
   methods: {
+    barSeries(points, field, label) {
+      return {
+        labels: points.map((point) => String(point.date || '').slice(5)),
+        datasets: [{
+          label,
+          data: points.map((point) => point[field] == null ? null : Number(point[field])),
+          backgroundColor: '#7a5436',
+          borderRadius: 6,
+          borderSkipped: false,
+          maxBarThickness: this.chartDays <= 30 ? 16 : 10,
+        }],
+      }
+    },
     initial: studentInitial,
     scoreTone: scoreBadgeTone,
     activityLabel(student) {

@@ -81,11 +81,12 @@
         <div v-if="rangeError" class="teacher-form-field teacher-form-field--full">
           <p :id="`${formId}-range-error`" class="text-danger small mb-0" role="alert">{{ rangeError }}</p>
         </div>
-        <div class="teacher-form-field teacher-form-field--third">
+        <div class="teacher-form-field teacher-form-field--half teacher-form-field--reps">
           <label class="form-label" :for="`${formId}-reps`">{{ t('teacher.repetitions') }}</label>
           <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required @input="patch('repetition_target', $event.target.value)">
         </div>
-        <div class="teacher-form-field teacher-form-field--third">
+        <div class="teacher-form-pair">
+        <div class="teacher-form-field teacher-form-field--due">
           <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_date') }}</label>
           <input
             :id="`${formId}-due`"
@@ -101,13 +102,14 @@
           >
           <p v-if="showDueError" :id="`${formId}-due-error`" class="text-danger small mb-0 mt-1" role="alert">{{ dueError }}</p>
         </div>
-        <div class="teacher-form-field teacher-form-field--third">
+        <div class="teacher-form-field teacher-form-field--half teacher-form-field--priority">
           <label class="form-label" :for="`${formId}-priority`">{{ t('teacher.priority') }}</label>
           <select :id="`${formId}-priority`" class="form-select" :value="form.priority || 'normal'" @change="patch('priority', $event.target.value)">
             <option value="low">{{ t('teacher.priority_low') }}</option>
             <option value="normal">{{ t('teacher.priority_normal') }}</option>
             <option value="high">{{ t('teacher.priority_high') }}</option>
           </select>
+        </div>
         </div>
         <div class="teacher-form-field teacher-form-field--full">
           <label class="form-check" :for="`${formId}-recording`">

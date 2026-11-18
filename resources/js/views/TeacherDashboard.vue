@@ -225,6 +225,7 @@ export default {
     }
     function onProfileSection(tab) {
       if (!dashboard.profile.value?.student?.id) return
+      dashboard.noteNavigation()
       dashboard.profileFocus.value = null
       dashboard.loadProfile(dashboard.profile.value.student.id, tab, true)
     }

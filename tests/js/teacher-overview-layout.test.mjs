@@ -8,20 +8,15 @@ const kpi = template.indexOf('TeacherKpiGrid')
 const queue = template.indexOf('teacher-overview-queue')
 const priorities = template.indexOf('teacher.today_priorities')
 const columns = template.indexOf('teacher-overview-columns')
-const insights = template.indexOf('<details class="teacher-insights">')
 
-assert.ok(kpi < queue && queue < priorities && priorities < columns && columns < insights)
+assert.ok(kpi < queue && queue < priorities && priorities < columns)
+assert.doesNotMatch(template, /teacher-insights/)
 for (const key of [
   'today_chip_recitations',
   'today_chip_clear_overdue',
   'today_chip_clear_plans',
   'today_chip_messages',
-  'overview_completions_empty',
   'open-reviews',
-  'hifz_class_title',
-  'overview_outstanding_revision',
-  'overview_plan_progress',
-  'overview_recent_completions',
 ]) {
   assert.match(source, new RegExp(key))
 }

@@ -215,6 +215,7 @@ class TeacherDashboardController extends Controller
             'fluency' => ['nullable', 'array'],
             'fluency.rating' => ['nullable', 'string', 'in:needs_work,sound,strong'],
             'fluency.note' => ['nullable', 'string', 'max:2000'],
+            'heard_live' => ['sometimes', 'boolean'],
         ]);
 
         return $this->json($playback->storeAssessment($this->teacher($request), $student, $attempt, $data));

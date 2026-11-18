@@ -1,8 +1,15 @@
 import { TASK_STATE, taskStateFromTeacherItem } from './taskState'
 
 function inferHifzCategory(assignment) {
-  if (assignment?.kind === 'ai_recite') return 'sabqi'
-  return Number(assignment?.repetition_target || 0) >= 5 ? 'manzil' : 'sabaq'
+  const stored = assignment?.hifz_category
+  if (stored === 'sabaq' || stored === 'sabqi' || stored === 'manzil') return stored
+  const activity = assignment?.activity
+  if (activity === 'hifz') return 'sabaq'
+  if (activity === 'sabqi') return 'sabqi'
+  if (activity === 'manzil') return 'manzil'
+  if (activity === 'nazra') return 'nazra'
+  if (activity === 'tajweed') return 'tajweed'
+  return 'revision'
 }
 
 function normalizedStatus(status) {
