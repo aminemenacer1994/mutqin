@@ -60,12 +60,32 @@ class StudentHifzProgressService
 
         return [
             'source' => 'memorisation_progress',
+            'counting' => 'sum_of_student_ayahs',
             'students' => count($metrics),
             'students_with_memorised_ayahs' => $withMemorised,
             'memorised_ayahs' => $memorised,
             'in_progress_ayahs' => $learning,
             'mushaf_ayahs' => QuranMetadata::totalAyahCount(),
         ];
+    }
+
+    /**
+     * Distinct Mushaf ayahs across the class. This is not the summed student total.
+     *
+     * @param  list<int>  $studentIds
+     */
+    public function uniqueMemorisedAyahs(array $studentIds): int
+    {
+        if ($studentIds === []) {
+            return 0;
+        }
+
+        return MemorisationProgress::query()
+            ->whereIn('user_id', $studentIds)
+            ->whereIn('status', ['memorised', 'mastered'])
+            ->get(['surah_number', 'ayah_number'])
+            ->unique(fn (MemorisationProgress $row) => (int) $row->surah_number.':'.(int) $row->ayah_number)
+            ->count();
     }
 
     /**
@@ -189,11 +209,21 @@ class StudentHifzProgressService
             ->orderBy('ayah_number')
             ->get(['surah_number', 'ayah_number', 'status', 'metadata', 'completed_at', 'updated_at']);
 
+        $collapsed = [];
+        foreach ($records as $record) {
+            $key = (int) $record->surah_number.':'.(int) $record->ayah_number;
+            $collapsed[$key] = isset($collapsed[$key])
+                ? $this->preferProgressRow($collapsed[$key], $record)
+                : $record;
+        }
+
         $rows = [];
         $lastProgress = null;
-        foreach ($records as $record) {
+        foreach ($collapsed as $record) {
             $meta = is_array($record->metadata) ? $record->metadata : [];
-            $reviewAt = isset($meta['last_review_at']) ? (string) $meta['last_review_at'] : null;
+            $reviewAt = isset($meta['last_review_at']) && trim((string) $meta['last_review_at']) !== ''
+                ? (string) $meta['last_review_at']
+                : null;
             $status = (string) $record->status;
             $memorised = in_array($status, ['memorised', 'mastered'], true);
             $updated = $record->updated_at?->toIso8601String();
@@ -213,6 +243,7 @@ class StudentHifzProgressService
                 'completed_at' => $record->completed_at?->toIso8601String(),
             ];
         }
+        usort($rows, fn (array $a, array $b) => [$a['surah_number'], $a['ayah_number']] <=> [$b['surah_number'], $b['ayah_number']]);
 
         $memorisedRows = array_values(array_filter($rows, fn (array $row) => $row['memorised']));
         $learningRows = array_values(array_filter($rows, fn (array $row) => $row['learning']));
@@ -224,7 +255,8 @@ class StudentHifzProgressService
         }
         $olderRows = array_values(array_filter(
             $memorisedRows,
-            fn (array $row) => ! isset($recentKeys[$row['surah_number'].':'.$row['ayah_number']])
+            fn (array $row) => $row['last_review_at'] !== null
+                && ! isset($recentKeys[$row['surah_number'].':'.$row['ayah_number']])
         ));
         $mushaf = QuranMetadata::totalAyahCount();
         $memorisedCount = count($memorisedRows);
@@ -537,6 +569,30 @@ class StudentHifzProgressService
                 'at' => $review->reviewed_at?->toIso8601String(),
             ])
             ->all();
+    }
+
+    private function preferProgressRow(MemorisationProgress $current, MemorisationProgress $candidate): MemorisationProgress
+    {
+        $rank = function (MemorisationProgress $row): int {
+            return match ((string) $row->status) {
+                'mastered', 'memorised' => 3,
+                'reviewing' => 2,
+                'learning' => 1,
+                default => 0,
+            };
+        };
+        $chosen = $rank($candidate) > $rank($current) ? $candidate : $current;
+        $other = $chosen === $candidate ? $current : $candidate;
+        $chosenMeta = is_array($chosen->metadata) ? $chosen->metadata : [];
+        $otherMeta = is_array($other->metadata) ? $other->metadata : [];
+        $chosenReview = isset($chosenMeta['last_review_at']) ? strtotime((string) $chosenMeta['last_review_at']) : false;
+        $otherReview = isset($otherMeta['last_review_at']) ? strtotime((string) $otherMeta['last_review_at']) : false;
+        if ($otherReview !== false && ($chosenReview === false || $otherReview > $chosenReview)) {
+            $chosenMeta['last_review_at'] = $otherMeta['last_review_at'];
+            $chosen->metadata = $chosenMeta;
+        }
+
+        return $chosen;
     }
 
     /**

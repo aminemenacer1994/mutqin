@@ -303,14 +303,15 @@ class TeacherAssignmentService
                 continue;
             }
 
-            if ($recipient->student_completed_at !== null) {
-                $current = $recipient->status instanceof AssignmentStatus
-                    ? $recipient->status
-                    : AssignmentStatus::tryFrom((string) $recipient->status);
+            $current = $recipient->status instanceof AssignmentStatus
+                ? $recipient->status
+                : AssignmentStatus::tryFrom((string) $recipient->status);
 
-                if ($current === AssignmentStatus::Completed) {
-                    continue;
-                }
+            if ($current === AssignmentStatus::Completed) {
+                continue;
+            }
+
+            if ($recipient->student_completed_at !== null) {
 
                 $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
                 $awaitingTeacherCorrection = $current === AssignmentStatus::InProgress
@@ -331,12 +332,10 @@ class TeacherAssignmentService
 
             $matches = $this->completedRepeats($recipient, $sessions, $attempts);
 
+            // Overdue stays a due-date flag. It must not replace pending or in progress.
             $status = AssignmentStatus::Pending;
             if ($matches > 0 || $recipient->started_at !== null) {
                 $status = AssignmentStatus::InProgress;
-            }
-            if ($assignment->due_at !== null && $assignment->due_at->copy()->endOfDay()->isPast()) {
-                $status = AssignmentStatus::Overdue;
             }
 
             $completedAt = $recipient->completed_at;
@@ -1188,11 +1187,42 @@ class TeacherAssignmentService
         ];
     }
 
-    private function displayStatus(TeacherAssignmentRecipient $recipient, ?TeacherAssignment $assignment): string
+    /**
+     * Stored "overdue" is a legacy date stamp. The task status stays pending or in progress.
+     */
+    public function lifecycleStatus(TeacherAssignmentRecipient $recipient): string
     {
-        return $recipient->status instanceof AssignmentStatus
+        $status = $recipient->status instanceof AssignmentStatus
             ? $recipient->status->value
             : (string) $recipient->status;
+
+        if ($status === AssignmentStatus::Overdue->value) {
+            return $recipient->started_at !== null
+                ? AssignmentStatus::InProgress->value
+                : AssignmentStatus::Pending->value;
+        }
+
+        return $status;
+    }
+
+    /**
+     * Date condition in the application timezone. Completed work is never overdue.
+     * A task due today stays open until the end of that day.
+     */
+    public function isDateOverdue(TeacherAssignmentRecipient $recipient, ?TeacherAssignment $assignment = null): bool
+    {
+        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
+            return false;
+        }
+
+        $due = ($assignment ?? $recipient->assignment)?->due_at;
+
+        return $due !== null && $due->copy()->endOfDay()->isPast();
+    }
+
+    private function displayStatus(TeacherAssignmentRecipient $recipient, ?TeacherAssignment $assignment): string
+    {
+        return $this->lifecycleStatus($recipient);
     }
 
     private function reviewState(TeacherAssignmentRecipient $recipient): ?string

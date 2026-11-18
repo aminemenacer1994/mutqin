@@ -1322,7 +1322,8 @@ class TeacherDashboardTest extends TestCase
         $recipient->assignment->forceFill(['due_at' => today()->subDay()->toDateString()])->save();
 
         $rows = $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data');
-        $this->assertSame(AssignmentStatus::Overdue->value, $rows[0]['recipients'][0]['status']);
+        $this->assertSame(AssignmentStatus::Pending->value, $rows[0]['recipients'][0]['status']);
+        $this->assertTrue($rows[0]['recipients'][0]['task_overdue_overlay']);
     }
 
     public function test_teacher_can_edit_or_remove_only_an_unstarted_task(): void
@@ -1398,7 +1399,8 @@ class TeacherDashboardTest extends TestCase
             'due_at' => $due,
         ])->assertCreated()->json();
         $this->assertSame('manzil', $assignment['assignment']['hifz_category']);
-        $this->assertSame('overdue', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertSame('pending', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertTrue($this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.task_overdue_overlay'));
 
         $this->actingAs($teacher)->putJson(route('api.teacher.attendance.set', [$group, $hidden]), [
             'date' => $due,
@@ -1409,7 +1411,8 @@ class TeacherDashboardTest extends TestCase
             'status' => 'absent',
         ])->assertOk();
 
-        $this->assertSame('overdue', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertSame('pending', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertTrue($this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.task_overdue_overlay'));
         $profile = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', $student))->assertOk()->json('payload');
         $this->assertSame('absent', $profile['attendance'][0]['status']);
         $this->assertSame('teacher_recorded', $profile['attendance'][0]['source']);
@@ -1433,7 +1436,8 @@ class TeacherDashboardTest extends TestCase
             'date' => $due,
             'status' => 'clear',
         ])->assertOk()->assertJsonPath('source', 'teacher_recorded');
-        $this->assertSame('overdue', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertSame('pending', $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.status'));
+        $this->assertTrue($this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data.0.recipients.0.task_overdue_overlay'));
     }
 
     public function test_attendance_notes_percentages_filters_and_learner_summary(): void

@@ -51,7 +51,7 @@
         </header>
         <p class="teacher-plan-card__count">{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</p>
         <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
-          <span :style="{ width: `${planPercent(plan)}%` }"></span>
+          <span :style="planMeterStyle(plan)"></span>
         </div>
         <p v-if="nextOf(plan)" class="teacher-plan-card__next">
           <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
@@ -97,7 +97,7 @@
             <span>{{ t('teacher.plan_progress', { done: detailPlan.progress?.completed || 0, total: detailPlan.progress?.total || 0 }) }}</span>
           </p>
           <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
-            <span :style="{ width: `${planPercent(detailPlan)}%` }"></span>
+            <span :style="planMeterStyle(detailPlan)"></span>
           </div>
         </header>
         <p v-if="detailPlan.student_goal" class="teacher-plan-detail__goal"><span>{{ t('teacher.plan_goal_label') }}</span>{{ detailPlan.student_goal }}</p>
@@ -323,6 +323,7 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import { activityProgressPercent, progressMeterStyle } from '../../../scripts/teacher/activityProgress'
 import { learningApi } from '../../../scripts/api/learning'
 import TeacherDialog from '../TeacherDialog.vue'
 import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.vue'
@@ -1120,10 +1121,10 @@ export default {
       }
     },
     planPercent(plan) {
-      const total = Number(plan.progress?.total || 0)
-      const done = Number(plan.progress?.completed || 0)
-      if (!total) return 0
-      return Math.min(100, Math.round((done / total) * 100))
+      return activityProgressPercent(plan?.progress?.completed, plan?.progress?.total)
+    },
+    planMeterStyle(plan) {
+      return progressMeterStyle(plan?.progress?.completed, plan?.progress?.total)
     },
     activitiesComplete(plan) {
       const total = Number(plan.progress?.total || 0)

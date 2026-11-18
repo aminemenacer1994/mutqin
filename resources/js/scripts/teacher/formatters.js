@@ -233,14 +233,23 @@ export function attentionReasonTags(student, t) {
   return tags
 }
 
-/** Shared overview counts. Reviews are submitted tasks. Recitations are scored attempts still awaiting a teacher review. */
+/**
+ * Shared overview counts.
+ * reviews: task submissions awaiting the teacher.
+ * recitations: scored checks linked to this teacher that are not yet marked reviewed.
+ * reviewsDueToday: scheduled revision whose date is today.
+ * legacyRecitations: earlier AI-only checks kept on record and left out of the queue.
+ */
 export function teacherDeskCounts(overview = {}) {
   const assignments = overview?.assignments || {}
   const kpis = overview?.kpis || {}
   const snapshot = overview?.snapshot || {}
+  const queue = Array.isArray(overview?.review_queue?.actionable) ? overview.review_queue.actionable : null
   return {
-    reviews: Number(assignments.awaiting_confirmation || 0),
-    recitations: Number(snapshot.recitations_awaiting_review || 0),
+    reviews: Number(assignments.awaiting_confirmation ?? snapshot.submissions_awaiting_review ?? 0),
+    recitations: queue ? queue.length : Number(snapshot.recitations_awaiting_review || 0),
+    reviewsDueToday: Number(snapshot.reviews_due_today || 0),
+    legacyRecitations: Number(snapshot.legacy_ai_only_unreviewed || 0),
     overdue: Number(snapshot.overdue_tasks ?? kpis.overdue_assignments ?? assignments.overdue ?? 0),
     plans: Number(kpis.open_recommendations || 0),
     unread: Number(snapshot.unread_messages || 0),

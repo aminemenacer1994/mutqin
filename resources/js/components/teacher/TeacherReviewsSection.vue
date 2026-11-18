@@ -5,6 +5,7 @@
         <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
         <h1 id="teacher-reviews-heading" class="teacher-page-header__title">{{ t('teacher.nav_reviews') }}</h1>
         <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
+        <p v-if="legacyCount" class="teacher-page-header__hint">{{ t('teacher.reviews_legacy_note', { n: legacyCount }) }}</p>
       </div>
     </header>
     <section v-if="deskCounts.reviews || deskCounts.overdue" class="teacher-priorities">
@@ -118,8 +119,12 @@ export default {
     deskCounts() {
       return teacherDeskCounts(this.overview)
     },
+    legacyCount() {
+      return Number(this.deskCounts.legacyRecitations || 0)
+    },
     recent() {
-      return this.overview?.recent_ai || []
+      const queue = this.overview?.review_queue?.actionable
+      return Array.isArray(queue) ? queue : []
     },
     recentVisible() {
       return this.recent.slice(0, this.recentShown)

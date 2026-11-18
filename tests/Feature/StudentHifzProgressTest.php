@@ -7,6 +7,7 @@ use App\Enums\AnalyticsConsentStatus;
 use App\Enums\AssignmentStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\MemorisationProgress;
@@ -85,7 +86,49 @@ class StudentHifzProgressTest extends TestCase
 
         $overview = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json();
         $this->assertSame(3, $overview['hifz']['memorised_ayahs']);
+        $this->assertSame(3, $overview['hifz']['unique_memorised_ayahs']);
+        $this->assertSame('sum_of_student_ayahs', $overview['hifz']['counting']);
         $this->assertSame(1, $overview['hifz']['students_with_memorised_ayahs']);
+    }
+
+    public function test_overlapping_progress_is_counted_once_and_assignments_do_not_memorise(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $this->progress($student, 112, 1, 'memorised', ['last_review_at' => now()->subDays(2)->toIso8601String()]);
+        $this->progress($student, 112, 2, 'memorised');
+        $this->task($teacher, $student, now()->addDay(), AssignmentStatus::Pending);
+        AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'attempt_number' => 1,
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+            'accuracy_percent' => 99,
+            'band' => 'strong',
+        ]);
+
+        $coverage = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', $student))->assertOk()->json('meta.hifz.coverage');
+        $this->assertSame(2, $coverage['memorised_ayahs']);
+        $this->assertSame(1, $coverage['recent_revision']['ayahs']);
+        $this->assertSame(0, $coverage['older_revision']['ayahs']);
+
+        $peer = User::factory()->create([
+            'account_role' => AccountRole::Student->value,
+            'organisation_id' => $student->organisation_id,
+        ]);
+        $groupId = GroupMembership::query()->where('user_id', $student->id)->value('learning_group_id');
+        GroupMembership::factory()->create([
+            'learning_group_id' => $groupId,
+            'user_id' => $peer->id,
+            'membership_role' => MembershipRole::Student->value,
+            'status' => MembershipStatus::Approved->value,
+            'analytics_consent_status' => AnalyticsConsentStatus::Granted->value,
+            'analytics_consent_version' => GroupMembership::ANALYTICS_CONSENT_VERSION,
+            'analytics_consent_user_id' => $peer->id,
+        ]);
+        $this->progress($peer, 112, 1, 'memorised', ['last_review_at' => now()->subDays(40)->toIso8601String()]);
+
+        $class = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json('hifz');
+        $this->assertSame(3, $class['memorised_ayahs']);
+        $this->assertSame(2, $class['unique_memorised_ayahs']);
     }
 
     public function test_lesson_denominator_counts_only_tasks_due_in_the_period(): void

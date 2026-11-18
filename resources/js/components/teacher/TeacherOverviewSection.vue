@@ -15,7 +15,7 @@
         <div class="teacher-overview-facts__card">
           <strong>{{ classHifz.memorised_ayahs }}</strong>
           <span>{{ t('teacher.hifz_class_memorised') }}</span>
-          <small>{{ t('teacher.hifz_class_memorised_help') }}</small>
+          <small>{{ t('teacher.hifz_class_memorised_help', { unique: Number(classHifz.unique_memorised_ayahs || 0) }) }}</small>
         </div>
         <div class="teacher-overview-facts__card">
           <strong>{{ classHifz.in_progress_ayahs }}</strong>
@@ -28,6 +28,7 @@
       <header class="teacher-overview-facts__head">
         <h3>{{ t('teacher.today_priorities') }}</h3>
         <p>{{ t('teacher.today_priorities_help') }}</p>
+        <p v-if="reviewBreakdown">{{ reviewBreakdown }}</p>
       </header>
       <div class="teacher-overview-facts__grid">
         <button
@@ -182,7 +183,7 @@ export default {
         {
           id: 'reviews',
           count: counts.reviews,
-          label: this.t('teacher.today_chip_reviews'),
+          label: this.t('teacher.today_chip_submissions'),
           action: this.t('teacher.today_chip_go_reviews'),
           aria: this.t('teacher.today_chip_reviews_label', { count: counts.reviews }),
           tone: '',
@@ -207,6 +208,15 @@ export default {
     },
     recentCompletions() {
       return this.overview?.recent_completions || []
+    },
+    reviewBreakdown() {
+      const counts = this.deskCounts
+      if (!counts.recitations && !counts.reviewsDueToday && !counts.legacyRecitations) return ''
+      return this.t('teacher.today_review_breakdown', {
+        recitations: counts.recitations,
+        due: counts.reviewsDueToday,
+        legacy: counts.legacyRecitations,
+      })
     },
     attentionRows() {
       if (this.attentionPreview.length) return this.attentionPreview

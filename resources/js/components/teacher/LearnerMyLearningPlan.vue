@@ -32,7 +32,7 @@
       :aria-valuenow="progressPercent"
       :aria-label="progressLabel"
     >
-      <span class="learner-my-plan__meter-fill" :style="{ width: `${progressPercent}%` }"></span>
+      <span class="learner-my-plan__meter-fill" :style="meterStyle"></span>
     </div>
 
     <p v-if="plan.status === 'paused'" class="learner-my-plan__note">{{ t('teacher.plan_paused_student') }}</p>
@@ -69,6 +69,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { activityProgressPercent, progressMeterStyle } from '../../scripts/teacher/activityProgress'
 
 export default {
   name: 'LearnerMyLearningPlan',
@@ -81,7 +82,10 @@ export default {
   emits: ['continue'],
   computed: {
     progressPercent() {
-      return Number(this.plan?.progress?.percent || 0)
+      return activityProgressPercent(this.plan?.progress?.completed, this.plan?.progress?.total)
+    },
+    meterStyle() {
+      return progressMeterStyle(this.plan?.progress?.completed, this.plan?.progress?.total)
     },
     progressLabel() {
       return this.t('teacher.plan_progress', {

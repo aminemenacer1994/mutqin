@@ -85,7 +85,7 @@
             >
               <span
                 class="learner-teacher__progress-meter-fill"
-                :style="{ width: `${weeklyProgressPercent}%`, '--learner-weekly-fill': `${weeklyProgressPercent}%` }"
+                :style="weeklyMeterStyle"
               ></span>
             </span>
           </div>
@@ -817,6 +817,13 @@ export default {
     },
     weeklyProgressPercent() {
       return this.weeklyProgressSnapshot.percent
+    },
+    weeklyMeterStyle() {
+      const percent = Number(this.weeklyProgressPercent) || 0
+      return {
+        width: percent <= 0 ? '0px' : `${percent}%`,
+        '--learner-weekly-fill': percent <= 0 ? '0px' : `${percent}%`,
+      }
     },
     todoAssignmentIds() {
       return this.assignments

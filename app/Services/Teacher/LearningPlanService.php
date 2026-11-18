@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
+use App\Support\ActivityProgress;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
@@ -576,16 +577,18 @@ class LearningPlanService
 
     /**
      * @param  list<array<string, mixed>>  $items
-     * @return array{total:int,completed:int,overdue:int,upcoming:int,suggested:int,percent:int}
+     * @return array{total:int,completed:int,overdue:int,upcoming:int,suggested:int,cancelled:int,archived:int,percent:int}
      */
     public function progressFromItems(array $items): array
     {
-        $assigned = array_values(array_filter($items, fn ($item) => ($item['origin'] ?? '') !== 'suggested' || ($item['item_status'] ?? '') === 'released'));
-        $total = count($assigned);
-        $completed = count(array_filter($assigned, fn ($item) => ($item['display_status'] ?? '') === 'completed'));
-        $overdue = count(array_filter($assigned, fn ($item) => ($item['display_status'] ?? '') === 'overdue'));
-        $upcoming = count(array_filter($assigned, fn ($item) => in_array(($item['display_status'] ?? ''), ['upcoming', 'in_progress', 'planned', 'submitted'], true)));
+        $countable = array_values(array_filter($items, fn ($item) => $this->activityCountsTowardPlan($item)));
+        $total = count($countable);
+        $completed = count(array_filter($countable, fn ($item) => ($item['display_status'] ?? '') === 'completed'));
+        $overdue = count(array_filter($countable, fn ($item) => ($item['display_status'] ?? '') === 'overdue'));
+        $upcoming = count(array_filter($countable, fn ($item) => in_array(($item['display_status'] ?? ''), ['upcoming', 'in_progress', 'planned', 'submitted'], true)));
         $suggested = count(array_filter($items, fn ($item) => ($item['origin'] ?? '') === 'suggested' && ($item['item_status'] ?? '') !== 'released'));
+        $cancelled = count(array_filter($items, fn ($item) => $this->activityClosure($item) === 'cancelled'));
+        $archived = count(array_filter($items, fn ($item) => $this->activityClosure($item) === 'archived'));
 
         return [
             'total' => $total,
@@ -593,8 +596,41 @@ class LearningPlanService
             'overdue' => $overdue,
             'upcoming' => $upcoming,
             'suggested' => $suggested,
-            'percent' => $total > 0 ? (int) round(($completed / $total) * 100) : 0,
+            'cancelled' => $cancelled,
+            'archived' => $archived,
+            'percent' => ActivityProgress::percent($completed, $total),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function activityCountsTowardPlan(array $item): bool
+    {
+        if ($this->activityClosure($item) !== null) {
+            return false;
+        }
+
+        $origin = (string) ($item['origin'] ?? '');
+        $itemStatus = (string) ($item['item_status'] ?? '');
+
+        return $origin !== 'suggested' || $itemStatus === 'released';
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function activityClosure(array $item): ?string
+    {
+        $itemStatus = (string) ($item['item_status'] ?? '');
+        $display = (string) ($item['display_status'] ?? '');
+        foreach (['cancelled', 'archived'] as $closure) {
+            if ($itemStatus === $closure || $display === $closure) {
+                return $closure;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -665,6 +701,9 @@ class LearningPlanService
 
     private function displayStatus(string $itemStatus, ?string $taskStatus, mixed $dueOn): string
     {
+        if (in_array($itemStatus, ['cancelled', 'archived'], true)) {
+            return $itemStatus;
+        }
         if ($itemStatus === LearningPlanItemStatus::Skipped->value) {
             return 'skipped';
         }

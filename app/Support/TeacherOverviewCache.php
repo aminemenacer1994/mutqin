@@ -13,8 +13,9 @@ class TeacherOverviewCache
         }
 
         foreach ([7, 30, 90] as $days) {
-            Cache::forget(sprintf('teacher.overview.%d.%d', $teacherId, $days));
-            Cache::forget(sprintf('teacher.overview.v2.%d.%d', $teacherId, $days));
+            foreach (['', '.v2', '.v3', '.v4'] as $version) {
+                Cache::forget(sprintf('teacher.overview%s.%d.%d', $version, $teacherId, $days));
+            }
         }
     }
 }
