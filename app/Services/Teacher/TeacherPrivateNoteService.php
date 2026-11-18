@@ -35,7 +35,7 @@ class TeacherPrivateNoteService
         $query = TeacherPrivateNote::query()
             ->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
-            ->with(['assignment:id,surah_number,ayah_start,ayah_end,kind']);
+            ->with(['assignment:id,surah_number,ayah_start,ayah_end,kind', 'teacher:id,name']);
 
         $includeArchived = filter_var($filters['archived'] ?? false, FILTER_VALIDATE_BOOL);
         if ($includeArchived) {
@@ -307,6 +307,7 @@ class TeacherPrivateNoteService
                 : null,
             'author' => [
                 'id' => (int) $note->teacher_id,
+                'name' => $note->teacher?->name,
             ],
             'created_at' => $note->created_at?->toIso8601String(),
             'updated_at' => $note->updated_at?->toIso8601String(),

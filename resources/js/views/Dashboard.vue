@@ -181,17 +181,26 @@
           </section>
 
           <section v-if="reflectionPrompt" class="learner-home__feedback" aria-labelledby="home-reflection-title">
-            <h2 id="home-reflection-title">{{ t('dashboard.home_reflection_title') }}</h2>
+            <h2 id="home-reflection-title">{{ t('dashboard.home_reflection_confidence') }}</h2>
             <p class="learner-home__instructions">{{ t('dashboard.home_reflection_help') }}</p>
             <div class="learner-home__task-footer">
-              <button v-for="feeling in reflectionFeelings" :key="feeling" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionFeeling === feeling }" @click="reflectionFeeling = feeling">{{ t(`dashboard.home_reflection_${feeling}`) }}</button>
+              <button v-for="level in reflectionLevels" :key="level" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionConfidence === level }" @click="reflectionConfidence = level">{{ t(`dashboard.home_reflection_${level}`) }}</button>
             </div>
             <label class="learner-home__instructions">
-              {{ t('dashboard.home_reflection_help_label') }}
+              {{ t('dashboard.home_reflection_difficult_ayahs') }}
+              <input v-model="reflectionDifficult" class="form-control" type="text" maxlength="120">
+            </label>
+            <p class="learner-home__instructions">{{ t('dashboard.home_reflection_revision') }}</p>
+            <div class="learner-home__task-footer">
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionWantsRevision === true }" @click="reflectionWantsRevision = true">{{ t('dashboard.home_reflection_yes') }}</button>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionWantsRevision === false }" @click="reflectionWantsRevision = false">{{ t('dashboard.home_reflection_no') }}</button>
+            </div>
+            <label class="learner-home__instructions">
+              {{ t('dashboard.home_reflection_note') }}
               <textarea v-model="reflectionHelp" class="form-control" rows="2" maxlength="1000"></textarea>
             </label>
             <div class="learner-home__task-footer">
-              <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="!reflectionFeeling || reflectionSaving" @click="saveReflection">{{ t('dashboard.home_reflection_save') }}</button>
+              <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="!reflectionConfidence || reflectionSaving" @click="saveReflection">{{ t('dashboard.home_reflection_save') }}</button>
               <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="reflectionPrompt = null">{{ t('dashboard.home_reflection_skip') }}</button>
             </div>
             <p v-if="reflectionSaved" class="learner-home__confirmation" role="status">{{ t('dashboard.home_reflection_saved') }}</p>
@@ -1363,6 +1372,9 @@ export default {
       assignmentCompletionMessage: '',
       reflectionPrompt: null,
       reflectionFeeling: '',
+      reflectionConfidence: '',
+      reflectionDifficult: '',
+      reflectionWantsRevision: null,
       reflectionHelp: '',
       reflectionSaving: false,
       reflectionSaved: false,
@@ -1535,8 +1547,8 @@ export default {
         return ['pending', 'in_progress', 'overdue'].includes(String(row?.status || ''))
       }).slice(0, 4)
     },
-    reflectionFeelings() {
-      return ['easy', 'manageable', 'difficult']
+    reflectionLevels() {
+      return ['low', 'steady', 'confident']
     },
     showHomeContinue() {
       if (this.showLearnerTeacherSection && this.supportLoading && !this.support) return false
@@ -3980,6 +3992,9 @@ export default {
           ayah_end: item.assignment?.ayah_end || null,
         }
         this.reflectionFeeling = ''
+        this.reflectionConfidence = ''
+        this.reflectionDifficult = ''
+        this.reflectionWantsRevision = null
         this.reflectionHelp = ''
         this.reflectionSaved = false
         clearTimeout(this.assignmentCompletionTimer)
@@ -3996,11 +4011,16 @@ export default {
       return teacherTaskTypeLabel(resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity), this.t.bind(this))
     },
     async saveReflection() {
-      if (!this.reflectionPrompt || !this.reflectionFeeling || this.reflectionSaving) return
+      if (!this.reflectionPrompt || !this.reflectionConfidence || this.reflectionSaving) return
       this.reflectionSaving = true
+      const feeling = { low: 'difficult', steady: 'manageable', confident: 'easy' }[this.reflectionConfidence] || 'manageable'
       try {
         await learningApi.saveLearnerSelfAssessment({
-          feeling: this.reflectionFeeling,
+          feeling,
+          confidence: this.reflectionConfidence,
+          difficult_ayahs: this.reflectionDifficult,
+          wants_revision: this.reflectionWantsRevision,
+          note: this.reflectionHelp,
           help_request: this.reflectionHelp,
           teacher_assignment_recipient_id: this.reflectionPrompt.recipientId,
           surah_number: this.reflectionPrompt.surah_number,

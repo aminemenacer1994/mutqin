@@ -98,12 +98,30 @@ export default {
         { key: 'checks', icon: 'bi bi-mic', label: this.t('teacher.scored_checks'), value: Number(this.summary.scored_checks || 0) },
         { key: 'average', icon: 'bi bi-graph-up', label: this.t('teacher.report_average_score'), value: this.summary.ai_word_match_average == null ? '—' : `${this.summary.ai_word_match_average}%`, wording: this.summary.ai_word_match_average != null },
         { key: 'tasks', icon: 'bi bi-journal-check', label: this.t('teacher.report_tasks'), value: Number(this.summary.tasks_assigned || 0) },
+        { key: 'memorised', icon: 'bi bi-book', label: this.t('teacher.hifz_memorised'), value: this.hifzCoverage },
+        { key: 'due', icon: 'bi bi-check2-square', label: this.t('teacher.hifz_tasks_due'), value: this.hifzTasks },
+        { key: 'wording', icon: 'bi bi-chat-left-text', label: this.t('teacher.hifz_wording'), value: this.hifzWording },
         { key: 'rate', tone: 'good', icon: 'bi bi-percent', label: this.t('teacher.attendance_rate_label'), value: this.attendanceRate == null ? '—' : `${this.attendanceRate}%` },
         { key: 'present', tone: 'good', icon: 'bi bi-check-lg', label: this.t('teacher.attendance_present'), value: Number(this.summary.attendance?.present || 0) },
         { key: 'absent', tone: 'danger', icon: 'bi bi-x-lg', label: this.t('teacher.attendance_absent'), value: Number(this.summary.attendance?.absent || 0) },
         { key: 'late', tone: 'warning', icon: 'bi bi-clock', label: this.t('teacher.attendance_late'), value: Number(this.summary.attendance?.late || 0) },
         { key: 'excused', icon: 'bi bi-shield-check', label: this.t('teacher.attendance_excused'), value: Number(this.summary.attendance?.excused || 0) },
       ]
+    },
+    hifzCoverage() {
+      const coverage = this.summary.hifz?.coverage
+      if (!coverage) return '—'
+      return `${coverage.memorised_ayahs} · ${coverage.coverage_percent}%`
+    },
+    hifzTasks() {
+      const tasks = this.summary.hifz?.tasks
+      if (!tasks || !tasks.due) return this.t('teacher.hifz_tasks_none')
+      return this.t('teacher.hifz_tasks_line', { done: tasks.completed, missed: tasks.missed, due: tasks.due, percent: tasks.completion_percent ?? 0 })
+    },
+    hifzWording() {
+      const wording = this.summary.hifz?.wording
+      if (!wording || wording.direction === 'insufficient') return this.t('teacher.hifz_wording_insufficient')
+      return this.t(`teacher.hifz_wording_${wording.direction}`)
     },
     attendanceRate() {
       const rate = this.summary.attendance?.rate_percent

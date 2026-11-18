@@ -125,18 +125,6 @@
       <button v-if="!rows.length" type="button" class="btn btn-primary btn-sm" @click="$emit('new')">{{ t('teacher.add_task') }}</button>
     </div>
 
-    <TeacherTaskSheet
-      :open="formOpen"
-      :editing="editing"
-      :form="form"
-      :saving="saving"
-      :error="error"
-      :students="students"
-      :surahs="surahs"
-      @close="closeForm"
-      @submit="$emit('save')"
-      @update:form="$emit('update:form', $event)"
-    />
     <TeacherDialog
       :open="Boolean(removeItem)"
       size="sm"
@@ -203,7 +191,7 @@
       autoplay
       @close="playbackItem = null"
       @navigate="onPlaybackNavigate"
-      @reviewed="$emit('refresh')"
+      @reviewed="$emit('refresh', playbackItem && playbackItem.studentId)"
     />
   </section>
 </template>
@@ -227,14 +215,13 @@ import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.v
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import TeacherTaskReminder from './TeacherTaskReminder.vue'
-import TeacherTaskSheet from './TeacherTaskSheet.vue'
 import { learningApi } from '../../scripts/api/learning'
 
 const STEP = 25
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskReminder, TeacherTaskSheet },
+  components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskReminder },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
@@ -532,12 +519,6 @@ export default {
       } catch (_) {
         return ''
       }
-    },
-    patch(key, value) {
-      this.$emit('update:form', { ...this.form, [key]: value })
-    },
-    closeForm() {
-      this.$emit('update:formOpen', false)
     },
     setStatusFilter(filter) {
       this.statusFilter = filter

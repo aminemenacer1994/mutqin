@@ -59,6 +59,14 @@
           <p v-if="selectedTaskType" class="text-body-secondary small mb-0 mt-1">{{ t(selectedTaskType.helpKey) }}</p>
         </div>
         <div class="teacher-form-field teacher-form-field--half">
+          <label class="form-label" :for="`${formId}-stage`">{{ t('teacher.hifz_stage') }}</label>
+          <select :id="`${formId}-stage`" class="form-select" :value="form.hifz_category || 'sabaq'" @change="patch('hifz_category', $event.target.value)">
+            <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
+            <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
+            <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
+          </select>
+        </div>
+        <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }}</label>
           <TeacherSurahSelect :id="`${formId}-surah`" :model-value="form.surah_number" :surahs="surahs" :disabled="saving" @update:model-value="onSurahChange" />
         </div>
@@ -75,8 +83,7 @@
         </div>
         <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-reps`">{{ t('teacher.repetitions') }}</label>
-          <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required :aria-describedby="attemptHelp ? `${formId}-reps-help` : undefined" @input="patch('repetition_target', $event.target.value)">
-          <p v-if="attemptHelp" :id="`${formId}-reps-help`" class="text-body-secondary small mb-0 mt-1">{{ attemptHelp }}</p>
+          <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required @input="patch('repetition_target', $event.target.value)">
         </div>
         <div class="teacher-form-field teacher-form-field--third">
           <label class="form-label" :for="`${formId}-due`">{{ t('teacher.due_date') }}</label>
@@ -201,10 +208,6 @@ export default {
     },
     selectedTaskType() {
       return TEACHER_TASK_TYPES.find((type) => type.id === this.form.task_type) || null
-    },
-    attemptHelp() {
-      if (!this.selectedTaskType || this.selectedTaskType.kind === 'ai_recite') return ''
-      return this.t('teacher.attempt_help_practice')
     },
     minDueDate() {
       const today = new Date()

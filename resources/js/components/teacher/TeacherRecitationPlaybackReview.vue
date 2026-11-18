@@ -392,6 +392,9 @@
           <span v-if="reviewedAtLabel"> · {{ reviewedAtLabel }}</span>
         </p>
         <div class="teacher-playback__review-actions">
+          <button type="button" class="btn btn-outline-secondary" :disabled="!hasPrevious || Boolean(saving) || moving || loading" @click="requestPrevious">
+            {{ t('teacher.playback_previous') }}
+          </button>
           <button type="button" class="btn btn-outline-secondary" :disabled="!hasNext || Boolean(saving) || moving || loading" @click="requestNext">
             {{ t('teacher.playback_next') }}
           </button>
@@ -513,6 +516,7 @@ export default {
       actionError: '',
       actionMessage: '',
       navPrompt: false,
+      navDirection: 1,
       moving: false,
       queueScroll: false,
       queueSnapshot: [],
@@ -541,6 +545,9 @@ export default {
     },
     hasNext() {
       return this.queueIndex >= 0 && this.queueIndex < this.activeQueue.length - 1
+    },
+    hasPrevious() {
+      return this.queueIndex > 0
     },
     ayahNumbers() {
       return [...new Set(this.ayahs.flatMap(line => line.parts.map(part => part.ayah)).filter(ayah => Number.isInteger(ayah) && ayah > 0))].sort((a, b) => a - b)
@@ -1389,17 +1396,27 @@ export default {
         node.scrollTop = 0
       })
     },
+    requestPrevious() {
+      this.requestMove(-1)
+    },
     requestNext() {
-      if (!this.hasNext || this.saving || this.moving || this.loading) return
+      this.requestMove(1)
+    },
+    requestMove(direction) {
+      const allowed = direction < 0 ? this.hasPrevious : this.hasNext
+      if (!allowed || this.saving || this.moving || this.loading) return
+      this.navDirection = direction
       if (this.hasUnsavedWork) {
         this.navPrompt = true
         this.$nextTick(() => this.$refs.navSave?.focus())
         return
       }
-      this.moveToNext()
+      this.moveQueue(direction)
     },
     async saveAndNext() {
-      if (this.saving || this.moving || !this.hasNext) return
+      const direction = this.navDirection || 1
+      const allowed = direction < 0 ? this.hasPrevious : this.hasNext
+      if (this.saving || this.moving || !allowed) return
       this.saving = 'next'
       this.actionError = ''
       this.actionMessage = ''
@@ -1407,14 +1424,16 @@ export default {
       this.saving = ''
       if (!saved) return
       this.navPrompt = false
-      this.moveToNext()
+      this.moveQueue(direction)
     },
     discardAndNext() {
-      if (this.saving || !this.hasNext) return
+      const direction = this.navDirection || 1
+      const allowed = direction < 0 ? this.hasPrevious : this.hasNext
+      if (this.saving || !allowed) return
       this.discardDrafts()
       this.navPrompt = false
       this.actionError = ''
-      this.moveToNext()
+      this.moveQueue(direction)
     },
     discardDrafts() {
       this.feedback = ''
@@ -1471,7 +1490,10 @@ export default {
       this.queueSnapshot = this.queueItems
     },
     moveToNext() {
-      const next = this.activeQueue[this.queueIndex + 1]
+      this.moveQueue(1)
+    },
+    moveQueue(direction) {
+      const next = this.activeQueue[this.queueIndex + direction]
       if (!next) return
       this.moving = true
       this.navPrompt = false

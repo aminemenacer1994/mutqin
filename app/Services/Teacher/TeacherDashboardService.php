@@ -67,7 +67,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.v2.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v3.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -130,6 +130,7 @@ class TeacherDashboardService
                 'assignments' => $assignments,
                 'outstanding_revision' => $this->outstandingRevision($teacher, $ids),
                 'plan_progress' => $this->planProgress($teacher),
+                'hifz' => app(StudentHifzProgressService::class)->classSummary($metrics),
                 'recent_completions' => $this->recentCompletions($teacher, $ids),
                 'surahs' => $this->surahCatalog(),
                 'roster' => $this->organisationRoster($teacher, $ids),
@@ -178,6 +179,8 @@ class TeacherDashboardService
                 'sessions' => $metric['sessions'],
                 'active_days' => $metric['active_days'],
                 'ayahs_practised' => $metric['ayahs_practised'],
+                'memorised_ayahs' => $metric['memorised_ayahs'],
+                'learning_ayahs' => $metric['learning_ayahs'],
                 'last_activity_at' => $metric['last_activity_at'],
                 'ai_success_rate' => $metric['ai_success_rate'],
                 'ai_attempts' => $metric['ai_attempts'],
@@ -310,6 +313,7 @@ class TeacherDashboardService
                 'assignments_needs_review' => (int) ($metrics['assignments']['awaiting_confirmation'] ?? 0),
                 'unread_messages' => $this->unreadStudentMessageCount($teacher, $student),
                 'learning_plan' => $this->currentLearningPlan($teacher, $student),
+                'hifz' => app(StudentHifzProgressService::class)->forProfile($teacher, $student),
             ],
         ];
 

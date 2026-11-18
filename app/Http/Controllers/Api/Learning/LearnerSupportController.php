@@ -97,7 +97,11 @@ class LearnerSupportController extends Controller
         abort_unless($user instanceof User, 401);
         $data = $request->validate([
             'feeling' => ['required', Rule::in(['easy', 'manageable', 'difficult'])],
+            'confidence' => ['nullable', Rule::in(['low', 'steady', 'confident'])],
             'help_request' => ['nullable', 'string', 'max:1000'],
+            'difficult_ayahs' => ['nullable', 'string', 'max:120'],
+            'wants_revision' => ['nullable', 'boolean'],
+            'note' => ['nullable', 'string', 'max:1000'],
             'teacher_assignment_recipient_id' => ['nullable', 'integer'],
             'teacher_lesson_id' => ['nullable', 'integer'],
             'surah_number' => ['nullable', 'integer', 'between:1,114'],

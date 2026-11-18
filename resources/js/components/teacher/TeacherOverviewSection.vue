@@ -2,6 +2,29 @@
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+    <section v-if="classHifz" class="teacher-overview-facts" :aria-label="t('teacher.hifz_class_title')">
+      <header class="teacher-overview-facts__head">
+        <h3>{{ t('teacher.hifz_class_title') }}</h3>
+        <p>{{ t('teacher.hifz_class_help') }}</p>
+      </header>
+      <div class="teacher-overview-facts__grid">
+        <div class="teacher-overview-facts__card">
+          <strong>{{ classHifz.students_with_memorised_ayahs }}</strong>
+          <span>{{ t('teacher.hifz_class_students') }}</span>
+          <small>{{ t('teacher.hifz_class_students_help', { total: classHifz.students }) }}</small>
+        </div>
+        <div class="teacher-overview-facts__card">
+          <strong>{{ classHifz.memorised_ayahs }}</strong>
+          <span>{{ t('teacher.hifz_memorised') }}</span>
+          <small>{{ t('teacher.hifz_class_memorised_help') }}</small>
+        </div>
+        <div class="teacher-overview-facts__card">
+          <strong>{{ classHifz.in_progress_ayahs }}</strong>
+          <span>{{ t('teacher.hifz_class_progress') }}</span>
+          <small>{{ t('teacher.hifz_class_progress_help') }}</small>
+        </div>
+      </div>
+    </section>
     <section class="teacher-snapshot" aria-labelledby="teacher-snapshot-title">
       <h3 id="teacher-snapshot-title">{{ t('teacher.snapshot_title') }}</h3>
       <p v-if="!snapshot" class="teacher-snapshot__clear" role="status">{{ t('teacher.snapshot_unavailable') }}</p>
@@ -15,14 +38,17 @@
         </li>
       </ul>
     </section>
-    <section class="teacher-today" :aria-label="t('teacher.today_priorities')">
-      <h3>{{ t('teacher.today_priorities') }}</h3>
-      <div class="teacher-today__items">
+    <section class="teacher-overview-facts" :aria-label="t('teacher.today_priorities')">
+      <header class="teacher-overview-facts__head">
+        <h3>{{ t('teacher.today_priorities') }}</h3>
+        <p>{{ t('teacher.today_priorities_help') }}</p>
+      </header>
+      <div class="teacher-overview-facts__grid">
         <button
           v-for="item in todayItems"
           :key="item.id"
           type="button"
-          class="teacher-today__item"
+          class="teacher-overview-facts__card"
           :class="[item.count ? 'is-attention' : 'is-clear', item.count ? item.tone : '']"
           :aria-label="item.aria"
           @click="openToday(item.id)"
@@ -141,6 +167,11 @@ export default {
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
+    },
+    classHifz() {
+      const hifz = this.overview?.hifz
+      if (!hifz || !hifz.students) return null
+      return hifz
     },
     snapshot() {
       const snapshot = this.overview?.snapshot

@@ -5,14 +5,13 @@
         <label class="teacher-student-card__select">
           <input type="checkbox" :checked="isSelected(student.id)" :aria-label="t('teacher.select_student', { name: student.name })" @change="$emit('toggle', student.id)">
         </label>
-        <button type="button" class="teacher-student-card__main" :aria-label="rowLabel(student)" @click="$emit('open', student.id)">
+        <div class="teacher-student-card__main">
           <span class="teacher-table__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
           <span class="teacher-student-card__identity">
             <strong>{{ student.name }}</strong>
             <small v-if="student.email" class="d-block text-body-secondary">{{ student.email }}</small>
           </span>
-          <i class="bi bi-chevron-right" aria-hidden="true"></i>
-        </button>
+        </div>
         <dl class="teacher-student-card__metrics">
           <div><dt>{{ t('teacher.ai_check_average') }}</dt><dd :title="scoreHelp(student)"><TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'">{{ score(student) }}</TeacherWordingMatch><template v-else>{{ score(student) }}</template></dd></div>
         </dl>
@@ -54,14 +53,8 @@
         :key="student.id"
         class="teacher-table__row"
         :class="rowClasses(student)"
-        tabindex="0"
-        role="row"
-        :aria-label="rowLabel(student)"
-        @click="$emit('open', student.id)"
-        @keydown.enter.prevent="$emit('open', student.id)"
-        @keydown.space.prevent="$emit('open', student.id)"
       >
-        <td class="teacher-table__cell" @click.stop>
+        <td class="teacher-table__cell">
           <input type="checkbox" :checked="isSelected(student.id)" :aria-label="t('teacher.select_student', { name: student.name })" @change="$emit('toggle', student.id)">
         </td>
         <td class="teacher-table__cell teacher-table__cell--name">

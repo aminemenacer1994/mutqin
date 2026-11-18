@@ -69,7 +69,17 @@
         </section>
       </template>
 
-      <TeacherStudentProfilePlan v-else-if="activeSubview === 'plan'" :student-id="profile.student.id" :student-name="profile.student.name" @open-task="$emit('open-task', $event)" @updated="$emit('refresh')" />
+      <TeacherStudentProfilePlan
+        v-else-if="activeSubview === 'plan'"
+        :student-id="profile.student.id"
+        :student-name="profile.student.name"
+        :hifz="profile.meta?.hifz || null"
+        :profile="profile"
+        :format-when="formatWhen"
+        @open-task="$emit('open-task', $event)"
+        @assign-next="$emit('assign-revision', $event)"
+        @updated="$emit('refresh')"
+      />
     </div>
   </TeacherSectionPane>
 </template>

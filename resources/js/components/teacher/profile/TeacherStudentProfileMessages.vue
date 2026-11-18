@@ -162,7 +162,7 @@ export default {
     formatWhen: { type: Function, required: true },
     taskContext: { type: Object, default: null },
   },
-  emits: ['open-task', 'open-tasks', 'open-recitations', 'clear-context', 'unsent-change', 'unread-change', 'marked-read'],
+  emits: ['open-task', 'open-tasks', 'open-recitations', 'clear-context', 'unsent-change', 'unread-change', 'marked-read', 'sent'],
   data() {
     return {
       draft: '',
@@ -399,6 +399,7 @@ export default {
         this.$refs.voice?.discardRecording()
         this.success = this.t('teacher.message_sent')
         this.stickToBottom = true
+        this.$emit('sent')
       } catch (error) {
         if (!this.disposed && studentId === this.profile.student.id) this.error = error?.response?.data?.message || this.t('teacher.action_failed')
       } finally {

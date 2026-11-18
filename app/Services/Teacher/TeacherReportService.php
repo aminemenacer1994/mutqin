@@ -96,6 +96,12 @@ class TeacherReportService
                 'rate_percent' => $attendanceTotal > 0 ? (int) round(100 * ($present + $late) / $attendanceTotal) : null,
             ],
             'activity_chart' => $this->activityChart($student->id, $chartStart, $chartDays),
+            'hifz' => app(StudentHifzProgressService::class)->period(
+                $teacher,
+                $student,
+                $from ? Carbon::parse($from)->startOfDay() : null,
+                $to ? Carbon::parse($to)->endOfDay() : null,
+            ),
         ];
     }
 

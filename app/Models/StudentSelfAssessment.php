@@ -15,6 +15,7 @@ class StudentSelfAssessment extends Model
             'surah_number' => 'integer',
             'ayah_start' => 'integer',
             'ayah_end' => 'integer',
+            'wants_revision' => 'boolean',
         ];
     }
 

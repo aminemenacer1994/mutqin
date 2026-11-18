@@ -14,11 +14,6 @@
                 <TeacherWordingMatch v-if="typeof profile.meta?.ai_success_rate === 'number'">{{ t('teacher.profile_recite_avg_with_count', { score: profile.meta.ai_success_rate, count: Number(profile.meta.ai_attempts || 0) }) }}</TeacherWordingMatch>
                 <span v-if="learningPlanLabel">{{ learningPlanLabel }}</span>
               </div>
-              <details class="teacher-profile-details">
-                <summary>{{ t('teacher.student_details') }}</summary>
-                <p v-if="profile.student.email">{{ profile.student.email }}</p>
-                <p v-for="group in profile.student.groups || []" :key="group.id">{{ group.name }}</p>
-              </details>
             </div>
           </div>
           <div class="teacher-profile-hero__actions">
@@ -115,6 +110,7 @@
             @unsent-change="unsent.messages = $event"
             @unread-change="messageUnread = $event"
             @marked-read="$emit('refresh')"
+            @sent="$emit('refresh')"
           />
         </KeepAlive>
       </div>

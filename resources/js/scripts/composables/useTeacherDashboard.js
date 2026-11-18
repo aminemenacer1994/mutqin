@@ -287,8 +287,7 @@ export function useTeacherDashboard(authRef) {
     try {
       await learningApi.completeTeacherReview(studentId, id)
       formSuccess.value = t('teacher.review_marked')
-      await loadProfile(studentId, 'ai')
-      await loadOverview()
+      await publishTeacherWork([studentId])
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
     }
@@ -315,11 +314,25 @@ export function useTeacherDashboard(authRef) {
     assignment.value = next
   }
 
+  function rememberRosterStudent(student) {
+    if (!student?.id) return
+    if (assignmentRoster.value.some((row) => String(row.id) === String(student.id))) return
+    assignmentRoster.value = [...assignmentRoster.value, student]
+  }
+
+  function ensureAssignmentContext() {
+    if (!assignmentRoster.value.length) loadAssignmentRoster()
+    if (!assignmentRows.value.length && !assignmentsLoading.value) loadAssignments()
+  }
+
   function openAssignRevision(student) {
     editingAssignmentId.value = null
+    rememberRosterStudent(student)
+    ensureAssignmentContext()
     prefillAssignmentFromStudent(student)
+    formError.value = ''
+    formSuccess.value = ''
     assignmentFormOpen.value = true
-    openView('assignments')
   }
 
 
@@ -485,7 +498,7 @@ export function useTeacherDashboard(authRef) {
   }
 
   function beginCreateAssignment() {
-    if (!assignmentRoster.value.length) loadAssignmentRoster()
+    ensureAssignmentContext()
     editingAssignmentId.value = null
     assignment.value = defaultAssignmentForm(surahs.value)
     formError.value = ''
@@ -515,14 +528,50 @@ export function useTeacherDashboard(authRef) {
     }
     formError.value = ''
     formSuccess.value = ''
+    rememberRosterStudent(profile.value?.student)
+    ensureAssignmentContext()
     assignmentFormOpen.value = true
-    openView('assignments')
+  }
+
+  function forgetStudentCache(studentIds = []) {
+    const ids = [...new Set((studentIds || []).map((id) => String(id)).filter((id) => Number(id) > 0))]
+    if (!ids.length) return
+    const next = { ...profileSectionPayloads.value }
+    ids.forEach((id) => { delete next[id] })
+    profileSectionPayloads.value = next
+  }
+
+  async function publishTeacherWork(studentIds = []) {
+    const ids = [...new Set((studentIds || []).map((id) => Number(id)).filter((id) => id > 0))]
+    forgetStudentCache(ids)
+    const openId = Number(profile.value?.student?.id || 0)
+    const affectsOpen = openId > 0 && (!ids.length || ids.includes(openId))
+    const jobs = [loadOverview()]
+    if (students.value.length || view.value === 'students') {
+      jobs.push(loadStudents(Number(studentMeta.value.current_page || 1)))
+    }
+    if (affectsOpen && view.value === 'student') {
+      jobs.push(loadProfile(openId, profileSection.value, false, { force: true }))
+    }
+    await Promise.all(jobs)
+  }
+
+  function studentIdsForAssignment(id) {
+    const row = assignmentRows.value.find((item) => Number(item.assignment?.id || item.id) === Number(id))
+    return (row?.recipients || []).map((recipient) => recipient.student_id).filter((studentId) => Number(studentId) > 0)
+  }
+
+  function studentIdForRecipient(recipientId) {
+    for (const row of assignmentRows.value) {
+      const match = (row.recipients || []).find((recipient) => Number(recipient.id) === Number(recipientId))
+      if (Number(match?.student_id) > 0) return match.student_id
+    }
+    return null
   }
 
   function refreshStudentProfile() {
     const id = profile.value?.student?.id
-    if (id) loadProfile(id, profileSection.value, false, { force: true })
-    loadOverview()
+    return publishTeacherWork(id ? [id] : [])
   }
 
   function beginEditAssignment(row) {
@@ -612,7 +661,7 @@ export function useTeacherDashboard(authRef) {
       assignmentFormOpen.value = false
       if (wasEditing) formSuccess.value = t('teacher.task_updated')
       await loadAssignments()
-      await loadOverview()
+      await publishTeacherWork(studentIds)
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
     } finally {
@@ -625,7 +674,6 @@ export function useTeacherDashboard(authRef) {
     if (!unique.length) return
     beginCreateAssignment()
     assignment.value = { ...assignment.value, student_id: unique[0], student_ids: unique }
-    openView('assignments')
   }
 
   async function exportStudentProgress() {
@@ -640,6 +688,8 @@ export function useTeacherDashboard(authRef) {
     } while (page <= lastPage)
     const lines = [[
       'Name',
+      'Memorised ayahs',
+      'Ayahs still in progress',
       'AI wording match',
       'Wording checks',
       'Overdue tasks',
@@ -649,6 +699,8 @@ export function useTeacherDashboard(authRef) {
     rows.forEach((student) => {
       const cells = [
         student.name || '',
+        student.memorised_ayahs ?? 0,
+        student.learning_ayahs ?? 0,
         student.ai_success_rate ?? '',
         student.ai_attempts ?? '',
         student.assignments?.overdue ?? 0,
@@ -671,10 +723,11 @@ export function useTeacherDashboard(authRef) {
     formError.value = ''
     formSuccess.value = ''
     try {
+      const studentIds = studentIdsForAssignment(id)
       await learningApi.deleteTeacherAssignment(id)
       formSuccess.value = t('teacher.task_removed')
       await loadAssignments()
-      await loadOverview()
+      await publishTeacherWork(studentIds)
     } catch (err) {
       formError.value = teacherErrorMessage(err, t)
     } finally {
@@ -684,6 +737,8 @@ export function useTeacherDashboard(authRef) {
 
   async function sendTeacherMessage(recipientId, body, recording = null) {
     const payload = await learningApi.sendTeacherAssignmentMessage(recipientId, body, recording)
+    const studentId = studentIdForRecipient(recipientId)
+    if (studentId) await publishTeacherWork([studentId])
     return payload?.message || null
   }
 
@@ -800,6 +855,7 @@ export function useTeacherDashboard(authRef) {
     beginEditAssignment,
     beginEditStudentTask,
     refreshStudentProfile,
+    publishTeacherWork,
     saveAssignment,
     removeAssignment,
     sendTeacherMessage,

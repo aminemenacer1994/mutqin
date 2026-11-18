@@ -9,6 +9,7 @@ enum TeacherPrivateNoteCategory: string
     case LearningNeeds = 'learning_needs';
     case LessonObservations = 'lesson_observations';
     case Recommendations = 'recommendations';
+    case NextPriorities = 'next_priorities';
 
     /**
      * @return list<string>

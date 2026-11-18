@@ -58,11 +58,20 @@ class StudentSelfAssessmentService
         [$surah, $start, $end] = $this->range($input, $recipient);
 
         $help = trim((string) ($input['help_request'] ?? ''));
+        $note = trim((string) ($input['note'] ?? ''));
+        $difficult = trim((string) ($input['difficult_ayahs'] ?? ''));
+        $confidence = (string) ($input['confidence'] ?? '');
         $attributes = [
             'teacher_id' => $recipient?->assignment?->teacher_id ?: ($lesson?->teacher_id),
             'teacher_lesson_id' => $lesson?->id,
             'feeling' => $feeling,
+            'confidence' => in_array($confidence, ['low', 'steady', 'confident'], true) ? $confidence : null,
             'help_request' => $help === '' ? null : mb_substr($help, 0, 1000),
+            'difficult_ayahs' => $difficult === '' ? null : mb_substr($difficult, 0, 120),
+            'wants_revision' => array_key_exists('wants_revision', $input) && $input['wants_revision'] !== null
+                ? (bool) $input['wants_revision']
+                : null,
+            'note' => $note === '' ? null : mb_substr($note, 0, 1000),
             'surah_number' => $surah,
             'ayah_start' => $start,
             'ayah_end' => $end,
@@ -117,7 +126,11 @@ class StudentSelfAssessmentService
         return [
             'id' => (int) $row->id,
             'feeling' => $row->feeling,
+            'confidence' => $row->confidence,
             'help_request' => $row->help_request,
+            'difficult_ayahs' => $row->difficult_ayahs,
+            'wants_revision' => $row->wants_revision,
+            'note' => $row->note,
             'surah_number' => $surah,
             'surah_name' => $surah ? QuranMetadata::name($surah) : null,
             'ayah_start' => $row->ayah_start ? (int) $row->ayah_start : null,

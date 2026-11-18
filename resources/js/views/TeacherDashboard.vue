@@ -34,7 +34,7 @@
           />
 
           <div class="teacher-dashboard__main dash-reveal" style="--dash-delay: 80ms">
-            <p v-if="formError && view !== 'assignments'" class="alert alert-danger mb-0" role="alert">{{ formError }}</p>
+            <p v-if="formError && view !== 'assignments' && !assignmentFormOpen" class="alert alert-danger mb-0" role="alert">{{ formError }}</p>
             <p v-if="formSuccess && view !== 'assignments'" class="alert alert-success mb-0" role="status">{{ formSuccess }}</p>
 
               <div :key="view" class="teacher-view-stage">
@@ -161,6 +161,19 @@
         </div>
 
         <TeacherNav variant="mobile" :items="TEACHER_NAV" :counts="deskCounts" :active-view="view" @select="openView" />
+
+        <TeacherTaskSheet
+          :open="assignmentFormOpen"
+          :editing="Boolean(editingAssignmentId)"
+          :form="assignment"
+          :saving="assignmentSaving"
+          :error="formError"
+          :students="assignmentRoster.length ? assignmentRoster : students"
+          :surahs="surahs"
+          @close="assignmentFormOpen = false"
+          @submit="saveAssignment"
+          @update:form="assignment = $event"
+        />
       </template>
     </div>
   </div>
@@ -178,6 +191,7 @@ import TeacherReviewsSection from '../components/teacher/TeacherReviewsSection.v
 import TeacherSettingsSection from '../components/teacher/TeacherSettingsSection.vue'
 import TeacherStudentProfileSection from '../components/teacher/TeacherStudentProfileSection.vue'
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
+import TeacherTaskSheet from '../components/teacher/TeacherTaskSheet.vue'
 import { useTeacherDashboard } from '../scripts/composables/useTeacherDashboard'
 import { teacherDeskCounts } from '../scripts/teacher/formatters'
 
@@ -194,6 +208,7 @@ export default {
     TeacherSettingsSection,
     TeacherStudentProfileSection,
     TeacherStudentsSection,
+    TeacherTaskSheet,
   },
   props: {
     auth: { type: Object, default: () => ({}) },
@@ -216,14 +231,13 @@ export default {
       dashboard.assignmentEntryFilter.value = typeof filter === 'string' && filter ? filter : 'all'
       dashboard.openView('assignments')
     }
-    function refreshAssignments() {
+    function refreshAssignments(studentId = null) {
+      const ids = Number(studentId) > 0 ? [studentId] : []
       dashboard.loadAssignments()
-      dashboard.loadOverview()
+      dashboard.publishTeacherWork(ids)
     }
     function startAssignment() {
-      dashboard.assignmentEntryFilter.value = 'all'
       dashboard.beginCreateAssignment()
-      dashboard.openView('assignments')
     }
     return {
       ...dashboard,

@@ -1,12 +1,7 @@
 <template>
   <div class="teacher-plan-workspace" :class="{ 'is-for-student': Boolean(studentId) }">
-    <nav v-if="detailPlan" class="teacher-plan-crumbs" :aria-label="t('teacher.nav_plans')">
-      <button v-if="embedded" type="button" @click="$emit('leave')">{{ t('teacher.nav_plans') }}</button>
-      <button v-if="detailPlan" type="button" @click="detailId = null">{{ studentLabel }}</button>
-      <span v-if="detailPlan">{{ detailPlan.title }}</span>
-    </nav>
-    <p v-if="error && !composerOpen" class="alert alert-danger mb-2" role="alert">{{ error }}</p>
-    <p v-if="success" class="alert alert-success mb-2" role="status">{{ success }}</p>
+    <p v-if="error && !composerOpen && !detailPlan" class="alert alert-danger mb-2" role="alert">{{ error }}</p>
+    <p v-if="success && !detailPlan" class="alert alert-success mb-2" role="status">{{ success }}</p>
 
     <div v-if="!embedded" class="teacher-plan-workspace__toolbar">
       <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="openComposer()">
@@ -14,114 +9,35 @@
       </button>
     </div>
 
-    <section v-if="studentId" class="teacher-plan-detail" :aria-label="t('teacher.plan_recommendations')">
-      <header class="teacher-plan-detail__head">
-        <h2>{{ t('teacher.plan_recommendations') }}</h2>
+    <TeacherHifzProgress
+      v-if="studentId && hifz"
+      :student-id="studentId"
+      :hifz="hifz"
+      :format-when="formatWhen"
+      @assign="assignNext"
+    />
+
+    <section v-if="reflections.length" class="teacher-profile-sheet" :aria-label="t('teacher.student_reflections')">
+      <header class="teacher-profile-sheet__head">
+        <div class="teacher-profile-sheet__copy">
+          <strong>{{ t('teacher.student_reflections') }}</strong>
+          <p>{{ t('teacher.reflection_not_verified') }}</p>
+        </div>
       </header>
-      <p v-if="!recommendations.length" class="teacher-plan-detail__notes">{{ t('teacher.plan_recommendation_empty') }}</p>
-      <ol v-else class="teacher-plan-detail__list">
-        <li v-for="row in recommendations" :key="row.id">
-          <div>
-            <p class="teacher-plan-card__student">{{ t('teacher.plan_recommendation_student', { name: studentLabel }) }}</p>
-            <strong>{{ row.label }}</strong>
-            <p class="teacher-plan-card__meta">
-              <span class="teacher-fact teacher-fact--info">{{ activityLabel(row) }}</span>
-              <span class="teacher-plan-card__badge" :class="`is-${row.status}`">{{ recommendationStatusLabel(row.status) }}</span>
-            </p>
-            <p class="teacher-plan-detail__reason">{{ recommendationSummary(row) }}</p>
-            <div v-if="editingRecommendationId === row.id" class="teacher-plan-modal__activity-grid">
-              <label>
-                <span>{{ t('teacher.plan_kind') }}</span>
-                <select v-model="row.activity" class="form-select form-select-sm">
-                  <option v-for="type in activityTypes.filter((entry) => ['nazra', 'hifz', 'tajweed', 'revision'].includes(entry.id))" :key="type.id" :value="type.id">{{ t(type.label) }}</option>
-                </select>
-              </label>
-              <label>
-                <span>{{ t('teacher.due') }}</span>
-                <input v-model="row.due_on" class="form-control form-control-sm" type="date">
-              </label>
-              <label class="teacher-plan-modal__instructions">
-                <span>{{ t('teacher.plan_instructions_placeholder') }}</span>
-                <input v-model="row.instructions" class="form-control form-control-sm" type="text" maxlength="2000">
-              </label>
-            </div>
-          </div>
-          <p v-if="row.status === 'pending'" class="visually-hidden">{{ t('teacher.plan_accept_help') }}</p>
-          <div class="teacher-plan-detail__actions teacher-plan-detail__actions--primary">
-            <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="runRecommendationPrimary(row)">{{ recommendationPrimary(row).label }}</button>
-            <button v-if="recommendationPrimary(row).id !== 'save' && row.status !== 'assigned' && row.status !== 'dismissed'" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="runRecommendationMenu(row, 'edit')">{{ editingRecommendationId === row.id ? t('teacher.plan_recommendation_save') : t('teacher.plan_edit_recommendation') }}</button>
-            <div v-if="recommendationMenu(row).length" class="teacher-plan-menu">
-              <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="recommendationMenuId === row.id ? 'true' : 'false'" :aria-label="t('teacher.plan_recommendation_menu')" @click.stop="recommendationMenuId = recommendationMenuId === row.id ? null : row.id">
-                <i class="bi bi-three-dots" aria-hidden="true"></i>
-              </button>
-              <div v-if="recommendationMenuId === row.id" class="teacher-plan-menu__list" role="menu">
-                <button v-for="item in recommendationMenu(row)" :key="item.id" type="button" role="menuitem" :disabled="busy" @click="runRecommendationMenu(row, item.id)">{{ item.label }}</button>
-              </div>
-            </div>
-          </div>
+      <ul class="teacher-activity-list">
+        <li v-for="row in reflections" :key="row.id">
+          <span class="teacher-activity-list__copy">
+            <strong>{{ reflectionLabel(row) }}</strong>
+            <small>{{ reflectionDetail(row) }}</small>
+          </span>
         </li>
-      </ol>
+      </ul>
     </section>
 
     <p v-if="loading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
-    <div v-else-if="!visiblePlans.length && !detailPlan" class="teacher-empty-panel">
+    <div v-else-if="!visiblePlans.length" class="teacher-empty-panel">
       <TeacherEmpty icon="bi bi-calendar-week" :message="plans.length ? t('teacher.plan_no_matches') : (studentId ? t('teacher.plan_empty') : t('teacher.plans_global_empty'))" />
     </div>
-
-    <article v-else-if="detailPlan" class="teacher-plan-detail">
-      <header class="teacher-plan-detail__head">
-        <div>
-          <p class="teacher-plan-card__student">{{ detailPlan.student?.name || studentLabel }}</p>
-          <h2>{{ detailPlan.title }}</h2>
-          <p class="teacher-plan-card__meta">
-            <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
-            <span class="teacher-fact teacher-fact--neutral">{{ formatDate(detailPlan.starts_on) }}<template v-if="detailPlan.ends_on"> – {{ formatDate(detailPlan.ends_on) }}</template></span>
-          </p>
-        </div>
-        <p class="teacher-plan-card__count">{{ t('teacher.plan_progress', { done: detailPlan.progress?.completed || 0, total: detailPlan.progress?.total || 0 }) }}</p>
-      </header>
-      <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
-        <span :style="{ width: `${planPercent(detailPlan)}%` }"></span>
-      </div>
-      <p v-if="detailPlan.student_goal" class="teacher-plan-goal"><span class="teacher-fact teacher-fact--info">{{ t('teacher.plan_student_goal') }}</span>{{ detailPlan.student_goal }}</p>
-      <p v-if="detailPlan.notes" class="teacher-plan-detail__notes">{{ detailPlan.notes }}</p>
-      <ol class="teacher-plan-detail__list">
-        <li v-for="item in detailPlan.items" :key="item.id">
-          <div>
-            <strong>{{ item.label }}</strong>
-            <p class="teacher-plan-card__meta">
-              <span class="teacher-fact teacher-fact--info">{{ activityLabel(item) }}</span>
-              <span class="teacher-plan-card__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
-              <span v-if="item.is_milestone" class="teacher-fact teacher-fact--good">{{ t('teacher.plan_milestone') }}</span>
-              <span v-if="item.due_on" class="teacher-fact" :class="item.display_status === 'overdue' ? 'teacher-fact--danger' : 'teacher-fact--warn'">{{ formatDate(item.due_on) }}</span>
-            </p>
-            <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
-            <p v-if="item.task_status" class="teacher-plan-detail__notes">{{ t('teacher.plan_assigned') }}</p>
-          </div>
-          <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
-            <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
-          </div>
-          <div v-else class="teacher-plan-detail__actions">
-            <label class="teacher-plan-detail__feedback">
-              <span>{{ t('teacher.plan_reschedule') }}</span>
-              <input v-model="rescheduleDrafts[item.id]" class="form-control" type="date">
-            </label>
-            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !rescheduleDrafts[item.id]" @click="rescheduleItem(item)">{{ t('teacher.plan_reschedule') }}</button>
-          </div>
-          <div v-if="item.recipient_id" class="teacher-plan-detail__actions">
-            <a class="btn btn-sm btn-outline-secondary" :href="reviewHref">{{ t('teacher.plan_review_recitation') }}</a>
-            <label class="teacher-plan-detail__feedback">
-              <span>{{ t('teacher.plan_feedback') }}</span>
-              <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
-            </label>
-            <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
-            <button v-if="item.display_status === 'submitted'" type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="requestAttempt(item)">{{ t('teacher.plan_request_attempt') }}</button>
-            <button v-if="item.display_status === 'submitted'" type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="completeActivity(item)">{{ t('teacher.plan_mark_activity') }}</button>
-          </div>
-        </li>
-      </ol>
-    </article>
 
     <div v-else class="teacher-plan-board">
       <article v-for="plan in visiblePlans" :key="plan.id" class="teacher-plan-card">
@@ -163,6 +79,74 @@
     </div>
 
     <TeacherDialog
+      class="teacher-plan-dialog"
+      :open="Boolean(detailPlan)"
+      :busy="busy"
+      :title="detailPlan?.title || t('teacher.plan_view')"
+      :close-label="t('teacher.close')"
+      @close="detailId = null"
+    >
+      <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
+      <p v-if="success" class="alert alert-success" role="status">{{ success }}</p>
+      <article v-if="detailPlan" class="teacher-plan-detail">
+        <header class="teacher-plan-detail__summary">
+          <p class="teacher-plan-detail__who">{{ detailPlan.student?.name || studentLabel }}</p>
+          <p class="teacher-plan-card__meta">
+            <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
+            <span>{{ planSpan(detailPlan) }}</span>
+            <span>{{ t('teacher.plan_progress', { done: detailPlan.progress?.completed || 0, total: detailPlan.progress?.total || 0 }) }}</span>
+          </p>
+          <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
+            <span :style="{ width: `${planPercent(detailPlan)}%` }"></span>
+          </div>
+        </header>
+        <p v-if="detailPlan.student_goal" class="teacher-plan-detail__goal"><span>{{ t('teacher.plan_goal_label') }}</span>{{ detailPlan.student_goal }}</p>
+        <p v-if="detailPlan.notes" class="teacher-plan-detail__notes">{{ detailPlan.notes }}</p>
+        <h3 v-if="detailPlan.items.length" class="teacher-plan-detail__activities">{{ t('teacher.plan_activities') }}</h3>
+        <ol class="teacher-plan-detail__list">
+          <li v-for="item in detailPlan.items" :key="item.id">
+            <div class="teacher-plan-detail__item">
+              <strong>{{ item.label }}</strong>
+              <p class="teacher-plan-card__meta">
+                <span>{{ activityLabel(item) }}</span>
+                <span class="teacher-plan-card__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
+                <span v-if="item.due_on" :class="item.display_status === 'overdue' ? 'is-overdue' : ''">{{ formatDate(item.due_on) }}</span>
+                <span v-if="item.is_milestone">{{ t('teacher.plan_milestone') }}</span>
+              </p>
+              <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
+            </div>
+            <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
+              <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
+            </div>
+            <div v-else-if="item.display_status === 'submitted'" class="teacher-plan-detail__actions">
+              <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="completeActivity(item)">{{ t('teacher.plan_mark_activity') }}</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="requestAttempt(item)">{{ t('teacher.plan_request_attempt') }}</button>
+            </div>
+            <details v-if="item.origin !== 'suggested' || item.item_status === 'released'" class="teacher-plan-detail__change">
+              <summary>{{ t('teacher.plan_change') }}</summary>
+              <div class="teacher-plan-detail__actions">
+                <label class="teacher-plan-detail__date">
+                  <span class="visually-hidden">{{ t('teacher.plan_reschedule') }}</span>
+                  <input v-model="rescheduleDrafts[item.id]" class="form-control" type="date">
+                </label>
+                <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !rescheduleDrafts[item.id]" @click="rescheduleItem(item)">{{ t('teacher.plan_reschedule') }}</button>
+                <a v-if="item.recipient_id" class="teacher-plan-detail__link" :href="reviewHref">{{ t('teacher.plan_review_recitation') }}</a>
+              </div>
+              <label v-if="item.recipient_id" class="teacher-plan-detail__feedback">
+                <span>{{ t('teacher.plan_feedback') }}</span>
+                <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
+              </label>
+              <div v-if="item.recipient_id" class="teacher-plan-detail__actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
+              </div>
+            </details>
+          </li>
+        </ol>
+      </article>
+    </TeacherDialog>
+
+    <TeacherDialog
       ref="dialog"
       class="teacher-plan-dialog"
       :open="composerOpen"
@@ -175,16 +159,12 @@
     >
       <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
       <p v-if="stepError" class="alert alert-danger" role="alert">{{ stepError }}</p>
-      <ol class="teacher-plan-steps">
-        <li :class="{ 'is-current': step === 1, 'is-done': step > 1 }"><button type="button" @click="goToStep(1)">{{ t('teacher.plan_step_details') }}</button></li>
-        <li :class="{ 'is-current': step === 2, 'is-done': step > 2 }"><button type="button" :disabled="step < 2 && !stepValid(1)" @click="goToStep(2)">{{ t('teacher.plan_step_activities') }}</button></li>
-        <li :class="{ 'is-current': step === 3 }"><button type="button" :disabled="step < 3 && !(stepValid(1) && stepValid(2))" @click="goToStep(3)">{{ t('teacher.plan_step_review') }}</button></li>
-      </ol>
-
-      <div v-show="step === 1" class="teacher-plan-modal__fields">
+      <section class="teacher-plan-section" :aria-label="t('teacher.plan_step_details')">
+        <h3>{{ t('teacher.plan_step_details') }}</h3>
+      <div class="teacher-plan-modal__fields">
         <label class="teacher-plan-modal__field teacher-plan-modal__field--wide">
           <span>{{ t('teacher.plan_student') }}</span>
-          <select v-if="students.length && !editingPlan" v-model="form.student_id" class="form-select">
+          <select v-if="students.length && !editingPlan" v-model="form.student_id" class="form-select" @change="loadSuggestions">
             <option value="">{{ t('teacher.student') }}</option>
             <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
           </select>
@@ -219,8 +199,10 @@
           <textarea v-model="form.notes" class="form-control" rows="2" maxlength="2000"></textarea>
         </label>
       </div>
+      </section>
 
-      <div v-show="step === 2">
+      <section class="teacher-plan-section" :aria-label="t('teacher.plan_step_activities')">
+        <h3>{{ t('teacher.plan_step_activities') }}</h3>
         <details v-if="editingPlan?.items?.length" class="teacher-plan-existing">
           <summary>{{ t('teacher.plan_existing_activities', { n: editingPlan.items.length }) }}</summary>
           <ul>
@@ -246,6 +228,14 @@
               <span>{{ t('teacher.plan_kind') }}</span>
               <select v-model="item.activity" class="form-select form-select-sm" @change="applyActivity(item)">
                 <option v-for="type in activityTypes" :key="type.id" :value="type.id">{{ t(type.label) }}</option>
+              </select>
+            </label>
+            <label>
+              <span>{{ t('teacher.hifz_stage') }}</span>
+              <select v-model="item.hifz_category" class="form-select form-select-sm">
+                <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
+                <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
+                <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
               </select>
             </label>
             <label>
@@ -294,9 +284,11 @@
             </div>
           </article>
         </section>
-      </div>
+      </section>
 
-      <div v-show="step === 3" class="teacher-plan-review">
+      <section class="teacher-plan-section" :aria-label="t('teacher.plan_step_review')">
+        <h3>{{ t('teacher.plan_step_review') }}</h3>
+      <div class="teacher-plan-review">
         <p><span>{{ t('teacher.plan_student') }}</span><strong>{{ selectedStudentName }}</strong></p>
         <p><span>{{ t('teacher.plan_title') }}</span><strong>{{ form.title }}</strong></p>
         <p><span>{{ t('teacher.plan_starts') }}</span><strong>{{ formatDate(form.starts_on) }} – {{ formatDate(form.ends_on) }}</strong></p>
@@ -310,15 +302,12 @@
         </ul>
         <p v-if="!form.items.length" class="teacher-plan-empty">{{ t('teacher.plan_activities_empty') }}</p>
       </div>
+      </section>
 
       <template #footer>
-        <button v-if="step > 1" type="button" class="btn btn-outline-secondary" :disabled="busy" @click="step -= 1">{{ t('teacher.plan_back_step') }}</button>
-        <button v-else type="button" class="btn btn-outline-secondary" :disabled="busy" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
-        <button v-if="step < 3" type="button" class="btn btn-primary" :disabled="busy" @click="goNext">{{ t('teacher.plan_next') }}</button>
-        <template v-else>
-          <button type="button" class="btn btn-outline-secondary" :disabled="busy || !formValid" @click="savePlan(false)">{{ t(editingPlan ? 'teacher.task_save' : 'teacher.plan_save_draft') }}</button>
-          <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy || !formValid || !form.items.length" @click="savePlan(true)">{{ t('teacher.plan_activate') }}</button>
-        </template>
+        <button type="button" class="btn btn-outline-secondary" :disabled="busy" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
+        <button type="button" class="btn" :class="editingPlan ? 'btn-primary' : 'btn-outline-secondary'" :disabled="busy || !formValid" @click="savePlan(false)">{{ t(editingPlan ? 'teacher.task_save' : 'teacher.plan_save_draft') }}</button>
+        <button v-if="!editingPlan" type="button" class="btn btn-primary" :disabled="busy || !formValid || !form.items.length" @click="savePlan(true)">{{ t('teacher.plan_activate') }}</button>
       </template>
     </TeacherDialog>
 
@@ -339,6 +328,7 @@ import TeacherDialog from '../TeacherDialog.vue'
 import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.vue'
 import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
+import TeacherHifzProgress from './TeacherHifzProgress.vue'
 
 const ACTIVITY_TYPES = [
   { id: 'nazra', kind: 'practice', hifz_category: 'sabqi', label: 'teacher.activity_nazra' },
@@ -408,13 +398,16 @@ function uniquePlans(list) {
 
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherRecitationPlaybackReview, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherEmpty, TeacherHifzProgress, TeacherRecitationPlaybackReview, TeacherSurahSelect },
   inject: { teacherSurahs: { default: () => [] } },
-  emits: ['updated', 'leave', 'created', 'open-task'],
+  emits: ['updated', 'leave', 'created', 'open-task', 'assign-next'],
   mixins: [i18nMixin],
   props: {
     studentId: { type: [Number, String], default: '' },
     studentName: { type: String, default: '' },
+    hifz: { type: Object, default: null },
+    profile: { type: Object, default: null },
+    formatWhen: { type: Function, default: (value) => value || '' },
     students: { type: Array, default: () => [] },
     embedded: { type: Boolean, default: false },
     statusFilter: { type: String, default: 'all' },
@@ -466,6 +459,21 @@ export default {
       return `/teacher?view=student&student=${id}&section=ai`
     },
     detailPlan() { return this.plans.find((plan) => Number(plan.id) === Number(this.detailId)) || null },
+    reflections() { return this.profile?.payload?.self_assessments || [] },
+    weeklySchedule() {
+      const items = this.detailPlan?.items || []
+      const groups = new Map()
+      items.forEach((item) => {
+        const key = item.due_on ? this.weekStart(item.due_on) : 'none'
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key).push(item)
+      })
+      return [...groups.entries()].map(([key, rows]) => ({
+        key,
+        label: key === 'none' ? this.t('teacher.hifz_week_undated') : this.t('teacher.hifz_week_of', { date: key }),
+        items: rows,
+      }))
+    },
     visiblePlans() {
       const query = this.query.trim().toLowerCase()
       const rows = this.plans.filter((plan) => {
@@ -515,6 +523,39 @@ export default {
     document.removeEventListener('click', this.onRecommendationMenuPointer)
   },
   methods: {
+    assignNext(next) {
+      this.$emit('assign-next', {
+        id: Number(this.studentId),
+        activity: next.activity,
+        hifz_category: next.hifz_category,
+        weak_example: {
+          surah_number: next.surah_number,
+          ayah_number: next.ayah_start,
+          ayah_start: next.ayah_start,
+          ayah_end: next.ayah_end,
+        },
+      })
+    },
+    weekStart(iso) {
+      const date = new Date(`${iso}T12:00:00`)
+      const day = date.getDay() || 7
+      date.setDate(date.getDate() - day + 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      return `${date.getFullYear()}-${month}-${String(date.getDate()).padStart(2, '0')}`
+    },
+    reflectionLabel(row) {
+      const key = {
+        low: 'teacher.hifz_confidence_low',
+        steady: 'teacher.hifz_confidence_steady',
+        confident: 'teacher.hifz_confidence_confident',
+      }[row.confidence]
+      return key ? this.t(key) : this.t('teacher.student_reflections')
+    },
+    reflectionDetail(row) {
+      return [row.difficult_ayahs, row.wants_revision ? this.t('teacher.hifz_wants_revision') : '', row.note || row.help_request, this.t('teacher.reflection_not_verified')]
+        .filter(Boolean)
+        .join(' · ')
+    },
     keepVisibleDetail() {
       if (this.detailId && !this.visiblePlans.some((plan) => Number(plan.id) === Number(this.detailId))) this.detailId = null
     },
@@ -600,6 +641,7 @@ export default {
       }
       this.initialForm = JSON.stringify(this.form)
       this.composerOpen = true
+      this.loadSuggestions()
       this.$nextTick(() => this.$refs.planTitle?.focus())
     },
     closeComposer(force = false) {
@@ -1104,6 +1146,20 @@ export default {
       const [year, month, day] = String(value || '').slice(0, 10).split('-').map(Number)
       if (!year || !month || !day) return ''
       return new Date(year, month - 1, day).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    },
+    planSpan(plan) {
+      const start = String(plan?.starts_on || '').slice(0, 10)
+      const end = String(plan?.ends_on || '').slice(0, 10)
+      if (!start) return ''
+      if (!end || end === start) return this.formatDate(start)
+      const [startYear, startMonth, startDay] = start.split('-').map(Number)
+      const [endYear, endMonth, endDay] = end.split('-').map(Number)
+      const startDate = new Date(startYear, startMonth - 1, startDay)
+      const endDate = new Date(endYear, endMonth - 1, endDay)
+      const monthName = (date) => date.toLocaleDateString(undefined, { month: 'short' })
+      if (startYear === endYear && startMonth === endMonth) return `${startDay}–${endDay} ${monthName(startDate)} ${startYear}`
+      if (startYear === endYear) return `${startDay} ${monthName(startDate)} – ${endDay} ${monthName(endDate)} ${startYear}`
+      return `${this.formatDate(start)} – ${this.formatDate(end)}`
     },
     cadenceLabel(value) {
       if (value === 'monthly') return this.t('teacher.plan_monthly')

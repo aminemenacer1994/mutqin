@@ -176,6 +176,7 @@
               <span v-if="note.archived" class="teacher-private-notes__badge">{{ t('teacher.private_notes_archived') }}</span>
             </div>
             <div class="teacher-private-notes__card-dates">
+              <span v-if="note.author?.name">{{ note.author.name }}</span>
               <time :datetime="note.updated_at || note.created_at">{{ formatWhen(note.updated_at || note.created_at) }}</time>
               <small v-if="note.updated_at && note.updated_at !== note.created_at">{{ t('teacher.private_notes_edited') }}</small>
             </div>
@@ -234,8 +235,9 @@ const CATEGORIES = [
   'strengths',
   'difficulties',
   'learning_needs',
-  'lesson_observations',
   'recommendations',
+  'next_priorities',
+  'lesson_observations',
 ]
 
 function blankDraft() {
@@ -339,6 +341,7 @@ export default {
         learning_needs: 'bi bi-lightbulb',
         lesson_observations: 'bi bi-journal-text',
         recommendations: 'bi bi-signpost-2',
+        next_priorities: 'bi bi-flag',
       }[value] || 'bi bi-journal-text'
     },
     setCategory(value) {

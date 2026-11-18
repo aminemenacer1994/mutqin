@@ -82,31 +82,33 @@ class LearningPlanService
             ]);
         }
 
-        $plan = new LearningPlan;
-        $plan->forceFill([
-            'teacher_id' => $teacher->id,
-            'student_id' => $studentId,
-            'organisation_id' => $teacher->organisation_id,
-            'source_template_id' => $input['source_template_id'] ?? null,
-            'title' => $title,
-            'cadence' => $cadence,
-            'status' => LearningPlanStatus::Draft->value,
-            'starts_on' => $startsOn->toDateString(),
-            'ends_on' => $endsOn->toDateString(),
-            'notes' => $this->nullableText($input['notes'] ?? null),
-            'student_goal' => $this->nullableGoal($input['student_goal'] ?? null),
-        ])->save();
+        return DB::transaction(function () use ($teacher, $input, $studentId, $cadence, $startsOn, $endsOn, $title) {
+            $plan = new LearningPlan;
+            $plan->forceFill([
+                'teacher_id' => $teacher->id,
+                'student_id' => $studentId,
+                'organisation_id' => $teacher->organisation_id,
+                'source_template_id' => $input['source_template_id'] ?? null,
+                'title' => $title,
+                'cadence' => $cadence,
+                'status' => LearningPlanStatus::Draft->value,
+                'starts_on' => $startsOn->toDateString(),
+                'ends_on' => $endsOn->toDateString(),
+                'notes' => $this->nullableText($input['notes'] ?? null),
+                'student_goal' => $this->nullableGoal($input['student_goal'] ?? null),
+            ])->save();
 
-        $items = is_array($input['items'] ?? null) ? $input['items'] : [];
-        foreach (array_values($items) as $index => $item) {
-            $this->addItem($teacher, $plan, $item, $index, persist: true);
-        }
+            $items = is_array($input['items'] ?? null) ? $input['items'] : [];
+            foreach (array_values($items) as $index => $item) {
+                $this->addItem($teacher, $plan, $item, $index, persist: true);
+            }
 
-        if (! empty($input['activate'])) {
-            return $this->activate($teacher, $plan->fresh('items'));
-        }
+            if (! empty($input['activate'])) {
+                return $this->activate($teacher, $plan->fresh('items'));
+            }
 
-        return $plan->fresh(['student:id,name', 'items.assignment.recipients']);
+            return $plan->fresh(['student:id,name', 'items.assignment.recipients']);
+        });
     }
 
     /**
@@ -255,19 +257,19 @@ class LearningPlanService
         }
         if ($activity === 'hifz') {
             $item['kind'] = 'ai_recite';
-            $item['hifz_category'] = 'sabaq';
+            $item['hifz_category'] = $this->stage($item['hifz_category'] ?? null, 'sabaq');
         } elseif ($activity === 'tajweed') {
             $item['kind'] = 'ai_recite';
-            $item['hifz_category'] = 'sabqi';
+            $item['hifz_category'] = $this->stage($item['hifz_category'] ?? null, 'sabqi');
         } elseif ($activity === 'nazra' || $activity === 'revision' || $activity === 'sabqi') {
             $item['kind'] = 'practice';
-            $item['hifz_category'] = 'sabqi';
+            $item['hifz_category'] = $this->stage($item['hifz_category'] ?? null, 'sabqi');
         } elseif ($activity === 'manzil') {
             $item['kind'] = 'practice';
             $item['hifz_category'] = 'manzil';
         } elseif ($activity === 'ai_recite') {
             $item['kind'] = 'ai_recite';
-            $item['hifz_category'] = $item['hifz_category'] ?? 'sabqi';
+            $item['hifz_category'] = $this->stage($item['hifz_category'] ?? null, 'sabqi');
         }
         $kind = (string) ($item['kind'] ?? 'practice');
         if ($kind === 'teacher_review') {
@@ -284,6 +286,8 @@ class LearningPlanService
         if ($ayahCount === null || $start < 1 || $end < $start || $end > $ayahCount) {
             throw ValidationException::withMessages(['ayah_end' => 'Choose a valid surah and ayah range.']);
         }
+        $dueOn = ! empty($item['due_on']) ? Carbon::parse((string) $item['due_on'])->toDateString() : null;
+        $this->assertUniqueItem($plan, $activity, $surah, $start, $end, $dueOn);
 
         $row = new LearningPlanItem;
         $row->forceFill([
@@ -298,7 +302,7 @@ class LearningPlanService
             'ayah_start' => $start,
             'ayah_end' => $end,
             'repetition_target' => isset($item['repetition_target']) ? (int) $item['repetition_target'] : null,
-            'due_on' => ! empty($item['due_on']) ? Carbon::parse((string) $item['due_on'])->toDateString() : null,
+            'due_on' => $dueOn,
             'priority' => in_array(($item['priority'] ?? 'normal'), ['low', 'normal', 'high'], true) ? (string) ($item['priority'] ?? 'normal') : 'normal',
             'is_milestone' => (bool) ($item['is_milestone'] ?? false),
             'instructions' => $this->nullableText($item['instructions'] ?? null),
@@ -805,6 +809,38 @@ class LearningPlanService
             'is_milestone' => $draft->is_milestone,
             'instructions' => $draft->instructions,
         ])->save();
+    }
+
+    private function stage(mixed $value, string $fallback): string
+    {
+        $stage = (string) $value;
+
+        return in_array($stage, ['sabaq', 'sabqi', 'manzil'], true) ? $stage : $fallback;
+    }
+
+    private function assertUniqueItem(LearningPlan $plan, ?string $activity, int $surah, int $start, int $end, ?string $dueOn): void
+    {
+        $query = LearningPlanItem::query()
+            ->where('learning_plan_id', $plan->id)
+            ->where('surah_number', $surah)
+            ->where('ayah_start', $start)
+            ->where('ayah_end', $end)
+            ->where('item_status', '!=', LearningPlanItemStatus::Skipped->value);
+        if ($activity === null || $activity === '') {
+            $query->whereNull('activity');
+        } else {
+            $query->where('activity', $activity);
+        }
+        if ($dueOn === null) {
+            $query->whereNull('due_on');
+        } else {
+            $query->whereDate('due_on', $dueOn);
+        }
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'items' => 'This activity is already on the learning plan.',
+            ]);
+        }
     }
 
     private function nullableText(mixed $value): ?string
