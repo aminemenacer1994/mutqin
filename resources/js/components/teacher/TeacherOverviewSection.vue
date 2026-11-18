@@ -9,13 +9,12 @@
       </header>
       <div class="teacher-overview-facts__grid">
         <div class="teacher-overview-facts__card">
-          <strong>{{ classHifz.students_with_memorised_ayahs }}</strong>
+          <strong>{{ classHifz.students_with_memorised_ayahs }} of {{ classHifz.students }}</strong>
           <span>{{ t('teacher.hifz_class_students') }}</span>
-          <small>{{ t('teacher.hifz_class_students_help', { total: classHifz.students }) }}</small>
         </div>
         <div class="teacher-overview-facts__card">
           <strong>{{ classHifz.memorised_ayahs }}</strong>
-          <span>{{ t('teacher.hifz_memorised') }}</span>
+          <span>{{ t('teacher.hifz_class_memorised') }}</span>
           <small>{{ t('teacher.hifz_class_memorised_help') }}</small>
         </div>
         <div class="teacher-overview-facts__card">
@@ -24,19 +23,6 @@
           <small>{{ t('teacher.hifz_class_progress_help') }}</small>
         </div>
       </div>
-    </section>
-    <section class="teacher-snapshot" aria-labelledby="teacher-snapshot-title">
-      <h3 id="teacher-snapshot-title">{{ t('teacher.snapshot_title') }}</h3>
-      <p v-if="!snapshot" class="teacher-snapshot__clear" role="status">{{ t('teacher.snapshot_unavailable') }}</p>
-      <p v-else-if="!snapshotItems.length" class="teacher-snapshot__clear" role="status">{{ t('teacher.snapshot_clear') }}</p>
-      <ul v-else class="teacher-snapshot__list">
-        <li v-for="item in snapshotItems" :key="item.id" class="teacher-snapshot__item" :class="{ 'is-priority': item.priority }">
-          <i :class="item.icon" aria-hidden="true"></i>
-          <strong class="teacher-snapshot__count">{{ item.count }}</strong>
-          <span class="teacher-snapshot__label">{{ item.label }}</span>
-          <button type="button" class="btn btn-sm" :class="item.priority ? 'btn-primary' : 'btn-outline-secondary'" @click="openSnapshot(item)">{{ item.action }}</button>
-        </li>
-      </ul>
     </section>
     <section class="teacher-overview-facts" :aria-label="t('teacher.today_priorities')">
       <header class="teacher-overview-facts__head">
@@ -101,19 +87,6 @@
         <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.overview_revision_empty')" />
       </TeacherSectionPane>
       <div class="teacher-overview-secondary">
-        <TeacherSectionPane :title="t('teacher.overview_plan_progress')" icon="bi bi-calendar-week" flat>
-          <ul v-if="planRows.length" class="teacher-activity-list">
-            <li v-for="row in planRows" :key="row.id">
-              <button type="button" @click="openStudent(row.student_id, 'plan')">
-                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-                <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.title }} · {{ row.completed }}/{{ row.total }}</small></span>
-                <span></span>
-                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-              </button>
-            </li>
-          </ul>
-          <TeacherEmpty v-else inline icon="bi bi-calendar-week" :message="t('teacher.overview_plan_empty')" />
-        </TeacherSectionPane>
         <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
           <ul v-if="recentCompletions.length" class="teacher-activity-list">
             <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
@@ -172,45 +145,6 @@ export default {
       const hifz = this.overview?.hifz
       if (!hifz || !hifz.students) return null
       return hifz
-    },
-    snapshot() {
-      const snapshot = this.overview?.snapshot
-      return snapshot && typeof snapshot.recitations_awaiting_review === 'number' ? snapshot : null
-    },
-    snapshotItems() {
-      const snapshot = this.snapshot
-      if (!snapshot) return []
-      return [
-        {
-          id: 'reviews',
-          count: Number(snapshot.recitations_awaiting_review || 0),
-          label: this.t('teacher.snapshot_reviews'),
-          action: this.t('teacher.snapshot_review'),
-          icon: 'bi bi-ear',
-          priority: true,
-          studentId: snapshot.review_student_id,
-          section: 'ai',
-          focus: snapshot.review_attempt_id ? { attemptId: snapshot.review_attempt_id } : null,
-        },
-        {
-          id: 'overdue',
-          count: Number(snapshot.overdue_tasks || 0),
-          label: this.t('teacher.snapshot_overdue'),
-          action: this.t('teacher.snapshot_tasks'),
-          icon: 'bi bi-journal-text',
-          priority: true,
-        },
-        {
-          id: 'messages',
-          count: Number(snapshot.unread_messages || 0),
-          label: this.t('teacher.snapshot_messages'),
-          action: this.t('teacher.snapshot_open_messages'),
-          icon: 'bi bi-chat-dots',
-          priority: false,
-          studentId: snapshot.unread_student_id,
-          section: 'messages',
-        },
-      ].filter((item) => item.count > 0)
     },
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
@@ -271,9 +205,6 @@ export default {
         },
       ]
     },
-    planRows() {
-      return this.overview?.plan_progress?.rows || []
-    },
     recentCompletions() {
       return this.overview?.recent_completions || []
     },
@@ -332,13 +263,6 @@ export default {
         awaiting_confirmation: 'teacher.status_awaiting_confirmation',
       }[row.status]
       return this.t(key || 'teacher.status_pending')
-    },
-    openSnapshot(item) {
-      if (item.id === 'overdue') {
-        this.$emit('open-assignments', 'overdue')
-        return
-      }
-      if (item.studentId) this.openStudent(item.studentId, item.section || 'ai', item.focus || null)
     },
   },
 }
