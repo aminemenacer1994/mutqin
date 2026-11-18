@@ -15,6 +15,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\Organisation;
 use App\Models\TeacherAssignment;
+use App\Models\RevisionRecommendation;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -222,6 +223,24 @@ class MetricConsistencyTest extends TestCase
         $this->assertSame(0, $overview['hifz']['memorised_ayahs']);
         $this->assertSame(0, $overview['hifz']['unique_memorised_ayahs']);
         $this->assertSame('sum_of_student_ayahs', $overview['hifz']['counting']);
+        $this->assertSame([], $overview['revision_decisions']);
+    }
+
+    public function test_revision_decisions_keep_this_teachers_open_rows(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $other = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $teacher->organisation_id,
+        ]);
+        $this->recommendation($teacher, $student, 'accepted', 'accepted-1');
+        $this->recommendation($teacher, $student, 'dismissed', 'dismissed-1');
+        $this->recommendation($other, $student, 'pending', 'other-1');
+
+        $rows = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json('revision_decisions');
+        $this->assertCount(1, $rows);
+        $this->assertSame('accepted', $rows[0]['status']);
+        $this->assertSame($student->id, $rows[0]['student_id']);
     }
 
     /**
@@ -236,6 +255,22 @@ class MetricConsistencyTest extends TestCase
             'accuracy_percent' => 80,
             'band' => 'mixed',
         ], $overrides));
+    }
+
+    private function recommendation(User $teacher, User $student, string $status, string $key): void
+    {
+        RevisionRecommendation::query()->forceCreate([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'status' => $status,
+            'activity' => 'revision',
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'reason_code' => 'weak',
+            'reason' => 'Needs another hearing',
+            'source_key' => $key,
+        ]);
     }
 
     /**

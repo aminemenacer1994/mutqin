@@ -109,11 +109,17 @@
         <p v-if="!submissions.length" class="teacher-student-tasks__empty">{{ t('teacher.task_no_submission') }}</p>
         <ul v-else>
           <li v-for="submission in submissions" :key="submission.id">
-            <div class="teacher-student-tasks__submission-meta">
+            <p class="teacher-student-tasks__submission-meta">
               <strong>{{ submission.when }}</strong>
-              <span v-if="submission.score !== null" class="teacher-fact" :class="submission.score >= 85 ? 'teacher-fact--good' : (submission.score >= 65 ? 'teacher-fact--warn' : 'teacher-fact--danger')">{{ submission.score }}%</span>
-              <span v-if="submission.match" class="teacher-fact teacher-fact--info">{{ t('teacher.task_words_matched', submission.match) }}</span>
-            </div>
+              <template v-if="submission.score !== null">
+                <br>
+                <span class="teacher-fact" :class="submission.score >= 85 ? 'teacher-fact--good' : (submission.score >= 65 ? 'teacher-fact--warn' : 'teacher-fact--danger')">{{ submission.score }}%</span>
+              </template>
+              <template v-else-if="submission.match">
+                <br>
+                <span class="teacher-fact teacher-fact--info">{{ t('teacher.task_words_matched', submission.match) }}</span>
+              </template>
+            </p>
             <TeacherAudioFeedbackPlayer
               v-if="submission.audio?.available && submission.audio?.url"
               :src="submission.audio.url"
@@ -121,7 +127,7 @@
               compact
             />
             <p v-else class="teacher-student-tasks__empty">{{ t('teacher.task_no_recording') }}</p>
-            <button v-if="submission.attemptId" type="button" class="btn btn-outline-secondary btn-sm" @click="openReview(submission.attemptId)">
+            <button v-if="submission.attemptId && !sameReview(submission.attemptId)" type="button" class="btn btn-outline-secondary btn-sm" @click="openReview(submission.attemptId)">
               {{ t('teacher.task_review_submission') }}
             </button>
           </li>
@@ -166,7 +172,6 @@
         :show-heading="false"
         :show-history="false"
         show-ayah-reference
-        :context-label="t('teacher.task_feedback_for', { task: selectedTitle })"
         :messages="selectedMessages"
         :student-id="profile.student.id"
         :recipient-id="selectedAssignment.id"
@@ -392,6 +397,9 @@ export default {
     dueDraft() { this.reportUnsent() },
   },
   methods: {
+    sameReview(attemptId) {
+      return this.canReviewSubmission && String(attemptId) === String(this.reviewAttemptId)
+    },
     reportUnsent() {
       const dueChanged = this.rescheduleOpen && this.dueDraft && this.dueDraft !== this.currentDueValue()
       this.$emit('unsent-change', Boolean(this.feedbackUnsent || dueChanged))

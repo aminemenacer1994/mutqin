@@ -2,113 +2,144 @@
   <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
-    <section v-if="classHifz" class="teacher-overview-facts" :aria-label="t('teacher.hifz_class_title')">
-      <header class="teacher-overview-facts__head">
-        <h3>{{ t('teacher.hifz_class_title') }}</h3>
-        <p>{{ t('teacher.hifz_class_help') }}</p>
-      </header>
-      <div class="teacher-overview-facts__grid">
-        <div class="teacher-overview-facts__card">
-          <strong>{{ classHifz.students_with_memorised_ayahs }} of {{ classHifz.students }}</strong>
-          <span>{{ t('teacher.hifz_class_students') }}</span>
-        </div>
-        <div class="teacher-overview-facts__card">
-          <strong>{{ classHifz.memorised_ayahs }}</strong>
-          <span>{{ t('teacher.hifz_class_memorised') }}</span>
-          <small>{{ t('teacher.hifz_class_memorised_help', { unique: Number(classHifz.unique_memorised_ayahs || 0) }) }}</small>
-        </div>
-        <div class="teacher-overview-facts__card">
-          <strong>{{ classHifz.in_progress_ayahs }}</strong>
-          <span>{{ t('teacher.hifz_class_progress') }}</span>
-          <small>{{ t('teacher.hifz_class_progress_help') }}</small>
-        </div>
-      </div>
-    </section>
+
+    <TeacherSectionPane v-if="actionQueue.length" class="teacher-overview-queue" :title="t('teacher.overview_action_queue')" icon="bi bi-lightning" flat>
+      <ul class="teacher-activity-list">
+        <li v-for="item in actionQueue" :key="`${item.kind}-${item.recordId}`">
+          <button type="button" :aria-label="queueAria(item)" @click="openQueueItem(item)">
+            <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(item.name) }}</span>
+            <span class="teacher-activity-list__copy"><strong>{{ item.name }}</strong><small>{{ item.detail }}</small></span>
+            <span class="teacher-activity-list__score">{{ queueAction(item) }}</span>
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </li>
+      </ul>
+    </TeacherSectionPane>
+    <p v-else class="teacher-overview-clear" role="status">{{ t('teacher.overview_action_queue_empty') }}</p>
+
     <section class="teacher-overview-facts" :aria-label="t('teacher.today_priorities')">
       <header class="teacher-overview-facts__head">
         <h3>{{ t('teacher.today_priorities') }}</h3>
-        <p>{{ t('teacher.today_priorities_help') }}</p>
-        <p v-if="reviewBreakdown">{{ reviewBreakdown }}</p>
+        <p class="visually-hidden">{{ t('teacher.today_priorities_help') }}</p>
       </header>
-      <div class="teacher-overview-facts__grid">
-        <button
+      <div class="teacher-overview-facts__grid teacher-overview-facts__grid--quad">
+        <component
+          :is="item.count ? 'button' : 'div'"
           v-for="item in todayItems"
           :key="item.id"
-          type="button"
+          :type="item.count ? 'button' : null"
           class="teacher-overview-facts__card"
-          :class="[item.count ? 'is-attention' : 'is-clear', item.count ? item.tone : '']"
+          :class="item.count ? ['is-attention', item.tone] : 'is-clear'"
+          :role="item.count ? null : 'status'"
           :aria-label="item.aria"
-          @click="openToday(item.id)"
+          @click="item.count && openPriority(item)"
         >
           <strong aria-hidden="true">{{ item.count }}</strong>
           <span aria-hidden="true">{{ item.label }}</span>
-          <small aria-hidden="true">{{ item.count ? item.action : t('teacher.today_chip_clear') }}</small>
-        </button>
+          <small aria-hidden="true">{{ item.count ? item.action : item.clear }}</small>
+        </component>
       </div>
     </section>
+
     <div class="teacher-overview-columns">
       <TeacherSectionPane :title="t('teacher.overview_need_look')" icon="bi bi-exclamation-circle" tone="warn" flat>
-        <TeacherAttentionList :rows="attentionRows" :format-when="formatWhen" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
-        <button v-if="!attentionRows.length" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('select-kpi', 'students')">{{ t('teacher.view_students') }}</button>
+        <TeacherAttentionList v-if="attentionRows.length" :rows="attentionRows" :format-when="formatWhen" @open-student="openStudent" @assign-revision="$emit('assign-revision', $event)" />
+        <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="attentionEmpty" />
       </TeacherSectionPane>
-      <div class="teacher-overview-secondary">
-        <TeacherSectionPane :title="t('teacher.overview_recent_activity')" icon="bi bi-activity" flat>
-          <ul v-if="recentActivity.length" class="teacher-activity-list">
-            <li v-for="student in recentActivity" :key="student.id" :class="{ 'has-wording': typeof student.ai_success_rate === 'number' }">
-              <button type="button" @click="openActivity(student)">
-                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
-                <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ activityLabel(student) }}</small></span>
-                <i v-if="typeof student.ai_success_rate !== 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
-              </button>
-              <TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></TeacherWordingMatch>
-              <i v-if="typeof student.ai_success_rate === 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
-            </li>
-          </ul>
-          <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
-        </TeacherSectionPane>
-        <TeacherSectionPane v-if="taskRows.length > 1 || assignmentCounts.awaiting_confirmation" :title="t('teacher.overview_task_status')" flat>
-          <div class="teacher-task-pulse__breakdown">
-            <button v-for="row in taskRows" :key="row.id" type="button" :class="row.tone" @click="$emit('open-assignments', row.id)"><span class="teacher-task-pulse__name"><i aria-hidden="true"></i>{{ row.label }}</span><strong>{{ row.count }}</strong></button>
-          </div>
-        </TeacherSectionPane>
-      </div>
-    </div>
-    <div class="teacher-overview-columns">
-      <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" :hint="t('teacher.overview_revision_hint')" icon="bi bi-arrow-repeat" flat>
-        <ul v-if="outstandingRevision.length" class="teacher-activity-list">
-          <li v-for="row in outstandingRevision" :key="row.recipient_id">
-            <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
-              <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-              <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ revisionDetail(row) }}</small></span>
-              <span class="teacher-activity-list__score" :class="{ 'teacher-activity-list__score--warn': row.overdue }">{{ revisionStatus(row) }}</span>
-              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      <TeacherSectionPane :title="t('teacher.overview_recent_activity')" icon="bi bi-activity" flat>
+        <ul v-if="recentActivity.length" class="teacher-activity-list">
+          <li v-for="student in recentActivity" :key="student.id" :class="{ 'has-wording': typeof student.ai_success_rate === 'number' }">
+            <button type="button" @click="openActivity(student)">
+              <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(student.name) }}</span>
+              <span class="teacher-activity-list__copy"><strong>{{ student.name }}</strong><small>{{ activityLabel(student) }}</small></span>
+              <i v-if="typeof student.ai_success_rate !== 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
+            <TeacherWordingMatch v-if="typeof student.ai_success_rate === 'number'" class="teacher-activity-list__score" :class="`teacher-activity-list__score--${scoreTone(student.ai_success_rate)}`">{{ student.ai_success_rate }}%<small>{{ t('teacher.ai_word_match_short') }}</small></TeacherWordingMatch>
+            <i v-if="typeof student.ai_success_rate === 'number'" class="bi bi-chevron-right" aria-hidden="true"></i>
           </li>
         </ul>
-        <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.overview_revision_empty')" />
+        <TeacherEmpty v-else inline icon="bi bi-calendar2" :message="t('teacher.activity_empty')" />
       </TeacherSectionPane>
-      <div class="teacher-overview-secondary">
-        <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
-          <ul v-if="recentCompletions.length" class="teacher-activity-list">
-            <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
-              <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
-                <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
-                <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
-                <span></span>
-                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-              </button>
-            </li>
-          </ul>
-          <TeacherEmpty v-else inline icon="bi bi-inbox" :message="t('teacher.overview_completions_empty')" />
-        </TeacherSectionPane>
-      </div>
     </div>
+
+    <details class="teacher-insights">
+      <summary>
+        <span class="teacher-insights__copy">
+          <span class="teacher-insights__title">{{ t('teacher.overview_insights') }}</span>
+        </span>
+        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+      </summary>
+      <div class="teacher-insights__body">
+        <div class="teacher-overview-columns">
+          <TeacherSectionPane :title="t('teacher.hifz_class_title')" :hint="t('teacher.hifz_class_help')" icon="bi bi-journal-bookmark" flat>
+            <div v-if="classHifz" class="teacher-overview-facts__grid">
+              <div class="teacher-overview-facts__card">
+                <strong>{{ classHifz.students_with_memorised_ayahs }} of {{ classHifz.students }}</strong>
+                <span>{{ t('teacher.hifz_class_students') }}</span>
+              </div>
+              <div class="teacher-overview-facts__card">
+                <strong>{{ classHifz.memorised_ayahs }}</strong>
+                <span>{{ t('teacher.hifz_class_memorised') }}</span>
+                <small>{{ t('teacher.hifz_class_memorised_help', { unique: Number(classHifz.unique_memorised_ayahs || 0) }) }}</small>
+              </div>
+              <div class="teacher-overview-facts__card">
+                <strong>{{ classHifz.in_progress_ayahs }}</strong>
+                <span>{{ t('teacher.hifz_class_progress') }}</span>
+                <small>{{ t('teacher.hifz_class_progress_help') }}</small>
+              </div>
+            </div>
+            <TeacherEmpty v-else inline icon="bi bi-journal" :message="t('teacher.overview_hifz_empty')" />
+          </TeacherSectionPane>
+          <TeacherSectionPane :title="t('teacher.overview_outstanding_revision')" :hint="t('teacher.overview_revision_hint')" icon="bi bi-arrow-repeat" flat>
+            <ul v-if="outstandingRevision.length" class="teacher-activity-list">
+              <li v-for="row in outstandingRevision" :key="row.recipient_id">
+                <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
+                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ revisionDetail(row) }}</small></span>
+                  <span class="teacher-activity-list__score" :class="{ 'teacher-activity-list__score--warn': row.overdue }">{{ revisionStatus(row) }}</span>
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+              </li>
+            </ul>
+            <TeacherEmpty v-else inline icon="bi bi-check2-circle" :message="t('teacher.overview_revision_empty')" />
+          </TeacherSectionPane>
+        </div>
+        <div class="teacher-overview-columns">
+          <TeacherSectionPane :title="t('teacher.overview_plan_progress')" icon="bi bi-signpost" flat>
+            <ul v-if="planRows.length" class="teacher-activity-list">
+              <li v-for="row in planRows" :key="`plan-${row.id}`">
+                <button type="button" @click="openStudent(row.student_id, 'plan')">
+                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ planDetail(row) }}</small></span>
+                  <span class="teacher-activity-list__score">{{ Number(row.percent || 0) }}%</span>
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+              </li>
+            </ul>
+            <TeacherEmpty v-else inline icon="bi bi-signpost" :message="t('teacher.overview_plan_empty')" />
+          </TeacherSectionPane>
+          <TeacherSectionPane :title="t('teacher.overview_recent_completions')" icon="bi bi-check2-circle" flat>
+            <ul v-if="recentCompletions.length" class="teacher-activity-list">
+              <li v-for="row in recentCompletions" :key="`done-${row.recipient_id}`">
+                <button type="button" @click="openStudent(row.student_id, 'tasks', { taskId: row.recipient_id })">
+                  <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.student_name) }}</span>
+                  <span class="teacher-activity-list__copy"><strong>{{ row.student_name }}</strong><small>{{ row.label }}</small></span>
+                  <span></span>
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+              </li>
+            </ul>
+            <TeacherEmpty v-else inline icon="bi bi-inbox" :message="t('teacher.overview_completions_empty')" />
+          </TeacherSectionPane>
+        </div>
+      </div>
+    </details>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { scoreBadgeTone, studentInitial, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
+import { scoreBadgeTone, studentInitial, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
@@ -137,7 +168,7 @@ export default {
     chartData: { type: Object, required: true },
     chartOptions: { type: Object, required: true },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'create-assignment'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'create-assignment'],
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
@@ -150,27 +181,6 @@ export default {
     recentActivity() {
       return (this.overview.recently_active || []).slice(0, 5)
     },
-    assignmentCounts() {
-      return this.overview?.assignments || {}
-    },
-    hasStudents() {
-      return Number(this.overview?.kpis?.authorised_students || 0) > 0
-    },
-    taskRows() {
-      const counts = this.assignmentCounts
-      return [
-        { id: 'submitted', label: this.t('teacher.status_awaiting_confirmation'), count: Number(counts.awaiting_confirmation || 0), tone: '' },
-        { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: Number(counts.overdue || 0), tone: 'is-danger' },
-        { id: 'progress', label: this.t('teacher.task_filter_progress'), count: Number(counts.in_progress || 0), tone: '' },
-        { id: 'done', label: this.t('teacher.task_filter_completed'), count: Number(counts.completed || 0), tone: 'is-good' },
-      ].filter((row) => row.count > 0)
-    },
-    taskLead() {
-      const counts = this.assignmentCounts
-      const overdue = Number(counts.overdue || 0)
-      if (overdue > 0) return { count: overdue, label: this.t('teacher.task_filter_overdue') }
-      return { count: Number(this.overview?.kpis?.outstanding_assignments || 0), label: this.t('teacher.kpi_open_tasks') }
-    },
     outstandingRevision() {
       return [...(this.overview?.outstanding_revision || [])].sort((a, b) => {
         if (Boolean(a.overdue) !== Boolean(b.overdue)) return a.overdue ? -1 : 1
@@ -181,11 +191,14 @@ export default {
       const counts = this.deskCounts
       return [
         {
-          id: 'reviews',
-          count: counts.reviews,
-          label: this.t('teacher.today_chip_submissions'),
-          action: this.t('teacher.today_chip_go_reviews'),
-          aria: this.t('teacher.today_chip_reviews_label', { count: counts.reviews }),
+          id: 'recitations',
+          count: counts.recitations,
+          label: this.t('teacher.today_chip_recitations'),
+          action: this.t('teacher.today_chip_go_recitations'),
+          clear: this.t('teacher.today_chip_clear_recitations'),
+          aria: counts.recitations
+            ? this.t('teacher.today_chip_recitations_label', { count: counts.recitations })
+            : this.t('teacher.today_chip_clear_recitations'),
           tone: '',
         },
         {
@@ -193,7 +206,10 @@ export default {
           count: counts.overdue,
           label: this.t('teacher.today_chip_overdue'),
           action: this.t('teacher.today_chip_go_overdue'),
-          aria: this.t('teacher.today_chip_overdue_label', { count: counts.overdue }),
+          clear: this.t('teacher.today_chip_clear_overdue'),
+          aria: counts.overdue
+            ? this.t('teacher.today_chip_overdue_label', { count: counts.overdue })
+            : this.t('teacher.today_chip_clear_overdue'),
           tone: 'is-overdue',
         },
         {
@@ -201,7 +217,21 @@ export default {
           count: counts.plans,
           label: this.t('teacher.today_chip_plans'),
           action: this.t('teacher.today_chip_go_plans'),
-          aria: this.t('teacher.today_chip_plans_label', { count: counts.plans }),
+          clear: this.t('teacher.today_chip_clear_plans'),
+          aria: counts.plans
+            ? this.t('teacher.today_chip_plans_label', { count: counts.plans })
+            : this.t('teacher.today_chip_clear_plans'),
+          tone: '',
+        },
+        {
+          id: 'messages',
+          count: counts.unread,
+          label: this.t('teacher.today_chip_messages'),
+          action: this.t('teacher.today_chip_go_messages'),
+          clear: this.t('teacher.today_chip_clear_messages'),
+          aria: counts.unread
+            ? this.t('teacher.today_chip_messages_label', { count: counts.unread })
+            : this.t('teacher.today_chip_clear_messages'),
           tone: '',
         },
       ]
@@ -209,16 +239,10 @@ export default {
     recentCompletions() {
       return this.overview?.recent_completions || []
     },
-    reviewBreakdown() {
-      const counts = this.deskCounts
-      if (!counts.recitations && !counts.reviewsDueToday && !counts.legacyRecitations) return ''
-      return this.t('teacher.today_review_breakdown', {
-        recitations: counts.recitations,
-        due: counts.reviewsDueToday,
-        legacy: counts.legacyRecitations,
-      })
+    planRows() {
+      return this.overview?.plan_progress?.rows || []
     },
-    attentionRows() {
+    attentionSource() {
       if (this.attentionPreview.length) return this.attentionPreview
       const inactive = this.overview.inactive || []
       const extra = (this.overview.recently_active || []).filter((student) => student.needs_attention)
@@ -228,6 +252,17 @@ export default {
         seen.add(student.id)
         return true
       }).sort((a, b) => teacherAttentionRank(a) - teacherAttentionRank(b))
+    },
+    actionQueue() {
+      return teacherActionQueue(this.overview, this.attentionSource)
+    },
+    attentionRows() {
+      const queued = new Set(this.actionQueue.map((item) => item.studentId))
+      return this.attentionSource.filter((student) => !queued.has(Number(student.id)))
+    },
+    attentionEmpty() {
+      if (this.actionQueue.length) return this.t('teacher.overview_attention_rest_empty')
+      return this.t('teacher.need_look_empty')
     },
   },
   methods: {
@@ -249,12 +284,60 @@ export default {
     openStudent(id, section = 'ai', focus = null) {
       this.$emit('open-student', id, section, focus)
     },
-    openToday(id) {
-      if (id === 'plans') {
+    queueAction(item) {
+      if (item.kind === 'recitation') return this.t('teacher.overview_action_review')
+      if (item.kind === 'overdue') return this.t('teacher.overview_action_overdue')
+      if (item.kind === 'decision') {
+        return item.status === 'accepted'
+          ? this.t('teacher.overview_queue_open_plan')
+          : this.t('teacher.overview_queue_decide')
+      }
+      const student = this.attentionSource.find((row) => Number(row.id) === item.studentId)
+      return student ? teacherAttentionAction(student, this.t).label : this.t('teacher.overview_action_progress')
+    },
+    queueAria(item) {
+      return `${item.name}. ${item.detail}. ${this.queueAction(item)}`
+    },
+    openQueueItem(item) {
+      if (item.kind === 'recitation') {
+        this.openStudent(item.studentId, 'ai', { attemptId: item.recordId })
+        return
+      }
+      if (item.kind === 'overdue') {
+        this.openStudent(item.studentId, 'tasks', { taskId: item.recordId })
+        return
+      }
+      if (item.kind === 'decision') {
+        this.openStudent(item.studentId, 'plan')
+        return
+      }
+      const student = this.attentionSource.find((row) => Number(row.id) === item.studentId)
+      if (student) {
+        this.openActivity(student)
+        return
+      }
+      this.openStudent(item.studentId, 'ai')
+    },
+    openPriority(item) {
+      if (!item.count) return
+      if (item.id === 'recitations') {
+        this.$emit('open-reviews')
+        return
+      }
+      if (item.id === 'plans') {
         this.$emit('open-plans')
         return
       }
-      this.$emit('open-assignments', id === 'reviews' ? 'submitted' : 'overdue')
+      if (item.id === 'messages') {
+        const studentId = Number(this.overview?.snapshot?.unread_student_id || 0)
+        if (studentId > 0) this.openStudent(studentId, 'messages')
+        return
+      }
+      this.$emit('open-assignments', 'overdue')
+    },
+    planDetail(row) {
+      const progress = this.t('teacher.plan_progress', { done: row.completed || 0, total: row.total || 0 })
+      return row.title ? `${row.title} · ${progress}` : progress
     },
     revisionWhen(row) {
       if (row.overdue && row.due_at) return this.t('teacher.reviews_revision_was_due', { date: this.formatWhen(row.due_at) })

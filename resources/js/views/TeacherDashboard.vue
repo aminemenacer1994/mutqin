@@ -67,6 +67,7 @@
               @set-chart-days="setDays"
               @open-assignments="openAssignments"
               @open-plans="openView('plans')"
+              @open-reviews="openView('reviews')"
               @create-assignment="startAssignment"
             />
 

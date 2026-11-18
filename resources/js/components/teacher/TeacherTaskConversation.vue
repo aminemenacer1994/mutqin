@@ -61,7 +61,7 @@
           </div>
           <div class="teacher-task-conversation__meta">
             <time v-if="message.created_at" :datetime="message.created_at">
-              {{ messageWhen(message) }}<template v-if="showDelivery(message)"> · {{ deliveryLabel(message) }}</template>
+              {{ messageWhen(message) }}<template v-if="showDelivery(message)"><br>{{ deliveryLabel(message) }}</template>
             </time>
             <button
               v-if="message.can_delete && onDelete"

@@ -730,7 +730,7 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
 }
 
 .teacher-playback-studio .modal-body {
-  padding-bottom: 20px;
+  padding-bottom: 28px;
 }
 
 .teacher-playback-studio .teacher-playback__player {
@@ -765,12 +765,14 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
 .teacher-playback-studio .teacher-playback__times {
   flex-direction: row;
   flex-wrap: nowrap;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   max-width: none;
   line-height: 1.4;
   color: var(--teacher-text, var(--text));
-  font-size: 13px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .teacher-playback-studio .teacher-playback__tools {
@@ -858,16 +860,16 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
 
 .teacher-voice-note .teacher-audio-feedback-player,
 .teacher-audio-feedback-player.is-compact {
-  width: auto;
-  flex: 1 1 8rem;
-  min-width: 0;
+  width: 100%;
+  flex: 1 1 220px;
+  min-width: 200px;
   padding: 0 2px;
-  gap: 6px;
+  gap: 8px;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
 }
 
 .teacher-voice-note .teacher-audio-feedback-player__speed,

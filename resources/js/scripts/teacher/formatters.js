@@ -256,6 +256,72 @@ export function teacherDeskCounts(overview = {}) {
   }
 }
 
+/**
+ * Up to five urgent records, in this order:
+ * recitations awaiting this teacher, overdue assignments, revision decisions, then other students.
+ * A student already queued is not added again.
+ */
+export function teacherActionQueue(overview = {}, students = []) {
+  const items = []
+  const seenStudents = new Set()
+  const push = (item) => {
+    if (items.length >= 5) return
+    const studentId = Number(item.studentId || 0)
+    const recordId = Number(item.recordId || 0)
+    if (items.some((row) => row.kind === item.kind && row.studentId === studentId && row.recordId === recordId)) return
+    items.push({ ...item, studentId, recordId })
+    if (studentId > 0) seenStudents.add(studentId)
+  }
+
+  for (const row of overview?.review_queue?.actionable || []) {
+    push({
+      kind: 'recitation',
+      studentId: row.student_id,
+      recordId: row.id,
+      name: row.student_name || '',
+      detail: [row.surah_name, row.ayah_start && row.ayah_end ? `${row.ayah_start}–${row.ayah_end}` : ''].filter(Boolean).join(' · '),
+    })
+  }
+  const overdue = [...(overview?.outstanding_revision || [])]
+    .filter((row) => row?.overdue)
+    .sort((a, b) => String(a.due_at || '9999').localeCompare(String(b.due_at || '9999')))
+  for (const row of overdue) {
+    push({
+      kind: 'overdue',
+      studentId: row.student_id,
+      recordId: row.recipient_id,
+      name: row.student_name || '',
+      detail: row.label || '',
+    })
+  }
+  const decisions = [...(overview?.revision_decisions || [])].sort((a, b) => {
+    const rank = (row) => (row?.status === 'accepted' ? 0 : 1)
+    return rank(a) - rank(b)
+  })
+  for (const row of decisions) {
+    push({
+      kind: 'decision',
+      studentId: row.student_id,
+      recordId: row.id,
+      name: row.student_name || '',
+      detail: row.label || '',
+      status: row.status || 'pending',
+    })
+  }
+  for (const student of students) {
+    if (!student?.id || seenStudents.has(Number(student.id))) continue
+    push({
+      kind: 'attention',
+      studentId: student.id,
+      recordId: student.id,
+      name: student.name || '',
+      detail: '',
+    })
+  }
+
+  return items
+}
+
 export function assignmentPassageKey(item) {
   const assignment = item?.assignment || {}
   return [

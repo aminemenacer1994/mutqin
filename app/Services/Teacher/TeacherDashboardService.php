@@ -67,7 +67,7 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $cacheKey = sprintf('teacher.overview.v4.%d.%d', (int) $teacher->id, $days);
+        $cacheKey = sprintf('teacher.overview.v5.%d.%d', (int) $teacher->id, $days);
 
         return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
             $ids = $this->access->authorizedStudentIds($teacher)->all();
@@ -130,6 +130,7 @@ class TeacherDashboardService
                 'recent_ai' => $this->recentAi($ids),
                 'assignments' => $assignments,
                 'outstanding_revision' => $this->outstandingRevision($teacher, $ids),
+                'revision_decisions' => $this->revisionDecisions($teacher),
                 'plan_progress' => $this->planProgress($teacher),
                 'hifz' => array_merge($hifz->classSummary($metrics), [
                     'unique_memorised_ayahs' => $hifz->uniqueMemorisedAyahs($ids),
@@ -1646,6 +1647,40 @@ class TeacherDashboardService
                     'due_at' => $assignment?->due_at?->toIso8601String(),
                     'overdue' => $this->assignments->isDateOverdue($recipient, $assignment),
                     'status' => $this->assignments->lifecycleStatus($recipient),
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * Open revision recommendations this teacher still has to accept or assign.
+     * Dismissed and already assigned rows stay out of the queue.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function revisionDecisions(User $teacher): array
+    {
+        return RevisionRecommendation::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('status', [
+                RevisionRecommendationStatus::Pending->value,
+                RevisionRecommendationStatus::Accepted->value,
+            ])
+            ->with('student:id,name')
+            ->orderByRaw("case status when 'accepted' then 0 else 1 end")
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(function (RevisionRecommendation $row) {
+                $status = $row->status instanceof RevisionRecommendationStatus ? $row->status->value : (string) $row->status;
+                $surah = (int) $row->surah_number;
+
+                return [
+                    'id' => (int) $row->id,
+                    'student_id' => (int) $row->student_id,
+                    'student_name' => $row->student?->name,
+                    'status' => $status,
+                    'label' => QuranMetadata::name($surah).' · '.(int) $row->ayah_start.'–'.(int) $row->ayah_end,
                 ];
             })
             ->all();

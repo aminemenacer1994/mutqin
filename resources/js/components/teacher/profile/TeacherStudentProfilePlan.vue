@@ -55,7 +55,8 @@
         </div>
         <p v-if="nextOf(plan)" class="teacher-plan-card__next">
           <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
-          {{ t('teacher.plan_next_activity') }}: {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
+          {{ t('teacher.plan_next_activity') }}<br>
+          {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"><br>{{ formatDate(nextOf(plan).due_on) }}</template>
         </p>
         <footer>
           <button type="button" class="btn btn-primary btn-sm" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
@@ -217,7 +218,8 @@
         <article v-for="(item, index) in form.items" :key="`draft-${index}`" class="teacher-plan-modal__activity">
           <header>
             <button type="button" class="teacher-plan-activity__toggle" :aria-expanded="item.open ? 'true' : 'false'" @click="item.open = !item.open">
-              {{ t('teacher.plan_activity_n', { n: index + 1 }) }} · {{ activityLabel(item) }}
+              {{ t('teacher.plan_activity_n', { n: index + 1 }) }}<br>
+              <span>{{ activityLabel(item) }}</span>
             </button>
             <button type="button" class="teacher-plan-modal__remove" :aria-label="t('teacher.plan_remove_activity')" @click="form.items.splice(index, 1)">
               <i class="bi bi-trash" aria-hidden="true"></i>
@@ -269,7 +271,6 @@
         <section class="teacher-plan-suggestions">
           <header>
             <strong>{{ t('teacher.plan_suggestions') }}</strong>
-            <p>{{ t('teacher.plan_suggestion_note') }}</p>
           </header>
           <p v-if="suggestionsLoading" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
           <p v-else-if="!groupedSuggestions.length" class="teacher-plan-empty">{{ t('teacher.plan_no_suggestions') }}</p>
@@ -295,9 +296,10 @@
         <p v-if="form.notes"><span>{{ t('teacher.plan_notes') }}</span><strong>{{ form.notes }}</strong></p>
         <ul>
           <li v-for="(item, index) in form.items" :key="`review-${index}`">
-            {{ activityLabel(item) }} · {{ surahName(item) }} {{ item.ayah_start }}–{{ item.ayah_end }}
-            <template v-if="item.due_on"> · {{ formatDate(item.due_on) }}</template>
-            <template v-if="item.instructions"> · {{ item.instructions }}</template>
+            {{ activityLabel(item) }}<br>
+            {{ surahName(item) }} {{ item.ayah_start }}–{{ item.ayah_end }}
+            <template v-if="item.due_on"><br>{{ formatDate(item.due_on) }}</template>
+            <template v-if="item.instructions"><br>{{ item.instructions }}</template>
           </li>
         </ul>
         <p v-if="!form.items.length" class="teacher-plan-empty">{{ t('teacher.plan_activities_empty') }}</p>

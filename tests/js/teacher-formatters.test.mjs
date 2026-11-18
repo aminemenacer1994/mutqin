@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { assignmentAttemptHelp, assignmentPassageKey, assignmentProgressLabel, attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts, teacherRecitationEvidenceRow } from '../../resources/js/scripts/teacher/formatters.js'
+import { assignmentAttemptHelp, assignmentPassageKey, assignmentProgressLabel, attentionReasonTags, ayahRangeLabel, formatTeacherWhen, issueLabel, practiceMinutes, studentStatus, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts, teacherRecitationEvidenceRow } from '../../resources/js/scripts/teacher/formatters.js'
 
 const t = (key, params = {}) => {
   if (key === 'teacher.ayahs_range') return `Ayahs ${params.from}–${params.to}`
@@ -99,5 +99,26 @@ assert.notEqual(assignmentPassageKey({
   studentId: 9,
   assignment: { surah_number: 1, ayah_start: 1, ayah_end: 7, kind: 'practice' },
 }), '9:1:1:7:ai_recite')
+
+const queue = teacherActionQueue({
+  review_queue: { actionable: [{ id: 8, student_id: 1, student_name: 'Amina', surah_name: 'Al-Fatihah', ayah_start: 1, ayah_end: 7 }] },
+  outstanding_revision: [
+    { recipient_id: 3, student_id: 2, student_name: 'Yusuf', label: 'Al-Baqarah · 1–5', overdue: false, due_at: '2026-11-20' },
+    { recipient_id: 4, student_id: 2, student_name: 'Yusuf', label: 'Al-Baqarah · 6–7', overdue: true, due_at: '2026-11-10' },
+  ],
+  revision_decisions: [
+    { id: 15, student_id: 3, student_name: 'Maryam', status: 'pending', label: 'Al-Ikhlas · 1–4' },
+    { id: 16, student_id: 4, student_name: 'Hasan', status: 'accepted', label: 'An-Nas · 1–6' },
+  ],
+}, [
+  { id: 1, name: 'Amina', needs_attention: true },
+  { id: 5, name: 'Layla', needs_attention: true },
+])
+assert.deepEqual(queue.map((item) => item.kind), ['recitation', 'overdue', 'decision', 'decision', 'attention'])
+assert.equal(queue[2].status, 'accepted')
+assert.equal(queue[4].studentId, 5)
+assert.equal(teacherActionQueue({
+  review_queue: { actionable: [1, 2, 3, 4, 5, 6].map((id) => ({ id, student_id: id, student_name: `S${id}` })) },
+}).length, 5)
 
 console.log('teacher-formatters.test.mjs: ok')

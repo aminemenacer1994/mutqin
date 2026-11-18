@@ -31,11 +31,12 @@
         type="range"
         class="teacher-audio-feedback-player__scrub"
         min="0"
-        :max="Math.max(duration, 0.1)"
+        :max="scrubMax"
         step="0.05"
-        :value="currentTime"
+        :value="Math.min(currentTime, scrubMax)"
         :aria-label="t('teacher.audio_position')"
-        :disabled="!src || error"
+        :aria-valuetext="`${formatTime(currentTime)} / ${formatTime(scrubMax)}`"
+        :disabled="!src || error || scrubMax <= 0"
         @input="seek"
       >
       <div class="teacher-audio-feedback-player__wave" aria-hidden="true">
@@ -99,9 +100,13 @@ export default {
       return Number.isFinite(ms) && ms > 0 ? ms / 1000 : 0
     },
     progressRatio() {
-      const total = this.duration || this.durationHint
+      const total = this.scrubMax
       if (!total) return 0
       return Math.min(1, Math.max(0, this.currentTime / total))
+    },
+    scrubMax() {
+      const known = this.duration || this.durationHint
+      return known > 0 ? known : 0
     },
     playIcon() {
       if (this.loading) return 'bi-arrow-repeat'
@@ -116,6 +121,9 @@ export default {
     errorLabel() {
       return this.t('teacher.recording_unavailable')
     },
+  },
+  created() {
+    if (this.durationHint) this.duration = this.durationHint
   },
   watch: {
     src() {
@@ -195,9 +203,12 @@ export default {
     },
     seek(event) {
       const audio = this.$refs.audioEl
-      const next = Number(event.target.value)
+      const raw = Number(event.target.value)
+      if (!Number.isFinite(raw)) return
+      const limit = this.scrubMax
+      const next = limit > 0 ? Math.min(Math.max(0, raw), limit) : 0
       this.currentTime = next
-      if (audio && Number.isFinite(next)) audio.currentTime = next
+      if (audio) audio.currentTime = next
     },
     cycleSpeed() {
       const index = SPEEDS.indexOf(this.speed)
