@@ -1,0 +1,363 @@
+/* My Learning: shared surfaces with separate, content-sized work areas. */
+.learner-workspace.user-dashboard #dash-my-learning {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.learner-workspace.user-dashboard #dash-my-learning > .dash-section__body {
+  padding: 0;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__intro {
+  margin: 0 0 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 16px;
+  background: var(--dash-ds-surface);
+  box-shadow: var(--dash-ds-shadow-card);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__section-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--dash-ds-accent-soft);
+  color: var(--dash-ds-accent);
+  font-size: 19px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__section-name {
+  margin: 3px 0 0;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__section-eyebrow {
+  margin: 0;
+  color: var(--dash-ds-text-muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .06em;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__workspace {
+  align-items: start;
+  gap: 16px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__block,
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 16px;
+  background: var(--dash-ds-surface);
+  box-shadow: var(--dash-ds-shadow-card);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-heading {
+  margin: 0 0 16px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-heading h3 {
+  margin: 0;
+  color: var(--dash-ds-text);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-heading p {
+  max-width: 50ch;
+  margin: 6px 0 0;
+  color: var(--dash-ds-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters-row {
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 12px;
+  background: var(--dash-ds-surface-soft);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filter {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-tab-btn {
+  display: inline-flex;
+  width: auto;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 10px;
+  background: var(--dash-ds-surface);
+  color: var(--dash-ds-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-list {
+  gap: 12px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card {
+  padding: 16px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 14px;
+  background: var(--dash-ds-surface);
+  box-shadow: none;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card.is-priority {
+  border-color: var(--dash-ds-line-strong);
+  box-shadow: inset 3px 0 0 var(--dash-ds-accent);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-title-row { gap: 12px; min-width: 0; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-title-copy { min-width: 0; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-title-copy > strong {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-meta {
+  margin-top: 5px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-toolbar { align-items: center; flex-wrap: wrap; gap: 8px; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-toolbar .learner-teacher__icon-hit--primary {
+  min-height: 44px;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+/* The plan shares the sidebar width with feedback, including when it has
+   progress metrics or a next milestone. */
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan {
+  padding: 20px;
+  border-color: var(--dash-ds-line);
+  border-radius: 16px;
+  box-shadow: var(--dash-ds-shadow-card);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan__head { padding-bottom: 12px; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan__title { font-size: 16px; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan__empty { margin-top: 12px; line-height: 1.5; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.learner-workspace.user-dashboard #dash-my-learning .learner-my-plan__next { flex-wrap: wrap; }
+/* Expanded assignment details use the same restrained panels and controls as
+   the teacher review workspace. Keep the wording-check colours untouched. */
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-body {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--dash-ds-line);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card.is-collapsed .learner-teacher__card-body {
+  display: none;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-note.is-correction {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--dash-ds-warning) 24%, var(--dash-ds-line));
+  border-inline-start: 3px solid var(--dash-ds-warning);
+  border-radius: 10px;
+  background: var(--dash-ds-warning-soft);
+  color: var(--dash-ds-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-note.is-correction > i {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--dash-ds-warning);
+  font-size: 16px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-note.is-correction strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-note.is-correction p {
+  margin: 3px 0 0;
+  color: var(--dash-ds-text-muted);
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 10px;
+  background: var(--dash-ds-surface);
+  color: var(--dash-ds-text);
+  font-size: 14px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct > summary::-webkit-details-marker { display: none; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct[open] > summary::after {
+  transform: rotate(225deg) translate(-2px, -1px);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct-content {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-top: 1px solid var(--dash-ds-line);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__instruct-content > p {
+  margin: 0;
+  color: var(--dash-ds-text-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__mistake-panel { gap: 12px; }
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__mistake-ayah-label {
+  margin: 0;
+  color: var(--dash-ds-text);
+  font-size: 14px;
+  font-weight: 650;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__mistake-row {
+  gap: 8px 12px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 10px;
+  background: var(--dash-ds-surface-soft);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__mistake-ayah-text {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 2vw, 30px);
+  line-height: 2;
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning :is(.learner-teacher__mistake-type, .learner-teacher__mistake-compare) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-progress {
+  gap: 8px;
+  padding-top: 4px;
+  color: var(--dash-ds-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-head {
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-head .learner-teacher__section-title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-item,
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-item {
+  padding: 16px;
+  border: 1px solid var(--dash-border, var(--border));
+  border-radius: 12px;
+  background: var(--surface-strong);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-main-hit,
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-main-hit {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: start;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-body,
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-body {
+  min-width: 0;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-top strong,
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-top strong {
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-preview,
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-preview {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.user-dashboard.dash-drawer-root .dash-drawer {
+  width: min(100%, 480px);
+  background: var(--surface-strong);
+}
+.user-dashboard.dash-drawer-root .dash-drawer__head { padding: 24px; }
+.user-dashboard.dash-drawer-root .dash-drawer__body { padding: 20px 24px 32px; }
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-grid { gap: 12px; }
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-audio { margin-top: 16px; }
+.user-dashboard.dash-drawer-root .learner-teacher__feedback-correction-action { margin-top: 16px; }
+@media (min-width: 1100px) {
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__workspace {
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+  }
+}
+@media (max-width: 767.98px) {
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__intro,
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__block,
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-panel,
+  .learner-workspace.user-dashboard #dash-my-learning .learner-my-plan { padding: 16px; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__intro { margin-bottom: 16px; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__workspace { gap: 16px; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card { padding: 16px; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-head { grid-template-columns: minmax(0, 1fr); }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-head-tools { width: 100%; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-toolbar { display: flex; width: 100%; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__card-toolbar .learner-teacher__icon-hit--primary { flex: 1 1 auto; justify-content: center; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented .learner-teacher__filter {
+    gap: 4px;
+    padding-inline: 5px;
+    white-space: nowrap;
+  }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-tab-label { display: none; }
+  .user-dashboard.dash-drawer-root .dash-drawer__head { padding: 20px 16px; }
+  .user-dashboard.dash-drawer-root .dash-drawer__body { padding: 16px 16px 32px; }
+}
+@media (max-width: 380px) {
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters-row { flex-wrap: wrap; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented { flex-basis: 100%; }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__feedback-tab-label { display: inline; }
+}

@@ -145,6 +145,7 @@ export function buildReviewHref(base, item) {
     to: String(Math.max(ayah, end)),
     review: '1',
     return: 'dashboard',
+    return_tab: 'progress',
   })
   const attemptId = Number(item?.attempt_id || item?.id || 0)
   const assessmentId = Number(item?.assessment_id || 0)
@@ -178,6 +179,7 @@ export function buildCheckAgainHref(base, item) {
     to: String(Math.max(from, to)),
     ai_check: '1',
     return: 'dashboard',
+    return_tab: 'progress',
   })
   const assessmentId = Number(item?.assessment_id || 0)
   if (assessmentId > 0) params.set('prior_assessment', String(assessmentId))

@@ -13,6 +13,7 @@
       v-if="studentId && hifz"
       :student-id="studentId"
       :hifz="hifz"
+      :recommendations="openRecommendations"
       :format-when="formatWhen"
       @assign="assignNext"
     />
@@ -25,21 +26,13 @@
       <article v-for="row in openRecommendations" :key="row.id" class="teacher-plan-revisions__row">
         <div>
           <p class="teacher-hifz__lead">{{ row.label }}</p>
-          <p class="teacher-hifz__quiet">{{ recommendationSummary(row) }}</p>
-          <p class="teacher-hifz__quiet">{{ lastReviewedLabel(row) }} · {{ dueLabel(row) }}<template v-if="row.teacher_confirmed"> · {{ t('teacher.plan_teacher_confirmed') }}</template></p>
+          <p class="teacher-hifz__quiet">{{ recommendationEvidenceLabel(row) }} · {{ revisionStageLabel(row) }}</p>
+          <p class="teacher-hifz__quiet">{{ lastReviewedLabel(row) }} · {{ dueLabel(row) }}</p>
         </div>
         <div class="teacher-plan-revisions__actions">
-          <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="runRecommendationPrimary(row)">{{ recommendationPrimary(row).label }}</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy || row.status === 'assigned'" @click="openRecommendationEdit(row)">{{ t('teacher.plan_recommendation_edit') }}</button>
-          <div class="teacher-plan-menu">
-            <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="recommendationMenuId === row.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="recommendationMenuId = recommendationMenuId === row.id ? null : row.id">
-              <i class="bi bi-three-dots" aria-hidden="true"></i>
-            </button>
-            <div v-if="recommendationMenuId === row.id" class="teacher-plan-menu__list" role="menu">
-              <button type="button" role="menuitem" :disabled="busy" @click="snoozeRecommendation(row)">{{ t('teacher.plan_snooze') }}</button>
-              <button type="button" role="menuitem" :disabled="busy" @click="dismissRecommendation(row)">{{ t('teacher.plan_dismiss') }}</button>
-            </div>
-          </div>
+          <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="assignRecommendation(row)">{{ t('teacher.playback_assign_revision') }}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="openRecommendationEdit(row)">{{ t('teacher.plan_recommendation_edit') }}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="busy" @click="dismissRecommendation(row)">{{ t('teacher.plan_dismiss') }}</button>
         </div>
       </article>
       <details v-if="historyRecommendations.length" class="teacher-plan-revisions__history">
@@ -64,6 +57,12 @@
             <strong>{{ reflectionLabel(row) }}</strong>
             <small>{{ reflectionDetail(row) }}</small>
           </span>
+          <button
+            v-if="row.teacher_assignment_recipient_id && ['difficult', 'need_help'].includes(row.feeling)"
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            @click="assignReflection(row)"
+          >{{ t('teacher.assignment_self_assessment_assign_revision') }}</button>
         </li>
       </ul>
     </section>
@@ -83,7 +82,6 @@
             <p class="teacher-plan-card__meta">
               <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
               <span>{{ formatDate(plan.starts_on) }}<template v-if="plan.ends_on"> – {{ formatDate(plan.ends_on) }}</template></span>
-              <span>{{ t('teacher.plan_progress', { done: plan.progress?.completed || 0, total: plan.progress?.total || 0 }) }}</span>
             </p>
           </div>
           <footer>
@@ -105,12 +103,18 @@
             </div>
           </footer>
         </header>
+        <dl class="teacher-plan-card__stats">
+          <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ plan.progress?.completed || 0 }}<small>/ {{ plan.progress?.total || 0 }}</small></dd></div>
+          <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ plan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
+          <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ plan.progress?.upcoming_lessons || 0 }}</dd></div>
+          <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ plan.progress?.revision_due || 0 }}</dd></div>
+        </dl>
         <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
           <span :style="planMeterStyle(plan)"></span>
         </div>
         <p v-if="nextOf(plan)" class="teacher-plan-card__next">
           <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
-          <span class="teacher-plan-card__next-label">{{ t('teacher.plan_next_activity') }}</span>
+          <span class="teacher-plan-card__next-label">{{ t('teacher.plan_next_milestone') }}</span>
           {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
         </p>
       </article>
@@ -158,8 +162,13 @@
           <p class="teacher-plan-card__meta">
             <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
             <span>{{ planSpan(detailPlan) }}</span>
-            <span>{{ t('teacher.plan_progress', { done: detailPlan.progress?.completed || 0, total: detailPlan.progress?.total || 0 }) }}</span>
           </p>
+          <dl class="teacher-plan-card__stats">
+            <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ detailPlan.progress?.completed || 0 }}<small>/ {{ detailPlan.progress?.total || 0 }}</small></dd></div>
+            <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ detailPlan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
+            <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ detailPlan.progress?.upcoming_lessons || 0 }}</dd></div>
+            <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ detailPlan.progress?.revision_due || 0 }}</dd></div>
+          </dl>
           <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
             <span :style="planMeterStyle(detailPlan)"></span>
           </div>
@@ -178,6 +187,7 @@
                 <span v-if="item.is_milestone">{{ t('teacher.plan_milestone') }}</span>
               </p>
               <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
+              <p class="teacher-plan-detail__notes">{{ completionCriteriaLabel(item) }}</p>
             </div>
             <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
               <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
@@ -539,10 +549,8 @@ export default {
       feedbackDrafts: {},
       rescheduleDrafts: {},
       recommendations: [],
-      editingRecommendationId: null,
       editDraft: { id: null, due_on: '', instructions: '' },
       successTimer: null,
-      recommendationMenuId: null,
       reviewAttemptId: null,
       form: blankForm(this.studentId),
       removedItemIds: [],
@@ -641,17 +649,8 @@ export default {
       this.successTimer = window.setTimeout(() => { this.success = '' }, 4000)
     },
   },
-  mounted() {
-    if (this.createOnMount) this.openComposer()
-    this.onRecommendationMenuPointer = (event) => {
-      if (!this.recommendationMenuId) return
-      if (event.target?.closest?.('.teacher-plan-menu')) return
-      this.recommendationMenuId = null
-    }
-    document.addEventListener('click', this.onRecommendationMenuPointer)
-  },
+  mounted() { if (this.createOnMount) this.openComposer() },
   beforeUnmount() {
-    document.removeEventListener('click', this.onRecommendationMenuPointer)
     window.clearTimeout(this.successTimer)
   },
   methods: {
@@ -668,6 +667,15 @@ export default {
         },
       })
     },
+    assignReflection(row) {
+      this.assignNext({
+        activity: 'revision',
+        hifz_category: 'sabqi',
+        surah_number: Number(row.surah_number || 0),
+        ayah_start: Number(row.ayah_start || 0),
+        ayah_end: Number(row.ayah_end || row.ayah_start || 0),
+      })
+    },
     weekStart(iso) {
       const date = new Date(`${iso}T12:00:00`)
       const day = date.getDay() || 7
@@ -676,6 +684,13 @@ export default {
       return `${date.getFullYear()}-${month}-${String(date.getDate()).padStart(2, '0')}`
     },
     reflectionLabel(row) {
+      const feelingKey = {
+        easy: 'dashboard.assignment_self_assessment_easy',
+        manageable: 'dashboard.assignment_self_assessment_manageable',
+        difficult: 'dashboard.assignment_self_assessment_difficult',
+        need_help: 'dashboard.assignment_self_assessment_need_help',
+      }[row.feeling]
+      if (feelingKey) return this.t(feelingKey)
       const key = {
         low: 'teacher.hifz_confidence_low',
         steady: 'teacher.hifz_confidence_steady',
@@ -684,7 +699,7 @@ export default {
       return key ? this.t(key) : this.t('teacher.student_reflections')
     },
     reflectionDetail(row) {
-      return [row.difficult_ayahs, row.wants_revision ? this.t('teacher.hifz_wants_revision') : '', row.note || row.help_request, this.t('teacher.reflection_not_verified')]
+      return [row.surah_name, row.difficult_ayahs, row.wants_revision ? this.t('teacher.hifz_wants_revision') : '', row.note || row.help_request, this.t('teacher.reflection_not_verified')]
         .filter(Boolean)
         .join(' · ')
     },
@@ -970,72 +985,11 @@ export default {
       if (!row?.due_on) return this.t('teacher.hifz_tasks_clear')
       return this.t('teacher.task_due_date', { date: this.formatDate(row.due_on) })
     },
-    recommendationSummary(row) {
-      const reason = String(row?.reason || '').trim()
-      if (reason && !/still open\.?$/i.test(reason)) return reason
-      const range = row?.label || ''
-      if (row?.reason_code === 'previous_feedback') {
-        return range
-          ? `${this.studentLabel} still has written feedback on ${range} that has not been turned into a completed assignment.`
-          : reason
-      }
-      if (row?.reason_code === 'previous_revision') {
-        return range
-          ? `${range} still needs practice after your last review. This follow-up is not a Tajweed assessment.`
-          : reason
-      }
-      return reason
+    recommendationEvidenceLabel(row) {
+      return this.t(row?.teacher_confirmed ? 'teacher.plan_teacher_confirmed_weakness' : 'teacher.plan_ai_wording_flag')
     },
-    recommendationPrimary(row) {
-      const assignmentId = row?.teacher_assignment_id || row?.evidence?.teacher_assignment_id || row?.evidence?.practice_assignment_id || null
-      const attemptId = row?.evidence?.attempt_id || null
-      if (assignmentId && row.status !== 'dismissed') {
-        return { id: 'view_task', label: this.t('teacher.task_view'), assignmentId }
-      }
-      return { id: 'assign', label: this.t('teacher.playback_assign_revision'), attemptId }
-    },
-    recommendationMenu(row) {
-      const primary = this.recommendationPrimary(row).id
-      const items = []
-      const attemptId = row?.evidence?.attempt_id || null
-      if (row.status === 'pending') items.push({ id: 'accept', label: this.t('teacher.plan_accept') })
-      if (attemptId && primary !== 'review_recitation') items.push({ id: 'review_recitation', label: this.t('teacher.overview_action_review') })
-      if (row.status === 'pending' || row.status === 'accepted') items.push({ id: 'dismiss', label: this.t('teacher.plan_dismiss') })
-      return items
-    },
-    runRecommendationPrimary(row) {
-      const action = this.recommendationPrimary(row)
-      this.recommendationMenuId = null
-      if (action.id === 'review') {
-        this.editingRecommendationId = row.id
-        return
-      }
-      if (action.id === 'save') return this.saveRecommendation(row)
-      if (action.id === 'assign') return this.assignRecommendation(row)
-      if (action.id === 'view_task') {
-        this.$emit('open-task', { studentId: this.studentId || row.student_id, assignmentId: action.assignmentId })
-        return
-      }
-      if (action.id === 'review_recitation') this.reviewAttemptId = action.attemptId
-    },
-    runRecommendationMenu(row, id) {
-      this.recommendationMenuId = null
-      if (id === 'edit') {
-        if (this.editingRecommendationId === row.id) return this.saveRecommendation(row)
-        this.editingRecommendationId = row.id
-        return
-      }
-      if (id === 'accept') return this.acceptRecommendation(row)
-      if (id === 'dismiss') return this.dismissRecommendation(row)
-      if (id === 'assign') return this.assignRecommendation(row)
-      if (id === 'review_recitation') {
-        this.reviewAttemptId = row?.evidence?.attempt_id || null
-        return
-      }
-      if (id === 'view_task') {
-        const assignmentId = row.teacher_assignment_id || row.evidence?.teacher_assignment_id || row.evidence?.practice_assignment_id
-        this.$emit('open-task', { studentId: this.studentId || row.student_id, assignmentId })
-      }
+    revisionStageLabel(row) {
+      return this.t(row?.hifz_category === 'manzil' ? 'teacher.hifz_manzil' : 'teacher.hifz_sabqi')
     },
     onRecommendationReviewed() {
       this.reviewAttemptId = null
@@ -1043,7 +997,6 @@ export default {
       this.$emit('updated')
     },
     openRecommendationEdit(row) {
-      this.recommendationMenuId = null
       this.editDraft = {
         id: row.id,
         due_on: String(row.due_on || '').slice(0, 10),
@@ -1070,32 +1023,6 @@ export default {
           due_on: row.due_on || null,
           instructions: row.instructions || null,
         })
-        this.editingRecommendationId = null
-        await this.reload()
-      } catch (error) {
-        this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')
-      } finally {
-        this.busy = false
-      }
-    },
-    async acceptRecommendation(row) {
-      if (this.busy || row?.status === 'assigned') return
-      if (this.editingRecommendationId === row.id) {
-        await this.saveRecommendation(row)
-        if (this.error) return
-      }
-      await this.runRecommendation(learningApi.acceptTeacherRevisionRecommendation(row.id), this.t('teacher.plan_recommendation_accepted'))
-    },
-    async snoozeRecommendation(row) {
-      if (this.busy || row?.status === 'assigned' || row?.status === 'dismissed') return
-      this.recommendationMenuId = null
-      const due = new Date()
-      due.setDate(due.getDate() + 7)
-      const dueOn = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`
-      this.busy = true
-      this.error = ''
-      try {
-        await learningApi.updateTeacherRevisionRecommendation(row.id, { due_on: dueOn })
         await this.reload()
       } catch (error) {
         this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')
@@ -1109,10 +1036,6 @@ export default {
     },
     async assignRecommendation(row) {
       if (this.busy || row?.status === 'assigned' || row?.teacher_assignment_id) return
-      if (this.editingRecommendationId === row.id) {
-        await this.saveRecommendation(row)
-        if (this.error) return
-      }
       await this.runRecommendation(learningApi.assignTeacherRevisionRecommendation(row.id), this.t('teacher.playback_revision_sent'))
     },
     async runRecommendation(request, message = '') {
@@ -1122,7 +1045,6 @@ export default {
       this.success = ''
       try {
         await request
-        this.editingRecommendationId = null
         this.success = message || this.t('teacher.plan_status_updated')
         await this.reload()
         this.$emit('updated')
@@ -1426,10 +1348,15 @@ export default {
       return { key: plan.status, label: this.statusLabel(plan.status) }
     },
     nextOf(plan) {
+      if (plan?.next_milestone) return plan.next_milestone
       return (plan.items || [])
         .filter((item) => ['overdue', 'submitted', 'upcoming', 'in_progress', 'planned'].includes(item.display_status))
         .slice()
         .sort((a, b) => String(a.due_on || '9999').localeCompare(String(b.due_on || '9999')))[0] || null
+    },
+    completionCriteriaLabel(item) {
+      const target = Number(item?.completion_criteria?.required_activities || 1)
+      return this.t('teacher.plan_completion_criteria', { n: target })
     },
     isOverdue(plan) { return Number(plan.progress?.overdue || 0) > 0 || this.nextOf(plan)?.display_status === 'overdue' },
     formatDate(value) {

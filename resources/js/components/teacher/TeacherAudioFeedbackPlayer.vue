@@ -19,6 +19,7 @@
       type="button"
       class="teacher-audio-feedback-player__play"
       :disabled="!src || error || loading"
+      :aria-busy="loading"
       :aria-label="playing ? pauseLabelResolved : playLabelResolved"
       :title="playing ? pauseLabelResolved : playLabelResolved"
       @click="toggle"
@@ -55,13 +56,21 @@
     <button
       type="button"
       class="teacher-audio-feedback-player__speed"
-      :aria-label="t('teacher.playback_speed')"
-      :title="t('teacher.playback_speed')"
+      :aria-label="speedLabel"
+      :title="speedLabel"
       :disabled="!src || error"
       @click="cycleSpeed"
     >{{ speed }}×</button>
 
-    <p v-if="error" class="teacher-audio-feedback-player__error" role="status">{{ errorLabel }}</p>
+    <p v-if="loading" class="teacher-audio-feedback-player__status" role="status" aria-live="polite">
+      {{ t('teacher.audio_feedback_loading') }}
+    </p>
+    <p v-if="error" class="teacher-audio-feedback-player__error" role="alert">
+      <span>{{ errorLabel }}</span>
+      <button type="button" class="teacher-audio-feedback-player__retry" @click="retryLoad">
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ t('common.retry') }}
+      </button>
+    </p>
   </div>
 </template>
 
@@ -91,6 +100,7 @@ export default {
       duration: 0,
       speed: 1,
       loadedSrc: '',
+      loadGeneration: 0,
       bars: [28, 52, 38, 70, 44, 62, 34, 78, 48, 66, 40, 58, 32, 74, 46, 60, 36, 68, 42, 55],
     }
   },
@@ -121,6 +131,9 @@ export default {
     errorLabel() {
       return this.t('teacher.recording_unavailable')
     },
+    speedLabel() {
+      return `${this.t('teacher.playback_speed')}: ${this.speed}×`
+    },
   },
   created() {
     if (this.durationHint) this.duration = this.durationHint
@@ -135,6 +148,7 @@ export default {
     if (this.src) this.ensureLoaded()
   },
   beforeUnmount() {
+    this.loadGeneration += 1
     this.stop(true)
   },
   methods: {
@@ -143,6 +157,7 @@ export default {
       return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
     },
     reset() {
+      this.loadGeneration += 1
       this.stop(true)
       this.loadedSrc = ''
       this.error = false
@@ -167,19 +182,23 @@ export default {
       if (this.loadedSrc === this.src) return true
       const audio = this.$refs.audioEl
       if (!audio) return false
+      const source = this.src
+      const generation = this.loadGeneration
       this.loading = true
       this.error = false
       try {
-        await bindAudioSource(audio, this.src)
-        this.loadedSrc = this.src
+        await bindAudioSource(audio, source)
+        if (generation !== this.loadGeneration) return false
+        this.loadedSrc = source
         audio.playbackRate = this.speed
         this.onMeta()
         return true
       } catch {
+        if (generation !== this.loadGeneration) return false
         this.error = true
         return false
       } finally {
-        this.loading = false
+        if (generation === this.loadGeneration) this.loading = false
       }
     },
     async toggle() {
@@ -200,6 +219,11 @@ export default {
         this.error = true
         releaseClipPlayback(this.stop)
       }
+    },
+    async retryLoad() {
+      this.loadedSrc = ''
+      this.error = false
+      await this.ensureLoaded()
     },
     seek(event) {
       const audio = this.$refs.audioEl
@@ -232,6 +256,7 @@ export default {
       releaseClipPlayback(this.stop)
     },
     onError() {
+      if (this.$refs.audioEl?.error?.code === 1) return
       this.error = true
       this.loading = false
       this.playing = false

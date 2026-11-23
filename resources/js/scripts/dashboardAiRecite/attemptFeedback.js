@@ -357,7 +357,9 @@ export function compactAttemptSummary(item, t = (key) => key) {
   let reviewHint = t('dashboard.ai_recite.counts_unavailable')
   if (attention != null) {
     reviewHint = attention > 0
-      ? t('dashboard.ai_recite.words_to_review', { n: attention })
+      ? t(attention === 1
+        ? 'dashboard.ai_recite.word_to_review'
+        : 'dashboard.ai_recite.words_to_review', { n: attention })
       : t('dashboard.ai_recite.no_words_to_review')
   }
 

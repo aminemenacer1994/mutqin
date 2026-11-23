@@ -60,6 +60,11 @@ class StudentHifzProgressTest extends TestCase
         $coverage = $hifz['coverage'];
 
         $this->assertSame(3, $coverage['memorised_ayahs']);
+        $this->assertSame('memorisation_progress', $coverage['source']);
+        $this->assertSame(0, $hifz['validated_memorisation']['validated_ayahs']);
+        $this->assertSame('teacher_approved_assignments', $hifz['validated_memorisation']['source']);
+        $this->assertSame('ai_word_match', $hifz['wording_match']['source']);
+        $this->assertFalse($hifz['wording_match']['is_tajweed']);
         $this->assertSame(1, $coverage['learning_ayahs']);
         $this->assertSame(1, $coverage['reviewing_ayahs']);
         $this->assertSame(QuranMetadata::totalAyahCount(), $coverage['mushaf_ayahs']);
@@ -67,6 +72,7 @@ class StudentHifzProgressTest extends TestCase
         $this->assertSame(1, $coverage['ranges']['total']);
         $this->assertSame(1, $coverage['ranges']['items'][0]['ayah_start']);
         $this->assertSame(3, $coverage['ranges']['items'][0]['ayah_end']);
+        $this->assertNotEmpty($coverage['ranges']['items'][0]['last_reviewed_at']);
         $this->assertSame(2, $coverage['recent_revision']['ayahs']);
         $this->assertSame(1, $coverage['older_revision']['ayahs']);
         $this->assertSame(1, $coverage['new_memorisation']['ayahs']);
@@ -92,6 +98,31 @@ class StudentHifzProgressTest extends TestCase
         $this->assertSame(3, $overview['hifz']['unique_memorised_ayahs']);
         $this->assertSame('sum_of_student_ayahs', $overview['hifz']['counting']);
         $this->assertSame(1, $overview['hifz']['students_with_memorised_ayahs']);
+
+        $assignment = TeacherAssignment::factory()->create([
+            'teacher_id' => $teacher->id,
+            'organisation_id' => $teacher->organisation_id,
+            'kind' => 'ai_recite',
+            'activity' => 'hifz',
+            'hifz_category' => 'sabaq',
+            'surah_number' => 112,
+            'ayah_start' => 1,
+            'ayah_end' => 2,
+        ]);
+        TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'status' => AssignmentStatus::Completed->value,
+            'completed_at' => now(),
+        ]);
+
+        $validated = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', $student))
+            ->assertOk()
+            ->json('meta.hifz.validated_memorisation');
+        $this->assertSame(2, $validated['validated_ayahs']);
+        $this->assertSame(1, $validated['ranges']['total']);
+        $this->assertNotNull($validated['last_validated_at']);
     }
 
     public function test_snoozing_a_recommendation_does_not_assign_it(): void

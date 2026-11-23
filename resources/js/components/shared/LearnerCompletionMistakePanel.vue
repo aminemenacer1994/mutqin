@@ -2,7 +2,7 @@
   <div class="learner-teacher__mistake-panel">
     <p v-if="perfect && !hidePerfectBanner" class="learner-teacher__mistake-perfect">
       <i class="bi bi-check2-circle" aria-hidden="true"></i>
-      {{ t('teacher.learner_mistake_none') }}
+      {{ t('teacher.learner_assignments_done_score', { n: 100 }) }}
     </p>
 
     <ul v-else-if="groups.length" class="learner-teacher__mistake-groups">
@@ -55,7 +55,7 @@
       </li>
     </ul>
 
-    <p v-else class="learner-teacher__mistake-empty">{{ t('teacher.learner_mistake_none') }}</p>
+    <p v-else-if="!perfect || !hidePerfectBanner" class="learner-teacher__mistake-empty">{{ t('teacher.learner_wording_details_empty') }}</p>
   </div>
 </template>
 
@@ -90,7 +90,7 @@ export default {
   },
   computed: {
     perfect() {
-      return isPerfectCompletionResult(this.result)
+      return isPerfectCompletionResult(this.result) && this.groups.length === 0
     },
     groups() {
       return groupMistakesByAyah(this.mistakes)

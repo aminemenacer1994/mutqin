@@ -66,7 +66,7 @@
             @click="$emit('open-feedback', item)"
           >
             <span class="learner-teacher__feedback-icon" aria-hidden="true">
-              <i class="bi" :class="item.audio?.available ? 'bi-mic-fill' : 'bi-chat-left-quote'"></i>
+              <i class="bi" :class="feedbackIcon(item)"></i>
             </span>
             <span class="learner-teacher__feedback-body">
               <span class="learner-teacher__feedback-top">
@@ -76,18 +76,32 @@
               <span class="learner-teacher__feedback-sender">
                 <span class="learner-teacher__feedback-who">
                   {{ item.teacher_name || t('teacher.teacher') }}
-                  <span v-if="item.recitation" class="learner-teacher__feedback-kind">{{ t('teacher.playback_feedback') }}</span>
+                  <span class="learner-teacher__feedback-kind">{{ feedbackTypeLabel(item) }}</span>
                 </span>
                 <time>{{ formatWhen(item.created_at) }}</time>
               </span>
-              <span v-if="item.preview || item.body" class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</span>
+              <span v-if="(item.preview || item.body) && (item.preview || item.body) !== feedbackTypeLabel(item)" class="learner-teacher__feedback-preview">{{ item.preview || item.body }}</span>
+              <span v-if="Number(item.conversation_message_count) > 1" class="learner-teacher__feedback-count">
+                {{ t('teacher.feedback_conversation_count', { n: item.conversation_message_count }) }}
+              </span>
               <span class="learner-teacher__feedback-read">{{ actionLabel(item) }} <i class="bi bi-arrow-right-short" aria-hidden="true"></i></span>
             </span>
           </button>
         </div>
-        <div v-if="item.audio?.available && item.audio?.url" class="learner-teacher__feedback-audio">
+        <div v-if="variant === 'drawer' && item.audio?.available && item.audio?.url" class="learner-teacher__feedback-audio">
           <TeacherAudioFeedbackPlayer :src="item.audio.url" :duration-ms="item.audio.duration_ms" compact />
         </div>
+        <p v-else-if="variant === 'drawer' && item.audio?.reason === 'missing'" class="learner-teacher__feedback-audio-missing" role="status">
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ t('teacher.voice_feedback_unavailable') }}
+        </p>
+        <a
+          v-if="variant === 'drawer' && item.correction_action?.href"
+          class="learner-teacher__feedback-correction-action"
+          :href="item.correction_action.href"
+        >
+          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+          {{ t('teacher.practise_correction') }}
+        </a>
       </li>
     </ul>
     </div>
@@ -101,7 +115,7 @@ import { mergeFeedbackReadState, readFeedbackReadMap, sortFeedbackInbox } from '
 import { learnerDashboardTp } from '../../scripts/teacher/learnerDashboardI18n.js'
 import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 
-const SIDEBAR_PREVIEW_LIMIT = 2
+const SIDEBAR_PREVIEW_LIMIT = 1
 
 export default {
   name: 'LearnerTeacherLearning',
@@ -166,10 +180,19 @@ export default {
     actionLabel(item) {
       return item?.unread
         ? this.t('teacher.learner_feedback_read_now')
-        : this.t('teacher.learner_view_feedback')
+        : this.t('teacher.open_feedback_conversation')
     },
-    actionIcon(item) {
-      return item?.unread ? 'bi-envelope-open' : 'bi-chat-square-text'
+    feedbackIcon(item) {
+      if (item?.feedback_type === 'correction_request') return 'bi-arrow-counterclockwise'
+      if (item?.feedback_type === 'recitation_feedback') return 'bi-soundwave'
+      if (item?.feedback_type === 'voice_feedback') return 'bi-mic-fill'
+      return 'bi-chat-left-quote'
+    },
+    feedbackTypeLabel(item) {
+      if (item?.feedback_type === 'correction_request') return this.t('teacher.correction_request')
+      if (item?.feedback_type === 'recitation_feedback') return this.t('teacher.recitation_feedback')
+      if (item?.feedback_type === 'voice_feedback') return this.t('teacher.voice_feedback')
+      return this.t('teacher.written_feedback')
     },
   },
 }

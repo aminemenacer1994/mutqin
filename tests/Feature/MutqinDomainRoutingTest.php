@@ -147,7 +147,7 @@ class MutqinDomainRoutingTest extends TestCase
     {
         $expected = file_get_contents(public_path('sw.js'));
         $this->assertNotFalse($expected);
-        $this->assertStringContainsString('mutqin-shell-v99', $expected);
+        $this->assertStringContainsString('mutqin-shell-v101', $expected);
         $this->assertStringNotContainsString('isSameOrigin || isQuranApi', $expected);
 
         $response = $this->onPublicHost('/sw.js');
@@ -155,7 +155,7 @@ class MutqinDomainRoutingTest extends TestCase
         $body = method_exists($response, 'streamedContent')
             ? (string) $response->streamedContent()
             : (string) $response->getContent();
-        $this->assertStringContainsString('mutqin-shell-v99', $body);
+        $this->assertStringContainsString('mutqin-shell-v101', $body);
     }
 
     public function test_public_host_serves_public_mix_assets_same_origin(): void

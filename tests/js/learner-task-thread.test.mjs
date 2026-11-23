@@ -68,4 +68,19 @@ const merged = mergeThreadAppendMessages([], sent, 7)
 assert.equal(merged.length, 1)
 assert.equal(merged[0].senderRole, 'student')
 
+const missingVoice = normalizeThreadMessages([{
+  id: 101,
+  sender: 'teacher',
+  sender_name: 'Ustadha Maryam',
+  body: '',
+  feedback_type: 'voice_feedback',
+  audio: { available: false, url: null, reason: 'missing' },
+  related_assignment: { id: 8, title: 'Al-Fatihah · 1–7' },
+}], 8)[0]
+assert.equal(missingVoice.type, 'voice')
+assert.equal(missingVoice.audioReason, 'missing')
+assert.equal(missingVoice.feedbackType, 'voice_feedback')
+assert.equal(missingVoice.senderName, 'Ustadha Maryam')
+assert.equal(missingVoice.relatedAssignment.title, 'Al-Fatihah · 1–7')
+
 console.log('learner-task-thread.test.mjs: ok')

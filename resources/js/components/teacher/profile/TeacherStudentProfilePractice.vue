@@ -12,6 +12,22 @@
       <p v-if="focusLoading && activeSubview === 'revision'" class="teacher-loading-inline" role="status">{{ t('teacher.loading') }}</p>
 
       <template v-if="activeSubview === 'memorisation'">
+        <section class="teacher-beginner-tool" :aria-labelledby="`${sectionId}-beginner-tool`">
+          <div class="teacher-beginner-tool__copy">
+            <span class="teacher-beginner-tool__icon" aria-hidden="true"><i class="bi bi-eye-slash"></i></span>
+            <div>
+              <h3 :id="`${sectionId}-beginner-tool`">{{ t('teacher.beginner_tools_title') }}</h3>
+              <p>{{ t('teacher.progressive_hiding_description') }}</p>
+            </div>
+          </div>
+          <div class="teacher-beginner-tool__action">
+            <a class="btn btn-outline-secondary btn-sm" :href="progressiveHidingHref">
+              <i class="bi bi-play-circle" aria-hidden="true"></i>
+              {{ t('teacher.progressive_hiding_launch') }}
+            </a>
+            <p>{{ t('teacher.progressive_hiding_scope') }}</p>
+          </div>
+        </section>
         <div v-if="sessionGroups.length" class="teacher-learn__split">
           <div class="teacher-learn__passages" role="listbox" :aria-label="t('teacher.learning_memorisation')">
             <button
@@ -106,6 +122,7 @@ export default {
     sessionLabel: { type: Function, required: true },
     issueLabel: { type: Function, default() { return () => '' } },
     formatWhen: { type: Function, required: true },
+    memorisationUrl: { type: String, default: '/memorisation' },
     focusPayload: { type: Object, default: null },
     initialSubview: { type: String, default: 'memorisation' },
     focusAttemptId: { type: [Number, String], default: null },
@@ -217,14 +234,55 @@ export default {
       const groups = this.sessionGroups
       return groups.find((group) => group.key === this.selectedPassageKey) || groups[0] || null
     },
+    selectedPassageRange() {
+      const group = this.selectedPassage
+      if (!group?.surah || !group?.from) return null
+      return {
+        surah: Number(group.surah),
+        from: Number(group.from),
+        to: Math.max(Number(group.from), Number(group.to || group.from)),
+      }
+    },
+    progressiveHidingHref() {
+      const base = this.memorisationUrl || '/memorisation'
+      try {
+        const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin
+        const url = new URL(base, origin)
+        const range = this.selectedPassageRange
+        if (range) {
+          url.searchParams.set('surah', String(range.surah))
+          url.searchParams.set('from', String(range.from))
+          url.searchParams.set('to', String(range.to))
+        } else {
+          url.searchParams.set('setup', '1')
+        }
+        // This is an explicit teacher choice. The memorisation workspace must
+        // not infer or apply techniques from ordinary recommendation links.
+        url.searchParams.set('technique', 'blur')
+        return url.toString()
+      } catch (_) {
+        return `${base}?setup=1&technique=blur`
+      }
+    },
     sessionGroups() {
       const groups = new Map()
       for (const session of this.profile.payload.sessions || []) {
         const title = this.sessionLabel(session)
+        const range = this.sessionRange(session)
         if (!groups.has(title)) {
-          groups.set(title, { key: title, title, surah: session.surah_number, rows: [], seconds: 0 })
+          groups.set(title, {
+            key: title,
+            title,
+            surah: range?.surah || Number(session.surah_number || 0),
+            from: range?.from || 0,
+            to: range?.to || 0,
+            rows: [],
+            seconds: 0,
+          })
         }
         const group = groups.get(title)
+        if (range && (!group.from || range.from < group.from)) group.from = range.from
+        if (range && range.to > group.to) group.to = range.to
         group.rows.push(this.sessionEvidenceRow(session))
         group.seconds += Number(session.duration_seconds || 0)
       }
@@ -277,6 +335,14 @@ export default {
     },
   },
   methods: {
+    sessionRange(session) {
+      const range = session?.practiced_range || session?.assigned_range || {}
+      const surah = Number(range.surah || range.surah_number || session?.surah_number || 0)
+      const from = Number(range.from || range.ayah_start || session?.ayah_start || session?.ayah_number || 0)
+      const to = Number(range.to || range.ayah_end || session?.ayah_end || session?.ayah_number || from || 0)
+      if (!surah || !from) return null
+      return { surah, from, to: Math.max(from, to) }
+    },
     async ensureFocusData() {
       if (this.focusPayload || this.focusData || !this.profile?.student?.id) return
       const id = ++this.focusRequestId

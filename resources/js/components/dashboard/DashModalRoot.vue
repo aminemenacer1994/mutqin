@@ -9,6 +9,7 @@
       aria-modal="true"
       :aria-labelledby="labelledBy || undefined"
       :aria-label="labelledBy ? undefined : ariaLabel"
+      :data-testid="testId || undefined"
       tabindex="-1"
       @keydown="onKeydown"
     >
@@ -41,6 +42,7 @@ export default {
     ariaLabel: { type: String, default: '' },
     rootClass: { type: [String, Object, Array], default: '' },
     panelClass: { type: [String, Object, Array], default: '' },
+    testId: { type: String, default: '' },
     closeOnBackdrop: { type: Boolean, default: true },
     closeOnEscape: { type: Boolean, default: true },
   },

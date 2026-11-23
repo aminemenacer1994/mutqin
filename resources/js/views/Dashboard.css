@@ -5916,6 +5916,96 @@ a.dash-ai-results__attempt {
   align-items: start !important;
 }
 
+.user-dashboard--progress .dash-review-workspace {
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 28%, var(--dash-border));
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--dash-accent-light) 34%, var(--dash-card-bg)), var(--dash-card-bg) 42%);
+  box-shadow: var(--dash-shadow), var(--dash-inset);
+}
+
+.user-dashboard--progress .dash-review-workspace__head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.1rem 0.1rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-border) 82%, transparent);
+}
+
+.user-dashboard--progress .dash-review-workspace__mark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2.85rem;
+  height: 2.85rem;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: var(--dash-accent);
+  color: var(--dash-on-accent, #fffaf3);
+  font-size: 1.05rem;
+  box-shadow: 0 0.55rem 1.2rem color-mix(in srgb, var(--dash-accent) 22%, transparent);
+}
+
+.user-dashboard--progress .dash-review-workspace__copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-review-workspace__eyebrow {
+  color: var(--dash-accent-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-dashboard--progress .dash-review-workspace__copy h2 {
+  margin: 0;
+  color: var(--dash-ink);
+  font-size: clamp(1.15rem, 2vw, 1.4rem) !important;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.user-dashboard--progress .dash-review-workspace__copy > span:last-child {
+  color: var(--dash-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.user-dashboard--progress .dash-review-workspace > .dash-section {
+  min-width: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.user-dashboard--progress .dash-review-workspace > .dash-section > .dash-section__head,
+.user-dashboard--progress .dash-review-workspace > .dash-section .dash-murajaah-block__head {
+  min-height: 0;
+  padding: 0 0 0.65rem !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.user-dashboard--progress .dash-review-workspace > .dash-section .dash-section__body {
+  padding: 0 !important;
+}
+
+.user-dashboard--progress .dash-review-workspace .dash-revisit {
+  padding: 0;
+}
+
+.user-dashboard--progress .dash-review-workspace .dash-section__icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+}
+
 .user-dashboard--progress .dash-color-key li {
   text-decoration: none;
 }
@@ -5953,6 +6043,12 @@ a.dash-ai-results__attempt {
   background: color-mix(in srgb, var(--dash-bg) 42%, var(--dash-card-bg));
 }
 
+.user-dashboard--progress .dash-revisit__card.is-priority {
+  border-color: color-mix(in srgb, var(--dash-accent) 52%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 34%, var(--dash-card-bg));
+  box-shadow: inset 0.2rem 0 0 var(--dash-accent);
+}
+
 .user-dashboard--progress .dash-revisit__head {
   align-items: flex-start;
   justify-content: space-between;
@@ -5964,6 +6060,19 @@ a.dash-ai-results__attempt {
   font-size: 1rem;
   font-weight: 650;
   line-height: 1.35;
+}
+
+.user-dashboard--progress .dash-revisit__priority-label {
+  width: fit-content;
+  padding: 0.15rem 0.42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-card-bg));
+  color: var(--dash-accent-strong);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .user-dashboard--progress .dash-revisit__state {
@@ -6329,6 +6438,16 @@ a.dash-ai-results__attempt {
   line-height: 1;
 }
 
+.user-dashboard--progress .dash-fb-card__score-label {
+  margin-top: 0.12rem;
+  color: currentColor;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  text-align: center;
+}
+
 .user-dashboard--progress .dash-fb-card.is-strong .dash-fb-card__score {
   color: #146443;
   background: rgba(20, 100, 67, 0.12);
@@ -6592,7 +6711,6 @@ a.dash-ai-results__attempt {
   color: #9b2e27;
 }
 
-.user-dashboard--progress .dash-fb-ayah__actions,
 .user-dashboard--progress .dash-fb-detail__show-all {
   margin-top: 0.1rem;
 }
@@ -6605,13 +6723,43 @@ a.dash-ai-results__attempt {
 
   .user-dashboard--progress .dash-fb-card__actions {
     grid-column: auto;
-    flex-direction: column;
-    align-items: stretch;
-    min-width: 9.5rem;
+    align-items: center;
+    min-width: 0;
   }
 
   .user-dashboard--progress .dash-fb-card__actions .dash-btn {
     justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Let the two review sections follow their own content height. */
+  .user-dashboard--progress .user-dashboard__review-row--secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .user-dashboard--progress .user-dashboard__review-row--secondary > .dash-section {
+    height: auto;
+  }
+
+  .user-dashboard--progress .user-dashboard__review-row--secondary > .dash-section .dash-section__body {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .user-dashboard--progress .dash-review-workspace {
+    padding: 0.9rem;
+  }
+
+  .user-dashboard--progress .dash-review-workspace__head {
+    align-items: flex-start;
+  }
+
+  .user-dashboard--progress .dash-review-workspace__mark {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
 

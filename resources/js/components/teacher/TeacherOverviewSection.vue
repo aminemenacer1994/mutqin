@@ -144,7 +144,7 @@ export default {
     attentionPreview: { type: Array, default: () => [] },
     formatWhen: { type: Function, required: true },
     chartDays: { type: Number, default: 30 },
-    chartDayOptions: { type: Array, default: () => [30, 90] },
+    chartDayOptions: { type: Array, default: () => [7, 30, 90] },
     trendLoading: { type: Boolean, default: false },
     trendError: { type: String, default: '' },
   },

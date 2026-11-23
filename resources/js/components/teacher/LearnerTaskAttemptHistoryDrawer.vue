@@ -7,6 +7,7 @@
     <button
       type="button"
       class="dash-drawer__backdrop"
+      tabindex="-1"
       :aria-label="t('dashboard.drawer_close')"
       @click="$emit('close')"
     ></button>
@@ -74,6 +75,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { formatLearnerDisplayDate } from '../../utils/learnerDisplayDate.js'
+import { captureReturnFocus, handleModalKeydown, restoreReturnFocus } from '../../utils/modalFocus.js'
 import AudioClip from '../AudioClip.vue'
 
 export default {
@@ -87,16 +89,27 @@ export default {
     titleId: { type: String, required: true },
   },
   emits: ['close'],
+  data() {
+    return { returnFocus: null }
+  },
   computed: {
     attemptsNewestFirst() {
       return [...(this.attempts || [])].sort((a, b) => Number(b.n) - Number(a.n))
     },
   },
   watch: {
-    open(value) {
-      if (value) {
-        this.$nextTick(() => this.$refs.closeBtn?.focus())
-      }
+    open: {
+      immediate: true,
+      handler(value) {
+        if (value) {
+          this.returnFocus = captureReturnFocus()
+          this.$nextTick(() => this.$refs.closeBtn?.focus({ preventScroll: true }))
+        } else if (this.returnFocus) {
+          const target = this.returnFocus
+          this.returnFocus = null
+          this.$nextTick(() => restoreReturnFocus(target))
+        }
+      },
     },
   },
   methods: {
@@ -109,10 +122,11 @@ export default {
       return formatLearnerDisplayDate(attempt.completedAt, this.t.bind(this), locale)
     },
     onKeydown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        this.$emit('close')
-      }
+      handleModalKeydown(event, {
+        container: this.$refs.panel,
+        onEscape: () => this.$emit('close'),
+        open: this.open,
+      })
     },
   },
 }

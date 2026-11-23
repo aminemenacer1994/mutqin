@@ -565,6 +565,7 @@ import {
   queueSessionCompletionRetry,
   replaceWithDashboard,
 } from '../scripts/session/postSessionDashboardFlow'
+import { studentDashboardReturnHref } from '../scripts/dashboard/studentDashboardNavigation.js'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
 import { createDailyPlan } from '../scripts/composables/useDailyPlanner'
@@ -14553,6 +14554,7 @@ export default {
         const sessionId = String(params.get('session') || '').trim()
         const panel = String(params.get('panel') || '').trim().toLowerCase()
         const returnTo = String(params.get('return') || '').trim().toLowerCase()
+        const returnTab = String(params.get('return_tab') || '').trim().toLowerCase()
         const assignmentRecipientId = Number(params.get('assignment_recipient') || 0)
         const wordCoachingId = Number(params.get('word_coaching') || 0)
         const surah = Number(params.get('surah') || 0)
@@ -14562,6 +14564,10 @@ export default {
         const view = String(params.get('view') || params.get('layout') || '').trim()
         const weak = String(params.get('weak') || '').trim()
         const priorAssessment = Number(params.get('prior_assessment') || 0)
+        const techniqueParam = String(params.get('technique') || '').trim().toLowerCase()
+        // Technique links are deliberately opt-in. At present Progressive Hiding
+        // is the teacher-facing beginner tool; recommendations remain advisory.
+        const technique = techniqueParam === 'blur' ? 'blur' : null
         const goal = normaliseSessionGoal(params.get('goal') || '')
         const hasGoal = params.has('goal')
         const reciterParam = String(params.get('reciter') || '').trim()
@@ -14582,6 +14588,7 @@ export default {
           || journey
           || review
           || hasGoal
+          || technique
         )
         if (hasUrlIntent) {
           return {
@@ -14593,6 +14600,7 @@ export default {
             sessionId: sessionId || null,
             panel: panel || null,
             returnTo: returnTo || null,
+            returnTab: returnTab || null,
             assignmentRecipientId: assignmentRecipientId > 0 ? assignmentRecipientId : null,
             wordCoachingId: wordCoachingId > 0 ? wordCoachingId : null,
             journey: journey || null,
@@ -14602,6 +14610,7 @@ export default {
             view: view || null,
             weak: weak || null,
             priorAssessment: priorAssessment > 0 ? priorAssessment : null,
+            technique,
             goal: hasGoal ? goal : null,
             reciter: voiceReciter,
             speed: voiceSpeed,
@@ -14619,7 +14628,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'return_tab', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt', 'technique']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14636,7 +14645,7 @@ export default {
       this.teacherAssignmentRecipientId = Number(entry.assignmentRecipientId || 0) || null
       this.wordCoachingId = Number(entry.wordCoachingId || 0) || null
       this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
-        ? (this.learnerDashboardUrl || '/dashboard')
+        ? studentDashboardReturnHref(this.learnerDashboardUrl || '/dashboard', entry.returnTab || 'home')
         : null
       if (entry.returnTo === 'dashboard') {
         this.rememberProgressReturn(this.dashboardEntryReturnHref)
@@ -14715,6 +14724,7 @@ export default {
             ayah: entry.from,
             to: entry.to,
             returnTo: entry.returnTo,
+            returnTab: entry.returnTab,
             assignmentRecipientId: this.teacherAssignmentRecipientId,
           })
           this.markDashboardEntryIntentConsumed()
@@ -14862,7 +14872,9 @@ export default {
             rangeStart: entry.from,
             rangeEnd,
             sessionMode: goal === 'revise' ? 'revision' : 'new_learning',
+            techniqueId: entry.technique,
             settings: Object.keys(voiceSettings).length ? voiceSettings : null,
+            explicitTechnique: Boolean(entry.technique),
             autoStart: true,
           })
           this.finishDashboardMadaniEntry(entry)
@@ -14875,6 +14887,10 @@ export default {
           this.prepareManualSessionSelection()
           this.resetRepetitionsForFreshSession()
           this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
+          if (entry.technique === 'blur') {
+            this.blurModeEnabled = true
+            this.syncPracticeToolSectionOpen('blur_mode', true)
+          }
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           this.markDashboardEntryIntentConsumed()
           return true
@@ -24831,6 +24847,7 @@ export default {
       techniqueId = null,
       settings = null,
       sessionPayload = null,
+      explicitTechnique = false,
       autoStart = false,
     }) {
       this.primeAudioPlaybackUnlock()
@@ -24912,7 +24929,8 @@ export default {
       this.applyRecommendedTechnique(
         techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || plan.techniqueIds?.[0] || null,
         sessionMode,
-        mergedSettings
+        mergedSettings,
+        { explicitTechnique }
       )
       this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
       this.seedWeakAyahPracticeFocusWordsIfNeeded(mergedSettings?.focus_ayahs)
@@ -24940,7 +24958,8 @@ export default {
       this.applyRecommendedTechnique(
         techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
         sessionMode,
-        mergedSettings
+        mergedSettings,
+        { explicitTechnique }
       )
       this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
       this.seedWeakAyahPracticeFocusWordsIfNeeded(mergedSettings?.focus_ayahs)
@@ -25005,7 +25024,7 @@ export default {
         session: sessionPayload,
       })
     },
-    applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
+    applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null, options = {}) {
       // Standard setup only when moving to the next session — never auto-apply
       // recommended/random memorisation techniques from the recommendation payload.
       this.focusModeEnabled = false
@@ -25013,6 +25032,14 @@ export default {
       this.talqinModeEnabled = false
       this.chainingEnabled = false
       this.anchorModeEnabled = false
+
+      // This is only set for a direct, deliberate URL action (for example a
+      // teacher opening Progressive Hiding). Automated recommendations never
+      // change a learner's chosen practice technique.
+      if (options.explicitTechnique && techniqueId === 'blur') {
+        this.blurModeEnabled = true
+        this.syncPracticeToolSectionOpen('blur_mode', true)
+      }
 
       if (settings && typeof settings === 'object') {
         const weak = settings.practice_weak_words || settings.weak_words
@@ -28151,12 +28178,14 @@ export default {
         return null
       }
     },
-    async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, to = 0, returnTo = null, assignmentRecipientId = null } = {}) {
+    async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, to = 0, returnTo = null, returnTab = null, assignmentRecipientId = null } = {}) {
       const chapterId = Number(surah || 0)
       const ayahNumber = Number(ayah || 0)
       if (!(chapterId > 0 && ayahNumber > 0) || !this.aiTestModalsEnabled) return false
 
-      this.dashboardAiCheckReturnTo = returnTo === 'dashboard' ? '/dashboard' : null
+      this.dashboardAiCheckReturnTo = returnTo === 'dashboard'
+        ? studentDashboardReturnHref(this.learnerDashboardUrl || '/dashboard', returnTab || 'progress')
+        : null
       if (returnTo === 'dashboard') this.rememberProgressReturn(this.dashboardAiCheckReturnTo)
       this.teacherAssignmentRecipientId = Number(assignmentRecipientId || 0) || null
       let rangeSurah = chapterId
@@ -38774,7 +38803,7 @@ export default {
     restoreProgressReturn() {
       const intent = this.readDashboardEntryIntent?.()
       if (intent?.returnTo === 'dashboard') {
-        this.rememberProgressReturn(this.learnerDashboardUrl || '/dashboard')
+        this.rememberProgressReturn(studentDashboardReturnHref(this.learnerDashboardUrl || '/dashboard', intent.returnTab || 'home'))
         return
       }
       let stored = ''

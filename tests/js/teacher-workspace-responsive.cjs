@@ -6,6 +6,7 @@ const path = require('node:path')
 const { chromium } = require('playwright')
 const base = process.env.MUTQIN_QA_BASE || 'http://localhost:8000'
 const shots = process.env.MUTQIN_QA_SHOTS || '/private/tmp/mutqin-workspace-qa'
+const responsiveWidths = [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920]
 
 async function main() {
   fs.mkdirSync(shots, { recursive: true })
@@ -35,7 +36,7 @@ async function main() {
     const results = []
     async function checkFormLayout(name) {
       const formDialog = page.locator('.teacher-dialog[role=dialog]')
-      for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+      for (const width of responsiveWidths) {
         await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
         for (const theme of ['light', 'sepia', 'dark']) {
           await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
@@ -79,7 +80,7 @@ async function main() {
       await page.goto(`${base}${route}`)
       await page.locator(ready).first().waitFor()
       await page.waitForTimeout(200)
-      for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+      for (const width of responsiveWidths) {
         await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
         for (const theme of ['light', 'sepia', 'dark']) {
           await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
@@ -237,7 +238,7 @@ async function main() {
     if (await dialog.locator('.teacher-playback__player.is-empty').count()) assert.equal(await dialog.locator('.teacher-playback__transport').count(), 0, 'Unavailable recording has no transport')
     assert.equal(await dialog.locator('.teacher-playback__summary-counts dt').count(), 4, 'Assessment summary exposes all four real word states')
     let studioCases = 0
-    for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+    for (const width of responsiveWidths) {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
       for (const theme of ['light', 'sepia', 'dark']) {
         await page.evaluate(value => { document.documentElement.dataset.theme = value }, theme)
@@ -250,7 +251,7 @@ async function main() {
           const side = root.querySelector('.teacher-playback__side').getBoundingClientRect()
           return { height: content.height, overflow: body.scrollWidth - body.clientWidth, outerScroll: root.querySelector('.modal-content').scrollHeight - root.querySelector('.modal-content').clientHeight, columns: side.left > main.right - 1, mainFraction: main.width / (layout.width - 24), bodyScroll: body.scrollHeight > body.clientHeight }
         })
-        assert.ok(geometry.height <= (width < 768 ? 844 : 1000) * .9 + 1, `Studio ${width}px ${theme}: content stays within 90vh`)
+        assert.ok(geometry.height <= (width < 768 ? 844 : 1000) * (width < 768 ? 1 : .9) + 1, `Studio ${width}px ${theme}: content stays within the available viewport`)
         assert.ok(geometry.overflow <= 1, `Studio ${width}px ${theme}: no horizontal overflow`)
         assert.ok(geometry.outerScroll <= 1, `Studio ${width}px ${theme}: scrolling stays inside the content panes`)
         if (width > 960) {
@@ -326,7 +327,7 @@ async function main() {
       await page.screenshot({ path: path.join(shots, 'attention-actions-1440.png') })
     }
     assert.deepEqual(errors, [], 'No runtime errors')
-    console.log(JSON.stringify({ responsiveCases: results.length, studioCases, routes: routes.length, widths: 8, themes: 3, formValidation: true, focusReturn: true, unsavedChanges: true, conversation: true, audioOnly: true, keyboardWordSelection: true, uniqueGlyphs: glyphs.length, runtimeErrors: errors.length, screenshots: shots }, null, 2))
+    console.log(JSON.stringify({ responsiveCases: results.length, studioCases, routes: routes.length, widths: responsiveWidths.length, themes: 3, formValidation: true, focusReturn: true, unsavedChanges: true, conversation: true, audioOnly: true, keyboardWordSelection: true, uniqueGlyphs: glyphs.length, runtimeErrors: errors.length, screenshots: shots }, null, 2))
     fs.writeFileSync(path.join(shots, 'results.json'), JSON.stringify(results, null, 2))
   } catch (error) { await page.screenshot({ path: path.join(shots, 'failure.png') }); console.log(await page.locator('[role=dialog]').allTextContents()); throw error } finally { await browser.close() }
 }

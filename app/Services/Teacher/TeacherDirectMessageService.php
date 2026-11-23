@@ -21,7 +21,7 @@ class TeacherDirectMessageService
     ) {}
 
     /** @return list<array<string, mixed>> */
-    public function thread(User $teacher, User $student, ?User $viewer = null): array
+    public function thread(User $teacher, User $student, ?User $viewer = null, bool $markRead = true): array
     {
         abort_unless($this->access->allows($teacher, $student), 404);
 
@@ -35,10 +35,11 @@ class TeacherDirectMessageService
                 $query->where(function ($direct) {
                     $direct->whereNull('teacher_assignment_id')
                         ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::StudentMessage->value]);
-                })->orWhere(function ($task) {
-                    $task->whereNotNull('teacher_assignment_id')
-                        ->whereIn('kind', [TeacherNoteKind::Feedback->value, TeacherNoteKind::Note->value]);
-                });
+                })->orWhere('kind', TeacherNoteKind::Feedback->value)
+                    ->orWhere(function ($taskReply) {
+                        $taskReply->whereNotNull('teacher_assignment_id')
+                            ->where('kind', TeacherNoteKind::Note->value);
+                    });
             })
             ->with(['teacher:id,name', 'student:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
             ->orderBy('created_at')
@@ -46,16 +47,23 @@ class TeacherDirectMessageService
             ->limit(100)
             ->get();
 
-        $presented = $notes->map(fn (TeacherNote $note) => $this->present($note, $viewer))->all();
-        $unreadIds = $notes
-            ->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->sentBy($note, $viewer))
-            ->pluck('id');
-        if ($unreadIds->isNotEmpty()) {
-            TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
-            TeacherOverviewCache::forget((int) $teacher->id);
+        if ($markRead) {
+            $unreadIds = $notes
+                ->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->sentBy($note, $viewer))
+                ->pluck('id');
+            if ($unreadIds->isNotEmpty()) {
+                $readAt = now();
+                TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => $readAt]);
+                $notes->each(function (TeacherNote $note) use ($unreadIds, $readAt): void {
+                    if ($unreadIds->contains($note->id)) {
+                        $note->setAttribute('read_at', $readAt);
+                    }
+                });
+                TeacherOverviewCache::forget((int) $teacher->id);
+            }
         }
 
-        return $presented;
+        return $notes->map(fn (TeacherNote $note) => $this->present($note, $viewer))->all();
     }
 
     /** @return list<array<string, mixed>> */
@@ -77,7 +85,9 @@ class TeacherDirectMessageService
             ->map(fn (User $teacher) => [
                 'teacher_id' => (int) $teacher->id,
                 'teacher_name' => $teacher->name,
-                'messages' => $this->thread($teacher, $student, $student),
+                // Loading the learning page is not the same as opening a
+                // conversation. Keep unread state until the student chooses it.
+                'messages' => $this->thread($teacher, $student, $student, markRead: false),
             ])->values()->all();
     }
 
@@ -162,13 +172,19 @@ class TeacherDirectMessageService
             ? 'teacher'
             : 'student';
         $assignment = $note->assignment;
+        $audio = $this->messageAudio->payload($note);
+        $feedbackType = $kind === TeacherNoteKind::Feedback
+            ? (($note->audio_path || ($audio['available'] ?? false)) ? 'voice_feedback' : 'written_feedback')
+            : 'message';
 
         return [
             'id' => (int) $note->id,
             'sender' => $sender,
             'sender_name' => $sender === 'teacher' ? $note->teacher?->name : $note->student?->name,
             'body' => $note->body,
-            'audio' => $this->messageAudio->payload($note),
+            'audio' => $audio,
+            'message_kind' => $kind?->value,
+            'feedback_type' => $feedbackType,
             'task' => $assignment ? [
                 'id' => (int) $assignment->id,
                 'surah_number' => (int) $assignment->surah_number,

@@ -118,6 +118,9 @@ class LearningPlanService
     public function updatePlan(User $teacher, LearningPlan $plan, array $input): LearningPlan
     {
         $this->assertOwns($teacher, $plan);
+        $requestedStatus = isset($input['status'])
+            ? LearningPlanStatus::tryFrom((string) $input['status'])
+            : null;
         if (isset($input['title'])) {
             $plan->title = trim((string) $input['title']) ?: $plan->title;
         }
@@ -138,12 +141,6 @@ class LearningPlanService
                 ? Carbon::parse((string) $input['ends_on'])->toDateString()
                 : null;
         }
-        if (isset($input['status'])) {
-            $status = LearningPlanStatus::tryFrom((string) $input['status']);
-            if ($status && $status !== LearningPlanStatus::Draft) {
-                $plan->status = $status;
-            }
-        }
         $plan->save();
 
         // Append new activities only — released history and pending suggestions stay.
@@ -160,6 +157,10 @@ class LearningPlanService
             }
         }
 
+        if ($requestedStatus && $requestedStatus !== $plan->status) {
+            return $this->setStatus($teacher, $plan, $requestedStatus->value);
+        }
+
         return $plan->fresh(['student:id,name', 'items.assignment.recipients']);
     }
 
@@ -172,6 +173,14 @@ class LearningPlanService
         }
         if ($next === LearningPlanStatus::Active) {
             return $this->activate($teacher, $plan);
+        }
+        if ($next === LearningPlanStatus::Completed) {
+            $presented = $this->presentPlan($plan);
+            if (! $presented['progress_complete']) {
+                throw ValidationException::withMessages([
+                    'status' => 'A plan can only be completed after every assigned activity is teacher approved.',
+                ]);
+            }
         }
         $plan->status = $next;
         $plan->save();
@@ -194,6 +203,19 @@ class LearningPlanService
         $this->assertOwns($teacher, $plan);
 
         return DB::transaction(function () use ($teacher, $plan) {
+            $conflict = LearningPlan::query()
+                ->where('teacher_id', $teacher->id)
+                ->where('student_id', $plan->student_id)
+                ->where('status', LearningPlanStatus::Active->value)
+                ->where('id', '!=', $plan->id)
+                ->lockForUpdate()
+                ->exists();
+            if ($conflict) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pause or complete the student\'s current active plan before activating another one.',
+                ]);
+            }
+
             $plan->load('items');
             foreach ($plan->items as $item) {
                 if ($item->item_status === LearningPlanItemStatus::Planned
@@ -514,12 +536,17 @@ class LearningPlanService
         $plan->loadMissing(['student:id,name', 'items.assignment.recipients']);
         $items = $plan->items->map(fn (LearningPlanItem $item) => $this->presentItem($item))->values()->all();
         $progress = $this->progressFromItems($items);
+        $planStatus = $plan->status instanceof LearningPlanStatus ? $plan->status->value : (string) $plan->status;
+        $nextAction = in_array($planStatus, [LearningPlanStatus::Completed->value, LearningPlanStatus::Archived->value], true)
+            ? null
+            : $this->nextAction($items);
+        $nextMilestone = $nextAction === null ? null : ($this->nextMilestone($items) ?? $nextAction);
 
         return [
             'id' => (int) $plan->id,
             'title' => $plan->title,
             'cadence' => $plan->cadence,
-            'status' => $plan->status instanceof LearningPlanStatus ? $plan->status->value : (string) $plan->status,
+            'status' => $planStatus,
             'starts_on' => $plan->starts_on?->toDateString(),
             'ends_on' => $plan->ends_on?->toDateString(),
             'notes' => $plan->notes,
@@ -531,7 +558,8 @@ class LearningPlanService
             'progress' => $progress,
             'progress_complete' => $progress['total'] > 0 && $progress['completed'] >= $progress['total'],
             'items' => $items,
-            'next_action' => $this->nextAction($items),
+            'next_action' => $nextAction,
+            'next_milestone' => $nextMilestone,
         ];
     }
 
@@ -549,6 +577,8 @@ class LearningPlanService
             ? $taskStatus->value
             : ($taskStatus !== null ? (string) $taskStatus : null);
         $display = $this->displayStatus($status, $taskStatusValue, $item->due_on);
+        $target = max(1, (int) ($item->repetition_target ?? 1));
+        $validatesMemorisation = $item->activity === 'hifz' && $item->hifz_category === 'sabaq';
 
         return [
             'id' => (int) $item->id,
@@ -573,12 +603,17 @@ class LearningPlanService
             'task_status' => $taskStatusValue,
             'weak_spot_id' => $item->weak_spot_id ? (int) $item->weak_spot_id : null,
             'label' => QuranMetadata::name((int) $item->surah_number).' · '.(int) $item->ayah_start.'–'.(int) $item->ayah_end,
+            'completion_criteria' => [
+                'required_activities' => $target,
+                'teacher_approval_required' => true,
+                'validates_memorisation' => $validatesMemorisation,
+            ],
         ];
     }
 
     /**
      * @param  list<array<string, mixed>>  $items
-     * @return array{total:int,completed:int,overdue:int,upcoming:int,suggested:int,cancelled:int,archived:int,percent:int}
+     * @return array<string, int|array<string, array<string, int>>>
      */
     public function progressFromItems(array $items): array
     {
@@ -590,6 +625,33 @@ class LearningPlanService
         $suggested = count(array_filter($items, fn ($item) => ($item['origin'] ?? '') === 'suggested' && ($item['item_status'] ?? '') !== 'released'));
         $cancelled = count(array_filter($items, fn ($item) => $this->activityClosure($item) === 'cancelled'));
         $archived = count(array_filter($items, fn ($item) => $this->activityClosure($item) === 'archived'));
+        $validatedAyahs = [];
+        $stages = [
+            'sabaq' => ['total' => 0, 'completed' => 0, 'due' => 0],
+            'sabqi' => ['total' => 0, 'completed' => 0, 'due' => 0],
+            'manzil' => ['total' => 0, 'completed' => 0, 'due' => 0],
+        ];
+        foreach ($countable as $item) {
+            $stage = in_array(($item['hifz_category'] ?? null), array_keys($stages), true)
+                ? (string) $item['hifz_category']
+                : 'sabqi';
+            $stages[$stage]['total']++;
+            if (($item['display_status'] ?? '') === 'completed') {
+                $stages[$stage]['completed']++;
+                if (($item['completion_criteria']['validates_memorisation'] ?? false) === true) {
+                    for ($ayah = (int) $item['ayah_start']; $ayah <= (int) $item['ayah_end']; $ayah++) {
+                        $validatedAyahs[(int) $item['surah_number'].':'.$ayah] = true;
+                    }
+                }
+            }
+            if (in_array(($item['display_status'] ?? ''), ['overdue', 'upcoming'], true)
+                && in_array($stage, ['sabqi', 'manzil'], true)) {
+                $due = $item['due_on'] ?? null;
+                if ($due !== null && Carbon::parse((string) $due)->endOfDay()->lte(now()->endOfDay())) {
+                    $stages[$stage]['due']++;
+                }
+            }
+        }
 
         return [
             'total' => $total,
@@ -600,6 +662,12 @@ class LearningPlanService
             'cancelled' => $cancelled,
             'archived' => $archived,
             'percent' => ActivityProgress::percent($completed, $total),
+            'activities_completed' => $completed,
+            'activities_total' => $total,
+            'validated_memorised_ayahs' => count($validatedAyahs),
+            'upcoming_lessons' => $stages['sabaq']['total'] - $stages['sabaq']['completed'],
+            'revision_due' => $stages['sabqi']['due'] + $stages['manzil']['due'],
+            'stages' => $stages,
         ];
     }
 
@@ -643,7 +711,11 @@ class LearningPlanService
     {
         $plan = LearningPlan::query()
             ->where('student_id', $student->id)
-            ->whereIn('status', [LearningPlanStatus::Active->value, LearningPlanStatus::Paused->value])
+            ->whereIn('status', [
+                LearningPlanStatus::Active->value,
+                LearningPlanStatus::Paused->value,
+                LearningPlanStatus::Completed->value,
+            ])
             ->with(['teacher:id,name', 'items.assignment.recipients' => fn ($q) => $q->where('student_id', $student->id)])
             ->latest('id')
             ->first();
@@ -657,9 +729,13 @@ class LearningPlanService
             fn ($item) => ($item['origin'] ?? '') === 'assigned' || ($item['item_status'] ?? '') === 'released'
         ));
         $presented['progress'] = $this->progressFromItems($presented['items']);
-        $presented['next_action'] = $plan->status === LearningPlanStatus::Paused
+        $planIsActionable = $plan->status === LearningPlanStatus::Active;
+        $presented['next_action'] = ! $planIsActionable
             ? null
             : $this->nextAction($presented['items']);
+        $presented['next_milestone'] = ! $planIsActionable
+            ? null
+            : ($this->nextMilestone($presented['items']) ?? $presented['next_action']);
         if ($plan->status === LearningPlanStatus::Paused) {
             $presented['items'] = array_map(function (array $item) {
                 if (! in_array($item['display_status'] ?? '', ['completed', 'skipped'], true)) {
@@ -698,6 +774,21 @@ class LearningPlanService
         });
 
         return $candidates[0] ?? null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return array<string, mixed>|null
+     */
+    private function nextMilestone(array $items): ?array
+    {
+        $milestones = array_values(array_filter(
+            $items,
+            fn (array $item) => ($item['is_milestone'] ?? false)
+                && in_array(($item['display_status'] ?? ''), ['overdue', 'upcoming', 'in_progress', 'planned'], true)
+        ));
+
+        return $this->nextAction($milestones);
     }
 
     private function displayStatus(string $itemStatus, ?string $taskStatus, mixed $dueOn): string

@@ -104,6 +104,7 @@
               :session-label="sessionLabel"
               :issue-label="issueLabel"
               :format-when="formatWhen"
+              :memorisation-url="auth.memorisation_url || '/memorisation'"
               @back="openView('students')"
               @change-section="onProfileSection"
               @clear-focus="profileFocus = null"

@@ -153,6 +153,15 @@
       </template>
       <template v-if="messageItem">
         <div v-if="messageItem.status === 'awaiting_confirmation'" class="d-flex flex-wrap gap-2 mb-3">
+          <label class="visually-hidden" :for="`teacher-correction-note-${messageItem.recipientId}`">{{ t('teacher.correction_feedback_label') }}</label>
+          <textarea
+            :id="`teacher-correction-note-${messageItem.recipientId}`"
+            v-model="correctionNote"
+            class="form-control form-control-sm w-100"
+            rows="2"
+            maxlength="2000"
+            :placeholder="t('teacher.correction_feedback_placeholder')"
+          ></textarea>
           <button type="button" class="btn btn-success btn-sm" :disabled="reviewSaving" @click="approveSubmission">{{ t('teacher.task_approve') }}</button>
           <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="reviewSaving" @click="requestCorrection">{{ t('teacher.task_request_correction') }}</button>
         </div>
@@ -253,6 +262,7 @@ export default {
       messageError: '',
       messageSent: false,
       messageSentTimer: null,
+      correctionNote: '',
       reviewSaving: false,
       playbackItem: null,
       remindItem: null,
@@ -419,12 +429,14 @@ export default {
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
       this.messageItem = item
       this.messageDraft = ''
+      this.correctionNote = ''
       this.messageError = ''
       this.messageSent = false
     },
     closeMessages() {
       if (this.messageSending || this.reviewSaving) return
       if (this.messageSentTimer) clearTimeout(this.messageSentTimer)
+      this.correctionNote = ''
       this.messageItem = null
     },
     clearMessageComposer() {
@@ -482,7 +494,7 @@ export default {
       this.reviewSaving = true
       this.messageError = ''
       try {
-        const payload = await learningApi.requestTeacherAssignmentCorrection(this.messageItem.recipientId, '')
+        const payload = await learningApi.requestTeacherAssignmentCorrection(this.messageItem.recipientId, this.correctionNote)
         if (payload?.recipient) {
           this.syncMessageItemState(payload.recipient)
         }

@@ -4,6 +4,8 @@ namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
+use App\Enums\LearningPlanItemStatus;
+use App\Enums\LearningPlanStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\RevisionReminderPriority;
@@ -12,6 +14,8 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\LearningPlan;
+use App\Models\LearningPlanItem;
 use App\Models\MemorisationAssessment;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
@@ -360,46 +364,50 @@ class TeacherAssignmentService
     {
         TeacherFeatures::abortUnlessEnabled();
 
-        $assignment = $recipient->assignment;
-        if ($assignment === null || (int) $recipient->student_id !== (int) $student->id) {
-            abort(404);
-        }
+        return DB::transaction(function () use ($student, $recipient) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with('assignment')
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $this->assertStudentCanWorkOn($student, $locked);
 
-        $current = $recipient->status instanceof AssignmentStatus
-            ? $recipient->status
-            : AssignmentStatus::tryFrom((string) $recipient->status);
+            if ($locked->started_at === null) {
+                $this->markRecipientInProgress($locked);
+            }
 
-        if ($current === AssignmentStatus::Completed) {
-            return $recipient->refresh();
-        }
-
-        if ($recipient->started_at === null) {
-            $this->markRecipientInProgress($recipient);
-        }
-
-        return $recipient->refresh();
+            return $locked->refresh()->load('assignment');
+        });
     }
 
     public function completeByStudent(User $student, TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
     {
         TeacherFeatures::abortUnlessEnabled();
 
-        $recipient->loadMissing('assignment');
-        if ($recipient->assignment === null || (int) $recipient->student_id !== (int) $student->id) {
-            abort(404);
-        }
+        return DB::transaction(function () use ($student, $recipient) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with('assignment')
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $this->assertStudentCanWorkOn($student, $locked, allowSubmitted: true);
 
-        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
-        $resubmittingAfterCorrection = $this->reviewState($recipient) === 'needs_correction';
+            $evidence = is_array($locked->completion_evidence) ? $locked->completion_evidence : [];
+            $resubmittingAfterCorrection = $this->reviewState($locked) === 'needs_correction';
 
-        if ($recipient->student_completed_at === null || $resubmittingAfterCorrection) {
-            $progress = $this->progressForRecipient($recipient);
+            // A repeated click after a normal submission is harmless. It cannot
+            // append another submission or advance the review state.
+            if ($locked->student_completed_at !== null && ! $resubmittingAfterCorrection) {
+                return $locked->refresh()->load('assignment');
+            }
+
+            $progress = $this->progressForRecipient($locked);
             if ((int) $progress['activity_count'] < (int) $progress['target']) {
                 throw ValidationException::withMessages([
-                    'assignment' => 'Complete the required linked activity before marking this task complete.',
+                    'assignment' => $resubmittingAfterCorrection
+                        ? 'Complete the requested correction practice before resubmitting this task.'
+                        : 'Complete the required linked activity before marking this task complete.',
                 ]);
             }
-            if ($recipient->assignment->recording_required && ! $this->recipientHasPlayableRecording($recipient)) {
+            if ($locked->assignment->recording_required && ! $this->recipientHasPlayableRecording($locked)) {
                 throw ValidationException::withMessages([
                     'audio' => 'Submit a recording before completing this task.',
                 ]);
@@ -410,9 +418,14 @@ class TeacherAssignmentService
                 'activity_count' => (int) $progress['activity_count'],
                 'target' => (int) $progress['target'],
                 'submitted_at' => $completedAt->toIso8601String(),
+                'kind' => $resubmittingAfterCorrection ? 'correction' : 'initial',
             ];
-            unset($evidence['correction_requested_at'], $evidence['correction_note']);
-            $recipient->forceFill([
+            unset(
+                $evidence['correction_requested_at'],
+                $evidence['correction_note'],
+                $evidence['correction_activity_baseline'],
+            );
+            $locked->forceFill([
                 'status' => AssignmentStatus::AwaitingConfirmation->value,
                 'student_completed_at' => $completedAt,
                 'completion_evidence' => array_merge($evidence, [
@@ -422,48 +435,54 @@ class TeacherAssignmentService
                     'submissions' => $submissions,
                 ]),
             ])->save();
-            TeacherOverviewCache::forget((int) $recipient->assignment->teacher_id);
-        }
+            TeacherOverviewCache::forget((int) $locked->assignment->teacher_id);
 
-        return $recipient->refresh();
+            return $locked->refresh()->load('assignment');
+        });
     }
 
     public function approveByTeacher(User $teacher, TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
     {
         TeacherFeatures::abortUnlessEnabled();
 
-        $recipient->loadMissing('assignment');
-        $assignment = $recipient->assignment;
-        if ($assignment === null
-            || (int) $assignment->teacher_id !== (int) $teacher->id
-            || ! $teacher->isTeacher()
-            || ! $this->access->allows($teacher, $recipient->student)) {
-            abort(404);
-        }
+        $fresh = DB::transaction(function () use ($teacher, $recipient) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with(['assignment', 'student'])
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $assignment = $locked->assignment;
+            if ($assignment === null
+                || (int) $assignment->teacher_id !== (int) $teacher->id
+                || ! $teacher->isTeacher()
+                || ! $this->access->allows($teacher, $locked->student)) {
+                abort(404);
+            }
 
-        if ($recipient->student_completed_at === null) {
-            throw ValidationException::withMessages([
-                'assignment' => 'The student has not submitted this task yet.',
-            ]);
-        }
+            if ($locked->student_completed_at === null) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'The student has not submitted this task yet.',
+                ]);
+            }
 
-        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
-            return $recipient->refresh();
-        }
+            if ($this->lifecycleStatus($locked) === AssignmentStatus::Completed->value) {
+                return $locked->refresh()->load('assignment');
+            }
 
-        if ($this->lifecycleStatus($recipient) !== AssignmentStatus::AwaitingConfirmation->value) {
-            throw ValidationException::withMessages([
-                'assignment' => 'This task must be submitted again before it can be approved.',
-            ]);
-        }
+            if ($this->lifecycleStatus($locked) !== AssignmentStatus::AwaitingConfirmation->value) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'This task must be submitted again before it can be approved.',
+                ]);
+            }
 
-        $approvedAt = now();
-        $recipient->forceFill([
-            'status' => AssignmentStatus::Completed->value,
-            'completed_at' => $approvedAt,
-        ])->save();
+            $locked->forceFill([
+                'status' => AssignmentStatus::Completed->value,
+                'completed_at' => now(),
+            ])->save();
 
-        $fresh = $recipient->refresh();
+            $this->syncLearningPlanAfterApproval($assignment);
+
+            return $locked->refresh()->load('assignment');
+        });
         try {
             app(RevisionReminderSyncService::class)
                 ->completeAssignmentReminder($fresh, 'assignment');
@@ -476,6 +495,53 @@ class TeacherAssignmentService
         return $fresh;
     }
 
+    /**
+     * A linked plan advances only after teacher approval. Student submission and
+     * AI wording-match evidence deliberately do not complete a plan activity.
+     */
+    private function syncLearningPlanAfterApproval(TeacherAssignment $assignment): void
+    {
+        $planId = (int) ($assignment->learning_plan_id ?? 0);
+        if ($planId <= 0) {
+            return;
+        }
+
+        $plan = LearningPlan::query()->whereKey($planId)->lockForUpdate()->first();
+        if (! $plan || in_array($plan->status, [LearningPlanStatus::Completed, LearningPlanStatus::Archived], true)) {
+            return;
+        }
+
+        $items = LearningPlanItem::query()
+            ->where('learning_plan_id', $plan->id)
+            ->where('origin', 'assigned')
+            ->where('item_status', '!=', LearningPlanItemStatus::Skipped->value)
+            ->with('assignment.recipients')
+            ->lockForUpdate()
+            ->get();
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $allApproved = $items->every(function (LearningPlanItem $item) {
+            $recipients = $item->assignment?->recipients;
+
+            return $item->teacher_assignment_id !== null
+                && $recipients !== null
+                && $recipients->isNotEmpty()
+                && $recipients->every(function (TeacherAssignmentRecipient $recipient) {
+                    $status = $recipient->status instanceof AssignmentStatus
+                        ? $recipient->status
+                        : AssignmentStatus::tryFrom((string) $recipient->status);
+
+                    return $status === AssignmentStatus::Completed;
+                });
+        });
+
+        if ($allApproved) {
+            $plan->forceFill(['status' => LearningPlanStatus::Completed->value])->save();
+        }
+    }
+
     public function requestCorrectionByTeacher(
         User $teacher,
         TeacherAssignmentRecipient $recipient,
@@ -483,50 +549,60 @@ class TeacherAssignmentService
     ): TeacherAssignmentRecipient {
         TeacherFeatures::abortUnlessEnabled();
 
-        $recipient->loadMissing('assignment');
-        $assignment = $recipient->assignment;
-        if ($assignment === null
-            || (int) $assignment->teacher_id !== (int) $teacher->id
-            || ! $teacher->isTeacher()
-            || ! $this->access->allows($teacher, $recipient->student)) {
-            abort(404);
-        }
+        $fresh = DB::transaction(function () use ($teacher, $recipient, $note) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with(['assignment', 'student'])
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $assignment = $locked->assignment;
+            if ($assignment === null
+                || (int) $assignment->teacher_id !== (int) $teacher->id
+                || ! $teacher->isTeacher()
+                || ! $this->access->allows($teacher, $locked->student)) {
+                abort(404);
+            }
 
-        if ($recipient->student_completed_at === null) {
-            throw ValidationException::withMessages([
-                'assignment' => 'The student has not submitted this task yet.',
-            ]);
-        }
+            if ($locked->student_completed_at === null) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'The student has not submitted this task yet.',
+                ]);
+            }
 
-        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
-        if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
-            throw ValidationException::withMessages([
-                'assignment' => 'Completed tasks cannot be returned for correction.',
-            ]);
-        }
+            $evidence = is_array($locked->completion_evidence) ? $locked->completion_evidence : [];
+            if ($this->lifecycleStatus($locked) === AssignmentStatus::Completed->value) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'Completed tasks cannot be returned for correction.',
+                ]);
+            }
 
-        if ($this->reviewState($recipient) === 'needs_correction') {
-            return $recipient->refresh();
-        }
+            if ($this->reviewState($locked) === 'needs_correction') {
+                return $locked->refresh()->load('assignment');
+            }
 
-        if ($this->lifecycleStatus($recipient) !== AssignmentStatus::AwaitingConfirmation->value) {
-            throw ValidationException::withMessages([
-                'assignment' => 'This task is not awaiting teacher review.',
-            ]);
-        }
+            if ($this->lifecycleStatus($locked) !== AssignmentStatus::AwaitingConfirmation->value) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'This task is not awaiting teacher review.',
+                ]);
+            }
 
-        $evidence['correction_requested_at'] = now()->toIso8601String();
-        if ($note !== null && trim($note) !== '') {
-            $evidence['correction_note'] = trim($note);
-        }
+            // Keep a persisted baseline. A correction is a new piece of work, not a
+            // second click against the original submission's sessions/checks.
+            $evidence['correction_activity_baseline'] = (int) $this->progressForRecipient($locked)['activity_count'];
+            $evidence['correction_requested_at'] = now()->toIso8601String();
+            if ($note !== null && trim($note) !== '') {
+                $evidence['correction_note'] = trim($note);
+            }
 
-        $recipient->forceFill([
-            'status' => AssignmentStatus::InProgress->value,
-            'completion_evidence' => $evidence,
-        ])->save();
+            $locked->forceFill([
+                'status' => AssignmentStatus::InProgress->value,
+                'completion_evidence' => $evidence,
+            ])->save();
+
+            return $locked->refresh()->load('assignment');
+        });
         TeacherOverviewCache::forget((int) $teacher->id);
 
-        return $recipient->refresh();
+        return $fresh;
     }
 
     public function addLearnerMessage(
@@ -587,27 +663,39 @@ class TeacherAssignmentService
             return null;
         }
 
-        $recipient = TeacherAssignmentRecipient::query()
-            ->whereKey($id)
-            ->where('student_id', $student->id)
-            ->with('assignment')
-            ->first();
-        $assignment = $recipient?->assignment;
+        return DB::transaction(function () use ($id, $student, $kind, $surah, $ayahStart, $ayahEnd) {
+            $recipient = TeacherAssignmentRecipient::query()
+                ->whereKey($id)
+                ->where('student_id', $student->id)
+                ->with('assignment')
+                ->lockForUpdate()
+                ->first();
+            $assignment = $recipient?->assignment;
 
-        $rangeMatches = $recipient !== null
-            && $assignment !== null
-            && $assignment->kind === $kind
-            && (int) $assignment->surah_number === $surah
-            && (int) $assignment->ayah_start === $ayahStart
-            && (int) $assignment->ayah_end === $ayahEnd;
+            $rangeMatches = $recipient !== null
+                && $assignment !== null
+                && $assignment->kind === $kind
+                && (int) $assignment->surah_number === $surah
+                && (int) $assignment->ayah_start === $ayahStart
+                && (int) $assignment->ayah_end === $ayahEnd;
 
-        if (! $rangeMatches) {
-            throw ValidationException::withMessages([
-                'teacher_assignment_recipient_id' => 'This task link is no longer valid. Return to Tasks and try again.',
-            ]);
-        }
+            if (! $rangeMatches) {
+                throw ValidationException::withMessages([
+                    'teacher_assignment_recipient_id' => 'This task link is no longer valid. Return to Tasks and try again.',
+                ]);
+            }
 
-        return $this->markRecipientInProgress($recipient);
+            $this->assertStudentCanWorkOn($student, $recipient, allowApprovedPractice: true);
+
+            // Approved work may be practised again, but a legacy recipient can
+            // legitimately have no started_at value. Never let that missing
+            // timestamp move an approved assignment back to in progress.
+            if ($this->lifecycleStatus($recipient) === AssignmentStatus::Completed->value) {
+                return $recipient->load('assignment');
+            }
+
+            return $this->markRecipientInProgress($recipient)->load('assignment');
+        });
     }
 
     private function markRecipientInProgress(TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
@@ -620,8 +708,55 @@ class TeacherAssignmentService
             'started_at' => now(),
             'status' => AssignmentStatus::InProgress->value,
         ])->save();
+        if ($recipient->assignment !== null) {
+            TeacherOverviewCache::forget((int) $recipient->assignment->teacher_id);
+        }
 
         return $recipient->refresh();
+    }
+
+    /**
+     * A recipient is the source of truth for whether linked work may be added.
+     * Do not let a stale browser tab attach more activity after submission.
+     * Approved work may be practised again, but cannot be resubmitted or
+     * moved back into the assignment workflow.
+     */
+    private function assertStudentCanWorkOn(
+        User $student,
+        TeacherAssignmentRecipient $recipient,
+        bool $allowSubmitted = false,
+        bool $allowApprovedPractice = false,
+    ): void {
+        $recipient->loadMissing('assignment');
+        if ($recipient->assignment === null || (int) $recipient->student_id !== (int) $student->id) {
+            abort(404);
+        }
+
+        $status = $this->lifecycleStatus($recipient);
+        if ($status === AssignmentStatus::Completed->value) {
+            if ($allowApprovedPractice) {
+                return;
+            }
+            throw ValidationException::withMessages([
+                'assignment' => 'This task has already been approved by the teacher.',
+            ]);
+        }
+
+        if ($status === AssignmentStatus::AwaitingConfirmation->value && ! $allowSubmitted) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This task is waiting for teacher review and cannot be changed.',
+            ]);
+        }
+
+        if (! in_array($status, [
+            AssignmentStatus::Pending->value,
+            AssignmentStatus::InProgress->value,
+            AssignmentStatus::AwaitingConfirmation->value,
+        ], true)) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This task is not available for practice.',
+            ]);
+        }
     }
 
     /**
@@ -661,6 +796,7 @@ class TeacherAssignmentService
             'from' => $assignment->ayah_start,
             'to' => $assignment->ayah_end,
             'return' => 'dashboard',
+            'return_tab' => 'learning',
         ];
 
         if ($assignment->kind === AssignmentKind::AiRecite) {
@@ -704,7 +840,7 @@ class TeacherAssignmentService
     }
 
     /**
-     * @return array{completed: int, target: int, activity_count: int, attempt_count: int|null, completion_count: int|null, resume_available: bool}
+     * @return array{completed: int, target: int, activity_count: int, lifetime_activity_count: int, scope: string, attempt_count: int|null, completion_count: int|null, resume_available: bool}
      */
     public function progressForRecipient(
         TeacherAssignmentRecipient $recipient,
@@ -715,7 +851,7 @@ class TeacherAssignmentService
         $assignment = $recipient->assignment;
         $target = max(1, (int) ($assignment?->repetition_target ?? 1));
         if ($assignment === null) {
-            return ['completed' => 0, 'target' => $target, 'activity_count' => 0, 'attempt_count' => null, 'completion_count' => null, 'resume_available' => false];
+            return ['completed' => 0, 'target' => $target, 'activity_count' => 0, 'lifetime_activity_count' => 0, 'scope' => 'assignment', 'attempt_count' => null, 'completion_count' => null, 'resume_available' => false];
         }
 
         if ($completedSessions === null || $scoredAttempts === null) {
@@ -734,8 +870,16 @@ class TeacherAssignmentService
             $scoredAttempts = $this->dedupeScoredAttempts($scoredAttempts);
         }
 
-        $activityCount = $this->completedRepeats($recipient, $completedSessions, $scoredAttempts);
-        if ($recipient->student_completed_at !== null) {
+        $lifetimeActivityCount = $this->completedRepeats($recipient, $completedSessions, $scoredAttempts);
+        $activityCount = $lifetimeActivityCount;
+        $scope = 'assignment';
+        if ($this->reviewState($recipient) === 'needs_correction') {
+            $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+            $baseline = max(0, (int) ($evidence['correction_activity_baseline'] ?? $lifetimeActivityCount));
+            $activityCount = max(0, $lifetimeActivityCount - $baseline);
+            $scope = 'correction';
+        }
+        if ($recipient->student_completed_at !== null && $scope !== 'correction') {
             $evidenceCount = is_array($recipient->completion_evidence)
                 ? (int) ($recipient->completion_evidence['activity_count'] ?? $target)
                 : $target;
@@ -749,6 +893,8 @@ class TeacherAssignmentService
             'completed' => min($activityCount, $target),
             'target' => $target,
             'activity_count' => $activityCount,
+            'lifetime_activity_count' => $lifetimeActivityCount,
+            'scope' => $scope,
             'attempt_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? $activityCount : null,
             'completion_count' => ($assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind) === AssignmentKind::AiRecite->value ? null : $activityCount,
             'resume_available' => $this->resumeSessionId($recipient, $unfinishedSessions) !== null,
@@ -803,6 +949,7 @@ class TeacherAssignmentService
         ?Collection $unfinishedSessions = null,
         ?int $viewerId = null,
     ): array {
+        $recipient->loadMissing('latestSelfAssessment');
         $assignment = $recipient->assignment;
         $status = $this->displayStatus($recipient, $assignment);
 
@@ -820,6 +967,9 @@ class TeacherAssignmentService
             'completed_at' => $recipient->completed_at?->toIso8601String(),
             'updated_at' => $recipient->updated_at?->toIso8601String(),
             'completion_evidence' => $recipient->completion_evidence,
+            'self_assessment' => $recipient->latestSelfAssessment
+                ? app(StudentSelfAssessmentService::class)->present($recipient->latestSelfAssessment)
+                : null,
         ];
 
         $stateSnapshot = TeacherTaskState::snapshot(
@@ -860,10 +1010,20 @@ class TeacherAssignmentService
                 $unfinishedSessions,
             );
             $payload['assignment_state'] = $this->assignmentWorkflowState($status, $payload['review_state']);
+            $payload['workflow_state'] = $this->learnerWorkflowState($recipient, $status, $payload['review_state'], $payload['progress']);
             $payload['ai_practice_state'] = $this->aiPracticeState($assignment, $payload['progress'], $recipient);
             $payload['teacher_review_state'] = $this->teacherReviewWorkflowState($assignment, $recipient);
             $payload['revision_state'] = $this->revisionWorkflowState($assignment, $recipient);
-            $payload['href'] = $this->practiceHref($assignment, $resumeSessionId, (int) $recipient->id);
+            $canLinkPractice = in_array($this->lifecycleStatus($recipient), [
+                AssignmentStatus::Pending->value,
+                AssignmentStatus::InProgress->value,
+                AssignmentStatus::Completed->value,
+            ], true);
+            $payload['href'] = $this->practiceHref(
+                $assignment,
+                $resumeSessionId,
+                $canLinkPractice ? (int) $recipient->id : null,
+            );
             $payload['messages'] = $this->assignmentMessages(
                 $assignment,
                 (int) $recipient->student_id,
@@ -1133,19 +1293,24 @@ class TeacherAssignmentService
             ->where('student_id', $studentId)
             ->sortBy(fn (TeacherNote $note) => sprintf('%020d', (int) $note->id))
             ->values();
-        $presented = $thread
-            ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note, $viewerId))
-            ->values()
-            ->all();
         if ($viewerId !== null && $markRead) {
             $unreadIds = $thread->filter(fn (TeacherNote $note) => $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId))->pluck('id');
             if ($unreadIds->isNotEmpty()) {
-                TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => now()]);
+                $readAt = now();
+                TeacherNote::query()->whereIn('id', $unreadIds)->whereNull('read_at')->update(['read_at' => $readAt]);
+                $thread->each(function (TeacherNote $note) use ($unreadIds, $readAt): void {
+                    if ($unreadIds->contains($note->id)) {
+                        $note->setAttribute('read_at', $readAt);
+                    }
+                });
                 TeacherOverviewCache::forget((int) $assignment->teacher_id);
             }
         }
 
-        return $presented;
+        return $thread
+            ->map(fn (TeacherNote $note) => $this->presentAssignmentMessage($note, $viewerId))
+            ->values()
+            ->all();
     }
 
     /**
@@ -1157,19 +1322,32 @@ class TeacherAssignmentService
         $surah = $note->surah_number ? (int) $note->surah_number : null;
         $from = $note->ayah_start ? (int) $note->ayah_start : null;
         $to = $note->ayah_end ? (int) $note->ayah_end : $from;
+        $audio = $this->messageAudio->payload($note);
+        $feedbackType = $kind === TeacherNoteKind::Feedback
+            ? (($note->audio_path || ($audio['available'] ?? false)) ? 'voice_feedback' : 'written_feedback')
+            : 'message';
 
         return [
             'id' => (int) $note->id,
             'sender' => $kind === TeacherNoteKind::Feedback ? 'teacher' : 'student',
             'sender_name' => $kind === TeacherNoteKind::Feedback ? $note->teacher?->name : null,
             'body' => $note->body,
-            'audio' => $this->messageAudio->payload($note),
+            'audio' => $audio,
+            'message_kind' => $kind?->value,
+            'feedback_type' => $feedbackType,
             'passage' => $surah && $from ? [
                 'surah_number' => $surah,
                 'surah_name' => QuranMetadata::name($surah),
                 'ayah_start' => $from,
                 'ayah_end' => $to,
             ] : null,
+            'related_assignment' => [
+                'id' => (int) $note->teacher_assignment_id,
+                'recipient_id' => null,
+                'title' => $surah && $from
+                    ? QuranMetadata::name($surah).' · '.$from.($to && $to !== $from ? '–'.$to : '')
+                    : null,
+            ],
             'created_at' => $note->created_at?->toIso8601String(),
             'read_at' => $note->read_at?->toIso8601String(),
             'unread' => $viewerId !== null && $note->read_at === null && ! $this->assignmentMessageSentBy($note, $viewerId),
@@ -1296,6 +1474,40 @@ class TeacherAssignmentService
     }
 
     /**
+     * The learner-facing workflow deliberately distinguishes practising from
+     * submitting and approving. These values are derived from the recipient,
+     * its linked activity and its persisted submission history.
+     *
+     * @param  array{activity_count: int, target: int}  $progress
+     */
+    private function learnerWorkflowState(
+        TeacherAssignmentRecipient $recipient,
+        string $status,
+        ?string $reviewState,
+        array $progress,
+    ): string {
+        if ($reviewState === 'needs_correction') {
+            return 'needs_correction';
+        }
+        if ($status === AssignmentStatus::Completed->value) {
+            return 'completed';
+        }
+        if ($status === AssignmentStatus::AwaitingConfirmation->value || $reviewState === 'submitted') {
+            $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+            $submissions = is_array($evidence['submissions'] ?? null) ? $evidence['submissions'] : [];
+            $last = end($submissions);
+
+            return is_array($last) && ($last['kind'] ?? null) === 'correction'
+                ? 'correction_resubmitted'
+                : 'submitted_for_review';
+        }
+
+        return (int) ($progress['activity_count'] ?? 0) >= (int) ($progress['target'] ?? 1)
+            ? 'practice_completed'
+            : 'practice_required';
+    }
+
+    /**
      * A scored AI check only proves progress against its configured target; it never approves an assignment.
      *
      * @param  array{completed: int, target: int, activity_count: int, attempt_count: int|null, completion_count: int|null, resume_available: bool}  $progress
@@ -1387,7 +1599,10 @@ class TeacherAssignmentService
         array $messages,
         TeacherAssignment $assignment,
     ): ?array {
-        if (! $this->isLearnerTaskApproved($recipient, $reviewState)) {
+        // Keep the exact wording evidence available when a teacher returns a
+        // submission. It identifies words to revisit, without presenting the
+        // AI result as a Tajweed or pronunciation judgement.
+        if (! $this->isLearnerTaskApproved($recipient, $reviewState) && $reviewState !== 'needs_correction') {
             return null;
         }
 

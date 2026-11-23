@@ -189,12 +189,19 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame($first['id'], $second['id']);
         $this->assertSame(1, TeacherNote::query()->where('client_message_id', $clientMessageId)->count());
 
+        $supportThread = collect($this->actingAs($student)
+            ->getJson(route('api.me.support'))
+            ->assertOk()
+            ->json('direct_threads'))
+            ->firstWhere('teacher_id', $teacher->id);
+        $this->assertTrue($supportThread['messages'][0]['unread']);
+
         $studentThread = $this->actingAs($student)
             ->getJson(route('api.me.teachers.messages.index', $teacher))
             ->assertOk()
             ->json('messages');
-        $this->assertTrue($studentThread[0]['unread']);
-        $this->assertSame('sent', $studentThread[0]['delivery_status']);
+        $this->assertFalse($studentThread[0]['unread']);
+        $this->assertSame('read', $studentThread[0]['delivery_status']);
 
         $studentThreadAgain = $this->actingAs($student)
             ->getJson(route('api.me.teachers.messages.index', $teacher))
@@ -1083,6 +1090,15 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $recipient->completion_evidence['activity_count']);
         $this->assertSame(1, $recipient->completion_evidence['target']);
 
+        // A stale practice tab cannot add activity after the student submits.
+        $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'assignment-after-submit-session',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertStatus(422);
+
         $this->actingAs($student)
             ->postJson(route('api.me.assignments.complete', $recipientId))
             ->assertOk();
@@ -1105,6 +1121,82 @@ class TeacherDashboardTest extends TestCase
             ->json('payload.assignments');
 
         $this->assertSame(AssignmentStatus::Completed->value, $tasks[0]['status']);
+    }
+
+    public function test_optional_assignment_self_assessment_is_visible_to_teacher_and_never_changes_ai_accuracy(): void
+    {
+        [$teacher, $student] = $this->classroom();
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite',
+            'hifz_category' => 'sabqi',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 3,
+            'repetition_target' => 1,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+
+        $recipientId = $created['recipients'][0]['id'];
+        $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))->assertOk();
+        $attempt = AiReciteAttempt::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $recipientId,
+            'attempt_number' => 1,
+            'accuracy_percent' => 77,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 3],
+        ]);
+
+        $support = $this->actingAs($student)
+            ->postJson(route('api.me.assignments.complete', $recipientId), [
+                'self_assessment' => [
+                    'feeling' => 'need_help',
+                    'comment' => 'I lose my place at the start of ayah 2.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('assignments.0.self_assessment.feeling', 'need_help')
+            ->assertJsonPath('assignments.0.self_assessment.note', 'I lose my place at the start of ayah 2.')
+            ->assertJsonPath('assignments.0.self_assessment.verified_mistake', false)
+            ->assertJsonPath('assignments.0.self_assessment.affects_ai_score', false)
+            ->json();
+
+        $this->assertSame(77, $attempt->fresh()->accuracy_percent);
+        $this->assertSame(77, $support['assignments'][0]['last_attempt']['accuracy_percent']);
+        $this->assertDatabaseCount('student_self_assessments', 1);
+
+        $teacherRows = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.assignments'))
+            ->assertOk()
+            ->json('data');
+        $this->assertSame('need_help', $teacherRows[0]['recipients'][0]['self_assessment']['feeling']);
+        $this->assertSame('I lose my place at the start of ayah 2.', $teacherRows[0]['recipients'][0]['self_assessment']['note']);
+        $this->assertSame(77, $teacherRows[0]['recipients'][0]['last_attempt']['accuracy_percent']);
+
+        $tasks = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'tasks']))
+            ->assertOk()
+            ->json('payload.assignments');
+        $this->assertSame('need_help', $tasks[0]['self_assessment']['feeling']);
+
+        // Students may also add or revise the optional assessment after submission.
+        $this->actingAs($student)->postJson(route('api.me.self-assessments.store'), [
+            'teacher_assignment_recipient_id' => $recipientId,
+            'feeling' => 'manageable',
+            'note' => 'It became clearer after one more practice.',
+        ])->assertOk()
+            ->assertJsonPath('self_assessment.feeling', 'manageable')
+            ->assertJsonPath('self_assessment.affects_ai_score', false);
+
+        $this->assertDatabaseCount('student_self_assessments', 1);
+        $this->assertSame(77, $attempt->fresh()->accuracy_percent);
+
+        $this->actingAs($student)->postJson(route('api.me.self-assessments.store'), [
+            'teacher_assignment_recipient_id' => $recipientId,
+            'feeling' => 'very_hard',
+        ])->assertUnprocessable();
     }
 
     public function test_correction_request_survives_status_refresh_for_teacher_and_learner(): void
@@ -1160,9 +1252,16 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame('needs_correction', $learnerRow['review_state']);
         $this->assertSame('NEEDS_CORRECTION', $learnerRow['task_state']);
         $this->assertSame('needs_correction', $learnerRow['assignment_state']);
+        $this->assertSame('needs_correction', $learnerRow['workflow_state']);
         $this->assertNull($learnerRow['ai_practice_state']);
         $this->assertNull($learnerRow['teacher_review_state']);
         $this->assertNull($learnerRow['revision_state']);
+        $correctionFeedback = collect($learnerSupport['learning']['feedback_inbox'] ?? [])
+            ->firstWhere('recipient_id', $recipientId);
+        $this->assertSame('correction_request', $correctionFeedback['feedback_type']);
+        $this->assertSame('Repeat ayah 3', $correctionFeedback['body']);
+        $this->assertSame($recipientId, $correctionFeedback['related_assignment']['recipient_id']);
+        $this->assertStringContainsString('assignment_recipient='.$recipientId, $correctionFeedback['correction_action']['href']);
 
         $teacherRows = $this->actingAs($teacher)
             ->getJson(route('api.teacher.assignments'))
@@ -1175,12 +1274,32 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame('NEEDS_CORRECTION', $teacherRecipient['task_state']);
         $this->assertSame('needs_correction', $teacherRecipient['assignment_state']);
 
-        // A correction returns the task to the student; it must be possible to submit it again.
+        // A correction returns the task to the student, but the original
+        // practice cannot be reused to bypass the requested correction.
+        $this->actingAs($student)
+            ->postJson(route('api.me.assignments.complete', $recipientId))
+            ->assertStatus(422);
+
+        $correctionSession = $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'assignment-correction-resubmission-session',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk()->json('session');
+        $this->actingAs($student)->postJson(route('api.session.end'), [
+            'session_id' => $correctionSession['id'],
+            'idempotency_key' => 'assignment-correction-resubmission-session-end',
+            'range_complete' => true,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk();
+
         $this->actingAs($student)
             ->postJson(route('api.me.assignments.complete', $recipientId))
             ->assertOk()
             ->assertJsonPath('assignments.0.status', AssignmentStatus::AwaitingConfirmation->value)
-            ->assertJsonPath('assignments.0.review_state', 'submitted');
+            ->assertJsonPath('assignments.0.review_state', 'submitted')
+            ->assertJsonPath('assignments.0.workflow_state', 'correction_resubmitted');
         $recipient = TeacherAssignmentRecipient::query()->findOrFail($recipientId);
         $this->assertCount(2, $recipient->completion_evidence['submissions']);
 
@@ -1295,6 +1414,180 @@ class TeacherDashboardTest extends TestCase
         $this->actingAs($student)
             ->postJson(route('api.me.assignments.notes.store', $recipientId), ['body' => 'Sharing was revoked.'])
             ->assertNotFound();
+    }
+
+    public function test_opening_an_assignment_thread_returns_the_persisted_read_state_and_feedback_is_idempotent(): void
+    {
+        [$teacher, $student, $hidden] = $this->classroom();
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+        $clientMessageId = '02f85296-cac5-4d31-93c5-d2567549840f';
+
+        $first = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), [
+                'body' => 'Repeat ayah three slowly.',
+                'client_message_id' => $clientMessageId,
+            ])->assertCreated()->json('message');
+        $second = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), [
+                'body' => 'Repeat ayah three slowly.',
+                'client_message_id' => $clientMessageId,
+            ])->assertCreated()->json('message');
+
+        $this->assertSame($first['id'], $second['id']);
+        $this->assertSame(1, TeacherNote::query()->where('client_message_id', $clientMessageId)->count());
+        $this->assertSame(1, $student->fresh()->notifications->filter(
+            fn ($notification) => ($notification->data['source_key'] ?? null) === 'feedback:'.$first['id']
+        )->count());
+
+        $this->actingAs($student)->getJson(route('api.me.support'))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.thread_unread_count', 1);
+
+        $thread = $this->actingAs($student)
+            ->getJson(route('api.me.assignments.messages.index', $recipientId))
+            ->assertOk()
+            ->assertJsonPath('thread_unread_count', 0)
+            ->json('messages');
+        $this->assertFalse($thread[0]['unread']);
+        $this->assertSame('read', $thread[0]['delivery_status']);
+        $this->assertNotNull(TeacherNote::query()->findOrFail($first['id'])->read_at);
+
+        $this->actingAs($student)->getJson(route('api.me.support'))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.thread_unread_count', 0);
+        $this->actingAs($hidden)
+            ->getJson(route('api.me.assignments.messages.index', $recipientId))
+            ->assertForbidden();
+    }
+
+    public function test_feedback_inbox_consolidates_assignment_conversations_and_preserves_audio_and_history(): void
+    {
+        Storage::fake('user_files');
+        [$teacher, $student, $hidden] = $this->classroom();
+        $recipientIds = [];
+        foreach ([[1, 1, 7], [2, 1, 5]] as [$surah, $from, $to]) {
+            $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+                'kind' => 'practice',
+                'hifz_category' => 'sabaq',
+                'student_id' => $student->id,
+                'surah_number' => $surah,
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+                'due_at' => today()->addDays(7)->toDateString(),
+            ])->assertCreated()->json();
+            $recipientIds[] = $created['recipients'][0]['id'];
+        }
+
+        $longBody = str_repeat('Read this passage carefully. ', 12);
+        $this->actingAs($teacher)->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientIds[0]), [
+            'body' => $longBody,
+            'client_message_id' => '869e713a-83ca-42ef-998e-b629c4a7a345',
+        ])->assertCreated();
+        $voice = $this->actingAs($teacher)->post(route('api.teacher.assignment-recipients.notes.store', $recipientIds[0]), [
+            'audio' => UploadedFile::fake()->createWithContent(
+                'feedback.wav',
+                \App\Support\DemoRecitationAudio::silentWavBytes(900),
+            ),
+            'duration_ms' => 900,
+        ], ['Accept' => 'application/json'])->assertCreated()->json('message');
+
+        $secondWritten = $this->actingAs($teacher)->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientIds[1]), [
+            'body' => 'Focus on the final two ayahs.',
+        ])->assertCreated()->json('message');
+        $secondAssignmentId = TeacherAssignmentRecipient::query()->findOrFail($recipientIds[1])->teacher_assignment_id;
+        $missing = new TeacherNote;
+        $missing->forceFill([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'organisation_id' => $teacher->organisation_id,
+            'teacher_assignment_id' => $secondAssignmentId,
+            'surah_number' => 2,
+            'ayah_start' => 1,
+            'ayah_end' => 5,
+            'kind' => \App\Enums\TeacherNoteKind::Feedback->value,
+            'body' => '',
+            'audio_disk' => 'user_files',
+            'audio_path' => 'teacher-task-audio/missing.webm',
+            'audio_mime' => 'audio/webm',
+            'audio_duration_ms' => 1100,
+        ])->save();
+
+        $firstRecipient = TeacherAssignmentRecipient::query()->findOrFail($recipientIds[0]);
+        $firstRecipient->forceFill([
+            'status' => AssignmentStatus::Completed->value,
+            'student_completed_at' => now()->subMinute(),
+            'completed_at' => now(),
+        ])->save();
+
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $inbox = collect($support['learning']['feedback_inbox']);
+        $this->assertCount(2, $inbox);
+
+        $firstPreview = $inbox->firstWhere('recipient_id', $recipientIds[0]);
+        $this->assertSame($voice['id'], $firstPreview['id']);
+        $this->assertSame('voice_feedback', $firstPreview['feedback_type']);
+        $this->assertSame(2, $firstPreview['conversation_message_count']);
+        $this->assertSame($recipientIds[0], $firstPreview['related_assignment']['recipient_id']);
+        $this->assertTrue($firstPreview['audio']['available']);
+
+        $missingPreview = $inbox->firstWhere('recipient_id', $recipientIds[1]);
+        $this->assertSame($missing->id, $missingPreview['id']);
+        $this->assertSame('voice_feedback', $missingPreview['feedback_type']);
+        $this->assertSame('missing', $missingPreview['audio']['reason']);
+        $this->assertSame(2, $missingPreview['conversation_message_count']);
+
+        $completedThread = collect($support['assignments'])->firstWhere('id', $recipientIds[0]);
+        $this->assertSame(AssignmentStatus::Completed->value, $completedThread['status']);
+        $this->assertCount(2, $completedThread['messages']);
+        $this->assertSame(trim($longBody), $completedThread['messages'][0]['body']);
+        $this->actingAs($student)->get($voice['audio']['url'])->assertOk();
+        $this->actingAs($hidden)->get($voice['audio']['url'])->assertNotFound();
+        $this->actingAs($student)->get('/api/task-messages/'.$missing->id.'/audio')->assertNotFound();
+        $this->assertSame('Focus on the final two ayahs.', TeacherNote::query()->findOrFail($secondWritten['id'])->body);
+    }
+
+    public function test_feedback_conversations_remain_separate_for_multiple_teachers(): void
+    {
+        [$teacher, $student, , $group] = $this->classroom();
+        $secondTeacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $teacher->organisation_id,
+            'name' => 'Second Teacher',
+        ]);
+        GroupMembership::factory()->create([
+            'learning_group_id' => $group->id,
+            'user_id' => $secondTeacher->id,
+            'membership_role' => MembershipRole::Teacher->value,
+            'status' => MembershipStatus::Approved->value,
+        ]);
+
+        foreach ([[$teacher, 'First teacher feedback.'], [$secondTeacher, 'Second teacher feedback.']] as [$sender, $body]) {
+            $this->actingAs($sender)->postJson(route('api.teacher.students.notes', $student), [
+                'kind' => 'feedback',
+                'body' => $body,
+            ])->assertCreated();
+        }
+
+        $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
+        $general = collect($support['learning']['feedback_inbox'])->where('source', 'general');
+        $this->assertCount(2, $general);
+        $this->assertEqualsCanonicalizing(
+            [$teacher->id, $secondTeacher->id],
+            $general->pluck('teacher_id')->all(),
+        );
+        $threads = collect($support['direct_threads'])->keyBy('teacher_id');
+        $this->assertSame('First teacher feedback.', $threads[$teacher->id]['messages'][0]['body']);
+        $this->assertSame('Second teacher feedback.', $threads[$secondTeacher->id]['messages'][0]['body']);
+        $this->assertTrue($threads[$teacher->id]['messages'][0]['unread']);
     }
 
     public function test_teacher_audio_feedback_is_playable_listed_and_deletable(): void
@@ -1414,6 +1707,44 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(2, $support['progress']['activity_count']);
         $this->assertSame(2, $support['progress']['completion_count']);
         $this->assertStringContainsString('assignment_recipient='.$recipientId, $support['href']);
+    }
+
+    public function test_repeat_practice_does_not_reopen_a_legacy_approved_assignment_without_started_at(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+        $recipient = TeacherAssignmentRecipient::query()->findOrFail($recipientId);
+        $recipient->forceFill([
+            'status' => AssignmentStatus::Completed->value,
+            'started_at' => null,
+            'student_completed_at' => now()->subMinute(),
+            'completed_at' => now(),
+        ])->save();
+
+        $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'legacy-approved-repeat-practice',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk();
+
+        $recipient->refresh();
+        $this->assertSame(AssignmentStatus::Completed->value, $recipient->status->value);
+        $this->assertNull($recipient->started_at);
+        $this->actingAs($student)->getJson(route('api.me.support'))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.status', AssignmentStatus::Completed->value)
+            ->assertJsonPath('assignments.0.workflow_state', 'completed');
     }
 
     public function test_date_only_task_is_not_overdue_until_after_its_due_day(): void
@@ -1800,10 +2131,26 @@ class TeacherDashboardTest extends TestCase
             ->assertJsonPath('assignment.kind', 'practice')
             ->assertJsonPath('assignment.recording_required', false);
 
+        $recitationCheck = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'ai_recite',
+            'hifz_category' => 'sabqi',
+            'recording_required' => false,
+            'student_id' => $student->id,
+            'surah_number' => 2,
+            'ayah_start' => 1,
+            'ayah_end' => 2,
+            'due_at' => $due,
+        ])->assertCreated()->json();
+        $this->assertNull($recitationCheck['assignment']['activity']);
+        $this->assertSame('ai_recite', $recitationCheck['assignment']['kind']);
+        $this->assertFalse($recitationCheck['assignment']['recording_required']);
+
         $nazraStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $nazra['recipients'][0]['id']))->assertOk()->json();
         $this->assertStringNotContainsString('ai_check=1', $nazraStart['href']);
         $tajweedStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $tajweed['recipients'][0]['id']))->assertOk()->json();
         $this->assertStringContainsString('ai_check=1', $tajweedStart['href']);
+        $recitationStart = $this->actingAs($student)->postJson(route('api.me.assignments.start', $recitationCheck['recipients'][0]['id']))->assertOk()->json();
+        $this->assertStringContainsString('ai_check=1', $recitationStart['href']);
 
         $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'practice',

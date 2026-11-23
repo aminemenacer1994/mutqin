@@ -1,27 +1,26 @@
 <template>
   <section class="learner-my-plan" :aria-label="t('teacher.learner_my_plan')">
     <header class="learner-my-plan__head">
-      <div>
+      <span class="learner-my-plan__mark" aria-hidden="true"><i class="bi bi-map"></i></span>
+      <div class="learner-my-plan__heading-copy">
         <p class="learner-my-plan__eyebrow">{{ t('teacher.learner_my_plan') }}</p>
         <h3 class="learner-my-plan__title">{{ plan?.title || t('teacher.learner_my_plan_empty_title') }}</h3>
+        <p v-if="plan?.teacher_name" class="learner-my-plan__teacher">{{ t('teacher.teacher') }} · {{ plan.teacher_name }}</p>
       </div>
       <span v-if="plan" class="learner-my-plan__status" :class="`is-${plan.status}`">{{ statusLabel(plan.status) }}</span>
     </header>
     <p v-if="!plan" class="learner-my-plan__empty">{{ t('teacher.learner_my_plan_empty') }}</p>
     <template v-if="plan">
+    <div v-if="plan.student_goal" class="learner-my-plan__goal">
+      <i class="bi bi-bullseye" aria-hidden="true"></i>
+      <div><span>{{ t('teacher.learner_plan_goal') }}</span><strong>{{ plan.student_goal }}</strong></div>
+    </div>
+
     <dl class="learner-my-plan__facts">
-      <div v-if="plan.student_goal">
-        <dt><i class="bi bi-bullseye" aria-hidden="true"></i>{{ t('teacher.learner_plan_goal') }}</dt>
-        <dd>{{ plan.student_goal }}</dd>
-      </div>
-      <div v-if="plan.teacher_name">
-        <dt><i class="bi bi-person" aria-hidden="true"></i>{{ t('teacher.teacher') }}</dt>
-        <dd>{{ plan.teacher_name }}</dd>
-      </div>
-      <div>
-        <dt><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ t('teacher.learner_plan_progress') }}</dt>
-        <dd>{{ progressLabel }}</dd>
-      </div>
+      <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ plan.progress?.completed || 0 }}<small>/ {{ plan.progress?.total || 0 }}</small></dd></div>
+      <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ plan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
+      <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ plan.progress?.upcoming_lessons || 0 }}</dd></div>
+      <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ plan.progress?.revision_due || 0 }}</dd></div>
     </dl>
 
     <div
@@ -34,13 +33,14 @@
     >
       <span class="learner-my-plan__meter-fill" :style="meterStyle"></span>
     </div>
+    <p class="learner-my-plan__meter-label"><span>{{ progressLabel }}</span><strong>{{ progressPercent }}%</strong></p>
 
     <p v-if="plan.status === 'paused'" class="learner-my-plan__note">{{ t('teacher.plan_paused_student') }}</p>
     <div v-else-if="nextAction" class="learner-my-plan__next">
       <div class="learner-my-plan__next-copy">
-        <p class="learner-my-plan__next-kicker">{{ t('teacher.learner_continue_learning') }}</p>
+        <p class="learner-my-plan__next-kicker"><i class="bi bi-flag" aria-hidden="true"></i>{{ t('teacher.plan_next_milestone') }}</p>
         <p class="learner-my-plan__next-label">{{ nextAction.label }}</p>
-        <p v-if="nextAction.due_on" class="learner-my-plan__next-due">{{ t('teacher.due') }} · {{ nextAction.due_on }}</p>
+        <p class="learner-my-plan__next-due">{{ activityLabel(nextAction) }} · {{ stageLabel(nextAction) }}<template v-if="nextAction.due_on"> · {{ t('teacher.due') }} {{ nextAction.due_on }}</template></p>
       </div>
       <button
         v-if="showContinue && nextRecipient"
@@ -59,7 +59,10 @@
         class="learner-my-plan__week-item"
         :class="[`is-${item.display_status}`]"
       >
-        <span class="learner-my-plan__week-label">{{ item.label }}</span>
+        <span class="learner-my-plan__week-copy">
+          <span class="learner-my-plan__week-label">{{ item.label }}</span>
+          <small>{{ activityLabel(item) }} · {{ stageLabel(item) }}<template v-if="item.due_on"> · {{ item.due_on }}</template></small>
+        </span>
         <span class="learner-my-plan__week-status">{{ displayStatusLabel(item.display_status) }}</span>
       </li>
     </ul>
@@ -94,7 +97,7 @@ export default {
       })
     },
     nextAction() {
-      return this.plan?.next_action || null
+      return this.plan?.next_milestone || this.plan?.next_action || null
     },
     nextRecipient() {
       const recipientId = this.nextAction?.recipient_id
@@ -126,6 +129,26 @@ export default {
         submitted: 'teacher.plan_status_submitted',
       }[value]
       return key ? this.t(key) : value
+    },
+    activityLabel(item) {
+      const key = {
+        hifz: 'teacher.plan_type_hifz',
+        revision: 'teacher.plan_type_sabqi',
+        sabqi: 'teacher.plan_type_sabqi',
+        manzil: 'teacher.plan_type_manzil',
+        nazra: 'teacher.plan_type_nazra',
+        ai_recite: 'teacher.plan_type_ai',
+        tajweed: 'teacher.assignment_activity_tajweed',
+      }[item?.activity]
+      return this.t(key || (item?.kind === 'ai_recite' ? 'teacher.plan_type_ai' : 'teacher.plan_kind_practice'))
+    },
+    stageLabel(item) {
+      const key = {
+        sabaq: 'teacher.hifz_sabaq',
+        sabqi: 'teacher.hifz_sabqi',
+        manzil: 'teacher.hifz_manzil',
+      }[item?.hifz_category]
+      return key ? this.t(key) : ''
     },
   },
 }

@@ -7,6 +7,7 @@
       <div class="dash-fb-card__summary">
         <div class="dash-fb-card__score" :aria-label="percentLabel">
           <span class="dash-fb-card__score-value">{{ scoreShort }}</span>
+          <span class="dash-fb-card__score-label">{{ t('dashboard.ai_recite.wording_match') }}</span>
         </div>
 
         <div class="dash-fb-card__body">
@@ -15,9 +16,6 @@
               <span>{{ title }}</span>
               <span v-if="rangeLabel" class="dash-fb-card__range">{{ rangeLabel }}</span>
             </h3>
-            <p v-if="summary.wordsMatchedLabel" class="dash-fb-card__match">
-              {{ summary.wordsMatchedLabel }}
-            </p>
           </header>
 
           <ul
@@ -52,44 +50,56 @@
             <time v-if="item.occurred_at" :datetime="item.occurred_at">{{ checkedLabel }}</time>
           </p>
 
-          <p v-if="expanded && summary.insight" class="dash-fb-card__insight">{{ summary.insight }}</p>
-        </div>
-
-        <div class="dash-fb-card__actions">
+          <div class="dash-fb-card__actions">
           <button
             v-if="item.card_kind === 'attempt'"
             type="button"
-            class="dash-btn dash-btn--ghost dash-btn--sm"
+            class="dash-btn dash-btn--ghost dash-btn--sm dash-fb-card__open"
             :aria-expanded="expanded ? 'true' : 'false'"
             :aria-controls="detailId"
             @click="$emit('toggle')"
           >
-            <span>{{ expanded ? t('dashboard.history_less') : t('dashboard.ai_recite.review_feedback') }}</span>
-            <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+            <span>{{ summary.attention > 0
+              ? t('dashboard.ai_recite.show_flagged_ayahs')
+              : t('dashboard.ai_recite.review_feedback')
+            }}</span>
+            <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
           </button>
           <a
             v-else-if="focusHref"
-            class="dash-btn dash-btn--ghost dash-btn--sm"
+            class="dash-btn dash-btn--primary dash-btn--sm"
             :href="focusHref"
           >
             <span>{{ t('dashboard.ai_focus_review') }}</span>
             <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
           </a>
-          <a
-            v-if="item.card_kind === 'attempt' && checkAgainHref"
-            class="dash-btn dash-btn--ghost dash-btn--sm"
-            :href="checkAgainHref"
-          >
-            {{ t('dashboard.revisit_check_again') }}
-          </a>
+          </div>
         </div>
       </div>
+    </article>
 
-      <div
-        v-if="item.card_kind === 'attempt' && expanded"
-        :id="detailId"
-        class="dash-attempt-detail dash-fb-detail"
-      >
+    <DashModalRoot
+      :open="item.card_kind === 'attempt' && expanded"
+      root-class="dash-progress-modal"
+      panel-class="dash-progress-modal__panel"
+      :labelled-by="detailId"
+      @close="$emit('toggle')"
+    >
+      <header class="dash-progress-modal__head">
+        <div>
+          <p class="dash-progress-modal__eyebrow">{{ percentLabel }}</p>
+          <h2 :id="detailId" class="dash-progress-modal__title">{{ title }}</h2>
+          <p v-if="rangeLabel || checkedLabel" class="dash-progress-modal__meta">
+            <span v-if="rangeLabel">{{ rangeLabel }}</span>
+            <span v-if="checkedLabel">{{ checkedLabel }}</span>
+          </p>
+        </div>
+        <button type="button" class="dash-progress-modal__close" :aria-label="t('common.close')" @click="$emit('toggle')">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="dash-progress-modal__body">
         <p v-if="loading" role="status">{{ t('dashboard.loading') }}</p>
         <p v-else-if="error">
           {{ t('dashboard.ai_recite.stats_error_title') }}
@@ -102,84 +112,64 @@
             {{ t('dashboard.ai_recite.no_attention_ayahs') }}
           </p>
 
-          <ul class="dash-fb-ayah-list">
+          <ul class="dash-progress-modal__ayahs">
             <li
               v-for="ayah in visibleAyahs"
               :key="`${item.id}-${ayah.number}`"
-              class="dash-fb-ayah"
-              :class="{ 'is-open': expandedAyah === ayah.number }"
+              class="dash-progress-modal__ayah"
             >
-              <button
-                type="button"
-                class="dash-fb-ayah__toggle"
-                :aria-expanded="expandedAyah === ayah.number ? 'true' : 'false'"
-                @click="toggleAyah(ayah.number)"
+              <header class="dash-progress-modal__ayah-head">
+                <strong>{{ t('dashboard.ayah_n', { n: ayah.number }) }}</strong>
+                <span v-if="ayah.percent != null">{{ t('dashboard.ai_recite.ayah_matched_percent', { n: ayah.percent }) }}</span>
+                <span>{{ ayahAttentionLabel(ayah) }}</span>
+              </header>
+
+              <ul class="dash-color-key dash-color-key--compact" :aria-label="t('dashboard.ai_word_meaning')">
+                <li class="is-matched">{{ t('dashboard.word_matched') }}</li>
+                <li class="is-uncertain">{{ t('dashboard.word_uncertain') }}</li>
+                <li class="is-mismatch">{{ t('dashboard.word_mismatch') }}</li>
+                <li class="is-skipped">{{ t('dashboard.word_skipped') }}</li>
+              </ul>
+
+              <p v-if="ayah.needsAttention" class="dash-fb-ayah__explain">{{ ayahExplanation(ayah) }}</p>
+
+              <p
+                v-if="ayah.reference.length"
+                class="dash-ayah dash-ayah--feedback"
+                lang="ar"
+                dir="rtl"
               >
-                <span class="dash-fb-ayah__label">
-                  <strong>{{ t('dashboard.ayah_n', { n: ayah.number }) }}</strong>
-                  <span v-if="ayah.percent != null">{{ t('dashboard.ai_recite.ayah_matched_percent', { n: ayah.percent }) }}</span>
-                  <span>{{ ayahAttentionLabel(ayah) }}</span>
-                </span>
-                <i class="bi" :class="expandedAyah === ayah.number ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-              </button>
-
-              <div v-if="expandedAyah === ayah.number" class="dash-fb-ayah__body">
-                <ul class="dash-color-key dash-color-key--compact" :aria-label="t('dashboard.ai_word_meaning')">
-                  <li class="is-matched">{{ t('dashboard.word_matched') }}</li>
-                  <li class="is-uncertain">{{ t('dashboard.word_uncertain') }}</li>
-                  <li class="is-mismatch">{{ t('dashboard.word_mismatch') }}</li>
-                </ul>
-
-                <p class="dash-fb-ayah__explain">{{ ayahExplanation(ayah) }}</p>
-
-                <p
-                  v-if="ayah.reference.length"
-                  class="dash-ayah dash-ayah--feedback"
-                  lang="ar"
-                  dir="rtl"
+                <span
+                  v-for="(word, wordIndex) in ayah.reference"
+                  :key="`${ayah.number}-ref-${wordIndex}`"
+                  class="dash-word"
+                  :class="`is-${word.state}`"
                 >
-                  <span
-                    v-for="(word, wordIndex) in ayah.reference"
-                    :key="`${ayah.number}-ref-${wordIndex}`"
-                    class="dash-word"
-                    :class="`is-${word.state}`"
-                  >
-                    <span class="dash-word__text" :style="word.fontFamily ? { fontFamily: word.fontFamily, fontWeight: 400 } : undefined">{{ word.text }}</span>
-                    <span class="visually-hidden">{{ t(word.labelKey) }}</span>
-                  </span>
-                </p>
-                <p v-else class="dash-attempt-detail__empty">{{ t('dashboard.reference_unavailable') }}</p>
+                  <span class="dash-word__text" :style="word.fontFamily ? { fontFamily: word.fontFamily, fontWeight: 400 } : undefined">{{ word.text }}</span>
+                  <span class="visually-hidden">{{ t(word.labelKey) }}</span>
+                </span>
+              </p>
+              <p v-else class="dash-attempt-detail__empty">{{ t('dashboard.reference_unavailable') }}</p>
 
-                <div v-if="ayah.reviewWords.length" class="dash-fb-review-words">
-                  <h4>{{ t('dashboard.ai_recite.words_requiring_review') }}</h4>
-                  <ul>
-                    <li v-for="row in ayah.reviewWords" :key="row.key" class="dash-fb-review-word">
-                      <p v-if="row.expected">
-                        <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.expected_word') }}</span>
-                        <span lang="ar" dir="rtl">{{ row.expected }}</span>
-                      </p>
-                      <p>
-                        <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.recognised_word') }}</span>
-                        <span v-if="row.recognised" lang="ar" dir="rtl">{{ row.recognised }}</span>
-                        <span v-else class="dash-fb-review-word__missing">{{ t('dashboard.ai_recite.recognised_unavailable') }}</span>
-                      </p>
-                      <p>
-                        <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.result_label') }}</span>
-                        <span :class="`is-${row.state}`">{{ t(row.labelKey) }}</span>
-                      </p>
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="dash-fb-ayah__actions">
-                  <a
-                    class="dash-btn dash-btn--primary dash-btn--sm"
-                    :href="reviewAyahHref(ayah)"
-                    @click="$emit('stash-review', reviewAyahItem(ayah))"
-                  >
-                    {{ t('dashboard.ai_recite.review_ayah') }}
-                  </a>
-                </div>
+              <div v-if="ayah.reviewWords.length" class="dash-fb-review-words">
+                <h3>{{ t('dashboard.ai_recite.words_requiring_review') }}</h3>
+                <ul>
+                  <li v-for="row in ayah.reviewWords" :key="row.key" class="dash-fb-review-word">
+                    <p v-if="row.expected">
+                      <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.expected_word') }}</span>
+                      <span lang="ar" dir="rtl">{{ row.expected }}</span>
+                    </p>
+                    <p>
+                      <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.recognised_word') }}</span>
+                      <span v-if="row.recognised" lang="ar" dir="rtl">{{ row.recognised }}</span>
+                      <span v-else class="dash-fb-review-word__missing">{{ t('dashboard.ai_recite.recognised_unavailable') }}</span>
+                    </p>
+                    <p>
+                      <span class="dash-fb-review-word__label">{{ t('dashboard.ai_recite.result_label') }}</span>
+                      <span :class="`is-${row.state}`">{{ t(row.labelKey) }}</span>
+                    </p>
+                  </li>
+                </ul>
               </div>
             </li>
           </ul>
@@ -199,38 +189,40 @@
           <p v-if="!detail.ayahs.length" class="dash-attempt-detail__empty">
             {{ t('dashboard.ai_no_transcript') }}
           </p>
-
-          <div class="dash-attempt-detail__actions">
-            <a
-              class="dash-btn dash-btn--primary dash-btn--sm"
-              :href="reviewHref"
-              @click="$emit('stash-review', reviewItem)"
-            >
-              {{ t('dashboard.revisit_review') }}
-            </a>
-            <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="checkAgainHref">
-              {{ t('dashboard.revisit_check_again') }}
-            </a>
-            <button
-              v-if="item.has_audio"
-              type="button"
-              class="dash-btn dash-btn--ghost dash-btn--sm"
-              @click="$emit('listen')"
-            >
-              {{ t('dashboard.ai_recite.listen') }}
-            </button>
-          </div>
         </template>
       </div>
-    </article>
+
+      <footer v-if="detail && !loading && !error" class="dash-progress-modal__foot">
+        <a
+          class="dash-btn dash-btn--primary dash-btn--sm"
+          :href="reviewHref"
+          @click="$emit('stash-review', reviewItem)"
+        >
+          {{ t('dashboard.ai_recite.review_passage') }}
+        </a>
+        <a v-if="checkAgainHref" class="dash-btn dash-btn--ghost dash-btn--sm" :href="checkAgainHref">
+          {{ t('dashboard.revisit_check_again') }}
+        </a>
+        <button
+          v-if="item.has_audio"
+          type="button"
+          class="dash-btn dash-btn--ghost dash-btn--sm"
+          @click="$emit('listen')"
+        >
+          {{ t('dashboard.ai_recite.listen') }}
+        </button>
+      </footer>
+    </DashModalRoot>
   </li>
 </template>
 
 <script>
 import { compactAttemptSummary } from '../../scripts/dashboardAiRecite/attemptFeedback.js'
+import DashModalRoot from './DashModalRoot.vue'
 
 export default {
   name: 'DashAiReciteAttemptCard',
+  components: { DashModalRoot },
   props: {
     item: { type: Object, required: true },
     expanded: { type: Boolean, default: false },
@@ -247,13 +239,11 @@ export default {
     checkAgainHref: { type: String, default: '' },
     focusHref: { type: String, default: '' },
     reviewItem: { type: Object, default: null },
-    buildReviewHref: { type: Function, default: null },
   },
   emits: ['toggle', 'retry', 'listen', 'stash-review'],
   data() {
     return {
       showAllAyahs: false,
-      expandedAyah: null,
     }
   },
   computed: {
@@ -280,20 +270,7 @@ export default {
   },
   watch: {
     expanded(value) {
-      if (!value) {
-        this.showAllAyahs = false
-        this.expandedAyah = null
-      }
-    },
-    detail(value) {
-      if (!value) {
-        this.expandedAyah = null
-        return
-      }
-      if (this.attentionAyahs.length === 1 && !this.isMobile()) {
-        // Keep collapsed on mobile; desktop may auto-open the single attention ayah.
-        this.expandedAyah = null
-      }
+      if (!value) this.showAllAyahs = false
     },
   },
   methods: {
@@ -301,19 +278,10 @@ export default {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
     },
-    isMobile() {
-      if (typeof window === 'undefined' || !window.matchMedia) return true
-      return window.matchMedia('(max-width: 767.98px)').matches
-    },
-    toggleAyah(number) {
-      if (this.expandedAyah === number) {
-        this.expandedAyah = null
-        return
-      }
-      // One open at a time on mobile to limit scroll.
-      this.expandedAyah = number
-    },
     ayahAttentionLabel(ayah) {
+      if (!ayah.needsAttention && ayah.counts?.evaluated === 0) {
+        return this.t('dashboard.word_unassessed')
+      }
       const key = `dashboard.ai_recite.${ayah.attentionKey}`
       const n = ayah.attentionCount || 1
       return this.t(key, { n })
@@ -329,22 +297,6 @@ export default {
         return this.t('dashboard.ai_recite.ayah_explain_skipped')
       }
       return this.t('dashboard.ai_recite.ayah_explain_attention')
-    },
-    reviewAyahItem(ayah) {
-      return {
-        ...this.item,
-        ayah_number: ayah.number,
-        ayah_start: ayah.number,
-        ayah_end: ayah.number,
-        words: ayah.stored || [],
-        attempt_id: this.item.id,
-      }
-    },
-    reviewAyahHref(ayah) {
-      if (typeof this.buildReviewHref === 'function') {
-        return this.buildReviewHref(this.reviewAyahItem(ayah))
-      }
-      return this.reviewHref
     },
   },
 }

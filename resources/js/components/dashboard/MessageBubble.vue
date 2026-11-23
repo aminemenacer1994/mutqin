@@ -4,6 +4,11 @@
     :class="bubbleClasses"
     :dir="bodyDir"
   >
+    <div v-if="showContext" class="message-bubble__context">
+      <span v-if="feedbackTypeLabel" class="message-bubble__kind">{{ feedbackTypeLabel }}</span>
+      <span v-if="message.senderName" class="message-bubble__sender">{{ message.senderName }}</span>
+      <span v-if="assignmentLabel" class="message-bubble__assignment">{{ assignmentLabel }}</span>
+    </div>
     <p v-if="message.body" class="message-bubble__body">{{ message.body }}</p>
     <div
       v-if="showVoice"
@@ -22,6 +27,9 @@
         <span v-if="voiceDuration" class="message-bubble__voice-duration">{{ voiceDuration }}</span>
       </template>
     </div>
+    <p v-else-if="voiceUnavailable" class="message-bubble__voice-unavailable" role="status">
+      <i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ t('teacher.voice_feedback_unavailable') }}
+    </p>
     <footer class="message-bubble__foot">
       <time v-if="timeLabel" class="message-bubble__time" :datetime="message.sentAt || message.created_at">{{ timeLabel }}</time>
       <p v-if="receiptLabel" class="message-bubble__receipt">{{ receiptLabel }}</p>
@@ -65,6 +73,29 @@ export default {
     },
     showVoice() {
       return (this.message.type === 'voice' || this.message.audioUrl) && this.message.audioUrl
+    },
+    voiceUnavailable() {
+      return this.message.type === 'voice' && !this.message.audioUrl && this.message.audioReason === 'missing'
+    },
+    assignmentLabel() {
+      const assignment = this.message.relatedAssignment
+      if (!assignment) return ''
+      if (assignment.title) return assignment.title
+      const name = assignment.surah_name
+      const from = assignment.ayah_start
+      const to = assignment.ayah_end ?? from
+      if (!name || !from) return ''
+      return `${name} · ${from}${to !== from ? `–${to}` : ''}`
+    },
+    feedbackTypeLabel() {
+      if (this.senderRole !== 'teacher') return ''
+      if (this.message.feedbackType === 'recitation_feedback') return this.t('teacher.recitation_feedback')
+      if (this.message.feedbackType === 'voice_feedback') return this.t('teacher.voice_feedback')
+      if (this.message.feedbackType === 'correction_request') return this.t('teacher.correction_request')
+      return this.t('teacher.written_feedback')
+    },
+    showContext() {
+      return Boolean(this.feedbackTypeLabel || this.message.senderName || this.assignmentLabel)
     },
     voiceDuration() {
       const ms = Number(this.message.durationMs)

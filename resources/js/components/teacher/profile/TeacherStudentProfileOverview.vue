@@ -336,6 +336,7 @@ export default {
         easy: 'dashboard.home_reflection_easy',
         manageable: 'dashboard.home_reflection_manageable',
         difficult: 'dashboard.home_reflection_difficult',
+        need_help: 'dashboard.assignment_self_assessment_need_help',
       }[feeling]
       return key ? this.t(key) : feeling
     },

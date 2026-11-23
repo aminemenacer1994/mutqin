@@ -27,9 +27,9 @@ class StudentSelfAssessmentService
     public function record(User $student, array $input): StudentSelfAssessment
     {
         $feeling = (string) ($input['feeling'] ?? '');
-        if (! in_array($feeling, ['easy', 'manageable', 'difficult'], true)) {
+        if (! in_array($feeling, ['easy', 'manageable', 'difficult', 'need_help'], true)) {
             throw ValidationException::withMessages([
-                'feeling' => 'Choose easy, manageable, or difficult.',
+                'feeling' => 'Choose easy, manageable, difficult, or need teacher help.',
             ]);
         }
 
@@ -109,6 +109,9 @@ class StudentSelfAssessmentService
 
         return StudentSelfAssessment::query()
             ->where('student_id', $student->id)
+            ->where(function ($query) use ($teacher) {
+                $query->whereNull('teacher_id')->orWhere('teacher_id', $teacher->id);
+            })
             ->latest('id')
             ->limit(20)
             ->get()
@@ -140,8 +143,10 @@ class StudentSelfAssessmentService
                 : null,
             'teacher_lesson_id' => $row->teacher_lesson_id ? (int) $row->teacher_lesson_id : null,
             'created_at' => $row->created_at?->toIso8601String(),
+            'updated_at' => $row->updated_at?->toIso8601String(),
             'source' => 'student_reflection',
             'verified_mistake' => false,
+            'affects_ai_score' => false,
         ];
     }
 

@@ -79,10 +79,27 @@ class LearnerSupportController extends Controller
         $user = $request->user();
         abort_unless($user instanceof User, 401);
 
+        $data = $request->validate([
+            'self_assessment' => ['nullable', 'array'],
+            'self_assessment.feeling' => ['required_with:self_assessment', Rule::in(['easy', 'manageable', 'difficult', 'need_help'])],
+            'self_assessment.comment' => ['nullable', 'string', 'max:500'],
+            'self_assessment.note' => ['nullable', 'string', 'max:500'],
+            'self_assessment.help_request' => ['nullable', 'string', 'max:500'],
+            'self_assessment.confidence' => ['nullable', Rule::in(['low', 'steady', 'confident'])],
+            'self_assessment.difficult_ayahs' => ['nullable', 'string', 'max:120'],
+            'self_assessment.wants_revision' => ['nullable', 'boolean'],
+        ]);
+
         $assignments->completeByStudent($user, $recipient);
-        if (is_array($request->input('self_assessment'))) {
+        if (is_array($data['self_assessment'] ?? null)) {
+            $assessment = $data['self_assessment'];
+            $comment = trim((string) ($assessment['comment'] ?? ''));
+            if ($comment !== '') {
+                $assessment['note'] = $comment;
+                $assessment['help_request'] = $comment;
+            }
             app(StudentSelfAssessmentService::class)->record($user, array_merge(
-                $request->input('self_assessment'),
+                $assessment,
                 ['teacher_assignment_recipient_id' => $recipient->id],
             ));
         }
@@ -96,7 +113,7 @@ class LearnerSupportController extends Controller
         $user = $request->user();
         abort_unless($user instanceof User, 401);
         $data = $request->validate([
-            'feeling' => ['required', Rule::in(['easy', 'manageable', 'difficult'])],
+            'feeling' => ['required', Rule::in(['easy', 'manageable', 'difficult', 'need_help'])],
             'confidence' => ['nullable', Rule::in(['low', 'steady', 'confident'])],
             'help_request' => ['nullable', 'string', 'max:1000'],
             'difficult_ayahs' => ['nullable', 'string', 'max:120'],

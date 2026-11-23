@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TeacherAssignmentRecipient extends Model
 {
@@ -45,5 +46,10 @@ class TeacherAssignmentRecipient extends Model
     public function aiReciteAttempts(): HasMany
     {
         return $this->hasMany(AiReciteAttempt::class, 'teacher_assignment_recipient_id');
+    }
+
+    public function latestSelfAssessment(): HasOne
+    {
+        return $this->hasOne(StudentSelfAssessment::class, 'teacher_assignment_recipient_id')->latestOfMany();
     }
 }

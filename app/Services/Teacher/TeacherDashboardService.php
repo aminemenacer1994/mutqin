@@ -524,7 +524,7 @@ class TeacherDashboardService
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $user->id)
             ->whereHas('assignment')
-            ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name'])
+            ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
             ->latest('id')
             ->limit(50)
             ->get();
@@ -540,7 +540,7 @@ class TeacherDashboardService
             $assignments = TeacherAssignmentRecipient::query()
                 ->where('student_id', $user->id)
                 ->whereHas('assignment')
-                ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name'])
+                ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
                 ->latest('id')
                 ->limit(50)
                 ->get();
@@ -590,6 +590,7 @@ class TeacherDashboardService
                     (int) $user->id,
                 );
                 $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
+                $payload['teacher_id'] = $recipient->assignment?->teacher_id ? (int) $recipient->assignment->teacher_id : null;
                 $payload['organisation_name'] = $recipient->assignment?->organisation?->name;
 
                 return $payload;
@@ -760,6 +761,9 @@ class TeacherDashboardService
                 ],
                 'audio' => $evidence['audio'] ?? null,
                 'transcript' => $evidence['transcript'] ?? null,
+                'self_assessment' => is_array($row['self_assessment'] ?? null)
+                    ? $row['self_assessment']
+                    : null,
                 'history' => is_array($row['completion_evidence']['submissions'] ?? null)
                     ? $row['completion_evidence']['submissions']
                     : [],
@@ -813,9 +817,34 @@ class TeacherDashboardService
             ->unique('id')
             ->map(function (array $item) use ($recitationNoteIds) {
                 $item['recitation'] = $recitationNoteIds->has((int) ($item['id'] ?? 0));
+                if ($item['recitation']) {
+                    $item['feedback_type'] = 'recitation_feedback';
+                }
 
                 return $item;
             })
+            ->merge($this->learnerCorrectionFeedback($assignments))
+            ->sortByDesc('created_at')
+            ->groupBy('conversation_key')
+            ->map(function ($items) {
+                $ordered = $items->sortByDesc('created_at')->values();
+                $latest = $ordered->first();
+                if (! is_array($latest)) {
+                    return null;
+                }
+                $correction = $ordered->first(fn (array $item) => ($item['feedback_type'] ?? null) === 'correction_request');
+                $latest['conversation_message_count'] = $ordered->count();
+                $latest['unread'] = $ordered->contains(fn (array $item) => (bool) ($item['unread'] ?? false));
+                if (is_array($correction) && ! empty($correction['action_href'])) {
+                    $latest['correction_action'] = [
+                        'href' => $correction['action_href'],
+                        'label' => 'Practise correction',
+                    ];
+                }
+
+                return $latest;
+            })
+            ->filter()
             ->sortByDesc('created_at')
             ->values()
             ->take(12)
@@ -837,7 +866,8 @@ class TeacherDashboardService
     {
         $body = trim((string) $note->body);
         $audio = app(TeacherAssignmentMessageAudioService::class)->payload($note);
-        if ($body === '' && ! ($audio['available'] ?? false)) {
+        $hasAudioRecord = (bool) $note->audio_path;
+        if ($body === '' && ! $hasAudioRecord && ! ($audio['available'] ?? false)) {
             return null;
         }
 
@@ -851,7 +881,11 @@ class TeacherDashboardService
 
         $preview = $body !== ''
             ? (mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'…' : $body)
-            : ($audio['available'] ? 'Audio feedback' : '');
+            : (($audio['available'] ?? false) ? 'Voice feedback' : 'Voice feedback is unavailable.');
+        $assignment = $note->assignment;
+        $feedbackType = $hasAudioRecord || ($audio['available'] ?? false)
+            ? 'voice_feedback'
+            : 'written_feedback';
 
         return [
             'id' => (int) $note->id,
@@ -868,11 +902,89 @@ class TeacherDashboardService
             'teacher_name' => $note->teacher?->name,
             'teacher_id' => $note->teacher_id ? (int) $note->teacher_id : null,
             'created_at' => $note->created_at?->toIso8601String(),
+            'read_at' => $note->read_at?->toIso8601String(),
             'source' => 'task',
+            'feedback_type' => $feedbackType,
             'task_title' => $passageLabel,
             'recipient_id' => $recipientId ? (int) $recipientId : null,
+            'related_assignment' => $assignment ? [
+                'id' => (int) $assignment->id,
+                'recipient_id' => $recipientId ? (int) $recipientId : null,
+                'title' => $passageLabel,
+            ] : null,
+            'conversation_key' => $recipientId
+                ? 'assignment:'.(int) $recipientId
+                : 'teacher:'.(int) $note->teacher_id,
             'unread' => $note->read_at === null,
         ];
+    }
+
+    /**
+     * Correction requests are persisted on the assignment recipient rather
+     * than duplicated as messages. Present them in the same conversation
+     * index while keeping the assignment workflow as the source of truth.
+     *
+     * @param  list<array<string, mixed>>  $assignments
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function learnerCorrectionFeedback(array $assignments): Collection
+    {
+        return collect($assignments)
+            ->filter(fn (array $row) => ($row['review_state'] ?? null) === 'needs_correction')
+            ->map(function (array $row) {
+                $assignment = is_array($row['assignment'] ?? null) ? $row['assignment'] : [];
+                $evidence = is_array($row['completion_evidence'] ?? null) ? $row['completion_evidence'] : [];
+                $recipientId = (int) ($row['id'] ?? 0);
+                $surah = (int) ($assignment['surah_number'] ?? 0);
+                $from = (int) ($assignment['ayah_start'] ?? 0);
+                $to = (int) ($assignment['ayah_end'] ?? $from);
+                $passageLabel = $surah && $from
+                    ? QuranMetadata::name($surah).' · '.$from.($to !== $from ? '–'.$to : '')
+                    : null;
+                $requestedAt = (string) ($evidence['correction_requested_at'] ?? $row['updated_at'] ?? now()->toIso8601String());
+                $body = trim((string) ($evidence['correction_note'] ?? ''));
+                if ($body === '') {
+                    $body = 'Your teacher asked you to correct and resubmit this assignment.';
+                }
+
+                return [
+                    'id' => 'correction-'.$recipientId.'-'.sha1($requestedAt),
+                    'body' => $body,
+                    'preview' => mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'…' : $body,
+                    'audio' => [
+                        'available' => false,
+                        'url' => null,
+                        'mime' => null,
+                        'duration_ms' => null,
+                        'reason' => 'not_recorded',
+                    ],
+                    'passage' => $surah && $from ? [
+                        'surah_number' => $surah,
+                        'surah_name' => QuranMetadata::name($surah),
+                        'ayah_start' => $from,
+                        'ayah_end' => $to,
+                        'label' => $passageLabel,
+                    ] : null,
+                    'teacher_name' => $row['teacher_name'] ?? null,
+                    'teacher_id' => isset($row['teacher_id']) ? (int) $row['teacher_id'] : null,
+                    'created_at' => $requestedAt,
+                    'read_at' => null,
+                    'source' => 'correction',
+                    'feedback_type' => 'correction_request',
+                    'task_title' => $passageLabel,
+                    'recipient_id' => $recipientId,
+                    'related_assignment' => [
+                        'id' => (int) ($row['assignment_id'] ?? $assignment['id'] ?? 0),
+                        'recipient_id' => $recipientId,
+                        'title' => $passageLabel,
+                    ],
+                    'conversation_key' => 'assignment:'.$recipientId,
+                    'action_href' => $row['href'] ?? null,
+                    'unread' => true,
+                    'recitation' => false,
+                ];
+            })
+            ->values();
     }
 
     private function learnerWeakSpotIssue(MemorisationWeakSpot $spot): string
@@ -3109,7 +3221,7 @@ class TeacherDashboardService
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $student->id)
             ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $teacher->id))
-            ->with(['assignment.notes.teacher:id,name'])
+            ->with(['assignment.notes.teacher:id,name', 'latestSelfAssessment'])
             ->latest('id')
             ->limit(20)
             ->get()

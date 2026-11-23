@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import {
+  ayahAttentionSummaryKey,
+  ayahNeedsAttention,
   compactAttemptSummary,
   countWordStatuses,
   feedbackInsightKey,
@@ -26,6 +28,11 @@ assert.equal(counts.extra, 1)
 assert.equal(counts.evaluated, 5)
 // Extras must not inflate "words to review".
 assert.equal(counts.attention, 3)
+assert.equal(ayahNeedsAttention({ matched: 6, uncertain: 0, mismatch: 0, skipped: 0 }), false)
+assert.equal(ayahNeedsAttention({ matched: 5, uncertain: 1, mismatch: 0, skipped: 0 }), true)
+assert.equal(ayahNeedsAttention({ matched: 5, uncertain: 0, mismatch: 1, skipped: 0 }), true)
+assert.equal(ayahNeedsAttention({ matched: 5, uncertain: 0, mismatch: 0, skipped: 1 }), true)
+assert.equal(ayahAttentionSummaryKey({ uncertain: 0, mismatch: 2, skipped: 0, attention: 2 }), 'ayah_n_mismatch')
 
 const mismatchOnly = compactAttemptSummary({
   accuracy_percent: 93,
@@ -93,6 +100,17 @@ assert.equal(pairs[2].recognised, null)
 assert.equal(pairs[2].state, 'skipped')
 assert.equal(pairs[3].state, 'extra')
 
+const longArabicPairs = reviewWordPairs([
+  {
+    ayah_number: 2,
+    status: 'wrong',
+    text: 'فَسَيَكْفِيكَهُمُ ٱللَّهُ ۚ وَهُوَ ٱلسَّمِيعُ ٱلْعَلِيمُ',
+    recognised_word: 'فسيكفيكهم الله وهو السميع العليم',
+  },
+], 2)
+assert.equal(longArabicPairs.length, 1)
+assert.equal(longArabicPairs[0].expected, 'فَسَيَكْفِيكَهُمُ ٱللَّهُ ۚ وَهُوَ ٱلسَّمِيعُ ٱلْعَلِيمُ')
+
 const summary = compactAttemptSummary({
   accuracy_percent: 91,
   word_counts: fromApi,
@@ -108,5 +126,19 @@ assert.equal(summary.percent, 91)
 assert.equal(summary.wordsMatchedLabel, '91% words matched')
 assert.equal(summary.reviewHint, '3 words to review')
 assert.equal(summary.insight, 'A few words to review.')
+
+const singularReview = compactAttemptSummary({
+  word_counts: {
+    matched: 4,
+    uncertain: 1,
+    mismatch: 0,
+    skipped: 0,
+  },
+}, (key, params = {}) => {
+  if (key === 'dashboard.ai_recite.word_to_review') return '1 word needing review'
+  if (key === 'dashboard.ai_recite.words_to_review') return `${params.n} words needing review`
+  return key
+})
+assert.equal(singularReview.reviewHint, '1 word needing review')
 
 console.log('ai-recite-attempt-feedback.test.mjs: ok')

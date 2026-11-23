@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+
+const hifz = readFileSync(new URL('../../resources/js/components/teacher/profile/TeacherHifzProgress.vue', import.meta.url), 'utf8')
+const plan = readFileSync(new URL('../../resources/js/components/teacher/profile/TeacherStudentProfilePlan.vue', import.meta.url), 'utf8')
+const learner = readFileSync(new URL('../../resources/js/components/teacher/LearnerMyLearningPlan.vue', import.meta.url), 'utf8')
+const learnerStyles = readFileSync(new URL('../../resources/js/views/Dashboard.learner-teacher.css', import.meta.url), 'utf8')
+const teacherStyles = readFileSync(new URL('../../resources/js/views/TeacherDashboard.css', import.meta.url), 'utf8')
+
+assert.match(hifz, /hifz_summary_validated/, 'Teacher sees teacher-validated memorisation first')
+assert.match(hifz, /validated_memorisation/, 'Validated memorisation uses its own persisted summary')
+assert.match(hifz, /wording_match/, 'AI wording evidence is displayed separately')
+assert.match(hifz, /hifz_wording_not_validation/, 'AI wording evidence is not presented as memorisation validation')
+assert.match(hifz, /hifz_summary_learning/, 'Teacher sees current Sabaq and lessons')
+assert.match(hifz, /hifz_summary_revision/, 'Teacher sees revision due')
+assert.match(hifz, /hifz_last_reviewed/, 'The validated summary includes its latest review date')
+assert.match(plan, /teacher\.playback_assign_revision/, 'Revision recommendations have one primary Assign revision action')
+assert.match(plan, /plan_teacher_confirmed_weakness/, 'Teacher-confirmed weaknesses remain distinct')
+assert.match(plan, /plan_ai_wording_flag/, 'AI wording flags remain distinct')
+assert.doesNotMatch(plan, /recommendationMenuId/, 'Revision actions no longer hide behind a crowded menu')
+assert.match(learner, /teacher\.plan_progress/, 'Student and teacher use the same completed\/total plan progress')
+assert.match(learner, /validated_memorised_ayahs/, 'Student sees the same teacher-validated ayah count')
+assert.match(learner, /next_milestone/, 'Student receives one persisted next milestone')
+assert.match(plan, /plan_completion_criteria/, 'Teacher sees measurable completion criteria')
+assert.match(learner, /learner-my-plan__facts/, 'Student plan uses a compact progress summary')
+assert.match(plan, /teacher-plan-card__stats/, 'Teacher plan uses the same compact progress summary')
+assert.match(learnerStyles, /Plus Jakarta Sans/, 'Learner workspace matches the teacher platform typeface')
+assert.match(learnerStyles, /grid-template-columns: minmax\(0, 1fr\) !important/, 'Progress review panels use a balanced single-column workspace')
+assert.match(teacherStyles, /teacher-plan-card__stats/, 'Teacher plan summary styles are present')
+
+console.log('teacher learning plan summary ok')

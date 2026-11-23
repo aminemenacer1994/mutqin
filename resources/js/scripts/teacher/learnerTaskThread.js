@@ -18,15 +18,23 @@ export function sanitizeThreadText(value) {
 export function normalizeThreadMessage(raw, taskId) {
   if (!raw || typeof raw !== 'object') return null
   const senderRole = raw.sender === 'teacher' || raw.senderRole === 'teacher' ? 'teacher' : 'student'
-  const hasVoice = Boolean(raw.audio?.available && raw.audio?.url) || raw.type === 'voice'
+  const hasVoiceRecord = Boolean(raw.audio?.available && raw.audio?.url)
+    || raw.audio?.reason === 'missing'
+    || raw.feedback_type === 'voice_feedback'
+    || raw.type === 'voice'
   return {
     id: raw.id ?? raw.client_message_id ?? `tmp-${Math.random()}`,
     taskId: Number(taskId),
     senderRole,
-    type: hasVoice ? 'voice' : 'text',
+    type: hasVoiceRecord ? 'voice' : 'text',
     body: sanitizeThreadText(raw.body),
     audioUrl: raw.audio?.url ?? raw.audioUrl ?? null,
+    audioReason: raw.audio?.reason ?? null,
     durationMs: Number(raw.audio?.duration_ms ?? raw.durationMs ?? 0) || null,
+    senderName: raw.sender_name ?? raw.senderName ?? null,
+    feedbackType: raw.feedback_type ?? raw.feedbackType ?? (senderRole === 'teacher' ? 'written_feedback' : 'message'),
+    relatedAssignment: raw.related_assignment ?? raw.task ?? raw.relatedAssignment ?? null,
+    passage: raw.passage ?? null,
     sentAt: raw.created_at ?? raw.sentAt ?? null,
     readAt: raw.read_at ?? raw.readAt ?? null,
     unread: Boolean(raw.unread),

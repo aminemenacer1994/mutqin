@@ -1,5 +1,5 @@
 <template>
-  <main id="mainContent" class="user-dashboard user-dashboard--progress learner-workspace" :style="{ '--learner-header-height': `${learnerHeaderHeight}px` }" tabindex="-1">
+  <main id="mainContent" class="user-dashboard user-dashboard--progress learner-workspace teacher-dashboard" :style="{ '--learner-header-height': `${learnerHeaderHeight}px` }" tabindex="-1">
     <div class="container-fluid user-dashboard__shell">
       <div v-if="loading && !data" class="user-dashboard__loading" role="status" aria-live="polite">
         <div class="dash-spinner" aria-hidden="true"></div>
@@ -28,26 +28,30 @@
       />
 
       <template v-else>
-        <nav class="dash-jump" data-platform-shell="student" :style="{ '--learner-nav-count': dashboardJumps.length }" :aria-label="t('dashboard.jump_label')">
+        <div class="teacher-dashboard__layout">
+        <nav class="teacher-nav dash-jump" data-platform-shell="student" :style="{ '--learner-nav-count': dashboardJumps.length }" :aria-label="t('dashboard.jump_label')">
           <button
             v-for="item in dashboardJumps"
             :key="item.id"
             type="button"
-            class="dash-jump__link"
+            class="teacher-nav__link dash-jump__link"
             :class="{ 'is-active': studentPane === item.pane }"
             :aria-current="studentPane === item.pane ? 'page' : null"
             @click="openDashPane(item)"
           >
             <i :class="item.icon" aria-hidden="true"></i>
-            <span>{{ item.label }}</span>
+            <span class="teacher-nav__label">{{ item.label }}</span>
           </button>
         </nav>
+        <div class="teacher-dashboard__main">
 
-        <div v-show="studentPane === 'home'" class="dash-pane dash-home-pane">
-        <header id="dash-home" class="learner-home__header" tabindex="-1">
-          <div>
-            <h1>{{ greetingText }}</h1>
-            <p v-if="showHeroProgressSummary && !showLearnerTeacherSection">{{ heroProgressSummary }}</p>
+        <div v-show="studentPane === 'home'" class="dash-pane dash-home-pane teacher-view-stage">
+        <header id="dash-home" class="teacher-hero learner-home__header" tabindex="-1">
+          <div class="teacher-hero__row">
+          <div class="teacher-hero__copy">
+            <p class="teacher-hero__eyebrow">{{ t('dashboard.jump_home') }}</p>
+            <h1 class="teacher-hero__title">{{ greetingText }}</h1>
+            <p v-if="showHeroProgressSummary && !showLearnerTeacherSection" class="teacher-meta">{{ heroProgressSummary }}</p>
           </div>
             <button
               type="button"
@@ -59,22 +63,26 @@
             >
               <i class="bi bi-arrow-clockwise" :class="{ 'is-spinning': loading }" aria-hidden="true"></i>
             </button>
+          </div>
         </header>
 
         <p v-if="assignmentCompletionMessage" class="learner-home__confirmation" role="status" aria-live="polite"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ assignmentCompletionMessage }}</p>
 
         <div class="learner-home__grid">
-          <section v-if="showLearnerTeacherSection" class="learner-home__today" aria-labelledby="learner-home-today">
-            <header class="learner-home__section-head">
-              <h2 id="learner-home-today">{{ t('dashboard.home_today') }}</h2>
+          <section v-if="showLearnerTeacherSection" class="teacher-pane learner-home__today" aria-labelledby="learner-home-today">
+            <header class="teacher-pane__head learner-home__section-head">
+              <div class="teacher-pane__titles">
+                <h2 id="learner-home-today" class="teacher-pane__title">{{ t('dashboard.home_today') }}</h2>
+              </div>
               <button type="button" class="dash-text-link" @click="openDashPane({ pane: 'learning' })">{{ t('dashboard.home_all_tasks') }}</button>
             </header>
+            <div class="teacher-pane__body">
             <div v-if="supportLoading && !support" class="learner-home__skeleton" role="status" :aria-label="t('teacher.loading')"><span></span><span></span></div>
             <div v-else-if="supportError" class="learner-home__state is-error" role="alert">
               <p>{{ supportError }}</p>
               <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="supportLoading" @click="loadLearnerSupport">{{ t('common.retry') }}</button>
             </div>
-            <template v-else-if="homeTask">
+            <div v-else-if="homeTask" class="learner-home__priority">
               <div class="learner-home__task-head" :data-assignment-id="homeTask.id">
                 <span class="learner-home__task-icon" aria-hidden="true"><i class="bi" :class="homeTask.assignment?.kind === 'ai_recite' ? 'bi-mic' : 'bi-book'"></i></span>
                 <div>
@@ -83,26 +91,25 @@
                 </div>
                 <span class="learner-home__status" :class="`is-${homeTaskTone}`">{{ homeTaskStatus }}</span>
               </div>
-              <p v-if="homeTask.assignment?.feedback" class="learner-home__instructions">{{ homeTask.assignment.feedback }}</p>
-              <p v-if="homeTaskRequirement" class="learner-home__instructions">{{ homeTaskRequirement }}</p>
-              <p v-if="homeTask.assignment?.activity" class="learner-home__instructions">{{ t(homeTask.assignment.recording_required ? 'teacher.recording_required_hint' : 'teacher.recording_optional_hint') }}</p>
               <div class="learner-home__task-footer">
                 <span v-if="homeTaskDue.text" class="learner-home__due" :class="`is-${homeTaskDue.tone}`"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ homeTaskDue.text }}</span>
-                <button type="button" class="dash-btn dash-btn--primary" :disabled="Boolean(assignmentSavingId)" @click="homeTaskReadyToSubmit ? completeSupportAssignment(homeTask) : startSupportAssignment(homeTask)">
+                <span v-if="homeTaskProgress" class="learner-home__due"><i class="bi bi-bar-chart-steps" aria-hidden="true"></i>{{ homeTaskProgress }}</span>
+                <button type="button" class="dash-btn dash-btn--primary" :disabled="Boolean(assignmentSavingId)" @click="homeTaskReadyToSubmit ? promptSupportAssignmentCompletion(homeTask) : startSupportAssignment(homeTask)">
                   <i class="bi" :class="homeTaskIcon" aria-hidden="true"></i>
                   {{ assignmentSavingId === homeTask.id ? t('teacher.loading') : homeTaskAction }}
                 </button>
               </div>
-            </template>
+            </div>
             <div v-else class="learner-home__state">
               <i class="bi" :class="homeWaitingReview ? 'bi-hourglass-split' : 'bi-check2-circle'" aria-hidden="true"></i>
               <div><strong>{{ t(homeWaitingReview ? 'dashboard.home_waiting_review' : 'dashboard.home_no_tasks') }}</strong><p>{{ t(homeWaitingReview ? 'dashboard.home_waiting_review_hint' : 'dashboard.home_no_tasks_hint') }}</p></div>
+            </div>
             </div>
           </section>
 
           <a
             v-if="showHomeContinue && primaryContinueAction"
-            class="dash-continue-card learner-home__continue"
+            class="teacher-pane dash-continue-card learner-home__continue"
             data-testid="dashboard-primary-continue"
             :data-kind="primaryContinueAction.kind"
             :class="{
@@ -134,8 +141,11 @@
             </span>
           </a>
 
-          <section v-if="homeRevisions.length" class="learner-home__revisions" aria-labelledby="home-revision-title">
-            <h2 id="home-revision-title">{{ t('dashboard.home_needs_revision') }}</h2>
+          <section v-if="homeRevisions.length" class="teacher-pane learner-home__revisions" aria-labelledby="home-revision-title">
+            <header class="teacher-pane__head">
+              <h2 id="home-revision-title" class="teacher-pane__title">{{ t('dashboard.home_needs_revision') }}</h2>
+            </header>
+            <div class="teacher-pane__body">
             <div v-for="row in homeRevisions" :key="row.key" class="learner-home__revision-row">
               <div>
                 <strong>{{ row.task ? row.task.assignment.surah_name : row.item.surah_name }}</strong>
@@ -145,67 +155,26 @@
               <button v-if="row.task" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="assignmentSavingId === row.task.id" @click="startSupportAssignment(row.task)">{{ t('teacher.coaching_practise_again') }}</button>
               <a v-else class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(row.item)" @click="stashReviewContext(row.item)">{{ t('teacher.coaching_practise_again') }}</a>
             </div>
+            </div>
           </section>
 
-          <aside v-if="homeFeedback" class="learner-home__feedback" aria-labelledby="learner-home-feedback">
-            <header class="learner-home__section-head">
-              <h2 id="learner-home-feedback">{{ t('dashboard.home_recent_feedback') }}</h2>
+          <aside v-if="homeFeedback" class="teacher-pane learner-home__feedback" aria-labelledby="learner-home-feedback">
+            <header class="teacher-pane__head learner-home__section-head">
+              <h2 id="learner-home-feedback" class="teacher-pane__title">{{ t('dashboard.home_recent_feedback') }}</h2>
               <span v-if="homeFeedback.unread" class="learner-home__status is-warning">{{ t('teacher.unread') }}</span>
             </header>
+            <div class="teacher-pane__body">
             <p class="learner-home__feedback-context">{{ homeFeedback.task_title || homeFeedback.passage?.label || homeFeedback.teacher_name }}</p>
+            <p v-if="homeFeedback.teacher_name && (homeFeedback.task_title || homeFeedback.passage?.label)" class="learner-home__feedback-teacher">{{ homeFeedback.teacher_name }}</p>
             <p v-if="homeFeedback.preview || homeFeedback.body" class="learner-home__feedback-preview">{{ homeFeedback.preview || homeFeedback.body }}</p>
             <p v-else-if="homeFeedback.audio?.available" class="learner-home__feedback-preview"><i class="bi bi-mic" aria-hidden="true"></i> {{ t('teacher.voice_note') }}</p>
             <div class="learner-home__feedback-footer">
               <time :datetime="homeFeedback.created_at">{{ homeFeedbackWhen }}</time>
               <button type="button" class="dash-text-link" @click="openHomeFeedback">{{ t('dashboard.home_open_feedback') }}<i class="bi bi-arrow-right-short" aria-hidden="true"></i></button>
             </div>
+            </div>
           </aside>
 
-          <LearnerMyLearningPlan
-            v-if="showLearnerTeacherSection && support"
-            :plan="homePlan"
-            :assignments="support.assignments || []"
-            :show-continue="homePlanContinue"
-            @continue="startSupportAssignment"
-          />
-
-          <section v-if="showLearnerTeacherSection && support" class="learner-home__revisions" aria-labelledby="home-upcoming-title">
-            <h2 id="home-upcoming-title">{{ t('dashboard.home_upcoming') }}</h2>
-            <p v-if="!homeUpcoming.length" class="learner-home__instructions">{{ t('dashboard.home_upcoming_empty') }}</p>
-            <div v-for="task in homeUpcoming" :key="task.id" class="learner-home__revision-row">
-              <div>
-                <strong>{{ task.assignment?.surah_name }}</strong>
-                <span>{{ homeTaskTypeFor(task) }}</span>
-              </div>
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="startSupportAssignment(task)">{{ t('teacher.learner_upcoming_start') }}</button>
-            </div>
-          </section>
-
-          <section v-if="reflectionPrompt" class="learner-home__feedback" aria-labelledby="home-reflection-title">
-            <h2 id="home-reflection-title">{{ t('dashboard.home_reflection_confidence') }}</h2>
-            <p class="learner-home__instructions">{{ t('dashboard.home_reflection_help') }}</p>
-            <div class="learner-home__task-footer">
-              <button v-for="level in reflectionLevels" :key="level" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionConfidence === level }" @click="reflectionConfidence = level">{{ t(`dashboard.home_reflection_${level}`) }}</button>
-            </div>
-            <label class="learner-home__instructions">
-              {{ t('dashboard.home_reflection_difficult_ayahs') }}
-              <input v-model="reflectionDifficult" class="form-control" type="text" maxlength="120">
-            </label>
-            <p class="learner-home__instructions">{{ t('dashboard.home_reflection_revision') }}</p>
-            <div class="learner-home__task-footer">
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionWantsRevision === true }" @click="reflectionWantsRevision = true">{{ t('dashboard.home_reflection_yes') }}</button>
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :class="{ 'dash-btn--primary': reflectionWantsRevision === false }" @click="reflectionWantsRevision = false">{{ t('dashboard.home_reflection_no') }}</button>
-            </div>
-            <label class="learner-home__instructions">
-              {{ t('dashboard.home_reflection_note') }}
-              <textarea v-model="reflectionHelp" class="form-control" rows="2" maxlength="1000"></textarea>
-            </label>
-            <div class="learner-home__task-footer">
-              <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="!reflectionConfidence || reflectionSaving" @click="saveReflection">{{ t('dashboard.home_reflection_save') }}</button>
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="reflectionPrompt = null">{{ t('dashboard.home_reflection_skip') }}</button>
-            </div>
-            <p v-if="reflectionSaved" class="learner-home__confirmation" role="status">{{ t('dashboard.home_reflection_saved') }}</p>
-          </section>
         </div>
         </div>
 
@@ -225,11 +194,21 @@
           :on-send-note="sendSupportNote"
           :on-send-direct-message="sendDirectTeacherMessage"
           @start="startSupportAssignment"
-          @complete="completeSupportAssignment"
+          @complete="promptSupportAssignmentCompletion"
+          @self-assess="openPostSubmissionAssessment"
           @view-completed="showCompletedAssignments"
           @dismiss-completion="dismissAssignmentCompletion"
           @support-thread-update="patchLearnerSupportThread"
-        />
+        >
+          <template #learning-plan>
+            <LearnerMyLearningPlan
+              v-if="support"
+              :plan="homePlan"
+              :assignments="support.assignments || []"
+              @continue="startSupportAssignment"
+            />
+          </template>
+        </LearnerTeacherSection>
         <p v-else class="dash-pane__empty">{{ t('dashboard.jump_learning_empty') }}</p>
         </div>
 
@@ -238,30 +217,20 @@
           id="dash-progress"
           tabindex="-1"
           class="dash-section dash-section--flat dash-learning"
-          :class="{ 'is-collapsed': isSectionCollapsed('learning') }"
           aria-labelledby="dash-learning-heading"
         >
           <div class="dash-section__head dash-section__head--compact">
-            <button
-              type="button"
-              class="dash-section__collapse"
-              :aria-expanded="isSectionCollapsed('learning') ? 'false' : 'true'"
-              aria-controls="dash-learning-body"
-              @click="toggleSection('learning')"
-            >
-              <span class="dash-section__title">
-                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-                  <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
-                </span>
-                <span class="dash-section__title-copy">
-                  <h2 id="dash-learning-heading">{{ t('dashboard.learning_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.learning_period', { days: chartDays }) }}</p>
-                </span>
+            <div class="dash-section__title">
+              <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
               </span>
-              <i class="bi dash-section__chevron" :class="isSectionCollapsed('learning') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
-            </button>
+              <span class="dash-section__title-copy">
+                <h2 id="dash-learning-heading">{{ t('dashboard.learning_title') }}</h2>
+                <p class="dash-section__hint">{{ t('dashboard.learning_period', { days: chartDays }) }}</p>
+              </span>
+            </div>
           </div>
-          <div v-show="!isSectionCollapsed('learning')" id="dash-learning-body" class="dash-section__body dash-learning__body">
+          <div id="dash-learning-body" class="dash-section__body dash-learning__body">
             <ul class="dash-learning__metrics dash-learning__metrics--compact dash-learning__metrics--aa" role="list">
               <li v-for="metric in learningCards" :key="metric.key">
               <button
@@ -322,26 +291,33 @@
           </div>
         </section>
 
-        <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
+        <div
+          v-if="showMurajaahSection || showAiReciteSection"
+          class="user-dashboard__review-row user-dashboard__review-row--secondary dash-review-workspace"
+          data-testid="review-focus-workspace"
+        >
+        <header class="dash-review-workspace__head">
+          <span class="dash-review-workspace__mark" aria-hidden="true">
+            <i class="bi bi-bullseye"></i>
+          </span>
+          <span class="dash-review-workspace__copy">
+            <span class="dash-review-workspace__eyebrow">{{ t('dashboard.review_focus_kicker') }}</span>
+            <h2>{{ t('dashboard.review_focus_title') }}</h2>
+            <span>{{ t('dashboard.review_focus_summary') }}</span>
+          </span>
+        </header>
         <section
           v-if="showMurajaahSection"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
           :class="{
             'dash-section--empty': showMurajaahEmpty,
-            'is-collapsed': isSectionCollapsed('murajaah'),
           }"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
         >
           <div class="dash-murajaah-block">
             <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
-              <button
-                type="button"
-                class="dash-section__collapse dash-murajaah-block__head-main"
-                :aria-expanded="isSectionCollapsed('murajaah') ? 'false' : 'true'"
-                aria-controls="dash-murajaah-body"
-                @click="toggleSection('murajaah')"
-              >
+              <div class="dash-murajaah-block__head-main">
                 <span class="dash-murajaah-block__title-row">
                   <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
@@ -350,13 +326,11 @@
                     <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
                       {{ t('dashboard.revisit_title') }}
                     </h2>
-                    <p class="dash-section__hint">{{ t('dashboard.revisit_subtitle') }}</p>
                   </span>
                 </span>
-                <i class="bi dash-section__chevron" :class="isSectionCollapsed('murajaah') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
-              </button>
+              </div>
               <button
-                v-if="showMurajaahViewAll && !isSectionCollapsed('murajaah')"
+                v-if="showMurajaahViewAll"
                 type="button"
                 class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
                 @click="openDrawer('murajaah')"
@@ -366,7 +340,7 @@
               </button>
             </div>
 
-            <div v-show="!isSectionCollapsed('murajaah')" id="dash-murajaah-body">
+            <div id="dash-murajaah-body">
             <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty dash-empty">
               <p class="dash-murajaah-block__empty-title">{{ t('dashboard.revisit_empty_title') }}</p>
               <p class="dash-murajaah-block__empty-hint">{{ t('dashboard.revisit_empty_hint') }}</p>
@@ -377,37 +351,34 @@
               <li v-for="(item, index) in revisitItems" :key="item.key">
                 <article
                   class="dash-revisit__card dash-reveal"
-                  :class="{ 'is-collapsed': isCardCollapsed(`revisit:${item.key}`) }"
+                  :class="{
+                    'is-priority': index === 0,
+                  }"
                   :style="{ '--dash-delay': `${index * 50}ms` }"
                 >
                   <header class="dash-revisit__head">
-                    <button
-                      type="button"
-                      class="dash-card__collapse"
-                      :aria-expanded="isCardCollapsed(`revisit:${item.key}`) ? 'false' : 'true'"
-                      @click="toggleRevisitCard(item.key)"
-                    >
-                      <span class="dash-revisit__head-copy">
-                        <h3 class="dash-revisit__title">
-                          {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                        </h3>
-                        <span class="dash-revisit__summary">
-                          <span
-                            v-if="item.accuracy_percent != null"
-                            class="dash-revisit__meta dash-revisit__meta--inline"
-                          >
-                            {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
-                          </span>
-                          <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
-                            {{ revisitStateLabel(item) }}
-                          </span>
+                    <div class="dash-revisit__head-copy">
+                      <h3 class="dash-revisit__title">
+                        {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                      </h3>
+                      <span v-if="index === 0" class="dash-revisit__priority-label">
+                        {{ t('dashboard.revisit_start_here') }}
+                      </span>
+                      <span class="dash-revisit__summary">
+                        <span
+                          v-if="item.accuracy_percent != null"
+                          class="dash-revisit__meta dash-revisit__meta--inline"
+                        >
+                          {{ t('dashboard.ai_match_plain', { n: item.accuracy_percent }) }}
                         </span>
-                        <span v-if="murajaahItemHint(item)" class="dash-revisit__reason">
-                          {{ murajaahItemHint(item) }}
+                        <span class="dash-revisit__state" :class="`is-${item.assessment_state || 'not_assessed'}`">
+                          {{ revisitStateLabel(item) }}
                         </span>
                       </span>
-                      <i class="bi dash-section__chevron" :class="isCardCollapsed(`revisit:${item.key}`) ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
-                    </button>
+                      <span v-if="murajaahItemHint(item)" class="dash-revisit__reason">
+                        {{ murajaahItemHint(item) }}
+                      </span>
+                    </div>
                     <a
                       class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta dash-revisit__cta-inline"
                       :href="reviewNowHref(item)"
@@ -417,7 +388,7 @@
                       {{ t('dashboard.revisit_review') }}
                     </a>
                   </header>
-                  <div v-show="!isCardCollapsed(`revisit:${item.key}`)" class="dash-revisit__body">
+                  <div class="dash-revisit__body">
                     <div class="dash-revisit__ayah">
                       <p
                         v-if="referenceLine(item).words.length"
@@ -462,35 +433,22 @@
           class="dash-section dash-section--flat dash-ai-results dash-reveal"
           :class="{
             'dash-section--empty': !aiReciteLoading && !aiReciteError && (!aiReciteView || aiReciteView.empty),
-            'is-collapsed': isSectionCollapsed('ai_recite'),
           }"
           aria-labelledby="dash-ai-results-heading"
           style="--dash-delay: 40ms"
         >
           <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__head-row">
-              <button
-                type="button"
-                class="dash-section__collapse"
-                :aria-expanded="isSectionCollapsed('ai_recite') ? 'false' : 'true'"
-                aria-controls="dash-ai-results-body"
-                @click="toggleSection('ai_recite')"
-              >
-                <span class="dash-section__title">
-                  <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-                    <i class="bi bi-mic" aria-hidden="true"></i>
-                  </span>
-                  <span class="dash-section__title-copy">
-                    <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
-
-                  </span>
-                </span>
-                <i class="bi dash-section__chevron" :class="isSectionCollapsed('ai_recite') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
-              </button>
+            <div class="dash-section__title">
+              <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                <i class="bi bi-mic" aria-hidden="true"></i>
+              </span>
+              <span class="dash-section__title-copy">
+                <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
+              </span>
             </div>
           </div>
 
-          <div v-show="!isSectionCollapsed('ai_recite')" id="dash-ai-results-body" class="dash-section__body">
+          <div id="dash-ai-results-body" class="dash-section__body">
             <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status dash-fb-skeleton" role="status">
               <span class="visually-hidden">{{ t('dashboard.loading') }}</span>
               <div class="dash-fb-skeleton__card" aria-hidden="true"></div>
@@ -550,7 +508,6 @@
                         :check-again-href="checkAgainHref(item)"
                         :focus-href="focusReviewHref(item)"
                         :review-item="attemptReviewItem(item)"
-                        :build-review-href="(payload) => reviewNowHref(payload)"
                         @toggle="toggleAttemptDetail(item)"
                         @retry="toggleAttemptDetail(item, true)"
                         @listen="openAnalysisForItem(item, 'attempt')"
@@ -628,7 +585,8 @@
                     </span>
                     <span class="dash-history__copy">
                       <span class="dash-history__kind">{{ historyKindLabel(item) }}</span>
-                      <span class="dash-history__title">{{ historyTitle(item) }}</span>
+                      <span v-if="historyTitle(item) && historyTitle(item) !== historyKindLabel(item)" class="dash-history__title">{{ historyTitle(item) }}</span>
+                      <span v-if="historyDetail(item)" class="dash-history__detail">{{ historyDetail(item) }}</span>
                     </span>
                     <time :datetime="item.occurred_at">{{ formatHistoryClock(item.occurred_at) }}</time>
                     <i class="bi bi-chevron-right dash-history__go" aria-hidden="true"></i>
@@ -639,7 +597,8 @@
                     </span>
                     <span class="dash-history__copy">
                       <span class="dash-history__kind">{{ historyKindLabel(item) }}</span>
-                      <span class="dash-history__title">{{ historyTitle(item) }}</span>
+                      <span v-if="historyTitle(item) && historyTitle(item) !== historyKindLabel(item)" class="dash-history__title">{{ historyTitle(item) }}</span>
+                      <span v-if="historyDetail(item)" class="dash-history__detail">{{ historyDetail(item) }}</span>
                     </span>
                     <time :datetime="item.occurred_at">{{ formatHistoryClock(item.occurred_at) }}</time>
                   </div>
@@ -691,6 +650,8 @@
           @view-all="openAchievementsDrawer"
         />
         </div>
+        </div>
+        </div>
 
       </template>
     </div>
@@ -705,6 +666,7 @@
         <button
           type="button"
           class="dash-drawer__backdrop"
+          tabindex="-1"
           :aria-label="t('dashboard.drawer_close')"
           @click="closeDrawer"
         ></button>
@@ -897,13 +859,14 @@
                     :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                   >
                     <div class="dash-drawer__ai-check-card">
-                      <button
-                        v-if="canViewAnalysis(item, 'attempt')"
-                        type="button"
+                      <component
+                        :is="canViewAnalysis(item, 'attempt') ? 'button' : 'div'"
+                        :type="canViewAnalysis(item, 'attempt') ? 'button' : undefined"
                         class="dash-drawer__ai-check-main"
-                        :disabled="isAnalysisLoading(item, 'attempt')"
-                        :aria-label="aiAttemptActionLabel(item)"
-                        @click="openAnalysisForItem(item, 'attempt')"
+                        :class="{ 'is-unavailable': !canViewAnalysis(item, 'attempt') }"
+                        :disabled="canViewAnalysis(item, 'attempt') && isAnalysisLoading(item, 'attempt')"
+                        :aria-label="canViewAnalysis(item, 'attempt') ? aiAttemptActionLabel(item) : undefined"
+                        @click="canViewAnalysis(item, 'attempt') && openAnalysisForItem(item, 'attempt')"
                       >
                         <span
                           class="dash-drawer__ai-check-score"
@@ -919,12 +882,14 @@
                             <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
                           </span>
                         </span>
+                        <span class="dash-drawer__ai-check-action">{{ canViewAnalysis(item, 'attempt') ? t('dashboard.view_analysis') : t('dashboard.analysis_unavailable') }}</span>
                         <i
+                          v-if="canViewAnalysis(item, 'attempt')"
                           class="dash-drawer__ai-check-go"
                           :class="isAnalysisLoading(item, 'attempt') ? 'bi bi-hourglass-split' : 'bi bi-chevron-right'"
                           aria-hidden="true"
                         ></i>
-                      </button>
+                      </component>
                       <div class="dash-drawer__ai-check-actions">
                         <a
                           v-if="aiCheckRevisionHref(item)"
@@ -934,16 +899,6 @@
                           <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                           {{ t('dashboard.review_now') }}
                         </a>
-                        <button
-                          v-if="canViewAnalysis(item, 'attempt')"
-                          type="button"
-                          class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
-                          :disabled="isAnalysisLoading(item, 'attempt')"
-                          @click="openAnalysisForItem(item, 'attempt')"
-                        >
-                          <i class="bi bi-graph-up" aria-hidden="true"></i>
-                          {{ t('dashboard.view_analysis') }}
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -1027,6 +982,73 @@
         </aside>
       </div>
     </Teleport>
+
+    <DashModalRoot
+      :open="Boolean(reflectionPrompt)"
+      root-class="dash-student-dialog-root"
+      panel-class="dash-student-dialog learner-self-assessment"
+      labelled-by="learner-self-assessment-title"
+      :close-on-backdrop="!reflectionSaving"
+      :close-on-escape="!reflectionSaving"
+      @close="closeSelfAssessment"
+    >
+      <template v-if="reflectionPrompt">
+        <header class="dash-drawer__head">
+          <div class="dash-drawer__head-main">
+            <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></span>
+            <div class="dash-drawer__head-copy">
+              <h2 id="learner-self-assessment-title" class="dash-drawer__title">{{ t('dashboard.assignment_self_assessment_title') }}</h2>
+              <p class="dash-drawer__subtitle">{{ reflectionPrompt.title }}</p>
+            </div>
+          </div>
+          <button type="button" class="dash-icon-btn dash-drawer__close" :disabled="reflectionSaving" :aria-label="t('common.close')" @click="closeSelfAssessment">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="dash-student-dialog__body learner-self-assessment__body">
+          <p class="learner-self-assessment__intro">{{ t('dashboard.assignment_self_assessment_intro') }}</p>
+          <div class="learner-self-assessment__choices" role="radiogroup" :aria-label="t('dashboard.assignment_self_assessment_title')">
+            <button
+              v-for="option in reflectionFeelingOptions"
+              :key="option"
+              type="button"
+              class="learner-self-assessment__choice"
+              :class="{ 'is-selected': reflectionFeeling === option }"
+              role="radio"
+              :aria-checked="reflectionFeeling === option ? 'true' : 'false'"
+              @click="reflectionFeeling = option"
+            >
+              <i :class="reflectionFeelingIcon(option)" aria-hidden="true"></i>
+              {{ t(`dashboard.assignment_self_assessment_${option}`) }}
+            </button>
+          </div>
+          <label class="learner-self-assessment__comment">
+            <span>{{ t('dashboard.assignment_self_assessment_comment') }}</span>
+            <textarea v-model="reflectionHelp" class="form-control" rows="3" maxlength="500" :placeholder="t('dashboard.assignment_self_assessment_comment_placeholder')"></textarea>
+            <small>{{ t('dashboard.assignment_self_assessment_score_note') }}</small>
+          </label>
+          <p v-if="supportError" class="learner-teacher__alert alert alert-danger" role="alert">{{ supportError }}</p>
+          <div class="learner-self-assessment__actions">
+            <button
+              type="button"
+              class="dash-btn dash-btn--primary"
+              :disabled="!reflectionFeeling || reflectionSaving"
+              @click="reflectionPrompt.mode === 'before' ? submitSupportAssignment(true) : saveReflection()"
+            >
+              {{ reflectionPrompt.mode === 'before' ? t('dashboard.assignment_self_assessment_submit') : t('dashboard.assignment_self_assessment_save') }}
+            </button>
+            <button
+              v-if="reflectionPrompt.mode === 'before'"
+              type="button"
+              class="dash-btn dash-btn--ghost"
+              :disabled="reflectionSaving"
+              @click="submitSupportAssignment(false)"
+            >{{ t('dashboard.assignment_self_assessment_submit_without') }}</button>
+            <button v-else type="button" class="dash-btn dash-btn--ghost" :disabled="reflectionSaving" @click="closeSelfAssessment">{{ t('dashboard.home_reflection_skip') }}</button>
+          </div>
+        </div>
+      </template>
+    </DashModalRoot>
 
     <SessionAnalysisModal
       :open="analysisModalOpen && analysisSourceKind !== 'attempt'"
@@ -1156,12 +1178,13 @@ import { defineAsyncComponent } from 'vue'
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
+import DashModalRoot from '../components/dashboard/DashModalRoot.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import { latestLearnerHomeFeedback, nextLearnerHomeTask, learnerHomeRevisions } from '../scripts/teacher/learnerHome.js'
-import { isLearnerSubmitted, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
+import { isLearnerSubmitted, isLearnerTaskApproved, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import LearnerMyLearningPlan from '../components/teacher/LearnerMyLearningPlan.vue'
-import { assignmentAttemptHelp } from '../scripts/teacher/formatters.js'
+import { assignmentProgressLabel } from '../scripts/teacher/formatters.js'
 import { assignmentDisplayLabel } from '../scripts/teacher/taskTypes.js'
 import { formatLearnerDisplayDate } from '../utils/learnerDisplayDate.js'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
@@ -1190,6 +1213,13 @@ import {
 } from '../scripts/dashboard/progressView'
 import DashAiReciteAttemptCard from '../components/dashboard/DashAiReciteAttemptCard.vue'
 import { pickDashboardPrimaryKind } from '../scripts/dashboard/primaryAction'
+import {
+  normalizeStudentDashboardPane,
+  studentDashboardHistoryState,
+  studentDashboardPaneFromHistory,
+  studentDashboardPaneFromLocation,
+  studentDashboardUrlForPane,
+} from '../scripts/dashboard/studentDashboardNavigation.js'
 import { dailyMutqinHref, memorisationGoalHref } from '../scripts/session/sessionGoal'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import {
@@ -1212,7 +1242,10 @@ import AchievementsPanel from '../components/achievements/AchievementsPanel.vue'
 import AchievementUnlockToast from '../components/achievements/AchievementUnlockToast.vue'
 import './Dashboard.css'
 import './Dashboard.learner-teacher.css'
+import './Dashboard.progress.css'
+import './Dashboard.student-premium.css'
 import '../styles/workspace-modern.css'
+import './Dashboard.student-experience.css'
 import '../components/achievements/achievements.css'
 
 const SessionAnalysisModal = defineAsyncComponent(() => import(
@@ -1294,6 +1327,7 @@ export default {
   components: {
     NetworkFallback,
     LearnerTeacherSection,
+    DashModalRoot,
     LearnerMyLearningPlan,
     DashAnimatedNumber,
     DashAiReciteAttemptCard,
@@ -1374,12 +1408,8 @@ export default {
       assignmentCompletionMessage: '',
       reflectionPrompt: null,
       reflectionFeeling: '',
-      reflectionConfidence: '',
-      reflectionDifficult: '',
-      reflectionWantsRevision: null,
       reflectionHelp: '',
       reflectionSaving: false,
-      reflectionSaved: false,
       assignmentCompletionTimer: null,
       assignmentFailedItem: null,
       historyItems: [],
@@ -1397,7 +1427,12 @@ export default {
       expandedDetailCache: {},
       collapsedSections: {},
       collapsedCards: {},
-      studentPane: 'home',
+      studentPane: typeof window === 'undefined'
+        ? 'home'
+        : studentDashboardPaneFromLocation(window.location, 'home'),
+      paneScrollPositions: {},
+      dashboardPopstateHandler: null,
+      dashboardPreviousScrollRestoration: null,
       learnerHeaderHeight: 76,
       learnerHeaderObserver: null,
       revisionSnoozingId: 0,
@@ -1483,12 +1518,16 @@ export default {
     homeTaskType() {
       return assignmentDisplayLabel(this.homeTask?.assignment, this.t.bind(this))
     },
-    homeTaskRequirement() {
-      return assignmentAttemptHelp(this.homeTask, this.t.bind(this))
+    homeTaskProgress() {
+      return this.homeTask?.progress ? assignmentProgressLabel(this.homeTask, this.t.bind(this)) : ''
     },
     homeTaskStatus() {
       return this.homeTask?.review_state === 'needs_correction'
         ? this.t('teacher.status_needs_correction')
+        : this.homeTask?.workflow_state === 'practice_completed'
+          ? this.t('teacher.practice_completed')
+          : this.homeTask?.workflow_state === 'practice_required'
+            ? this.t('teacher.practice_required')
         : this.t(taskStateLabelKey(resolveDisplayTaskState(this.homeTask)))
     },
     homeTaskTone() {
@@ -1510,15 +1549,19 @@ export default {
       return due
     },
     homeTaskAction() {
-      if (this.homeTaskReadyToSubmit) return this.t('teacher.mark_complete')
+      if (this.homeTaskReadyToSubmit) {
+        return this.homeTask?.review_state === 'needs_correction'
+          ? this.t('teacher.resubmit_correction')
+          : this.t('teacher.mark_complete')
+      }
+      if (this.homeTask?.review_state === 'needs_correction') return this.t('teacher.practise_correction')
       const key = learnerPrimaryActionKey(this.homeTask)
       if (key === 'resume') return this.t('common.resume')
       if (key === 'redo') return this.t('teacher.coaching_practise_again')
       return this.t('teacher.learner_upcoming_start')
     },
     homeTaskReadyToSubmit() {
-      return this.homeTask?.review_state !== 'needs_correction'
-        && Number(this.homeTask?.progress?.activity_count || 0) >= Number(this.homeTask?.progress?.target || 1)
+      return Number(this.homeTask?.progress?.activity_count || 0) >= Number(this.homeTask?.progress?.target || 1)
     },
     homeWaitingReview() {
       return (this.support?.assignments || []).some(isLearnerSubmitted)
@@ -1551,25 +1594,20 @@ export default {
         return ['pending', 'in_progress', 'overdue'].includes(String(row?.status || ''))
       }).slice(0, 4)
     },
-    reflectionLevels() {
-      return ['low', 'steady', 'confident']
+    reflectionFeelingOptions() {
+      return ['easy', 'manageable', 'difficult', 'need_help']
     },
     showHomeContinue() {
       if (this.showLearnerTeacherSection && this.supportLoading && !this.support) return false
       return this.primaryContinueAction && (!this.homeTask || this.primaryContinueAction.kind === 'saved')
     },
     dashboardJumps() {
-      const items = [
+      return [
         { id: 'dash-home', pane: 'home', label: this.t('dashboard.jump_home'), icon: 'bi bi-house' },
-      ]
-      if (this.showLearnerTeacherSection) {
-        items.push({ id: 'dash-my-learning', pane: 'learning', label: this.t('dashboard.jump_learning'), icon: 'bi bi-journal-check' })
-      }
-      items.push(
+        { id: 'dash-my-learning', pane: 'learning', label: this.t('dashboard.jump_learning'), icon: 'bi bi-journal-check' },
         { id: 'dash-progress', pane: 'progress', label: this.t('dashboard.jump_progress'), icon: 'bi bi-graph-up' },
         { id: 'dash-activity', pane: 'activity', label: this.t('dashboard.jump_activity'), icon: 'bi bi-clock-history' },
-      )
-      return items
+      ]
     },
     savedSessionsHref() {
       const base = this.memorisationUrl.split('?')[0]
@@ -2206,10 +2244,21 @@ export default {
         .filter((card) => card && card.value && card.value !== '—')
     },
     aiReciteSummaryLine() {
-      return this.aiReciteFacts
-        .map((fact) => `${fact.value} ${String(fact.label || '').toLowerCase()}`)
-        .filter(Boolean)
-        .join(' · ')
+      return this.aiReciteFacts.map((fact) => {
+        const value = Number(fact.value)
+        if (!Number.isFinite(value)) return ''
+        if (fact.key === 'total') {
+          return value === 1
+            ? this.t('dashboard.ai_recite.summary_attempt_one')
+            : this.t('dashboard.ai_recite.summary_attempts', { n: value })
+        }
+        if (fact.key === 'ayahs') {
+          return value === 1
+            ? this.t('dashboard.ai_recite.summary_ayah_one')
+            : this.t('dashboard.ai_recite.summary_ayahs', { n: value })
+        }
+        return ''
+      }).filter(Boolean).join(' · ')
     },
     aiReciteFocus() {
       return this.aiReciteView?.focus || []
@@ -2274,7 +2323,10 @@ export default {
     historyGroups() {
       const groups = []
       this.historyVisible.forEach((item) => {
-        const key = String(item.occurred_at || '').slice(0, 10) || 'undated'
+        const date = item.occurred_at ? new Date(item.occurred_at) : null
+        const key = date && !Number.isNaN(date.getTime())
+          ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+          : 'undated'
         let group = groups.find((entry) => entry.key === key)
         if (!group) {
           group = { key, label: this.formatAbsoluteDate(item.occurred_at) || key, items: [] }
@@ -2599,6 +2651,7 @@ export default {
     },
   },
   async mounted() {
+    this.initialiseDashboardNavigation()
     this.syncLearnerHeaderHeight()
     const learnerHeader = document.querySelector('.app-navbar')
     if (learnerHeader && typeof ResizeObserver !== 'undefined') {
@@ -2684,6 +2737,10 @@ export default {
     if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler)
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
+    if (this.dashboardPopstateHandler) window.removeEventListener('popstate', this.dashboardPopstateHandler)
+    if (this.dashboardPreviousScrollRestoration && window.history) {
+      window.history.scrollRestoration = this.dashboardPreviousScrollRestoration
+    }
     if (this.themeObserver) this.themeObserver.disconnect()
     this.clearToast()
     clearTimeout(this.assignmentCompletionTimer)
@@ -2694,23 +2751,115 @@ export default {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
     },
-    openDashPane(item) {
-      const moveFocus = Boolean(document.activeElement?.closest('.dash-pane'))
-      this.studentPane = item?.pane || 'home'
+    initialiseDashboardNavigation() {
+      if (typeof window === 'undefined' || !window.history) return
+      const pane = studentDashboardPaneFromLocation(window.location, this.studentPane)
+      this.studentPane = pane
+      const storedScroll = Number(window.history.state?.studentDashboardScrollY)
+      const scrollY = Number.isFinite(storedScroll) ? storedScroll : Number(window.scrollY || 0)
+      this.paneScrollPositions = { ...this.paneScrollPositions, [pane]: scrollY }
+      this.dashboardPreviousScrollRestoration = window.history.scrollRestoration
+      window.history.scrollRestoration = 'manual'
+      window.history.replaceState(
+        studentDashboardHistoryState(window.history.state, pane, scrollY),
+        '',
+        studentDashboardUrlForPane(window.location, pane),
+      )
+      this.dashboardPopstateHandler = event => this.onDashboardHistoryNavigation(event)
+      window.addEventListener('popstate', this.dashboardPopstateHandler)
+    },
+    dashboardPaneTop() {
+      if (typeof window === 'undefined') return 0
+      const top = this.$el?.getBoundingClientRect?.().top
+      return Math.max(0, Number(window.scrollY || 0) + (Number.isFinite(top) ? top : 0) - 12)
+    },
+    rememberDashboardPaneScroll(pane = this.studentPane) {
+      if (typeof window === 'undefined') return 0
+      const scrollY = Math.max(0, Number(window.scrollY || 0))
+      this.paneScrollPositions = { ...this.paneScrollPositions, [normalizeStudentDashboardPane(pane)]: scrollY }
+      return scrollY
+    },
+    replaceDashboardHistoryEntry(pane = this.studentPane) {
+      if (typeof window === 'undefined' || !window.history) return
+      const scrollY = this.rememberDashboardPaneScroll(pane)
+      window.history.replaceState(
+        studentDashboardHistoryState(window.history.state, pane, scrollY),
+        '',
+        studentDashboardUrlForPane(window.location, pane),
+      )
+    },
+    restoreDashboardPaneScroll(pane, requestedScroll = null) {
+      if (typeof window === 'undefined') return
+      const saved = Number(requestedScroll)
+      const cached = Number(this.paneScrollPositions[pane])
+      const top = requestedScroll !== null && requestedScroll !== undefined && Number.isFinite(saved)
+        ? saved
+        : (Number.isFinite(cached) ? cached : this.dashboardPaneTop())
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: Math.max(0, top), left: 0, behavior: 'instant' })
+      })
+    },
+    focusDashboardPaneHeading(pane) {
+      if (typeof document === 'undefined') return
+      const targetId = {
+        home: 'dash-home',
+        learning: 'dash-welcome-heading',
+        progress: 'dash-progress',
+        activity: 'dash-activity',
+      }[pane]
+      const target = targetId ? document.getElementById(targetId) : null
+      if (!target) return
+      target.tabIndex = -1
+      target.focus({ preventScroll: true })
+    },
+    navigateDashboardPane(pane, options = {}) {
+      const next = normalizeStudentDashboardPane(pane, 'home')
+      const previous = this.studentPane
+      if (next === previous) {
+        if (options.focus) this.$nextTick(() => this.focusDashboardPaneHeading(next))
+        return false
+      }
+      if (options.history !== 'none') this.replaceDashboardHistoryEntry(previous)
+      const nextScroll = Number.isFinite(Number(options.scrollY))
+        ? Number(options.scrollY)
+        : this.paneScrollPositions[next]
+      this.$refs.learnerTeacherSection?.closeNavigationOverlays?.()
+      this.studentPane = next
+      if (typeof window !== 'undefined' && window.history && options.history !== 'none') {
+        const method = options.history === 'replace' ? 'replaceState' : 'pushState'
+        const stateScroll = Number.isFinite(Number(nextScroll)) ? Number(nextScroll) : this.dashboardPaneTop()
+        window.history[method](
+          studentDashboardHistoryState(window.history.state, next, stateScroll),
+          '',
+          studentDashboardUrlForPane(window.location, next, { clearContextHash: options.clearContextHash !== false }),
+        )
+      }
       this.$nextTick(() => {
-        const el = this.$el
-        if (!el) return
-        const reduce = typeof window !== 'undefined'
-          && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-        el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
-        if (moveFocus) {
-          const targetId = { home: 'dash-home', learning: 'dash-welcome-heading', progress: 'dash-progress', activity: 'dash-activity' }[this.studentPane]
-          const target = document.getElementById(targetId)
-          if (target) {
-            target.tabIndex = -1
-            target.focus({ preventScroll: true })
-          }
+        if (options.restoreScroll !== false) this.restoreDashboardPaneScroll(next, nextScroll)
+        if (options.focus) this.focusDashboardPaneHeading(next)
+      })
+      return true
+    },
+    onDashboardHistoryNavigation(event) {
+      if (typeof window === 'undefined') return
+      this.rememberDashboardPaneScroll(this.studentPane)
+      const next = studentDashboardPaneFromHistory(event?.state, window.location, 'home')
+      this.$refs.learnerTeacherSection?.closeNavigationOverlays?.()
+      this.studentPane = next
+      const scrollY = Number(event?.state?.studentDashboardScrollY)
+      this.$nextTick(() => {
+        if (window.location.hash === '#ai-recite-results') {
+          this.scrollToAiReciteResults({ fromHistory: true })
+          return
         }
+        this.restoreDashboardPaneScroll(next, Number.isFinite(scrollY) ? scrollY : null)
+      })
+    },
+    openDashPane(item) {
+      this.navigateDashboardPane(item?.pane || 'home', {
+        focus: true,
+        history: 'push',
+        clearContextHash: true,
       })
     },
     syncLearnerHeaderHeight() {
@@ -2727,7 +2876,7 @@ export default {
         persistFeedbackRead(feedback.id)
         this.feedbackReadVersion += 1
       }
-      this.studentPane = 'learning'
+      this.navigateDashboardPane('learning', { history: 'push', restoreScroll: true })
       this.$nextTick(() => {
         document.getElementById('dash-welcome-heading')?.focus({ preventScroll: true })
         this.$refs.learnerTeacherSection?.openFeedbackFromPanel(feedback)
@@ -2811,8 +2960,11 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.collapsedCards || {}, key)) {
         return !!this.collapsedCards[key]
       }
-      // Next-to-revisit ayahs start collapsed to keep the page short.
-      return String(key).startsWith('revisit:')
+      // Keep the most urgent revisit open so its evidence and next action are visible.
+      if (String(key).startsWith('revisit:')) {
+        return key !== `revisit:${this.revisitItems?.[0]?.key}`
+      }
+      return false
     },
     toggleCard(key) {
       const currentlyCollapsed = this.isCardCollapsed(key)
@@ -2978,7 +3130,10 @@ export default {
         const parts = []
         if (bandLabel) parts.push(bandLabel)
         if (params.accuracy != null && params.accuracy !== '') {
-          parts.push(this.t('dashboard.drawer_accuracy', { n: Number(params.accuracy) }))
+          const accuracy = Number(params.accuracy)
+          parts.push(Number.isFinite(accuracy)
+            ? `${Math.round(accuracy)}% ${this.t('dashboard.ai_recite.wording_match')}`
+            : this.t('dashboard.drawer_accuracy', { n: params.accuracy }))
         }
         if (item.authority === 'ai_word_match') parts.push(this.t('dashboard.activity_word_match_not_tajweed'))
         return parts.join(' · ') || this.t('dashboard.activity_type_ai_check')
@@ -3211,15 +3366,88 @@ export default {
         return ''
       }
     },
+    historyActivityLabel(item) {
+      const activity = String(item?.outcome_params?.activity || '').toLowerCase()
+      const keys = {
+        hifz: 'teacher.activity_hifz',
+        revision: 'teacher.activity_revision',
+        nazra: 'teacher.activity_nazra',
+        tajweed: 'teacher.activity_tajweed',
+        recite: 'teacher.task_type_recite',
+        ai_recite: 'teacher.task_type_recite',
+        recitation: 'teacher.task_type_recite',
+        memorisation: 'teacher.task_type_new',
+        new: 'teacher.task_type_new',
+      }
+      const key = keys[activity]
+      if (!key) return ''
+      const label = this.t(key)
+      return label && label !== key ? label : ''
+    },
     historyKindLabel(item) {
+      const type = String(item?.type || '').toLowerCase()
+      if (type === 'ai_check' || type === 'ai_recite') return this.t('dashboard.history_ai_wording_check')
+      if (type === 'ayah_memorised') return this.t('dashboard.history_memorisation_recorded')
+      if (type === 'assignment' || type === 'milestone') {
+        const activityLabel = this.historyActivityLabel(item)
+        if (activityLabel) return activityLabel
+      }
+      if (type && type !== 'session' && !type.startsWith('session_')) {
+        const label = this.activityTypeLabel(type)
+        if (label) return label
+      }
       const kind = String(item?.practice_kind || '')
-      if (kind === 'memorisation') return this.t('dashboard.history_filter_memorisation')
+      if (kind === 'memorisation') return this.t('dashboard.history_memorisation_practice')
       if (kind === 'revision') return this.t('dashboard.history_filter_revision')
       if (kind === 'recitation') return this.t('dashboard.history_filter_recitation')
       if (kind === 'note') return this.t('dashboard.activity_type_note')
       return this.t('dashboard.history_unspecified')
     },
+    historyDetail(item) {
+      const type = String(item?.type || '').toLowerCase()
+      const params = item?.outcome_params && typeof item.outcome_params === 'object' ? item.outcome_params : {}
+      if ((type === 'ai_check' || type === 'ai_recite' || item?.authority === 'ai_word_match') && params.accuracy != null && params.accuracy !== '') {
+        const accuracy = Number(params.accuracy)
+        if (Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 100) {
+          return `${Math.round(accuracy)}% ${this.t('dashboard.ai_recite.wording_match')}`
+        }
+      }
+      if (type === 'session' || type.startsWith('session_')) return this.activityOutcome(item)
+      if (type === 'assignment' || type === 'milestone') {
+        const count = Number(params.submissions || 0)
+        if (count === 1) return this.t('teacher.learner_submission_count_one', { n: 1 })
+        if (count > 1) return this.t('teacher.learner_submission_count_other', { n: count })
+      }
+      if (type === 'self_assessment') {
+        const feeling = String(params.feeling || '')
+        const feelingKey = feeling ? `dashboard.assignment_self_assessment_${feeling}` : ''
+        const feelingLabel = feelingKey ? this.t(feelingKey) : ''
+        const help = String(params.help || '').trim()
+        const knownFeeling = feelingLabel && feelingLabel !== feelingKey ? feelingLabel : ''
+        return [knownFeeling, help].filter(Boolean).join(' · ')
+      }
+      if (type === 'teacher_feedback') return String(params.body || '').trim()
+      if (type === 'teacher_finding') {
+        const focus = String(params.focus || '')
+        const finding = String(params.finding || '')
+        const focusKey = focus ? `teacher.focus_${focus}` : ''
+        const findingKey = finding ? `teacher.finding_${finding}` : ''
+        const focusLabel = focusKey ? this.t(focusKey) : ''
+        const findingLabel = findingKey ? this.t(findingKey) : ''
+        const detail = [
+          findingLabel && findingLabel !== findingKey ? findingLabel : '',
+          focusLabel && focusLabel !== focusKey ? focusLabel : '',
+        ].filter(Boolean).join(' · ')
+        if (detail) return detail
+        if (item?.verified_mistake) return this.activityAuthority(item)
+      }
+      return ''
+    },
     historyKindIcon(item) {
+      const type = String(item?.type || '').toLowerCase()
+      if (type === 'ai_check' || type === 'ai_recite') return 'bi bi-stars'
+      if (type === 'teacher_feedback' || type === 'teacher_finding') return 'bi bi-chat-left-text'
+      if (type === 'assignment' || type === 'milestone') return 'bi bi-clipboard-check'
       const kind = String(item?.practice_kind || '')
       if (kind === 'revision') return 'bi bi-arrow-repeat'
       if (kind === 'recitation') return 'bi bi-mic'
@@ -3526,9 +3754,13 @@ export default {
         letterSpacing: '0',
       }
     },
-    scrollToAiReciteResults() {
+    scrollToAiReciteResults(options = {}) {
       if (typeof window === 'undefined' || window.location.hash !== '#ai-recite-results') return
-      this.studentPane = 'progress'
+      this.navigateDashboardPane('progress', {
+        history: options.fromHistory ? 'none' : 'replace',
+        restoreScroll: false,
+        clearContextHash: false,
+      })
       this.$nextTick(() => {
         const el = this.$refs.aiReciteResults
         if (!el || typeof el.scrollIntoView !== 'function') return
@@ -3978,7 +4210,73 @@ export default {
         this.assignmentSavingId = 0
       }
     },
-    async completeSupportAssignment(item) {
+    promptSupportAssignmentCompletion(item) {
+      if (!item?.id || this.assignmentSavingId) return
+      this.supportError = ''
+      this.reflectionFeeling = item?.self_assessment?.feeling || ''
+      this.reflectionHelp = item?.self_assessment?.note || item?.self_assessment?.help_request || ''
+      this.reflectionPrompt = {
+        mode: 'before',
+        item,
+        recipientId: Number(item.id),
+        title: this.assignmentSelfAssessmentTitle(item),
+        surah_number: item.assignment?.surah_number || null,
+        ayah_start: item.assignment?.ayah_start || null,
+        ayah_end: item.assignment?.ayah_end || null,
+      }
+    },
+    openPostSubmissionAssessment(submission) {
+      if (!submission?.recipient_id || this.reflectionSaving) return
+      this.supportError = ''
+      this.reflectionFeeling = submission?.self_assessment?.feeling || ''
+      this.reflectionHelp = submission?.self_assessment?.note || submission?.self_assessment?.help_request || ''
+      this.reflectionPrompt = {
+        mode: 'after',
+        recipientId: Number(submission.recipient_id),
+        title: submission.title || '',
+        surah_number: submission.assigned_range?.surah || null,
+        ayah_start: submission.assigned_range?.from || null,
+        ayah_end: submission.assigned_range?.to || null,
+      }
+    },
+    closeSelfAssessment(force = false) {
+      if (this.reflectionSaving && !force) return
+      this.reflectionPrompt = null
+      this.reflectionFeeling = ''
+      this.reflectionHelp = ''
+    },
+    reflectionFeelingIcon(feeling) {
+      return {
+        easy: 'bi bi-emoji-smile',
+        manageable: 'bi bi-hand-thumbs-up',
+        difficult: 'bi bi-exclamation-circle',
+        need_help: 'bi bi-person-raised-hand',
+      }[feeling] || 'bi bi-circle'
+    },
+    assignmentSelfAssessmentTitle(item) {
+      const assignment = item?.assignment || {}
+      const range = assignment.ayah_start === assignment.ayah_end
+        ? assignment.ayah_start
+        : `${assignment.ayah_start || ''}–${assignment.ayah_end || ''}`
+      return [assignment.surah_name, range].filter(Boolean).join(' · ')
+    },
+    selfAssessmentPayload() {
+      const comment = String(this.reflectionHelp || '').trim()
+      return {
+        feeling: this.reflectionFeeling,
+        comment,
+        note: comment,
+        help_request: comment,
+      }
+    },
+    async submitSupportAssignment(includeAssessment) {
+      const item = this.reflectionPrompt?.item
+      if (!item || this.reflectionSaving || (includeAssessment && !this.reflectionFeeling)) return
+      this.reflectionSaving = true
+      await this.completeSupportAssignment(item, includeAssessment ? this.selfAssessmentPayload() : null)
+      this.reflectionSaving = false
+    },
+    async completeSupportAssignment(item, assessment = null) {
       if (this.auth?.learner_teacher_section_enabled !== true || !item?.id || this.assignmentSavingId) return
       this.supportRequestId += 1
       this.supportLoading = false
@@ -3987,20 +4285,14 @@ export default {
       this.assignmentFailedItem = null
       this.assignmentSavingId = Number(item?.id || 0)
       try {
-        this.support = await learningApi.completeLearnerAssignment(item.id)
-        this.assignmentCompletionMessage = this.t('teacher.learner_assignments_submitted_success')
-        this.reflectionPrompt = {
-          recipientId: Number(item.id),
-          surah_number: item.assignment?.surah_number || null,
-          ayah_start: item.assignment?.ayah_start || null,
-          ayah_end: item.assignment?.ayah_end || null,
-        }
-        this.reflectionFeeling = ''
-        this.reflectionConfidence = ''
-        this.reflectionDifficult = ''
-        this.reflectionWantsRevision = null
-        this.reflectionHelp = ''
-        this.reflectionSaved = false
+        this.support = await learningApi.completeLearnerAssignment(item.id, assessment)
+        const updated = (Array.isArray(this.support?.assignments) ? this.support.assignments : [])
+          .find((row) => Number(row?.id) === Number(item.id))
+        const approved = updated && isLearnerTaskApproved(updated) && !isLearnerSubmitted(updated)
+        this.assignmentCompletionMessage = this.t(approved
+          ? 'teacher.learner_assignments_completed_success'
+          : 'teacher.learner_assignments_submitted_success')
+        this.closeSelfAssessment(true)
         clearTimeout(this.assignmentCompletionTimer)
         this.assignmentCompletionTimer = setTimeout(() => this.dismissAssignmentCompletion(), 5000)
       } catch (error) {
@@ -4014,24 +4306,19 @@ export default {
       return assignmentDisplayLabel(task?.assignment, this.t.bind(this))
     },
     async saveReflection() {
-      if (!this.reflectionPrompt || !this.reflectionConfidence || this.reflectionSaving) return
+      if (!this.reflectionPrompt || !this.reflectionFeeling || this.reflectionSaving) return
       this.reflectionSaving = true
-      const feeling = { low: 'difficult', steady: 'manageable', confident: 'easy' }[this.reflectionConfidence] || 'manageable'
       try {
         await learningApi.saveLearnerSelfAssessment({
-          feeling,
-          confidence: this.reflectionConfidence,
-          difficult_ayahs: this.reflectionDifficult,
-          wants_revision: this.reflectionWantsRevision,
-          note: this.reflectionHelp,
-          help_request: this.reflectionHelp,
+          ...this.selfAssessmentPayload(),
           teacher_assignment_recipient_id: this.reflectionPrompt.recipientId,
           surah_number: this.reflectionPrompt.surah_number,
           ayah_start: this.reflectionPrompt.ayah_start,
           ayah_end: this.reflectionPrompt.ayah_end,
         })
-        this.reflectionSaved = true
-        this.reflectionPrompt = null
+        await this.loadLearnerSupport(true)
+        this.showToast(this.t('dashboard.home_reflection_saved'))
+        this.closeSelfAssessment(true)
       } catch (error) {
         this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
       } finally {
@@ -4065,7 +4352,7 @@ export default {
     },
     showCompletedAssignments() {
       this.assignmentCompletionMessage = ''
-      this.studentPane = 'learning'
+      this.navigateDashboardPane('learning', { history: 'push', restoreScroll: true })
       this.$nextTick(() => this.$refs.learnerTeacherSection?.setFilter('done'))
     },
     dismissAssignmentCompletion() {

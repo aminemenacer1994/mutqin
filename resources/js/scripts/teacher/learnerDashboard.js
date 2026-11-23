@@ -184,9 +184,7 @@ export function learnerTaskAttemptCount(row) {
   return fromResult > 0 ? fromResult : 0
 }
 
-/**
- * Middle segment for approved task meta, e.g. "Score: 90%" or "Passed (1st try)".
- */
+/** Middle segment for approved task meta; accuracy is an AI wording check. */
 export function learnerCompletedPerformanceLabel(row, t, tp) {
   const result = row?.completion_result
   const raw = result?.accuracy_percent
@@ -235,17 +233,7 @@ export function completionAiScoreSummary(result, t, tp) {
   const mistakes = Array.isArray(result?.attempt?.mistakes) ? result.attempt.mistakes : []
   const fixCount = mistakes.length
 
-  if (percent >= 100 && fixCount === 0) {
-    return {
-      percent,
-      band,
-      label: t('teacher.learner_ai_score_perfect'),
-    }
-  }
-
-  let bandLabel = t('teacher.learner_ai_score_band_needs_work')
-  if (band === 'high') bandLabel = t('teacher.learner_ai_score_band_excellent')
-  else if (band === 'mid') bandLabel = t('teacher.learner_ai_score_band_good')
+  const bandLabel = t('teacher.learner_ai_score_perfect')
 
   if (fixCount <= 0) {
     return { percent, band, label: bandLabel }

@@ -7,6 +7,7 @@
     :busy="saving"
     :dirty="isDirty"
     compact
+    class="teacher-task-dialog"
     @close="$emit('close')"
   >
     <form :id="formId" class="teacher-task-form" @submit.prevent="submit">
@@ -56,7 +57,6 @@
             <option value="" disabled>{{ t('teacher.hifz_choose_type') }}</option>
             <option v-for="type in taskTypes" :key="type.id" :value="type.id">{{ t(type.labelKey) }}</option>
           </select>
-          <p v-if="selectedTaskType" class="text-body-secondary small mb-0 mt-1">{{ t(selectedTaskType.helpKey) }}</p>
         </div>
         <div v-if="showHifzStage" class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-stage`">{{ t('teacher.hifz_stage') }}</label>
@@ -65,7 +65,6 @@
             <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
             <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
           </select>
-          <p class="text-body-secondary small mb-0 mt-1">{{ t('teacher.hifz_stage_help') }}</p>
         </div>
         <div class="teacher-form-field teacher-form-field--half">
           <label class="form-label" :for="`${formId}-surah`">{{ t('teacher.surah') }}</label>
@@ -84,8 +83,15 @@
         </div>
         <div class="teacher-form-field teacher-form-field--half teacher-form-field--reps">
           <label class="form-label" :for="`${formId}-reps`">{{ requirementLabel }}</label>
-          <input :id="`${formId}-reps`" class="form-control" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required :aria-describedby="`${formId}-reps-help`" @input="patch('repetition_target', $event.target.value)">
-          <p :id="`${formId}-reps-help`" class="text-body-secondary small mb-0 mt-1">{{ requirementHelp }}</p>
+          <input :id="`${formId}-reps`" class="form-control" :class="{ 'is-invalid': showTargetError }" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required :aria-invalid="showTargetError ? 'true' : 'false'" :aria-describedby="showTargetError ? `${formId}-reps-error` : undefined" @input="patch('repetition_target', $event.target.value)">
+          <p v-if="showTargetError" :id="`${formId}-reps-error`" class="text-danger small mb-0 mt-1" role="alert">{{ targetError }}</p>
+        </div>
+        <div v-if="showRecordingOption" class="teacher-form-field teacher-form-field--full teacher-task-form__recording">
+          <label v-if="!selectedTaskType?.recordingLocked" class="form-check" :for="`${formId}-recording`">
+            <input :id="`${formId}-recording`" class="form-check-input" type="checkbox" :checked="Boolean(form.recording_required)" :disabled="saving" @change="onRecordingChange($event.target.checked)">
+            <span class="form-check-label">{{ t('teacher.recording_required') }}</span>
+          </label>
+          <p v-else class="mb-0 fw-medium"><i class="bi bi-mic" aria-hidden="true"></i> {{ t('teacher.recording_required') }}</p>
         </div>
         <div class="teacher-form-pair">
         <div class="teacher-form-field teacher-form-field--due">
@@ -114,13 +120,6 @@
         </div>
         </div>
         <div class="teacher-form-field teacher-form-field--full">
-          <label class="form-check" :for="`${formId}-recording`">
-            <input :id="`${formId}-recording`" class="form-check-input" type="checkbox" :checked="Boolean(form.recording_required)" :disabled="saving || selectedTaskType?.recordingLocked" @change="onRecordingChange($event.target.checked)">
-            <span class="form-check-label">{{ t('teacher.recording_required') }}</span>
-          </label>
-          <p class="text-body-secondary small mb-0">{{ t(form.recording_required ? 'teacher.recording_required_hint' : 'teacher.recording_optional_hint') }}</p>
-        </div>
-        <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
           <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
         </div>
@@ -128,7 +127,10 @@
     </form>
     <template #footer>
       <button type="button" class="btn btn-outline-secondary" :disabled="saving" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
-      <button type="submit" class="btn btn-primary" :form="formId" :disabled="saving || !canSubmit">{{ editing ? t('teacher.task_save') : t('teacher.assign_task') }}</button>
+      <span class="teacher-task-form__submit">
+        <span v-if="!canSubmit" :id="`${formId}-submit-hint`" class="teacher-task-form__submit-hint" aria-live="polite">{{ submitHint }}</span>
+        <button type="submit" class="btn btn-primary" :form="formId" :disabled="saving || !canSubmit" :aria-describedby="!canSubmit ? `${formId}-submit-hint` : undefined" :title="!canSubmit ? submitHint : undefined">{{ editing ? t('teacher.task_save') : t('teacher.assign_task') }}</button>
+      </span>
     </template>
   </TeacherDialog>
 </template>
@@ -137,7 +139,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
-import { assignmentAttemptHelp, assignmentRequirementLabel } from '../../scripts/teacher/formatters'
+import { assignmentRequirementLabel } from '../../scripts/teacher/formatters'
 import {
   TEACHER_TASK_TYPES,
   applyRecordingRequirement,
@@ -209,7 +211,7 @@ export default {
       return Number(this.selectedSurah?.ayah_count || 0)
     },
     taskTypes() {
-      return TEACHER_TASK_TYPES.filter((type) => !type.legacy || type.id === this.form.task_type)
+      return TEACHER_TASK_TYPES.filter((type) => type.id !== 'new_memorisation' || type.id === this.form.task_type)
     },
     selectedTaskType() {
       return TEACHER_TASK_TYPES.find((type) => type.id === this.form.task_type) || null
@@ -217,11 +219,11 @@ export default {
     showHifzStage() {
       return this.form.task_type === 'hifz' || this.form.task_type === 'new_memorisation'
     },
+    showRecordingOption() {
+      return ['hifz', 'tajweed', 'recitation_check'].includes(this.form.task_type)
+    },
     requirementLabel() {
       return assignmentRequirementLabel({ kind: this.form.kind }, this.t.bind(this))
-    },
-    requirementHelp() {
-      return assignmentAttemptHelp({ assignment: { kind: this.form.kind || '' } }, this.t.bind(this))
     },
     minDueDate() {
       const today = new Date()
@@ -247,6 +249,22 @@ export default {
         return this.editing ? this.t('teacher.due_date_required_edit') : this.t('teacher.due_date_required')
       }
       return ''
+    },
+    targetError() {
+      const target = Number(this.form.repetition_target)
+      if (!Number.isInteger(target) || target < 1 || target > 50) return this.t('teacher.task_target_error')
+      return ''
+    },
+    showTargetError() {
+      return this.submitAttempted && Boolean(this.targetError)
+    },
+    submitHint() {
+      if (!this.form.student_id && !this.bulkStudents.length) return this.t('teacher.task_submit_choose_student')
+      if (!this.form.task_type) return this.t('teacher.task_submit_choose_type')
+      if (!this.form.surah_number || !this.form.ayah_start || !this.form.ayah_end || this.rangeError) return this.t('teacher.task_submit_choose_passage')
+      if (this.targetError) return this.t('teacher.task_submit_choose_target')
+      if (this.dueError) return this.t('teacher.task_submit_choose_due_date')
+      return this.t('teacher.complete_required_fields')
     },
     canSubmit() {
       const target = Number(this.form.repetition_target)

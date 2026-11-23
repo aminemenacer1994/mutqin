@@ -113,7 +113,7 @@
     {{-- This stylesheet is emitted by webpack's Vue loader, not by a Mix entry.
          It is therefore not guaranteed to be present in mix-manifest.json. --}}
     <link rel="stylesheet" href="{{ asset('css/vue-styles.css').'?v='.$vueStylesFingerprint }}">
-    @if(request()->routeIs('teacher.dashboard'))
+    @if(request()->routeIs('teacher.dashboard', 'dashboard', 'progress.dashboard'))
         @php
             $teacherStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/teacher-dashboard.css', $mixManifestPath);
         @endphp

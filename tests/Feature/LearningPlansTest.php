@@ -74,6 +74,11 @@ class LearningPlansTest extends TestCase
 
         $this->assertSame(1, $listed['progress']['completed']);
         $this->assertSame(100, $listed['progress']['percent']);
+
+        $learnerPlan = app(TeacherDashboardService::class)->learnerSupport($student)['learning_plan'];
+        $this->assertNotNull($learnerPlan);
+        $this->assertSame($listed['progress']['completed'], $learnerPlan['progress']['completed']);
+        $this->assertSame($listed['progress']['total'], $learnerPlan['progress']['total']);
     }
 
     public function test_suggested_items_require_approval_and_history_is_preserved(): void
@@ -411,6 +416,116 @@ class LearningPlansTest extends TestCase
         $this->actingAs($otherTeacher)
             ->postJson(route('api.teacher.learning-plan-items.approve', $itemId))
             ->assertNotFound();
+    }
+
+    public function test_plan_exposes_measurable_targets_and_completes_only_after_teacher_approval(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $due = now()->addDays(2)->toDateString();
+        $plan = $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Al-Fatihah Sabaq',
+            'student_goal' => 'Memorise ayahs 1–3 by Friday',
+            'notes' => 'Pause at the end of each ayah.',
+            'activate' => true,
+            'items' => [[
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 1,
+                'ayah_start' => 1,
+                'ayah_end' => 3,
+                'repetition_target' => 2,
+                'due_on' => $due,
+                'is_milestone' => true,
+            ]],
+        ])->assertCreated()->json('plan');
+
+        $this->assertSame(1, $plan['progress']['activities_total']);
+        $this->assertSame(0, $plan['progress']['activities_completed']);
+        $this->assertSame(1, $plan['progress']['upcoming_lessons']);
+        $this->assertSame(0, $plan['progress']['validated_memorised_ayahs']);
+        $this->assertSame($plan['items'][0]['id'], $plan['next_milestone']['id']);
+        $this->assertSame(2, $plan['items'][0]['completion_criteria']['required_activities']);
+        $this->assertTrue($plan['items'][0]['completion_criteria']['teacher_approval_required']);
+        $this->assertTrue($plan['items'][0]['completion_criteria']['validates_memorisation']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.status', $plan['id']), ['status' => 'completed'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
+
+        $recipient = TeacherAssignmentRecipient::query()->findOrFail($plan['items'][0]['recipient_id']);
+        $recipient->forceFill([
+            'status' => AssignmentStatus::AwaitingConfirmation->value,
+            'student_completed_at' => now(),
+        ])->save();
+
+        $submitted = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.learning-plans.index', ['student_id' => $student->id]))
+            ->assertOk()
+            ->json('data.0');
+        $this->assertSame(0, $submitted['progress']['completed']);
+        $this->assertSame('submitted', $submitted['items'][0]['display_status']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.approve', $recipient))
+            ->assertOk();
+
+        $completed = $this->actingAs($teacher)
+            ->getJson(route('api.teacher.learning-plans.index', ['student_id' => $student->id]))
+            ->assertOk()
+            ->json('data.0');
+        $this->assertSame('completed', $completed['status']);
+        $this->assertSame(1, $completed['progress']['activities_completed']);
+        $this->assertSame(3, $completed['progress']['validated_memorised_ayahs']);
+        $this->assertNull($completed['next_action']);
+
+        $learner = app(TeacherDashboardService::class)->learnerSupport($student)['learning_plan'];
+        $this->assertSame('completed', $learner['status']);
+        $this->assertSame($completed['progress'], $learner['progress']);
+        $this->assertNull($learner['next_milestone']);
+    }
+
+    public function test_active_plan_conflicts_and_overdue_partial_progress_are_reported(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $active = $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Current plan',
+            'activate' => true,
+            'items' => [[
+                'activity' => 'revision',
+                'kind' => 'practice',
+                'hifz_category' => 'manzil',
+                'surah_number' => 112,
+                'ayah_start' => 1,
+                'ayah_end' => 4,
+                'due_on' => now()->subDay()->toDateString(),
+            ]],
+        ])->assertCreated()->json('plan');
+
+        $this->assertSame(1, $active['progress']['overdue']);
+        $this->assertSame(1, $active['progress']['revision_due']);
+        $this->assertSame(0, $active['progress']['completed']);
+
+        $second = $this->actingAs($teacher)->postJson(route('api.teacher.learning-plans.store'), [
+            'student_id' => $student->id,
+            'title' => 'Next plan',
+            'items' => [[
+                'activity' => 'hifz',
+                'kind' => 'ai_recite',
+                'hifz_category' => 'sabaq',
+                'surah_number' => 113,
+                'ayah_start' => 1,
+                'ayah_end' => 2,
+            ]],
+        ])->assertCreated()->json('plan');
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.learning-plans.status', $second['id']), ['status' => 'active'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
     }
 
     private function classroom(): array

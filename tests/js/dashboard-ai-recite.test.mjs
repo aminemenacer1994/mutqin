@@ -52,7 +52,10 @@ assert.match(
   'mobile progress page orders revisit/AI recite, achievements, then learning history',
 )
 assert.match(dashboard, /toggleRevisitCard/, 'revisit ayahs expand on demand')
-assert.match(dashboard, /startsWith\('revisit:'\)/, 'revisit ayahs are collapsed by default')
+assert.match(dashboard, /data-testid="review-focus-workspace"/, 'revisit and recitation feedback share one review workspace')
+assert.match(dashboardCss, /\.dash-review-workspace__head/, 'the combined review workspace has a distinct visual header')
+assert.match(dashboard, /revisitItems\?\.\[0\]\?\.key/, 'the highest-priority revisit ayah is open by default')
+assert.match(dashboard, /'is-priority': index === 0/, 'the highest-priority revisit ayah is visually distinguished')
 assert.match(dashboardCss, /dash-learning__metrics--compact/, 'learning metrics use a compact layout')
 assert.match(dashboard, /weakHistoryLine/, 'progress page keeps weak ayah history in the review drawer')
 assert.match(dashboard, /data-testid="dash-weak-history"/, 'weak ayah history is marked for tests')
@@ -62,6 +65,11 @@ assert.match(
   dashboardCss,
   /min-width:\s*1024px[\s\S]*?\.user-dashboard__review-row[\s\S]*?grid-column:\s*1 \/ -1[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(0,\s*1fr\)/,
   'desktop progress page shows Muraja’ah beside AI Recite results',
+)
+assert.match(
+  dashboardCss,
+  /review-row--secondary[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[\s\S]*?align-items:\s*start/,
+  'secondary review columns have equal widths without forced equal heights',
 )
 assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
 assert.match(dashboard, /aiReciteStats:\s*initial\?\.ai_recite_stats \|\| null/, 'progress page hydrates AI Recite results from dashboard DB payload')
@@ -136,8 +144,24 @@ assert.match(dashboard, /aiReciteUnifiedCards/, 'recent checks and needs-practic
 assert.match(dashboard, /card_kind: 'focus'/, 'needs-practice items map into the shared attempt card layout')
 assert.match(dashboard, /card_kind === 'attempt'/, 'attempt cards keep expandable feedback in the shared list')
 assert.equal(en.dashboard.ai_recite.review_feedback, 'Review feedback')
+assert.equal(en.dashboard.ai_recite.wording_match, 'Wording match')
+assert.match(en.dashboard.ai_recite.no_attention_ayahs, /check did not flag/i, 'an unflagged check does not imply teacher approval or flawless recitation')
+assert.equal(en.dashboard.ai_recite.show_flagged_ayahs, 'Show flagged ayahs')
 assert.equal(en.dashboard.ai_recite.insight_excellent, 'Excellent match. Most evaluated words matched.')
 assert.match(en.dashboard.ai_recite.words_matched_percent, /\{n\}% words matched/)
+assert.match(aiReciteAttemptCard, /attentionAyahs\.length/, 'flagged, uncertain, and skipped ayahs are the default detail view')
+assert.match(aiReciteAttemptCard, /ayah\.counts\?\.evaluated === 0[\s\S]*?dashboard\.word_unassessed/, 'an unevaluated ayah is labelled not checked rather than matched')
+assert.match(aiReciteAttemptCard, /show_all_ayahs/, 'fully matched ayahs remain available behind Show all')
+assert.match(aiReciteAttemptCard, /dashboard\.ai_recite\.review_passage/, 'each saved recitation has one primary review action')
+assert.match(aiReciteAttemptCard, /dashboard\.ai_recite\.show_flagged_ayahs/, 'attention checks make their next step explicit')
+assert.doesNotMatch(aiReciteAttemptCard, /dash-fb-ayah__actions/, 'nested ayah rows do not repeat the review action')
+assert.equal(
+  (aiReciteAttemptCard.match(/dashboard\.revisit_check_again/g) || []).length,
+  1,
+  'each expanded recitation exposes Check again once as a secondary action',
+)
+assert.match(aiReciteAttemptCard, /dashboard\.word_skipped/, 'the expanded colour key includes skipped words')
+assert.match(dashboard, /summary_attempt_one/, 'the recitation summary handles singular attempt grammar')
 assert.doesNotMatch(dashboard, /dash-ai-results__word/, 'often-missed chips are removed from the dashboard')
 assert.doesNotMatch(dashboard, /openMissedWordAttempt/, 'often-missed actions are removed with the section')
 assert.doesNotMatch(dashboard, /missed_words_hint/, 'often-missed helper copy is removed with the section')
@@ -262,6 +286,15 @@ const markedWeak = buildDashboardAiReciteStatsView({
 assert.equal(markedWeak.focus.length, 1)
 assert.equal(markedWeak.focus[0].ayah, 2)
 assert.equal(markedWeak.holding, false)
+
+const multipleFlagged = buildDashboardAiReciteStatsView({
+  total_attempts: 2,
+  weakest_ayahs: [
+    { surah_number: 2, surah_name: 'Al-Baqarah', ayah: 3, accuracy: 62, needs_practice: true },
+    { surah_number: 2, surah_name: 'Al-Baqarah', ayah: 4, accuracy: 67, needs_practice: true },
+  ],
+}, t)
+assert.equal(multipleFlagged.focus.length, 2)
 assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
 
 assert.match(

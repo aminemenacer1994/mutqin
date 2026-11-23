@@ -2,6 +2,7 @@
   <TeacherDialog
     :open="open"
     class="teacher-playback-studio"
+    :class="{ 'is-unavailable': !loading && !payload }"
     size="xl"
     :title="heading"
     compact
@@ -18,7 +19,15 @@
     </template>
     <div class="teacher-playback">
           <p v-if="loading" class="teacher-playback__status" role="status">{{ t('teacher.playback_loading') }}</p>
-          <p v-else-if="loadError" class="teacher-playback__status" role="alert">{{ loadError }}</p>
+          <div v-else-if="loadError" class="teacher-playback__empty" role="alert">
+            <p class="teacher-playback__status">{{ loadError }}</p>
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('close')">{{ t('teacher.playback_close') }}</button>
+          </div>
+
+          <div v-else-if="!payload" class="teacher-playback__empty" role="status">
+            <p class="teacher-playback__status teacher-playback__status--empty">{{ t('teacher.playback_load_failed') }}</p>
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('close')">{{ t('teacher.playback_close') }}</button>
+          </div>
 
           <div v-else-if="payload" class="teacher-playback__layout">
             <div ref="readingPanel" class="teacher-playback__main" tabindex="0" :aria-label="passageLabel">
@@ -906,6 +915,8 @@ export default {
     async load() {
       this.feedbackRequest = null
       if (!this.studentId || !this.attemptId) {
+        this.loading = false
+        this.payload = null
         this.loadError = this.t('teacher.playback_load_failed')
         return
       }

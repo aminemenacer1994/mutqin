@@ -43,18 +43,21 @@
           <LearnerAttemptPlaybackTrack
             ref="referenceTrack"
             track-id="reference"
-            :label="t('teacher.learner_playback_reference')"
+            :label="t('teacher.learner_playback_reference_ayah', { n: selectedAyah })"
             :src="referenceSrc"
             :duration-ms="referenceDurationMs"
             :markers="[]"
             :playback-rate="playbackRate"
             :timeline-dir="timelineDir"
+            :unavailable="!referenceSrc"
+            :unavailable-label="t('teacher.learner_playback_reference_unavailable')"
             :load-when="open"
             :play-label="t('teacher.learner_playback_play')"
             :pause-label="t('teacher.learner_playback_pause')"
             :seek-aria-label="t('teacher.learner_playback_seek_reference')"
             :error-label="t('teacher.learner_playback_reference_error')"
             :retry-label="t('teacher.learner_playback_retry')"
+            :loading-label="t('teacher.learner_mistake_audio_loading')"
             @ended="onReferenceEnded"
           />
 
@@ -77,29 +80,31 @@
             :seek-aria-label="t('teacher.learner_playback_seek_yours')"
             :error-label="t('teacher.learner_playback_recording_error')"
             :retry-label="t('teacher.learner_playback_retry')"
+            :loading-label="t('teacher.learner_mistake_audio_loading')"
             @marker-activate="onMarkerActivate"
             @ended="onStudentEnded"
           />
 
           <div class="learner-playback-shell__controls">
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="cycleSpeed">
-              {{ t('teacher.learner_playback_speed', { rate: playbackRate }) }}
+            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm learner-playback-shell__speed" @click="cycleSpeed">
+              {{ t('teacher.learner_playback_speed') }} <strong>{{ playbackRate }}×</strong>
             </button>
-            <label class="learner-playback-shell__loop">
-              <input v-model="loopAyahEnabled" type="checkbox">
-              <span>{{ t('teacher.learner_playback_loop_ayah', { n: selectedAyah }) }}</span>
+            <label class="learner-playback-shell__loop" :class="{ 'is-disabled': !hasTimedMistakes }">
+              <input v-model="loopAyahEnabled" type="checkbox" :disabled="!hasTimedMistakes || !playback.recordingUrl">
+              <span>{{ t('teacher.learner_playback_loop_section') }}</span>
             </label>
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="goPreviousMistake">
+            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="!hasTimedMistakes || !playback.recordingUrl" @click="goPreviousMistake">
               {{ t('teacher.learner_playback_prev_mistake') }}
             </button>
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="goNextMistake">
+            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="!hasTimedMistakes || !playback.recordingUrl" @click="goNextMistake">
               {{ t('teacher.learner_playback_next_mistake') }}
             </button>
             <button
               type="button"
               class="dash-btn dash-btn--ghost dash-btn--sm"
-              :disabled="!playback.recordingUrl"
+              :disabled="!playback.recordingUrl || !referenceSrc"
               :class="{ 'is-active': compareActive }"
+              :aria-pressed="compareActive"
               @click="toggleCompare"
             >
               {{ t('teacher.learner_playback_compare') }}
@@ -195,6 +200,9 @@ export default {
         text: this.markerTooltip(item.mistake),
       }))
     },
+    hasTimedMistakes() {
+      return this.studentMarkers.length > 0
+    },
   },
   watch: {
     open(value) {
@@ -216,6 +224,7 @@ export default {
       const first = this.playback.mistakes[0]
       this.selectedAyah = Number(first?.ayah) || Number(this.row?.assignment?.ayah_start) || 1
       this.selectedMistakeIndex = first ? 0 : null
+      this.loopAyahEnabled = false
     },
     onOpen() {
       this.playbackRate = getRememberedPlaybackSpeed()
@@ -260,6 +269,7 @@ export default {
       return this.t('teacher.learner_playback_marker_aria', {
         ayah: mistake.ayah,
         type: this.typeLabel(mistake.type),
+        label: `${this.typeLabel(mistake.type)}, ayah ${mistake.ayah}`,
       })
     },
     markerTooltip(mistake) {
@@ -297,7 +307,7 @@ export default {
     onMarkerActivate(marker) {
       this.focusMistake(marker.index)
     },
-    toggleCompare() {
+    async toggleCompare() {
       this.compareActive = !this.compareActive
       if (!this.compareActive) {
         this.compareStep = 'idle'
@@ -307,13 +317,21 @@ export default {
       }
       this.compareStep = 'reference'
       this.$refs.studentTrack?.pauseExternal?.()
-      this.$refs.referenceTrack?.playFrom(0)
+      const started = await this.$refs.referenceTrack?.playFrom(0)
+      if (!started) {
+        this.compareActive = false
+        this.compareStep = 'idle'
+      }
     },
-    onReferenceEnded() {
+    async onReferenceEnded() {
       if (!this.compareActive) return
       this.compareStep = 'student'
       const bounds = this.loopBounds
-      this.$refs.studentTrack?.playFrom((bounds.startMs || 0) / 1000)
+      const started = await this.$refs.studentTrack?.playFrom((bounds.startMs || 0) / 1000)
+      if (!started) {
+        this.compareActive = false
+        this.compareStep = 'idle'
+      }
     },
     onStudentEnded() {
       if (this.compareActive) {
@@ -324,3 +342,83 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.learner-playback-shell__panel.dash-student-dialog {
+  width: min(100%, 36rem);
+  max-height: min(90dvh, 44rem);
+  padding: 0;
+  overflow: hidden;
+}
+
+.learner-playback-shell__head {
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--dash-border, #ded8d1);
+}
+
+.learner-playback-shell__head .learner-playback-shell__title {
+  font-size: 1.125rem;
+  line-height: 1.35;
+  font-weight: 650;
+}
+
+.learner-playback-shell__body.dash-student-dialog__body {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.learner-playback-shell__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.learner-playback-shell__controls .dash-btn {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.learner-playback-shell__controls .dash-btn:disabled,
+.learner-playback-shell__loop.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.learner-playback-shell__speed strong { margin-inline-start: 0.25rem; }
+
+.learner-playback-shell__loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.learner-playback-shell__loop input { accent-color: var(--dash-accent, #80583f); }
+
+@media (max-width: 480px) {
+  .learner-playback-shell.dash-student-dialog-root.is-mobile-sheet {
+    display: grid;
+    place-items: center;
+    padding: 0.75rem;
+  }
+
+  .learner-playback-shell__panel.dash-student-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: 0.875rem;
+  }
+
+  .learner-playback-shell__head { padding: 0.875rem 1rem; }
+  .learner-playback-shell__body.dash-student-dialog__body { padding: 0.875rem 1rem 1rem; }
+  .learner-playback-shell__controls .dash-btn { min-height: 2.75rem; }
+}
+</style>

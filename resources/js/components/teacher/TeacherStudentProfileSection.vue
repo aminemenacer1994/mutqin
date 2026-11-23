@@ -71,6 +71,7 @@
           :session-label="sessionLabel"
           :issue-label="issueLabel"
           :format-when="formatWhen"
+          :memorisation-url="memorisationUrl"
           :initial-subview="learningSubview"
           :focus-attempt-id="section === 'ai' ? (taskFocus && taskFocus.attemptId) : null"
           @assign-revision="$emit('assign-revision', $event)"
@@ -182,6 +183,7 @@ export default {
     sessionLabel: { type: Function, required: true },
     issueLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
+    memorisationUrl: { type: String, default: '/memorisation' },
     taskFocus: { type: Object, default: null },
   },
   emits: ['back', 'change-section', 'assign-revision', 'mark-reviewed', 'refresh', 'edit-task', 'clear-focus'],

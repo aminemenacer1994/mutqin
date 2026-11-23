@@ -17,13 +17,14 @@
       <button
         ref="closeBtn"
         type="button"
-        class="dash-modal__close dash-icon-btn"
-        :aria-label="t('common.close')"
-        :title="t('common.close')"
+        class="dash-modal__close dash-btn dash-btn--tertiary dash-btn--sm"
+        :aria-label="t('common.back')"
+        :title="t('common.back')"
         :disabled="sending"
         @click="close"
       >
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>{{ t('common.back') }}</span>
       </button>
     </header>
 
@@ -34,6 +35,17 @@
     </div>
 
     <div class="dash-modal__body learner-task-thread-modal__body">
+      <section v-if="correctionRequest" class="learner-task-thread-modal__correction" role="status">
+        <div>
+          <span class="learner-task-thread-modal__correction-kind">
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ t('teacher.correction_request') }}
+          </span>
+          <p>{{ correctionRequest.note }}</p>
+        </div>
+        <a v-if="correctionRequest.href" class="dash-btn dash-btn--primary" :href="correctionRequest.href">
+          {{ t('teacher.practise_correction') }}
+        </a>
+      </section>
       <TeacherTaskConversation
         ref="conversation"
         :messages="displayMessages"
@@ -57,6 +69,7 @@
 </template>
 
 <script>
+import './LearnerFeedbackExperience.css'
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
@@ -125,6 +138,12 @@ export default {
       return merged.sort(
         (a, b) => String(a.sentAt || '').localeCompare(String(b.sentAt || '')) || String(a.id).localeCompare(String(b.id)),
       )
+    },
+    correctionRequest() {
+      if (this.task?.review_state !== 'needs_correction') return null
+      const note = String(this.task?.completion_evidence?.correction_note || '').trim()
+        || this.t('teacher.learner_correction_default')
+      return { note, href: this.task?.href || '' }
     },
   },
   watch: {

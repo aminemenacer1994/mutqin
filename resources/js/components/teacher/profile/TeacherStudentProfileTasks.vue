@@ -107,6 +107,21 @@
         <button type="button" class="btn btn-link btn-sm" @click="$emit('open-plan')">{{ t('teacher.task_open_plan') }}</button>
       </p>
 
+      <section v-if="selectedSelfAssessment" class="teacher-student-tasks__self-assessment" :aria-label="t('teacher.assignment_self_assessment')">
+        <div>
+          <span>{{ t('teacher.assignment_self_assessment') }}</span>
+          <strong>{{ selfAssessmentFeelingLabel(selectedSelfAssessment.feeling) }}</strong>
+          <p v-if="selectedSelfAssessment.note || selectedSelfAssessment.help_request">{{ selectedSelfAssessment.note || selectedSelfAssessment.help_request }}</p>
+          <small>{{ t('teacher.assignment_self_assessment_score_note') }}</small>
+        </div>
+        <button
+          v-if="['difficult', 'need_help'].includes(selectedSelfAssessment.feeling)"
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          @click="$emit('assign-revision', assessmentRevisionPayload)"
+        >{{ t('teacher.assignment_self_assessment_assign_revision') }}</button>
+      </section>
+
       <section class="teacher-student-tasks__submissions">
         <h4>{{ t('teacher.task_submissions') }}</h4>
         <p v-if="!submissions.length" class="teacher-student-tasks__empty">{{ t('teacher.task_no_submission') }}</p>
@@ -378,6 +393,23 @@ export default {
       if (!plan?.title && !plan?.status) return ''
       return plan.title || ''
     },
+    selectedSelfAssessment() {
+      return this.selectedAssignment?.self_assessment || null
+    },
+    assessmentRevisionPayload() {
+      const assignment = this.selectedAssignment?.assignment || {}
+      return {
+        id: Number(this.profile?.student?.id || 0),
+        activity: 'revision',
+        hifz_category: assignment.hifz_category === 'manzil' ? 'manzil' : 'sabqi',
+        weak_example: {
+          surah_number: Number(assignment.surah_number || 0),
+          ayah_number: Number(assignment.ayah_start || 0),
+          ayah_start: Number(assignment.ayah_start || 0),
+          ayah_end: Number(assignment.ayah_end || assignment.ayah_start || 0),
+        },
+      }
+    },
     messageContext() {
       return {
         recipientId: this.selectedAssignment?.id || null,
@@ -484,6 +516,11 @@ export default {
       if (!Array.isArray(words) || !words.length) return null
       const matched = words.filter((word) => normaliseTeacherWordStatus(word) === 'correct').length
       return { matched, total: words.length }
+    },
+    selfAssessmentFeelingLabel(feeling) {
+      const key = `dashboard.assignment_self_assessment_${feeling}`
+      const label = this.t(key)
+      return label && label !== key ? label : feeling
     },
     openFocusedTask(force = false) {
       const id = this.focusTaskId

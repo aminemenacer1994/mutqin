@@ -6,7 +6,7 @@
         ref="root"
         v-bind="$attrs"
         class="modal fade show d-block teacher-dialog"
-        :class="{ 'is-compact': compact }"
+        :class="{ 'is-compact': compact, 'has-footer': hasFooter }"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"

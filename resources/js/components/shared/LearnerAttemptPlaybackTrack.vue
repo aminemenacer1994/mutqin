@@ -19,6 +19,7 @@
         type="button"
         class="dash-icon-btn learner-playback-track__toggle"
         :disabled="unavailable || loading"
+        :aria-busy="loading"
         :aria-label="toggleLabel"
         @click="toggle"
       >
@@ -27,6 +28,7 @@
     </div>
 
     <p v-if="unavailable" class="learner-playback-track__unavailable" role="status">{{ unavailableLabel }}</p>
+    <p v-else-if="loading" class="learner-playback-track__unavailable" role="status">{{ loadingLabel }}</p>
     <p v-else-if="error" class="learner-playback-track__error" role="status">
       {{ errorLabel }}
       <button type="button" class="dash-text-link" @click="retry">{{ retryLabel }}</button>
@@ -120,6 +122,7 @@ export default {
     unavailableLabel: { type: String, default: '' },
     errorLabel: { type: String, default: '' },
     retryLabel: { type: String, default: 'Retry' },
+    loadingLabel: { type: String, default: 'Loading audio…' },
   },
   emits: ['marker-activate', 'ended', 'ready'],
   data() {
@@ -128,6 +131,7 @@ export default {
       loading: false,
       error: false,
       loadedSrc: '',
+      loadGeneration: 0,
       currentSeconds: 0,
       durationSeconds: 0,
       activeMarker: null,
@@ -191,6 +195,7 @@ export default {
     },
   },
   beforeUnmount() {
+    this.loadGeneration += 1
     this.stopInternal(true)
   },
   methods: {
@@ -203,6 +208,7 @@ export default {
       return this.$refs.audioEl
     },
     resetAudio() {
+      this.loadGeneration += 1
       this.stopInternal(true)
       this.loadedSrc = ''
       this.error = false
@@ -226,19 +232,23 @@ export default {
       if (this.loadedSrc === this.src) return true
       const el = this.audio()
       if (!el) return false
+      const source = this.src
+      const generation = this.loadGeneration
       this.loading = true
       this.error = false
       try {
-        await bindAudioSource(el, this.src)
-        this.loadedSrc = this.src
+        await bindAudioSource(el, source)
+        if (generation !== this.loadGeneration) return false
+        this.loadedSrc = source
         this.syncDuration()
         this.$emit('ready')
         return true
       } catch {
+        if (generation !== this.loadGeneration) return false
         this.error = true
         return false
       } finally {
-        this.loading = false
+        if (generation === this.loadGeneration) this.loading = false
       }
     },
     async toggle() {
@@ -266,17 +276,20 @@ export default {
     },
     async playFrom(seconds) {
       const ready = await this.ensureLoaded()
-      if (!ready) return
+      if (!ready) return false
       const el = this.audio()
-      if (!el) return
+      if (!el) return false
       claimTrackPlayback(this.trackId, () => this.stopInternal(true))
       el.playbackRate = Number(this.playbackRate) || 1
       el.currentTime = Math.max(0, Number(seconds) || 0)
       try {
         await playAudioElement(el)
         this.playing = true
+        return true
       } catch {
         this.error = true
+        releaseTrackPlayback(this.trackId)
+        return false
       }
     },
     retry() {
@@ -355,11 +368,11 @@ export default {
 <style scoped>
 .learner-playback-track {
   display: grid;
-  gap: 0.55rem;
-  padding: 0.75rem;
-  border: 1px solid var(--dash-border);
-  border-radius: 0.75rem;
-  background: var(--dash-card-bg);
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--dash-border, #ded8d1);
+  border-radius: 0.625rem;
+  background: var(--dash-card-bg, #fff);
 }
 
 .learner-playback-track__head {
@@ -371,15 +384,15 @@ export default {
 
 .learner-playback-track__title {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .learner-playback-track__toggle {
-  inline-size: 2.75rem;
-  block-size: 2.75rem;
-  min-inline-size: 2.75rem;
-  min-block-size: 2.75rem;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  min-inline-size: 2.5rem;
+  min-block-size: 2.5rem;
 }
 
 .learner-playback-track__seek-row {
@@ -388,8 +401,13 @@ export default {
 
 .learner-playback-track__seek {
   inline-size: 100%;
-  min-block-size: 2.75rem;
+  min-block-size: 1.75rem;
+  margin: 0;
+  accent-color: var(--dash-accent, #80583f);
+  cursor: pointer;
 }
+
+.learner-playback-track__seek:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .learner-playback-track__markers {
   position: absolute;
@@ -439,12 +457,18 @@ export default {
   justify-content: space-between;
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
-  color: var(--dash-muted);
+  color: var(--dash-muted, #72675f);
 }
 
 .learner-playback-track__unavailable,
 .learner-playback-track__error {
   margin: 0;
   font-size: 0.8125rem;
+}
+
+@media (max-width: 480px) {
+  .learner-playback-track { padding: 0.75rem; }
+  .learner-playback-track__toggle { inline-size: 2.75rem; block-size: 2.75rem; }
+  .learner-playback-track__seek { min-block-size: 2.75rem; }
 }
 </style>

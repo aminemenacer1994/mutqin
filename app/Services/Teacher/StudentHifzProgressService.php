@@ -26,11 +26,14 @@ class StudentHifzProgressService
     public function forProfile(User $teacher, User $student): array
     {
         $coverage = $this->coverage($student);
+        $validated = $this->validatedMemorisation($teacher, $student);
         $lessons = $this->lessons($teacher, $student);
         $weak = $this->confirmedWeak($student);
 
         return [
             'coverage' => $this->publicCoverage($coverage),
+            'validated_memorisation' => $validated,
+            'wording_match' => $this->wordingTrend($student, null, null),
             'lessons' => $lessons,
             'weak_passages' => $weak,
             'next' => $this->nextActivity($coverage, $weak),
@@ -291,6 +294,68 @@ class StudentHifzProgressService
     }
 
     /**
+     * Teacher-approved Sabaq is the only source presented as validated
+     * memorisation. AI-derived memorisation_progress remains visible as a
+     * learning record, but is intentionally not included here.
+     *
+     * @return array<string, mixed>
+     */
+    private function validatedMemorisation(User $teacher, User $student): array
+    {
+        $recipients = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->where('status', AssignmentStatus::Completed->value)
+            ->whereHas('assignment', function ($query) use ($teacher) {
+                $query->where('teacher_id', $teacher->id)
+                    ->where('hifz_category', 'sabaq')
+                    ->where(function ($activity) {
+                        $activity->where('activity', 'hifz')
+                            ->orWhere(function ($legacy) {
+                                $legacy->whereNull('activity')
+                                    ->whereIn('kind', ['practice', 'ai_recite']);
+                            });
+                    });
+            })
+            ->with('assignment:id,surah_number,ayah_start,ayah_end,activity,hifz_category')
+            ->orderBy('completed_at')
+            ->get();
+
+        $ayahs = [];
+        $latest = null;
+        foreach ($recipients as $recipient) {
+            $assignment = $recipient->assignment;
+            if ($assignment === null) {
+                continue;
+            }
+            $completedAt = $recipient->completed_at?->toIso8601String();
+            if ($completedAt !== null && ($latest === null || $completedAt > $latest)) {
+                $latest = $completedAt;
+            }
+            for ($ayah = (int) $assignment->ayah_start; $ayah <= (int) $assignment->ayah_end; $ayah++) {
+                $key = (int) $assignment->surah_number.':'.$ayah;
+                $previous = $ayahs[$key]['last_review_at'] ?? null;
+                $ayahs[$key] = [
+                    'surah_number' => (int) $assignment->surah_number,
+                    'ayah_number' => $ayah,
+                    'last_review_at' => $completedAt !== null && ($previous === null || $completedAt > $previous)
+                        ? $completedAt
+                        : $previous,
+                ];
+            }
+        }
+        $rows = array_values($ayahs);
+        usort($rows, fn (array $a, array $b) => [$a['surah_number'], $a['ayah_number']] <=> [$b['surah_number'], $b['ayah_number']]);
+
+        return [
+            'source' => 'teacher_approved_assignments',
+            'validated_ayahs' => count($rows),
+            'ranges' => $this->limitRanges($this->ranges($rows)),
+            'last_validated_at' => $latest,
+            'empty' => $rows === [],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function lessons(User $teacher, User $student): array
@@ -303,6 +368,9 @@ class StudentHifzProgressService
 
         $completed = 0;
         $pending = 0;
+        $overdue = 0;
+        $revisionDue = 0;
+        $upcomingLessons = 0;
         $lastCompleted = null;
         $next = null;
         foreach ($recipients as $recipient) {
@@ -319,6 +387,15 @@ class StudentHifzProgressService
             }
             $pending++;
             $due = $recipient->assignment?->due_at?->toIso8601String();
+            if ($recipient->assignment?->due_at?->copy()->endOfDay()->isPast()) {
+                $overdue++;
+            }
+            if ($recipient->assignment?->hifz_category === 'sabaq') {
+                $upcomingLessons++;
+            } elseif (in_array($recipient->assignment?->hifz_category, ['sabqi', 'manzil'], true)
+                && $recipient->assignment?->due_at?->copy()->endOfDay()->lte(now()->endOfDay())) {
+                $revisionDue++;
+            }
             if ($next === null || ($due !== null && ($next['due_at'] === null || $due < $next['due_at']))) {
                 $next = $this->presentLesson($recipient, $due);
             }
@@ -327,6 +404,10 @@ class StudentHifzProgressService
         return [
             'completed' => $completed,
             'pending' => $pending,
+            'total' => $completed + $pending,
+            'overdue' => $overdue,
+            'upcoming_lessons' => $upcomingLessons,
+            'revision_due' => $revisionDue,
             'last_completed_at' => $lastCompleted,
             'next' => $next,
         ];
@@ -607,6 +688,10 @@ class StudentHifzProgressService
             if ($last && $last['surah_number'] === $row['surah_number'] && $last['ayah_end'] + 1 === $row['ayah_number']) {
                 $ranges[count($ranges) - 1]['ayah_end'] = $row['ayah_number'];
                 $ranges[count($ranges) - 1]['ayahs']++;
+                $reviewedAt = $row['last_review_at'] ?? null;
+                if ($reviewedAt !== null && (! $ranges[count($ranges) - 1]['last_reviewed_at'] || $reviewedAt > $ranges[count($ranges) - 1]['last_reviewed_at'])) {
+                    $ranges[count($ranges) - 1]['last_reviewed_at'] = $reviewedAt;
+                }
                 continue;
             }
             $ranges[] = [
@@ -615,6 +700,7 @@ class StudentHifzProgressService
                 'ayah_start' => $row['ayah_number'],
                 'ayah_end' => $row['ayah_number'],
                 'ayahs' => 1,
+                'last_reviewed_at' => $row['last_review_at'] ?? null,
             ];
         }
 

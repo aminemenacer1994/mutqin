@@ -94,6 +94,12 @@
         <div class="learner-teacher__shell">
         <div class="learner-teacher__workspace">
         <section class="learner-teacher__block">
+          <header class="learner-teacher__assignments-heading">
+            <div>
+              <h3>{{ t('teacher.learner_assignments_title') }}</h3>
+              <p>{{ t('teacher.learner_assignments_subtitle') }}</p>
+            </div>
+          </header>
           <div v-if="!assignments.length" class="learner-teacher__empty">
             <strong>{{ t('teacher.learner_assignments_empty_title') }}</strong>
             <span>{{ t('teacher.learner_assignments_empty') }}</span>
@@ -133,6 +139,7 @@
               @click="openFeedbackDrawer"
             >
               <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
+              <span class="learner-teacher__feedback-tab-label">{{ t('teacher.learner_feedback_open') }}</span>
               <span
                 v-if="feedbackUnreadCount"
                 class="learner-teacher__feedback-tab-badge"
@@ -175,7 +182,7 @@
                               :class="performanceMetaClass(item)"
                             >{{ completedPerformanceLabel(item) }}</span>
                           </template>
-                          <template v-else-if="taskAttemptCount(item)">
+                          <template v-else-if="showCompactAttemptCount(item)">
                             <span class="learner-teacher__meta-sep" aria-hidden="true"> · </span>
                             <span class="learner-teacher__attempt-badge">{{ taskAttemptCountLabel(item) }}</span>
                           </template>
@@ -241,20 +248,42 @@
                     :id="`learner-task-card-body-${item.id}`"
                     class="learner-teacher__card-body"
                   >
-                  <p v-if="correctionNote(item)" class="learner-teacher__card-note is-correction">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ correctionNote(item) }}
-                  </p>
+                  <div v-if="correctionNote(item)" class="learner-teacher__card-note is-correction">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <div>
+                      <strong>{{ t('teacher.correction_feedback') }}</strong>
+                      <p>{{ correctionNote(item) }}</p>
+                    </div>
+                  </div>
+
+                  <details
+                    v-if="needsCorrection(item) && completionLink(item)?.opensMistakeDetails"
+                    class="learner-teacher__instruct"
+                  >
+                    <summary>{{ t('teacher.correction_words_to_practise') }}</summary>
+                    <div class="learner-teacher__instruct-content">
+                      <p class="learner-teacher__ai-disclaimer">{{ t('teacher.playback_ai_wording_only') }}</p>
+                      <LearnerCompletionMistakePanel
+                        :result="completionResult(item)"
+                        :mistakes="completionMistakes(item)"
+                        :recording-url="completionRecordingUrl(item)"
+                        :surah="item.assignment?.surah_number"
+                        hide-perfect-banner
+                      />
+                    </div>
+                  </details>
 
                   <details v-if="hasInstruction(item)" class="learner-teacher__instruct">
                     <summary>{{ t('teacher.assignment_instructions_label') }}</summary>
-                    <p>{{ instructionText(item) }}</p>
+                    <div class="learner-teacher__instruct-content"><p>{{ instructionText(item) }}</p></div>
                   </details>
 
                   <div v-if="isTeacherApproved(item) && completionResult(item)" class="learner-teacher__result">
                     <div class="learner-teacher__result-score">
                       <div class="learner-teacher__result-score-copy">
+                        <template v-if="completionAiScoreSummaryRow(item)">
                         <div
-                          v-if="completionAiScoreSummaryRow(item)"
+                          v-if="scoreSummaryAddsDetail(item)"
                           class="learner-teacher__ai-score-badge"
                           :class="`is-${completionAiScoreSummaryRow(item).band}`"
                           role="status"
@@ -262,6 +291,7 @@
                           <span class="learner-teacher__ai-score-badge-value">{{ completionAiScoreSummaryRow(item).percent }}%</span>
                           <span class="learner-teacher__ai-score-badge-label">{{ completionAiScoreSummaryRow(item).label }}</span>
                         </div>
+                        </template>
                         <p v-else-if="completionAiScoreRow(item)" class="learner-teacher__result-headline">
                           <span class="learner-teacher__result-check-mark" aria-hidden="true">
                             <i class="bi bi-patch-check"></i>
@@ -272,10 +302,6 @@
                           </span>
                         </p>
                         <p v-else class="learner-teacher__result-headline">{{ completionHeadline(item) }}</p>
-                        <p v-if="completionMistakePerfect(item)" class="learner-teacher__mistake-none-inline">
-                          <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                          {{ t('teacher.learner_mistake_none') }}
-                        </p>
                       </div>
                       <div
                         class="learner-teacher__result-actions learner-teacher__result-actions--icons"
@@ -316,7 +342,10 @@
                     />
                   </div>
 
-                  <p class="text-body-secondary small mb-2">{{ requirementHelp(item) }}</p>
+                  <details v-if="item.assignment?.kind === 'ai_recite'" class="learner-teacher__instruct">
+                    <summary>{{ t('teacher.how_checks_work') }}</summary>
+                    <div class="learner-teacher__instruct-content"><p>{{ requirementHelp(item) }}</p></div>
+                  </details>
                   <div v-if="showCardProgress(item)" class="learner-teacher__card-progress" :aria-label="progressLabel(item)">
                     <span>{{ progressLabel(item) }}</span>
                     <span v-if="showProgressBar(item)" class="learner-teacher__progress" aria-hidden="true"><span :style="{ width: `${progressPercent(item)}%` }"></span></span>
@@ -357,6 +386,7 @@
         </section>
 
         <div class="learner-teacher__sidebar">
+        <slot name="learning-plan"></slot>
         <LearnerWordCorrections :items="wordCorrections" />
         <LearnerTeacherLearning
           class="learner-teacher__feedback-panel--desktop"
@@ -382,27 +412,14 @@
       </template>
     </div>
 
-    <Teleport to="body">
-    <div
-      v-if="feedbackDrawerOpen"
-      class="dash-drawer-root user-dashboard"
-      @keydown="onFeedbackDrawerKeydown"
+    <DashModalRoot
+      :open="feedbackDrawerOpen"
+      :labelled-by="feedbackDrawerTitleId"
+      root-class="learner-feedback-list-modal"
+      panel-class="learner-feedback-list-modal__panel"
+      test-id="learner-feedback-modal"
+      @close="closeFeedbackDrawer"
     >
-      <button
-        type="button"
-        class="dash-drawer__backdrop dash-modal__backdrop"
-        :aria-label="t('dashboard.drawer_close')"
-        @click="closeFeedbackDrawer"
-      ></button>
-      <aside
-        ref="feedbackDrawer"
-        class="dash-drawer"
-        tabindex="-1"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="feedbackDrawerTitleId"
-      >
-        <div class="dash-drawer__handle" aria-hidden="true"></div>
         <header class="dash-drawer__head">
           <div class="dash-drawer__head-main">
             <span class="dash-drawer__head-icon" aria-hidden="true">
@@ -426,8 +443,7 @@
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
-        <div class="dash-drawer__body">
-          <div class="dash-drawer__content">
+        <div class="learner-feedback-list-modal__body">
             <LearnerWordCorrections :items="wordCorrections" />
             <LearnerTeacherLearning
               variant="drawer"
@@ -435,11 +451,8 @@
               :pending="!learning"
               @open-feedback="openFeedbackFromDrawer"
             />
-          </div>
         </div>
-      </aside>
-    </div>
-    </Teleport>
+    </DashModalRoot>
 
     <Teleport to="body">
     <LearnerTaskThreadPanel
@@ -471,8 +484,9 @@
             <p class="dash-drawer__subtitle">{{ t('teacher.messages') }}</p>
           </div>
         </div>
-        <button ref="directThreadClose" type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" :title="t('common.close')" :disabled="directSending" @click="closeDirectThread">
-          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        <button ref="directThreadClose" type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close" :aria-label="t('common.back')" :title="t('common.back')" :disabled="directSending" @click="closeDirectThread">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          <span>{{ t('common.back') }}</span>
         </button>
       </header>
       <div v-if="confirmDirectDiscard" class="learner-task-thread-modal__discard" role="alert">
@@ -528,8 +542,9 @@
               <p class="dash-drawer__subtitle">{{ submissionStateLabel(selectedSubmission) }}</p>
             </div>
           </div>
-          <button type="button" class="dash-icon-btn dash-drawer__close" :aria-label="t('common.close')" @click="closeSubmission">
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          <button type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close" :aria-label="t('common.back')" @click="closeSubmission">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span>{{ t('common.back') }}</span>
           </button>
         </header>
         <div class="dash-student-dialog__body learner-teacher__submission-detail">
@@ -550,6 +565,12 @@
             </p>
             <audio v-if="selectedSubmission.audio?.available && selectedSubmission.audio?.url" controls preload="metadata" class="learner-teacher__submission-audio" :src="selectedSubmission.audio.url"></audio>
             <p v-if="selectedSubmission.transcript" class="learner-teacher__submission-transcript">{{ selectedSubmission.transcript }}</p>
+            <section v-if="selectedSubmission.self_assessment" class="learner-self-assessment-summary" :aria-label="t('dashboard.assignment_self_assessment_title')">
+              <span class="learner-self-assessment-summary__label">{{ t('dashboard.assignment_self_assessment_title') }}</span>
+              <strong>{{ selfAssessmentFeelingLabel(selectedSubmission.self_assessment.feeling) }}</strong>
+              <p v-if="selectedSubmission.self_assessment.note || selectedSubmission.self_assessment.help_request">{{ selectedSubmission.self_assessment.note || selectedSubmission.self_assessment.help_request }}</p>
+              <small>{{ t('dashboard.assignment_self_assessment_score_note') }}</small>
+            </section>
             <div class="learner-teacher__submission-actions">
               <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="openAssignmentById(selectedSubmission.recipient_id)">
                 {{ t('teacher.task_conversation') }}
@@ -557,34 +578,22 @@
               <a v-if="assignmentHref(selectedSubmission.recipient_id)" class="dash-btn dash-btn--ghost dash-btn--sm" :href="assignmentHref(selectedSubmission.recipient_id)">
                 {{ t('teacher.practice_again') }}
               </a>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('self-assess', selectedSubmission)">
+                {{ selectedSubmission.self_assessment ? t('dashboard.assignment_self_assessment_update') : t('dashboard.assignment_self_assessment_add') }}
+              </button>
             </div>
         </div>
       </section>
     </div>
     </Teleport>
 
-    <Teleport to="body">
-    <div
-      v-if="mistakeDrawerRow"
-      class="dash-drawer-root user-dashboard"
-      :class="{ 'is-learner-results': true, 'is-mobile-sheet': isMobileLayout }"
-      @keydown="onMistakeDrawerKeydown"
+    <DashModalRoot
+      :open="Boolean(mistakeDrawerRow)"
+      :labelled-by="mistakeDrawerTitleId"
+      root-class="learner-feedback-list-modal learner-results-modal"
+      panel-class="learner-feedback-list-modal__panel"
+      @close="closeMistakeDrawer"
     >
-      <button
-        type="button"
-        class="dash-drawer__backdrop"
-        :aria-label="t('dashboard.drawer_close')"
-        @click="closeMistakeDrawer"
-      ></button>
-      <aside
-        ref="mistakeDrawer"
-        class="dash-drawer dash-drawer--learner-results"
-        tabindex="-1"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="mistakeDrawerTitleId"
-      >
-        <div class="dash-drawer__handle" aria-hidden="true"></div>
         <header class="dash-drawer__head">
           <div class="dash-drawer__head-main">
             <span class="dash-drawer__head-icon" aria-hidden="true">
@@ -592,7 +601,7 @@
             </span>
             <div class="dash-drawer__head-copy">
               <h2 :id="mistakeDrawerTitleId" class="dash-drawer__title">{{ t('teacher.learner_view_results') }}</h2>
-              <p class="dash-drawer__subtitle">{{ rangeLabel(mistakeDrawerRow) }}</p>
+              <p v-if="mistakeDrawerRow" class="dash-drawer__subtitle">{{ rangeLabel(mistakeDrawerRow) }}</p>
             </div>
           </div>
           <button
@@ -605,19 +614,16 @@
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
-        <div class="dash-drawer__body dash-drawer__body--learner-results">
-          <div class="dash-drawer__content dash-drawer__content--learner-results">
+        <div class="learner-feedback-list-modal__body">
             <LearnerCompletionMistakePanel
+              v-if="mistakeDrawerRow"
               :result="completionResult(mistakeDrawerRow)"
               :mistakes="completionMistakes(mistakeDrawerRow)"
               :recording-url="completionRecordingUrl(mistakeDrawerRow)"
               :surah="mistakeDrawerRow?.assignment?.surah_number"
             />
-          </div>
         </div>
-      </aside>
-    </div>
-    </Teleport>
+    </DashModalRoot>
 
     <LearnerAttemptPlaybackModal
       :open="Boolean(playbackRow)"
@@ -636,6 +642,8 @@
 </template>
 
 <script>
+import './LearnerTeacherWorkspace.css'
+import './LearnerFeedbackModal.css'
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
@@ -685,10 +693,7 @@ import LearnerAttemptPlaybackModal from '@/components/shared/LearnerAttemptPlayb
 import LearnerCompletionMistakePanel from '@/components/shared/LearnerCompletionMistakePanel.vue'
 import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 import LearnerTaskThreadPanel from './LearnerTaskThreadPanel.vue'
-import {
-  isPerfectCompletionResult,
-  resolveLearnerCompletionAttempt,
-} from '../../scripts/teacher/learnerCompletionMistakes.js'
+import { resolveLearnerCompletionAttempt } from '../../scripts/teacher/learnerCompletionMistakes.js'
 
 const ACTIVE_STATUSES = new Set(['pending', 'in_progress', 'overdue', 'awaiting_confirmation'])
 
@@ -718,7 +723,7 @@ export default {
     onSendNote: { type: Function, required: true },
     onSendDirectMessage: { type: Function, required: true },
   },
-  emits: ['start', 'complete', 'view-completed', 'dismiss-completion', 'support-thread-update'],
+  emits: ['start', 'complete', 'self-assess', 'view-completed', 'dismiss-completion', 'support-thread-update'],
   data() {
     return {
       activeFilter: 'todo',
@@ -1036,8 +1041,7 @@ export default {
       this.activeFilter = this.pendingCount > 0 ? 'todo' : 'all'
     },
     syncModalOpen() {
-      const drawerOpen = Boolean(this.feedbackDrawerOpen || this.mistakeDrawerRow)
-      setModalScrollLock(this, Boolean(this.threadTask || this.selectedDirectThread || this.selectedSubmission || drawerOpen), { dashboard: drawerOpen })
+      setModalScrollLock(this, Boolean(this.threadTask || this.selectedDirectThread || this.selectedSubmission))
     },
     async sendDirectMessage(body) {
       const thread = this.selectedDirectThread
@@ -1172,20 +1176,27 @@ export default {
       }
     },
     openFeedback(item) {
-      if (item?.recipient_id) {
-        const row = this.assignments.find((assignment) => Number(assignment.id) === Number(item.recipient_id))
+      const recipientId = Number(item?.recipient_id || item?.related_assignment?.recipient_id || 0)
+      const assignmentId = Number(item?.related_assignment?.id || 0)
+      if (recipientId || assignmentId) {
+        const row = this.assignments.find((assignment) => (
+          (recipientId && Number(assignment.id) === recipientId)
+          || (assignmentId && Number(assignment.assignment?.id) === assignmentId)
+        ))
         if (row) {
           this.closeSubmission()
           this.openDetailsWithReply(row)
+          return true
         }
-        return
       }
       if (item?.teacher_id) {
         const thread = this.directThreads.find((row) => Number(row.teacher_id) === Number(item.teacher_id))
         if (thread) {
           this.openDirectThread(thread, item)
+          return true
         }
       }
+      return false
     },
     openFeedbackFromPanel(item) {
       this.markFeedbackRead(item)
@@ -1230,6 +1241,12 @@ export default {
     taskAttemptCount(row) {
       return learnerTaskAttemptCount(row)
     },
+    showCompactAttemptCount(row) {
+      const count = this.taskAttemptCount(row)
+      const progressVisible = this.showCardProgress(row)
+        && (!this.cardHasExpandableContent(row) || this.isCardExpanded(row))
+      return count > 0 && !(progressVisible && count === Number(row?.progress?.completed || 0))
+    },
     taskAttemptCountLabel(row) {
       const n = this.taskAttemptCount(row)
       if (!n) return ''
@@ -1241,6 +1258,11 @@ export default {
         ? this.t('teacher.learner_submission_count_one', { n: 1 })
         : this.t('teacher.learner_submission_count_other', { n: Number(item?.submission_count || 0) })
       return `${attempts} · ${submissions}`
+    },
+    selfAssessmentFeelingLabel(feeling) {
+      const key = `dashboard.assignment_self_assessment_${feeling}`
+      const label = this.t(key)
+      return label && label !== key ? label : feeling
     },
     completedPerformanceLabel(row) {
       if (!this.isTeacherApproved(row)) return ''
@@ -1257,19 +1279,19 @@ export default {
     },
     openFeedbackDrawer() {
       this.feedbackDrawerOpen = true
-      this.setFeedbackDrawerScrollLock(true)
-      this.$nextTick(() => this.$refs.feedbackDrawerClose?.focus())
     },
     closeFeedbackDrawer() {
       this.feedbackDrawerOpen = false
-      this.setFeedbackDrawerScrollLock(false)
     },
-    setFeedbackDrawerScrollLock() { this.syncModalOpen() },
-    onFeedbackDrawerKeydown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        this.closeFeedbackDrawer()
-      }
+    closeNavigationOverlays() {
+      if (this.feedbackDrawerOpen) this.closeFeedbackDrawer()
+      if (this.mistakeDrawerRow) this.closeMistakeDrawer()
+      if (this.selectedSubmission) this.closeSubmission()
+      if (this.selectedItem) this.selectedItem = null
+      if (this.recitationReviewRow) this.recitationReviewRow = null
+      if (this.playbackRow) this.playbackRow = null
+      if (this.threadTask) this.$refs.taskThreadPanel?.close?.()
+      if (this.selectedDirectThread) this.closeDirectThread()
     },
     completionResult(row) {
       return row?.completion_result || null
@@ -1296,6 +1318,11 @@ export default {
     completionAiScoreContext() {
       return this.t('teacher.learner_completion_ai_score_context')
     },
+    scoreSummaryAddsDetail(row) {
+      const summary = this.completionAiScoreSummaryRow(row)
+      if (!summary?.label) return false
+      return summary.label !== this.t('teacher.learner_ai_score_perfect')
+    },
     completionLink(row) {
       return completionResultLink(this.completionResult(row), this.t.bind(this))
     },
@@ -1307,9 +1334,6 @@ export default {
     },
     completionRecordingUrl(row) {
       return this.completionAttemptBundle(row).recordingUrl || ''
-    },
-    completionMistakePerfect(row) {
-      return isPerfectCompletionResult(this.completionResult(row))
     },
     toggleMistakeDetails(row) {
       if (this.isMobileLayout) {
@@ -1349,19 +1373,9 @@ export default {
     },
     openMistakeDrawer(row) {
       this.mistakeDrawerRow = row
-      this.setMistakeDrawerScrollLock(true)
-      this.$nextTick(() => this.$refs.mistakeDrawerClose?.focus())
     },
     closeMistakeDrawer() {
       this.mistakeDrawerRow = null
-      this.setMistakeDrawerScrollLock(false)
-    },
-    setMistakeDrawerScrollLock() { this.syncModalOpen() },
-    onMistakeDrawerKeydown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        this.closeMistakeDrawer()
-      }
     },
     syncMobileLayout() {
       this.isMobileLayout = Boolean(this.mobileMedia?.matches)
@@ -1461,7 +1475,12 @@ export default {
         return date ? { text: date, tone: 'success' } : { text: '', tone: 'neutral' }
       }
       if (this.isSubmitted(row)) {
-        return { text: this.t('teacher.task_state_waiting_review'), tone: 'submitted' }
+        return {
+          text: row?.workflow_state === 'correction_resubmitted'
+            ? this.t('teacher.correction_resubmitted')
+            : this.t('teacher.task_state_waiting_review'),
+          tone: 'submitted',
+        }
       }
       if (this.needsCorrection(row)) {
         return { text: this.t('teacher.status_needs_correction'), tone: 'warning' }
@@ -1643,10 +1662,20 @@ export default {
       if (this.isSubmitted(row)) {
         return { label: this.t('teacher.view_submission'), icon: 'bi-eye', emit: 'details' }
       }
+      if (this.needsCorrection(row)) {
+        if (this.canConfirm(row)) {
+          return { label: this.t('teacher.resubmit_correction'), icon: 'bi-send-check', emit: 'complete' }
+        }
+        const label = this.actionLabel(row)
+        if (row?.href) {
+          return { label, icon: this.actionIcon(row), href: row.href }
+        }
+        return { label, icon: this.actionIcon(row), emit: 'start' }
+      }
       if (this.canConfirm(row) && !this.isSubmitted(row)) {
         return { label: this.t('teacher.mark_complete'), icon: 'bi-check2-circle', emit: 'complete' }
       }
-      if (this.needsCorrection(row) || row?.status !== 'awaiting_confirmation') {
+      if (row?.status !== 'awaiting_confirmation') {
         const label = this.actionLabel(row)
         if (row?.href) {
           return { label, icon: this.actionIcon(row), href: row.href }
@@ -1679,6 +1708,7 @@ export default {
     },
     actionLabel(row) {
       if (this.isTeacherApproved(row)) return this.t('teacher.practice_again')
+      if (this.needsCorrection(row)) return this.t('teacher.practise_correction')
       if (row?.progress?.resume_available || row?.status === 'in_progress' || row?.started_at) {
         return this.t('common.resume')
       }

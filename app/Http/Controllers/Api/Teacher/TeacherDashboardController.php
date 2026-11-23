@@ -320,7 +320,7 @@ class TeacherDashboardController extends Controller
                 $query->whereIn('student_id', $ids === [] ? [0] : $ids);
             })
             ->with(['recipients' => function ($query) use ($ids) {
-                $query->whereIn('student_id', $ids === [] ? [0] : $ids)->with('student:id,name');
+                $query->whereIn('student_id', $ids === [] ? [0] : $ids)->with(['student:id,name', 'latestSelfAssessment']);
             }, 'learningGroup:id,name', 'notes.teacher:id,name'])
             ->latest('id')
             ->get()

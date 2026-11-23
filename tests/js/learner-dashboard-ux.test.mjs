@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { formatLearnerDisplayDate } from '../../resources/js/utils/learnerDisplayDate.js'
 import { formatIcuPluralMessage, pluralFormForCount } from '../../resources/js/utils/icuPluralFormat.js'
 import {
@@ -29,7 +30,7 @@ const t = (key, params = {}) => {
   if (key === 'teacher.learner_ai_score_band_good') return 'Good'
   if (key === 'teacher.learner_ai_score_band_excellent') return 'Excellent'
   if (key === 'teacher.learner_ai_score_band_needs_work') return 'Keep practising'
-  if (key === 'teacher.learner_ai_score_perfect') return 'Perfect match'
+  if (key === 'teacher.learner_ai_score_perfect') return 'AI wording match'
   return `${key}:${JSON.stringify(params)}`
 }
 
@@ -159,7 +160,16 @@ const aiSummary = completionAiScoreSummary(
   (key, count, params) => `${key}:${count}:${JSON.stringify(params)}`,
 )
 assert.equal(aiSummary.band, 'mid')
-assert.match(aiSummary.label, /Good/)
+assert.match(aiSummary.label, /AI wording match/)
+assert.match(aiSummary.label, /teacher\.learner_ai_score_words_to_fix/)
+assert.equal(completionAiScoreSummary({ accuracy_percent: 100 }, t).label, 'AI wording match')
+assert.equal(completionAiScoreSummary({ accuracy_percent: 0 }, t).label, 'AI wording match')
+assert.equal(completionAiScoreSummary({ accuracy_percent: null }, t), null)
+
+const englishTeacherLabels = JSON.parse(readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url))).teacher
+assert.match(englishTeacherLabels.learner_assignments_done_score, /AI wording match.*\{n\}/i)
+assert.match(englishTeacherLabels.learner_ai_score_perfect, /AI wording match/i)
+assert.match(englishTeacherLabels.learner_wording_details_empty, /details.*available/i)
 
 assert.equal(learnerTaskAttemptCount({ progress: { activity_count: 2 } }), 2)
 assert.equal(learnerTaskAttemptCount({ last_attempt: { attempt_number: 3 } }), 3)

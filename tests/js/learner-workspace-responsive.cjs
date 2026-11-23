@@ -35,7 +35,7 @@ async function main() {
       await feedbackAction.click()
       const feedbackDialog = page.locator('.dash-student-dialog--thread, .learner-task-thread-modal')
       await feedbackDialog.waitFor()
-      const feedbackClose = feedbackDialog.getByRole('button', { name: 'Close', exact: true }).first()
+      const feedbackClose = feedbackDialog.getByRole('button', { name: 'Back', exact: true }).first()
       await feedbackClose.focus()
       await feedbackClose.press('Shift+Tab')
       assert.equal(await feedbackDialog.evaluate(el => el.contains(document.activeElement)), true, 'Feedback dialog traps reverse keyboard navigation')
@@ -87,6 +87,9 @@ async function main() {
         for (const name of ['Home', 'My learning', 'Progress', 'Activity']) {
           await page.locator('.dash-jump').getByRole('button', { name, exact: true }).click()
           await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+          // Tab navigation restores the previous reading position. Inspect the
+          // header geometry at the top separately from that behaviour.
+          await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }))
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
           assert.ok(overflow <= 1, `Learner ${name} ${width}px ${theme}: overflow ${overflow}`)
           const layout = await page.evaluate(() => {
@@ -135,10 +138,15 @@ async function main() {
     await page.locator('.learner-teacher__icon-hit--message').first().click()
     const thread = page.locator('.learner-task-thread-modal')
     await thread.waitFor()
+    await page.waitForTimeout(300)
+    const threadBox = await thread.locator('.learner-task-thread-modal__panel').boundingBox()
+    const threadRoot = await thread.boundingBox()
+    assert.ok(Math.abs(threadBox.x - (390 - threadBox.x - threadBox.width)) <= 2, 'Mobile conversation modal is horizontally centered')
+    assert.ok(Math.abs((threadBox.y + threadBox.height / 2) - (threadRoot.y + threadRoot.height / 2)) <= 16, `Mobile conversation modal is vertically centered: ${JSON.stringify({ threadBox, threadRoot })}`)
     const input = thread.locator('textarea')
     assert.ok((await input.boundingBox()).width >= 270, 'Learner conversation has a usable composer')
     await page.screenshot({ path: `${shots}/learner-conversation-390.png` })
-    await thread.locator('.learner-task-thread-modal__head').getByRole('button', { name: 'Close', exact: true }).click()
+    await thread.locator('.learner-task-thread-modal__head').getByRole('button', { name: 'Back', exact: true }).click()
     await thread.waitFor({ state: 'hidden' })
     assert.deepEqual(errors, [], 'No learner runtime errors')
     fs.writeFileSync(`${shots}/learner-results.json`, JSON.stringify(results, null, 2))
