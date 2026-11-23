@@ -35,7 +35,7 @@
     // after a frontend build.
     $vueStylesPath = public_path('css/vue-styles.css');
     $vueStylesFingerprint = is_file($vueStylesPath) ? substr(md5_file($vueStylesPath), 0, 12) : 'no-vue-styles';
-    $assetBuildMarker = config('error_tracking.asset_build', 'v207').'-'.$mixManifestFingerprint;
+    $assetBuildMarker = config('error_tracking.asset_build', 'v207').'-'.$mixManifestFingerprint.'-'.\App\Support\BrandIcons::version();
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
         'en' => 'English',
@@ -91,17 +91,7 @@
     @stack('head')
     @include('partials.google-analytics')
     @include('partials.ackee-config')
-    <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
-    <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730c">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260730c">
-    <link id="appThemeFaviconIco" rel="shortcut icon" href="/favicon.ico?v=20260730c">
-    <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
+    @include('partials.brand-icons-head')
     <link rel="preconnect" href="https://verses.quran.foundation" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     {{-- Icon font starts with the stylesheet instead of waiting to be discovered inside it. --}}
@@ -8950,7 +8940,7 @@
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
-                    favicon.setAttribute('href', '/favicon-512.png?v=20260730c');
+                    favicon.setAttribute('href', @json(\App\Support\BrandIcons::url('favicon-512.png')));
                 }
 
                 return normalizedTheme;

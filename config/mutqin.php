@@ -312,4 +312,12 @@ return [
             'queue' => (string) env('MUTQIN_WAITLIST_LAUNCH_QUEUE', 'default'),
         ],
     ],
+
+    /*
+     | Favicon / PWA icon cache bust (public/favicon-*.png, public/icons/*).
+     | Bump when running scripts/render-brand-icons.php; keep in sync with BRAND_ICONS_VERSION in public/sw.js.
+     */
+    'brand_icons' => [
+        'version' => (string) env('MUTQIN_BRAND_ICONS_VERSION', '20261123a'),
+    ],
 ];

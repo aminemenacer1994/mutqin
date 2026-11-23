@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -11,6 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 MARK_PATH = ROOT / "public/icons/icon-mark.png"
 PUBLIC = ROOT / "public"
 ICONS = PUBLIC / "icons"
+MANIFEST_PATH = PUBLIC / "manifest.webmanifest"
+
+# Bump in config/mutqin.php brand_icons.version and public/sw.js BRAND_ICONS_VERSION when shipping new icons.
+DEFAULT_BRAND_ICONS_VERSION = "20261123a"
 
 # Brand-aligned palette (resources/sass/app.scss)
 GRADIENT_TOP = (166, 124, 82)  # #a67c52
@@ -204,7 +209,14 @@ def main() -> None:
     write_svg(PUBLIC / "favicon-light.svg", variant="default")
     write_svg(PUBLIC / "favicon-dark.svg", variant="dark")
 
+    manifest = MANIFEST_PATH.read_text(encoding="utf-8")
+    manifest = re.sub(r"\?v=[^\"]+", f"?v={DEFAULT_BRAND_ICONS_VERSION}", manifest)
+    MANIFEST_PATH.write_text(manifest, encoding="utf-8")
+
     print("Rendered brand icons to public/ and public/icons/")
+    print(
+        f"Remember: deploy with brand_icons.version / BRAND_ICONS_VERSION = {DEFAULT_BRAND_ICONS_VERSION}"
+    )
 
 
 if __name__ == "__main__":

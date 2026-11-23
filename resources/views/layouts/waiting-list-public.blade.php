@@ -22,7 +22,7 @@
     @include('partials.google-analytics')
     @include('partials.ackee-config')
     @include('partials.meta-pixel')
-    <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
+    <link rel="icon" href="{{ \App\Support\BrandIcons::url('favicon.ico') }}" sizes="any">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
     @include('partials.font-links')

@@ -1,14 +1,18 @@
-const SHELL_CACHE = 'mutqin-shell-v101';
+// Keep in sync with config('mutqin.brand_icons.version') / App\Support\BrandIcons.
+const BRAND_ICONS_VERSION = '20261123a';
+const SHELL_CACHE = 'mutqin-shell-v102';
 const RUNTIME_CACHE = 'mutqin-runtime-v100';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
+const icon = (path) => `${path}?v=${BRAND_ICONS_VERSION}`;
 const SHELL_URLS = [
-  '/manifest.webmanifest',
-  '/favicon.ico',
-  '/favicon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  icon('/manifest.webmanifest'),
+  icon('/favicon.ico'),
+  icon('/favicon.svg'),
+  icon('/favicon-512.png'),
+  icon('/icons/icon-192.png'),
+  icon('/icons/icon-512.png'),
+  icon('/icons/apple-touch-icon.png')
 ];
 
 self.addEventListener('install', event => {
@@ -98,6 +102,9 @@ self.addEventListener('fetch', event => {
   const isAudio = request.destination === 'audio' || /audio|mp3|opus|webm/i.test(url.pathname);
   const isManifestOrIcon = isSameOrigin && (
     url.pathname === '/manifest.webmanifest'
+    || url.pathname === '/favicon.ico'
+    || url.pathname === '/favicon.svg'
+    || url.pathname.startsWith('/favicon-')
     || url.pathname.startsWith('/icons/')
   );
 
