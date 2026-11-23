@@ -798,6 +798,66 @@ export const learningApi = {
     const { data } = await http.delete(`/teacher/students/${studentId}/messages/${messageId}`)
     return data
   },
+  async getTeacherGuardianThreads(studentId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/guardian-messages`, { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async getTeacherGuardianThread(studentId, parentId, before = null) {
+    const { data } = await http.get(`/teacher/students/${studentId}/guardian-messages`, {
+      params: { parent: parentId, ...(before ? { before } : {}) },
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async sendTeacherGuardianMessage(studentId, parentId, body) {
+    const { data } = await http.post(`/teacher/students/${studentId}/guardian-messages`, {
+      parent_id: parentId,
+      body,
+    })
+    return data
+  },
+  async getParentReports({ cadence = 'week', childId = null } = {}) {
+    const { data } = await http.get('/parent/reports', {
+      params: { cadence, child_id: childId || undefined },
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async askParentAssistant({ prompt = null, question = null, childId = null } = {}) {
+    const { data } = await http.post('/parent/assistant', {
+      prompt,
+      question,
+      child_id: childId || null,
+    })
+    return data
+  },
+  async getParentMessages() {
+    const { data } = await http.get('/parent/messages', { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async getParentMessageThread(teacherId, studentId, before = null) {
+    const { data } = await http.get(`/parent/messages/${teacherId}/${studentId}`, {
+      params: before ? { before } : {},
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async sendParentMessage(teacherId, studentId, body) {
+    const { data } = await http.post(`/parent/messages/${teacherId}/${studentId}`, { body })
+    return data
+  },
+  async reportParentMessage(messageId, reason) {
+    const { data } = await http.post(`/parent/messages/${messageId}/report`, { reason })
+    return data
+  },
+  async getParentNoticePreferences() {
+    const { data } = await http.get('/parent/notification-preferences')
+    return data
+  },
+  async updateParentNoticePreferences(preferences) {
+    const { data } = await http.put('/parent/notification-preferences', preferences)
+    return data
+  },
   async saveTeacherRecitationAssessment(studentId, attemptId, payload, annotation) {
     const body = payload && typeof payload === 'object'
       ? payload

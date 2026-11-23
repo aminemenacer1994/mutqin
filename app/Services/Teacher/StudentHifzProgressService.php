@@ -42,6 +42,21 @@ class StudentHifzProgressService
     }
 
     /**
+     * Read-only progress snapshot for an authorised guardian (no teacher scope).
+     *
+     * @return array<string, mixed>
+     */
+    public function forGuardian(User $student, Carbon $from, Carbon $to): array
+    {
+        return [
+            'coverage' => $this->publicCoverage($this->coverage($student)),
+            'wording_match' => $this->wordingTrend($student, $from, $to),
+            'weak_passages' => $this->confirmedWeak($student),
+            'validated_memorisation' => $this->validatedMemorisationForStudent($student),
+        ];
+    }
+
+    /**
      * Class totals use the same memorised / in-progress buckets as the student list.
      *
      * @param  array<int, array<string, mixed>>  $metrics
@@ -300,6 +315,63 @@ class StudentHifzProgressService
      *
      * @return array<string, mixed>
      */
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedMemorisationForStudent(User $student): array
+    {
+        $recipients = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->where('status', AssignmentStatus::Completed->value)
+            ->whereHas('assignment', function ($query) {
+                $query->where('hifz_category', 'sabaq')
+                    ->where(function ($activity) {
+                        $activity->where('activity', 'hifz')
+                            ->orWhere(function ($legacy) {
+                                $legacy->whereNull('activity')
+                                    ->whereIn('kind', ['practice', 'ai_recite']);
+                            });
+                    });
+            })
+            ->with('assignment:id,surah_number,ayah_start,ayah_end,activity,hifz_category')
+            ->orderBy('completed_at')
+            ->get();
+
+        $ayahs = [];
+        $latest = null;
+        foreach ($recipients as $recipient) {
+            $assignment = $recipient->assignment;
+            if ($assignment === null) {
+                continue;
+            }
+            $completedAt = $recipient->completed_at?->toIso8601String();
+            if ($completedAt !== null && ($latest === null || $completedAt > $latest)) {
+                $latest = $completedAt;
+            }
+            for ($ayah = (int) $assignment->ayah_start; $ayah <= (int) $assignment->ayah_end; $ayah++) {
+                $key = (int) $assignment->surah_number.':'.$ayah;
+                $previous = $ayahs[$key]['last_review_at'] ?? null;
+                $ayahs[$key] = [
+                    'surah_number' => (int) $assignment->surah_number,
+                    'ayah_number' => $ayah,
+                    'last_review_at' => $completedAt !== null && ($previous === null || $completedAt > $previous)
+                        ? $completedAt
+                        : $previous,
+                ];
+            }
+        }
+        $rows = array_values($ayahs);
+        usort($rows, fn (array $a, array $b) => [$a['surah_number'], $a['ayah_number']] <=> [$b['surah_number'], $b['ayah_number']]);
+
+        return [
+            'source' => 'teacher_approved_assignments',
+            'validated_ayahs' => count($rows),
+            'ranges' => $this->limitRanges($this->ranges($rows)),
+            'last_validated_at' => $latest,
+            'empty' => $rows === [],
+        ];
+    }
+
     private function validatedMemorisation(User $teacher, User $student): array
     {
         $recipients = TeacherAssignmentRecipient::query()
@@ -383,6 +455,7 @@ class StudentHifzProgressService
                 if ($at !== null && ($lastCompleted === null || $at > $lastCompleted)) {
                     $lastCompleted = $at;
                 }
+
                 continue;
             }
             $pending++;
@@ -685,13 +758,14 @@ class StudentHifzProgressService
         $ranges = [];
         foreach ($rows as $row) {
             $last = $ranges === [] ? null : $ranges[count($ranges) - 1];
-            if ($last && $last['surah_number'] === $row['surah_number'] && $last['ayah_end'] + 1 === $row['ayah_number']) {
+            if ($last && $last['surah_number'] === $row['surah_number'] && $row['ayah_number'] === $last['ayah_end'] + 1) {
                 $ranges[count($ranges) - 1]['ayah_end'] = $row['ayah_number'];
                 $ranges[count($ranges) - 1]['ayahs']++;
                 $reviewedAt = $row['last_review_at'] ?? null;
                 if ($reviewedAt !== null && (! $ranges[count($ranges) - 1]['last_reviewed_at'] || $reviewedAt > $ranges[count($ranges) - 1]['last_reviewed_at'])) {
                     $ranges[count($ranges) - 1]['last_reviewed_at'] = $reviewedAt;
                 }
+
                 continue;
             }
             $ranges[] = [

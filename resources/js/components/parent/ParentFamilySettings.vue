@@ -1,10 +1,10 @@
 <template>
-  <section class="teacher-stack teacher-account-page">
-    <header class="teacher-page-header">
+  <section class="parent-home teacher-account-page">
+    <header class="parent-page">
+      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-gear"></i></span>
       <div>
-        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
-        <h1 class="teacher-page-header__title">{{ t('parent.nav_settings') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('parent.settings_body') }}</p>
+        <h1>{{ t('parent.nav_settings') }}</h1>
+        <p>{{ t('parent.settings_body') }}</p>
       </div>
     </header>
 
@@ -69,6 +69,25 @@
         <button type="button" class="btn btn-primary btn-sm" :disabled="acting" @click="$emit('create-code')">{{ t('parent.code_create') }}</button>
         <p v-if="linkCode" class="teacher-meta mb-0">{{ t('parent.code_once') }} <strong>{{ linkCode }}</strong></p>
       </section>
+
+      <section class="card teacher-account">
+        <div class="teacher-account__section-head">
+          <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-bell"></i></span>
+          <div>
+            <h2>{{ t('parent.notice_title') }}</h2>
+            <p>{{ t('parent.notice_hint') }}</p>
+          </div>
+        </div>
+        <form class="d-flex flex-column gap-2" @submit.prevent="savePreferences">
+          <label v-for="key in preferenceKeys" :key="key" class="d-flex align-items-center gap-2 mb-0">
+            <input v-model="preferences[key]" type="checkbox" :disabled="savingPreferences">
+            <span>{{ t(`parent.notice_${key}`) }}</span>
+          </label>
+          <button type="submit" class="btn btn-primary btn-sm teacher-account__action" :disabled="savingPreferences">{{ t('parent.notice_save') }}</button>
+        </form>
+        <p v-if="preferenceNotice" class="alert alert-success mb-0" role="status">{{ preferenceNotice }}</p>
+        <p v-if="preferenceError" class="alert alert-danger mb-0" role="alert">{{ preferenceError }}</p>
+      </section>
     </div>
 
     <ParentPlatformSwitch
@@ -82,6 +101,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { learningApi } from '../../scripts/api/learning'
 import { initial } from '../../scripts/parent/dashboard'
 import ParentPlatformSwitch from './ParentPlatformSwitch.vue'
 
@@ -104,6 +124,50 @@ export default {
     csrfToken: { type: String, default: '' },
   },
   emits: ['open-children', 'accept-invite', 'reject-invite', 'create-code', 'update:inviteToken'],
-  methods: { initial },
+  data() {
+    return {
+      preferenceKeys: ['homework', 'deadlines', 'feedback', 'messages', 'updates', 'weekly_summary', 'reports'],
+      preferences: {
+        homework: true,
+        deadlines: true,
+        feedback: true,
+        messages: true,
+        updates: true,
+        weekly_summary: false,
+        reports: false,
+      },
+      savingPreferences: false,
+      preferenceNotice: '',
+      preferenceError: '',
+    }
+  },
+  mounted() {
+    this.loadPreferences()
+  },
+  methods: {
+    initial,
+    async loadPreferences() {
+      try {
+        const data = await learningApi.getParentNoticePreferences()
+        if (data.preferences) this.preferences = { ...this.preferences, ...data.preferences }
+      } catch {
+        this.preferenceError = this.t('parent.notice_failed')
+      }
+    },
+    async savePreferences() {
+      this.savingPreferences = true
+      this.preferenceNotice = ''
+      this.preferenceError = ''
+      try {
+        const data = await learningApi.updateParentNoticePreferences(this.preferences)
+        if (data.preferences) this.preferences = { ...this.preferences, ...data.preferences }
+        this.preferenceNotice = this.t('parent.notice_saved')
+      } catch {
+        this.preferenceError = this.t('parent.notice_failed')
+      } finally {
+        this.savingPreferences = false
+      }
+    },
+  },
 }
 </script>

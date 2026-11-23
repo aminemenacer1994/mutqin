@@ -53,6 +53,15 @@ return [
     'parent_features_enabled' => filter_var(env('MUTQIN_PARENT_FEATURES_ENABLED', false), FILTER_VALIDATE_BOOL),
 
     /*
+     | Parent learning assistant. Answers are composed on the server from
+     | records the guardian may already see. There is no external chat model:
+     | Ask Mutqin and recitation checks stay the approved AI services.
+     */
+    'parent_assistant' => [
+        'daily_questions' => (int) env('MUTQIN_PARENT_ASSISTANT_DAILY_QUESTIONS', 20),
+    ],
+
+    /*
      | Password for php artisan mutqin:seed-platform-demo.
      | Never committed. The seeder refuses to run when this is empty and never prints it.
      */

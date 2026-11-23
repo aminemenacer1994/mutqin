@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Parent\ParentTeacherConversationService;
 use App\Services\Teacher\LearningPlanService;
 use App\Services\Teacher\RecitationDifficultyService;
 use App\Services\Teacher\RevisionRecommendationService;
@@ -167,6 +168,41 @@ class TeacherDashboardController extends Controller
         $messages->delete($teacher, $student, (int) $note->id);
 
         return $this->json(['deleted' => true]);
+    }
+
+    public function guardianMessages(Request $request, User $student, ParentTeacherConversationService $messages): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $parentId = $request->query('parent');
+        if ($parentId !== null && $parentId !== '') {
+            $parent = User::query()->find((int) $parentId);
+            abort_unless($parent instanceof User, 404);
+
+            $before = $request->query('before');
+
+            return $this->json($messages->threadForTeacher(
+                $teacher,
+                $parent,
+                $student,
+                is_numeric($before) ? (int) $before : null,
+            ));
+        }
+
+        return $this->json(['threads' => $messages->threadsForTeacher($teacher, $student)]);
+    }
+
+    public function sendGuardianMessage(Request $request, User $student, ParentTeacherConversationService $messages): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'parent_id' => ['required', 'integer'],
+            'body' => ['required', 'string', 'max:2000'],
+        ]);
+        $parent = User::query()->find((int) $data['parent_id']);
+        abort_unless($parent instanceof User, 404);
+        $note = $messages->reply($teacher, $parent, $student, $data['body'], $request);
+
+        return $this->json(['message' => $messages->present($note, $teacher)], 201);
     }
 
     public function deleteStudent(Request $request, User $student, StudentAccessAuthorizer $access, LearningHistoryRetentionService $retention): JsonResponse

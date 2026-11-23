@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             RegistrationOrganisationSeeder::class,
             OrganisationNetworkSeeder::class,
             TeacherAnchorStudentSeeder::class,
+            AnchorStudentLearningSeeder::class,
             DemoDataSeeder::class,
         ]);
     }

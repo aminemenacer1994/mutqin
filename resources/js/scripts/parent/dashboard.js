@@ -12,6 +12,13 @@ export function activityName(t, activity) {
   return label && label !== key ? label : activity
 }
 
+export function activityIcon(activity) {
+  if (activity === 'hifz') return 'bi bi-journal-bookmark'
+  if (activity === 'tajweed') return 'bi bi-soundwave'
+  if (activity === 'revision') return 'bi bi-arrow-repeat'
+  return 'bi bi-book'
+}
+
 export function passageLabel(item) {
   if (!item) return ''
   const range = item.ayah_start && item.ayah_end ? `${item.ayah_start}–${item.ayah_end}` : ''

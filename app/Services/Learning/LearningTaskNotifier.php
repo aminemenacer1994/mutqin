@@ -9,6 +9,7 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Notifications\LearningTaskNotification;
 use App\Services\Achievements\PracticePreferences;
+use App\Services\Parent\ParentNoticeService;
 use App\Services\RevisionReminders\RevisionReminderHrefBuilder;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
@@ -22,6 +23,7 @@ final class LearningTaskNotifier
     public function __construct(
         private readonly PracticePreferences $preferences,
         private readonly RevisionReminderHrefBuilder $hrefs,
+        private readonly ParentNoticeService $parents,
     ) {}
 
     public function assignmentPublished(TeacherAssignment $assignment): void
@@ -72,6 +74,10 @@ final class LearningTaskNotifier
                     'teacher_assignment_recipient_id' => (int) $recipient->id,
                 ]);
             }
+            $this->parents->homework($student, (int) $recipient->id);
+            if ($assignment->due_at !== null) {
+                $this->parents->deadline($student, 'parent-deadline:'.$recipient->id.':'.$assignment->due_at->toDateString());
+            }
         }
     }
 
@@ -98,6 +104,9 @@ final class LearningTaskNotifier
                 'ayah_end' => (int) $assignment->ayah_end,
                 'teacher_assignment_recipient_id' => (int) $recipient->id,
             ]);
+            if ($assignment->due_at !== null) {
+                $this->parents->deadline($student, 'parent-deadline:'.$recipient->id.':'.$due);
+            }
         }
     }
 
@@ -128,6 +137,7 @@ final class LearningTaskNotifier
                 'due_on' => $date->toDateString(),
                 'teacher_lesson_id' => (int) $lesson->id,
             ]);
+            $this->parents->learningUpdate($student, 'parent-lesson:'.$lesson->id.':'.$student->id);
         }
     }
 
@@ -148,6 +158,7 @@ final class LearningTaskNotifier
             'ayah_end' => $note->ayah_end ? (int) $note->ayah_end : null,
             'teacher_note_id' => (int) $note->id,
         ]);
+        $this->parents->feedback($student, $note);
     }
 
     /**

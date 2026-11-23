@@ -22,6 +22,7 @@ class TeacherNote extends Model
             'audio_bytes' => 'integer',
             'audio_duration_ms' => 'integer',
             'read_at' => 'datetime',
+            'reported_at' => 'datetime',
         ];
     }
 
@@ -33,6 +34,11 @@ class TeacherNote extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_user_id');
     }
 
     public function organisation(): BelongsTo

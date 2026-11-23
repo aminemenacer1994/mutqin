@@ -145,6 +145,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
             'practice_preferences' => 'array',
+            'parent_notice_preferences' => 'array',
             'ai_recite_lifetime_limit' => 'integer',
             'ai_recite_bonus_checks' => 'integer',
             'complimentary_pro_until' => 'datetime',

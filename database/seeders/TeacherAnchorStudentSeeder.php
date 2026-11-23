@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Services\Demo\AnchorStudentLearningPlanter;
 use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use Database\Seeders\Concerns\GuardsDemoSeeding;
 use Illuminate\Database\Seeder;
@@ -15,5 +16,6 @@ class TeacherAnchorStudentSeeder extends Seeder
         $this->guardAgainstProductionSeeding();
 
         app(TeacherAnchorStudentEnroller::class)->enrolAll();
+        app(AnchorStudentLearningPlanter::class)->plantAll();
     }
 }

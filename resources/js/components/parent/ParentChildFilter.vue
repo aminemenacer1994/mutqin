@@ -1,23 +1,24 @@
 <template>
-  <div v-if="children.length" class="dash-range-toggle" role="group" :aria-label="t('parent.child_filter')">
+  <div v-if="children.length" class="parent-pills" role="group" :aria-label="t('parent.child_filter')">
     <button
+      v-if="allowAll"
       type="button"
-      class="dash-btn dash-btn--ghost dash-btn--sm"
       :class="{ 'is-active': !selectedId }"
       :aria-pressed="!selectedId ? 'true' : 'false'"
       @click="$emit('select', null)"
     >
+      <i class="bi bi-people" aria-hidden="true"></i>
       {{ t('parent.child_all') }}
     </button>
     <button
       v-for="child in children"
       :key="child.id"
       type="button"
-      class="dash-btn dash-btn--ghost dash-btn--sm"
       :class="{ 'is-active': selectedId === child.id }"
       :aria-pressed="selectedId === child.id ? 'true' : 'false'"
       @click="$emit('select', child.id)"
     >
+      <i class="bi bi-person" aria-hidden="true"></i>
       {{ child.name }}
     </button>
   </div>
@@ -32,6 +33,7 @@ export default {
   props: {
     children: { type: Array, default: () => [] },
     selectedId: { type: Number, default: null },
+    allowAll: { type: Boolean, default: true },
   },
   emits: ['select'],
 }

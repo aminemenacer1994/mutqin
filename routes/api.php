@@ -24,8 +24,12 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\Parent\ParentAssistantController;
+use App\Http\Controllers\Api\Parent\ParentChildController;
 use App\Http\Controllers\Api\Parent\ParentDashboardController;
 use App\Http\Controllers\Api\Parent\ParentInvitationController;
+use App\Http\Controllers\Api\Parent\ParentMessageController;
+use App\Http\Controllers\Api\Parent\ParentReportController;
 use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
@@ -178,8 +182,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::middleware('parent.features')->group(function () {
             Route::prefix('parent')->group(function () {
+                Route::post('/assistant', [ParentAssistantController::class, 'ask'])->middleware('throttle:10,1')->name('api.parent.assistant');
+                Route::get('/reports', [ParentReportController::class, 'index'])->name('api.parent.reports.index');
+                Route::get('/reports/{report}', [ParentReportController::class, 'show'])->whereNumber('report')->name('api.parent.reports.show');
+                Route::get('/reports/{report}/download', [ParentReportController::class, 'download'])->whereNumber('report')->name('api.parent.reports.download');
                 Route::get('/shell', [ParentDashboardController::class, 'shell'])->name('api.parent.shell');
                 Route::get('/children/{student}', [ParentDashboardController::class, 'showChild'])->name('api.parent.children.show');
+                Route::get('/children/{student}/assignments', [ParentChildController::class, 'assignments'])->name('api.parent.children.assignments');
+                Route::get('/children/{student}/progress', [ParentChildController::class, 'progress'])->name('api.parent.children.progress');
+                Route::get('/children/{student}/profile', [ParentChildController::class, 'profile'])->name('api.parent.children.profile');
+                Route::get('/messages', [ParentMessageController::class, 'index'])->name('api.parent.messages.index');
+                Route::get('/notification-preferences', [ParentMessageController::class, 'preferences'])->name('api.parent.notification-preferences.show');
+                Route::put('/notification-preferences', [ParentMessageController::class, 'updatePreferences'])->name('api.parent.notification-preferences.update');
+                Route::get('/messages/{teacher}/{student}', [ParentMessageController::class, 'show'])->whereNumber('teacher')->whereNumber('student')->name('api.parent.messages.show');
+                Route::post('/messages/{teacher}/{student}', [ParentMessageController::class, 'store'])->whereNumber('teacher')->whereNumber('student')->middleware('throttle:20,1')->name('api.parent.messages.store');
+                Route::post('/messages/{note}/report', [ParentMessageController::class, 'report'])->middleware('throttle:10,1')->name('api.parent.messages.report');
                 Route::post('/invitations/accept', [ParentInvitationController::class, 'accept'])->middleware('throttle:10,1')->name('api.parent.invitations.accept');
                 Route::post('/invitations/reject', [ParentInvitationController::class, 'reject'])->middleware('throttle:10,1')->name('api.parent.invitations.reject');
                 Route::post('/link-codes', [ParentInvitationController::class, 'issueCode'])->middleware('throttle:5,1')->name('api.parent.link-codes.store');
@@ -205,6 +222,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/students/{student}/messages', [TeacherDashboardController::class, 'studentMessages'])->name('api.teacher.students.messages');
                 Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1')->name('api.teacher.students.messages.store');
                 Route::delete('/students/{student}/messages/{note}', [TeacherDashboardController::class, 'deleteStudentMessage'])->name('api.teacher.students.messages.destroy');
+                Route::get('/students/{student}/guardian-messages', [TeacherDashboardController::class, 'guardianMessages'])->name('api.teacher.students.guardian-messages');
+                Route::post('/students/{student}/guardian-messages', [TeacherDashboardController::class, 'sendGuardianMessage'])->middleware('throttle:20,1')->name('api.teacher.students.guardian-messages.store');
                 Route::put('/students/{student}/attempts/{attempt}/assessment', [TeacherDashboardController::class, 'assessRecitation'])->name('api.teacher.students.attempts.assess');
                 Route::get('/students/{student}/attempts/{attempt}/playback', [TeacherRecitationPlaybackController::class, 'show'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback');
                 Route::post('/students/{student}/attempts/{attempt}/playback/review', [TeacherRecitationPlaybackController::class, 'review'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.review');

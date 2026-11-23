@@ -21,6 +21,7 @@ use App\Models\LearningGroup;
 use App\Models\LearningPlan;
 use App\Models\LearningPlanItem;
 use App\Models\MemorisationAssessment;
+use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\Organisation;
 use App\Models\ParentStudentLink;
@@ -70,6 +71,8 @@ class PlatformDemoSeeder extends Seeder
 
     /** @var array<string, User> */
     private array $parents = [];
+
+    private Carbon $demoAnchor;
 
     public function run(): void
     {
@@ -122,7 +125,9 @@ class PlatformDemoSeeder extends Seeder
 
     private function plant(string $password): void
     {
-        $joined = Carbon::parse('2026-09-01 09:00:00');
+        $anchor = now()->copy()->startOfDay();
+        $joined = $anchor->copy()->subMonths(2)->setTime(9, 0);
+        $this->demoAnchor = $anchor;
         $this->organisation = new Organisation;
         $this->organisation->forceFill([
             'type' => OrganisationType::Halaqa,
@@ -172,6 +177,8 @@ class PlatformDemoSeeder extends Seeder
                 $this->guardianLink($parent, $this->students[$number]);
             }
         }
+
+        $this->seedParentConversations();
     }
 
     private function makeUser(string $name, string $email, AccountRole $role, string $password, Carbon $joined): User
@@ -224,12 +231,12 @@ class PlatformDemoSeeder extends Seeder
      */
     private function seedLearning(User $student, array $definition): void
     {
+        $anchor = $this->demoAnchor;
         $teacher = $this->primaryTeacher($definition['group']);
-        $activities = ['nazra', 'hifz', 'tajweed', 'revision'];
-        $activity = $activities[($definition['number'] - 1) % 4];
+        $activity = PlatformDemoCatalog::activity($definition['number']);
         $scenario = ($definition['number'] - 1) % 5;
-        $range = ['surah' => 1, 'from' => 1, 'to' => min(7, 1 + ($definition['number'] % 4))];
-        $created = Carbon::parse('2026-10-01 10:00:00')->addDays($definition['number']);
+        $range = PlatformDemoCatalog::assignmentRange($definition['number'], $activity);
+        $created = $anchor->copy()->subDays(24)->addHours(10 + ($definition['number'] % 5));
 
         [$status, $due, $started, $studentCompleted, $completed] = match ($scenario) {
             0 => [AssignmentStatus::Pending, $created->copy()->addDays(21), null, null, null],
@@ -239,13 +246,289 @@ class PlatformDemoSeeder extends Seeder
             default => [AssignmentStatus::Completed, $created->copy()->addDays(5), $created->copy()->addDay(), $created->copy()->addDays(3), $created->copy()->addDays(4)],
         };
 
+        if ($scenario === 2) {
+            $range = PlatformDemoCatalog::OVERDUE_RANGE;
+        }
+
+        [$assignment, $recipient] = $this->storeAssignment(
+            $teacher,
+            $student,
+            $definition,
+            $range,
+            $activity,
+            $status,
+            $created,
+            $due,
+            $started,
+            $studentCompleted,
+            $completed,
+            $scenario === 4 ? 'Reviewed in class. The range is ready to move on.' : null,
+        );
+
+        $note = new TeacherNote;
+        $note->forceFill([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'organisation_id' => $this->organisation->id,
+            'teacher_assignment_id' => $assignment->id,
+            'kind' => TeacherNoteKind::Feedback,
+            'body' => 'Synthetic demo feedback for '.$student->name.'. Keep working on '.$this->rangeLabel($range).' at a calm pace.',
+            'created_at' => $created->copy()->addDays(2),
+            'updated_at' => $created->copy()->addDays(2),
+        ])->save();
+
+        $historical = [];
+        if ($definition['number'] <= 13) {
+            $historical = $this->seedHistoricalAssignments($teacher, $student, $definition, $anchor);
+        }
+
+        if ($definition['number'] <= 12) {
+            $this->seedLearningPlan($teacher, $student, $definition, $activity, $anchor, $assignment, $recipient, $due, $range, $historical);
+        }
+
+        if ($definition['number'] % 3 === 1) {
+            $revisionRange = PlatformDemoCatalog::practiceRange($definition['number']);
+            (new RevisionRecommendation)->forceFill([
+                'teacher_id' => $teacher->id,
+                'student_id' => $student->id,
+                'organisation_id' => $this->organisation->id,
+                'status' => RevisionRecommendationStatus::Pending,
+                'activity' => 'revision',
+                'surah_number' => $revisionRange['surah'],
+                'ayah_start' => $revisionRange['from'],
+                'ayah_end' => $revisionRange['to'],
+                'due_on' => $anchor->copy()->addDays(4)->toDateString(),
+                'instructions' => 'Synthetic revision suggestion for '.$this->rangeLabel($revisionRange).'.',
+                'reason_code' => 'demo_weak_range',
+                'reason' => 'Recent practice on this short surah was uneven.',
+                'evidence' => ['source' => 'platform-demo', 'synthetic' => true],
+                'source_key' => 'platform-demo:'.$definition['key'],
+                'created_at' => $created,
+                'updated_at' => $created,
+            ])->save();
+        }
+
+        if (in_array($activity, ['revision', 'hifz'], true) && $definition['number'] <= 10) {
+            $this->seedMurajaahPlan($student, $definition, $range, $anchor);
+        }
+
+        $this->seedHistory($student, $definition, $range);
+    }
+
+    /**
+     * @param  array{number: int, key: string, name: string, email: string, group: string, extra_group: ?string}  $definition
+     * @return list<array{assignment: TeacherAssignment, due: Carbon}>
+     */
+    private function seedHistoricalAssignments(User $teacher, User $student, array $definition, Carbon $anchor): array
+    {
+        $rows = [];
+        $moments = [
+            ['offset' => 38, 'due_offset' => 32, 'completed_offset' => 30, 'activity' => 'nazra'],
+            ['offset' => 20, 'due_offset' => 16, 'completed_offset' => 15, 'activity' => 'tajweed'],
+        ];
+
+        foreach ($moments as $index => $moment) {
+            $range = $index === 0
+                ? PlatformDemoCatalog::priorRange($definition['number'])
+                : PlatformDemoCatalog::practiceRange($definition['number'] + $index);
+            $created = $anchor->copy()->subDays($moment['offset'])->setTime(11 + $index, 0);
+            $due = $anchor->copy()->subDays($moment['due_offset'])->setTime(17, 0);
+            $completed = $anchor->copy()->subDays($moment['completed_offset'])->setTime(18, 0);
+
+            [$assignment] = $this->storeAssignment(
+                $teacher,
+                $student,
+                $definition,
+                $range,
+                $moment['activity'],
+                AssignmentStatus::Completed,
+                $created,
+                $due,
+                $created->copy()->addDay(),
+                $completed->copy()->subDay(),
+                $completed,
+            );
+
+            $rows[] = ['assignment' => $assignment, 'due' => $due];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  array{number: int, key: string, group: string}  $definition
+     * @param  array{surah: int, from: int, to: int}  $range
+     * @param  list<array{assignment: TeacherAssignment, due: Carbon}>  $historical
+     */
+    private function seedLearningPlan(
+        User $teacher,
+        User $student,
+        array $definition,
+        string $activity,
+        Carbon $anchor,
+        TeacherAssignment $currentAssignment,
+        TeacherAssignmentRecipient $currentRecipient,
+        Carbon $due,
+        array $range,
+        array $historical,
+    ): void {
+        $created = $currentAssignment->created_at ?? $anchor->copy()->subWeeks(3);
+        $plan = new LearningPlan;
+        $plan->forceFill([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'organisation_id' => $this->organisation->id,
+            'title' => 'Four-week '.$activity.' plan',
+            'cadence' => $definition['number'] % 2 === 0 ? 'monthly' : 'weekly',
+            'status' => LearningPlanStatus::Active,
+            'starts_on' => $anchor->copy()->subWeeks(4)->toDateString(),
+            'ends_on' => $anchor->copy()->addWeeks(2)->toDateString(),
+            'student_goal' => 'Complete '.$this->rangeLabel($range).' and keep muraja\'ah on track.',
+            'notes' => 'Synthetic learning plan for parent and teacher dashboards.',
+            'created_at' => $created,
+            'updated_at' => $created,
+        ])->save();
+
+        $pastAssignment = $historical[0]['assignment'] ?? null;
+        $pastDue = $historical[0]['due'] ?? $anchor->copy()->subWeeks(3);
+        $pastRange = $pastAssignment !== null
+            ? ['surah' => (int) $pastAssignment->surah_number, 'from' => (int) $pastAssignment->ayah_start, 'to' => (int) $pastAssignment->ayah_end]
+            : PlatformDemoCatalog::priorRange($definition['number']);
+
+        (new LearningPlanItem)->forceFill([
+            'learning_plan_id' => $plan->id,
+            'sort_order' => 1,
+            'origin' => 'assigned',
+            'item_status' => 'released',
+            'kind' => $pastAssignment?->kind->value ?? AssignmentKind::Practice->value,
+            'activity' => $pastAssignment?->activity ?? 'nazra',
+            'hifz_category' => $pastAssignment?->hifz_category ?? 'sabaq',
+            'surah_number' => $pastRange['surah'],
+            'ayah_start' => $pastRange['from'],
+            'ayah_end' => $pastRange['to'],
+            'repetition_target' => 1,
+            'due_on' => $pastDue->toDateString(),
+            'priority' => 'normal',
+            'instructions' => 'Opening range for this plan cycle.',
+            'teacher_assignment_id' => $pastAssignment?->id,
+            'created_at' => $created,
+            'updated_at' => $created,
+        ])->save();
+
+        $currentItem = new LearningPlanItem;
+        $currentItem->forceFill([
+            'learning_plan_id' => $plan->id,
+            'sort_order' => 2,
+            'origin' => 'assigned',
+            'item_status' => 'released',
+            'kind' => $currentAssignment->kind->value,
+            'activity' => $currentAssignment->activity,
+            'hifz_category' => $currentAssignment->hifz_category,
+            'surah_number' => $range['surah'],
+            'ayah_start' => $range['from'],
+            'ayah_end' => $range['to'],
+            'repetition_target' => $currentAssignment->repetition_target,
+            'due_on' => $due->toDateString(),
+            'priority' => 'normal',
+            'instructions' => 'Current focus for '.$student->name.'.',
+            'teacher_assignment_id' => $currentAssignment->id,
+            'created_at' => $created,
+            'updated_at' => $created,
+        ])->save();
+
+        $nextRange = PlatformDemoCatalog::practiceRange($definition['number'] + 1);
+        (new LearningPlanItem)->forceFill([
+            'learning_plan_id' => $plan->id,
+            'sort_order' => 3,
+            'origin' => 'assigned',
+            'item_status' => 'planned',
+            'kind' => $activity === 'nazra' ? AssignmentKind::Practice->value : AssignmentKind::AiRecite->value,
+            'activity' => $activity,
+            'hifz_category' => PlatformDemoCatalog::hifzCategory($activity),
+            'surah_number' => $nextRange['surah'],
+            'ayah_start' => $nextRange['from'],
+            'ayah_end' => $nextRange['to'],
+            'repetition_target' => $activity === 'hifz' ? 5 : 1,
+            'due_on' => $anchor->copy()->addWeeks(2)->toDateString(),
+            'priority' => 'normal',
+            'instructions' => 'Next step after the current range is confirmed.',
+            'created_at' => $created,
+            'updated_at' => $created,
+        ])->save();
+
+        $currentAssignment->forceFill([
+            'learning_plan_id' => $plan->id,
+            'learning_plan_item_id' => $currentItem->id,
+        ])->save();
+        $currentRecipient->touch();
+    }
+
+    /**
+     * @param  array{number: int, email: string}  $definition
+     * @param  array{surah: int, from: int, to: int}  $range
+     */
+    private function seedMurajaahPlan(User $student, array $definition, array $range, Carbon $anchor): void
+    {
+        $identified = $anchor->copy()->subDays(18)->setTime(19, 30);
+        $assessment = new MemorisationAssessment;
+        $assessment->forceFill([
+            'user_id' => $student->id,
+            'surah_number' => $range['surah'],
+            'start_ayah' => $range['from'],
+            'end_ayah' => $range['to'],
+            'assessment_type' => 'memorisation_detection',
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'idempotency_key' => 'platform-demo-plan:'.$definition['email'],
+            'surah_name' => QuranMetadata::name($range['surah']),
+            'overall_accuracy' => 68 + ($definition['number'] % 5) * 4,
+            'friendly_summary' => 'Muraja\'ah plan for '.$this->rangeLabel($range).'.',
+            'created_at' => $identified,
+            'updated_at' => $identified,
+        ])->save();
+
+        (new MemorisationPracticePlan)->forceFill([
+            'user_id' => $student->id,
+            'assessment_id' => $assessment->id,
+            'title' => 'Revisit '.$this->rangeLabel($range),
+            'explanation' => 'Synthetic muraja\'ah plan tied to recent practice.',
+            'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+            'surah_number' => $range['surah'],
+            'start_ayah' => $range['from'],
+            'end_ayah' => $range['to'],
+            'recommended_review_at' => $anchor->copy()->addDays(3),
+            'accepted_at' => $identified,
+            'created_at' => $identified,
+            'updated_at' => $identified,
+        ])->save();
+    }
+
+    /**
+     * @param  array{number: int, key: string, group: string}  $definition
+     * @param  array{surah: int, from: int, to: int}  $range
+     * @return array{0: TeacherAssignment, 1: TeacherAssignmentRecipient}
+     */
+    private function storeAssignment(
+        User $teacher,
+        User $student,
+        array $definition,
+        array $range,
+        string $activity,
+        AssignmentStatus $status,
+        Carbon $created,
+        Carbon $due,
+        ?Carbon $started = null,
+        ?Carbon $studentCompleted = null,
+        ?Carbon $completed = null,
+        ?string $feedback = null,
+    ): array {
         $assignment = new TeacherAssignment;
         $assignment->forceFill([
             'teacher_id' => $teacher->id,
             'organisation_id' => $this->organisation->id,
             'learning_group_id' => $this->groups[$definition['group']]->id,
             'kind' => $activity === 'nazra' ? AssignmentKind::Practice : AssignmentKind::AiRecite,
-            'hifz_category' => $activity === 'revision' ? 'manzil' : 'sabaq',
+            'hifz_category' => PlatformDemoCatalog::hifzCategory($activity),
             'activity' => $activity,
             'recording_required' => false,
             'surah_number' => $range['surah'],
@@ -253,7 +536,7 @@ class PlatformDemoSeeder extends Seeder
             'ayah_end' => $range['to'],
             'repetition_target' => $activity === 'hifz' ? 5 : 1,
             'due_at' => $due,
-            'feedback' => $scenario === 4 ? 'Reviewed in class. The range is ready to move on.' : null,
+            'feedback' => $feedback,
             'priority' => 'normal',
             'created_at' => $created,
             'updated_at' => $created,
@@ -271,79 +554,55 @@ class PlatformDemoSeeder extends Seeder
             'updated_at' => $completed ?? $studentCompleted ?? $started ?? $created,
         ])->save();
 
-        $note = new TeacherNote;
-        $note->forceFill([
-            'teacher_id' => $teacher->id,
-            'student_id' => $student->id,
-            'organisation_id' => $this->organisation->id,
-            'teacher_assignment_id' => $assignment->id,
-            'kind' => TeacherNoteKind::Feedback,
-            'body' => 'Synthetic demo feedback for '.$student->name.'. Keep the same short range and repeat it calmly.',
-            'created_at' => $created->copy()->addDays(2),
-            'updated_at' => $created->copy()->addDays(2),
-        ])->save();
+        return [$assignment, $recipient];
+    }
 
-        if ($definition['number'] <= 5) {
-            $plan = new LearningPlan;
-            $plan->forceFill([
+    private function seedParentConversations(): void
+    {
+        $threads = [
+            ['parent' => 'p01', 'child' => 1, 'parent_body' => 'Salaam — how is Adam doing on the current Al-Fatiha range?', 'teacher_body' => 'He is steady. One more calm repetition at home this week would help.'],
+            ['parent' => 'p01', 'child' => 2, 'parent_body' => 'Should Ayah practise the overdue task before the new one?', 'teacher_body' => 'Yes — finish the overdue nazra first, then move to the next ayahs.'],
+            ['parent' => 'p03', 'child' => 6, 'parent_body' => 'Khadija asked about muraja\'ah at home. Any suggested rhythm?', 'teacher_body' => 'Ten quiet minutes after maghrib on the plan range is enough for now.'],
+        ];
+
+        foreach ($threads as $thread) {
+            $parent = $this->parents[$thread['parent']];
+            $student = $this->students[$thread['child']];
+            $group = collect(PlatformDemoCatalog::students())->firstWhere('number', $thread['child'])['group'] ?? 'dawn';
+            $teacher = $this->primaryTeacher($group);
+            $at = $this->demoAnchor->copy()->subDays(4)->setTime(20, 15);
+
+            (new TeacherNote)->forceFill([
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
+                'parent_user_id' => $parent->id,
                 'organisation_id' => $this->organisation->id,
-                'title' => 'Four-week '.$activity.' target',
-                'cadence' => 'weekly',
-                'status' => LearningPlanStatus::Active,
-                'starts_on' => '2026-10-06',
-                'ends_on' => '2026-11-02',
-                'student_goal' => 'Finish Al-Fatiha with a steady revision habit.',
-                'notes' => 'Demo learning target. No live classroom data.',
-                'created_at' => $created,
-                'updated_at' => $created,
+                'kind' => TeacherNoteKind::ParentMessage,
+                'body' => $thread['parent_body'],
+                'created_at' => $at,
+                'updated_at' => $at,
             ])->save();
 
-            (new LearningPlanItem)->forceFill([
-                'learning_plan_id' => $plan->id,
-                'sort_order' => 1,
-                'origin' => 'assigned',
-                'item_status' => 'released',
-                'kind' => $assignment->kind->value,
-                'hifz_category' => $assignment->hifz_category,
-                'surah_number' => $range['surah'],
-                'ayah_start' => $range['from'],
-                'ayah_end' => $range['to'],
-                'repetition_target' => $assignment->repetition_target,
-                'due_on' => $due->toDateString(),
-                'priority' => 'normal',
-                'instructions' => 'Synthetic target for the demo classroom.',
-                'teacher_assignment_id' => $assignment->id,
-                'created_at' => $created,
-                'updated_at' => $created,
-            ])->save();
-
-            $assignment->forceFill(['learning_plan_id' => $plan->id])->save();
-        }
-
-        if ($definition['number'] % 3 === 1) {
-            (new RevisionRecommendation)->forceFill([
+            (new TeacherNote)->forceFill([
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
+                'parent_user_id' => $parent->id,
                 'organisation_id' => $this->organisation->id,
-                'status' => RevisionRecommendationStatus::Pending,
-                'activity' => 'revision',
-                'surah_number' => 112,
-                'ayah_start' => 1,
-                'ayah_end' => 4,
-                'due_on' => '2026-11-20',
-                'instructions' => 'Synthetic revision suggestion.',
-                'reason_code' => 'demo_weak_range',
-                'reason' => 'Recent practice on this short surah was uneven.',
-                'evidence' => ['source' => 'platform-demo', 'synthetic' => true],
-                'source_key' => 'platform-demo:'.$definition['key'],
-                'created_at' => $created,
-                'updated_at' => $created,
+                'kind' => TeacherNoteKind::TeacherMessage,
+                'body' => $thread['teacher_body'],
+                'read_at' => $at->copy()->addHours(6),
+                'created_at' => $at->copy()->addHours(5),
+                'updated_at' => $at->copy()->addHours(6),
             ])->save();
         }
+    }
 
-        $this->seedHistory($student, $definition, $range);
+    /**
+     * @param  array{surah: int, from: int, to: int}  $range
+     */
+    private function rangeLabel(array $range): string
+    {
+        return QuranMetadata::name($range['surah']).' '.$range['from'].'–'.$range['to'];
     }
 
     /**
@@ -352,21 +611,27 @@ class PlatformDemoSeeder extends Seeder
      */
     private function seedHistory(User $student, array $definition, array $range): void
     {
-        $sessions = $definition['number'] === 15 ? 1 : 4;
-        for ($week = 0; $week < $sessions; $week++) {
-            $at = Carbon::parse('2026-10-06 18:00:00')->addWeeks($week)->addHours($definition['number'] % 3);
-            $mastery = max(40, min(96, 55 + ($definition['number'] % 7) * 4 + $week * 6));
+        $historyStart = now()->copy()->startOfDay()->subWeeks(5);
+        $ayahs = range($range['from'], $range['to']);
+        foreach ($ayahs as $offset => $ayah) {
+            $at = $historyStart->copy()->addDays($offset * 3)->setTime(17 + ($definition['number'] % 2), 0);
+            $mastery = max(45, min(96, 58 + ($definition['number'] % 6) * 3 + $offset * 5));
             (new MemorisationProgress)->forceFill([
                 'user_id' => $student->id,
                 'surah_number' => $range['surah'],
-                'ayah_number' => $week + 1,
+                'ayah_number' => $ayah,
                 'status' => $mastery >= 80 ? 'memorised' : 'learning',
                 'mastery_level' => $mastery,
-                'repetitions' => 2 + $week,
+                'repetitions' => 2 + $offset,
                 'completed_at' => $mastery >= 80 ? $at : null,
                 'created_at' => $at,
                 'updated_at' => $at,
             ])->save();
+        }
+
+        $sessions = $definition['number'] === 15 ? 1 : 4;
+        for ($week = 0; $week < $sessions; $week++) {
+            $at = $historyStart->copy()->addWeeks($week)->setTime(18 + ($definition['number'] % 3), 0);
 
             $session = new UserSession;
             $session->forceFill([
@@ -394,7 +659,7 @@ class PlatformDemoSeeder extends Seeder
             return;
         }
 
-        $at = Carbon::parse('2026-10-20 19:00:00')->addDays($definition['number']);
+        $at = now()->copy()->subDays(10 + ($definition['number'] % 6))->setTime(19, 0);
         $accuracy = 62 + (($definition['number'] * 5) % 31);
         $assessment = new MemorisationAssessment;
         $assessment->forceFill([
@@ -480,10 +745,11 @@ class PlatformDemoSeeder extends Seeder
             $rows[] = ['Student', $student['name'], $student['email']];
         }
         foreach (PlatformDemoCatalog::parents() as $parent) {
-            $rows[] = ['Parent', $parent['name'], $parent['email'].' (children '.implode(', ', $parent['children']).')'];
+            $rows[] = ['Parent', $parent['name'], $parent['email'].' → '.PlatformDemoCatalog::parentChildrenNames($parent)];
         }
-        $command->table(['Role', 'Name', 'Email'], $rows);
-        $command->line('Scenarios: every student has a teacher and an approved guardian. Students 1 and 15 have two guardians. Students 1, 2, 6 and 11 have two circles. Assignments cover nazra, hifz, tajweed and revision, including upcoming, in progress, date-overdue, submitted and completed work.');
-        $command->line('No audio files were created.');
+        $command->table(['Role', 'Name', 'Sign-in'], $rows);
+        $command->line('Password: set MUTQIN_PLATFORM_DEMO_PASSWORD locally (see docs/TESTER_GUIDE.md). It is never printed here.');
+        $command->line('Try Hana Yusuf (/teacher), Adam Nasser (/dashboard), Sara Qadir (/parent). Data dates are anchored to today so overdue, in-progress and recent practice show on every dashboard.');
+        $command->line('Scenarios: every student has a teacher and an approved guardian. Students 1 and 15 have two guardians. Students 1, 2, 6 and 11 have two circles. Each student has current work, completed history, and most have a three-step learning plan. Parent threads exist for Sara Qadir and Amina Saleh. No audio files were created.');
     }
 }

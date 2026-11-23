@@ -1,12 +1,12 @@
 <template>
   <aside :class="shellClass" :style="navStyle">
-    <nav class="teacher-nav nav nav-pills flex-column gap-1 p-2 border rounded-3 bg-body" :aria-label="navLabel">
+    <nav class="teacher-nav nav nav-pills flex-column gap-1" :aria-label="navLabel">
       <button
-        v-for="item in items"
+        v-for="item in visibleItems"
         :key="`${variant}-${item.id}`"
         type="button"
         class="teacher-nav__link nav-link d-flex align-items-center gap-2 text-start"
-        :class="{ 'is-active': isActive(item.id), active: isActive(item.id) }"
+        :class="{ 'is-active': isActive(item.id) }"
         :aria-current="isActive(item.id) ? 'page' : null"
         @click="$emit('select', item.id)"
       >
@@ -17,12 +17,12 @@
       <button
         type="button"
         class="teacher-nav__link teacher-nav__account nav-link d-flex align-items-center gap-2 text-start"
-        :class="{ 'is-active': isActive('settings'), active: isActive('settings') }"
+        :class="{ 'is-active': isActive('settings') }"
         :aria-current="isActive('settings') ? 'page' : null"
         @click="$emit('select', 'settings')"
       >
         <i class="bi bi-person" aria-hidden="true"></i>
-        <span>{{ t(settingsLabelKey) }}</span>
+        <span class="teacher-nav__label">{{ t(settingsLabelKey) }}</span>
       </button>
     </nav>
   </aside>
@@ -57,9 +57,13 @@ export default {
         ? 'teacher-nav-shell teacher-nav-shell--desktop dash-reveal'
         : 'teacher-nav-shell teacher-nav-shell--mobile'
     },
+    visibleItems() {
+      if (this.variant !== 'mobile') return this.items
+      return this.items.filter((item) => item.mobile !== false)
+    },
     navStyle() {
       if (this.variant !== 'mobile') return null
-      return { '--teacher-nav-count': String(this.items.length + 1) }
+      return { '--teacher-nav-count': String(this.visibleItems.length + 1) }
     },
   },
   methods: {
@@ -76,6 +80,7 @@ export default {
     countTitle(id) {
       const n = this.countFor(id)
       if (id === 'reviews') return this.t('teacher.nav_reviews_count', { n })
+      if (id === 'assignments') return this.t('teacher.nav_overdue_count', { n })
       return this.t('teacher.nav_count', { n })
     },
     isActive(id) {

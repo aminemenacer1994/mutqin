@@ -1,49 +1,49 @@
 <template>
-  <section class="teacher-stack">
-    <header class="teacher-page-header">
+  <section class="parent-home">
+    <header class="parent-page">
+      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
       <div>
-        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
-        <h1 class="teacher-page-header__title">{{ t('parent.nav_children') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('parent.children_hint') }}</p>
+        <h1>{{ t('parent.nav_children') }}</h1>
+        <p>{{ t('parent.children_hint') }}</p>
       </div>
-      <span class="teacher-page-count">{{ children.length }}</span>
     </header>
-    <ParentChildFilter :children="allChildren" :selected-id="selectedId" @select="$emit('select-child', $event)" />
-    <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
-    <div v-else class="d-grid gap-3">
-      <article v-for="child in children" :key="child.id" class="teacher-pane">
-        <header class="teacher-pane__head">
-          <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ initial(child.name) }}</span>
-          <div class="teacher-pane__titles">
-            <h2 class="teacher-pane__title mb-0">{{ child.name }}</h2>
-            <p class="teacher-pane__hint mb-0">{{ teacherLine(child) }}</p>
-          </div>
-        </header>
-        <div class="teacher-pane__body d-grid gap-3">
-          <div>
-            <p class="teacher-meta mb-1">{{ t('parent.learning_area') }}</p>
-            <p v-if="!child.permissions?.progress" class="mb-0">{{ t('parent.permission_progress') }}</p>
-            <p v-else class="mb-0">{{ learningLabel(t, child.learning) || t('parent.learning_empty') }}</p>
-          </div>
-          <div>
-            <p class="teacher-meta mb-1">{{ t('parent.recent_progress') }}</p>
-            <p v-if="!child.permissions?.progress" class="mb-0">{{ t('parent.permission_progress') }}</p>
-            <p v-else class="mb-0">{{ progressLine(child) }}</p>
-          </div>
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-learning', child.id)">{{ t('parent.open_learning') }}</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-progress', child.id)">{{ t('parent.open_progress') }}</button>
-            <button type="button" class="btn btn-primary btn-sm" @click="$emit('open-messages', child.id)">{{ t('parent.open_teacher') }}</button>
-          </div>
-        </div>
-      </article>
+    <div class="parent-filters">
+      <ParentChildFilter :children="allChildren" :selected-id="selectedId" @select="$emit('select-child', $event)" />
     </div>
+    <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
+    <ul v-else class="parent-child-grid">
+      <li v-for="(child, index) in children" :key="child.id" class="parent-child-card" :style="{ '--parent-i': index }">
+        <button type="button" class="parent-child-card__main" @click="$emit('open-profile', child.id)">
+          <span class="parent-avatar" aria-hidden="true">{{ initial(child.name) }}</span>
+          <span class="parent-child-card__copy">
+            <strong>{{ child.name }}</strong>
+            <small>{{ teacherLine(child) }}</small>
+            <span class="parent-status is-quiet">
+              <i class="bi bi-book" aria-hidden="true"></i>
+              {{ learningLabel(t, child.learning) || t('parent.learning_empty') }}
+            </span>
+          </span>
+          <i class="bi bi-chevron-right parent-child-card__go" aria-hidden="true"></i>
+        </button>
+        <div class="parent-child-card__actions">
+          <button type="button" @click="$emit('open-learning', child.id)">
+            <i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.home_homework') }}
+          </button>
+          <button type="button" @click="$emit('open-progress', child.id)">
+            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ t('parent.home_progress') }}
+          </button>
+          <button type="button" @click="$emit('open-messages', child.id)">
+            <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_message') }}
+          </button>
+        </div>
+      </li>
+    </ul>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { formatWhen, initial, learningLabel } from '../../scripts/parent/dashboard'
+import { initial, learningLabel } from '../../scripts/parent/dashboard'
 import ParentChildFilter from './ParentChildFilter.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 
@@ -56,20 +56,12 @@ export default {
     allChildren: { type: Array, default: () => [] },
     selectedId: { type: Number, default: null },
   },
-  emits: ['select-child', 'open-learning', 'open-progress', 'open-messages'],
+  emits: ['select-child', 'open-learning', 'open-progress', 'open-profile', 'open-messages'],
   methods: {
     initial,
     learningLabel,
     teacherLine(child) {
-      const names = (child.teachers || []).map((teacher) => teacher.name)
-      return names.length ? names.join(', ') : this.t('parent.teachers_empty')
-    },
-    progressLine(child) {
-      const recent = Number(child.progress?.recent_ayahs || 0)
-      const when = formatWhen(child.progress?.last_activity_at)
-      if (!when) return this.t('parent.progress_none')
-      if (recent === 1) return this.t('parent.progress_recent_one', { when })
-      return this.t('parent.progress_recent', { count: recent, when })
+      return child.teachers?.[0]?.name || this.t('parent.teachers_empty')
     },
   },
 }

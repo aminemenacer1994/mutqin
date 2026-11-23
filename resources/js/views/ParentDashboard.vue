@@ -26,7 +26,7 @@
             variant="desktop"
             :items="PARENT_NAV"
             :badges="navBadges"
-            :active-view="view"
+            :active-view="navView"
             nav-label-key="parent.nav_label"
             settings-label-key="parent.nav_settings"
             style="--dash-delay: 40ms"
@@ -38,17 +38,13 @@
               <ParentFamilyOverview
                 v-if="view === 'overview'"
                 :first-name="firstName"
-                :children="visibleChildren"
-                :summary="visibleSummary"
-                :homework="visibleHomework"
-                :activity="visibleActivity"
-                :feedback="visibleFeedback"
-                :selected-id="selectedChildId"
-                @select-child="selectChild"
-                @select-kpi="openKpi"
+                :children="children"
+                :homework="shell?.homework || []"
+                :message-unread="familyUnread"
                 @open-child="openChild"
                 @open-learning="openLearning"
                 @open-messages="openMessages"
+                @open-progress="openProgress"
               />
               <ParentFamilyChildren
                 v-else-if="view === 'children'"
@@ -58,23 +54,53 @@
                 @select-child="selectChild"
                 @open-learning="openLearning"
                 @open-progress="openProgress"
+                @open-profile="openProfile"
                 @open-messages="openMessages"
+              />
+              <ParentChildProfile
+                v-else-if="view === 'child'"
+                :profile="childProfile"
+                :loading="profileLoading"
+                :error="profileError"
+                @reload="loadChildProfile"
+                @back="openView('children')"
+                @open-learning="openLearning(selectedChildId)"
+                @open-progress="openProgress(selectedChildId)"
               />
               <ParentFamilyLearning
                 v-else-if="view === 'learning'"
                 :children="children"
-                :homework="visibleHomework"
+                :rows="learningRows"
                 :selected-id="selectedChildId"
                 :shared="assignmentsShared"
+                :loading="learningLoading"
+                :error="learningError"
+                :truncated="learningTruncated"
+                :filters="learningFilters"
                 @select-child="selectChild"
+                @filter="updateLearningFilters"
+                @reload="loadLearningDetail"
               />
               <ParentFamilyProgress
                 v-else-if="view === 'progress'"
                 :children="visibleChildren"
                 :all-children="children"
                 :selected-id="selectedChildId"
+                :child-id="progressChildId"
+                :shared="progressShared"
+                :payload="progressPayload"
+                :window="progressWindow"
+                :loading="progressLoading"
+                :error="progressError"
                 @select-child="selectChild"
-                @open-learning="openLearning"
+                @window="setProgressWindow"
+                @reload="loadProgressDetail"
+              />
+              <ParentFamilyReports
+                v-else-if="view === 'reports'"
+                :children="children"
+                :selected-id="selectedChildId"
+                @select-child="selectChild"
               />
               <ParentFamilyMessages
                 v-else-if="view === 'messages'"
@@ -83,6 +109,7 @@
                 :selected-id="selectedChildId"
                 :shared="messagesShared"
                 @select-child="selectChild"
+                @unread-change="messageUnread = $event"
               />
               <ParentFamilySettings
                 v-else
@@ -112,7 +139,7 @@
           variant="mobile"
           :items="PARENT_NAV"
           :badges="navBadges"
-          :active-view="view"
+          :active-view="navView"
           nav-label-key="parent.nav_label"
           settings-label-key="parent.nav_settings"
           @select="openView"
@@ -132,6 +159,8 @@ import ParentFamilyLearning from '../components/parent/ParentFamilyLearning.vue'
 import ParentFamilyProgress from '../components/parent/ParentFamilyProgress.vue'
 import ParentFamilyMessages from '../components/parent/ParentFamilyMessages.vue'
 import ParentFamilySettings from '../components/parent/ParentFamilySettings.vue'
+import ParentChildProfile from '../components/parent/ParentChildProfile.vue'
+import ParentFamilyReports from '../components/parent/ParentFamilyReports.vue'
 import { PARENT_NAV, PARENT_VIEWS } from '../scripts/parent/constants'
 import { i18nMixin } from '../mixins/i18nMixin'
 
@@ -146,6 +175,8 @@ export default {
     ParentFamilyProgress,
     ParentFamilyMessages,
     ParentFamilySettings,
+    ParentChildProfile,
+    ParentFamilyReports,
   },
   mixins: [i18nMixin],
   props: {
@@ -164,6 +195,19 @@ export default {
       actionError: '',
       inviteToken: '',
       linkCode: '',
+      learningFilters: { activity: null, status: 'all', from: '', to: '' },
+      learningRows: [],
+      learningLoading: false,
+      learningError: false,
+      progressWindow: 'month',
+      progressPayload: null,
+      progressLoading: false,
+      progressError: false,
+      childProfile: null,
+      profileLoading: false,
+      profileError: false,
+      messageUnread: null,
+      learningTruncated: false,
     }
   },
   computed: {
@@ -220,14 +264,51 @@ export default {
       if (this.selectedChildId) return Boolean(this.visibleChildren[0]?.permissions?.messages)
       return Boolean(this.shell?.summary?.messages_shared)
     },
+    familyUnread() {
+      return this.messageUnread === null
+        ? Number(this.shell?.summary?.message_unread || 0)
+        : this.messageUnread
+    },
     navBadges() {
       const count = this.selectedChildId
         ? Number(this.visibleSummary.needs_attention || 0)
         : Number(this.shell?.summary?.needs_attention || 0)
-      return count > 0 ? { learning: count } : {}
+      const unread = this.messageUnread === null
+        ? Number(this.shell?.summary?.message_unread || 0)
+        : this.messageUnread
+      const badges = {}
+      if (count > 0) badges.learning = count
+      if (unread > 0) badges.messages = unread
+      return badges
     },
     platformForms() {
       return Array.isArray(this.auth?.available_platforms) ? this.auth.available_platforms : []
+    },
+    progressShared() {
+      const child = this.selectedChildId ? this.visibleChildren[0] : null
+      return child ? Boolean(child.permissions?.progress) : this.children.some((row) => row.permissions?.progress)
+    },
+    progressChildId() {
+      return this.selectedChildId || null
+    },
+    detailChildIds() {
+      if (this.selectedChildId) return [this.selectedChildId]
+      return this.children.filter((child) => child.permissions?.assignments).map((child) => child.id)
+    },
+    navView() {
+      return this.view === 'child' ? 'children' : this.view
+    },
+  },
+  watch: {
+    view(next) {
+      if (next === 'learning') this.loadLearningDetail()
+      if (next === 'progress') this.loadProgressDetail()
+      if (next === 'child') this.loadChildProfile()
+    },
+    selectedChildId() {
+      if (this.view === 'learning') this.loadLearningDetail()
+      if (this.view === 'progress') this.loadProgressDetail()
+      if (this.view === 'child') this.loadChildProfile()
     },
   },
   mounted() {
@@ -240,7 +321,11 @@ export default {
   },
   methods: {
     openView(id) {
-      this.view = PARENT_VIEWS.includes(id) ? id : 'overview'
+      const next = PARENT_VIEWS.includes(id) ? id : 'overview'
+      if (next === 'progress' && !this.selectedChildId && this.children.length === 1) {
+        this.selectedChildId = this.children[0].id
+      }
+      this.view = next
       this.syncUrl()
     },
     selectChild(id) {
@@ -249,23 +334,96 @@ export default {
     },
     openChild(id) {
       this.selectedChildId = id
-      this.openView('children')
+      this.openView('child')
     },
     openLearning(id) {
       this.selectedChildId = id
       this.openView('learning')
     },
     openProgress(id) {
-      this.selectedChildId = id
+      this.selectedChildId = id || this.selectedChildId || (this.children.length === 1 ? this.children[0].id : null)
       this.openView('progress')
     },
     openMessages(id) {
       this.selectedChildId = id
       this.openView('messages')
     },
-    openKpi(key) {
-      if (key === 'children') this.openView('children')
-      else if (key === 'attention' || key === 'active' || key === 'completed') this.openView('learning')
+    openProfile(id) {
+      this.selectedChildId = id
+      this.openView('child')
+    },
+    updateLearningFilters(filters) {
+      this.learningFilters = filters
+      this.loadLearningDetail()
+    },
+    setProgressWindow(window) {
+      this.progressWindow = window
+      this.loadProgressDetail()
+    },
+    async loadLearningDetail() {
+      const ids = this.detailChildIds
+      if (!ids.length || this.view !== 'learning') return
+      this.learningLoading = true
+      this.learningError = false
+      try {
+        const rows = []
+        let truncated = false
+        for (const id of ids) {
+          const { data } = await axios.get(`${this.auth.api_url}/children/${id}/assignments`, {
+            params: {
+              activity: this.learningFilters.activity || undefined,
+              status: this.learningFilters.status,
+              from: this.learningFilters.from || undefined,
+              to: this.learningFilters.to || undefined,
+            },
+            headers: { Accept: 'application/json' },
+          })
+          rows.push(...(data.assignments || []))
+          truncated = truncated || Boolean(data.truncated)
+        }
+        this.learningRows = rows
+        this.learningTruncated = truncated
+      } catch {
+        this.learningError = true
+        this.learningRows = []
+      } finally {
+        this.learningLoading = false
+      }
+    },
+    async loadProgressDetail() {
+      const id = this.progressChildId
+      if (!id || this.view !== 'progress') return
+      this.progressLoading = true
+      this.progressError = false
+      try {
+        const { data } = await axios.get(`${this.auth.api_url}/children/${id}/progress`, {
+          params: { window: this.progressWindow },
+          headers: { Accept: 'application/json' },
+        })
+        this.progressPayload = data
+      } catch {
+        this.progressError = true
+        this.progressPayload = null
+      } finally {
+        this.progressLoading = false
+      }
+    },
+    async loadChildProfile() {
+      const id = this.selectedChildId
+      if (!id || this.view !== 'child') return
+      this.profileLoading = true
+      this.profileError = false
+      try {
+        const { data } = await axios.get(`${this.auth.api_url}/children/${id}/profile`, {
+          headers: { Accept: 'application/json' },
+        })
+        this.childProfile = data
+      } catch {
+        this.profileError = true
+        this.childProfile = null
+      } finally {
+        this.profileLoading = false
+      }
     },
     syncUrl() {
       const url = new URL(window.location.href)
@@ -317,10 +475,14 @@ export default {
           headers: { Accept: 'application/json' },
         })
         this.shell = data
+        this.messageUnread = null
         if (this.selectedChildId && !this.children.some((child) => child.id === this.selectedChildId)) {
           this.selectedChildId = null
           this.syncUrl()
         }
+        if (this.view === 'learning') this.loadLearningDetail()
+        if (this.view === 'progress') this.loadProgressDetail()
+        if (this.view === 'child') this.loadChildProfile()
       } catch {
         this.error = true
       } finally {

@@ -8,6 +8,7 @@ enum TeacherNoteKind: string
     case Feedback = 'feedback';
     case TeacherMessage = 'message_teacher';
     case StudentMessage = 'message_student';
+    case ParentMessage = 'message_parent';
 
     /**
      * @return list<string>

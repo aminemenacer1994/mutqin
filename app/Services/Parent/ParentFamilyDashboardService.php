@@ -18,6 +18,7 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Support\PlatformContextResolver;
 use App\Support\QuranMetadata;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -119,12 +120,13 @@ class ParentFamilyDashboardService
                 'assignments_shared' => $assignmentIds !== [],
                 'progress_shared' => $progressIds !== [],
                 'messages_shared' => $messageIds !== [],
+                'message_unread' => $this->unreadMessages($parent, $messageIds),
             ],
             'homework' => $homework->all(),
             'activity' => $activity,
             'feedback' => $feedback->all(),
             'platforms' => PlatformContextResolver::routeUrls($parent),
-            'phase' => 'dashboard',
+            'phase' => 'learning',
         ];
     }
 
@@ -237,17 +239,38 @@ class ParentFamilyDashboardService
 
         return MemorisationProgress::query()
             ->whereIn('user_id', $studentIds)
-            ->orderByDesc('created_at')
-            ->get(['user_id', 'created_at'])
-            ->groupBy(fn (MemorisationProgress $row) => (int) $row->user_id)
-            ->map(function (Collection $rows) use ($since) {
-                $latest = $rows->first();
+            ->groupBy('user_id')
+            ->selectRaw(
+                'user_id, MAX(created_at) as last_activity_at, SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_ayahs',
+                [$since],
+            )
+            ->get()
+            ->mapWithKeys(function (MemorisationProgress $row) {
+                $latest = $row->getAttribute('last_activity_at');
 
-                return [
-                    'recent_ayahs' => $rows->filter(fn (MemorisationProgress $row) => $row->created_at !== null && $row->created_at->greaterThanOrEqualTo($since))->count(),
-                    'last_activity_at' => $latest?->created_at?->toIso8601String(),
-                ];
+                return [(int) $row->user_id => [
+                    'recent_ayahs' => (int) $row->getAttribute('recent_ayahs'),
+                    'last_activity_at' => $latest ? Carbon::parse($latest)->toIso8601String() : null,
+                ]];
             });
+    }
+
+    /**
+     * @param  list<int>  $studentIds
+     */
+    private function unreadMessages(User $parent, array $studentIds): int
+    {
+        if ($studentIds === []) {
+            return 0;
+        }
+
+        return TeacherNote::query()
+            ->where('parent_user_id', $parent->id)
+            ->whereIn('student_id', $studentIds)
+            ->where('kind', TeacherNoteKind::TeacherMessage->value)
+            ->whereNotNull('parent_user_id')
+            ->whereNull('read_at')
+            ->count();
     }
 
     /**

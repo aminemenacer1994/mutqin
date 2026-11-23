@@ -75,11 +75,14 @@ Practice accounts `practice01`–`practice15` use password **`PracticeNN!`** (fo
 
 ### Parent platform (local only)
 
-Requires `MUTQIN_PARENT_FEATURES_ENABLED=true` and an existing child account `menacer72@gmail.com` in your database. Create the guardian with:
+Requires `MUTQIN_PARENT_FEATURES_ENABLED=true` and an existing child account `menacer72@gmail.com` in your database. Seed the organisation network first so teachers, assignments, and practice exist, then create the guardian:
 
 ```bash
+php artisan mutqin:seed-organisation-network   # or: php artisan db:seed
 php artisan mutqin:seed-parent-demo
 ```
+
+`php artisan db:seed` already enrols configured anchor students (`menacer72@gmail.com` by default) and plants classroom data, parent reports, and sample parent–teacher messages after the parent demo seeder runs.
 
 | Role | Email | Password | Notes |
 |---|---|---|---|
@@ -90,11 +93,39 @@ Do **not** sign in to the parent workspace with `menacer72@gmail.com` unless you
 
 A teacher who already teaches a student can open that student and use **Parents & Guardians** to send an invitation. The link only works for the invited email, expires after 7 days, and can be resent or revoked. The child stays hidden until the invitation is accepted. A parent can also create a 30-minute single-use code from **Settings**; the child enters it at `/parent/link-code` while signed in. Teachers cannot approve a guardian link by themselves.
 
-The parent home at `/parent` is a family overview: linked children, active and completed homework, overdue work, recent practice, and teacher feedback. Use the sidebar for My Children, Learning & Homework, Progress, Messages, and Settings. Messages shows teacher feedback only; there is no inbox yet. Counts come from the linked children’s real assignments and practice, and a child is omitted when that guardian is not approved.
+The parent home at `/parent` is a family overview: linked children, homework that needs attention, recent practice, and teacher feedback. The desktop sidebar has Overview, My Children, Homework, Progress, Reports, Messages, AI Learning Assistant, and Settings. On a phone the bottom bar keeps Overview, Children, Homework, Progress, Messages, and Settings. Reports and the assistant stay on the overview and on each child profile so the bar does not clip. Counts come from the linked children’s real assignments and practice, and a child is omitted when that guardian is not approved.
+
+**Learning & Homework** and **Progress** load read-only detail from `/api/parent/children/{id}/assignments`, `/progress`, and `/profile`. Guardians can filter homework by category, status and date range, expand a task for instructions and completion history, and see AI word-match separately from teacher-reviewed results. Recordings appear only when retention policy and guardian progress permission allow them.
+
+**Messages** lets an approved guardian write to a teacher who currently teaches that child. The thread is stored with the existing teacher notes and stays out of the student’s own conversation. Teachers see the parent’s name and the student on the student profile Messages tab. Unread counts and sent/read state are on each thread. A parent can report a message; the report is audited and the teacher is notified without the message text. Revoking the link, removing messaging permission, or reassigning the teacher closes the thread.
+
+Parents choose notification preferences under **Settings**. New homework, deadlines, teacher feedback, teacher replies, and learning updates are on by default. The weekly progress summary is off until the parent turns it on. Notification titles and bodies do not include the child’s name or the passage. Deadline reminders run with `php artisan mutqin:notify-parent-deadlines`. Weekly summaries run with `php artisan mutqin:notify-parent-weekly-summaries`.
+
+The unread badge on Messages comes from the family overview, so opening the home page does not load the inbox twice. A long conversation shows the latest 40 messages, with **Load earlier messages** for the rest. Homework keeps overdue tasks and the latest work; a note appears when older tasks are outside that window.
+
+**AI Learning Assistant** answers suggested or typed questions from homework, progress, plans, and teacher-visible feedback for the selected child or the whole family. It does not copy the question into the answer, does not read private teacher notes or recordings, and does not treat a wording check as a Tajweed grade. The local cap is 20 questions per parent per UTC day.
+
+**Reports** are weekly and monthly snapshots. The family list keeps each child’s homework and practice counts separate and does not average scores. Download saves a printable HTML file; the app does not create a PDF. New-report notices stay off until **Settings → New learning reports** is turned on. Prepare them locally with:
+
+```bash
+php artisan mutqin:generate-parent-reports --sync --cadence=week
+php artisan mutqin:generate-parent-reports --sync --cadence=month
+```
+
+The scheduler runs those same commands, with `--sync`, on Mondays at 08:30 UTC and on the 1st at 08:45 UTC. It writes the snapshots in the scheduler process, so a queue worker is not required. A second run for the same child and period updates the snapshot instead of adding another row.
+
+**Beta scenarios for a teacher, a parent, and a student**
+
+1. Teacher opens a student and invites a guardian. The invited email can accept. A different account cannot. An expired or revoked invitation does not reveal the child.
+2. Two approved guardians on one child each see only the permissions on their own link.
+3. Parent opens Homework, Progress, Messages, the assistant, and Reports for an approved child. The same parent receives not found for another family’s child, a revoked link, or a download of that child’s old report.
+4. Student completes or leaves a task. The parent’s homework list and the next report use that status. The parent cannot edit the student’s work.
+5. Assistant answer for overdue homework names only that child’s shared tasks. A private teacher note does not appear. After the daily cap, the assistant refuses another question.
+6. Use **Send Feedback** in the account menu. That is the existing feedback form (`/api/feedback`) and is the beta feedback channel. Do not include a child’s full record in the message.
 
 ### Interconnected platform demo (local only)
 
-This is separate from `php artisan db:seed`. It creates 5 teachers, 15 students and 8 parents with assignments, plans, revision suggestions and several weeks of synthetic progress. It refuses to run in production and will not replace an account that lacks the platform-demo marker.
+This is separate from `php artisan db:seed`. It creates 5 teachers, 15 students and 8 parents with current and completed assignments, three-step learning plans, muraja'ah plans, revision suggestions, sample parent–teacher threads, and several weeks of synthetic progress (dates anchor to today). It refuses to run in production and will not replace an account that lacks the platform-demo marker.
 
 ```bash
 # Set a local password first. The command never prints it.
@@ -102,7 +133,40 @@ This is separate from `php artisan db:seed`. It creates 5 teachers, 15 students 
 php artisan mutqin:seed-platform-demo
 ```
 
-Accounts use `platform.demo.teacher.01@mutqin.test` through `05`, `platform.demo.student.01@mutqin.test` through `15`, and `platform.demo.parent.01@mutqin.test` through `08`. Sign in with `MUTQIN_PLATFORM_DEMO_PASSWORD`. Teachers open `/teacher`, students open `/dashboard`, and parents open `/parent`.
+Use the **same password** for every platform-demo account: your local `MUTQIN_PLATFORM_DEMO_PASSWORD` (for many developers this is `PlatformDemo1!` in `.env`). The seeder prints **names and emails only**, not the password.
+
+| Role | Name | Email | Where to open |
+|---|---|---|---|
+| Teacher | Hana Yusuf | `platform.demo.teacher.01@mutqin.test` | `/teacher` — overview, students, assignments, reviews |
+| Teacher | Bilal Karim | `platform.demo.teacher.02@mutqin.test` | `/teacher` |
+| Teacher | Maryam Noor | `platform.demo.teacher.03@mutqin.test` | `/teacher` |
+| Teacher | Yusuf Adeel | `platform.demo.teacher.04@mutqin.test` | `/teacher` |
+| Teacher | Layla Farid | `platform.demo.teacher.05@mutqin.test` | `/teacher` |
+| Student | Adam Nasser | `platform.demo.student.01@mutqin.test` | `/dashboard` — practice history, assignments |
+| Student | Ayah Malik | `platform.demo.student.02@mutqin.test` | `/dashboard` |
+| Student | Yusuf Hussein | `platform.demo.student.03@mutqin.test` | `/dashboard` |
+| Student | Fatima Qadir | `platform.demo.student.04@mutqin.test` | `/dashboard` |
+| Student | Ibrahim Adel | `platform.demo.student.05@mutqin.test` | `/dashboard` |
+| Student | Khadija Saleh | `platform.demo.student.06@mutqin.test` | `/dashboard` |
+| Student | Omar Amin | `platform.demo.student.07@mutqin.test` | `/dashboard` |
+| Student | Maryam Rashid | `platform.demo.student.08@mutqin.test` | `/dashboard` |
+| Student | Hassan Tariq | `platform.demo.student.09@mutqin.test` | `/dashboard` |
+| Student | Zainab Nabil | `platform.demo.student.10@mutqin.test` | `/dashboard` |
+| Student | Hamza Suleiman | `platform.demo.student.11@mutqin.test` | `/dashboard` |
+| Student | Hana Farid | `platform.demo.student.12@mutqin.test` | `/dashboard` |
+| Student | Ismail Jamil | `platform.demo.student.13@mutqin.test` | `/dashboard` |
+| Student | Aisha Nur | `platform.demo.student.14@mutqin.test` | `/dashboard` |
+| Student | Anas Khalil | `platform.demo.student.15@mutqin.test` | `/dashboard` |
+| Parent | Sara Qadir | `platform.demo.parent.01@mutqin.test` | `/parent` — children: Adam, Ayah, Yusuf |
+| Parent | Omar Nabil | `platform.demo.parent.02@mutqin.test` | `/parent` — Fatima, Ibrahim |
+| Parent | Amina Saleh | `platform.demo.parent.03@mutqin.test` | `/parent` — Khadija, Omar, Maryam |
+| Parent | Hassan Idris | `platform.demo.parent.04@mutqin.test` | `/parent` — Hassan, Zainab |
+| Parent | Fatima Zahra | `platform.demo.parent.05@mutqin.test` | `/parent` — Hamza, Hana |
+| Parent | Ibrahim Sami | `platform.demo.parent.06@mutqin.test` | `/parent` — Ismail, Aisha, Anas |
+| Parent | Khadija Harun | `platform.demo.parent.07@mutqin.test` | `/parent` — Adam, Khadija (two guardians on Adam) |
+| Parent | Zayd Noor | `platform.demo.parent.08@mutqin.test` | `/parent` — Zainab, Anas |
+
+**What you should see after seeding:** teacher dashboards list authorised students with mixed assignment states (upcoming, in progress, overdue, with the teacher, completed), synthetic AI word-match scores on some students, learning plans on students 1–5, and teacher feedback notes. Parent dashboards mirror approved children only, with homework counts, recent practice in the last 30 days, and feedback excerpts. Student dashboards show memorisation progress and session history spread across several weeks. Dates are anchored to **today** whenever you re-run the seeder, so lists stay current.
 
 ---
 

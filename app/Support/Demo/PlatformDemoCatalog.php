@@ -2,6 +2,8 @@
 
 namespace App\Support\Demo;
 
+use App\Support\QuranMetadata;
+
 /**
  * Closed identities for the interconnected teacher, student and parent demo.
  * Reset and seed logic may touch these emails only, and only with the ownership marker.
@@ -11,6 +13,30 @@ final class PlatformDemoCatalog
     public const MARKER_PREFIX = 'cus_mutqin_platform_demo_';
 
     public const ORGANISATION = 'Nur Platform Demo Halaqa';
+
+    /**
+     * Short surah ranges rotated across demo students.
+     *
+     * @var list<array{surah: int, from: int, to: int}>
+     */
+    public const PRACTICE_RANGES = [
+        ['surah' => 1, 'from' => 1, 'to' => 7],
+        ['surah' => 112, 'from' => 1, 'to' => 4],
+        ['surah' => 113, 'from' => 1, 'to' => 5],
+        ['surah' => 114, 'from' => 1, 'to' => 6],
+        ['surah' => 108, 'from' => 1, 'to' => 3],
+        ['surah' => 103, 'from' => 1, 'to' => 3],
+    ];
+
+    /**
+     * @var array{surah: int, from: int, to: int}
+     */
+    public const REVISION_RANGE = ['surah' => 67, 'from' => 1, 'to' => 5];
+
+    /**
+     * @var array{surah: int, from: int, to: int}
+     */
+    public const OVERDUE_RANGE = ['surah' => 106, 'from' => 1, 'to' => 4];
 
     /**
      * @return list<array{key: string, name: string, email: string}>
@@ -108,5 +134,88 @@ final class PlatformDemoCatalog
     public static function markerFor(string $email): string
     {
         return self::MARKER_PREFIX.substr(hash('sha256', strtolower($email)), 0, 24);
+    }
+
+    public static function studentName(int $number): string
+    {
+        foreach (self::students() as $student) {
+            if ($student['number'] === $number) {
+                return $student['name'];
+            }
+        }
+
+        return 'Student '.$number;
+    }
+
+    /**
+     * @param  array{children: list<int>}  $parent
+     */
+    public static function parentChildrenNames(array $parent): string
+    {
+        return implode(', ', array_map(
+            fn (int $number) => self::studentName($number),
+            $parent['children'],
+        ));
+    }
+
+    public static function activity(int $number): string
+    {
+        return ['nazra', 'hifz', 'tajweed', 'revision'][($number - 1) % 4];
+    }
+
+    public static function hifzCategory(string $activity): string
+    {
+        return match ($activity) {
+            'revision' => 'manzil',
+            'tajweed' => 'sabqi',
+            default => 'sabaq',
+        };
+    }
+
+    /**
+     * @return array{surah: int, from: int, to: int}
+     */
+    public static function practiceRange(int $number): array
+    {
+        return self::PRACTICE_RANGES[($number - 1) % count(self::PRACTICE_RANGES)];
+    }
+
+    /**
+     * @return array{surah: int, from: int, to: int}
+     */
+    public static function assignmentRange(int $number, string $activity): array
+    {
+        $base = self::practiceRange($number);
+
+        return match ($activity) {
+            'revision' => self::REVISION_RANGE,
+            'hifz' => self::extendRange($base, 2),
+            default => $base,
+        };
+    }
+
+    /**
+     * @return array{surah: int, from: int, to: int}
+     */
+    public static function priorRange(int $number): array
+    {
+        $index = (($number - 2) % count(self::PRACTICE_RANGES) + count(self::PRACTICE_RANGES)) % count(self::PRACTICE_RANGES);
+
+        return self::PRACTICE_RANGES[$index];
+    }
+
+    /**
+     * @param  array{surah: int, from: int, to: int}  $range
+     * @return array{surah: int, from: int, to: int}
+     */
+    private static function extendRange(array $range, int $extraAyahs): array
+    {
+        $max = QuranMetadata::ayahCount($range['surah']) ?? $range['to'];
+
+        return [
+            'surah' => $range['surah'],
+            'from' => $range['from'],
+            'to' => min($max, $range['to'] + $extraAyahs),
+        ];
     }
 }

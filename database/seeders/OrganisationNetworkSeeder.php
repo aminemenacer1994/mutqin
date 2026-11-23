@@ -15,6 +15,7 @@ use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\Demo\AnchorStudentLearningPlanter;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use App\Support\Demo\OrganisationNetworkCatalog;
@@ -63,6 +64,7 @@ class OrganisationNetworkSeeder extends Seeder
                 }
 
                 app(TeacherAnchorStudentEnroller::class)->enrolAll();
+                app(AnchorStudentLearningPlanter::class)->plantAll();
             });
         });
 

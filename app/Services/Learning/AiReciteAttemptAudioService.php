@@ -2,15 +2,18 @@
 
 namespace App\Services\Learning;
 
+use App\Enums\ParentGuardianPermission;
 use App\Models\AiReciteAttempt;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Parent\ParentAccessAuthorizer;
 use App\Support\AudioPrivacy;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class AiReciteAttemptAudioService
 {
@@ -239,7 +242,19 @@ class AiReciteAttemptAudioService
             ? $attempt->user
             : User::query()->find($attempt->user_id);
 
-        return $student instanceof User && $this->access->allows($viewer, $student);
+        if ($student instanceof User && $this->access->allows($viewer, $student)) {
+            return true;
+        }
+
+        if ($student instanceof User && $viewer->isParent()) {
+            $parentAccess = app(ParentAccessAuthorizer::class);
+
+            return $parentAccess->allows($viewer, $student, ParentGuardianPermission::ViewProgress->value)
+                && $this->hasPlayableAudio($attempt)
+                && AudioPrivacy::rawRecordingRetention() !== AudioPrivacy::RETENTION_NEVER;
+        }
+
+        return false;
     }
 
     public function deleteStored(?AiReciteAttempt $attempt): void
@@ -408,7 +423,7 @@ class AiReciteAttemptAudioService
         return is_string($contents) ? $contents : '';
     }
 
-    private function deletePath(\Illuminate\Contracts\Filesystem\Filesystem $disk, string $path): void
+    private function deletePath(Filesystem $disk, string $path): void
     {
         try {
             if ($disk->exists($path)) {

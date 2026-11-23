@@ -102,21 +102,26 @@
             @return-to-messages="returnToMessages"
             @unsent-change="unsent.tasks = $event"
           />
-          <TeacherStudentProfileMessages
-            v-else-if="section === 'messages'"
-            key="student-messages"
-            :profile="tabProfile"
-            :format-when="formatWhen"
-            :task-context="messageContext"
-            @open-task="openTask"
-            @open-tasks="selectTab('tasks')"
-            @open-recitations="selectTab('ai')"
-            @clear-context="messageContext = null"
-            @unsent-change="unsent.messages = $event"
-            @unread-change="messageUnread = $event"
-            @marked-read="$emit('refresh')"
-            @sent="$emit('refresh')"
-          />
+          <div v-else-if="section === 'messages'" key="student-messages" class="teacher-stack">
+            <TeacherStudentProfileMessages
+              :profile="tabProfile"
+              :format-when="formatWhen"
+              :task-context="messageContext"
+              @open-task="openTask"
+              @open-tasks="selectTab('tasks')"
+              @open-recitations="selectTab('ai')"
+              @clear-context="messageContext = null"
+              @unsent-change="unsent.messages = $event"
+              @unread-change="messageUnread = $event"
+              @marked-read="$emit('refresh')"
+              @sent="$emit('refresh')"
+            />
+            <TeacherStudentGuardianThreads
+              v-if="tabProfile && tabProfile.student && tabProfile.student.id"
+              :student-id="Number(tabProfile.student.id)"
+              :student-name="tabProfile.student.name || ''"
+            />
+          </div>
         </KeepAlive>
       </div>
     </template>
@@ -161,6 +166,7 @@ import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
+import TeacherStudentGuardianThreads from './profile/TeacherStudentGuardianThreads.vue'
 import TeacherStudentProfileGuardians from './profile/TeacherStudentProfileGuardians.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
@@ -172,6 +178,7 @@ export default {
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
+    TeacherStudentGuardianThreads,
     TeacherStudentProfileGuardians,
     TeacherWordingMatch,
   },

@@ -20,6 +20,28 @@ Schedule::command('mutqin:dispatch-revision-reminders')
     ->everyFifteenMinutes()
     ->withoutOverlapping(5);
 
+Schedule::command('mutqin:notify-parent-deadlines')
+    ->dailyAt('08:00')
+    ->timezone('UTC')
+    ->withoutOverlapping(15);
+
+Schedule::command('mutqin:notify-parent-weekly-summaries')
+    ->weeklyOn(1, '08:15')
+    ->timezone('UTC')
+    ->withoutOverlapping(30);
+
+// Generate in the scheduler process. The default queue is database, and a
+// worker is not guaranteed to be running (see the campaign-email note above).
+Schedule::command('mutqin:generate-parent-reports --cadence=week --sync')
+    ->weeklyOn(1, '08:30')
+    ->timezone('UTC')
+    ->withoutOverlapping(30);
+
+Schedule::command('mutqin:generate-parent-reports --cadence=month --sync')
+    ->monthlyOn(1, '08:45')
+    ->timezone('UTC')
+    ->withoutOverlapping(60);
+
 // Drain campaign deliveries even when no long-running queue worker is attached.
 // Each run is capped; pending rows stay claimed so a worker and this command cannot double-send.
 Schedule::command('mutqin:deliver-campaign-email')

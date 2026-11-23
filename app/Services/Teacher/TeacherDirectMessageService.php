@@ -2,13 +2,14 @@
 
 namespace App\Services\Teacher;
 
-use App\Enums\TeacherNoteKind;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\TeacherNoteKind;
 use App\Models\GroupMembership;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Support\QuranMetadata;
 use App\Support\TeacherOverviewCache;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +32,7 @@ class TeacherDirectMessageService
         $notes = TeacherNote::query()
             ->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
+            ->whereNull('parent_user_id')
             ->where(function ($query) {
                 $query->where(function ($direct) {
                     $direct->whereNull('teacher_assignment_id')
@@ -188,7 +190,7 @@ class TeacherDirectMessageService
             'task' => $assignment ? [
                 'id' => (int) $assignment->id,
                 'surah_number' => (int) $assignment->surah_number,
-                'surah_name' => \App\Support\QuranMetadata::name((int) $assignment->surah_number),
+                'surah_name' => QuranMetadata::name((int) $assignment->surah_number),
                 'ayah_start' => (int) $assignment->ayah_start,
                 'ayah_end' => (int) $assignment->ayah_end,
             ] : null,

@@ -74,7 +74,7 @@ class ParentPlatformTest extends TestCase
         $this->actingAs($teacher)
             ->getJson(route('api.parent.shell'))
             ->assertOk()
-            ->assertJsonPath('phase', 'dashboard');
+            ->assertJsonPath('phase', 'learning');
     }
 
     public function test_parent_link_flow_and_relationship_authorization(): void

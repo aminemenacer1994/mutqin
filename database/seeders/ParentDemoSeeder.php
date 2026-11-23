@@ -9,6 +9,7 @@ use App\Models\ParentStudentLink;
 use App\Models\ParentStudentLinkEvent;
 use App\Models\User;
 use App\Services\Auth\UserRoleService;
+use App\Services\Demo\AnchorStudentLearningPlanter;
 use App\Services\Parent\ParentAccessAuthorizer;
 use App\Support\Demo\ParentDemoCatalog;
 use Database\Seeders\Concerns\GuardsDemoSeeding;
@@ -36,6 +37,7 @@ class ParentDemoSeeder extends Seeder
         $child = $this->existingChild();
         $parent = $this->upsertParent();
         $this->approveLink($parent, $child);
+        app(AnchorStudentLearningPlanter::class)->plantForStudent($child);
         $this->report($parent, $child);
     }
 

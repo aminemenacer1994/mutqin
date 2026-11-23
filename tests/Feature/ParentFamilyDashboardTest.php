@@ -136,7 +136,7 @@ class ParentFamilyDashboardTest extends TestCase
         $response = $this->actingAs($parent)->getJson(route('api.parent.shell'))->assertOk();
 
         $response
-            ->assertJsonPath('phase', 'dashboard')
+            ->assertJsonPath('phase', 'learning')
             ->assertJsonPath('children_count', 1)
             ->assertJsonPath('children.0.id', $child->id)
             ->assertJsonPath('children.0.learning.plan_title', 'Four-week reading target')

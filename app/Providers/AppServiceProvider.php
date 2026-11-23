@@ -19,7 +19,11 @@ use App\Policies\TeacherPrivateNotePolicy;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Parent\LocalParentAssistantComposer;
 use App\Services\Parent\ParentAccessAuthorizer;
+use App\Services\Parent\ParentAssistantComposer;
+use App\Services\Parent\ParentLearningReportCollector;
+use App\Services\Parent\RecordParentLearningReportCollector;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
 use App\Support\PublicAppUrl;
@@ -46,7 +50,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ParentAssistantComposer::class, LocalParentAssistantComposer::class);
+        $this->app->bind(ParentLearningReportCollector::class, RecordParentLearningReportCollector::class);
     }
 
     /**

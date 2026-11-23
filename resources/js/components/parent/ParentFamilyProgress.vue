@@ -1,57 +1,95 @@
 <template>
-  <section class="teacher-stack">
-    <header class="teacher-page-header">
+  <section class="parent-home">
+    <header class="parent-page">
+      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
       <div>
-        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
-        <h1 class="teacher-page-header__title">{{ t('parent.nav_progress') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('parent.progress_hint') }}</p>
+        <h1>{{ t('parent.nav_progress') }}</h1>
+        <p>{{ t('parent.progress_detail_hint') }}</p>
       </div>
     </header>
-    <ParentChildFilter :children="allChildren" :selected-id="selectedId" @select="$emit('select-child', $event)" />
-    <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
-    <div v-else class="d-grid gap-3">
-      <TeacherSectionPane v-for="child in children" :key="child.id" :title="child.name" icon="bi bi-graph-up" flat>
-        <TeacherEmpty v-if="!child.permissions?.progress" inline icon="bi bi-lock" :message="t('parent.permission_progress')" />
-        <div v-else class="d-grid gap-2">
-          <p class="mb-0"><strong>{{ t('parent.learning_area') }}</strong> {{ learningLabel(t, child.learning) || t('parent.learning_empty') }}</p>
-          <p class="mb-0">{{ progressLine(child) }}</p>
-          <p v-if="teacherLine(child)" class="teacher-meta mb-0">{{ teacherLine(child) }}</p>
-          <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-learning', child.id)">{{ t('parent.open_learning') }}</button>
-        </div>
-      </TeacherSectionPane>
+
+    <div class="parent-filters">
+      <ParentChildFilter :children="allChildren" :selected-id="selectedId" :allow-all="false" @select="$emit('select-child', $event)" />
+      <div class="parent-pills" role="group" :aria-label="t('parent.progress_window_label')">
+        <button type="button" :class="{ 'is-active': window === 'week' }" :aria-pressed="window === 'week' ? 'true' : 'false'" @click="$emit('window', 'week')">{{ t('parent.progress_week') }}</button>
+        <button type="button" :class="{ 'is-active': window === 'month' }" :aria-pressed="window === 'month' ? 'true' : 'false'" @click="$emit('window', 'month')">{{ t('parent.progress_month') }}</button>
+      </div>
     </div>
+
+    <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
+    <TeacherEmpty v-else-if="!childId" illustrated icon="bi bi-person" :message="t('parent.progress_pick_child')" />
+    <TeacherEmpty v-else-if="!shared" illustrated icon="bi bi-lock" :message="t('parent.permission_progress')" />
+    <div v-else-if="loading" class="teacher-skeletons" role="status">
+      <div v-for="n in 3" :key="n" class="teacher-skeleton"></div>
+      <span class="visually-hidden">{{ t('parent.loading') }}</span>
+    </div>
+    <NetworkFallback v-else-if="error" @retry="$emit('reload')" />
+    <template v-else-if="payload">
+      <p class="parent-lead">{{ summaryLine }}</p>
+      <div class="parent-stats" role="list">
+        <article v-for="card in cards" :key="card.key" class="parent-stat" role="listitem">
+          <span aria-hidden="true"><i :class="card.icon"></i></span>
+          <strong>{{ card.value }}</strong>
+          <small>{{ card.label }}</small>
+        </article>
+      </div>
+      <section v-if="suggestions.length" class="parent-suggest">
+        <h2><i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('parent.progress_suggests') }}</h2>
+        <ul>
+          <li v-for="item in suggestions" :key="item.id">{{ recommendationTitle(item) }}</li>
+        </ul>
+      </section>
+    </template>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { formatWhen, learningLabel } from '../../scripts/parent/dashboard'
+import { activityName, passageLabel } from '../../scripts/parent/dashboard'
 import ParentChildFilter from './ParentChildFilter.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
-import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
+import NetworkFallback from '../NetworkFallback.vue'
 
 export default {
   name: 'ParentFamilyProgress',
-  components: { ParentChildFilter, TeacherEmpty, TeacherSectionPane },
+  components: { ParentChildFilter, TeacherEmpty, NetworkFallback },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
     allChildren: { type: Array, default: () => [] },
     selectedId: { type: Number, default: null },
+    shared: { type: Boolean, default: false },
+    childId: { type: Number, default: null },
+    payload: { type: Object, default: null },
+    window: { type: String, default: 'month' },
+    loading: { type: Boolean, default: false },
+    error: { type: Boolean, default: false },
   },
-  emits: ['select-child', 'open-learning'],
-  methods: {
-    learningLabel,
-    progressLine(child) {
-      const count = Number(child.progress?.recent_ayahs || 0)
-      const when = formatWhen(child.progress?.last_activity_at)
-      if (!when) return this.t('parent.progress_none')
-      if (count === 1) return this.t('parent.progress_recent_one', { when })
-      return this.t('parent.progress_recent', { count, when })
+  emits: ['select-child', 'window', 'reload'],
+  computed: {
+    cards() {
+      const coverage = this.payload?.coverage || {}
+      const practice = this.payload?.practice_volume || {}
+      return [
+        { key: 'memorised', label: this.t('parent.kpi_memorised'), value: coverage.memorised_ayahs || 0, icon: 'bi bi-journal-bookmark' },
+        { key: 'learning', label: this.t('parent.kpi_learning'), value: coverage.learning_ayahs || 0, icon: 'bi bi-pencil' },
+        { key: 'practice', label: this.t('parent.kpi_practice'), value: practice.ayah_rows || 0, icon: 'bi bi-activity' },
+      ]
     },
-    teacherLine(child) {
-      const names = (child.teachers || []).map((teacher) => teacher.name)
-      return names.length ? this.t('parent.teachers_named', { names: names.join(', ') }) : ''
+    suggestions() {
+      return (this.payload?.recommendations || []).slice(0, 3)
+    },
+    summaryLine() {
+      const count = Number(this.payload?.practice_volume?.ayah_rows || 0)
+      const when = this.t(this.window === 'week' ? 'parent.progress_when_week' : 'parent.progress_when_month')
+      if (!count) return this.t('parent.progress_quiet')
+      if (count === 1) return this.t('parent.progress_simple_one', { when })
+      return this.t('parent.progress_simple', { count, when })
+    },
+  },
+  methods: {
+    recommendationTitle(item) {
+      return [activityName(this.t, item.activity), passageLabel(item) || item.surah_name].filter(Boolean).join(' · ')
     },
   },
 }
