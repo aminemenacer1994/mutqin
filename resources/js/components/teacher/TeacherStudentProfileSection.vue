@@ -80,6 +80,10 @@
           @clear-focus="$emit('clear-focus')"
           @refresh="$emit('refresh')"
         />
+        <TeacherStudentProfileGuardians
+          v-else-if="section === 'guardians' && profile.student"
+          :student-id="Number(profile.student.id)"
+        />
         <KeepAlive>
           <TeacherStudentProfileTasks
             v-if="section === 'tasks'"
@@ -157,6 +161,7 @@ import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
+import TeacherStudentProfileGuardians from './profile/TeacherStudentProfileGuardians.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 export default {
@@ -167,6 +172,7 @@ export default {
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
+    TeacherStudentProfileGuardians,
     TeacherWordingMatch,
   },
   mixins: [i18nMixin],

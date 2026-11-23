@@ -4,6 +4,7 @@ namespace App\Support\Registration;
 
 use App\Enums\AccountRole;
 use App\Enums\OrganisationType;
+use App\Support\ParentFeatures;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -34,13 +35,33 @@ final class RegistrationProfile
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
+    /**
+     * @return list<string>
+     */
+    public static function allowedAccountRoles(): array
+    {
+        $roles = [AccountRole::Individual->value];
+
+        if (TeacherFeatures::enabled()) {
+            $roles[] = AccountRole::Student->value;
+            $roles[] = AccountRole::Teacher->value;
+        }
+
+        if (ParentFeatures::enabled()) {
+            $roles[] = AccountRole::Parent->value;
+        }
+
+        return $roles;
+    }
+
     public static function rules(array $data): array
     {
         $data = self::normalize($data);
 
-        if (! TeacherFeatures::enabled()) {
+        $allowed = self::allowedAccountRoles();
+        if ($allowed === [AccountRole::Individual->value]) {
             return [
-                'account_role' => ['nullable', 'string', Rule::in([AccountRole::Individual->value])],
+                'account_role' => ['nullable', 'string', Rule::in($allowed)],
                 'organisation_type' => ['prohibited'],
                 'organisation_name' => ['prohibited'],
             ];
@@ -57,7 +78,7 @@ final class RegistrationProfile
         ], true);
 
         return [
-            'account_role' => ['nullable', 'string', Rule::in(AccountRole::values())],
+            'account_role' => ['nullable', 'string', Rule::in($allowed)],
             'organisation_type' => [
                 $needsOrganisation ? 'required' : 'nullable',
                 'string',

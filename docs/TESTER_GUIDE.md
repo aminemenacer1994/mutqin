@@ -73,6 +73,37 @@ Practice accounts `practice01`–`practice15` use password **`PracticeNN!`** (fo
 
 **Google-only demo (no password login):** `sofia.google@mutqin.test`
 
+### Parent platform (local only)
+
+Requires `MUTQIN_PARENT_FEATURES_ENABLED=true` and an existing child account `menacer72@gmail.com` in your database. Create the guardian with:
+
+```bash
+php artisan mutqin:seed-parent-demo
+```
+
+| Role | Email | Password | Notes |
+|---|---|---|---|
+| **Parent (guardian)** | `guardian.menacer@mutqin.test` | `ParentDemo1!` | Opens `/parent` after login |
+| **Child (unchanged)** | `menacer72@gmail.com` | *(your existing password or Google)* | Not the parent login |
+
+Do **not** sign in to the parent workspace with `menacer72@gmail.com` unless you have also granted that account the parent role yourself.
+
+A teacher who already teaches a student can open that student and use **Parents & Guardians** to send an invitation. The link only works for the invited email, expires after 7 days, and can be resent or revoked. The child stays hidden until the invitation is accepted. A parent can also create a 30-minute single-use code from **Settings**; the child enters it at `/parent/link-code` while signed in. Teachers cannot approve a guardian link by themselves.
+
+The parent home at `/parent` is a family overview: linked children, active and completed homework, overdue work, recent practice, and teacher feedback. Use the sidebar for My Children, Learning & Homework, Progress, Messages, and Settings. Messages shows teacher feedback only; there is no inbox yet. Counts come from the linked children’s real assignments and practice, and a child is omitted when that guardian is not approved.
+
+### Interconnected platform demo (local only)
+
+This is separate from `php artisan db:seed`. It creates 5 teachers, 15 students and 8 parents with assignments, plans, revision suggestions and several weeks of synthetic progress. It refuses to run in production and will not replace an account that lacks the platform-demo marker.
+
+```bash
+# Set a local password first. The command never prints it.
+# MUTQIN_PLATFORM_DEMO_PASSWORD=your-local-demo-password
+php artisan mutqin:seed-platform-demo
+```
+
+Accounts use `platform.demo.teacher.01@mutqin.test` through `05`, `platform.demo.student.01@mutqin.test` through `15`, and `platform.demo.parent.01@mutqin.test` through `08`. Sign in with `MUTQIN_PLATFORM_DEMO_PASSWORD`. Teachers open `/teacher`, students open `/dashboard`, and parents open `/parent`.
+
 ---
 
 ## 4. What to test first

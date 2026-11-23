@@ -7,6 +7,7 @@ use App\Models\User;
 /**
  * Single post-auth destination for login / guest redirects.
  * Verified teachers land on the teacher dashboard when that feature is enabled.
+ * Verified parent-only accounts land on the parent workspace.
  * Verified learners and admins land on memorisation (not Progress).
  * Unverified accounts go to the email verification notice when verification is enabled.
  * Get Pro from /pricing stores a plan and resumes Stripe checkout after auth.
@@ -23,6 +24,10 @@ final class AuthRedirect
 
         if ($user !== null && TeacherFeatures::enabled() && $user->isTeacher()) {
             return 'teacher.dashboard';
+        }
+
+        if ($user !== null && ParentFeatures::enabled() && $user->isParent()) {
+            return 'parent.dashboard';
         }
 
         return 'memorisation';

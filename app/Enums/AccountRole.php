@@ -7,6 +7,7 @@ enum AccountRole: string
     case Individual = 'individual';
     case Student = 'student';
     case Teacher = 'teacher';
+    case Parent = 'parent';
 
     /**
      * @return list<string>
@@ -19,5 +20,10 @@ enum AccountRole: string
     public function needsOrganisation(): bool
     {
         return $this === self::Student || $this === self::Teacher;
+    }
+
+    public function isSupplementalCapable(): bool
+    {
+        return $this === self::Parent;
     }
 }

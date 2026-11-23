@@ -19,6 +19,13 @@ abstract class TestCase extends BaseTestCase
         ]);
     }
 
+    protected function enableParentFeatures(): void
+    {
+        config([
+            'mutqin.parent_features_enabled' => true,
+        ]);
+    }
+
     protected function enableArticles(): void
     {
         config(['mutqin.show_articles' => true]);

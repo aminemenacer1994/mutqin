@@ -17,6 +17,7 @@ export const TEACHER_PROFILE_TABS = [
   { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-clipboard-check' },
   { id: 'plan', label: 'teacher.tab_learning_plan', icon: 'bi bi-calendar-week' },
   { id: 'messages', label: 'teacher.messages', icon: 'bi bi-chat-dots' },
+  { id: 'guardians', label: 'teacher.tab_guardians', icon: 'bi bi-people' },
 ]
 
 /** Views inside the Learning tab. Recite covers the old Recitation tab. */

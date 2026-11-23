@@ -24,9 +24,12 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\Parent\ParentDashboardController;
+use App\Http\Controllers\Api\Parent\ParentInvitationController;
 use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
+use App\Http\Controllers\Api\Teacher\TeacherGuardianController;
 use App\Http\Controllers\Api\Teacher\TeacherRecitationPlaybackController;
 use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Auth\RegistrationOrganisationController;
@@ -173,6 +176,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
+        Route::middleware('parent.features')->group(function () {
+            Route::prefix('parent')->group(function () {
+                Route::get('/shell', [ParentDashboardController::class, 'shell'])->name('api.parent.shell');
+                Route::get('/children/{student}', [ParentDashboardController::class, 'showChild'])->name('api.parent.children.show');
+                Route::post('/invitations/accept', [ParentInvitationController::class, 'accept'])->middleware('throttle:10,1')->name('api.parent.invitations.accept');
+                Route::post('/invitations/reject', [ParentInvitationController::class, 'reject'])->middleware('throttle:10,1')->name('api.parent.invitations.reject');
+                Route::post('/link-codes', [ParentInvitationController::class, 'issueCode'])->middleware('throttle:5,1')->name('api.parent.link-codes.store');
+                Route::post('/link-codes/redeem', [ParentInvitationController::class, 'redeemCode'])->middleware('throttle:8,1')->name('api.parent.link-codes.redeem');
+            });
+        });
+
         Route::middleware('teacher.features')->group(function () {
             Route::prefix('teacher')->group(function () {
                 Route::get('/overview', [TeacherDashboardController::class, 'overview'])->name('api.teacher.overview');
@@ -181,6 +195,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/attendance/groups/{group}/lessons', [TeacherDashboardController::class, 'scheduleLesson'])->name('api.teacher.attendance.lessons.store');
                 Route::put('/attendance/groups/{group}/students/{student}', [TeacherDashboardController::class, 'setAttendance'])->name('api.teacher.attendance.set');
                 Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
+                Route::get('/students/{student}/guardians', [TeacherGuardianController::class, 'index'])->name('api.teacher.students.guardians');
+                Route::post('/students/{student}/guardians/invitations', [TeacherGuardianController::class, 'store'])->middleware('throttle:10,1')->name('api.teacher.students.guardians.invitations.store');
+                Route::post('/students/{student}/guardians/links/{link}/revoke', [TeacherGuardianController::class, 'revokeLink'])->name('api.teacher.students.guardians.links.revoke');
+                Route::post('/guardian-invitations/{invitation}/resend', [TeacherGuardianController::class, 'resend'])->middleware('throttle:10,1')->name('api.teacher.guardian-invitations.resend');
+                Route::post('/guardian-invitations/{invitation}/revoke', [TeacherGuardianController::class, 'revoke'])->name('api.teacher.guardian-invitations.revoke');
                 Route::delete('/students/{student}', [TeacherDashboardController::class, 'deleteStudent'])->name('api.teacher.students.destroy');
                 Route::get('/students/{student}/report', [TeacherDashboardController::class, 'report'])->name('api.teacher.students.report');
                 Route::get('/students/{student}/messages', [TeacherDashboardController::class, 'studentMessages'])->name('api.teacher.students.messages');

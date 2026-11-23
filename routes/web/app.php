@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Admin\FeedbackController as AdminFeedbackPageController;
+use App\Http\Controllers\Admin\GrowthController as AdminGrowthController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AyahAudioController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
@@ -17,20 +18,30 @@ use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\MadaniPageController;
+use App\Http\Controllers\Parent\DashboardController as ParentDashboardPageController;
+use App\Http\Controllers\Parent\InvitationController as ParentInvitationPageController;
+use App\Http\Controllers\Parent\LinkCodeController as ParentLinkCodePageController;
+use App\Http\Controllers\PlatformSwitchController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReferralPageController;
 use App\Http\Controllers\QuranProxyController;
+use App\Http\Controllers\ReferralPageController;
+use App\Http\Controllers\RegisteredUserUnsubscribeController;
 use App\Http\Controllers\Seo\SeoArticleController;
 use App\Http\Controllers\Seo\SeoGuidesController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardPageController;
 use App\Http\Controllers\WaitingListController;
+use App\Http\Controllers\WaitingListUnsubscribeController;
+use App\Http\Middleware\EnsureArticlesVisible;
+use App\Http\Middleware\EnsureDonationVisible;
+use App\Http\Middleware\EnsureHowItWorksVisible;
+use App\Models\User;
 use App\Services\Billing\SubscriptionEntitlement;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Services\UserAiReciteUsageService;
-use App\Models\User;
 use App\Support\ErrorReporting;
 use App\Support\Seo\SeoLaunchPages;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -42,7 +53,7 @@ Auth::routes(['verify' => true]);
 
 // GET /logout must never render. Sign out when a session exists, then leave for login.
 Route::get('/logout', function (Request $request) {
-    return app(\App\Http\Controllers\Auth\LoginController::class)->logout($request);
+    return app(LoginController::class)->logout($request);
 });
 
 Route::post('/login/demo', DemoLoginController::class)
@@ -145,7 +156,7 @@ Route::redirect('/about-us', '/about', 301)->name('about-us');
 Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
-Route::middleware(\App\Http\Middleware\EnsureDonationVisible::class)->group(function (): void {
+Route::middleware(EnsureDonationVisible::class)->group(function (): void {
     Route::view('/donate', 'content.donate')->name('donate');
     Route::post('/donate/checkout', [BillingController::class, 'donationCheckout'])
         ->middleware('throttle:10,1')
@@ -153,7 +164,7 @@ Route::middleware(\App\Http\Middleware\EnsureDonationVisible::class)->group(func
     Route::get('/donate/success', [BillingController::class, 'donationSuccess'])->name('donate.success');
 });
 Route::redirect('/waiting-list', '/', 301)->name('waiting-list');
-Route::middleware(\App\Http\Middleware\EnsureArticlesVisible::class)->group(function (): void {
+Route::middleware(EnsureArticlesVisible::class)->group(function (): void {
     Route::view('/articles', 'content.articles')->name('articles');
     Route::get('/articles/{slug}', [ArticleController::class, 'show'])
         ->where('slug', '[a-z0-9\-]+')
@@ -163,14 +174,14 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');
 
-Route::get('/waiting-list/unsubscribe/{entry}', \App\Http\Controllers\WaitingListUnsubscribeController::class)
+Route::get('/waiting-list/unsubscribe/{entry}', WaitingListUnsubscribeController::class)
     ->middleware('signed')
     ->name('waiting-list.unsubscribe');
 
 Route::view('/email/unsubscribe/preview', 'content.waiting-list-unsubscribed')
     ->name('registered-user.unsubscribe.preview');
 
-Route::get('/email/unsubscribe/{user}', \App\Http\Controllers\RegisteredUserUnsubscribeController::class)
+Route::get('/email/unsubscribe/{user}', RegisteredUserUnsubscribeController::class)
     ->middleware('signed')
     ->name('registered-user.unsubscribe');
 
@@ -183,7 +194,7 @@ foreach (SeoLaunchPages::paths() as $seoPath) {
     Route::view($seoPath, 'content.seo-launch')->name('seo.launch.'.str_replace('/', '.', trim($seoPath, '/')));
 }
 
-Route::middleware(\App\Http\Middleware\EnsureHowItWorksVisible::class)->group(function (): void {
+Route::middleware(EnsureHowItWorksVisible::class)->group(function (): void {
     Route::view('/features', 'content.seo-launch')->name('seo.launch.features');
 });
 
@@ -210,6 +221,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/teacher', [TeacherDashboardPageController::class, 'index'])
         ->middleware('teacher.features')
         ->name('teacher.dashboard');
+    Route::get('/parent', [ParentDashboardPageController::class, 'index'])
+        ->middleware('parent.features')
+        ->name('parent.dashboard');
+    Route::get('/parent/invitations/{token}', [ParentInvitationPageController::class, 'show'])
+        ->middleware('parent.features')
+        ->where('token', '[A-Za-z0-9]+')
+        ->name('parent.invitation.show');
+    Route::get('/parent/link-code', [ParentLinkCodePageController::class, 'show'])
+        ->middleware('parent.features')
+        ->name('parent.link-code');
+    Route::post('/platform/switch', [PlatformSwitchController::class, 'store'])
+        ->name('platform.switch');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     Route::get('/memorisation/audio-download', function (Request $request) {
@@ -264,7 +287,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $attempt = Http::timeout(20)
                     ->withOptions(['stream' => $mode !== 'play'])
                     ->get($candidate);
-            } catch (\Illuminate\Http\Client\ConnectionException) {
+            } catch (ConnectionException) {
                 $lastStatus = 502;
 
                 continue;
@@ -353,7 +376,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
         }
 
-        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId, $user, $isFindAyah) {
+        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId) {
             $cap = $usageCap->inspect($userId);
             if (! $cap['allowed']) {
                 return response()->json([

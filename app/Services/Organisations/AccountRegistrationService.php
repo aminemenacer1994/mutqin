@@ -5,6 +5,8 @@ namespace App\Services\Organisations;
 use App\Enums\AccountRole;
 use App\Enums\OrganisationType;
 use App\Models\User;
+use App\Services\Auth\UserRoleService;
+use App\Support\ParentFeatures;
 use App\Support\TeacherFeatures;
 
 /**
@@ -16,6 +18,7 @@ class AccountRegistrationService
     public function __construct(
         private readonly OrganisationRegistry $organisations,
         private readonly OrganisationRegistrationRoster $registrationRoster,
+        private readonly UserRoleService $roles,
     ) {}
 
     /**
@@ -23,17 +26,40 @@ class AccountRegistrationService
      */
     public function apply(User $user, array $profile): void
     {
-        if (! TeacherFeatures::enabled()) {
+        $role = $profile['account_role'];
+        $teacherOrOrgEnabled = TeacherFeatures::enabled();
+        $parentEnabled = ParentFeatures::enabled();
+
+        if (! $teacherOrOrgEnabled && ! $parentEnabled) {
             return;
         }
 
-        $role = $profile['account_role'];
+        if ($role === AccountRole::Parent) {
+            if (! $parentEnabled) {
+                return;
+            }
+
+            $user->forceFill([
+                'account_role' => AccountRole::Parent->value,
+                'organisation_id' => null,
+            ])->save();
+
+            $this->roles->syncPrimaryRoleGrant($user->refresh(), AccountRole::Parent);
+
+            return;
+        }
+
+        if (! $teacherOrOrgEnabled) {
+            return;
+        }
 
         if (! $role->needsOrganisation()) {
             $user->forceFill([
                 'account_role' => $role->value,
                 'organisation_id' => null,
             ])->save();
+
+            $this->roles->syncPrimaryRoleGrant($user->refresh(), $role);
 
             return;
         }
@@ -49,5 +75,6 @@ class AccountRegistrationService
         ])->save();
 
         $this->registrationRoster->enrollRegisteredMember($user->refresh(), $organisation);
+        $this->roles->syncPrimaryRoleGrant($user->refresh(), $role);
     }
 }

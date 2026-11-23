@@ -752,6 +752,29 @@ export const learningApi = {
     const { data } = await http.get(`/teacher/students/${studentId}`, { params: { section } })
     return data
   },
+  async getTeacherGuardians(studentId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/guardians`)
+    return data
+  },
+  async inviteTeacherGuardian(studentId, email, relationship = '') {
+    const { data } = await http.post(`/teacher/students/${studentId}/guardians/invitations`, {
+      email,
+      relationship: relationship || null,
+    })
+    return data
+  },
+  async resendTeacherGuardianInvitation(invitationId) {
+    const { data } = await http.post(`/teacher/guardian-invitations/${invitationId}/resend`)
+    return data
+  },
+  async revokeTeacherGuardianInvitation(invitationId) {
+    const { data } = await http.post(`/teacher/guardian-invitations/${invitationId}/revoke`)
+    return data
+  },
+  async revokeTeacherGuardianLink(studentId, linkId) {
+    const { data } = await http.post(`/teacher/students/${studentId}/guardians/links/${linkId}/revoke`)
+    return data
+  },
   async getTeacherStudentReport(studentId, params = {}) {
     const { data } = await http.get(`/teacher/students/${studentId}/report`, { params })
     return data

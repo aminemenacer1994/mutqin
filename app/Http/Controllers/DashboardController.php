@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AskMutqin\SessionVoiceInterpreter;
 use App\Services\DashboardService;
+use App\Support\AdvancedAnalyticsAccess;
+use App\Support\ParentFeatures;
+use App\Support\SessionVoiceAccess;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -43,10 +47,10 @@ class DashboardController extends Controller
                     'subscription_tier' => $user->effectiveSubscriptionTier(),
                     'subscription_status' => $user->subscription_status ?? 'free',
                     'is_admin' => $user->isAdmin(),
-                    'advanced_analytics_enabled' => \App\Support\AdvancedAnalyticsAccess::visible($user),
-                    'session_voice_enabled' => \App\Support\SessionVoiceAccess::visible($user),
-                    'session_voice_hints' => \App\Support\SessionVoiceAccess::visible($user)
-                        ? app(\App\Services\AskMutqin\SessionVoiceInterpreter::class)->recognitionVocabulary(
+                    'advanced_analytics_enabled' => AdvancedAnalyticsAccess::visible($user),
+                    'session_voice_enabled' => SessionVoiceAccess::visible($user),
+                    'session_voice_hints' => SessionVoiceAccess::visible($user)
+                        ? app(SessionVoiceInterpreter::class)->recognitionVocabulary(
                             str_starts_with((string) app()->getLocale(), 'ar') ? 'ar' : 'en'
                         )
                         : [],
@@ -55,6 +59,10 @@ class DashboardController extends Controller
                     'account_role' => TeacherFeatures::enabled() ? $user->account_role?->value : null,
                     'teacher_dashboard_url' => TeacherFeatures::enabled() && $user->isTeacher()
                         ? route('teacher.dashboard')
+                        : null,
+                    'parent_features_enabled' => ParentFeatures::enabled(),
+                    'parent_dashboard_url' => ParentFeatures::enabled() && $user->isParent()
+                        ? route('parent.dashboard')
                         : null,
                 ],
             ])

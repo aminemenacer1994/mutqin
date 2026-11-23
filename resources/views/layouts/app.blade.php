@@ -113,7 +113,7 @@
     {{-- This stylesheet is emitted by webpack's Vue loader, not by a Mix entry.
          It is therefore not guaranteed to be present in mix-manifest.json. --}}
     <link rel="stylesheet" href="{{ asset('css/vue-styles.css').'?v='.$vueStylesFingerprint }}">
-    @if(request()->routeIs('teacher.dashboard', 'dashboard', 'progress.dashboard'))
+    @if(request()->routeIs('teacher.dashboard', 'parent.dashboard', 'parent.invitation.show', 'parent.link-code', 'dashboard', 'progress.dashboard'))
         @php
             $teacherStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/teacher-dashboard.css', $mixManifestPath);
         @endphp
@@ -8280,7 +8280,7 @@
         }
     </style>
 </head>
-<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home ' : '' }}{{ request()->routeIs('memorisation', 'memorisation.demo') ? 'memorisation-page ' : '' }}">
+<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard', 'parent.dashboard', 'parent.invitation.show', 'parent.link-code') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home ' : '' }}{{ request()->routeIs('memorisation', 'memorisation.demo') ? 'memorisation-page ' : '' }}">
     @php
         $usesEarlyAccessNav = \App\Support\MutqinDomains::usesEarlyAccessNav(request());
     @endphp
@@ -8373,6 +8373,13 @@
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong>{{ __('admin.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endif
+                            @if (\App\Support\ParentFeatures::enabled() && Auth::user()->isParent())
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('parent.dashboard') ? 'active' : '' }}" href="{{ route('parent.dashboard') }}" data-tour="nav-parent-dashboard">
+                                <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('ui.parent_dashboard') }}</strong><small class="d-lg-none">{{ __('parent.nav_children') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
@@ -8540,6 +8547,18 @@
                                 >
                                     <i class="bi bi-speedometer2" aria-hidden="true"></i>
                                     <span>{{ __('admin.dashboard') }}</span>
+                                </a>
+                            </li>
+                            @endif
+                            @if (\App\Support\ParentFeatures::enabled() && Auth::user()->isParent())
+                            <li>
+                                <a
+                                    class="dropdown-item"
+                                    href="{{ route('parent.dashboard') }}"
+                                    role="menuitem"
+                                >
+                                    <i class="bi bi-people" aria-hidden="true"></i>
+                                    <span>{{ __('ui.parent_dashboard') }}</span>
                                 </a>
                             </li>
                             @endif

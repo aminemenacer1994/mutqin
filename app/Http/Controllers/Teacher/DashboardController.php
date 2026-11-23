@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Support\ParentFeatures;
 use App\Support\TeacherFeatures;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         TeacherFeatures::abortUnlessEnabled();
 
         $user = $request->user();
+        if ($user !== null && ! $user->isTeacher() && ParentFeatures::enabled() && $user->isParent()) {
+            return redirect()->route('parent.dashboard');
+        }
+
         abort_unless($user !== null && $user->isTeacher(), 403);
 
         return view('teacher.dashboard', [

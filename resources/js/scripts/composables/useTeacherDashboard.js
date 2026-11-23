@@ -391,6 +391,7 @@ export function useTeacherDashboard(authRef) {
   function profileFetchSection(section) {
     if (section === 'revision') return 'focus'
     if (section === 'plan') return 'overview'
+    if (section === 'guardians') return 'overview'
     return section
   }
 

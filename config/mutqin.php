@@ -45,6 +45,20 @@ return [
     ),
 
     /*
+     | Parent Platform (guardian links, parent dashboard shell).
+     |
+     | Off unless MUTQIN_PARENT_FEATURES_ENABLED=true. Independent of teacher
+     | features; a user may be a teacher, parent, or both.
+     */
+    'parent_features_enabled' => filter_var(env('MUTQIN_PARENT_FEATURES_ENABLED', false), FILTER_VALIDATE_BOOL),
+
+    /*
+     | Password for php artisan mutqin:seed-platform-demo.
+     | Never committed. The seeder refuses to run when this is empty and never prints it.
+     */
+    'platform_demo_password' => env('MUTQIN_PLATFORM_DEMO_PASSWORD'),
+
+    /*
      | Comma-separated student mailboxes enrolled into every demo teacher group when
      | organisation-network or teacher-demo seeders run (non-production only).
      | Leave empty in production. Example: menacer72@gmail.com

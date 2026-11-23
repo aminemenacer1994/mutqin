@@ -62,5 +62,6 @@
         <env name="STRIPE_WEBHOOK_SECRET" value="" force="true"/>
         <env name="STRIPE_PUBLISHABLE_KEY" value="pk_test_phpunit" force="true"/>
         <env name="MUTQIN_TEACHER_FEATURES_ENABLED" value="false"/>
+        <env name="MUTQIN_PARENT_FEATURES_ENABLED" value="false" force="true"/>
     </php>
 </phpunit>

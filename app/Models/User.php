@@ -13,6 +13,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -188,6 +189,50 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(GroupMembership::class);
     }
 
+    public function accountRoles(): HasMany
+    {
+        return $this->hasMany(UserAccountRole::class);
+    }
+
+    public function parentStudentLinks(): HasMany
+    {
+        return $this->hasMany(ParentStudentLink::class, 'parent_user_id');
+    }
+
+    public function studentParentLinks(): HasMany
+    {
+        return $this->hasMany(ParentStudentLink::class, 'student_user_id');
+    }
+
+    public function linkedChildren(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'parent_student_links', 'parent_user_id', 'student_user_id')
+            ->withPivot(['status', 'relationship', 'permissions', 'approved_at', 'revoked_at'])
+            ->withTimestamps();
+    }
+
+    public function linkedGuardians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'parent_student_links', 'student_user_id', 'parent_user_id')
+            ->withPivot(['status', 'relationship', 'permissions', 'approved_at', 'revoked_at'])
+            ->withTimestamps();
+    }
+
+    public function hasAccountRole(AccountRole $role): bool
+    {
+        if ($this->account_role === $role) {
+            return true;
+        }
+
+        if ($this->relationLoaded('accountRoles')) {
+            return $this->accountRoles->contains(
+                static fn (UserAccountRole $row): bool => $row->role === $role,
+            );
+        }
+
+        return $this->accountRoles()->where('role', $role->value)->exists();
+    }
+
     public function isTeacher(): bool
     {
         return $this->account_role === AccountRole::Teacher;
@@ -196,6 +241,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function isStudent(): bool
     {
         return $this->account_role === AccountRole::Student;
+    }
+
+    public function isParent(): bool
+    {
+        return $this->hasAccountRole(AccountRole::Parent);
     }
 
     public function touchLastLogin(): void

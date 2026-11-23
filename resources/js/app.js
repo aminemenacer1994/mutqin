@@ -253,6 +253,18 @@ const TeacherDashboard = lazyPage(
     () => import(/* webpackChunkName: "teacher-dashboard" */ './views/TeacherDashboard.vue'),
     { feature: 'teacher-dashboard' }
 );
+const ParentDashboard = lazyPage(
+    () => import(/* webpackChunkName: "parent-dashboard" */ './views/ParentDashboard.vue'),
+    { feature: 'parent-dashboard' }
+);
+const ParentInvitation = lazyPage(
+    () => import(/* webpackChunkName: "parent-invitation" */ './views/ParentInvitation.vue'),
+    { feature: 'parent-invitation' }
+);
+const ParentLinkRedeem = lazyPage(
+    () => import(/* webpackChunkName: "parent-link-redeem" */ './views/ParentLinkRedeem.vue'),
+    { feature: 'parent-link-redeem' }
+);
 const AdminDashboard = lazyPage(
     () => import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue'),
     { feature: 'admin-dashboard' }
@@ -385,6 +397,33 @@ async function bootstrapApp() {
         TeacherDashboardComponent = mod.default;
     }
 
+    let ParentDashboardComponent = ParentDashboard;
+    if (typeof document !== 'undefined' && document.querySelector('parent-dashboard')) {
+        const mod = await import(
+            /* webpackChunkName: "parent-dashboard" */
+            './views/ParentDashboard.vue'
+        );
+        ParentDashboardComponent = mod.default;
+    }
+
+    let ParentInvitationComponent = ParentInvitation;
+    if (typeof document !== 'undefined' && document.querySelector('parent-invitation')) {
+        const mod = await import(
+            /* webpackChunkName: "parent-invitation" */
+            './views/ParentInvitation.vue'
+        );
+        ParentInvitationComponent = mod.default;
+    }
+
+    let ParentLinkRedeemComponent = ParentLinkRedeem;
+    if (typeof document !== 'undefined' && document.querySelector('parent-link-redeem')) {
+        const mod = await import(
+            /* webpackChunkName: "parent-link-redeem" */
+            './views/ParentLinkRedeem.vue'
+        );
+        ParentLinkRedeemComponent = mod.default;
+    }
+
     installErrorTracking(null);
     window.mutqinSetLocale = (locale) => setLocale(i18n, locale);
     window.mutqinGetLocale = () => i18n.global.locale.value;
@@ -398,6 +437,9 @@ async function bootstrapApp() {
         memorisation: Memorisation,
         'user-dashboard': UserDashboard,
         'teacher-dashboard': TeacherDashboardComponent,
+        'parent-dashboard': ParentDashboardComponent,
+        'parent-invitation': ParentInvitationComponent,
+        'parent-link-redeem': ParentLinkRedeemComponent,
         'admin-dashboard': AdminDashboard,
         'admin-growth': AdminGrowth,
         'admin-feedback': AdminFeedback,

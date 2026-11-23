@@ -7,16 +7,19 @@ use App\Listeners\LogBackupEvents;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\Organisation;
+use App\Models\ParentStudentLink;
 use App\Models\TeacherNote;
 use App\Models\TeacherPrivateNote;
 use App\Models\User;
 use App\Policies\GroupMembershipPolicy;
 use App\Policies\LearningGroupPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\ParentStudentLinkPolicy;
 use App\Policies\TeacherPrivateNotePolicy;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Parent\ParentAccessAuthorizer;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
 use App\Support\PublicAppUrl;
@@ -86,9 +89,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);
+        Gate::policy(ParentStudentLink::class, ParentStudentLinkPolicy::class);
         Gate::policy(TeacherPrivateNote::class, TeacherPrivateNotePolicy::class);
         Gate::define('view-student-analytics', function (User $actor, User $student): bool {
             return app(StudentAccessAuthorizer::class)->allows($actor, $student);
+        });
+        Gate::define('view-student-as-parent', function (User $actor, User $student, ?string $permission = null): bool {
+            return app(ParentAccessAuthorizer::class)->allows($actor, $student, $permission);
         });
         Paginator::useBootstrapFive();
 
