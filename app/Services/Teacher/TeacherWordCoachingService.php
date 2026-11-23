@@ -15,6 +15,7 @@ use App\Support\QuranMetadata;
 use App\Support\RecitationAlignmentStatus;
 use App\Support\TeacherRecitationWordEvidence;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -100,11 +101,56 @@ class TeacherWordCoachingService
      */
     public function recurringTeacherMistakes(User $teacher, User $student): array
     {
+        return array_slice($this->collectRecurringMistakes($teacher, $student), 0, 12);
+    }
+
+    /**
+     * Repeated teacher notes for the student. A single note is not returned.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recurringForLearner(User $student, ?Carbon $from, ?Carbon $to): array
+    {
+        $rows = array_values(array_filter(
+            $this->collectRecurringMistakes(null, $student),
+            function (array $row) use ($from, $to) {
+                if ((int) ($row['count'] ?? 0) < 2) {
+                    return false;
+                }
+                $last = $row['last_at'] ?? null;
+                if ($last === null) {
+                    return false;
+                }
+                $at = Carbon::parse($last);
+                if ($from && $at->lt($from)) {
+                    return false;
+                }
+                if ($to && $at->gt($to)) {
+                    return false;
+                }
+
+                return true;
+            }
+        ));
+
+        return array_slice($rows, 0, 8);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function collectRecurringMistakes(?User $teacher, User $student): array
+    {
         $groups = [];
         $corrections = TeacherWordCoachingCorrection::query()
-            ->where('teacher_id', $teacher->id)
+            ->when($teacher, fn ($query) => $query->where('teacher_id', $teacher->id))
             ->where('finding', 'difficulty')
-            ->whereHas('coaching', fn ($query) => $query->where('teacher_id', $teacher->id)->where('student_id', $student->id))
+            ->whereHas('coaching', function ($query) use ($teacher, $student) {
+                $query->where('student_id', $student->id);
+                if ($teacher) {
+                    $query->where('teacher_id', $teacher->id);
+                }
+            })
             ->with('coaching')
             ->orderBy('id')
             ->get();
@@ -132,7 +178,7 @@ class TeacherWordCoachingService
         }
 
         $assessments = TeacherRecitationAssessment::query()
-            ->where('teacher_id', $teacher->id)
+            ->when($teacher, fn ($query) => $query->where('teacher_id', $teacher->id))
             ->where('student_id', $student->id)
             ->whereNotNull('observations')
             ->with('attempt:id,user_id,ayah_range,created_at')
@@ -176,7 +222,6 @@ class TeacherWordCoachingService
 
         $rows = array_values($groups);
         usort($rows, fn (array $left, array $right) => strcmp((string) ($right['last_at'] ?? ''), (string) ($left['last_at'] ?? '')));
-        $rows = array_slice($rows, 0, 12);
 
         return array_map(function (array $row) {
             unset($row['attempt_ids']);

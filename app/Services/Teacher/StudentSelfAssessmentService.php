@@ -11,6 +11,7 @@ use App\Models\TeacherLesson;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
+use App\Support\TeacherFeatures;
 use Illuminate\Validation\ValidationException;
 
 class StudentSelfAssessmentService
@@ -41,6 +42,12 @@ class StudentSelfAssessmentService
             if ($recipient === null || (int) $recipient->student_id !== (int) $student->id) {
                 throw ValidationException::withMessages([
                     'teacher_assignment_recipient_id' => 'Choose one of your tasks.',
+                ]);
+            }
+            $teacher = $recipient->assignment?->teacher;
+            if (TeacherFeatures::enabled() && (! $teacher instanceof User || ! $this->access->allows($teacher, $student))) {
+                throw ValidationException::withMessages([
+                    'teacher_assignment_recipient_id' => 'This task is no longer shared with your teacher.',
                 ]);
             }
         }

@@ -13,7 +13,10 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use App\Services\Parent\ParentLearningReportGenerator;
+use App\Services\Parent\ParentLearningReportPeriods;
+use App\Support\ParentFeatures;
 use App\Support\Demo\AnchorStudentDemoCatalog;
+use App\Support\Demo\DemoStudentVolume;
 use App\Support\Demo\OrganisationNetworkClassroom;
 use Illuminate\Support\Carbon;
 
@@ -56,6 +59,7 @@ final class AnchorStudentLearningPlanter
         }
 
         $this->classroom->purgeActivity([(int) $student->id]);
+        ParentLearningReport::query()->where('student_user_id', $student->id)->delete();
 
         $definition = AnchorStudentDemoCatalog::definition($student);
         $this->classroom->plantStudent($student, $teacher, $definition);
@@ -114,17 +118,21 @@ final class AnchorStudentLearningPlanter
 
     private function ensureReports(User $student): void
     {
-        foreach (['week', 'month'] as $cadence) {
-            $exists = ParentLearningReport::query()
-                ->where('student_user_id', $student->id)
-                ->where('cadence', $cadence)
-                ->exists();
+        if (! ParentFeatures::enabled()) {
+            return;
+        }
 
-            if ($exists) {
-                continue;
-            }
+        $periods = app(ParentLearningReportPeriods::class);
+        $anchor = now()->utc();
+        $weekStart = $periods->closed('week', $anchor)[0];
+        $monthStart = $periods->closed('month', $anchor)[0];
 
-            $this->reportGenerator->generate((int) $student->id, $cadence);
+        for ($index = 0; $index < DemoStudentVolume::MIN_LIST_ITEMS; $index++) {
+            $this->reportGenerator->generate((int) $student->id, 'week', $weekStart);
+            $this->reportGenerator->generate((int) $student->id, 'month', $monthStart);
+
+            [$weekStart] = $periods->previous('week', $weekStart);
+            [$monthStart] = $periods->previous('month', $monthStart);
         }
     }
 

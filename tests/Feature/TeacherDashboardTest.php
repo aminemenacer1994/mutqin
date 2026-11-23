@@ -1416,6 +1416,57 @@ class TeacherDashboardTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_revoked_consent_blocks_task_submission_and_unlinks_personal_practice(): void
+    {
+        [$teacher, $student] = $this->classroom();
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+
+        $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))->assertOk();
+
+        GroupMembership::query()->where('user_id', $student->id)
+            ->update(['analytics_consent_status' => AnalyticsConsentStatus::Revoked->value]);
+
+        $this->actingAs($student)->postJson(route('api.me.assignments.start', $recipientId))->assertNotFound();
+        $this->actingAs($student)->postJson(route('api.me.assignments.complete', $recipientId))->assertNotFound();
+        $this->actingAs($student)->postJson(route('api.me.self-assessments.store'), [
+            'feeling' => 'need_help',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+        ])->assertUnprocessable();
+
+        $session = $this->actingAs($student)->postJson(route('api.session.start'), [
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'idempotency_key' => 'revoked-consent-personal-practice',
+            'teacher_assignment_recipient_id' => $recipientId,
+            'metadata' => ['config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7]],
+        ])->assertOk()->json('session');
+
+        $this->assertNull(UserSession::query()->findOrFail($session['id'])->teacher_assignment_recipient_id);
+        $recipient = TeacherAssignmentRecipient::query()->findOrFail($recipientId);
+        $this->assertNull($recipient->student_completed_at);
+        $this->assertNotSame(AssignmentStatus::AwaitingConfirmation->value, $recipient->status);
+
+        $row = collect($this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json('assignments'))
+            ->firstWhere('id', $recipientId);
+        $this->assertFalse($row['teacher_access']);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.approve', $recipientId))
+            ->assertNotFound();
+    }
+
     public function test_opening_an_assignment_thread_returns_the_persisted_read_state_and_feedback_is_idempotent(): void
     {
         [$teacher, $student, $hidden] = $this->classroom();

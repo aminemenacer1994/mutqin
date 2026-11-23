@@ -155,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+        Route::get('/dashboard/progress', [DashboardController::class, 'progress'])->name('api.dashboard.progress');
         Route::get('/referrals', [ReferralController::class, 'show'])->name('api.referrals.show');
         Route::post('/referrals/acknowledge', [ReferralController::class, 'acknowledge'])
             ->middleware('throttle:30,1')

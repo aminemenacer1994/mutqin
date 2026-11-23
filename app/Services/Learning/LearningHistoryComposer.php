@@ -35,7 +35,7 @@ class LearningHistoryComposer
                     ->orWhere('status', AssignmentStatus::Completed->value)
                     ->orWhere('status', AssignmentStatus::AwaitingConfirmation->value);
             })
-            ->with('assignment')
+            ->with('assignment.teacher:id,name')
             ->latest('id')
             ->limit($limit)
             ->get();
@@ -63,6 +63,9 @@ class LearningHistoryComposer
             $submissions = is_array($evidence['submissions'] ?? null) ? $evidence['submissions'] : [];
             $milestone = in_array((int) $assignment->id, $milestoneAssignmentIds, true);
             $surah = (int) $assignment->surah_number;
+            $status = $recipient->status instanceof AssignmentStatus
+                ? $recipient->status->value
+                : (string) $recipient->status;
             $events[] = [
                 'id' => 'assignment-'.$recipient->id,
                 'type' => $milestone ? 'milestone' : 'assignment',
@@ -71,9 +74,19 @@ class LearningHistoryComposer
                 'is_tajweed_assessment' => false,
                 'is_milestone' => $milestone,
                 'surah_number' => $surah,
-                'surah_name' => QuranMetadata::name($surah),
-                'ayah_start' => (int) $assignment->ayah_start,
-                'ayah_end' => (int) $assignment->ayah_end,
+                'surah_name' => $surah > 0 ? QuranMetadata::name($surah) : null,
+                'ayah_start' => (int) $assignment->ayah_start ?: null,
+                'ayah_end' => (int) $assignment->ayah_end ?: null,
+                'practice_mode' => $activity,
+                'learning_area' => in_array($activity, ['nazra', 'hifz', 'tajweed', 'revision'], true) ? $activity : null,
+                'activity_status' => match ($status) {
+                    AssignmentStatus::Completed->value => 'completed',
+                    AssignmentStatus::AwaitingConfirmation->value => 'awaiting_review',
+                    default => 'submitted',
+                },
+                'recipient_id' => (int) $recipient->id,
+                'assignment_id' => (int) $assignment->id,
+                'teacher_name' => $assignment->teacher?->name ?: null,
                 'outcome_key' => $milestone ? 'milestone' : ($activity === 'revision' ? 'revision_attempt' : 'assignment_completed'),
                 'outcome_params' => [
                     'activity' => $activity !== '' ? $activity : null,
@@ -87,12 +100,14 @@ class LearningHistoryComposer
         TeacherNote::query()
             ->where('student_id', $user->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
+            ->with(['teacher:id,name', 'assignment:id,activity'])
             ->latest('id')
             ->limit($limit)
             ->get()
             ->each(function (TeacherNote $note) use (&$events) {
                 $body = trim((string) $note->body);
                 $surah = $note->surah_number ? (int) $note->surah_number : null;
+                $activity = (string) ($note->assignment?->activity ?? '');
                 $events[] = [
                     'id' => 'teacher-feedback-'.$note->id,
                     'type' => 'teacher_feedback',
@@ -103,6 +118,10 @@ class LearningHistoryComposer
                     'surah_name' => $surah ? QuranMetadata::name($surah) : null,
                     'ayah_start' => $note->ayah_start ? (int) $note->ayah_start : null,
                     'ayah_end' => $note->ayah_end ? (int) $note->ayah_end : null,
+                    'learning_area' => in_array($activity, ['nazra', 'hifz', 'tajweed', 'revision'], true) ? $activity : null,
+                    'activity_status' => 'reviewed',
+                    'assignment_id' => $note->teacher_assignment_id ? (int) $note->teacher_assignment_id : null,
+                    'teacher_name' => $note->teacher?->name ?: null,
                     'outcome_key' => 'teacher_feedback',
                     'outcome_params' => [
                         'body' => $body === '' ? null : mb_substr(preg_replace('/\s+/u', ' ', $body) ?? $body, 0, 140),
@@ -114,7 +133,7 @@ class LearningHistoryComposer
 
         TeacherWordCoachingCorrection::query()
             ->whereHas('coaching', fn ($query) => $query->where('student_id', $user->id))
-            ->with('coaching')
+            ->with('coaching.teacher:id,name')
             ->latest('id')
             ->limit($limit)
             ->get()
@@ -134,6 +153,8 @@ class LearningHistoryComposer
                     'surah_name' => QuranMetadata::name($surah),
                     'ayah_start' => (int) $coaching->ayah_number,
                     'ayah_end' => (int) $coaching->ayah_number,
+                    'activity_status' => 'reviewed',
+                    'teacher_name' => $coaching->teacher?->name ?: null,
                     'outcome_key' => 'teacher_finding',
                     'outcome_params' => [
                         'focus' => $correction->focus,
@@ -147,6 +168,7 @@ class LearningHistoryComposer
         TeacherWordCoaching::query()
             ->where('student_id', $user->id)
             ->where('review_status', TeacherWordCoaching::IMPROVED)
+            ->with('teacher:id,name')
             ->latest('id')
             ->limit($limit)
             ->get()
@@ -162,6 +184,8 @@ class LearningHistoryComposer
                     'surah_name' => QuranMetadata::name($surah),
                     'ayah_start' => (int) $coaching->ayah_number,
                     'ayah_end' => (int) $coaching->ayah_number,
+                    'activity_status' => 'reviewed',
+                    'teacher_name' => $coaching->teacher?->name ?: null,
                     'outcome_key' => 'improvement',
                     'outcome_params' => [],
                     'occurred_at' => optional($coaching->updated_at)->toIso8601String(),

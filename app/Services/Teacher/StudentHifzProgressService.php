@@ -3,13 +3,19 @@
 namespace App\Services\Teacher;
 
 use App\Enums\AssignmentStatus;
+use App\Enums\TeacherNoteKind;
 use App\Models\AiReciteAttempt;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherNote;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
+use App\Services\Learning\ProgressOverviewService;
+use App\Services\Learning\StudentAiFeedbackService;
 use App\Support\QuranMetadata;
+use App\Support\ScoredAttemptIdentity;
 use Illuminate\Support\Carbon;
 
 /**
@@ -53,6 +59,130 @@ class StudentHifzProgressService
             'wording_match' => $this->wordingTrend($student, $from, $to),
             'weak_passages' => $this->confirmedWeak($student),
             'validated_memorisation' => $this->validatedMemorisationForStudent($student),
+        ];
+    }
+
+    /**
+     * Week and month use the same inclusive window as the student progress chart.
+     *
+     * @return array{window: string, days: int, from: Carbon, to: Carbon}
+     */
+    public function periodBounds(string $window): array
+    {
+        $window = $window === 'week' ? 'week' : 'month';
+        $days = $window === 'week' ? 7 : 30;
+
+        return [
+            'window' => $window,
+            'days' => $days,
+            'from' => now()->subDays($days - 1)->startOfDay(),
+            'to' => now()->endOfDay(),
+        ];
+    }
+
+    /**
+     * Student progress snapshot. Counts come from the same services as teacher and parent views.
+     *
+     * @return array<string, mixed>
+     */
+    public function forLearner(User $student, string $window = 'month'): array
+    {
+        $bounds = $this->periodBounds($window);
+        $from = $bounds['from'];
+        $to = $bounds['to'];
+        $coverage = $this->coverage($student);
+        $practice = (new ProgressOverviewService)->build($student, $bounds['days']);
+
+        return [
+            'window' => $bounds['window'],
+            'period_days' => $bounds['days'],
+            'from' => $from->toIso8601String(),
+            'to' => $to->toIso8601String(),
+            'overview' => [
+                'practice' => $practice['metrics'],
+                'assignments' => $this->assignmentCompletion($student, $from, $to),
+            ],
+            'memorisation' => [
+                'coverage' => $this->publicCoverage($coverage),
+                'validated_memorisation' => $this->validatedMemorisationForStudent($student),
+                'newly_memorised_ayahs' => $this->countNewlyMemorised($coverage['rows'], $from, $to),
+            ],
+            'recitation' => [
+                'wording_match' => $this->wordingTrend($student, $from, $to),
+                'teacher_assessments' => $this->learnerTeacherAssessments($student, $from, $to),
+            ],
+            'improve' => [
+                'weak_passages' => $this->confirmedWeak($student),
+                'recurring_mistakes' => app(TeacherWordCoachingService::class)->recurringForLearner($student, $from, $to),
+                'ai_revision' => app(StudentAiFeedbackService::class)->repeatedAyahs($student),
+            ],
+            'feedback' => $this->learnerFeedback($student, $from, $to),
+        ];
+    }
+
+    /**
+     * Assignments due in the window. Completion percent is omitted when nothing was due.
+     *
+     * @return array<string, mixed>
+     */
+    public function assignmentCompletion(User $student, ?Carbon $from, ?Carbon $to, ?int $teacherId = null): array
+    {
+        $due = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->whereHas('assignment', function ($query) use ($teacherId, $from, $to) {
+                $query->whereNotNull('due_at');
+                if ($teacherId) {
+                    $query->where('teacher_id', $teacherId);
+                }
+                if ($from) {
+                    $query->where('due_at', '>=', $from);
+                }
+                if ($to) {
+                    $query->where('due_at', '<=', $to);
+                }
+            })
+            ->with('assignment:id,surah_number,ayah_start,ayah_end,due_at,activity,hifz_category')
+            ->get();
+
+        $completed = 0;
+        $missed = 0;
+        $submitted = 0;
+        $items = [];
+        foreach ($due as $recipient) {
+            $status = $recipient->status instanceof AssignmentStatus
+                ? $recipient->status->value
+                : (string) $recipient->status;
+            $dueAt = $recipient->assignment?->due_at;
+            if ($status === AssignmentStatus::Completed->value) {
+                $completed++;
+            } elseif ($status === AssignmentStatus::AwaitingConfirmation->value) {
+                $submitted++;
+            } elseif ($dueAt !== null && $dueAt->isPast()) {
+                $missed++;
+            }
+            if (count($items) < 6 && $recipient->assignment !== null) {
+                $items[] = [
+                    'id' => (int) $recipient->id,
+                    'label' => $this->passageLabel(
+                        (int) $recipient->assignment->surah_number,
+                        (int) $recipient->assignment->ayah_start,
+                        (int) ($recipient->assignment->ayah_end ?: $recipient->assignment->ayah_start),
+                    ),
+                    'status' => $status,
+                    'due_at' => $dueAt?->toIso8601String(),
+                ];
+            }
+        }
+        $dueCount = $due->count();
+
+        return [
+            'due' => $dueCount,
+            'completed' => $completed,
+            'missed' => $missed,
+            'submitted' => $submitted,
+            'completion_percent' => $dueCount > 0 ? (int) round(100 * $completed / $dueCount) : null,
+            'denominator' => 'tasks_due',
+            'items' => $items,
         ];
     }
 
@@ -112,37 +242,8 @@ class StudentHifzProgressService
     public function period(User $teacher, User $student, ?Carbon $from, ?Carbon $to): array
     {
         $coverage = $this->coverage($student);
-        $due = TeacherAssignmentRecipient::query()
-            ->where('student_id', $student->id)
-            ->whereHas('assignment', function ($query) use ($teacher, $from, $to) {
-                $query->where('teacher_id', $teacher->id)->whereNotNull('due_at');
-                if ($from) {
-                    $query->where('due_at', '>=', $from);
-                }
-                if ($to) {
-                    $query->where('due_at', '<=', $to);
-                }
-            })
-            ->with('assignment:id,surah_number,ayah_start,ayah_end,due_at,activity,hifz_category')
-            ->get();
-
-        $completed = 0;
-        $missed = 0;
-        $submitted = 0;
-        foreach ($due as $recipient) {
-            $status = $recipient->status instanceof AssignmentStatus
-                ? $recipient->status->value
-                : (string) $recipient->status;
-            $dueAt = $recipient->assignment?->due_at;
-            if ($status === AssignmentStatus::Completed->value) {
-                $completed++;
-            } elseif ($status === AssignmentStatus::AwaitingConfirmation->value) {
-                $submitted++;
-            } elseif ($dueAt !== null && $dueAt->isPast()) {
-                $missed++;
-            }
-        }
-        $dueCount = $due->count();
+        $tasks = $this->assignmentCompletion($student, $from, $to, (int) $teacher->id);
+        unset($tasks['items']);
 
         $reviewed = 0;
         foreach ($coverage['rows'] as $row) {
@@ -155,16 +256,7 @@ class StudentHifzProgressService
             }
         }
 
-        $newlyMemorised = 0;
-        foreach ($coverage['rows'] as $row) {
-            if (! $row['memorised'] || $row['completed_at'] === null) {
-                continue;
-            }
-            $at = Carbon::parse($row['completed_at']);
-            if (($from === null || $at->gte($from)) && ($to === null || $at->lte($to))) {
-                $newlyMemorised++;
-            }
-        }
+        $newlyMemorised = $this->countNewlyMemorised($coverage['rows'], $from, $to);
 
         $mistakes = app(TeacherWordCoachingService::class)->recurringTeacherMistakes($teacher, $student);
         $recurring = array_values(array_filter($mistakes, function (array $row) use ($from, $to) {
@@ -190,14 +282,7 @@ class StudentHifzProgressService
             'from' => $from?->toDateString(),
             'to' => $to?->toDateString(),
             'coverage' => $this->publicCoverage($coverage),
-            'tasks' => [
-                'due' => $dueCount,
-                'completed' => $completed,
-                'missed' => $missed,
-                'submitted' => $submitted,
-                'completion_percent' => $dueCount > 0 ? (int) round(100 * $completed / $dueCount) : null,
-                'denominator' => 'tasks_due',
-            ],
+            'tasks' => $tasks,
             'revision' => [
                 'reviewed_ayahs' => $reviewed,
                 'memorised_ayahs' => $coverage['memorised_ayahs'],
@@ -598,13 +683,29 @@ class StudentHifzProgressService
      */
     private function wordingTrend(User $student, ?Carbon $from, ?Carbon $to): array
     {
-        $attempts = AiReciteAttempt::query()->validScored()
-            ->where('user_id', $student->id)
-            ->when($from, fn ($query) => $query->where('created_at', '>=', $from))
-            ->when($to, fn ($query) => $query->where('created_at', '<=', $to))
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->get(['id', 'ayah_range', 'accuracy_percent', 'created_at']);
+        $attempts = ScoredAttemptIdentity::unique(
+            AiReciteAttempt::query()->validScored()
+                ->where('user_id', $student->id)
+                ->when($from, fn ($query) => $query->where('created_at', '>=', $from))
+                ->when($to, fn ($query) => $query->where('created_at', '<=', $to))
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get([
+                    'id',
+                    'user_session_id',
+                    'memorisation_assessment_id',
+                    'teacher_assignment_recipient_id',
+                    'session_recommendation_id',
+                    'attempt_number',
+                    'ayah_range',
+                    'accuracy_percent',
+                    'band',
+                    'created_at',
+                ])
+        )->sortBy(fn (AiReciteAttempt $attempt) => [
+            $attempt->created_at?->getTimestamp() ?? 0,
+            $attempt->id,
+        ])->values();
 
         $groups = [];
         foreach ($attempts as $attempt) {
@@ -795,5 +896,238 @@ class StudentHifzProgressService
             'ayahs' => array_sum(array_column($ranges, 'ayahs')),
             'omitted' => max(0, count($ranges) - count($items)),
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function countNewlyMemorised(array $rows, ?Carbon $from, ?Carbon $to): int
+    {
+        $count = 0;
+        foreach ($rows as $row) {
+            if (! ($row['memorised'] ?? false) || ($row['completed_at'] ?? null) === null) {
+                continue;
+            }
+            $at = Carbon::parse($row['completed_at']);
+            if (($from === null || $at->gte($from)) && ($to === null || $at->lte($to))) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Teacher Tajweed assessments only. AI wording-match scores are not copied onto these rows.
+     *
+     * @return array<string, mixed>
+     */
+    private function learnerTeacherAssessments(User $student, Carbon $from, Carbon $to): array
+    {
+        $assessments = TeacherRecitationAssessment::query()
+            ->where('student_id', $student->id)
+            ->whereHas('attempt', function ($query) use ($student, $from, $to) {
+                $query->where('user_id', $student->id)
+                    ->validScored()
+                    ->whereBetween('created_at', [$from, $to]);
+            })
+            ->with('attempt')
+            ->latest('id')
+            ->get();
+
+        $kept = [];
+        foreach ($assessments as $assessment) {
+            $attempt = $assessment->attempt;
+            if (! $attempt instanceof AiReciteAttempt) {
+                continue;
+            }
+            $key = ScoredAttemptIdentity::key($attempt);
+            if (isset($kept[$key])) {
+                continue;
+            }
+            $kept[$key] = $assessment;
+        }
+
+        $teacherNames = User::query()
+            ->whereIn('id', collect($kept)->pluck('teacher_id')->filter()->all())
+            ->pluck('name', 'id');
+
+        $items = [];
+        $scores = [];
+        foreach ($kept as $assessment) {
+            $attempt = $assessment->attempt;
+            $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+            $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
+            $start = (int) ($range['from'] ?? $range['start'] ?? 0);
+            $end = (int) ($range['to'] ?? $range['end'] ?? $start);
+            $observations = is_array($assessment->observations) ? $assessment->observations : [];
+            $areas = [];
+            foreach (TeacherRecitationAssessment::AREAS as $area) {
+                $entry = is_array($observations[$area] ?? null) ? $observations[$area] : [];
+                if (($entry['rating'] ?? null) === 'needs_work') {
+                    $areas[] = $area;
+                }
+            }
+            $score = $assessment->tajweed_score !== null ? (int) $assessment->tajweed_score : null;
+            if ($score !== null) {
+                $scores[] = $score;
+            }
+            $items[] = [
+                'id' => (int) $assessment->id,
+                'attempt_id' => (int) $attempt->id,
+                'teacher_name' => $teacherNames[$assessment->teacher_id] ?? null,
+                'label' => $surah > 0 && $start > 0 ? $this->passageLabel($surah, $start, $end) : null,
+                'tajweed_score' => $score,
+                'is_tajweed' => $score !== null,
+                'note' => $this->teacherAssessmentNote($assessment),
+                'areas' => $areas,
+                'at' => $assessment->updated_at?->toIso8601String(),
+                'recipient_id' => $attempt->teacher_assignment_recipient_id ? (int) $attempt->teacher_assignment_recipient_id : null,
+            ];
+            if (count($items) >= 8) {
+                break;
+            }
+        }
+
+        return [
+            'source' => 'teacher_recitation_assessments',
+            'is_tajweed' => true,
+            'count' => count($items),
+            'average' => $scores === [] ? null : round(array_sum($scores) / count($scores), 1),
+            'items' => $items,
+        ];
+    }
+
+    private function teacherAssessmentNote(TeacherRecitationAssessment $assessment): ?string
+    {
+        $text = trim((string) $assessment->annotation);
+        if ($text !== '') {
+            return $text;
+        }
+        $observations = is_array($assessment->observations) ? $assessment->observations : [];
+        $published = trim((string) ($observations['published_feedback'] ?? ''));
+
+        return $published !== '' ? $published : null;
+    }
+
+    /**
+     * Student-visible comments and reviewed submissions. Private notes are excluded.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function learnerFeedback(User $student, Carbon $from, Carbon $to): array
+    {
+        $items = [];
+        $noteIds = [];
+
+        $notes = TeacherNote::query()
+            ->where('student_id', $student->id)
+            ->where('kind', TeacherNoteKind::Feedback->value)
+            ->whereBetween('created_at', [$from, $to])
+            ->with(['teacher:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        foreach ($notes as $note) {
+            $body = trim((string) $note->body);
+            if ($body === '') {
+                continue;
+            }
+            $noteIds[(int) $note->id] = true;
+            $assignment = $note->assignment;
+            $items[] = [
+                'id' => 'note-'.$note->id,
+                'kind' => 'comment',
+                'teacher_name' => $note->teacher?->name,
+                'body' => $body,
+                'label' => $assignment ? $this->passageLabel((int) $assignment->surah_number, (int) $assignment->ayah_start, (int) ($assignment->ayah_end ?: $assignment->ayah_start)) : null,
+                'at' => $note->created_at?->toIso8601String(),
+                'recipient_id' => $this->recipientIdForAssignment($student, $note->teacher_assignment_id ? (int) $note->teacher_assignment_id : null),
+            ];
+        }
+
+        $recipients = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->whereHas('assignment', fn ($query) => $query->whereNotNull('feedback')->where('feedback', '!=', ''))
+            ->with('assignment.teacher:id,name')
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            $assignment = $recipient->assignment;
+            $body = trim((string) ($assignment?->feedback ?? ''));
+            $updated = $assignment?->updated_at;
+            if ($body === '' || $updated === null || $updated->lt($from) || $updated->gt($to)) {
+                continue;
+            }
+            $items[] = [
+                'id' => 'assignment-feedback-'.$recipient->id,
+                'kind' => 'assignment_feedback',
+                'teacher_name' => $assignment->teacher?->name,
+                'body' => $body,
+                'label' => $this->passageLabel((int) $assignment->surah_number, (int) $assignment->ayah_start, (int) ($assignment->ayah_end ?: $assignment->ayah_start)),
+                'at' => $updated->toIso8601String(),
+                'recipient_id' => (int) $recipient->id,
+            ];
+        }
+
+        $reviews = TeacherRecitationReview::query()
+            ->where('student_id', $student->id)
+            ->where('status', TeacherRecitationReview::REVIEWED)
+            ->whereBetween('reviewed_at', [$from, $to])
+            ->with(['attempt', 'teacher:id,name', 'feedbackNote'])
+            ->latest('reviewed_at')
+            ->limit(8)
+            ->get();
+
+        foreach ($reviews as $review) {
+            if ($review->feedback_note_id && isset($noteIds[(int) $review->feedback_note_id])) {
+                continue;
+            }
+            $attempt = $review->attempt;
+            $range = $attempt instanceof AiReciteAttempt && is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+            $surah = (int) ($range['surah'] ?? $range['surah_number'] ?? 0);
+            $start = (int) ($range['from'] ?? $range['start'] ?? 0);
+            $end = (int) ($range['to'] ?? $range['end'] ?? $start);
+            $body = trim((string) ($review->feedbackNote?->body ?? ''));
+            $items[] = [
+                'id' => 'review-'.$review->id,
+                'kind' => $body !== '' ? 'comment' : 'reviewed_submission',
+                'teacher_name' => $review->teacher?->name,
+                'body' => $body !== '' ? $body : null,
+                'label' => $surah > 0 && $start > 0 ? $this->passageLabel($surah, $start, $end) : null,
+                'at' => $review->reviewed_at?->toIso8601String(),
+                'recipient_id' => $attempt?->teacher_assignment_recipient_id ? (int) $attempt->teacher_assignment_recipient_id : null,
+            ];
+        }
+
+        usort($items, fn (array $left, array $right) => strcmp((string) ($right['at'] ?? ''), (string) ($left['at'] ?? '')));
+
+        return array_slice($items, 0, 8);
+    }
+
+    private function recipientIdForAssignment(User $student, ?int $assignmentId): ?int
+    {
+        if (! $assignmentId) {
+            return null;
+        }
+        $id = TeacherAssignmentRecipient::query()
+            ->where('student_id', $student->id)
+            ->where('teacher_assignment_id', $assignmentId)
+            ->value('id');
+
+        return $id ? (int) $id : null;
+    }
+
+    private function passageLabel(int $surah, int $start, int $end): string
+    {
+        if ($surah < 1 || $start < 1) {
+            return '';
+        }
+        $end = max($start, $end);
+
+        return trim(QuranMetadata::name($surah).' · '.$start.($end !== $start ? '–'.$end : ''));
     }
 }

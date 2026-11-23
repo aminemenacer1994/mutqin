@@ -8,6 +8,8 @@ use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\MemorisationPracticePlan;
+use App\Models\TeacherAssignmentRecipient;
+use App\Support\Demo\DemoStudentVolume;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
@@ -122,7 +124,8 @@ class OrganisationNetworkSeederTest extends TestCase
         $this->assertGreaterThan(0, AiReciteAttempt::query()->where('user_id', $student->id)->whereNotNull('accuracy_percent')->count());
         $this->assertGreaterThan(0, MemorisationProgress::query()->where('user_id', $student->id)->count());
         $this->assertGreaterThan(0, MemorisationWeakSpot::query()->where('user_id', $student->id)->count());
-        $this->assertGreaterThan(0, MemorisationPracticePlan::query()->where('user_id', $student->id)->count());
+        $this->assertGreaterThanOrEqual(DemoStudentVolume::MIN_LIST_ITEMS, MemorisationPracticePlan::query()->where('user_id', $student->id)->count());
+        $this->assertGreaterThanOrEqual(DemoStudentVolume::MIN_LIST_ITEMS, TeacherAssignmentRecipient::query()->where('student_id', $student->id)->count());
         $this->assertNotNull(UserLastPosition::query()->where('user_id', $student->id)->first());
         $this->assertTrue(
             TeacherNote::query()

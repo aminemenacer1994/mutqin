@@ -36,6 +36,7 @@ use App\Services\Auth\UserRoleService;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Support\Demo\DemoStudentVolume;
 use App\Support\Demo\PlatformDemoCatalog;
 use App\Support\QuranMetadata;
 use App\Support\Registration\OrganisationName;
@@ -277,10 +278,7 @@ class PlatformDemoSeeder extends Seeder
             'updated_at' => $created->copy()->addDays(2),
         ])->save();
 
-        $historical = [];
-        if ($definition['number'] <= 13) {
-            $historical = $this->seedHistoricalAssignments($teacher, $student, $definition, $anchor);
-        }
+        $historical = $this->seedHistoricalAssignments($teacher, $student, $definition, $anchor);
 
         if ($definition['number'] <= 12) {
             $this->seedLearningPlan($teacher, $student, $definition, $activity, $anchor, $assignment, $recipient, $due, $range, $historical);
@@ -309,7 +307,7 @@ class PlatformDemoSeeder extends Seeder
         }
 
         if (in_array($activity, ['revision', 'hifz'], true) && $definition['number'] <= 10) {
-            $this->seedMurajaahPlan($student, $definition, $range, $anchor);
+            $this->seedMurajaahPlans($student, $definition, $range, $anchor);
         }
 
         $this->seedHistory($student, $definition, $range);
@@ -322,25 +320,25 @@ class PlatformDemoSeeder extends Seeder
     private function seedHistoricalAssignments(User $teacher, User $student, array $definition, Carbon $anchor): array
     {
         $rows = [];
-        $moments = [
-            ['offset' => 38, 'due_offset' => 32, 'completed_offset' => 30, 'activity' => 'nazra'],
-            ['offset' => 20, 'due_offset' => 16, 'completed_offset' => 15, 'activity' => 'tajweed'],
-        ];
+        $activities = ['nazra', 'tajweed', 'hifz', 'revision'];
+        $historyCount = DemoStudentVolume::MIN_LIST_ITEMS - 1;
 
-        foreach ($moments as $index => $moment) {
+        for ($index = 0; $index < $historyCount; $index++) {
             $range = $index === 0
                 ? PlatformDemoCatalog::priorRange($definition['number'])
                 : PlatformDemoCatalog::practiceRange($definition['number'] + $index);
-            $created = $anchor->copy()->subDays($moment['offset'])->setTime(11 + $index, 0);
-            $due = $anchor->copy()->subDays($moment['due_offset'])->setTime(17, 0);
-            $completed = $anchor->copy()->subDays($moment['completed_offset'])->setTime(18, 0);
+            $activity = $activities[$index % count($activities)];
+            $offset = 8 + ($index * 4);
+            $created = $anchor->copy()->subDays($offset)->setTime(11 + ($index % 4), 0);
+            $due = $anchor->copy()->subDays(max(1, $offset - 4))->setTime(17, 0);
+            $completed = $anchor->copy()->subDays(max(1, $offset - 6))->setTime(18, 0);
 
             [$assignment] = $this->storeAssignment(
                 $teacher,
                 $student,
                 $definition,
                 $range,
-                $moment['activity'],
+                $activity,
                 AssignmentStatus::Completed,
                 $created,
                 $due,
@@ -467,9 +465,16 @@ class PlatformDemoSeeder extends Seeder
      * @param  array{number: int, email: string}  $definition
      * @param  array{surah: int, from: int, to: int}  $range
      */
-    private function seedMurajaahPlan(User $student, array $definition, array $range, Carbon $anchor): void
+    private function seedMurajaahPlans(User $student, array $definition, array $range, Carbon $anchor): void
     {
-        $identified = $anchor->copy()->subDays(18)->setTime(19, 30);
+        for ($index = 0; $index < DemoStudentVolume::MIN_LIST_ITEMS; $index++) {
+            $this->seedMurajaahPlan($student, $definition, PlatformDemoCatalog::practiceRange($definition['number'] + $index), $anchor, $index);
+        }
+    }
+
+    private function seedMurajaahPlan(User $student, array $definition, array $range, Carbon $anchor, int $index = 0): void
+    {
+        $identified = $anchor->copy()->subDays(18 + ($index * 3))->setTime(19, 30);
         $assessment = new MemorisationAssessment;
         $assessment->forceFill([
             'user_id' => $student->id,
@@ -478,9 +483,9 @@ class PlatformDemoSeeder extends Seeder
             'end_ayah' => $range['to'],
             'assessment_type' => 'memorisation_detection',
             'status' => MemorisationAssessment::STATUS_COMPLETED,
-            'idempotency_key' => 'platform-demo-plan:'.$definition['email'],
+            'idempotency_key' => 'platform-demo-plan:'.$definition['email'].':'.$index,
             'surah_name' => QuranMetadata::name($range['surah']),
-            'overall_accuracy' => 68 + ($definition['number'] % 5) * 4,
+            'overall_accuracy' => 68 + (($definition['number'] + $index) % 5) * 4,
             'friendly_summary' => 'Muraja\'ah plan for '.$this->rangeLabel($range).'.',
             'created_at' => $identified,
             'updated_at' => $identified,
@@ -496,7 +501,7 @@ class PlatformDemoSeeder extends Seeder
             'surah_number' => $range['surah'],
             'start_ayah' => $range['from'],
             'end_ayah' => $range['to'],
-            'recommended_review_at' => $anchor->copy()->addDays(3),
+            'recommended_review_at' => $anchor->copy()->addDays(2 + $index),
             'accepted_at' => $identified,
             'created_at' => $identified,
             'updated_at' => $identified,

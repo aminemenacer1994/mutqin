@@ -1,23 +1,35 @@
 <template>
   <aside :class="shellClass" :style="navStyle">
-    <nav class="teacher-nav nav nav-pills flex-column gap-1" :aria-label="navLabel">
+    <nav class="teacher-nav nav nav-pills flex-column gap-1" :class="navClass" :aria-label="navLabel">
+      <template v-for="item in visibleItems" :key="`${variant}-${item.id}`">
+        <a
+          v-if="item.href"
+          class="teacher-nav__link nav-link d-flex align-items-center gap-2 text-start"
+          :class="[linkClass, { 'is-active': isActive(item.id) }]"
+          :href="item.href"
+          :aria-current="isActive(item.id) ? 'page' : null"
+        >
+          <i :class="item.icon" aria-hidden="true"></i>
+          <span class="teacher-nav__label">{{ navText(item) }}</span>
+        </a>
+        <button
+          v-else
+          type="button"
+          class="teacher-nav__link nav-link d-flex align-items-center gap-2 text-start"
+          :class="[linkClass, { 'is-active': isActive(item.id) }]"
+          :aria-current="isActive(item.id) ? 'page' : null"
+          @click="$emit('select', item.id)"
+        >
+          <i :class="item.icon" aria-hidden="true"></i>
+          <span class="teacher-nav__label">{{ navText(item) }}</span>
+          <span v-if="countFor(item.id)" class="teacher-nav__badge" :title="countTitle(item.id)" :aria-label="countTitle(item.id)">{{ countFor(item.id) }}</span>
+        </button>
+      </template>
       <button
-        v-for="item in visibleItems"
-        :key="`${variant}-${item.id}`"
-        type="button"
-        class="teacher-nav__link nav-link d-flex align-items-center gap-2 text-start"
-        :class="{ 'is-active': isActive(item.id) }"
-        :aria-current="isActive(item.id) ? 'page' : null"
-        @click="$emit('select', item.id)"
-      >
-        <i :class="item.icon" aria-hidden="true"></i>
-        <span class="teacher-nav__label">{{ navText(item) }}</span>
-        <span v-if="countFor(item.id)" class="teacher-nav__badge" :title="countTitle(item.id)" :aria-label="countTitle(item.id)">{{ countFor(item.id) }}</span>
-      </button>
-      <button
+        v-if="showAccount"
         type="button"
         class="teacher-nav__link teacher-nav__account nav-link d-flex align-items-center gap-2 text-start"
-        :class="{ 'is-active': isActive('settings') }"
+        :class="[linkClass, { 'is-active': isActive('settings') }]"
         :aria-current="isActive('settings') ? 'page' : null"
         @click="$emit('select', 'settings')"
       >
@@ -46,6 +58,9 @@ export default {
     badges: { type: Object, default: () => ({}) },
     navLabelKey: { type: String, default: 'teacher.nav_label' },
     settingsLabelKey: { type: String, default: 'teacher.nav_settings' },
+    showAccount: { type: Boolean, default: true },
+    navClass: { type: String, default: '' },
+    linkClass: { type: String, default: '' },
   },
   emits: ['select'],
   computed: {
@@ -63,7 +78,8 @@ export default {
     },
     navStyle() {
       if (this.variant !== 'mobile') return null
-      return { '--teacher-nav-count': String(this.visibleItems.length + 1) }
+      const account = this.showAccount ? 1 : 0
+      return { '--teacher-nav-count': String(this.visibleItems.length + account) }
     },
   },
   methods: {

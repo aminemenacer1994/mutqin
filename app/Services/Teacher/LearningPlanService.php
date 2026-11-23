@@ -703,26 +703,52 @@ class LearningPlanService
     }
 
     /**
-     * Learner-facing active plan summary.
+     * Learner-facing plans from teachers who still have access.
+     * Teacher plan notes stay off this payload.
      *
-     * @return array<string, mixed>|null
+     * @return list<array<string, mixed>>
      */
-    public function presentForLearner(User $student): ?array
+    public function plansForLearner(User $student): array
     {
-        $plan = LearningPlan::query()
+        TeacherFeatures::abortUnlessEnabled();
+
+        return LearningPlan::query()
             ->where('student_id', $student->id)
             ->whereIn('status', [
                 LearningPlanStatus::Active->value,
                 LearningPlanStatus::Paused->value,
                 LearningPlanStatus::Completed->value,
             ])
-            ->with(['teacher:id,name', 'items.assignment.recipients' => fn ($q) => $q->where('student_id', $student->id)])
+            ->with(['teacher:id,name,account_role,organisation_id', 'items.assignment.recipients' => fn ($q) => $q->where('student_id', $student->id)])
             ->latest('id')
-            ->first();
-        if (! $plan) {
-            return null;
-        }
+            ->get()
+            ->filter(function (LearningPlan $plan) use ($student) {
+                $teacher = $plan->teacher;
+
+                return $teacher instanceof User && $this->access->allows($teacher, $student);
+            })
+            ->map(fn (LearningPlan $plan) => $this->learnerPlanPayload($plan))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Learner-facing active plan summary. The latest plan from a current teacher.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function presentForLearner(User $student): ?array
+    {
+        return $this->plansForLearner($student)[0] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function learnerPlanPayload(LearningPlan $plan): array
+    {
         $presented = $this->presentPlan($plan);
+        unset($presented['notes']);
         $presented['teacher_name'] = $plan->teacher?->name;
         $presented['items'] = array_values(array_filter(
             $presented['items'],

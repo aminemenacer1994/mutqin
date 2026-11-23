@@ -411,6 +411,13 @@
       <span v-if="recitationStreamNotice">{{ recitationStreamNotice }}</span>
     </div>
     <p
+      v-if="showPracticeMicStatus"
+      class="practice-mic-status"
+      :data-state="amdLearnerMicStatus"
+      role="status"
+      aria-live="polite"
+    >{{ amdLearnerMicStatusLabel }}</p>
+    <p
       v-if="recitationStreamNotice && (recitationCheckPanelOpen || recitationCheckRecording)"
       class="recite-stream-notice"
       role="status"
@@ -453,6 +460,16 @@
           <i class="bi bi-chevron-left" aria-hidden="true"></i>
           <span>{{ t('memorisation.back_to_progress') }}</span>
         </button>
+        <p
+          v-if="teacherAssignmentRecipientId"
+          class="workspace-session-context"
+          data-testid="workspace-session-context"
+        >{{ t('memorisation.assignment_session_note') }}</p>
+        <p
+          v-else-if="showDashboardReturn"
+          class="workspace-session-context is-practice"
+          data-testid="workspace-session-context"
+        >{{ t('memorisation.practice_session_note') }}</p>
         <!-- Verses Grid -->
         <div class="workspace">
         <section
@@ -1989,6 +2006,14 @@
           <i class="bi bi-chevron-left" aria-hidden="true"></i>
           <span>{{ t('memorisation.back_to_progress') }}</span>
         </button>
+        <p
+          v-if="teacherAssignmentRecipientId"
+          class="workspace-session-context"
+        >{{ t('memorisation.assignment_session_note') }}</p>
+        <p
+          v-else-if="showDashboardReturn"
+          class="workspace-session-context is-practice"
+        >{{ t('memorisation.practice_session_note') }}</p>
         <div class="tools-topbar">
           <div class="tools-title">
             <h3 id="memorisationToolsTitle" class="tools-title__heading">{{ controlsPanelTitle }}</h3>

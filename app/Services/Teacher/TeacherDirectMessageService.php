@@ -8,6 +8,7 @@ use App\Enums\TeacherNoteKind;
 use App\Models\GroupMembership;
 use App\Models\TeacherNote;
 use App\Models\User;
+use App\Services\Learning\StudentMessagingPolicy;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
 use App\Support\TeacherOverviewCache;
@@ -19,6 +20,7 @@ class TeacherDirectMessageService
     public function __construct(
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentMessageAudioService $messageAudio,
+        private readonly StudentMessagingPolicy $messaging,
     ) {}
 
     /** @return list<array<string, mixed>> */
@@ -33,6 +35,7 @@ class TeacherDirectMessageService
             ->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
             ->whereNull('parent_user_id')
+            ->where('kind', '!=', TeacherNoteKind::ParentMessage->value)
             ->where(function ($query) {
                 $query->where(function ($direct) {
                     $direct->whereNull('teacher_assignment_id')
@@ -84,13 +87,19 @@ class TeacherDirectMessageService
             ->pluck('user_id'))
             ->get(['id', 'name', 'account_role', 'organisation_id'])
             ->filter(fn (User $teacher) => $this->access->allows($teacher, $student))
-            ->map(fn (User $teacher) => [
-                'teacher_id' => (int) $teacher->id,
-                'teacher_name' => $teacher->name,
-                // Loading the learning page is not the same as opening a
-                // conversation. Keep unread state until the student chooses it.
-                'messages' => $this->thread($teacher, $student, $student, markRead: false),
-            ])->values()->all();
+            ->map(function (User $teacher) use ($student) {
+                $decision = $this->messaging->decision($student, $teacher);
+
+                return [
+                    'teacher_id' => (int) $teacher->id,
+                    'teacher_name' => $teacher->name,
+                    'can_message' => $decision['allowed'],
+                    'messaging_reason' => $decision['reason'],
+                    // Loading the learning page is not the same as opening a
+                    // conversation. Keep unread state until the student chooses it.
+                    'messages' => $this->thread($teacher, $student, $student, markRead: false),
+                ];
+            })->values()->all();
     }
 
     public function send(
@@ -104,6 +113,9 @@ class TeacherDirectMessageService
     ): TeacherNote {
         abort_unless($this->access->allows($teacher, $student)
             && in_array((int) $sender->id, [(int) $teacher->id, (int) $student->id], true), 404);
+        if ((int) $sender->id === (int) $student->id) {
+            $this->messaging->assertStudentMayMessage($student, $teacher);
+        }
         $body = trim($body);
         if (($body === '' && $audio === null) || mb_strlen($body) > 2000) {
             throw ValidationException::withMessages(['body' => 'Write a message or add a voice note of up to 2,000 characters.']);

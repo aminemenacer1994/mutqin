@@ -19,7 +19,7 @@ async function main() {
     await page.goto(`${base}/progress`)
     await page.locator('.learner-home__header').waitFor()
 
-    const activeTab = page.locator('.dash-jump__link.is-active')
+    const activeTab = page.locator('.dash-jump__link.is-active:visible')
     const activeStyle = await activeTab.evaluate(element => {
       const style = getComputedStyle(element)
       const box = element.getBoundingClientRect()

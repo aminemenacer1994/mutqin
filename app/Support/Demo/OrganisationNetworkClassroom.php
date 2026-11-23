@@ -97,9 +97,9 @@ final class OrganisationNetworkClassroom
 
         $this->progress($student, $definition, $range);
         $this->weakSpots($student, $scored, $range);
-        $this->revisionPlan($student, $definition, $range, $moments[0] ?? now()->subDays(12));
+        $this->practicePlans($student, $definition, $moments[0] ?? now()->subDays(12));
         $this->lastPosition($student, $range);
-        $this->assignment($teacher, $student, $definition, $range);
+        $this->assignments($teacher, $student, $definition);
         $this->feedback($teacher, $student, $definition);
     }
 
@@ -448,50 +448,62 @@ final class OrganisationNetworkClassroom
      * @param  array{profile: string, number: int}  $definition
      * @param  array{surah: int, from: int, to: int}  $range
      */
-    private function revisionPlan(User $user, array $definition, array $range, Carbon $identified): void
+    /**
+     * @param  array{profile: string, number: int, email: string}  $definition
+     */
+    private function practicePlans(User $user, array $definition, Carbon $identified): void
     {
         if ($definition['profile'] === 'new') {
             return;
         }
 
         $overdue = in_array($definition['profile'], ['average', 'struggling', 'inactive'], true);
-        $reviewRange = $overdue ? OrganisationNetworkCatalog::OVERDUE_RANGE : $range;
-        $reviewAt = $overdue ? now()->subDays(2 + ($definition['number'] % 4)) : now()->addDays(4);
 
-        $assessment = new MemorisationAssessment;
-        $assessment->forceFill([
-            'user_id' => $user->id,
-            'surah_number' => $reviewRange['surah'],
-            'start_ayah' => $reviewRange['from'],
-            'end_ayah' => $reviewRange['to'],
-            'assessment_type' => 'memorisation_detection',
-            'status' => MemorisationAssessment::STATUS_COMPLETED,
-            'idempotency_key' => 'org-network-plan-'.$user->id,
-            'surah_name' => QuranMetadata::name($reviewRange['surah']),
-            'overall_accuracy' => $overdue ? 61 : 91,
-            'friendly_summary' => 'Revision plan for '.$this->rangeLabel($reviewRange).'.',
-            'created_at' => $identified,
-            'updated_at' => $identified,
-        ])->save();
+        for ($index = 0; $index < DemoStudentVolume::MIN_LIST_ITEMS; $index++) {
+            $baseRange = OrganisationNetworkCatalog::practiceRange($definition['number'] + $index);
+            $reviewRange = $overdue && $index % 3 === 0
+                ? OrganisationNetworkCatalog::OVERDUE_RANGE
+                : $baseRange;
+            $reviewAt = $overdue
+                ? now()->subDays(2 + (($definition['number'] + $index) % 6))
+                : now()->addDays(3 + $index);
+            $at = $identified->copy()->subDays($index * 4);
 
-        $plan = new MemorisationPracticePlan;
-        $plan->forceFill([
-            'user_id' => $user->id,
-            'assessment_id' => $assessment->id,
-            'title' => 'Revisit '.$this->rangeLabel($reviewRange),
-            'explanation' => $overdue
-                ? 'This range is overdue for muraja\'ah.'
-                : 'Scheduled muraja\'ah for a range this student already practises.',
-            'status' => MemorisationPracticePlan::STATUS_ACTIVE,
-            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
-            'surah_number' => $reviewRange['surah'],
-            'start_ayah' => $reviewRange['from'],
-            'end_ayah' => $reviewRange['to'],
-            'recommended_review_at' => $reviewAt,
-            'accepted_at' => $identified,
-            'created_at' => $identified,
-            'updated_at' => $identified,
-        ])->save();
+            $assessment = new MemorisationAssessment;
+            $assessment->forceFill([
+                'user_id' => $user->id,
+                'surah_number' => $reviewRange['surah'],
+                'start_ayah' => $reviewRange['from'],
+                'end_ayah' => $reviewRange['to'],
+                'assessment_type' => 'memorisation_detection',
+                'status' => MemorisationAssessment::STATUS_COMPLETED,
+                'idempotency_key' => 'org-network-plan:'.$definition['email'].':'.$index,
+                'surah_name' => QuranMetadata::name($reviewRange['surah']),
+                'overall_accuracy' => $overdue ? 58 + ($index % 8) : 88 + ($index % 6),
+                'friendly_summary' => 'Revision plan for '.$this->rangeLabel($reviewRange).'.',
+                'created_at' => $at,
+                'updated_at' => $at,
+            ])->save();
+
+            $plan = new MemorisationPracticePlan;
+            $plan->forceFill([
+                'user_id' => $user->id,
+                'assessment_id' => $assessment->id,
+                'title' => 'Revisit '.$this->rangeLabel($reviewRange),
+                'explanation' => $overdue && $index % 3 === 0
+                    ? 'This range is overdue for muraja\'ah.'
+                    : 'Scheduled muraja\'ah for a range this student already practises.',
+                'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+                'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+                'surah_number' => $reviewRange['surah'],
+                'start_ayah' => $reviewRange['from'],
+                'end_ayah' => $reviewRange['to'],
+                'recommended_review_at' => $reviewAt,
+                'accepted_at' => $at,
+                'created_at' => $at,
+                'updated_at' => $at,
+            ])->save();
+        }
     }
 
     /**
@@ -514,40 +526,63 @@ final class OrganisationNetworkClassroom
     }
 
     /**
-     * @param  array{profile: string, number: int}  $definition
-     * @param  array{surah: int, from: int, to: int}  $range
+     * @param  array{profile: string, number: int, email: string}  $definition
      */
-    private function assignment(User $teacher, User $student, array $definition, array $range): void
+    private function assignments(User $teacher, User $student, array $definition): void
     {
-        $createdAt = now()->subDays(5);
-        $dueAt = in_array($definition['profile'], ['struggling', 'inactive'], true)
-            ? now()->subDay()
-            : now()->addDays(6);
+        $activities = ['nazra', 'hifz', 'tajweed', 'revision'];
+        $statuses = [
+            AssignmentStatus::Completed,
+            AssignmentStatus::Pending,
+            AssignmentStatus::InProgress,
+            AssignmentStatus::AwaitingConfirmation,
+        ];
 
-        $assignment = new TeacherAssignment;
-        $assignment->forceFill([
-            'teacher_id' => $teacher->id,
-            'organisation_id' => $teacher->organisation_id,
-            'kind' => AssignmentKind::AiRecite,
-            'hifz_category' => 'sabqi',
-            'surah_number' => $range['surah'],
-            'ayah_start' => $range['from'],
-            'ayah_end' => $range['to'],
-            'repetition_target' => 1,
-            'due_at' => $dueAt,
-            'feedback' => 'Keep the same ayah range and recite it once more this week.',
-            'created_at' => $createdAt,
-            'updated_at' => $createdAt,
-        ])->save();
+        for ($index = 0; $index < DemoStudentVolume::MIN_LIST_ITEMS; $index++) {
+            $range = OrganisationNetworkCatalog::practiceRange($definition['number'] + $index);
+            $activity = $activities[$index % count($activities)];
+            $createdAt = now()->subDays(6 + ($index * 5))->setTime(10 + ($index % 4), 0);
+            $dueAt = in_array($definition['profile'], ['struggling', 'inactive'], true) && $index % 4 === 0
+                ? now()->subDays(1 + ($index % 3))
+                : now()->addDays(4 + $index);
+            $status = $statuses[$index % count($statuses)];
+            $completedAt = $status === AssignmentStatus::Completed
+                ? $createdAt->copy()->addDays(2)
+                : null;
 
-        $recipient = new TeacherAssignmentRecipient;
-        $recipient->forceFill([
-            'teacher_assignment_id' => $assignment->id,
-            'student_id' => $student->id,
-            'status' => AssignmentStatus::Pending,
-            'created_at' => $createdAt,
-            'updated_at' => $createdAt,
-        ])->save();
+            $assignment = new TeacherAssignment;
+            $assignment->forceFill([
+                'teacher_id' => $teacher->id,
+                'organisation_id' => $teacher->organisation_id,
+                'kind' => in_array($activity, ['nazra', 'tajweed'], true) ? AssignmentKind::Practice : AssignmentKind::AiRecite,
+                'activity' => $activity,
+                'hifz_category' => ['sabaq', 'sabqi', 'manzil'][$index % 3],
+                'surah_number' => $range['surah'],
+                'ayah_start' => $range['from'],
+                'ayah_end' => $range['to'],
+                'repetition_target' => $activity === 'hifz' ? 3 : 1,
+                'due_at' => $dueAt,
+                'feedback' => $index === 0 ? 'Keep the same ayah range and recite it once more this week.' : null,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ])->save();
+
+            $recipient = new TeacherAssignmentRecipient;
+            $recipient->forceFill([
+                'teacher_assignment_id' => $assignment->id,
+                'student_id' => $student->id,
+                'status' => $status,
+                'started_at' => in_array($status, [AssignmentStatus::InProgress, AssignmentStatus::Completed, AssignmentStatus::AwaitingConfirmation], true)
+                    ? $createdAt->copy()->addDay()
+                    : null,
+                'student_completed_at' => in_array($status, [AssignmentStatus::Completed, AssignmentStatus::AwaitingConfirmation], true)
+                    ? $createdAt->copy()->addDays(2)
+                    : null,
+                'completed_at' => $completedAt,
+                'created_at' => $createdAt,
+                'updated_at' => $completedAt ?? $createdAt,
+            ])->save();
+        }
     }
 
     /**

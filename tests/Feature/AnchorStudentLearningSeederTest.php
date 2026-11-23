@@ -9,6 +9,7 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Support\Demo\DemoStudentVolume;
 use App\Support\Demo\ParentDemoCatalog;
 use Database\Seeders\OrganisationNetworkSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,7 +40,7 @@ class AnchorStudentLearningSeederTest extends TestCase
         $child = User::query()->where('email', ParentDemoCatalog::CHILD_EMAIL)->firstOrFail();
 
         $this->assertGreaterThan(0, UserSession::query()->where('user_id', $child->id)->count());
-        $this->assertGreaterThan(0, TeacherAssignmentRecipient::query()->where('student_id', $child->id)->count());
+        $this->assertGreaterThanOrEqual(DemoStudentVolume::MIN_LIST_ITEMS, TeacherAssignmentRecipient::query()->where('student_id', $child->id)->count());
         $this->assertGreaterThan(0, MemorisationProgress::query()->where('user_id', $child->id)->count());
         $this->assertGreaterThan(0, TeacherNote::query()->where('student_id', $child->id)->whereNull('parent_user_id')->count());
     }
@@ -63,6 +64,6 @@ class AnchorStudentLearningSeederTest extends TestCase
             ->where('student_id', $child->id)
             ->where('parent_user_id', $parent->id)
             ->count());
-        $this->assertGreaterThan(0, ParentLearningReport::query()->where('student_user_id', $child->id)->count());
+        $this->assertGreaterThanOrEqual(DemoStudentVolume::MIN_LIST_ITEMS, ParentLearningReport::query()->where('student_user_id', $child->id)->count());
     }
 }

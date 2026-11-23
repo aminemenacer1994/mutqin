@@ -95,7 +95,7 @@
           <i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ t('teacher.voice_feedback_unavailable') }}
         </p>
         <a
-          v-if="variant === 'drawer' && item.correction_action?.href"
+          v-if="item.correction_action?.href"
           class="learner-teacher__feedback-correction-action"
           :href="item.correction_action.href"
         >
@@ -126,6 +126,7 @@ export default {
     variant: { type: String, default: 'panel' },
     pending: { type: Boolean, default: false },
     mobileCollapsible: { type: Boolean, default: false },
+    limit: { type: Number, default: 0 },
   },
   emits: ['open-feedback'],
   data() {
@@ -149,7 +150,9 @@ export default {
       return sortFeedbackInbox(mergeFeedbackReadState(raw, map))
     },
     feedbackPreview() {
-      const limit = this.variant === 'drawer' ? 20 : SIDEBAR_PREVIEW_LIMIT
+      const limit = this.limit > 0
+        ? this.limit
+        : (this.variant === 'drawer' ? 20 : SIDEBAR_PREVIEW_LIMIT)
       return this.feedbackItems.slice(0, limit)
     },
     unreadCount() {

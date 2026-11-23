@@ -2917,6 +2917,16 @@ export default {
     showDashboardReturn() {
       return !!(this.dashboardEntryReturnHref || this.dashboardAiCheckReturnTo)
     },
+    showPracticeMicStatus() {
+      if (this.amdOpen) return false
+      const status = this.amdLearnerMicStatus
+      if (!status || status === 'ready') return false
+      return !!(
+        this.recitationCheckRecording
+        || this.recitationCheckPreparing
+        || this.microphoneHelp
+      )
+    },
     progressPageUrl() {
       return '/progress'
     },
@@ -14568,6 +14578,10 @@ export default {
         // Technique links are deliberately opt-in. At present Progressive Hiding
         // is the teacher-facing beginner tool; recommendations remain advisory.
         const technique = techniqueParam === 'blur' ? 'blur' : null
+        const practiceToolParam = String(params.get('practice_tool') || '').trim().toLowerCase()
+        const practiceTool = practiceToolParam === 'talqin' || practiceToolParam === 'focus'
+          ? practiceToolParam
+          : null
         const goal = normaliseSessionGoal(params.get('goal') || '')
         const hasGoal = params.has('goal')
         const reciterParam = String(params.get('reciter') || '').trim()
@@ -14584,6 +14598,9 @@ export default {
           || recommendationId
           || (surah > 0)
           || panel === 'saved'
+          || panel === 'find'
+          || practiceTool
+          || (returnTo === 'dashboard' && !!view)
           || aiCheck
           || journey
           || review
@@ -14599,6 +14616,7 @@ export default {
             recommendationId: recommendationId || null,
             sessionId: sessionId || null,
             panel: panel || null,
+            practiceTool,
             returnTo: returnTo || null,
             returnTab: returnTab || null,
             assignmentRecipientId: assignmentRecipientId > 0 ? assignmentRecipientId : null,
@@ -14628,7 +14646,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'return_tab', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt', 'technique']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'return_tab', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt', 'technique', 'practice_tool']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14733,6 +14751,12 @@ export default {
 
         if (entry.panel === 'saved') {
           this.openSavedSessionsPanel()
+          this.markDashboardEntryIntentConsumed()
+          return true
+        }
+
+        if (entry.panel === 'find') {
+          this.openQuranSearchModal()
           this.markDashboardEntryIntentConsumed()
           return true
         }
@@ -14890,6 +14914,14 @@ export default {
           if (entry.technique === 'blur') {
             this.blurModeEnabled = true
             this.syncPracticeToolSectionOpen('blur_mode', true)
+          }
+          if (entry.practiceTool === 'focus') {
+            this.focusModeEnabled = true
+            this.syncPracticeToolSectionOpen('focus_mode', true)
+          }
+          if (entry.practiceTool === 'talqin') {
+            this.talqinModeEnabled = true
+            this.syncPracticeToolSectionOpen('talqin_mode', true)
           }
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           this.markDashboardEntryIntentConsumed()

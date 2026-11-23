@@ -89,6 +89,8 @@ class MemorisationDetectionController extends Controller
                 ]);
             }
             $payload['teacher_assignment_recipient_id'] = $recipient->id;
+        } else {
+            unset($payload['teacher_assignment_recipient_id']);
         }
 
         try {

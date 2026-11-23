@@ -146,7 +146,7 @@ assert.match(dashboard, /card_kind === 'attempt'/, 'attempt cards keep expandabl
 assert.equal(en.dashboard.ai_recite.review_feedback, 'Review feedback')
 assert.equal(en.dashboard.ai_recite.wording_match, 'Wording match')
 assert.match(en.dashboard.ai_recite.no_attention_ayahs, /check did not flag/i, 'an unflagged check does not imply teacher approval or flawless recitation')
-assert.equal(en.dashboard.ai_recite.show_flagged_ayahs, 'Show flagged ayahs')
+assert.equal(en.dashboard.ai_recite.show_flagged_ayahs, 'Show wording differences')
 assert.equal(en.dashboard.ai_recite.insight_excellent, 'Excellent match. Most evaluated words matched.')
 assert.match(en.dashboard.ai_recite.words_matched_percent, /\{n\}% words matched/)
 assert.match(aiReciteAttemptCard, /attentionAyahs\.length/, 'flagged, uncertain, and skipped ayahs are the default detail view')

@@ -7,6 +7,8 @@ use App\Enums\RecommendationType;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\AyahNote;
+use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherRecitationReview;
 use App\Models\LearningAnalytic;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
@@ -18,6 +20,7 @@ use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Services\Achievements\AchievementService;
+use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Learning\LearningHistoryComposer;
 use App\Services\Learning\ProgressOverviewService;
 use App\Services\Learning\SessionAnalysisQueryService;
@@ -54,9 +57,11 @@ class DashboardService
                 Cache::forget('dashboard:'.$version.':'.$user->id.':7');
                 Cache::forget('dashboard:'.$version.':'.$user->id.':30');
             }
-            foreach ([25, 50, 100, 200] as $limit) {
+            foreach ([25, 50, 100, 101, 200] as $limit) {
                 Cache::forget('dashboard:activity:v1:'.$user->id.':'.$limit);
                 Cache::forget('dashboard:activity:v2:'.$user->id.':'.$limit);
+                Cache::forget('dashboard:activity:v3:'.$user->id.':'.$limit);
+                Cache::forget('dashboard:activity:v4:'.$user->id.':'.$limit);
             }
         } catch (\Throwable $e) {
             report($e);
@@ -354,35 +359,43 @@ class DashboardService
     }
 
     /**
-     * Full chronological activity log for the dashboard drawer.
+     * Full chronological activity log for the dashboard drawer and Activity page.
      * Includes sessions, AI Recite checks, and notes with dates/outcomes.
      *
      * Copy is client-localised via outcome_key / structured surah+ayah fields.
+     * Filtered requests are not cached. The unfiltered list keeps its previous shape.
      *
+     * @param  array<string, mixed>  $filters
      * @return list<array<string, mixed>>
      */
-    public function activityLog(User $user, int $limit = 100): array
+    public function activityLog(User $user, int $limit = 100, array $filters = []): array
     {
         $limit = max(1, min(200, $limit));
-        $skipCache = app()->runningUnitTests() && ! config('mutqin.perf_benchmarks', false);
+        $filters = $this->normaliseActivityFilters($filters);
+        $skipCache = $filters['active'] || (app()->runningUnitTests() && ! config('mutqin.perf_benchmarks', false));
         if ($skipCache) {
-            return $this->buildActivityLog($user, $limit);
+            return $this->buildActivityLog($user, $limit, $filters);
         }
 
-        $cacheKey = 'dashboard:activity:v3:'.$user->id.':'.$limit;
+        $cacheKey = 'dashboard:activity:v4:'.$user->id.':'.$limit;
 
-        return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $limit) {
-            return $this->utf8Safe($this->buildActivityLog($user, $limit));
+        return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $limit, $filters) {
+            return $this->utf8Safe($this->buildActivityLog($user, $limit, $filters));
         });
     }
 
     /**
+     * @param  array<string, mixed>  $filters
      * @return list<array<string, mixed>>
      */
-    private function buildActivityLog(User $user, int $limit): array
+    private function buildActivityLog(User $user, int $limit, array $filters = []): array
     {
+        $filters = $this->normaliseActivityFilters($filters);
+        $scan = $filters['active'] ? 200 : $limit;
+        $type = $filters['type'];
         $events = collect();
 
+        if ($type === '' || $type === 'session') {
         UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
@@ -390,10 +403,11 @@ class DashboardService
                 UserSessionStatus::Completed->value,
                 UserSessionStatus::EndedEarly->value,
                 UserSessionStatus::Paused->value,
+                UserSessionStatus::Interrupted->value,
             ])
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
-            ->limit($limit)
+            ->limit($scan)
             ->get([
                 'id',
                 'status',
@@ -420,21 +434,30 @@ class DashboardService
                     $session->memorisation_mode
                     ?: ($config['sessionMode'] ?? $config['mode'] ?? ($meta['session_mode'] ?? ''))
                 )));
+                $canResume = $status?->isUnfinished() === true;
 
-                [$outcomeKey, $at] = match (true) {
+                [$outcomeKey, $activityStatus, $at] = match (true) {
                     $status === UserSessionStatus::Completed => [
                         'session_completed',
+                        'completed',
                         $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::EndedEarly => [
                         'session_ended_early',
+                        'ended_early',
                         $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::Paused => [
                         'session_saved',
+                        'saved',
                         $session->paused_at ?? $session->last_activity_at,
                     ],
-                    default => [null, null],
+                    $status === UserSessionStatus::Interrupted => [
+                        'session_interrupted',
+                        'interrupted',
+                        $session->last_activity_at ?? $session->paused_at,
+                    ],
+                    default => [null, null, null],
                 };
 
                 if (! $outcomeKey || ! $at) {
@@ -452,22 +475,73 @@ class DashboardService
                     'ayah_start' => $start > 0 ? $start : null,
                     'ayah_end' => $end > 0 ? $end : null,
                     'practice_mode' => $practiceMode,
+                    'learning_area' => $this->activityLearningArea($practiceMode),
+                    'activity_status' => $activityStatus,
+                    'can_resume' => $canResume,
+                    'resume_href' => $canResume
+                        ? $this->memorisationHref([
+                            'resume' => 1,
+                            'session' => (int) $session->id,
+                        ])
+                        : null,
                     'outcome_key' => $outcomeKey,
                     'occurred_at' => Carbon::parse($at)->toIso8601String(),
-                    'href' => $this->memorisationHref(array_filter([
-                        'surah' => $surah ?: null,
-                        'from' => $start ?: null,
-                        'to' => ($end ?: $start) ?: null,
-                    ])),
+                    'href' => ($surah > 0 && $start > 0)
+                        ? $this->memorisationHref([
+                            'surah' => $surah,
+                            'from' => $start,
+                            'to' => ($end ?: $start),
+                        ])
+                        : null,
                 ]));
             });
+        }
 
-        AiReciteAttempt::query()
-            ->where('user_id', $user->id)
-            ->latest('id')
-            ->limit($limit)
-            ->get(['id', 'ayah_range', 'band', 'accuracy_percent', 'created_at'])
-            ->each(function (AiReciteAttempt $attempt) use ($events) {
+        if ($type === '' || $type === 'ai_check' || $type === 'teacher_review') {
+            $attempts = AiReciteAttempt::query()
+                ->where('user_id', $user->id)
+                ->latest('id')
+                ->limit($scan)
+                ->get([
+                    'id',
+                    'user_id',
+                    'teacher_assignment_recipient_id',
+                    'ayah_range',
+                    'band',
+                    'accuracy_percent',
+                    'audio_path',
+                    'audio_expires_at',
+                    'created_at',
+                ]);
+            $reviewStatus = [];
+            if ($attempts->isNotEmpty()) {
+                TeacherRecitationReview::query()
+                    ->where('student_id', $user->id)
+                    ->whereIn('ai_recite_attempt_id', $attempts->pluck('id'))
+                    ->get(['ai_recite_attempt_id', 'status'])
+                    ->each(function (TeacherRecitationReview $review) use (&$reviewStatus) {
+                        $id = (int) $review->ai_recite_attempt_id;
+                        $status = (string) $review->status;
+                        if (($reviewStatus[$id] ?? null) === TeacherRecitationReview::REVIEWED) {
+                            return;
+                        }
+                        if (in_array($status, [TeacherRecitationReview::PENDING, TeacherRecitationReview::REVIEWED], true)) {
+                            $reviewStatus[$id] = $status;
+                        }
+                    });
+            }
+            $recipientIds = $attempts->pluck('teacher_assignment_recipient_id')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+            $recipients = $recipientIds->isEmpty()
+                ? collect()
+                : TeacherAssignmentRecipient::query()
+                    ->where('student_id', $user->id)
+                    ->whereIn('id', $recipientIds)
+                    ->with('assignment.teacher:id,name')
+                    ->get()
+                    ->keyBy('id');
+            $audio = app(AiReciteAttemptAudioService::class);
+
+            $attempts->each(function (AiReciteAttempt $attempt) use ($events, $reviewStatus, $recipients, $audio, $user) {
                 $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
                 $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? 0);
                 $from = (int) ($range['from'] ?? $range['start'] ?? $range['ayah_start'] ?? 0);
@@ -475,6 +549,10 @@ class DashboardService
                 $band = is_string($attempt->band) ? strtolower($attempt->band) : null;
                 $accuracy = $attempt->accuracy_percent !== null ? (int) $attempt->accuracy_percent : null;
                 $hasResult = ($band !== null && $band !== '') || $accuracy !== null;
+                $recipient = $recipients->get((int) $attempt->teacher_assignment_recipient_id);
+                $assignment = $recipient?->assignment;
+                $activity = (string) ($assignment->activity ?? '');
+                $kept = $audio->hasPlayableAudio($attempt) && $audio->canView($user, $attempt);
 
                 $events->push($this->activityEvent([
                     'id' => 'ai-'.$attempt->id,
@@ -486,25 +564,36 @@ class DashboardService
                     'surah_name' => $surah ? QuranMetadata::name($surah) : null,
                     'ayah_start' => $from > 0 ? $from : null,
                     'ayah_end' => $to > 0 ? $to : null,
+                    'learning_area' => $this->activityLearningArea('', $activity),
+                    'activity_status' => $hasResult ? 'scored' : 'no_result',
+                    'teacher_review_status' => $reviewStatus[(int) $attempt->id] ?? null,
+                    'recording_available' => $kept,
+                    'recipient_id' => $recipient ? (int) $recipient->id : null,
+                    'assignment_id' => $assignment ? (int) $assignment->id : null,
+                    'teacher_name' => $assignment?->teacher?->name ?: null,
                     'outcome_key' => $hasResult ? 'ai_result' : 'ai_check',
                     'outcome_params' => array_filter([
                         'band' => $band,
                         'accuracy' => $accuracy,
                     ], fn ($value) => $value !== null && $value !== ''),
                     'occurred_at' => optional($attempt->created_at)->toIso8601String(),
-                    'href' => $this->memorisationHref(array_filter([
-                        'surah' => $surah ?: null,
-                        'from' => $from ?: null,
-                        'to' => ($to ?: $from) ?: null,
-                    ])),
+                    'href' => ($surah > 0 && $from > 0)
+                        ? $this->memorisationHref([
+                            'surah' => $surah,
+                            'from' => $from,
+                            'to' => ($to ?: $from),
+                        ])
+                        : null,
                 ]));
             });
+        }
 
+        if ($type === '') {
         AyahNote::query()
             ->where('user_id', $user->id)
             ->latest('updated_at')
             ->latest('id')
-            ->limit($limit)
+            ->limit($scan)
             ->get(['id', 'surah_number', 'ayah_number', 'body', 'updated_at', 'created_at'])
             ->each(function (AyahNote $note) use ($events) {
                 $body = trim((string) preg_replace('/\s+/u', ' ', (string) $note->body));
@@ -535,7 +624,7 @@ class DashboardService
             ->whereIn('status', ['memorised', 'mastered'])
             ->orderByDesc('completed_at')
             ->orderByDesc('updated_at')
-            ->limit($limit)
+            ->limit($scan)
             ->get(['id', 'surah_number', 'ayah_number', 'status', 'completed_at', 'updated_at'])
             ->each(function (MemorisationProgress $row) use ($events) {
                 $at = $row->completed_at ?? $row->updated_at;
@@ -550,6 +639,8 @@ class DashboardService
                     'ayah_start' => (int) $row->ayah_number ?: null,
                     'ayah_end' => (int) $row->ayah_number ?: null,
                     'practice_mode' => 'memorisation',
+                    'learning_area' => 'hifz',
+                    'activity_status' => 'completed',
                     'outcome_key' => 'ayah_memorised',
                     'occurred_at' => Carbon::parse($at)->toIso8601String(),
                     'href' => $this->memorisationHref([
@@ -559,16 +650,27 @@ class DashboardService
                     ]),
                 ]));
             });
+        }
 
-        foreach (app(LearningHistoryComposer::class)->events($user, $limit) as $event) {
-            $events->push($this->activityEvent($event));
+        if ($type === '' || $type === 'assignment' || $type === 'teacher_review') {
+            foreach (app(LearningHistoryComposer::class)->events($user, $scan) as $event) {
+                $events->push($this->activityEvent($event));
+            }
         }
 
         $events = $events
             ->filter(fn ($event) => ! empty($event['occurred_at']))
-            ->sortByDesc('occurred_at')
-            ->take($limit)
-            ->values();
+            ->sortByDesc(fn ($event) => ($event['occurred_at'] ?? '').'|'.($event['id'] ?? ''));
+
+        if ($filters['active']) {
+            $events = $events
+                ->filter(fn ($event) => $this->activityEventMatches($event, $filters))
+                ->slice($filters['offset'])
+                ->take($limit)
+                ->values();
+        } else {
+            $events = $events->take($limit)->values();
+        }
 
         $sessionIds = $events
             ->filter(fn ($event) => ($event['analysis_kind'] ?? '') === 'session')
@@ -631,8 +733,182 @@ class DashboardService
         $event['verified_mistake'] = $event['authority'] === 'ai_word_match'
             ? false
             : (bool) ($event['verified_mistake'] ?? false);
+        $event['can_resume'] = (bool) ($event['can_resume'] ?? false);
+        if (! $event['can_resume']) {
+            $event['resume_href'] = null;
+        }
+        $event['learning_area'] = $this->activityLearningArea(
+            (string) ($event['practice_mode'] ?? ''),
+            (string) ($event['learning_area'] ?? '')
+        );
+        unset($event['audio_url'], $event['audio'], $event['url']);
+        if (in_array($type, ['ai_check', 'ai_recite'], true)) {
+            $event['recording_available'] = (bool) ($event['recording_available'] ?? false);
+            $review = (string) ($event['teacher_review_status'] ?? '');
+            $event['teacher_review_status'] = in_array($review, [
+                TeacherRecitationReview::PENDING,
+                TeacherRecitationReview::REVIEWED,
+            ], true) ? $review : null;
+        } else {
+            unset($event['recording_available']);
+        }
 
         return $event;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array{
+     *     type: string,
+     *     area: string,
+     *     status: string,
+     *     kind: string,
+     *     from: ?Carbon,
+     *     to: ?Carbon,
+     *     offset: int,
+     *     paged: bool,
+     *     active: bool
+     * }
+     */
+    private function normaliseActivityFilters(array $filters): array
+    {
+        $type = strtolower(trim((string) ($filters['type'] ?? '')));
+        $area = strtolower(trim((string) ($filters['area'] ?? '')));
+        $status = strtolower(trim((string) ($filters['status'] ?? '')));
+        $kind = strtolower(trim((string) ($filters['kind'] ?? '')));
+        if (! in_array($type, ['session', 'assignment', 'ai_check', 'teacher_review'], true)) {
+            $type = '';
+        }
+        if (! in_array($area, ['nazra', 'hifz', 'tajweed', 'revision'], true)) {
+            $area = '';
+        }
+        if (! in_array($status, ['completed', 'saved', 'interrupted', 'awaiting_review', 'reviewed', 'no_result'], true)) {
+            $status = '';
+        }
+        if (! in_array($kind, ['memorisation', 'revision', 'recitation', 'note'], true)) {
+            $kind = '';
+        }
+        $from = $this->activityFilterDate($filters['from'] ?? null);
+        $to = $this->activityFilterDate($filters['to'] ?? null);
+        if ($from && $to && $from->gt($to)) {
+            [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->startOfDay()];
+        }
+        $offset = max(0, min(500, (int) ($filters['offset'] ?? 0)));
+        $paged = filter_var($filters['paged'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        return [
+            'type' => $type,
+            'area' => $area,
+            'status' => $status,
+            'kind' => $kind,
+            'from' => $from,
+            'to' => $to,
+            'offset' => $offset,
+            'paged' => $paged,
+            'active' => $paged || $type !== '' || $area !== '' || $status !== '' || $kind !== '' || $from !== null || $to !== null || $offset > 0,
+        ];
+    }
+
+    private function activityFilterDate(mixed $value): ?Carbon
+    {
+        if ($value instanceof Carbon) {
+            return $value->copy()->startOfDay();
+        }
+        $value = trim((string) $value);
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return null;
+        }
+        try {
+            $date = Carbon::createFromFormat('!Y-m-d', $value);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $date instanceof Carbon && $date->format('Y-m-d') === $value
+            ? $date->startOfDay()
+            : null;
+    }
+
+    private function activityLearningArea(string $mode, string $activity = ''): ?string
+    {
+        $value = strtolower(trim($activity !== '' ? $activity : $mode));
+
+        return match ($value) {
+            'nazra' => 'nazra',
+            'tajweed' => 'tajweed',
+            'revision', 'revise', 'murajaah' => 'revision',
+            'hifz', 'memorisation', 'memorize', 'memorise', 'beginner', 'advanced', 'planner', 'new_learning', 'new' => 'hifz',
+            default => null,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $event
+     * @param  array<string, mixed>  $filters
+     */
+    private function activityEventMatches(array $event, array $filters): bool
+    {
+        $type = (string) ($event['type'] ?? '');
+        if ($filters['type'] === 'session' && $type !== 'session') {
+            return false;
+        }
+        if ($filters['type'] === 'assignment' && ! in_array($type, ['assignment', 'milestone'], true)) {
+            return false;
+        }
+        if ($filters['type'] === 'ai_check' && ! in_array($type, ['ai_check', 'ai_recite'], true)) {
+            return false;
+        }
+        if ($filters['type'] === 'teacher_review') {
+            $review = (string) ($event['teacher_review_status'] ?? '');
+            $teacherWork = in_array($type, ['teacher_feedback', 'teacher_finding', 'improvement'], true)
+                || in_array($review, [TeacherRecitationReview::PENDING, TeacherRecitationReview::REVIEWED], true);
+            if (! $teacherWork) {
+                return false;
+            }
+        }
+        if ($filters['area'] !== '' && ($event['learning_area'] ?? null) !== $filters['area']) {
+            return false;
+        }
+        if ($filters['kind'] !== '' && ($event['practice_kind'] ?? '') !== $filters['kind']) {
+            return false;
+        }
+        if ($filters['status'] !== '' && ! $this->activityStatusMatches($event, (string) $filters['status'])) {
+            return false;
+        }
+        if ($filters['from'] || $filters['to']) {
+            try {
+                $at = Carbon::parse((string) ($event['occurred_at'] ?? ''));
+            } catch (\Throwable) {
+                return false;
+            }
+            if ($filters['from'] instanceof Carbon && $at->lt($filters['from']->copy()->startOfDay())) {
+                return false;
+            }
+            if ($filters['to'] instanceof Carbon && $at->gt($filters['to']->copy()->endOfDay())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $event
+     */
+    private function activityStatusMatches(array $event, string $status): bool
+    {
+        $activityStatus = (string) ($event['activity_status'] ?? '');
+        $review = (string) ($event['teacher_review_status'] ?? '');
+
+        return match ($status) {
+            'completed' => $activityStatus === 'completed',
+            'saved' => $activityStatus === 'saved',
+            'interrupted' => in_array($activityStatus, ['interrupted', 'ended_early'], true),
+            'awaiting_review' => $activityStatus === 'awaiting_review' || $review === TeacherRecitationReview::PENDING,
+            'reviewed' => $activityStatus === 'reviewed' || $review === TeacherRecitationReview::REVIEWED,
+            'no_result' => $activityStatus === 'no_result',
+            default => true,
+        };
     }
 
     private function practiceKind(string $type, string $mode): string
@@ -714,6 +990,7 @@ class DashboardService
             'session_completed' => 'Completed',
             'session_ended_early' => 'Ended early',
             'session_saved' => 'Saved',
+            'session_interrupted' => 'Interrupted',
             'session_resumed' => 'Resumed',
             'ai_result' => trim(implode(' · ', array_filter([
                 isset($params['band']) ? ucfirst((string) $params['band']) : null,

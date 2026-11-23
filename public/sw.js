@@ -1,5 +1,5 @@
 // Keep in sync with config('mutqin.brand_icons.version') / App\Support\BrandIcons.
-const BRAND_ICONS_VERSION = '20261123a';
+const BRAND_ICONS_VERSION = '20261123c';
 const SHELL_CACHE = 'mutqin-shell-v102';
 const RUNTIME_CACHE = 'mutqin-runtime-v100';
 
@@ -10,9 +10,16 @@ const SHELL_URLS = [
   icon('/favicon.ico'),
   icon('/favicon.svg'),
   icon('/favicon-512.png'),
+  icon('/icons/icon-128.png'),
+  icon('/icons/icon-144.png'),
+  icon('/icons/icon-152.png'),
+  icon('/icons/icon-167.png'),
+  icon('/icons/apple-touch-icon.png'),
   icon('/icons/icon-192.png'),
+  icon('/icons/icon-256.png'),
+  icon('/icons/icon-384.png'),
   icon('/icons/icon-512.png'),
-  icon('/icons/apple-touch-icon.png')
+  icon('/icons/icon-512-maskable.png')
 ];
 
 self.addEventListener('install', event => {

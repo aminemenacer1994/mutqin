@@ -42,7 +42,13 @@ async function main() {
     await page.goto(`${base}/progress?source=navigation-test`)
     await page.locator('.dash-jump').waitFor()
 
-    assert.equal(await page.locator('.dash-jump__link').count(), 4, 'The student shell always exposes four stable tabs')
+    const visibleTabs = (await page.locator('.teacher-nav-shell--desktop .dash-jump__link').allInnerTexts())
+      .map(text => text.replace(/\s+/g, ' ').trim().toLowerCase())
+    for (const label of ['home', 'my learning', 'progress', 'activity', 'settings']) {
+      assert.ok(visibleTabs.some(text => text === label || text.startsWith(`${label} `)), `Missing student tab ${label}`)
+    }
+    assert.ok(!visibleTabs.some(text => text === 'practice' || text.startsWith('practice ')), 'Practice tab removed from student navigation')
+    assert.ok(visibleTabs.length === 5 || visibleTabs.length === 6, `Unexpected student tabs: ${visibleTabs.join(', ')}`)
     const desktopWorkspace = await page.evaluate(() => {
       const nav = document.querySelector('.dash-jump').getBoundingClientRect()
       const pane = document.querySelector('.dash-home-pane').getBoundingClientRect()
@@ -73,7 +79,7 @@ async function main() {
       const url = new URL(page.url())
       assert.equal(url.searchParams.get('tab'), slugs[index], `${labels[index]} has a stable URL state`)
       assert.equal(url.searchParams.get('source'), 'navigation-test', `${labels[index]} preserves existing parameters`)
-      assert.equal(await page.locator('.dash-jump__link.is-active').getAttribute('aria-current'), 'page')
+      assert.equal(await page.locator('.dash-jump__link.is-active:visible').getAttribute('aria-current'), 'page')
     }
     const history = page.locator('#dash-activity')
     await history.getByText('AI wording check', { exact: true }).waitFor()
@@ -93,15 +99,15 @@ async function main() {
     await clickTabWithoutAutoScroll(page, 'Progress')
     await page.evaluate(() => window.history.back())
     await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'learning')
-    assert.match((await page.locator('.dash-jump__link.is-active').innerText()).toLowerCase(), /my learning/)
+    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /my learning/)
     await page.evaluate(() => window.history.forward())
     await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'progress')
-    assert.match((await page.locator('.dash-jump__link.is-active').innerText()).toLowerCase(), /progress/)
+    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /progress/)
 
     await page.reload()
     await page.locator('.dash-jump').waitFor()
     assert.equal(new URL(page.url()).searchParams.get('tab'), 'progress', 'Reload preserves the selected tab')
-    assert.match((await page.locator('.dash-jump__link.is-active').innerText()).toLowerCase(), /progress/)
+    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /progress/)
 
     const review = page.getByRole('link', { name: /review ayah/i }).first()
     if (await review.count()) {
@@ -129,7 +135,7 @@ async function main() {
       await dialog.waitFor()
       const conversationHeadingSize = await dialog.locator('h2').first().evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))
       assert.ok(conversationHeadingSize <= 22, 'Conversation heading uses a standard size')
-      assert.equal(await page.locator('.dash-jump__link.is-active').innerText(), 'My learning')
+      assert.equal(await page.locator('.dash-jump__link.is-active:visible').innerText(), 'My learning')
       const back = dialog.getByRole('button', { name: /^back$/i })
       assert.equal(await back.count(), 1, 'Feedback conversation exposes a contextual Back action')
       await back.click()
@@ -209,7 +215,7 @@ async function main() {
 
     assert.deepEqual(runtimeErrors, [], 'Navigation interactions produce no runtime errors')
     console.log(JSON.stringify({
-      tabs: 4,
+      tabs: visibleTabs.length,
       parametersPreserved: true,
       scrollRestored: true,
       backForward: true,

@@ -56,6 +56,28 @@ final class ParentNoticeService
         ]);
     }
 
+    public function submitted(User $student, int $recipientId, int $stamp): void
+    {
+        $this->fanout($student, ParentGuardianPermission::ViewAssignments, 'updates', 'parent-submission:'.$recipientId.':'.$stamp, [
+            'type' => 'parent_learning_update',
+            'title' => 'Homework submitted',
+            'body' => 'Homework was submitted for review.',
+            'href' => '/parent?view=learning&child='.$student->id,
+            'teacher_assignment_recipient_id' => $recipientId,
+        ]);
+    }
+
+    public function reviewed(User $student, int $recipientId, int $stamp, bool $approved): void
+    {
+        $this->fanout($student, ParentGuardianPermission::ViewAssignments, 'updates', 'parent-review:'.$recipientId.':'.$stamp, [
+            'type' => 'parent_learning_update',
+            'title' => $approved ? 'Homework reviewed' : 'Correction requested',
+            'body' => $approved ? 'A teacher reviewed submitted homework.' : 'A teacher asked for a correction.',
+            'href' => '/parent?view=learning&child='.$student->id,
+            'teacher_assignment_recipient_id' => $recipientId,
+        ]);
+    }
+
     public function learningUpdate(User $student, string $sourceKey): void
     {
         $this->fanout($student, ParentGuardianPermission::ViewAssignments, 'updates', $sourceKey, [

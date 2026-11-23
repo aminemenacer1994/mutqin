@@ -146,12 +146,14 @@ export default {
       if (status === 'overdue') return 'is-late'
       if (status === 'completed') return 'is-ok'
       if (status === 'awaiting_confirmation') return 'is-wait'
+      if (status === 'needs_correction') return 'is-late'
       return 'is-open'
     },
     statusIcon(status) {
       if (status === 'overdue') return 'bi bi-clock'
       if (status === 'completed') return 'bi bi-check-circle'
       if (status === 'awaiting_confirmation') return 'bi bi-hourglass'
+      if (status === 'needs_correction') return 'bi bi-arrow-repeat'
       return 'bi bi-circle'
     },
   },

@@ -11,7 +11,7 @@ final class BrandIcons
 {
     public static function version(): string
     {
-        return (string) config('mutqin.brand_icons.version', '20261123a');
+        return (string) config('mutqin.brand_icons.version', '20261123b');
     }
 
     public static function url(string $path): string

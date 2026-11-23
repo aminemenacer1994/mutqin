@@ -18,12 +18,17 @@
             </h3>
           </header>
 
+          <p class="dash-fb-card__authority">
+            <span class="teacher-pill is-partial">{{ t('dashboard.ai_recite.ai_suggestion_label') }}</span>
+            <span class="dash-fb-card__note">{{ t('dashboard.ai_recite.not_tajweed_note') }}</span>
+          </p>
+
           <ul
             v-if="summary.hasDetailedCounts"
             class="dash-fb-card__counts"
             :aria-label="t('dashboard.ai_recite.word_counts_label')"
           >
-            <li v-if="summary.matched != null">
+            <li v-if="summary.matched != null" class="is-matched">
               <span class="dash-fb-card__count-n">{{ summary.matched }}</span>
               {{ t('dashboard.ai_recite.count_matched') }}
             </li>
@@ -44,13 +49,41 @@
             {{ t('dashboard.ai_recite.counts_unavailable') }}
           </p>
 
+          <p v-if="qualityNote" class="dash-fb-card__note">{{ qualityNote }}</p>
+          <p v-if="practiceReason" class="dash-fb-card__note">{{ practiceReason }}</p>
+          <p v-if="contextLine" class="dash-fb-card__meta">{{ contextLine }}</p>
+
+          <aside v-if="teacherReview" class="dash-fb-card__teacher" data-testid="ai-feedback-teacher-review">
+            <span class="teacher-pill is-score">{{ t('dashboard.ai_recite.teacher_review_label') }}</span>
+            <strong v-if="teacherReview.teacher_name">{{ teacherReview.teacher_name }}</strong>
+            <span v-if="teacherReview.tajweed_score != null">{{ t('dashboard.progress_teacher_score', { n: teacherReview.tajweed_score }) }}</span>
+            <span v-if="teacherReview.note">{{ teacherReview.note }}</span>
+            <button
+              v-if="teacherReview.recipient_id"
+              type="button"
+              class="dash-btn dash-btn--ghost dash-btn--sm"
+              @click="$emit('open-assignment', teacherReview.recipient_id)"
+            >
+              {{ t('dashboard.progress_feedback_open') }}
+            </button>
+          </aside>
+
           <p class="dash-fb-card__meta">
-            <span>{{ summary.reviewHint }}</span>
-            <span v-if="checkedLabel" class="dash-fb-card__sep" aria-hidden="true">·</span>
+            <span v-if="!qualityNote">{{ summary.reviewHint }}</span>
+            <span v-if="!qualityNote && checkedLabel" class="dash-fb-card__sep" aria-hidden="true">·</span>
             <time v-if="item.occurred_at" :datetime="item.occurred_at">{{ checkedLabel }}</time>
           </p>
 
           <div class="dash-fb-card__actions">
+          <a
+            v-if="item.card_kind === 'attempt' && practiceHref"
+            class="dash-btn dash-btn--primary dash-btn--sm"
+            data-testid="ai-feedback-practice"
+            :href="practiceHref"
+          >
+            <span>{{ t('dashboard.ai_recite.practice_revise') }}</span>
+            <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+          </a>
           <button
             v-if="item.card_kind === 'attempt'"
             type="button"
@@ -70,7 +103,7 @@
             class="dash-btn dash-btn--primary dash-btn--sm"
             :href="focusHref"
           >
-            <span>{{ t('dashboard.ai_focus_review') }}</span>
+            <span>{{ t('dashboard.ai_recite.practice_revise') }}</span>
             <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
           </a>
           </div>
@@ -100,6 +133,12 @@
       </header>
 
       <div class="dash-progress-modal__body">
+        <p class="dash-fb-card__note">{{ t('dashboard.ai_recite.not_tajweed_note') }}</p>
+        <p v-if="qualityNote" class="dash-fb-card__note">{{ qualityNote }}</p>
+        <aside v-if="teacherReview" class="dash-fb-card__teacher">
+          <span class="teacher-pill is-score">{{ t('dashboard.ai_recite.teacher_review_label') }}</span>
+          <span v-if="teacherReview.note">{{ teacherReview.note }}</span>
+        </aside>
         <p v-if="loading" role="status">{{ t('dashboard.loading') }}</p>
         <p v-else-if="error">
           {{ t('dashboard.ai_recite.stats_error_title') }}
@@ -194,6 +233,14 @@
 
       <footer v-if="detail && !loading && !error" class="dash-progress-modal__foot">
         <a
+          v-if="practiceHref"
+          class="dash-btn dash-btn--primary dash-btn--sm"
+          :href="practiceHref"
+        >
+          {{ t('dashboard.ai_recite.practice_revise') }}
+        </a>
+        <a
+          v-if="item.feedback?.valid !== false && item.feedback?.wording?.differences_reliable !== false"
           class="dash-btn dash-btn--primary dash-btn--sm"
           :href="reviewHref"
           @click="$emit('stash-review', reviewItem)"
@@ -218,6 +265,13 @@
 
 <script>
 import { compactAttemptSummary } from '../../scripts/dashboardAiRecite/attemptFeedback.js'
+import {
+  applyFeedbackToSummary,
+  feedbackContextKeys,
+  feedbackQualityKey,
+  practiceReasonKey,
+  teacherReviewOf,
+} from '../../scripts/dashboardAiRecite/studentFeedback.js'
 import DashModalRoot from './DashModalRoot.vue'
 
 export default {
@@ -238,9 +292,10 @@ export default {
     reviewHref: { type: String, default: '' },
     checkAgainHref: { type: String, default: '' },
     focusHref: { type: String, default: '' },
+    practiceHref: { type: String, default: '' },
     reviewItem: { type: Object, default: null },
   },
-  emits: ['toggle', 'retry', 'listen', 'stash-review'],
+  emits: ['toggle', 'retry', 'listen', 'stash-review', 'open-assignment'],
   data() {
     return {
       showAllAyahs: false,
@@ -251,7 +306,24 @@ export default {
       return `dash-fb-detail-${this.item.id}`
     },
     summary() {
-      return compactAttemptSummary(this.item, this.t.bind(this))
+      return applyFeedbackToSummary(
+        compactAttemptSummary(this.item, this.t.bind(this)),
+        this.item?.feedback,
+      )
+    },
+    teacherReview() {
+      return teacherReviewOf(this.item?.feedback)
+    },
+    qualityNote() {
+      const key = feedbackQualityKey(this.item?.feedback)
+      return key ? this.t(key) : ''
+    },
+    practiceReason() {
+      const key = practiceReasonKey(this.item?.feedback)
+      return key ? this.t(key) : ''
+    },
+    contextLine() {
+      return feedbackContextKeys(this.item?.feedback).map((key) => this.t(key)).filter(Boolean).join(' · ')
     },
     attentionAyahs() {
       return (this.detail?.ayahs || []).filter((ayah) => ayah.needsAttention)
@@ -287,6 +359,9 @@ export default {
       return this.t(key, { n })
     },
     ayahExplanation(ayah) {
+      if (this.item?.feedback?.wording?.differences_reliable === false) {
+        return this.qualityNote || this.t('dashboard.ai_recite.quality_low')
+      }
       if (!ayah.needsAttention) {
         return this.t('dashboard.ai_recite.ayah_explain_matched')
       }

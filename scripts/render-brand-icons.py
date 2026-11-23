@@ -15,7 +15,7 @@ ICONS = PUBLIC / "icons"
 MANIFEST_PATH = PUBLIC / "manifest.webmanifest"
 
 # Bump in config/mutqin.php brand_icons.version and public/sw.js BRAND_ICONS_VERSION when shipping new icons.
-DEFAULT_BRAND_ICONS_VERSION = "20261123a"
+DEFAULT_BRAND_ICONS_VERSION = "20261123b"
 
 # Brand-aligned palette (resources/sass/app.scss)
 GRADIENT_TOP = (166, 124, 82)  # #a67c52
@@ -181,7 +181,13 @@ def main() -> None:
         PUBLIC / "favicon-32x32.png": 32,
         PUBLIC / "favicon-16x16.png": 16,
         ICONS / "icon-512.png": 512,
+        ICONS / "icon-384.png": 384,
+        ICONS / "icon-256.png": 256,
         ICONS / "icon-192.png": 192,
+        ICONS / "icon-167.png": 167,
+        ICONS / "icon-152.png": 152,
+        ICONS / "icon-144.png": 144,
+        ICONS / "icon-128.png": 128,
         ICONS / "icon-512-maskable.png": 512,
         ICONS / "apple-touch-icon.png": 180,
         ICONS / "icon-mark-sq.png": 512,

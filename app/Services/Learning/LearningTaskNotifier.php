@@ -5,10 +5,12 @@ namespace App\Services\Learning;
 use App\Enums\AssignmentKind;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherLesson;
+use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Notifications\LearningTaskNotification;
 use App\Services\Achievements\PracticePreferences;
+use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Parent\ParentNoticeService;
 use App\Services\RevisionReminders\RevisionReminderHrefBuilder;
 use App\Support\QuranMetadata;
@@ -161,6 +163,37 @@ final class LearningTaskNotifier
         $this->parents->feedback($student, $note);
     }
 
+    public function studentSubmitted(User $student, TeacherAssignmentRecipient $recipient): void
+    {
+        $recipient->loadMissing('assignment.teacher');
+        $teacher = $recipient->assignment?->teacher;
+        $stamp = $recipient->student_completed_at?->getTimestamp() ?? $recipient->updated_at?->getTimestamp() ?? now()->getTimestamp();
+        if ($teacher instanceof User && app(StudentAccessAuthorizer::class)->allows($teacher, $student)) {
+            $this->notifyUser($teacher, 'student-submission:'.$recipient->id.':'.$stamp, [
+                'type' => 'student_submission',
+                'title' => 'Task submitted',
+                'body' => 'A student submitted work for review.',
+                'href' => '/teacher',
+                'teacher_assignment_recipient_id' => (int) $recipient->id,
+            ]);
+        }
+        $this->parents->submitted($student, (int) $recipient->id, $stamp);
+    }
+
+    public function assignmentReviewed(User $student, TeacherAssignmentRecipient $recipient, string $decision): void
+    {
+        $stamp = $recipient->updated_at?->getTimestamp() ?? now()->getTimestamp();
+        $approved = $decision === 'approved';
+        $this->once($student, 'assignment-review:'.$recipient->id.':'.$stamp, [
+            'type' => $approved ? 'assignment_approved' : 'assignment_correction',
+            'title' => $approved ? 'Task reviewed' : 'Correction requested',
+            'body' => $approved ? 'A teacher reviewed submitted work.' : 'A teacher asked for a correction.',
+            'href' => route('dashboard'),
+            'teacher_assignment_recipient_id' => (int) $recipient->id,
+        ]);
+        $this->parents->reviewed($student, (int) $recipient->id, $stamp, $approved);
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
@@ -170,7 +203,15 @@ final class LearningTaskNotifier
             return;
         }
 
-        $exists = $student->notifications()
+        $this->notifyUser($student, $sourceKey, $payload);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function notifyUser(User $user, string $sourceKey, array $payload): void
+    {
+        $exists = $user->notifications()
             ->where('type', LearningTaskNotification::class)
             ->where('data->source_key', $sourceKey)
             ->exists();
@@ -178,7 +219,7 @@ final class LearningTaskNotifier
             return;
         }
 
-        $student->notify(new LearningTaskNotification($sourceKey, $payload));
+        $user->notify(new LearningTaskNotification($sourceKey, $payload));
     }
 
     private function noticeBody(TeacherAssignment $assignment): string

@@ -6541,6 +6541,10 @@ a.dash-ai-results__attempt {
   font-variant-numeric: tabular-nums;
 }
 
+.user-dashboard--progress .dash-fb-card__counts .is-matched .dash-fb-card__count-n {
+  color: #1f7a45;
+}
+
 .user-dashboard--progress .dash-fb-card__counts .is-uncertain .dash-fb-card__count-n {
   color: #8a4f08;
 }
@@ -6548,6 +6552,33 @@ a.dash-ai-results__attempt {
 .user-dashboard--progress .dash-fb-card__counts .is-mismatch .dash-fb-card__count-n,
 .user-dashboard--progress .dash-fb-card__counts .is-skipped .dash-fb-card__count-n {
   color: #9b2e27;
+}
+
+.user-dashboard--progress .dash-fb-card__authority,
+.user-dashboard--progress .dash-fb-card__teacher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.user-dashboard--progress .dash-fb-card__note {
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.user-dashboard--progress .dash-fb-card__teacher {
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-ink) 12%, transparent);
+}
+
+[data-theme="dark"] .user-dashboard--progress .dash-fb-card__counts .is-matched .dash-fb-card__count-n {
+  color: #8dcead;
 }
 
 .user-dashboard--progress .dash-fb-card__meta,

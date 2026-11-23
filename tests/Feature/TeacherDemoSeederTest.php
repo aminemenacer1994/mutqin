@@ -126,8 +126,8 @@ class TeacherDemoSeederTest extends TestCase
         $this->assertLessThanOrEqual(500, $sessions);
         $this->assertGreaterThanOrEqual(300, $attempts);
         $this->assertLessThanOrEqual(650, $attempts);
-        $this->assertGreaterThanOrEqual(40, $assignments);
-        $this->assertLessThanOrEqual(60, $assignments);
+        $this->assertGreaterThanOrEqual(228, $assignments);
+        $this->assertLessThanOrEqual(340, $assignments);
 
         $fajr = User::query()->where('email', TeacherDemoCatalog::TEACHER_EMAIL)->firstOrFail();
         $maghrib = $fajr;

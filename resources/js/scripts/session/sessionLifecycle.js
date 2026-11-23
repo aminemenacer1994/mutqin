@@ -1306,6 +1306,8 @@ export function readStashedDashboardEntryIntent(storage = null, userId = null) {
       && !intent.recommendationId
       && !(Number(intent.surah || 0) > 0)
       && intent.panel !== 'saved'
+      && intent.panel !== 'find'
+      && !intent.practiceTool
       && !intent.aiCheck
       && !intent.journey
       && !intent.review

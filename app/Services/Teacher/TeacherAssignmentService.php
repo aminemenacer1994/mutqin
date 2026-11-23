@@ -383,7 +383,8 @@ class TeacherAssignmentService
     {
         TeacherFeatures::abortUnlessEnabled();
 
-        return DB::transaction(function () use ($student, $recipient) {
+        $changed = false;
+        $fresh = DB::transaction(function () use ($student, $recipient, &$changed) {
             $locked = TeacherAssignmentRecipient::query()
                 ->with('assignment')
                 ->lockForUpdate()
@@ -436,16 +437,24 @@ class TeacherAssignmentService
                 ]),
             ])->save();
             TeacherOverviewCache::forget((int) $locked->assignment->teacher_id);
+            $changed = true;
 
             return $locked->refresh()->load('assignment');
         });
+
+        if ($changed) {
+            $this->notifyLearningEvent(fn () => app(LearningTaskNotifier::class)->studentSubmitted($student, $fresh));
+        }
+
+        return $fresh;
     }
 
     public function approveByTeacher(User $teacher, TeacherAssignmentRecipient $recipient): TeacherAssignmentRecipient
     {
         TeacherFeatures::abortUnlessEnabled();
 
-        $fresh = DB::transaction(function () use ($teacher, $recipient) {
+        $changed = false;
+        $fresh = DB::transaction(function () use ($teacher, $recipient, &$changed) {
             $locked = TeacherAssignmentRecipient::query()
                 ->with(['assignment', 'student'])
                 ->lockForUpdate()
@@ -480,6 +489,7 @@ class TeacherAssignmentService
             ])->save();
 
             $this->syncLearningPlanAfterApproval($assignment);
+            $changed = true;
 
             return $locked->refresh()->load('assignment');
         });
@@ -491,6 +501,12 @@ class TeacherAssignmentService
         }
 
         TeacherOverviewCache::forget((int) $teacher->id);
+        if ($changed) {
+            $fresh->loadMissing('student');
+            if ($fresh->student instanceof User) {
+                $this->notifyLearningEvent(fn () => app(LearningTaskNotifier::class)->assignmentReviewed($fresh->student, $fresh, 'approved'));
+            }
+        }
 
         return $fresh;
     }
@@ -549,7 +565,8 @@ class TeacherAssignmentService
     ): TeacherAssignmentRecipient {
         TeacherFeatures::abortUnlessEnabled();
 
-        $fresh = DB::transaction(function () use ($teacher, $recipient, $note) {
+        $changed = false;
+        $fresh = DB::transaction(function () use ($teacher, $recipient, $note, &$changed) {
             $locked = TeacherAssignmentRecipient::query()
                 ->with(['assignment', 'student'])
                 ->lockForUpdate()
@@ -597,10 +614,17 @@ class TeacherAssignmentService
                 'status' => AssignmentStatus::InProgress->value,
                 'completion_evidence' => $evidence,
             ])->save();
+            $changed = true;
 
             return $locked->refresh()->load('assignment');
         });
         TeacherOverviewCache::forget((int) $teacher->id);
+        if ($changed) {
+            $fresh->loadMissing('student');
+            if ($fresh->student instanceof User) {
+                $this->notifyLearningEvent(fn () => app(LearningTaskNotifier::class)->assignmentReviewed($fresh->student, $fresh, 'correction'));
+            }
+        }
 
         return $fresh;
     }
@@ -685,6 +709,12 @@ class TeacherAssignmentService
                 ]);
             }
 
+            // Personal practice can continue, but it must not attach to a teacher
+            // who can no longer review the task.
+            if (! $this->studentCanShareAssignment($student, $recipient)) {
+                return null;
+            }
+
             $this->assertStudentCanWorkOn($student, $recipient, allowApprovedPractice: true);
 
             // Approved work may be practised again, but a legacy recipient can
@@ -716,6 +746,27 @@ class TeacherAssignmentService
     }
 
     /**
+     * Sharing follows the same teacher access rule as assignment messages.
+     * When teacher features are off, ownership alone is enough so personal
+     * sessions are not rejected by a disabled classroom module.
+     */
+    private function studentCanShareAssignment(User $student, TeacherAssignmentRecipient $recipient): bool
+    {
+        $recipient->loadMissing('assignment.teacher');
+        $assignment = $recipient->assignment;
+        $teacher = $assignment?->teacher;
+        if ($assignment === null || (int) $recipient->student_id !== (int) $student->id || ! $teacher instanceof User) {
+            return false;
+        }
+
+        if (! TeacherFeatures::enabled()) {
+            return true;
+        }
+
+        return $this->access->allows($teacher, $student);
+    }
+
+    /**
      * A recipient is the source of truth for whether linked work may be added.
      * Do not let a stale browser tab attach more activity after submission.
      * Approved work may be practised again, but cannot be resubmitted or
@@ -727,8 +778,7 @@ class TeacherAssignmentService
         bool $allowSubmitted = false,
         bool $allowApprovedPractice = false,
     ): void {
-        $recipient->loadMissing('assignment');
-        if ($recipient->assignment === null || (int) $recipient->student_id !== (int) $student->id) {
+        if (! $this->studentCanShareAssignment($student, $recipient)) {
             abort(404);
         }
 
@@ -1291,6 +1341,7 @@ class TeacherAssignmentService
 
         $thread = $notes
             ->where('student_id', $studentId)
+            ->filter(fn (TeacherNote $note) => $this->studentVisibleAssignmentNote($note))
             ->sortBy(fn (TeacherNote $note) => sprintf('%020d', (int) $note->id))
             ->values();
         if ($viewerId !== null && $markRead) {
@@ -1375,6 +1426,28 @@ class TeacherAssignmentService
         $note->delete();
     }
 
+    private function studentVisibleAssignmentNote(TeacherNote $note): bool
+    {
+        if ($note->parent_user_id !== null) {
+            return false;
+        }
+        $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
+
+        return in_array($kind, [TeacherNoteKind::Feedback, TeacherNoteKind::Note], true);
+    }
+
+    /**
+     * @param  callable(): void  $notify
+     */
+    private function notifyLearningEvent(callable $notify): void
+    {
+        try {
+            $notify();
+        } catch (\Throwable $error) {
+            report($error);
+        }
+    }
+
     private function assignmentMessageSentBy(TeacherNote $note, int $viewerId): bool
     {
         $kind = $note->kind instanceof TeacherNoteKind ? $note->kind : TeacherNoteKind::tryFrom((string) $note->kind);
@@ -1435,7 +1508,7 @@ class TeacherAssignmentService
         return $this->lifecycleStatus($recipient);
     }
 
-    private function reviewState(TeacherAssignmentRecipient $recipient): ?string
+    public function reviewState(TeacherAssignmentRecipient $recipient): ?string
     {
         $status = $recipient->status instanceof AssignmentStatus
             ? $recipient->status->value

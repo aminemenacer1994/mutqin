@@ -12,6 +12,7 @@ use App\Models\LearningPlan;
 use App\Models\LearningPlanItem;
 use App\Models\MemorisationProgress;
 use App\Models\RevisionRecommendation;
+use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\TeacherRecitationAssessment;
@@ -21,6 +22,7 @@ use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Teacher\StudentHifzProgressService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\QuranMetadata;
+use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
 
 /**
@@ -45,6 +47,7 @@ class ParentChildLearningService
     public function assignments(User $parent, User $student, array $filters = []): array
     {
         $this->assertPermission($parent, $student, ParentGuardianPermission::ViewAssignments);
+        $this->refreshSharedStatuses($student);
 
         $from = $this->parseDate($filters['from'] ?? null)?->startOfDay();
         $to = $this->parseDate($filters['to'] ?? null)?->endOfDay();
@@ -111,12 +114,10 @@ class ParentChildLearningService
     {
         $this->assertPermission($parent, $student, ParentGuardianPermission::ViewProgress);
 
-        $window = in_array($window, ['week', 'month'], true) ? $window : 'month';
-        $to = now()->endOfDay();
-        $from = match ($window) {
-            'week' => now()->subDays(7)->startOfDay(),
-            default => now()->subDays(30)->startOfDay(),
-        };
+        $bounds = $this->hifzProgress->periodBounds($window);
+        $window = $bounds['window'];
+        $from = $bounds['from'];
+        $to = $bounds['to'];
 
         $hifz = $this->hifzProgress->forGuardian($student, $from, $to);
 
@@ -131,6 +132,7 @@ class ParentChildLearningService
             'validated_memorisation' => $hifz['validated_memorisation'],
             'practice_volume' => $this->practiceVolume($student, $from, $to),
             'assignment_trends' => $this->assignmentTrends($student, $from, $to),
+            'assignment_completion' => $this->hifzProgress->assignmentCompletion($student, $from, $to),
             'recommendations' => $this->recommendations($student),
             'assessments' => $this->recentAssessments($parent, $student, $from, $to),
             'read_only' => true,
@@ -248,7 +250,7 @@ class ParentChildLearningService
             return 'all';
         }
 
-        return in_array($status, ['active', 'completed', 'overdue', 'awaiting_confirmation', 'in_progress', 'pending'], true)
+        return in_array($status, ['active', 'completed', 'overdue', 'awaiting_confirmation', 'in_progress', 'pending', 'needs_correction'], true)
             ? $status
             : 'all';
     }
@@ -262,6 +264,7 @@ class ParentChildLearningService
         abort_if($assignment === null, 500);
 
         $display = $this->displayStatus($recipient);
+        $reviewState = $this->assignments->reviewState($recipient);
         $instructions = LearningPlanItem::query()
             ->where('teacher_assignment_id', $assignment->id)
             ->value('instructions');
@@ -282,6 +285,7 @@ class ParentChildLearningService
             'child_id' => (int) $recipient->student_id,
             'child_name' => $childName,
             'status' => $this->assignments->lifecycleStatus($recipient),
+            'review_state' => $reviewState,
             'display_status' => $display,
             'assignment' => $this->assignments->presentAssignment($assignment),
             'teacher_name' => $assignment->teacher?->name,
@@ -371,17 +375,39 @@ class ParentChildLearningService
 
     private function displayStatus(TeacherAssignmentRecipient $recipient): string
     {
+        $review = $this->assignments->reviewState($recipient);
+        if ($review === 'needs_correction') {
+            return 'needs_correction';
+        }
+        if ($review === 'approved') {
+            return 'completed';
+        }
+        if ($review === 'submitted') {
+            return 'awaiting_confirmation';
+        }
         if ($this->isOverdue($recipient)) {
             return 'overdue';
         }
 
-        $status = $recipient->status instanceof AssignmentStatus
-            ? $recipient->status->value
-            : (string) $recipient->status;
+        return $this->assignments->lifecycleStatus($recipient);
+    }
 
-        return $status === AssignmentStatus::AwaitingConfirmation->value
-            ? 'awaiting_confirmation'
-            : $status;
+    private function refreshSharedStatuses(User $student): void
+    {
+        if (! TeacherFeatures::enabled()) {
+            return;
+        }
+
+        $teacherIds = TeacherAssignment::query()
+            ->whereHas('recipients', fn ($query) => $query->where('student_id', $student->id))
+            ->pluck('teacher_id')
+            ->unique();
+        foreach ($teacherIds as $teacherId) {
+            $teacher = User::query()->find($teacherId);
+            if ($teacher instanceof User && $teacher->isTeacher()) {
+                $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
+            }
+        }
     }
 
     /**

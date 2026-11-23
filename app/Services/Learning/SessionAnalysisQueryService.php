@@ -8,6 +8,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationWeakSpot;
 use App\Models\SessionRecommendation;
+use App\Models\TeacherRecitationAssessment;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Memorisation\RecitationAssessmentService;
@@ -21,6 +22,7 @@ class SessionAnalysisQueryService
     public function __construct(
         private readonly RecitationAssessmentService $assessments,
         private readonly AiReciteAttemptAudioService $audio,
+        private readonly StudentAiFeedbackService $feedback,
     ) {}
 
     /**
@@ -219,6 +221,8 @@ class SessionAnalysisQueryService
         $attemptColumns = [
             'id',
             'memorisation_assessment_id',
+            'user_session_id',
+            'teacher_assignment_recipient_id',
             'accuracy_percent',
             'band',
             'ayah_range',
@@ -380,6 +384,18 @@ class SessionAnalysisQueryService
 
         $peekUsed = $attempts->where('peek_used', true)->count();
         $lastRange = $latest ? $this->attemptRange($latest) : null;
+        $recentModels = $attempts->take(12)->values();
+        $qualityAssessments = MemorisationAssessment::query()
+            ->whereIn('id', $recentModels->pluck('memorisation_assessment_id')->filter()->unique()->all())
+            ->get(['id', 'status', 'failure_reason', 'recognition_data'])
+            ->keyBy('id');
+        $reviewRows = TeacherRecitationAssessment::query()
+            ->whereIn('ai_recite_attempt_id', $recentModels->pluck('id')->all())
+            ->get()
+            ->keyBy('ai_recite_attempt_id');
+        $teacherNames = User::query()
+            ->whereIn('id', $reviewRows->pluck('teacher_id')->filter()->unique()->all())
+            ->pluck('name', 'id');
 
         return [
             'source' => AiReciteAttempt::SOURCE_DASHBOARD,
@@ -395,10 +411,11 @@ class SessionAnalysisQueryService
             'improvement' => $improvement,
             'weakest_ayahs' => $weakest,
             'missed_words' => $missed,
-            'recent_attempts' => $attempts->take(12)->map(function (AiReciteAttempt $attempt) {
+            'recent_attempts' => $recentModels->map(function (AiReciteAttempt $attempt) use ($qualityAssessments, $reviewRows, $teacherNames) {
                 $range = $this->attemptRange($attempt);
                 $words = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
                 $wordCounts = RecitationAlignmentStatus::countStatuses($words);
+                $review = $reviewRows->get($attempt->id);
 
                 return [
                     'id' => $attempt->id,
@@ -425,6 +442,12 @@ class SessionAnalysisQueryService
                         ->take(3)
                         ->values()
                         ->all(),
+                    'feedback' => $this->feedback->presentAttempt(
+                        $attempt,
+                        $qualityAssessments->get($attempt->memorisation_assessment_id),
+                        $review instanceof TeacherRecitationAssessment ? $review : null,
+                        $review ? ($teacherNames[$review->teacher_id] ?? null) : null,
+                    ),
                 ];
             })->values()->all(),
             'last_location' => ($lastRange && $lastRange['surah_number'] && $lastRange['ayah_start'])

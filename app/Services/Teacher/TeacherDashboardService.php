@@ -32,6 +32,7 @@ use App\Models\User;
 use App\Models\UserSession;
 use App\Services\DashboardService;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Services\Learning\StudentCircleService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
@@ -57,6 +58,7 @@ class TeacherDashboardService
         private readonly LearningPlanService $learningPlans,
         private readonly RecitationDifficultyService $difficulties,
         private readonly TeacherWordCoachingService $wordCoachings,
+        private readonly StudentCircleService $circle,
     ) {}
 
     /**
@@ -524,7 +526,7 @@ class TeacherDashboardService
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $user->id)
             ->whereHas('assignment')
-            ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
+            ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
             ->latest('id')
             ->limit(50)
             ->get();
@@ -540,7 +542,7 @@ class TeacherDashboardService
             $assignments = TeacherAssignmentRecipient::query()
                 ->where('student_id', $user->id)
                 ->whereHas('assignment')
-                ->with(['assignment.teacher:id,name,organisation_id', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
+                ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
                 ->latest('id')
                 ->limit(50)
                 ->get();
@@ -567,6 +569,7 @@ class TeacherDashboardService
             ->where('student_id', $user->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
             ->whereNull('teacher_assignment_id')
+            ->whereNull('parent_user_id')
             ->with('teacher:id,name')
             ->latest('id')
             ->limit(20)
@@ -589,9 +592,11 @@ class TeacherDashboardService
                     $unfinishedSessions,
                     (int) $user->id,
                 );
-                $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
+                $teacher = $recipient->assignment?->teacher;
+                $payload['teacher_name'] = $teacher?->name;
                 $payload['teacher_id'] = $recipient->assignment?->teacher_id ? (int) $recipient->assignment->teacher_id : null;
                 $payload['organisation_name'] = $recipient->assignment?->organisation?->name;
+                $payload['teacher_access'] = $teacher instanceof User && $this->access->allows($teacher, $user);
 
                 return $payload;
             })
@@ -607,7 +612,8 @@ class TeacherDashboardService
             'direct_threads' => $this->directMessages->threadsForStudent($user),
             'overview' => $this->learnerOverview($user, $assignments),
             'learning' => $this->learnerLearning($user, $assignmentPayloads),
-            'learning_plan' => $this->learningPlans->presentForLearner($user),
+            'circle' => $circle = $this->circle->present($user),
+            'learning_plan' => $circle['learning_plans'][0] ?? null,
             'recitation_difficulties' => $this->learnerRecitationDifficulties($user),
         ];
 
@@ -754,6 +760,8 @@ class TeacherDashboardService
                 'teacher_correction' => is_array($row['completion_evidence'] ?? null)
                     ? ($row['completion_evidence']['correction_note'] ?? null)
                     : null,
+                'teacher_feedback' => $this->latestSubmissionFeedback($row),
+                'practice_href' => $row['href'] ?? null,
                 'assigned_range' => [
                     'surah' => (int) ($assignment['surah_number'] ?? 0),
                     'from' => (int) ($assignment['ayah_start'] ?? 0),
@@ -776,6 +784,7 @@ class TeacherDashboardService
             ->where('student_id', $user->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
             ->whereNotNull('teacher_assignment_id')
+            ->whereNull('parent_user_id')
             ->with(['teacher:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
             ->latest('id')
             ->limit(20)
@@ -856,6 +865,34 @@ class TeacherDashboardService
             'weak_focus' => array_slice($weakSpots, 0, 4),
             'revision_queue' => array_slice($revisionPlans, 0, 4),
             'submissions' => array_slice($submissions, 0, 10),
+        ];
+    }
+
+    /**
+     * Latest teacher feedback already present on the assignment thread.
+     * Parent conversations and private notes are not in that thread.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>|null
+     */
+    private function latestSubmissionFeedback(array $row): ?array
+    {
+        $messages = collect(is_array($row['messages'] ?? null) ? $row['messages'] : [])
+            ->filter(fn (array $message) => ($message['sender'] ?? null) === 'teacher'
+                && ($message['message_kind'] ?? null) === TeacherNoteKind::Feedback->value)
+            ->sortByDesc('created_at')
+            ->values();
+        $latest = $messages->first();
+        if (! is_array($latest)) {
+            return null;
+        }
+
+        return [
+            'id' => $latest['id'] ?? null,
+            'body' => $latest['body'] ?? '',
+            'audio' => $latest['audio'] ?? null,
+            'created_at' => $latest['created_at'] ?? null,
+            'teacher_name' => $row['teacher_name'] ?? null,
         ];
     }
 
@@ -1008,6 +1045,7 @@ class TeacherDashboardService
             ->where('student_id', $user->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
             ->whereNull('teacher_assignment_id')
+            ->whereNull('parent_user_id')
             ->with('teacher:id,name')
             ->latest('id')
             ->limit(10)

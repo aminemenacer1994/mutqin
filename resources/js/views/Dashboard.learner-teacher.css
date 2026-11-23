@@ -2882,6 +2882,46 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   margin-bottom: 0.65rem;
 }
 
+.user-dashboard .learner-teacher__filters-row > .learner-teacher__filters--segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.user-dashboard .learner-teacher__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.user-dashboard .learner-teacher__categories .learner-teacher__filter {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: var(--dash-card-bg);
+  color: var(--dash-ink);
+  font-size: 0.8125rem;
+}
+
+.user-dashboard .learner-teacher__categories .learner-teacher__filter.is-active {
+  border-color: var(--dash-accent);
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-card-bg));
+}
+
+.user-dashboard .learner-teacher__plan-slot {
+  margin-bottom: 0.85rem;
+}
+
+.user-dashboard .learner-teacher__card-title-copy strong,
+.user-dashboard .learner-teacher__instruction-preview,
+.user-dashboard .learner-teacher__instruct-content p,
+.user-dashboard .learner-teacher__card-note p,
+.user-dashboard .learner-teacher__retry-note-full,
+.user-dashboard .learner-teacher__retry-note-clamp {
+  overflow-wrap: anywhere;
+}
+
 .user-dashboard .learner-teacher__filters-row .learner-teacher__filters {
   flex: 1 1 auto;
   min-width: 0;
@@ -2909,7 +2949,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   display: grid;
   width: 100%;
   max-width: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
   gap: 0.2rem;
   padding: 0.2rem;
   margin-bottom: 0;
@@ -7642,6 +7682,47 @@ html[data-theme="dark"] .learner-workspace {
   gap: 20px;
   align-items: start;
 }
+.learner-home__today .learner-home__feedback {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.learner-home__priority + .learner-home__priority,
+.learner-home__priority + .learner-home__feedback {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--dash-border);
+}
+button.teacher-metric {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+  color: var(--dash-ink);
+}
+.learner-home__tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+.learner-home__tool {
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-control, 8px);
+  color: inherit;
+  text-decoration: none;
+}
+.learner-home__tool .bi { color: var(--dash-accent-strong); font-size: 18px; }
+.learner-home__tool strong { font-size: 15px; font-weight: 600; }
+.learner-home__tool span { color: var(--dash-muted); font-size: 14px; line-height: 1.4; }
+@media (max-width: 767.98px) {
+  .learner-home__tools { grid-template-columns: 1fr; }
+}
 .learner-home__confirmation { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 16px; border-radius: 8px; background: var(--success-soft); color: var(--success-strong); font-size: 14px; }
 html[data-theme="dark"] .learner-home__confirmation { color: var(--success); }
 .learner-home__today,
@@ -7790,9 +7871,9 @@ html[data-theme="dark"] .learner-home__confirmation { color: var(--success); }
 .learner-home__revisions h2 { margin: 0 0 4px; font-size: 17px; font-weight: 650; }
 .learner-home__revision-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 12px; }
 .learner-home__revision-row + .learner-home__revision-row { border-top: 1px solid var(--dash-border); }
-.learner-home__revision-row > div { display: grid; gap: 2px; min-width: 0; font-size: 14px; }
-.learner-home__revision-row span:not(.learner-home__due) { color: var(--dash-muted); font-size: 12px; }
-.learner-home__revision-row .learner-home__due { font-size: 12px; }
+.learner-home__revision-row > div { display: grid; gap: 4px; min-width: 0; font-size: 16px; }
+.learner-home__revision-row span:not(.learner-home__due) { color: var(--dash-muted); font-size: 14px; }
+.learner-home__revision-row .learner-home__due { font-size: 14px; }
 .learner-home__revision-row .dash-btn { flex: 0 0 auto; min-height: 44px; }
 @media (max-width: 767.98px) {
   .learner-home__revision-row { align-items: stretch; flex-wrap: wrap; }
@@ -9209,4 +9290,124 @@ html[data-theme="dark"] :is(.learner-workspace.user-dashboard, .dash-modal-root.
     flex: 1 1 0;
     min-height: var(--dash-ds-control-height);
   }
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__intro {
+  margin-bottom: 1.35rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__workspace,
+.learner-workspace #dash-my-learning .learner-teacher__sidebar {
+  gap: 1.25rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__block {
+  padding: 1.4rem 1.45rem 1.55rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__assignments-heading {
+  margin-bottom: 1.2rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__filters-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1.4rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__filters--segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  width: auto;
+  max-width: 40rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__filters--segmented .learner-teacher__filter {
+  flex: 0 1 auto;
+  width: auto;
+  min-height: 2.6rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__card-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__card {
+  gap: 0.9rem;
+  padding: 1.2rem 1.25rem;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__card-title-copy strong {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.2rem;
+  row-gap: 0.25rem;
+  margin: 0.45rem 0 0;
+  line-height: 1.5;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__instruction-preview {
+  margin: 0.2rem 0 0;
+  line-height: 1.6;
+}
+
+.learner-workspace #dash-my-learning .learner-teacher__detail-btn,
+.learner-assignment-modal .learner-teacher__detail-btn {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dash-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.learner-assignment-modal__panel.dash-modal {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: min(80dvh, 36rem);
+  padding-bottom: 1.25rem;
+}
+
+.learner-assignment-modal__body {
+  display: grid;
+  gap: 1.25rem;
+  padding: 0.25rem 1.4rem 0.35rem;
+  overflow: auto;
+}
+
+.learner-assignment-modal__section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.learner-assignment-modal__section h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.learner-assignment-modal__section p {
+  margin: 0;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }

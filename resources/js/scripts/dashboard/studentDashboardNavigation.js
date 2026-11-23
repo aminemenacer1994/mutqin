@@ -1,19 +1,32 @@
-export const STUDENT_DASHBOARD_PANES = Object.freeze(['home', 'learning', 'progress', 'activity'])
+export const STUDENT_DASHBOARD_PANES = Object.freeze(['home', 'learning', 'progress', 'activity', 'messages', 'settings'])
 
 const PANE_SET = new Set(STUDENT_DASHBOARD_PANES)
 const CONTEXT_HASH_PANES = Object.freeze({
   '#ai-recite-results': 'progress',
-  '#achievements': 'activity',
+  '#achievements': 'progress',
 })
+
+export function studentNavItems({ messaging = false } = {}) {
+  const items = [
+    { id: 'home', label: 'dashboard.jump_home', icon: 'bi bi-house' },
+    { id: 'learning', label: 'dashboard.jump_learning', mobileLabel: 'dashboard.jump_learning_mobile', icon: 'bi bi-journal-check' },
+    { id: 'progress', label: 'dashboard.jump_progress', icon: 'bi bi-graph-up' },
+    { id: 'activity', label: 'dashboard.jump_activity', icon: 'bi bi-clock-history' },
+  ]
+  if (messaging) items.push({ id: 'messages', label: 'dashboard.jump_messages', mobileLabel: 'dashboard.jump_messages_mobile', icon: 'bi bi-chat-left-text' })
+  return items
+}
 
 export function normalizeStudentDashboardPane(value, fallback = 'home') {
   const pane = String(value || '').trim().toLowerCase()
   if (pane === 'my-learning' || pane === 'my_learning') return 'learning'
+  if (pane === 'practice') return 'home'
   return PANE_SET.has(pane) ? pane : (PANE_SET.has(fallback) ? fallback : 'home')
 }
 
 export function studentDashboardPaneFromLocation(locationLike, fallback = 'home') {
   if (!locationLike) return normalizeStudentDashboardPane(fallback)
+  if (String(locationLike.hash || '').toLowerCase() === '#achievements') return 'progress'
   const params = new URLSearchParams(String(locationLike.search || '').replace(/^\?/, ''))
   const queryPane = params.get('tab')
   if (queryPane) return normalizeStudentDashboardPane(queryPane, fallback)

@@ -94,7 +94,7 @@ async function main() {
           assert.ok(overflow <= 1, `Learner ${name} ${width}px ${theme}: overflow ${overflow}`)
           const layout = await page.evaluate(() => {
             const visible = el => el.getClientRects().length && getComputedStyle(el).display !== 'none'
-            const nav = document.querySelector('.dash-jump').getBoundingClientRect()
+            const nav = [...document.querySelectorAll('.dash-jump')].find((el) => el.getClientRects().length).getBoundingClientRect()
             const header = document.querySelector('.app-navbar')?.getBoundingClientRect()
             const progress = document.querySelector('#dash-progress')
             const history = document.querySelector('#dash-activity')
@@ -106,6 +106,7 @@ async function main() {
               progressWidth: progress.getBoundingClientRect().width,
               progressPaneWidth: progress.parentElement.getBoundingClientRect().width,
               historyTop: history.getBoundingClientRect().top,
+              achievementsVisible: achievements ? visible(achievements) : false,
               achievementsTop: achievements?.getBoundingClientRect().top ?? null,
             }
           })
@@ -115,7 +116,7 @@ async function main() {
             assert.equal(layout.metricColumns, width < 768 ? 2 : 4, 'Progress metrics use the appropriate responsive grid')
             assert.ok(Math.abs(layout.progressWidth - layout.progressPaneWidth) <= 1, 'Progress summary uses its available width')
           }
-          if (name === 'Activity' && layout.achievementsTop !== null) assert.ok(layout.historyTop < layout.achievementsTop, 'Learning history precedes achievements')
+          if (name === 'Activity' && layout.achievementsVisible) assert.ok(layout.historyTop < layout.achievementsTop, 'Learning history precedes achievements')
           results.push({ pane: name, width, theme, overflow })
           if ([390, 1440].includes(width) && theme === 'light') await page.screenshot({ path: `${shots}/learner-${name.toLowerCase().replaceAll(' ', '-')}-${width}.png` })
         }

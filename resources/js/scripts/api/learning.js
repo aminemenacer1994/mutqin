@@ -233,17 +233,42 @@ export const learningApi = {
     // Laravel JsonResource wraps the payload under `data`.
     return data?.data && typeof data.data === 'object' ? data.data : data
   },
-  async getActivityLog(limit = 100) {
+  async getProgressSnapshot(window = 'month') {
+    const safeWindow = window === 'week' ? 'week' : 'month'
     const { data } = await withRetry(() =>
-      http.get('/dashboard/activity', {
-        params: { limit },
+      http.get('/dashboard/progress', {
+        params: { window: safeWindow },
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
         },
       })
     )
-    return Array.isArray(data?.activity) ? data.activity : []
+    return data && typeof data === 'object' ? data : null
+  },
+  async getActivityLog(limit = 100, options = {}) {
+    const { paged = false, ...params } = options && typeof options === 'object' ? options : {}
+    const query = { limit }
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') query[key] = value
+    })
+    const { data } = await withRetry(() =>
+      http.get('/dashboard/activity', {
+        params: query,
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    const items = Array.isArray(data?.activity) ? data.activity : []
+    if (!paged) return items
+    const nextOffset = Number(data?.next_offset)
+    return {
+      items,
+      has_more: data?.has_more === true,
+      next_offset: Number.isFinite(nextOffset) ? nextOffset : null,
+    }
   },
 
   async getAchievements() {

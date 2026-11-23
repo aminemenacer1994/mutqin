@@ -195,6 +195,8 @@ class SessionController extends Controller
         );
         if ($recipient !== null) {
             $data['teacher_assignment_recipient_id'] = $recipient->id;
+        } else {
+            unset($data['teacher_assignment_recipient_id']);
         }
 
         $session = $this->lifecycle->start($request->user(), $data);

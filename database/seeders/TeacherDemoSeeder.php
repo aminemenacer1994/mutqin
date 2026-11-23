@@ -29,6 +29,7 @@ use App\Services\Demo\TeacherDemoReset;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Support\Demo\DemoStudentVolume;
 use App\Support\Demo\TeacherDemoCatalog;
 use App\Support\DemoRecitationAudio;
 use App\Support\QuranMetadata;
@@ -791,7 +792,7 @@ class TeacherDemoSeeder extends Seeder
     }
 
     /**
-     * @param  array{profile: string}  $definition
+     * @param  array{profile: string, number: int}  $definition
      * @param  array{surah: int, from: int, to: int}  $range
      */
     private function plan(User $user, array $definition, array $range, Carbon $identified): void
@@ -801,41 +802,47 @@ class TeacherDemoSeeder extends Seeder
         }
 
         $overdue = in_array($definition['profile'], ['average', 'struggling', 'inactive'], true);
-        $reviewAt = $overdue ? now()->subDays(3) : now()->addDays(5);
-        $assessment = new MemorisationAssessment;
-        $assessment->forceFill([
-            'user_id' => $user->id,
-            'surah_number' => $range['surah'],
-            'start_ayah' => $range['from'],
-            'end_ayah' => $range['to'],
-            'assessment_type' => 'memorisation_detection',
-            'status' => MemorisationAssessment::STATUS_COMPLETED,
-            'idempotency_key' => 'teacher-demo-plan-'.$user->id,
-            'surah_name' => QuranMetadata::name($range['surah']),
-            'overall_accuracy' => $overdue ? 62 : 90,
-            'friendly_summary' => 'Demo revision plan for '.$this->rangeLabel($range).'.',
-            'created_at' => $identified,
-            'updated_at' => $identified,
-        ])->save();
 
-        $plan = new MemorisationPracticePlan;
-        $plan->forceFill([
-            'user_id' => $user->id,
-            'assessment_id' => $assessment->id,
-            'title' => 'Review '.$this->rangeLabel($range),
-            'explanation' => $overdue
-                ? 'This range was due for muraja\'ah and has not been reviewed.'
-                : 'Scheduled muraja\'ah for a range this student already practises.',
-            'status' => MemorisationPracticePlan::STATUS_ACTIVE,
-            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
-            'surah_number' => $range['surah'],
-            'start_ayah' => $range['from'],
-            'end_ayah' => $range['to'],
-            'recommended_review_at' => $reviewAt,
-            'accepted_at' => $identified,
-            'created_at' => $identified,
-            'updated_at' => $identified,
-        ])->save();
+        for ($index = 0; $index < DemoStudentVolume::MIN_LIST_ITEMS; $index++) {
+            $planRange = TeacherDemoCatalog::PRACTICE_RANGES[($definition['number'] + $index) % count(TeacherDemoCatalog::PRACTICE_RANGES)];
+            $reviewAt = $overdue ? now()->subDays(3 + $index) : now()->addDays(4 + $index);
+            $at = $identified->copy()->subDays($index * 3);
+
+            $assessment = new MemorisationAssessment;
+            $assessment->forceFill([
+                'user_id' => $user->id,
+                'surah_number' => $planRange['surah'],
+                'start_ayah' => $planRange['from'],
+                'end_ayah' => $planRange['to'],
+                'assessment_type' => 'memorisation_detection',
+                'status' => MemorisationAssessment::STATUS_COMPLETED,
+                'idempotency_key' => 'teacher-demo-plan:'.$user->id.':'.$index,
+                'surah_name' => QuranMetadata::name($planRange['surah']),
+                'overall_accuracy' => $overdue ? 62 + ($index % 6) : 88 + ($index % 5),
+                'friendly_summary' => 'Demo revision plan for '.$this->rangeLabel($planRange).'.',
+                'created_at' => $at,
+                'updated_at' => $at,
+            ])->save();
+
+            $practicePlan = new MemorisationPracticePlan;
+            $practicePlan->forceFill([
+                'user_id' => $user->id,
+                'assessment_id' => $assessment->id,
+                'title' => 'Review '.$this->rangeLabel($planRange),
+                'explanation' => $overdue
+                    ? 'This range was due for muraja\'ah and has not been reviewed.'
+                    : 'Scheduled muraja\'ah for a range this student already practises.',
+                'status' => MemorisationPracticePlan::STATUS_ACTIVE,
+                'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+                'surah_number' => $planRange['surah'],
+                'start_ayah' => $planRange['from'],
+                'end_ayah' => $planRange['to'],
+                'recommended_review_at' => $reviewAt,
+                'accepted_at' => $at,
+                'created_at' => $at,
+                'updated_at' => $at,
+            ])->save();
+        }
     }
 
     private function seedAssignments(): void
@@ -906,6 +913,62 @@ class TeacherDemoSeeder extends Seeder
                 null,
                 $this->groups[$definition['key']],
             );
+        }
+
+        $this->seedHistoricalStudentAssignments();
+    }
+
+    private function seedHistoricalStudentAssignments(): void
+    {
+        $activities = ['nazra', 'tajweed', 'hifz', 'revision'];
+
+        foreach (TeacherDemoCatalog::students() as $definition) {
+            if (in_array($definition['number'], [TeacherDemoCatalog::INTERVENTION, TeacherDemoCatalog::REPEATED], true)) {
+                continue;
+            }
+
+            $student = $this->students[$definition['number']];
+            $teacher = $this->teacherForGroup($definition['group']);
+            $recipientCount = TeacherAssignmentRecipient::query()->where('student_id', $student->id)->count();
+            $needed = max(0, DemoStudentVolume::MIN_LIST_ITEMS - $recipientCount);
+
+            for ($index = 0; $index < $needed; $index++) {
+                $range = TeacherDemoCatalog::PRACTICE_RANGES[($definition['number'] + $index) % count(TeacherDemoCatalog::PRACTICE_RANGES)];
+                $createdAt = now()->subDays(12 + ($index * 5))->setTime(12, 0);
+                $completedAt = $createdAt->copy()->addDays(2);
+
+                $this->assignment(
+                    $teacher,
+                    [$student],
+                    $index % 3 === 0 ? AssignmentKind::AiRecite : AssignmentKind::Practice,
+                    $range,
+                    $createdAt,
+                    $createdAt->copy()->addDays(3),
+                    $createdAt->copy()->addDay(),
+                    null,
+                    null,
+                    $completedAt,
+                );
+
+                $recipient = TeacherAssignmentRecipient::query()
+                    ->where('student_id', $student->id)
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($recipient !== null) {
+                    $recipient->forceFill([
+                        'status' => AssignmentStatus::Completed,
+                        'completed_at' => $completedAt,
+                        'student_completed_at' => $completedAt->copy()->subDay(),
+                    ])->save();
+                    $assignment = $recipient->assignment;
+                    if ($assignment !== null) {
+                        $assignment->forceFill([
+                            'activity' => $activities[$index % count($activities)],
+                        ])->save();
+                    }
+                }
+            }
         }
     }
 
@@ -1065,8 +1128,8 @@ class TeacherDemoSeeder extends Seeder
         if ($this->attemptCount < 300 || $this->attemptCount > 650) {
             throw new RuntimeException("Teacher demo seeded {$this->attemptCount} AI attempts; expected 300–650.");
         }
-        if ($this->assignmentCount < 40 || $this->assignmentCount > 60) {
-            throw new RuntimeException("Teacher demo seeded {$this->assignmentCount} assignments; expected 40–60.");
+        if ($this->assignmentCount < 228 || $this->assignmentCount > 340) {
+            throw new RuntimeException("Teacher demo seeded {$this->assignmentCount} assignments; expected 228–340.");
         }
     }
 

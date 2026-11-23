@@ -158,6 +158,7 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       algorithm_version: asText(item.algorithm_version),
       weak_words: Array.isArray(item.weak_words) ? item.weak_words : [],
       madani_preview: Array.isArray(item.madani_preview) ? item.madani_preview : [],
+      feedback: item.feedback && typeof item.feedback === 'object' ? item.feedback : null,
     })).filter((item) => item.id > 0)
     : []
 

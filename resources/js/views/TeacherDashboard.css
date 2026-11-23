@@ -567,6 +567,10 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .teacher-account__export .btn { flex: 0 0 auto; }
 .teacher-account-page { max-width: 960px; }
 .teacher-account__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.learner-circle__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.learner-circle__teacher, .learner-circle__guardian { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; align-items: center; }
+.learner-circle__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.learner-circle__subhead { margin: 18px 0 8px; padding-top: 14px; border-top: 1px solid var(--teacher-line, rgba(90, 70, 40, 0.12)); }
 .teacher-account-page .teacher-account { display: grid; gap: 16px; max-width: none; padding: 18px; border-radius: var(--teacher-radius); overflow: visible; }
 .teacher-account__classes-panel { grid-row: span 2; }
 .teacher-account__section-head { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
@@ -2725,3 +2729,74 @@ html[data-theme="dark"] .parent-modal__field input { background: #1b1613; color:
 html[data-theme="dark"] .parent-modal__close,
 html[data-theme="dark"] .parent-modal__ghost { background: #342b24; color: #f6efe6; border-color: #4a3d33; }
 html[data-theme="dark"] .parent-modal__primary { background: #e6d3bc; color: #1b1613; }
+
+/* Student shell uses the same TeacherNav column as teacher and parent.
+   The old jump bar stays as class hooks only; it must not become a second grid. */
+[data-platform-shell="student"].teacher-dashboard {
+  font-size: 15px;
+  line-height: 1.55;
+}
+[data-platform-shell="student"].teacher-dashboard .teacher-dashboard__shell.container-fluid {
+  display: block !important;
+  grid-template-columns: none !important;
+  width: 100%;
+  max-width: var(--content-max) !important;
+  margin-inline: auto !important;
+  padding-inline: var(--space-7);
+}
+[data-platform-shell="student"] .teacher-nav-shell--desktop .teacher-nav.dash-jump,
+[data-platform-shell="student"] .teacher-nav-shell--mobile .teacher-nav.dash-jump {
+  position: static;
+  top: auto;
+  max-width: none;
+  margin: 0;
+  overflow: visible;
+  grid-column: auto;
+  grid-row: auto;
+}
+[data-platform-shell="student"] .teacher-nav-shell--desktop .teacher-nav.dash-jump { width: 100%; }
+[data-platform-shell="student"] .teacher-nav-shell--mobile .teacher-nav.dash-jump { width: auto; }
+@media (max-width: 1200px) {
+  [data-platform-shell="student"].teacher-dashboard .teacher-dashboard__shell.container-fluid { padding-inline: 24px; }
+}
+@media (max-width: 991.98px) {
+  [data-platform-shell="student"].teacher-dashboard .teacher-dashboard__shell.container-fluid { padding-inline: 20px; }
+}
+@media (max-width: 767.98px) {
+  [data-platform-shell="student"].teacher-dashboard .teacher-dashboard__shell.container-fluid { padding-inline: 16px; }
+}
+[data-platform-shell="student"] .student-page-heading { margin-bottom: 8px; }
+[data-platform-shell="student"] .teacher-page-header__subtitle {
+  margin: 6px 0 0;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 14px;
+  font-weight: 400;
+  max-width: 42rem;
+}
+[data-platform-shell="student"] .student-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.4;
+}
+[data-platform-shell="student"] .student-crumb li + li::before {
+  content: "/";
+  margin-inline: 8px;
+}
+[data-platform-shell="student"] .student-crumb button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+[data-platform-shell="student"] .student-crumb button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
