@@ -3,21 +3,20 @@
 $annualEnabled = filter_var(env('BILLING_ANNUAL_ENABLED', true), FILTER_VALIDATE_BOOL);
 $lifetimeEnabled = filter_var(env('BILLING_LIFETIME_ENABLED', true), FILTER_VALIDATE_BOOL);
 
-$monthlyPence = 299;
+$premiumMonthlyPence = 299;
+$premiumPlusMonthlyPence = 499;
 $yearlyDiscountPercent = 25;
 $lifetimeDiscountPercent = 50;
 $lifetimeComparedToMonths = 36;
-$yearlyPence = (int) round($monthlyPence * 12 * (100 - $yearlyDiscountPercent) / 100);
-$lifetimePence = (int) round($monthlyPence * $lifetimeComparedToMonths * (100 - $lifetimeDiscountPercent) / 100);
+
+$premiumYearlyPence = (int) round($premiumMonthlyPence * 12 * (100 - $yearlyDiscountPercent) / 100);
+$premiumLifetimePence = (int) round($premiumMonthlyPence * $lifetimeComparedToMonths * (100 - $lifetimeDiscountPercent) / 100);
+$premiumPlusYearlyPence = (int) round($premiumPlusMonthlyPence * 12 * (100 - $yearlyDiscountPercent) / 100);
+$premiumPlusLifetimePence = (int) round($premiumPlusMonthlyPence * $lifetimeComparedToMonths * (100 - $lifetimeDiscountPercent) / 100);
 
 return [
     'currency' => env('BILLING_CURRENCY', 'GBP'),
     'currency_symbol' => env('BILLING_CURRENCY_SYMBOL', '£'),
-    /*
-     | Public checkout is Free + Pro monthly, yearly (25% off 12 months),
-     | and lifetime (50% off 3 years of monthly = 2 years of Pro yearly).
-     | Premium is archived in Stripe and is not sold.
-     */
     'annual_billing_enabled' => $annualEnabled,
     'lifetime_billing_enabled' => $lifetimeEnabled,
     'verify_price_on_checkout' => filter_var(env('BILLING_VERIFY_PRICE_ON_CHECKOUT', true), FILTER_VALIDATE_BOOL),
@@ -25,7 +24,12 @@ return [
         'free' => [
             'ai_assessments_per_day' => max(0, (int) env('BILLING_FREE_AI_ASSESSMENTS_PER_DAY', 5)),
             'saved_sessions' => max(0, (int) env('BILLING_FREE_SAVED_SESSIONS', 5)),
-            'find_ayah_per_day' => max(0, (int) env('BILLING_FREE_FIND_AYAH_PER_DAY', 5)),
+            'find_ayah_per_day' => 0,
+        ],
+        'premium' => [
+            'ai_assessments_per_day' => max(0, (int) env('BILLING_PREMIUM_AI_ASSESSMENTS_PER_DAY', 20)),
+            'saved_sessions' => max(0, (int) env('BILLING_PREMIUM_SAVED_SESSIONS', 10)),
+            'find_ayah_per_day' => max(0, (int) env('BILLING_PREMIUM_FIND_AYAH_PER_DAY', 10)),
         ],
     ],
     'plans' => [
@@ -35,48 +39,146 @@ return [
             'purchasable' => false,
             'display_amount' => '0',
             'interval' => 'month',
-            'features' => [
-                '5 AI recitation checks a day',
-                'Essential memorisation tools',
-                '5 saved sessions',
-                'Translation and transliteration',
-                'Beginner achievements and basic analytics',
-            ],
+            'features' => [],
         ],
         /*
-         | Archived Stripe prices. Kept so webhooks can still resolve old rows.
-         | Existing paid Premium subscribers receive Pro access.
+         | Legacy £9.99 Premium prices. Existing subscribers keep Premium Plus (pro) access.
          */
-        'premium_monthly' => [
-            'name' => 'Pro',
+        'legacy_premium_monthly' => [
+            'name' => 'Premium',
             'tier' => 'pro',
             'purchasable' => false,
             'interval' => 'month',
             'checkout_mode' => 'subscription',
             'price_type' => 'recurring',
-            'price_id' => env('STRIPE_PRICE_PREMIUM_MONTHLY'),
+            'price_id' => env('STRIPE_PRICE_LEGACY_PREMIUM_MONTHLY', env('STRIPE_PRICE_PREMIUM_MONTHLY')),
             'trial_days' => 0,
             'expected_unit_amount' => 999,
             'audited_unit_amount' => 999,
             'features' => [],
         ],
-        'premium_yearly' => [
-            'name' => 'Pro',
+        'legacy_premium_yearly' => [
+            'name' => 'Premium',
             'tier' => 'pro',
             'purchasable' => false,
             'interval' => 'year',
             'checkout_mode' => 'subscription',
             'price_type' => 'recurring',
-            'price_id' => env('STRIPE_PRICE_PREMIUM_YEARLY'),
+            'price_id' => env('STRIPE_PRICE_LEGACY_PREMIUM_YEARLY', env('STRIPE_PRICE_PREMIUM_YEARLY')),
             'trial_days' => 0,
             'expected_unit_amount' => 1799,
             'audited_unit_amount' => 1799,
             'features' => [],
         ],
-        'pro_monthly' => [
-            'name' => 'Pro',
+        'premium_monthly' => [
+            'name' => 'Premium',
+            'tier' => 'premium',
+            'purchasable' => true,
+            'interval' => 'month',
+            'checkout_mode' => 'subscription',
+            'price_type' => 'recurring',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_MONTHLY', env('STRIPE_PRICE_PRO_MONTHLY')),
+            'legacy_price_ids' => array_values(array_filter([
+                env('STRIPE_PRICE_PRO_MONTHLY_FALLBACK', 'price_1UY4m0GnjnR8GCMXlzedCo7N'),
+            ])),
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumMonthlyPence / 100, 2, '.', ''),
+            'expected_unit_amount' => $premiumMonthlyPence,
+            'audited_unit_amount' => $premiumMonthlyPence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        'premium_yearly' => [
+            'name' => 'Premium',
+            'tier' => 'premium',
+            'purchasable' => $annualEnabled,
+            'interval' => 'year',
+            'checkout_mode' => 'subscription',
+            'price_type' => 'recurring',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_YEARLY', env('STRIPE_PRICE_PRO_YEARLY')),
+            'legacy_price_ids' => array_values(array_filter([
+                env('STRIPE_PRICE_PRO_YEARLY_FALLBACK', 'price_1UY4m1GnjnR8GCMXeNk1veNH'),
+            ])),
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumYearlyPence / 100, 2, '.', ''),
+            'display_monthly_equivalent' => number_format($premiumYearlyPence / 12 / 100, 2, '.', ''),
+            'annual_discount_percent' => $yearlyDiscountPercent,
+            'expected_unit_amount' => $premiumYearlyPence,
+            'audited_unit_amount' => $premiumYearlyPence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        'premium_lifetime' => [
+            'name' => 'Premium',
+            'tier' => 'premium',
+            'purchasable' => $lifetimeEnabled,
+            'interval' => 'lifetime',
+            'checkout_mode' => 'payment',
+            'price_type' => 'one_time',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_LIFETIME', env('STRIPE_PRICE_PRO_LIFETIME')),
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumLifetimePence / 100, 2, '.', ''),
+            'lifetime_discount_percent' => $lifetimeDiscountPercent,
+            'expected_unit_amount' => $premiumLifetimePence,
+            'audited_unit_amount' => $premiumLifetimePence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        'premium_plus_monthly' => [
+            'name' => 'Premium Plus',
             'tier' => 'pro',
             'purchasable' => true,
+            'interval' => 'month',
+            'checkout_mode' => 'subscription',
+            'price_type' => 'recurring',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_PLUS_MONTHLY'),
+            'trial_days' => max(0, (int) env('BILLING_PREMIUM_PLUS_TRIAL_DAYS', 7)),
+            'display_amount' => number_format($premiumPlusMonthlyPence / 100, 2, '.', ''),
+            'expected_unit_amount' => $premiumPlusMonthlyPence,
+            'audited_unit_amount' => $premiumPlusMonthlyPence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        'premium_plus_yearly' => [
+            'name' => 'Premium Plus',
+            'tier' => 'pro',
+            'purchasable' => $annualEnabled,
+            'interval' => 'year',
+            'checkout_mode' => 'subscription',
+            'price_type' => 'recurring',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_PLUS_YEARLY'),
+            'trial_days' => max(0, (int) env('BILLING_PREMIUM_PLUS_TRIAL_DAYS', 7)),
+            'display_amount' => number_format($premiumPlusYearlyPence / 100, 2, '.', ''),
+            'display_monthly_equivalent' => number_format($premiumPlusYearlyPence / 12 / 100, 2, '.', ''),
+            'annual_discount_percent' => $yearlyDiscountPercent,
+            'expected_unit_amount' => $premiumPlusYearlyPence,
+            'audited_unit_amount' => $premiumPlusYearlyPence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        'premium_plus_lifetime' => [
+            'name' => 'Premium Plus',
+            'tier' => 'pro',
+            'purchasable' => $lifetimeEnabled,
+            'interval' => 'lifetime',
+            'checkout_mode' => 'payment',
+            'price_type' => 'one_time',
+            'price_id' => env('STRIPE_PRICE_PREMIUM_PLUS_LIFETIME'),
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumPlusLifetimePence / 100, 2, '.', ''),
+            'lifetime_discount_percent' => $lifetimeDiscountPercent,
+            'expected_unit_amount' => $premiumPlusLifetimePence,
+            'audited_unit_amount' => $premiumPlusLifetimePence,
+            'expected_currency' => 'gbp',
+            'features' => [],
+        ],
+        /*
+         | Archived Pro plan keys. Kept for existing Stripe subscriptions.
+         */
+        'pro_monthly' => [
+            'name' => 'Premium Plus',
+            'tier' => 'pro',
+            'purchasable' => false,
             'interval' => 'month',
             'checkout_mode' => 'subscription',
             'price_type' => 'recurring',
@@ -84,26 +186,17 @@ return [
             'legacy_price_ids' => array_values(array_filter([
                 'price_1UY4m0GnjnR8GCMXlzedCo7N',
             ])),
-            'trial_days' => max(0, (int) env('BILLING_PRO_TRIAL_DAYS', 7)),
-            'display_amount' => number_format($monthlyPence / 100, 2, '.', ''),
-            'expected_unit_amount' => $monthlyPence,
-            'audited_unit_amount' => $monthlyPence,
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumMonthlyPence / 100, 2, '.', ''),
+            'expected_unit_amount' => $premiumMonthlyPence,
+            'audited_unit_amount' => $premiumMonthlyPence,
             'expected_currency' => 'gbp',
-            'features' => [
-                'Everything in the Free plan',
-                'Unlimited AI recitation checks',
-                'Advanced memorisation tools',
-                'Unlimited saved sessions',
-                'Find an Ayah',
-                'Word-by-word translation',
-                'Offline audio downloads',
-                'Weak ayah insights',
-            ],
+            'features' => [],
         ],
         'pro_yearly' => [
-            'name' => 'Pro',
+            'name' => 'Premium Plus',
             'tier' => 'pro',
-            'purchasable' => $annualEnabled,
+            'purchasable' => false,
             'interval' => 'year',
             'checkout_mode' => 'subscription',
             'price_type' => 'recurring',
@@ -111,29 +204,24 @@ return [
             'legacy_price_ids' => array_values(array_filter([
                 'price_1UY4m1GnjnR8GCMXeNk1veNH',
             ])),
-            'trial_days' => max(0, (int) env('BILLING_PRO_TRIAL_DAYS', 7)),
-            'display_amount' => number_format($yearlyPence / 100, 2, '.', ''),
-            'display_monthly_equivalent' => number_format($yearlyPence / 12 / 100, 2, '.', ''),
-            'annual_discount_percent' => $yearlyDiscountPercent,
-            'expected_unit_amount' => $yearlyPence,
-            'audited_unit_amount' => $yearlyPence,
-            'expected_currency' => 'gbp',
+            'trial_days' => 0,
+            'display_amount' => number_format($premiumYearlyPence / 100, 2, '.', ''),
+            'expected_unit_amount' => $premiumYearlyPence,
+            'audited_unit_amount' => $premiumYearlyPence,
             'features' => [],
         ],
         'pro_lifetime' => [
-            'name' => 'Pro',
+            'name' => 'Premium Plus',
             'tier' => 'pro',
-            'purchasable' => $lifetimeEnabled,
+            'purchasable' => false,
             'interval' => 'lifetime',
             'checkout_mode' => 'payment',
             'price_type' => 'one_time',
             'price_id' => env('STRIPE_PRICE_PRO_LIFETIME'),
             'trial_days' => 0,
-            'display_amount' => number_format($lifetimePence / 100, 2, '.', ''),
-            'lifetime_discount_percent' => $lifetimeDiscountPercent,
-            'expected_unit_amount' => $lifetimePence,
-            'audited_unit_amount' => $lifetimePence,
-            'expected_currency' => 'gbp',
+            'display_amount' => number_format($premiumLifetimePence / 100, 2, '.', ''),
+            'expected_unit_amount' => $premiumLifetimePence,
+            'audited_unit_amount' => $premiumLifetimePence,
             'features' => [],
         ],
     ],

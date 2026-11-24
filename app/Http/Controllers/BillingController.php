@@ -66,7 +66,9 @@ class BillingController extends Controller
         $checkoutMode = (string) ($plan['checkout_mode'] ?? 'subscription');
         $isLifetime = $checkoutMode === 'payment';
         $trialDays = (int) ($plan['trial_days'] ?? 0);
-        $offerTrial = ! $isLifetime && $trialDays > 0 && blank($user->stripe_subscription_id);
+        $offerTrial = ! $isLifetime
+            && $trialDays > 0
+            && $this->userEligibleForPlanTrial($user);
 
         $checkoutData = [
             'mode' => $isLifetime ? 'payment' : 'subscription',
@@ -458,8 +460,23 @@ class BillingController extends Controller
 
     private function hasLifetimeAccess(User $user): bool
     {
-        return strtolower((string) $user->subscription_plan) === 'pro_lifetime'
+        $plan = strtolower((string) $user->subscription_plan);
+
+        return in_array($plan, ['pro_lifetime', 'premium_lifetime', 'premium_plus_lifetime'], true)
             && $user->hasPaidAccess();
+    }
+
+    private function userEligibleForPlanTrial(User $user): bool
+    {
+        if ($user->subscription_trial_ends_at !== null) {
+            return false;
+        }
+
+        if (filled($user->stripe_subscription_id)) {
+            return false;
+        }
+
+        return true;
     }
 
     private function assertConfiguredPrice(string $planKey, string $priceId): void

@@ -7,6 +7,7 @@ use App\Services\DashboardService;
 use App\Support\AdvancedAnalyticsAccess;
 use App\Support\ParentFeatures;
 use App\Support\SessionVoiceAccess;
+use App\Services\Learning\LearnerConnectionGate;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -56,6 +57,7 @@ class DashboardController extends Controller
                         : [],
                     'teacher_features_enabled' => TeacherFeatures::enabled(),
                     'learner_teacher_section_enabled' => TeacherFeatures::learnerSectionEnabled(),
+                    'learner_learning_network_connected' => app(LearnerConnectionGate::class)->connected($user),
                     'account_role' => TeacherFeatures::enabled() ? $user->account_role?->value : null,
                     'teacher_dashboard_url' => TeacherFeatures::enabled() && $user->isTeacher()
                         ? route('teacher.dashboard')

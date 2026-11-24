@@ -177,10 +177,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/onboarding/connections', [ConnectionOnboardingController::class, 'update'])->name('api.onboarding.connections.update');
 
         Route::middleware('learner.teacher.section')->group(function () {
-            Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/class-invites/redeem', [LearnerClassInviteController::class, 'redeem'])->middleware('throttle:10,1,api-me-class-invites-redeem')->name('api.me.class-invites.redeem');
+        });
+
+        Route::middleware(['learner.teacher.section', 'learner.learning.network'])->group(function () {
+            Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
             Route::post('/me/self-assessments', [LearnerSupportController::class, 'storeSelfAssessment'])->name('api.me.self-assessments.store');

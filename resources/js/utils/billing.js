@@ -19,7 +19,7 @@ function isPaid(auth = {}) {
 
   const status = String(auth?.subscription_status || '').toLowerCase()
 
-  return status === 'trialing' || status === 'active'
+  return status === 'trialing' || status === 'active' || status === 'lifetime'
 }
 
 export function resolveSubscriptionTier(auth = {}) {
@@ -29,8 +29,12 @@ export function resolveSubscriptionTier(auth = {}) {
 
   const tier = String(auth?.subscription_tier || 'free').toLowerCase()
 
-  if ((tier === 'pro' || tier === 'premium') && isPaid(auth)) {
-    return 'pro'
+  if (!isPaid(auth)) {
+    return 'free'
+  }
+
+  if (tier === 'premium' || tier === 'pro') {
+    return tier
   }
 
   return 'free'
@@ -68,6 +72,16 @@ export function freeSavedSessionsLimit() {
   return Number.isFinite(configured) && configured >= 0 ? configured : 5
 }
 
+export function premiumSavedSessionsLimit() {
+  if (typeof window === 'undefined') {
+    return 10
+  }
+
+  const configured = Number(window.mutqinBilling?.premiumSavedSessions)
+
+  return Number.isFinite(configured) && configured >= 0 ? configured : 10
+}
+
 export function maxSavedSessionsForTier(auth = {}) {
   if (isUnrestricted()) {
     return Number.POSITIVE_INFINITY
@@ -75,8 +89,12 @@ export function maxSavedSessionsForTier(auth = {}) {
 
   const tier = resolveSubscriptionTier(auth)
 
-  if (tier === 'pro' || tier === 'premium') {
+  if (tier === 'pro') {
     return Number.POSITIVE_INFINITY
+  }
+
+  if (tier === 'premium') {
+    return premiumSavedSessionsLimit()
   }
 
   return freeSavedSessionsLimit()

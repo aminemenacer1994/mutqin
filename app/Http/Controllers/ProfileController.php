@@ -301,11 +301,17 @@ class ProfileController extends Controller
     {
         return [
             'free' => __('profile.free_access'),
-            'premium_monthly' => __('profile.plan_pro_monthly'),
-            'premium_yearly' => __('profile.plan_pro_yearly'),
-            'pro_monthly' => __('profile.plan_pro_monthly'),
-            'pro_yearly' => __('profile.plan_pro_yearly'),
-            'pro_lifetime' => __('profile.plan_pro_lifetime'),
+            'premium_monthly' => __('profile.plan_premium_monthly'),
+            'premium_yearly' => __('profile.plan_premium_yearly'),
+            'premium_lifetime' => __('profile.plan_premium_lifetime'),
+            'premium_plus_monthly' => __('profile.plan_premium_plus_monthly'),
+            'premium_plus_yearly' => __('profile.plan_premium_plus_yearly'),
+            'premium_plus_lifetime' => __('profile.plan_premium_plus_lifetime'),
+            'legacy_premium_monthly' => __('profile.plan_premium_plus_monthly'),
+            'legacy_premium_yearly' => __('profile.plan_premium_plus_yearly'),
+            'pro_monthly' => __('profile.plan_premium_plus_monthly'),
+            'pro_yearly' => __('profile.plan_premium_plus_yearly'),
+            'pro_lifetime' => __('profile.plan_premium_plus_lifetime'),
         ];
     }
 

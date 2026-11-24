@@ -6,14 +6,20 @@ const CONTEXT_HASH_PANES = Object.freeze({
   '#achievements': 'progress',
 })
 
-export function studentNavItems({ messaging = false } = {}) {
+export function studentNavItems({ learning = false, messaging = false } = {}) {
   const items = [
     { id: 'home', label: 'dashboard.jump_home', icon: 'bi bi-house' },
-    { id: 'learning', label: 'dashboard.jump_learning', mobileLabel: 'dashboard.jump_learning_mobile', icon: 'bi bi-journal-check' },
+  ]
+  if (learning) {
+    items.push({ id: 'learning', label: 'dashboard.jump_learning', mobileLabel: 'dashboard.jump_learning_mobile', icon: 'bi bi-journal-check' })
+  }
+  items.push(
     { id: 'progress', label: 'dashboard.jump_progress', icon: 'bi bi-graph-up' },
     { id: 'activity', label: 'dashboard.jump_activity', icon: 'bi bi-clock-history' },
-  ]
-  if (messaging) items.push({ id: 'messages', label: 'dashboard.jump_messages', mobileLabel: 'dashboard.jump_messages_mobile', icon: 'bi bi-chat-left-text' })
+  )
+  if (messaging) {
+    items.push({ id: 'messages', label: 'dashboard.jump_messages', mobileLabel: 'dashboard.jump_messages_mobile', icon: 'bi bi-chat-left-text' })
+  }
   return items
 }
 

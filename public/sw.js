@@ -1,5 +1,5 @@
 // Keep in sync with config('mutqin.brand_icons.version') / App\Support\BrandIcons.
-const BRAND_ICONS_VERSION = '20261123c';
+const BRAND_ICONS_VERSION = '20261124b';
 const SHELL_CACHE = 'mutqin-shell-v102';
 const RUNTIME_CACHE = 'mutqin-runtime-v100';
 

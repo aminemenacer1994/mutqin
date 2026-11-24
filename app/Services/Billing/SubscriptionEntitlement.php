@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Single place for Free / Pro / legacy Premium access and daily AI usage.
+ * Single place for Free / Premium / Premium Plus access and daily quotas.
  */
 class SubscriptionEntitlement
 {
@@ -46,18 +46,28 @@ class SubscriptionEntitlement
         return match ($feature) {
             self::MUSHAF, self::MEMORISATION, self::REVISION, self::BASIC_PROGRESS => true,
             self::AI_ASSESSMENT => $this->canStartAiAssessment($user),
-            self::PREMIUM_TOOLS => $user->hasPremiumAccess(),
-            self::PRO_TOOLS, self::WORD_BY_WORD, self::OFFLINE_AUDIO, self::WEAK_AYAH_INSIGHTS, self::FIND_AYAH => $user->hasProAccess(),
+            self::PREMIUM_TOOLS,
+            self::WORD_BY_WORD,
+            self::WEAK_AYAH_INSIGHTS => $user->hasPremiumAccess(),
+            self::PRO_TOOLS, self::OFFLINE_AUDIO => $user->hasProAccess(),
+            self::FIND_AYAH => $this->canStartFindAyah($user),
             default => false,
         };
     }
 
-    /**
-     * Find an Ayah (Ask Mutqin voice) is a Premium feature.
-     */
     public function canStartFindAyah(User $user): bool
     {
-        return $user->hasProAccess();
+        if ($user->hasProAccess()) {
+            return true;
+        }
+
+        if (! $user->hasPremiumAccess()) {
+            return false;
+        }
+
+        $limit = $this->findAyahDailyLimit($user);
+
+        return $limit === null || $this->findAyahUsedToday($user) < $limit;
     }
 
     public function freeSavedSessionsLimit(): int
@@ -65,10 +75,19 @@ class SubscriptionEntitlement
         return max(0, (int) config('billing.limits.free.saved_sessions', 5));
     }
 
-    /**
-     * Free learners may start an assessment until the daily allowance is spent.
-     * Paid Premium rows are treated as Pro.
-     */
+    public function savedSessionsLimit(User $user): ?int
+    {
+        if ($user->hasProAccess()) {
+            return null;
+        }
+
+        if ($user->hasPremiumAccess()) {
+            return max(0, (int) config('billing.limits.premium.saved_sessions', 10));
+        }
+
+        return $this->freeSavedSessionsLimit();
+    }
+
     public function canStartAiAssessment(User $user): bool
     {
         return true;
@@ -79,6 +98,21 @@ class SubscriptionEntitlement
      */
     public function getRemainingUsage(User $user, string $feature): array
     {
+        if ($feature === self::FIND_AYAH) {
+            $limit = $user->hasProAccess() ? null : ($user->hasPremiumAccess() ? $this->findAyahDailyLimit($user) : 0);
+            $used = $user->hasPremiumAccess() ? $this->findAyahUsedToday($user) : 0;
+            $remaining = $limit === null ? null : max(0, $limit - $used);
+
+            return [
+                'limit' => $limit,
+                'used' => $used,
+                'remaining' => $remaining,
+                'resets_at' => $this->resetsAt()->toIso8601String(),
+                'allowed' => $this->canStartFindAyah($user),
+                'reason' => ($remaining === 0 && $limit !== null) ? UserAiReciteUsageService::REASON_DAILY : null,
+            ];
+        }
+
         if ($feature !== self::AI_ASSESSMENT) {
             return [
                 'limit' => null,
@@ -102,16 +136,23 @@ class SubscriptionEntitlement
         ];
     }
 
-    /**
-     * Reserve one successful AI assessment. Unlimited plans do not increment.
-     * The conditional update is atomic, so concurrent requests cannot pass the cap.
-     * Call this inside the assessment transaction so a failed save releases the slot.
-     * Referral bonus checks cover lifetime or daily overages without creating a new cap.
-     */
     public function checkAndConsumeUsage(User $user, string $feature): bool
     {
         if ($feature === self::FIND_AYAH) {
-            return $user->hasProAccess();
+            if ($user->hasProAccess()) {
+                return true;
+            }
+
+            if (! $user->hasPremiumAccess()) {
+                return false;
+            }
+
+            $limit = $this->findAyahDailyLimit($user);
+            if ($limit === null) {
+                return true;
+            }
+
+            return $this->incrementDaily($user, self::FIND_AYAH, $limit);
         }
 
         if ($feature !== self::AI_ASSESSMENT) {
@@ -177,6 +218,32 @@ class SubscriptionEntitlement
         ];
     }
 
+    private function findAyahDailyLimit(User $user): ?int
+    {
+        if ($user->hasProAccess()) {
+            return null;
+        }
+
+        if ($user->hasPremiumAccess()) {
+            $value = (int) config('billing.limits.premium.find_ayah_per_day', 10);
+
+            return $value > 0 ? $value : null;
+        }
+
+        return 0;
+    }
+
+    private function findAyahUsedToday(User $user): int
+    {
+        $period = Carbon::now('UTC')->toDateString();
+
+        return (int) (DB::table('feature_usage_counters')
+            ->where('user_id', $user->id)
+            ->where('feature', self::FIND_AYAH)
+            ->where('period_on', $period)
+            ->value('consumed') ?? 0);
+    }
+
     private function incrementDaily(User $user, string $feature, int $limit): bool
     {
         $period = Carbon::now('UTC')->toDateString();
@@ -186,7 +253,7 @@ class SubscriptionEntitlement
             'user_id' => $user->id,
             'feature' => $feature,
             'period_on' => $period,
-            'consumed' => $this->usage->storedDailyAssessmentCount($user),
+            'consumed' => 0,
             'created_at' => $now,
             'updated_at' => $now,
         ]);

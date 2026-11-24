@@ -2,20 +2,24 @@
 """Render Mutqin app icons (gradient tile + white mark)."""
 from __future__ import annotations
 
+import base64
 import math
 import re
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 MARK_PATH = ROOT / "public/icons/icon-mark.png"
+LOGO_MAIN_PATH = ROOT / "public/images/logo_main.png"
+CREAM_BG = (246, 240, 230)  # #f6f0e6 — matches --bg / marketing logo tile
 PUBLIC = ROOT / "public"
 ICONS = PUBLIC / "icons"
 MANIFEST_PATH = PUBLIC / "manifest.webmanifest"
 
 # Bump in config/mutqin.php brand_icons.version and public/sw.js BRAND_ICONS_VERSION when shipping new icons.
-DEFAULT_BRAND_ICONS_VERSION = "20261123b"
+DEFAULT_BRAND_ICONS_VERSION = "20261124b"
 
 # Brand-aligned palette (resources/sass/app.scss)
 GRADIENT_TOP = (166, 124, 82)  # #a67c52
@@ -137,7 +141,52 @@ def compose_icon(
   return out
 
 
-def write_svg(path: Path, *, variant: str = "default", mark_href: str = "icons/icon-mark.png") -> None:
+def compose_cream_logo_icon(canvas: int, *, inset: float = 1.0) -> Image.Image:
+    """Cream rounded tile + gold logo_main (browser-tab favicon)."""
+    radius = int(canvas * 0.22)
+    plate = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(plate)
+    draw.rounded_rectangle((0, 0, canvas - 1, canvas - 1), radius=radius, fill=CREAM_BG + (255,))
+
+    base_w, base_h, pad_x, pad_y = 176, 200, 40, 28
+    if inset != 1.0:
+        base_w = int(base_w * inset)
+        base_h = int(base_h * inset)
+        pad_x = (256 - base_w) // 2
+        pad_y = (256 - base_h) // 2
+
+    logo = Image.open(LOGO_MAIN_PATH).convert("RGBA")
+    lw = max(1, int(canvas * base_w / 256))
+    lh = max(1, int(canvas * base_h / 256))
+    logo = logo.resize((lw, lh), Image.Resampling.LANCZOS)
+    x = int(canvas * pad_x / 256)
+    y = int(canvas * pad_y / 256)
+    plate.alpha_composite(logo, (x, y))
+    return plate
+
+
+def mark_png_data_uri() -> str:
+    raw = base64.standard_b64encode(MARK_PATH.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{raw}"
+
+
+def write_embedded_png_svg(path: Path, icon: Image.Image, *, view: int = 256) -> None:
+    """SVG favicon with inlined raster — external <image href> is blocked in tab favicons."""
+    if icon.size[0] != view or icon.size[1] != view:
+        icon = icon.resize((view, view), Image.Resampling.LANCZOS)
+    buf = BytesIO()
+    icon.save(buf, format="PNG", optimize=True)
+    b64 = base64.standard_b64encode(buf.getvalue()).decode("ascii")
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {view} {view}" role="img" aria-label="Mutqin">\n'
+        f'  <image width="{view}" height="{view}" href="data:image/png;base64,{b64}"/>\n'
+        "</svg>\n"
+    )
+    path.write_text(svg, encoding="utf-8")
+
+
+def write_svg(path: Path, *, variant: str = "default", mark_href: str | None = None) -> None:
+    mark_href = mark_href or mark_png_data_uri()
     if variant == "dark":
         stops = """
       <stop offset="0%" stop-color="#5c3d28"/>
@@ -196,24 +245,25 @@ def main() -> None:
     for path, px in sizes.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         maskable = "maskable" in path.name
-        scale = 0.48 if maskable else 0.58
-        icon = compose_icon(px, mark_scale=scale)
+        inset = 0.86 if maskable else 1.0
+        icon = compose_cream_logo_icon(px, inset=inset)
         icon.save(path, format="PNG", optimize=True)
 
-    sq = compose_icon(512)
+    sq = compose_cream_logo_icon(512)
     sq.save(ICONS / "icon-mark-sq.png", format="PNG", optimize=True)
-    compose_icon(512).save(ICONS / "icon.png", format="PNG", optimize=True)
+    compose_cream_logo_icon(512).save(ICONS / "icon.png", format="PNG", optimize=True)
 
     ico_path = PUBLIC / "favicon.ico"
-    icon_16 = compose_icon(16).convert("RGBA")
-    icon_32 = compose_icon(32).convert("RGBA")
-    icon_48 = compose_icon(48).convert("RGBA")
-    icon_16.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
-
-    write_svg(PUBLIC / "favicon.svg", mark_href="icons/icon-mark.png")
-    write_svg(ICONS / "icon.svg", mark_href="icon-mark.png")
+    icon_master = compose_cream_logo_icon(512)
+    write_embedded_png_svg(PUBLIC / "favicon.svg", icon_master)
+    write_embedded_png_svg(ICONS / "icon.svg", icon_master)
     write_svg(PUBLIC / "favicon-light.svg", variant="default")
     write_svg(PUBLIC / "favicon-dark.svg", variant="dark")
+
+    icon_16 = compose_cream_logo_icon(16).convert("RGBA")
+    icon_32 = compose_cream_logo_icon(32).convert("RGBA")
+    icon_48 = compose_cream_logo_icon(48).convert("RGBA")
+    icon_16.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
 
     manifest = MANIFEST_PATH.read_text(encoding="utf-8")
     manifest = re.sub(r"\?v=[^\"]+", f"?v={DEFAULT_BRAND_ICONS_VERSION}", manifest)

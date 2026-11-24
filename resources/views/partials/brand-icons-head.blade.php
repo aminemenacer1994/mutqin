@@ -6,7 +6,8 @@
 <link rel="apple-touch-icon" sizes="167x167" href="{{ BrandIcons::url('icons/icon-167.png') }}">
 <link rel="apple-touch-icon" sizes="152x152" href="{{ BrandIcons::url('icons/icon-152.png') }}">
 <link rel="apple-touch-icon" sizes="144x144" href="{{ BrandIcons::url('icons/icon-144.png') }}">
-<link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="{{ BrandIcons::url('favicon-512.png') }}">
+<link id="appThemeFavicon" rel="icon" type="image/png" sizes="32x32" href="{{ BrandIcons::url('favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="512x512" href="{{ BrandIcons::url('favicon-512.png') }}">
 <link rel="icon" type="image/png" sizes="192x192" href="{{ BrandIcons::url('favicon-192.png') }}">
 <link rel="icon" type="image/png" sizes="96x96" href="{{ BrandIcons::url('favicon-96x96.png') }}">
 <link rel="icon" type="image/png" sizes="48x48" href="{{ BrandIcons::url('favicon-48x48.png') }}">

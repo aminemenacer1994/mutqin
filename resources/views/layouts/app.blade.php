@@ -60,17 +60,28 @@
     $mutqinBillingDisplay = [
         'currency' => config('billing.currency', 'GBP'),
         'currencySymbol' => config('billing.currency_symbol', '£'),
-        'proMonthly' => (string) config('billing.plans.pro_monthly.display_amount', '2.99'),
-        'proYearlyMonthly' => (string) config('billing.plans.pro_yearly.display_monthly_equivalent', '2.24'),
-        'proYearlyTotal' => (string) config('billing.plans.pro_yearly.display_amount', '26.91'),
-        'proLifetime' => (string) config('billing.plans.pro_lifetime.display_amount', '53.82'),
-        'annualDiscountPercent' => (int) config('billing.plans.pro_yearly.annual_discount_percent', 25),
-        'lifetimeDiscountPercent' => (int) config('billing.plans.pro_lifetime.lifetime_discount_percent', 50),
+        'premiumMonthly' => (string) config('billing.plans.premium_monthly.display_amount', '2.99'),
+        'premiumYearlyMonthly' => (string) config('billing.plans.premium_yearly.display_monthly_equivalent', '2.24'),
+        'premiumYearlyTotal' => (string) config('billing.plans.premium_yearly.display_amount', '26.91'),
+        'premiumLifetime' => (string) config('billing.plans.premium_lifetime.display_amount', '53.82'),
+        'premiumPlusMonthly' => (string) config('billing.plans.premium_plus_monthly.display_amount', '4.99'),
+        'premiumPlusYearlyMonthly' => (string) config('billing.plans.premium_plus_yearly.display_monthly_equivalent', '3.74'),
+        'premiumPlusYearlyTotal' => (string) config('billing.plans.premium_plus_yearly.display_amount', '44.91'),
+        'premiumPlusLifetime' => (string) config('billing.plans.premium_plus_lifetime.display_amount', '89.82'),
+        'proMonthly' => (string) config('billing.plans.premium_monthly.display_amount', '2.99'),
+        'proYearlyMonthly' => (string) config('billing.plans.premium_yearly.display_monthly_equivalent', '2.24'),
+        'proYearlyTotal' => (string) config('billing.plans.premium_yearly.display_amount', '26.91'),
+        'proLifetime' => (string) config('billing.plans.premium_lifetime.display_amount', '53.82'),
+        'annualDiscountPercent' => (int) config('billing.plans.premium_yearly.annual_discount_percent', 25),
+        'lifetimeDiscountPercent' => (int) config('billing.plans.premium_lifetime.lifetime_discount_percent', 50),
         'annualEnabled' => (bool) config('billing.annual_billing_enabled'),
         'lifetimeEnabled' => (bool) config('billing.lifetime_billing_enabled'),
         'freeAiAssessmentsPerDay' => (int) config('billing.limits.free.ai_assessments_per_day', 5),
+        'premiumAiAssessmentsPerDay' => (int) config('billing.limits.premium.ai_assessments_per_day', 20),
+        'premiumSavedSessions' => (int) config('billing.limits.premium.saved_sessions', 10),
+        'premiumFindAyahPerDay' => (int) config('billing.limits.premium.find_ayah_per_day', 10),
         'freeSavedSessions' => (int) config('billing.limits.free.saved_sessions', 5),
-        'freeFindAyahPerDay' => (int) config('billing.limits.free.find_ayah_per_day', 5),
+        'freeFindAyahPerDay' => (int) config('billing.limits.free.find_ayah_per_day', 0),
     ];
 @endphp
 <!doctype html>
@@ -8940,7 +8951,7 @@
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
-                    favicon.setAttribute('href', @json(\App\Support\BrandIcons::url('favicon-512.png')));
+                    favicon.setAttribute('href', @json(\App\Support\BrandIcons::url('favicon-32x32.png')));
                 }
 
                 return normalizedTheme;

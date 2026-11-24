@@ -481,11 +481,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
         $tier = strtolower((string) ($this->subscription_tier ?? 'free'));
 
-        if (in_array($tier, ['premium', 'pro'], true)) {
-            return 'pro';
-        }
-
-        return 'free';
+        return in_array($tier, ['premium', 'pro'], true) ? $tier : 'free';
     }
 
     public function effectiveSubscriptionTier(): string
@@ -499,13 +495,13 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasPremiumAccess(): bool
     {
-        if (config('mutqin.unrestricted_subscription')) {
+        if (config('mutqin.unrestricted_subscription') || $this->isAdmin()) {
             return true;
         }
 
         $tier = $this->effectiveSubscriptionTier();
 
-        return in_array($tier, ['premium', 'pro'], true);
+        return in_array($tier, ['premium', 'pro'], true) && $this->hasPaidAccess();
     }
 
     public function hasProAccess(): bool

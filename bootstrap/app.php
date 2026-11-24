@@ -4,6 +4,7 @@ use App\Http\Controllers\WaitingListController;
 use App\Http\Middleware\ApplySeoRobotsHeader;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
+use App\Http\Middleware\EnsureLearnerLearningNetworkConnected;
 use App\Http\Middleware\EnsureLearnerTeacherSectionEnabled;
 use App\Http\Middleware\EnsureParentFeaturesEnabled;
 use App\Http\Middleware\EnsureSubscriptionTier;
@@ -110,6 +111,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'teacher.features' => EnsureTeacherFeaturesEnabled::class,
             'parent.features' => EnsureParentFeaturesEnabled::class,
             'learner.teacher.section' => EnsureLearnerTeacherSectionEnabled::class,
+            'learner.learning.network' => EnsureLearnerLearningNetworkConnected::class,
         ]);
 
         // Run before auth so a disabled feature is a 404, including for guests.
@@ -120,6 +122,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             AuthenticatesRequests::class,
             EnsureLearnerTeacherSectionEnabled::class,
+        );
+        $middleware->prependToPriorityList(
+            AuthenticatesRequests::class,
+            EnsureLearnerLearningNetworkConnected::class,
         );
         $middleware->prependToPriorityList(
             AuthenticatesRequests::class,

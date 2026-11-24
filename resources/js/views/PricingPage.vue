@@ -46,12 +46,16 @@
             v-for="plan in plans"
             :key="plan.id"
             class="pricing-card"
-            :class="{ 'pricing-card--featured': plan.featured }"
+            :class="plan.cardClass"
             data-reveal
           >
             <div class="pricing-card-top">
-              <h2>{{ plan.name }}</h2>
-              <span v-if="plan.badge" class="pricing-badge">{{ plan.badge }}</span>
+              <h2 class="pricing-plan-name">{{ plan.name }}</h2>
+              <span
+                v-if="plan.badge"
+                class="pricing-badge"
+                :class="plan.badgeClass"
+              >{{ plan.badge }}</span>
             </div>
             <div class="pricing-price">
               <span class="pricing-price-currency">{{ currencySymbol }}</span>
@@ -80,7 +84,7 @@
               </form>
               <form
                 v-else
-                id="pricing-checkout-form"
+                :id="plan.checkoutFormId || undefined"
                 method="POST"
                 :action="checkoutFormAction"
                 @submit="onBillingSubmit"
@@ -106,7 +110,7 @@
                   ></i>
                   <span class="pricing-feature-name">{{ feature.name }}</span>
                 </span>
-                <span v-if="feature.value" class="pricing-feature-value">{{ feature.value }}</span>
+                <span v-if="feature.value" class="pricing-feature-value" :class="{ 'is-highlight': feature.highlight }">{{ feature.value }}</span>
               </li>
             </ul>
           </article>
@@ -129,20 +133,26 @@ function readBillingDisplay() {
   const billing = window.mutqinBilling || {};
   return {
     currencySymbol: billing.currencySymbol || '£',
-    proMonthly: String(billing.proMonthly || '2.99'),
-    proYearlyTotal: String(billing.proYearlyTotal || '26.91'),
-    proYearlyMonthly: String(billing.proYearlyMonthly || '2.24'),
-    proLifetime: String(billing.proLifetime || '53.82'),
+    premiumMonthly: String(billing.premiumMonthly || billing.proMonthly || '2.99'),
+    premiumYearlyTotal: String(billing.premiumYearlyTotal || billing.proYearlyTotal || '26.91'),
+    premiumYearlyMonthly: String(billing.premiumYearlyMonthly || billing.proYearlyMonthly || '2.24'),
+    premiumLifetime: String(billing.premiumLifetime || billing.proLifetime || '53.82'),
+    premiumPlusMonthly: String(billing.premiumPlusMonthly || '4.99'),
+    premiumPlusYearlyTotal: String(billing.premiumPlusYearlyTotal || '44.91'),
+    premiumPlusYearlyMonthly: String(billing.premiumPlusYearlyMonthly || '3.74'),
+    premiumPlusLifetime: String(billing.premiumPlusLifetime || '89.82'),
     annualEnabled: billing.annualEnabled !== false,
     lifetimeEnabled: billing.lifetimeEnabled !== false,
     freeChecks: Number(billing.freeAiAssessmentsPerDay || 5),
-    freeSavedSessions: Number(billing.freeSavedSessions || 5),
-    freeFindAyah: Number(billing.freeFindAyahPerDay || 5),
+    premiumChecks: Number(billing.premiumAiAssessmentsPerDay || 20),
+    freeSaved: Number(billing.freeSavedSessions || 5),
+    premiumSaved: Number(billing.premiumSavedSessions || 10),
+    premiumFindAyah: Number(billing.premiumFindAyahPerDay || 10),
   };
 }
 
-function featureRow(name, value, included = true) {
-  return { name, value, included: !!included };
+function featureRow(name, value, included = true, highlight = false) {
+  return { name, value, included: !!included, highlight: !!highlight };
 }
 
 export default {
@@ -171,6 +181,7 @@ export default {
     const hasPaidAccess = computed(() => !!window.mutqinHasPaidAccess);
     const canManageBilling = computed(() => !!window.mutqinCanManageBilling);
     const isCurrentPro = computed(() => isAuthenticated.value && hasPaidAccess.value && subscriptionTier.value === 'pro');
+    const isCurrentPremium = computed(() => isAuthenticated.value && hasPaidAccess.value && subscriptionTier.value === 'premium');
     const isCurrentFree = computed(() => isAuthenticated.value && !hasPaidAccess.value);
 
     onMounted(() => {
@@ -212,15 +223,15 @@ export default {
 
     function initialBillingCycle() {
       const plan = new URLSearchParams(window.location.search).get('plan');
-      if (plan === 'pro_yearly' && billingDisplay.annualEnabled) return 'annual';
-      if (plan === 'pro_lifetime' && billingDisplay.lifetimeEnabled) return 'lifetime';
+      if (plan?.includes('yearly') && billingDisplay.annualEnabled) return 'annual';
+      if (plan?.includes('lifetime') && billingDisplay.lifetimeEnabled) return 'lifetime';
       return 'monthly';
     }
 
-    function selectedCheckoutPlan() {
-      if (billingCycle.value === 'annual' && annualEnabled) return 'pro_yearly';
-      if (billingCycle.value === 'lifetime' && lifetimeEnabled) return 'pro_lifetime';
-      return 'pro_monthly';
+    function checkoutPlan(prefix) {
+      if (billingCycle.value === 'annual' && annualEnabled) return `${prefix}_yearly`;
+      if (billingCycle.value === 'lifetime' && lifetimeEnabled) return `${prefix}_lifetime`;
+      return `${prefix}_monthly`;
     }
 
     function startCheckoutIfRequested() {
@@ -232,7 +243,7 @@ export default {
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
       window.history.replaceState({}, '', next);
       window.setTimeout(() => {
-        const form = document.getElementById('pricing-checkout-form');
+        const form = document.getElementById('pricing-checkout-form-premium');
         if (!form || billingBusy.value) return;
         billingBusy.value = true;
         trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
@@ -257,118 +268,157 @@ export default {
       nodes.forEach((el) => revealObserver.observe(el));
     }
 
-    const plans = computed(() => {
-      const checks = billingDisplay.freeChecks;
-      const saved = billingDisplay.freeSavedSessions;
-      const included = t('pricingPage.comparisonValues.included');
-      const unlimited = t('pricingPage.comparisonValues.unlimited');
-
-      const freeFeatures = [
-        featureRow(t('pricingPage.comparisonRows.aiChecks'), t('pricingPage.comparisonValues.perDay', { count: checks }), true),
-        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.essential'), true),
-        featureRow(t('pricingPage.comparisonRows.savedSessions'), String(saved), true),
-        featureRow(t('pricingPage.comparisonRows.translation'), included, true),
-        featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
-        featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.beginner'), true),
-        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.basic'), true),
-        featureRow(t('pricingPage.comparisonRows.findAyah'), '', false),
-        featureRow(t('pricingPage.comparisonRows.wordByWord'), '', false),
-        featureRow(t('pricingPage.comparisonRows.offlineAudio'), '', false),
-        featureRow(t('pricingPage.comparisonRows.weakAyahInsights'), '', false),
-      ];
-
-      const premiumFeatures = [
-        featureRow(t('pricingPage.everythingInFree'), '', true),
-        featureRow(t('pricingPage.comparisonRows.aiChecks'), unlimited, true),
-        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.advanced'), true),
-        featureRow(t('pricingPage.comparisonRows.savedSessions'), unlimited, true),
-        featureRow(t('pricingPage.comparisonRows.findAyah'), unlimited, true),
-        featureRow(t('pricingPage.comparisonRows.translation'), included, true),
-        featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
-        featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.allLevels'), true),
-        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.advanced'), true),
-        featureRow(t('pricingPage.comparisonRows.wordByWord'), included, true),
-        featureRow(t('pricingPage.comparisonRows.offlineAudio'), included, true),
-        featureRow(t('pricingPage.comparisonRows.weakAyahInsights'), included, true),
-      ];
-
-      return [
-        {
-          id: 'free',
-          name: t('homepage.free'),
-          amount: '0',
-          period: t('pricingPage.freeForever'),
-          features: freeFeatures,
-          featured: false,
-          ...(isCurrentFree.value
-            ? { ctaType: 'current', ctaLabel: t('pricingPage.currentPlan') }
-            : {
-              ctaType: 'link',
-              ctaHref: isAuthenticated.value ? '/memorisation' : publicRegisterHref(),
-              ctaLabel: t('pricingPage.simple.getStartedFree'),
-              ctaClass: 'btn--secondary',
-            }),
-        },
-        {
-          id: 'pro',
-          name: t('pricingPage.premium'),
-          ...proPrice(),
-          features: premiumFeatures,
-          featured: true,
-          badge: t('pricingPage.recommended'),
-          ...proCta(),
-        },
-      ];
-    });
-
-    function proPrice() {
+    function tierPrice(prefix, amounts) {
       if (billingCycle.value === 'annual' && annualEnabled) {
         return {
-          amount: billingDisplay.proYearlyTotal,
+          amount: amounts.yearlyTotal,
           period: t('homepage.pricing.perYear'),
           priceHint: t('pricingPage.yearlyEquivalent', {
             symbol: currencySymbol,
-            amount: billingDisplay.proYearlyMonthly,
+            amount: amounts.yearlyMonthly,
           }),
         };
       }
       if (billingCycle.value === 'lifetime' && lifetimeEnabled) {
         return {
-          amount: billingDisplay.proLifetime,
+          amount: amounts.lifetime,
           period: t('homepage.pricing.once'),
           priceHint: t('pricingPage.billedOnce'),
         };
       }
       return {
-        amount: billingDisplay.proMonthly,
+        amount: amounts.monthly,
         period: t('homepage.pricing.perMonth'),
         priceHint: '',
       };
     }
 
-    function proCta() {
-      const checkoutPlan = selectedCheckoutPlan();
-      if (isCurrentPro.value) {
+    function buildCta({ isCurrent, checkoutPlanKey, upgradeLabel, portalLabel, registerPlan, btnClass, checkoutFormId }) {
+      if (isCurrent) {
         if (canManageBilling.value) {
-          return { ctaType: 'portal', ctaLabel: t('pricingPage.currentPlan'), ctaClass: 'btn--primary btn--premium' };
+          return { ctaType: 'portal', ctaLabel: portalLabel || t('pricingPage.currentPlan'), ctaClass: btnClass };
         }
         return { ctaType: 'current', ctaLabel: t('pricingPage.currentPlan') };
       }
       if (!isAuthenticated.value) {
         return {
           ctaType: 'link',
-          ctaHref: `/register?plan=${checkoutPlan}`,
-          ctaLabel: t('pricingPage.simple.unlockPremium'),
-          ctaClass: 'btn--primary btn--premium',
+          ctaHref: `/register?plan=${registerPlan || checkoutPlanKey}`,
+          ctaLabel: upgradeLabel,
+          ctaClass: btnClass,
         };
+      }
+      if (hasPaidAccess.value) {
+        if (canManageBilling.value) {
+          return { ctaType: 'portal', ctaLabel: t('pricingPage.manageBilling'), ctaClass: btnClass };
+        }
+        return { ctaType: 'current', ctaLabel: t('pricingPage.currentPlan') };
       }
       return {
         ctaType: 'checkout',
-        checkoutPlan,
-        ctaLabel: t('pricingPage.simple.unlockPremium'),
-        ctaClass: 'btn--primary btn--premium',
+        checkoutPlan: checkoutPlanKey,
+        checkoutFormId,
+        ctaLabel: upgradeLabel,
+        ctaClass: btnClass,
       };
     }
+
+    const plans = computed(() => {
+      const included = t('pricingPage.comparisonValues.included');
+      const unlimited = t('pricingPage.comparisonValues.unlimited');
+
+      const freeFeatures = [
+        featureRow(t('pricingPage.comparisonRows.aiChecks'), t('pricingPage.comparisonValues.perDay', { count: billingDisplay.freeChecks }), true),
+        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.essential'), true),
+        featureRow(t('pricingPage.comparisonRows.savedSessions'), String(billingDisplay.freeSaved), true),
+        featureRow(t('pricingPage.comparisonRows.translation'), included, true),
+        featureRow(t('pricingPage.comparisonRows.transliteration'), included, true),
+        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.basic'), true),
+      ];
+
+      const premiumFeatures = [
+        featureRow(t('pricingPage.everythingInFree'), '', true),
+        featureRow(t('pricingPage.comparisonRows.aiChecks'), t('pricingPage.comparisonValues.perDay', { count: billingDisplay.premiumChecks }), true),
+        featureRow(t('pricingPage.comparisonRows.memorisationTools'), t('pricingPage.comparisonValues.advanced'), true),
+        featureRow(t('pricingPage.comparisonRows.savedSessions'), String(billingDisplay.premiumSaved), true),
+        featureRow(t('pricingPage.comparisonRows.findAyah'), t('pricingPage.comparisonValues.perDay', { count: billingDisplay.premiumFindAyah }), true),
+        featureRow(t('pricingPage.comparisonRows.analytics'), t('pricingPage.comparisonValues.advanced'), true),
+        featureRow(t('pricingPage.comparisonRows.wordByWord'), included, true),
+      ];
+
+      const plusFeatures = [
+        featureRow(t('pricingPage.everythingInPremium'), '', true),
+        featureRow(t('pricingPage.comparisonRows.aiChecks'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.savedSessions'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.findAyah'), unlimited, true),
+        featureRow(t('pricingPage.comparisonRows.achievements'), t('pricingPage.comparisonValues.allLevels'), true),
+        featureRow(t('pricingPage.comparisonRows.offlineAudio'), included, true),
+      ];
+
+      const premiumCheckout = checkoutPlan('premium');
+      const plusCheckout = checkoutPlan('premium_plus');
+      const plusTrialEligible = billingCycle.value !== 'lifetime';
+
+      return [
+        {
+          id: 'free',
+          name: t('homepage.free'),
+          cardClass: 'pricing-card--neutral',
+          amount: '0',
+          period: t('pricingPage.freeForever'),
+          features: freeFeatures,
+          ...buildCta({
+            isCurrent: isCurrentFree.value,
+            checkoutPlanKey: 'premium_monthly',
+            upgradeLabel: t('pricingPage.simple.getStartedFree'),
+            btnClass: 'btn--secondary',
+          }),
+        },
+        {
+          id: 'premium',
+          name: t('pricingPage.premium'),
+          cardClass: 'pricing-card--featured',
+          badge: t('pricingPage.recommended'),
+          badgeClass: '',
+          ...tierPrice('premium', {
+            monthly: billingDisplay.premiumMonthly,
+            yearlyTotal: billingDisplay.premiumYearlyTotal,
+            yearlyMonthly: billingDisplay.premiumYearlyMonthly,
+            lifetime: billingDisplay.premiumLifetime,
+          }),
+          features: premiumFeatures,
+          ...buildCta({
+            isCurrent: isCurrentPremium.value,
+            checkoutPlanKey: premiumCheckout,
+            upgradeLabel: t('pricingPage.simple.unlockPremium'),
+            btnClass: 'btn--primary btn--premium',
+            checkoutFormId: 'pricing-checkout-form-premium',
+          }),
+        },
+        {
+          id: 'premium_plus',
+          name: t('pricingPage.premiumPlus'),
+          cardClass: 'pricing-card--plus',
+          badge: plusTrialEligible ? t('pricingPage.trialBadge') : null,
+          badgeClass: 'pricing-badge--trial',
+          ...tierPrice('premium_plus', {
+            monthly: billingDisplay.premiumPlusMonthly,
+            yearlyTotal: billingDisplay.premiumPlusYearlyTotal,
+            yearlyMonthly: billingDisplay.premiumPlusYearlyMonthly,
+            lifetime: billingDisplay.premiumPlusLifetime,
+          }),
+          features: plusFeatures,
+          ...buildCta({
+            isCurrent: isCurrentPro.value,
+            checkoutPlanKey: plusCheckout,
+            upgradeLabel: plusTrialEligible
+              ? t('pricingPage.startFreeTrial')
+              : t('pricingPage.simple.unlockPremiumPlus'),
+            btnClass: 'btn--primary btn--plus',
+          }),
+        },
+      ];
+    });
 
     return {
       t,

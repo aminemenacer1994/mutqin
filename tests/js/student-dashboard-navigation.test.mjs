@@ -13,9 +13,13 @@ import {
 import { buildCheckAgainHref, buildReviewHref } from '../../resources/js/scripts/dashboard/progressView.js'
 
 assert.deepEqual(STUDENT_DASHBOARD_PANES, ['home', 'learning', 'progress', 'activity', 'messages', 'settings'])
-const nav = studentNavItems({ messaging: true })
+const nav = studentNavItems({ learning: true, messaging: true })
 assert.deepEqual(nav.map((item) => item.id), ['home', 'learning', 'progress', 'activity', 'messages'])
-assert.deepEqual(studentNavItems({ messaging: false }).map((item) => item.id), ['home', 'learning', 'progress', 'activity'])
+assert.deepEqual(
+  studentNavItems({ learning: false, messaging: false }).map((item) => item.id),
+  ['home', 'progress', 'activity'],
+)
+assert.deepEqual(studentNavItems({ learning: true, messaging: false }).map((item) => item.id), ['home', 'learning', 'progress', 'activity'])
 assert.ok(nav.every((item) => item.label.startsWith('dashboard.jump_') && item.icon.startsWith('bi ')))
 assert.equal(normalizeStudentDashboardPane('my-learning'), 'learning')
 assert.equal(normalizeStudentDashboardPane('unknown'), 'home')

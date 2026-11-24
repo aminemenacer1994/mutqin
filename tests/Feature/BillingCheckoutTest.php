@@ -13,15 +13,15 @@ class BillingCheckoutTest extends TestCase
 
     public function test_guest_is_redirected_to_login_from_checkout(): void
     {
-        $this->post(route('billing.checkout'), ['plan' => 'pro_monthly'])
-            ->assertRedirect(route('login', ['plan' => 'pro_monthly']))
-            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'pro_monthly');
+        $this->post(route('billing.checkout'), ['plan' => 'premium_plus_monthly'])
+            ->assertRedirect(route('login', ['plan' => 'premium_plus_monthly']))
+            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'premium_plus_monthly');
     }
 
     public function test_guest_is_redirected_to_login_from_checkout_alias_route(): void
     {
-        $this->post(route('checkout'), ['plan' => 'pro_monthly'])
-            ->assertRedirect(route('login', ['plan' => 'pro_monthly']));
+        $this->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
+            ->assertRedirect(route('login', ['plan' => 'premium_plus_monthly']));
     }
 
     public function test_checkout_rejects_unknown_plan(): void
@@ -42,16 +42,18 @@ class BillingCheckoutTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
+            ->from(route('pricing'))
             ->post(route('billing.checkout'), ['plan' => 'premium_monthly'])
-            ->assertSessionHasErrors('plan');
+            ->assertRedirect(route('pricing'))
+            ->assertSessionHas('billing_error', __('billing.stripe_unavailable'));
     }
 
-    public function test_authenticated_user_can_start_pro_monthly_checkout(): void
+    public function test_authenticated_user_can_start_premium_plus_monthly_checkout(): void
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
-            'billing.plans.pro_monthly.trial_days' => 7,
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
+            'billing.plans.premium_plus_monthly.trial_days' => 7,
         ]);
 
         Http::fake([
@@ -65,13 +67,13 @@ class BillingCheckoutTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test');
 
         Http::assertSent(function ($request) use ($user) {
             return str_contains($request->url(), 'checkout/sessions')
-                && $request['line_items[0][price]'] === 'price_pro_monthly'
-                && $request['metadata[plan]'] === 'pro_monthly'
+                && $request['line_items[0][price]'] === 'price_premium_plus_monthly'
+                && $request['metadata[plan]'] === 'premium_plus_monthly'
                 && $request['metadata[user_id]'] === (string) $user->id
                 && (string) $request['subscription_data[trial_period_days]'] === '7'
                 && $request['payment_method_collection'] === 'always'
@@ -81,29 +83,29 @@ class BillingCheckoutTest extends TestCase
         });
     }
 
-    public function test_pro_yearly_checkout_stays_closed_when_annual_billing_is_disabled(): void
+    public function test_premium_plus_yearly_checkout_stays_closed_when_annual_billing_is_disabled(): void
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
-            'billing.plans.pro_yearly.purchasable' => false,
+            'billing.plans.premium_plus_yearly.price_id' => 'price_premium_plus_yearly',
+            'billing.plans.premium_plus_yearly.purchasable' => false,
         ]);
 
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_yearly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_yearly'])
             ->assertSessionHasErrors('plan');
     }
 
-    public function test_authenticated_user_can_start_pro_yearly_checkout(): void
+    public function test_authenticated_user_can_start_premium_plus_yearly_checkout(): void
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
-            'billing.plans.pro_yearly.purchasable' => true,
+            'billing.plans.premium_plus_yearly.price_id' => 'price_premium_plus_yearly',
+            'billing.plans.premium_plus_yearly.purchasable' => true,
             'billing.annual_billing_enabled' => true,
-            'billing.plans.pro_yearly.trial_days' => 7,
+            'billing.plans.premium_plus_yearly.trial_days' => 7,
         ]);
 
         Http::fake([
@@ -117,24 +119,24 @@ class BillingCheckoutTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_yearly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_yearly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test');
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), 'checkout/sessions')
-                && $request['line_items[0][price]'] === 'price_pro_yearly'
-                && $request['metadata[plan]'] === 'pro_yearly'
+                && $request['line_items[0][price]'] === 'price_premium_plus_yearly'
+                && $request['metadata[plan]'] === 'premium_plus_yearly'
                 && (string) $request['subscription_data[trial_period_days]'] === '7'
                 && $request['payment_method_collection'] === 'always';
         });
     }
 
-    public function test_authenticated_user_can_start_pro_lifetime_checkout(): void
+    public function test_authenticated_user_can_start_premium_plus_lifetime_checkout(): void
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_lifetime.price_id' => 'price_pro_lifetime',
-            'billing.plans.pro_lifetime.purchasable' => true,
+            'billing.plans.premium_plus_lifetime.price_id' => 'price_premium_plus_lifetime',
+            'billing.plans.premium_plus_lifetime.purchasable' => true,
         ]);
 
         Http::fake([
@@ -148,14 +150,14 @@ class BillingCheckoutTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_lifetime'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_lifetime'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_life');
 
         Http::assertSent(function ($request) use ($user) {
             return str_contains($request->url(), 'checkout/sessions')
                 && $request['mode'] === 'payment'
-                && $request['line_items[0][price]'] === 'price_pro_lifetime'
-                && $request['metadata[plan]'] === 'pro_lifetime'
+                && $request['line_items[0][price]'] === 'price_premium_plus_lifetime'
+                && $request['metadata[plan]'] === 'premium_plus_lifetime'
                 && $request['metadata[type]'] === 'lifetime'
                 && $request['metadata[user_id]'] === (string) $user->id
                 && ! array_key_exists('subscription_data[metadata][plan]', $request->data())
@@ -179,7 +181,7 @@ class BillingCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://billing.stripe.com/session/life');
 
         Http::assertNotSent(fn ($request) => str_contains($request->url(), 'checkout/sessions'));
@@ -189,8 +191,8 @@ class BillingCheckoutTest extends TestCase
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
-            'billing.plans.pro_monthly.trial_days' => 7,
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
+            'billing.plans.premium_plus_monthly.trial_days' => 7,
         ]);
 
         Http::fake([
@@ -207,7 +209,7 @@ class BillingCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test');
 
         Http::assertSent(function ($request) {
@@ -218,9 +220,9 @@ class BillingCheckoutTest extends TestCase
 
     public function test_registering_after_pricing_resumes_stripe_checkout(): void
     {
-        $this->get(route('register', ['plan' => 'pro_monthly']))
+        $this->get(route('register', ['plan' => 'premium_plus_monthly']))
             ->assertOk()
-            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'pro_monthly');
+            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'premium_plus_monthly');
 
         $this->post(route('register'), [
             'name' => 'New Student',
@@ -228,7 +230,7 @@ class BillingCheckoutTest extends TestCase
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
         ])->assertRedirect(route('pricing', [
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
             'checkout' => 1,
         ]));
     }
@@ -240,15 +242,15 @@ class BillingCheckoutTest extends TestCase
             'password' => bcrypt('secret12'),
         ]);
 
-        $this->get(route('login', ['plan' => 'pro_monthly']))
+        $this->get(route('login', ['plan' => 'premium_plus_monthly']))
             ->assertOk()
-            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'pro_monthly');
+            ->assertSessionHas(\App\Support\BillingIntent::SESSION_KEY, 'premium_plus_monthly');
 
         $this->post(route('login'), [
             'email' => 'returning-pro@example.com',
             'password' => 'secret12',
         ])->assertRedirect(route('pricing', [
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
             'checkout' => 1,
         ]));
     }
@@ -280,7 +282,7 @@ class BillingCheckoutTest extends TestCase
         config([
             'mutqin.admin_emails' => ['admin@example.com'],
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
         ]);
 
         Http::fake([
@@ -296,7 +298,7 @@ class BillingCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_admin');
     }
 
@@ -304,7 +306,7 @@ class BillingCheckoutTest extends TestCase
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
         ]);
 
         Http::fake([
@@ -323,7 +325,7 @@ class BillingCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_new');
 
         $this->assertSame('cus_new', $user->fresh()->stripe_customer_id);
@@ -333,7 +335,7 @@ class BillingCheckoutTest extends TestCase
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
         ]);
 
         Http::fake([
@@ -347,7 +349,7 @@ class BillingCheckoutTest extends TestCase
 
         $this->actingAs($user)
             ->from(route('pricing'))
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect(route('pricing'))
             ->assertSessionHas('billing_error', __('billing.stripe_unavailable'));
     }

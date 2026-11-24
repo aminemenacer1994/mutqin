@@ -318,6 +318,6 @@ return [
      | Bump when running scripts/render-brand-icons.php; keep in sync with BRAND_ICONS_VERSION in public/sw.js.
      */
     'brand_icons' => [
-        'version' => (string) env('MUTQIN_BRAND_ICONS_VERSION', '20261123c'),
+        'version' => (string) env('MUTQIN_BRAND_ICONS_VERSION', '20261124b'),
     ],
 ];

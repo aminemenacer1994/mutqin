@@ -76,11 +76,14 @@ class SubscriptionBillingTest extends TestCase
     public function test_find_ayah_requires_premium_access(): void
     {
         $user = User::factory()->create();
+        $premium = User::factory()->premium()->create();
         $pro = User::factory()->pro()->create();
         $entitlement = app(SubscriptionEntitlement::class);
 
         $this->assertFalse($entitlement->canStartFindAyah($user));
         $this->assertFalse($entitlement->consumeFindAyah($user));
+        $this->assertTrue($entitlement->canStartFindAyah($premium));
+        $this->assertTrue($entitlement->consumeFindAyah($premium));
         $this->assertTrue($entitlement->canStartFindAyah($pro));
         $this->assertTrue($entitlement->consumeFindAyah($pro));
     }
@@ -186,13 +189,13 @@ class SubscriptionBillingTest extends TestCase
             'services.stripe.secret_key' => 'sk_test_123',
             'services.stripe.livemode' => false,
             'billing.verify_price_on_checkout' => true,
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
-            'billing.plans.pro_monthly.expected_unit_amount' => 299,
+            'billing.plans.premium_monthly.price_id' => 'price_premium_monthly',
+            'billing.plans.premium_monthly.expected_unit_amount' => 299,
         ]);
 
         Http::fake([
-            'https://api.stripe.com/v1/prices/price_pro_monthly' => Http::response([
-                'id' => 'price_pro_monthly',
+            'https://api.stripe.com/v1/prices/price_premium_monthly' => Http::response([
+                'id' => 'price_premium_monthly',
                 'active' => true,
                 'currency' => 'gbp',
                 'unit_amount' => 599,
@@ -205,7 +208,7 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_monthly'])
             ->assertRedirect(route('pricing'))
             ->assertSessionHas('billing_error', __('billing.price_mismatch'));
 
@@ -218,8 +221,8 @@ class SubscriptionBillingTest extends TestCase
             'services.stripe.secret_key' => 'sk_test_123',
             'services.stripe.livemode' => false,
             'billing.verify_price_on_checkout' => true,
-            'billing.plans.pro_monthly.price_id' => 'price_pro_299',
-            'billing.plans.pro_monthly.expected_unit_amount' => 299,
+            'billing.plans.premium_monthly.price_id' => 'price_pro_299',
+            'billing.plans.premium_monthly.expected_unit_amount' => 299,
         ]);
 
         Http::fake([
@@ -242,7 +245,7 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_monthly'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test');
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'checkout/sessions')
@@ -255,9 +258,9 @@ class SubscriptionBillingTest extends TestCase
             'services.stripe.secret_key' => 'sk_test_123',
             'services.stripe.livemode' => false,
             'billing.verify_price_on_checkout' => true,
-            'billing.plans.pro_lifetime.price_id' => 'price_life',
-            'billing.plans.pro_lifetime.expected_unit_amount' => 5382,
-            'billing.plans.pro_lifetime.price_type' => 'one_time',
+            'billing.plans.premium_plus_lifetime.price_id' => 'price_life',
+            'billing.plans.premium_plus_lifetime.expected_unit_amount' => 8982,
+            'billing.plans.premium_plus_lifetime.price_type' => 'one_time',
         ]);
 
         Http::fake([
@@ -275,7 +278,7 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_lifetime'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_lifetime'])
             ->assertRedirect(route('pricing'))
             ->assertSessionHas('billing_error', __('billing.price_mismatch'));
     }
@@ -284,7 +287,7 @@ class SubscriptionBillingTest extends TestCase
     {
         config([
             'services.stripe.secret_key' => 'sk_test',
-            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.premium_plus_monthly.price_id' => 'price_premium_plus_monthly',
         ]);
 
         Http::fake([
@@ -299,7 +302,7 @@ class SubscriptionBillingTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->post(route('checkout'), ['plan' => 'premium_plus_monthly'])
             ->assertRedirect('https://billing.stripe.com/session/test');
 
         Http::assertNotSent(fn ($request) => str_contains($request->url(), 'checkout/sessions'));
@@ -311,7 +314,7 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
         $payload = $this->subscriptionEvent('evt_activate', 'customer.subscription.updated', $user, [
             'status' => 'active',
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
         ]);
 
         $this->postJson(route('stripe.webhook'), $payload, [
@@ -331,7 +334,7 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
         $payload = $this->subscriptionEvent('evt_once', 'customer.subscription.updated', $user, [
             'status' => 'active',
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
         ]);
 
         $this->postJson(route('stripe.webhook'), $payload)->assertOk();
@@ -346,11 +349,11 @@ class SubscriptionBillingTest extends TestCase
         $user = User::factory()->create();
         $newer = $this->subscriptionEvent('evt_new', 'customer.subscription.updated', $user, [
             'status' => 'active',
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
         ], 200);
         $older = $this->subscriptionEvent('evt_old', 'customer.subscription.updated', $user, [
             'status' => 'canceled',
-            'plan' => 'pro_monthly',
+            'plan' => 'premium_plus_monthly',
         ], 100);
 
         $this->postJson(route('stripe.webhook'), $newer)->assertOk();
@@ -547,10 +550,9 @@ class SubscriptionBillingTest extends TestCase
 
         $this->get(route('pricing'))
             ->assertOk()
-            ->assertSee('£0/month', false)
-            ->assertSee('£2.99/month', false)
-            ->assertSee('£26.91/year', false)
-            ->assertSee('£53.82 lifetime', false)
+            ->assertSee('£2.99', false)
+            ->assertSee('£4.99', false)
+            ->assertSee('Premium Plus', false)
             ->assertSee('name="viewport"', false);
 
         $this->actingAs($user)
@@ -568,13 +570,20 @@ class SubscriptionBillingTest extends TestCase
         ]);
 
         $this->assertTrue($user->hasPremiumAccess());
-        $this->assertTrue($user->hasProAccess());
+        $this->assertFalse($user->hasProAccess());
+
+        Http::fake([
+            'https://api.stripe.com/v1/billing_portal/sessions' => Http::response([
+                'url' => 'https://billing.stripe.com/session/premium',
+            ], 200),
+        ]);
+        config(['services.stripe.secret_key' => 'sk_test']);
 
         $this->actingAs($user)
             ->post(route('checkout'), ['plan' => 'premium_monthly'])
-            ->assertSessionHasErrors('plan');
+            ->assertRedirect('https://billing.stripe.com/session/premium');
 
-        $this->assertSame('pro', $user->fresh()->billingSubscriptionTier());
+        $this->assertSame('premium', $user->fresh()->billingSubscriptionTier());
         $this->assertSame('sub_premium', $user->fresh()->stripe_subscription_id);
     }
 
@@ -597,7 +606,7 @@ class SubscriptionBillingTest extends TestCase
                     'current_period_end' => $overrides['current_period_end'] ?? now()->addMonth()->timestamp,
                     'metadata' => [
                         'user_id' => (string) $user->id,
-                        'plan' => $overrides['plan'] ?? 'pro_monthly',
+                        'plan' => $overrides['plan'] ?? 'premium_plus_monthly',
                     ],
                 ],
             ],

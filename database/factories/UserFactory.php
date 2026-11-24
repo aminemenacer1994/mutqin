@@ -58,6 +58,17 @@ class UserFactory extends Factory
             'subscription_tier' => 'premium',
             'subscription_status' => 'active',
             'subscription_plan' => 'premium_monthly',
+            'subscription_current_period_ends_at' => now()->addMonth(),
+        ]);
+    }
+
+    public function legacyPremium(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'subscription_tier' => 'pro',
+            'subscription_status' => 'active',
+            'subscription_plan' => 'legacy_premium_monthly',
+            'subscription_current_period_ends_at' => now()->addMonth(),
         ]);
     }
 
@@ -66,7 +77,8 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'subscription_tier' => 'pro',
             'subscription_status' => 'active',
-            'subscription_plan' => 'pro_monthly',
+            'subscription_plan' => 'premium_plus_monthly',
+            'subscription_current_period_ends_at' => now()->addMonth(),
         ]);
     }
 

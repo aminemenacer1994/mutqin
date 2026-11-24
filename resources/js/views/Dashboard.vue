@@ -901,7 +901,7 @@
           </div>
         </section>
 
-        <section id="progress-feedback" class="dash-section dash-section--flat" aria-labelledby="progress-feedback-heading">
+        <section v-if="showLearnerTeacherSection" id="progress-feedback" class="dash-section dash-section--flat" aria-labelledby="progress-feedback-heading">
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__title">
               <span class="dash-section__title-copy">
@@ -1883,6 +1883,7 @@ import {
 } from '../scripts/dashboard/studentActivity.js'
 import LearnerStudentMessages from '../components/teacher/LearnerStudentMessages.vue'
 import { pickDashboardPrimaryKind } from '../scripts/dashboard/primaryAction'
+import { learnerHasLearningNetwork } from '../scripts/dashboard/learnerConnection'
 import {
   studentNavItems as buildStudentNavItems,
   normalizeStudentDashboardPane,
@@ -2159,8 +2160,15 @@ export default {
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
     },
+    learnerLearningNetworkConnected() {
+      return learnerHasLearningNetwork({
+        auth: this.auth,
+        support: this.support,
+        supportLoading: this.supportLoading,
+      })
+    },
     messagingEnabled() {
-      return this.auth?.learner_teacher_section_enabled === true
+      return this.learnerLearningNetworkConnected
     },
     messagingRestricted() {
       const teachers = this.support?.circle?.teachers
@@ -2187,6 +2195,7 @@ export default {
     },
     studentNavItems() {
       return buildStudentNavItems({
+        learning: this.learnerLearningNetworkConnected,
         messaging: this.messagingEnabled,
         practiceHref: this.memorisationUrl,
       })
@@ -2263,7 +2272,7 @@ export default {
     },
     showLearnerTeacherSection() {
       return this.auth?.learner_teacher_section_enabled === true
-        && (this.supportLoading || this.support !== null)
+        && this.learnerLearningNetworkConnected
     },
     learnerTeachersClassesCount() {
       const teachers = Array.isArray(this.support?.circle?.teachers) ? this.support.circle.teachers.length : 0
@@ -2553,13 +2562,16 @@ export default {
       return this.chartDays === 7 ? 'week' : 'month'
     },
     progressSections() {
-      return [
+      const sections = [
         { id: 'dash-progress', label: this.t('dashboard.progress_section_overview') },
         { id: 'progress-memorisation', label: this.t('dashboard.progress_section_memorisation') },
         { id: 'progress-recitation', label: this.t('dashboard.progress_section_recitation') },
-        { id: 'progress-feedback', label: this.t('dashboard.progress_section_feedback') },
-        { id: 'achievements', label: this.t('dashboard.progress_section_achievements') },
       ]
+      if (this.showLearnerTeacherSection) {
+        sections.push({ id: 'progress-feedback', label: this.t('dashboard.progress_section_feedback') })
+      }
+      sections.push({ id: 'achievements', label: this.t('dashboard.progress_section_achievements') })
+      return sections
     },
     progressPracticeMetrics() {
       const practice = this.progressSnapshot?.overview?.practice
@@ -3713,9 +3725,12 @@ export default {
     },
     initialiseDashboardNavigation() {
       if (typeof window === 'undefined' || !window.history) return
-      const pane = studentDashboardPaneFromLocation(window.location, this.studentPane)
+      let pane = studentDashboardPaneFromLocation(window.location, this.studentPane)
       const urlWindow = progressWindowFromSearch(window.location.search)
       if (urlWindow) this.chartDays = urlWindow === 'week' ? 7 : 30
+      if ((pane === 'learning' || pane === 'messages') && !this.learnerLearningNetworkConnected) {
+        pane = 'home'
+      }
       this.studentPane = pane
       if (pane === 'progress') this.loadProgressSnapshot(this.chartDays === 7 ? 'week' : 'month')
       const storedScroll = Number(window.history.state?.studentDashboardScrollY)
@@ -3792,7 +3807,10 @@ export default {
       target.focus({ preventScroll: true })
     },
     navigateDashboardPane(pane, options = {}) {
-      const next = normalizeStudentDashboardPane(pane, 'home')
+      let next = normalizeStudentDashboardPane(pane, 'home')
+      if ((next === 'learning' || next === 'messages') && !this.learnerLearningNetworkConnected) {
+        next = 'home'
+      }
       const previous = this.studentPane
       if (next === previous) {
         if (options.focus) this.$nextTick(() => this.focusDashboardPaneHeading(next))
@@ -3832,7 +3850,10 @@ export default {
       this.rememberDashboardPaneScroll(this.studentPane)
       const urlWindow = progressWindowFromSearch(window.location.search)
       if (urlWindow) this.chartDays = urlWindow === 'week' ? 7 : 30
-      const next = studentDashboardPaneFromHistory(event?.state, window.location, 'home')
+      let next = studentDashboardPaneFromHistory(event?.state, window.location, 'home')
+      if ((next === 'learning' || next === 'messages') && !this.learnerLearningNetworkConnected) {
+        next = 'home'
+      }
       this.$refs.learnerTeacherSection?.closeNavigationOverlays?.()
       this.studentPane = next
       if (next === 'progress') this.loadProgressSnapshot(this.chartDays === 7 ? 'week' : 'month')
@@ -5519,6 +5540,8 @@ export default {
     },
     async loadLearnerSupport() {
       if (this.assignmentSavingId) return
+      if (this.auth?.learner_teacher_section_enabled !== true) return
+      if (!this.auth?.learner_learning_network_connected) return
       const requestId = ++this.supportRequestId
       this.supportLoading = true
       try {

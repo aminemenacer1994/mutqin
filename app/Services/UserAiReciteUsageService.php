@@ -105,6 +105,12 @@ class UserAiReciteUsageService
             return null;
         }
 
+        if ($user->hasPremiumAccess()) {
+            $value = (int) config('billing.limits.premium.ai_assessments_per_day', 20);
+
+            return $value > 0 ? $value : null;
+        }
+
         $default = config('billing.limits.free.ai_assessments_per_day');
         if ($default === null || $default === '') {
             $default = config('mutqin.ai_recite.default_daily_limit', 5);

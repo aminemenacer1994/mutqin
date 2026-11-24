@@ -41,9 +41,9 @@ class StripeSubscriptionSync
         $tier = 'free';
         if ($entitled) {
             if (is_array($plan) && isset($plan['tier'])) {
-                $tier = (string) $plan['tier'] === 'premium' ? 'pro' : (string) $plan['tier'];
+                $tier = (string) $plan['tier'];
             } elseif (in_array((string) $user->subscription_tier, ['pro', 'premium'], true)) {
-                $tier = 'pro';
+                $tier = (string) $user->subscription_tier;
             }
         }
 
@@ -97,14 +97,19 @@ class StripeSubscriptionSync
         }
 
         $priceId = $this->lifetimePriceId($session)
-            ?: (string) (config('billing.plans.pro_lifetime.price_id') ?? '');
+            ?: (string) (config('billing.plans.premium_plus_lifetime.price_id') ?? '');
+        $planKey = $this->knownPlanKey($session['metadata']['plan'] ?? null)
+            ?? $this->planKeyForPrice($priceId)
+            ?? 'premium_plus_lifetime';
+        $plan = config("billing.plans.$planKey");
+        $tier = is_array($plan) && isset($plan['tier']) ? (string) $plan['tier'] : 'pro';
 
         $user->forceFill([
             'stripe_customer_id' => $customerId ?: $user->stripe_customer_id,
             'stripe_subscription_id' => null,
             'stripe_price_id' => $priceId !== '' ? $priceId : $user->stripe_price_id,
-            'subscription_plan' => 'pro_lifetime',
-            'subscription_tier' => 'pro',
+            'subscription_plan' => $planKey,
+            'subscription_tier' => $tier,
             'subscription_status' => 'lifetime',
             'subscription_cancel_at_period_end' => false,
             'subscription_trial_ends_at' => null,
@@ -123,7 +128,8 @@ class StripeSubscriptionSync
         $plan = strtolower((string) ($session['metadata']['plan'] ?? ''));
         $type = strtolower((string) ($session['metadata']['type'] ?? ''));
 
-        return $plan === 'pro_lifetime' || $type === 'lifetime';
+        return in_array($plan, ['pro_lifetime', 'premium_lifetime', 'premium_plus_lifetime'], true)
+            || $type === 'lifetime';
     }
 
     private function isLifetimeUser(User $user): bool
