@@ -3,7 +3,9 @@
 namespace Tests\Unit;
 
 use App\Enums\AccountRole;
+use App\Enums\PlatformContext;
 use App\Models\User;
+use App\Services\Auth\UserRoleService;
 use App\Support\AuthRedirect;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -47,5 +49,49 @@ class AuthRedirectTest extends TestCase
         ]);
 
         $this->assertSame(route('memorisation', absolute: false), AuthRedirect::path($teacher));
+    }
+
+    public function test_preferred_platform_wins_for_multi_role_accounts(): void
+    {
+        $this->enableTeacherFeatures();
+        $this->enableParentFeatures();
+
+        $user = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'preferred_platform' => PlatformContext::Parent->value,
+        ]);
+        app(UserRoleService::class)->grant($user, AccountRole::Parent);
+
+        $this->assertSame(route('parent.dashboard', absolute: false), AuthRedirect::path($user->fresh()));
+    }
+
+    public function test_just_registered_student_without_organisation_goes_to_memorisation(): void
+    {
+        $this->enableTeacherFeatures();
+
+        $student = User::factory()->create([
+            'account_role' => AccountRole::Student->value,
+            'organisation_id' => null,
+        ]);
+
+        $this->assertSame(
+            route('memorisation', absolute: false),
+            AuthRedirect::path($student, justRegistered: true),
+        );
+    }
+
+    public function test_just_registered_teacher_without_organisation_goes_to_teacher_dashboard(): void
+    {
+        $this->enableTeacherFeatures();
+
+        $teacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => null,
+        ]);
+
+        $this->assertSame(
+            route('teacher.dashboard', absolute: false),
+            AuthRedirect::path($teacher, justRegistered: true),
+        );
     }
 }

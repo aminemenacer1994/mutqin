@@ -32,7 +32,7 @@ class ParentLearningReportReader
             return [
                 'scope' => 'child',
                 'cadence' => $cadence,
-                'pdf_supported' => false,
+                'pdf_supported' => true,
                 'combined_scores' => false,
                 'family' => null,
                 'reports' => $reports,
@@ -71,7 +71,7 @@ class ParentLearningReportReader
         return [
             'scope' => 'family',
             'cadence' => $cadence,
-            'pdf_supported' => false,
+            'pdf_supported' => true,
             'combined_scores' => false,
             'family' => [
                 'plain' => 'Each child is listed separately. Homework and practice counts are not averaged, and wording checks are not combined.',
@@ -153,7 +153,7 @@ class ParentLearningReportReader
             'period_end' => $end->toDateString(),
             'period_label' => $start->format('j M Y').' – '.$end->format('j M Y'),
             'generated_at' => $generated->toIso8601String(),
-            'pdf_supported' => false,
+            'pdf_supported' => true,
             'combined_scores' => false,
             'assignments' => $assignments,
             'activity' => $activity,

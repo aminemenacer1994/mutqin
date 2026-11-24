@@ -243,6 +243,50 @@ class GroupMembershipService
         return $membership->refresh();
     }
 
+    /**
+     * Move a student to another class in the same active organisation.
+     * Consent is not copied; the destination membership starts pending.
+     */
+    public function transfer(User $actor, GroupMembership $membership, LearningGroup $destination): GroupMembership
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $membership->loadMissing(['learningGroup', 'user']);
+        $source = $membership->learningGroup;
+        $student = $membership->user;
+        abort_unless($source instanceof LearningGroup && $student instanceof User, 404);
+
+        if ((int) $source->organisation_id !== (int) $destination->organisation_id) {
+            throw ValidationException::withMessages([
+                'group' => 'Transfers stay inside the same institution.',
+            ]);
+        }
+
+        if ((int) $source->id === (int) $destination->id) {
+            throw ValidationException::withMessages([
+                'group' => 'Choose a different class.',
+            ]);
+        }
+
+        $isTeacher = $actor->isTeacher()
+            && (int) $actor->organisation_id === (int) $source->organisation_id;
+        $isSelf = (int) $actor->id === (int) $student->id;
+
+        if ($isTeacher) {
+            Gate::forUser($actor)->authorize('review', $membership);
+        } elseif (! $isSelf) {
+            abort(403);
+        }
+
+        return DB::transaction(function () use ($actor, $membership, $destination, $student, $isTeacher) {
+            if ($membership->status === MembershipStatus::Approved || $membership->status === MembershipStatus::Pending) {
+                $this->closeMembership($membership, $isTeacher ? $actor : $student);
+            }
+
+            return $this->requestJoin($student, $destination);
+        });
+    }
+
     private function closeMembership(GroupMembership $membership, User $teacher): void
     {
         $membership->forceFill([
@@ -256,3 +300,4 @@ class GroupMembershipService
         ])->save();
     }
 }
+

@@ -1,0 +1,145 @@
+[data-platform-shell="student"] .learner-messages-workspace {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+[data-platform-shell="student"] .learner-messages__teachers .teacher-pane__body {
+  padding-top: 4px;
+}
+
+[data-platform-shell="student"] .learner-messages__empty {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 8px 0 4px;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+[data-platform-shell="student"] .learner-messages__empty .bi {
+  font-size: 22px;
+  color: var(--teacher-accent-ink, var(--accent-strong));
+}
+
+[data-platform-shell="student"] .learner-messages__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-platform-shell="student"] .learner-messages__list > li {
+  position: relative;
+  border-top: 1px solid var(--teacher-line, var(--dash-border));
+}
+
+[data-platform-shell="student"] .learner-messages__list > li:first-child {
+  border-top: 0;
+}
+
+[data-platform-shell="student"] .learner-messages__list > li > button {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  padding: 14px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--teacher-text, var(--dash-ink));
+  text-align: start;
+  cursor: pointer;
+}
+
+[data-platform-shell="student"] .learner-messages__list > li > button:hover,
+[data-platform-shell="student"] .learner-messages__list > li > button:focus-visible {
+  background: var(--teacher-surface-hover, color-mix(in srgb, var(--accent) 6%, var(--surface-strong)));
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+[data-platform-shell="student"] .learner-messages__avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--teacher-accent-soft, var(--accent-light));
+  color: var(--teacher-accent-ink, var(--accent-strong));
+  font-size: 13px;
+  font-weight: 650;
+}
+
+[data-platform-shell="student"] .learner-messages__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+[data-platform-shell="student"] .learner-messages__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+[data-platform-shell="student"] .learner-messages__title-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+[data-platform-shell="student"] .learner-messages__title-row time {
+  flex: 0 0 auto;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+[data-platform-shell="student"] .learner-messages__preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+[data-platform-shell="student"] .learner-messages__preview.is-muted {
+  font-style: italic;
+}
+
+[data-platform-shell="student"] .learner-messages__badge {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--teacher-accent, var(--accent));
+  color: var(--on-accent, #fff);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+[data-platform-shell="student"] .learner-messages__list > li.has-unread .learner-messages__title-row strong {
+  color: var(--teacher-text, var(--dash-ink));
+}
+
+[data-platform-shell="student"] .learner-messages__feedback.learner-teacher__feedback-panel.is-drawer {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+@media (min-width: 992px) {
+  [data-platform-shell="student"] .learner-messages-workspace {
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+}

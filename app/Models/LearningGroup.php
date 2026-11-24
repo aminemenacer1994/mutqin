@@ -13,7 +13,11 @@ class LearningGroup extends Model
     /** @use HasFactory<LearningGroupFactory> */
     use HasFactory;
 
-    protected $guarded = ['*'];
+    protected $fillable = [
+        'organisation_id',
+        'name',
+        'name_canonical',
+    ];
 
     public function organisation(): BelongsTo
     {

@@ -56,6 +56,47 @@
         <div class="teacher-account__section-head"><span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-book"></i></span><div><h2 :id="practiceHeadingId">{{ t('teacher.my_practice') }}</h2><p>{{ t('teacher.account_practice_hint') }}</p></div></div>
         <a class="btn btn-outline-secondary btn-sm teacher-account__action" :href="practiceUrl">{{ t('teacher.my_practice') }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
       </section>
+
+      <section class="card teacher-account" :aria-labelledby="connectionsHeadingId">
+        <div class="teacher-account__section-head">
+          <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
+          <div>
+            <h2 :id="connectionsHeadingId">{{ t('ui.connections_my_title') }}</h2>
+            <p>{{ t('ui.connections_connect_lede') }}</p>
+          </div>
+        </div>
+        <p class="teacher-meta mb-2">
+          {{ teacher?.organisation?.name ? t('ui.connections_status_connected') : t('ui.connections_status_none') }}
+        </p>
+        <p v-if="teacher?.organisation?.name" class="teacher-account__org mb-2">
+          <i class="bi bi-building" aria-hidden="true"></i>{{ teacher.organisation.name }}
+        </p>
+        <ul v-if="organisationMemberships.length" class="teacher-account__classes mb-2">
+          <li v-for="membership in organisationMemberships" :key="membership.id">
+            <span class="teacher-account__link-text">
+              <span class="teacher-account__link-title">{{ membership.organisation?.name }}</span>
+              <span class="teacher-account__link-desc">{{ membership.status }}{{ membership.active ? ' · active' : '' }}</span>
+            </span>
+            <button
+              v-if="membership.status === 'approved' && !membership.active && membership.organisation?.id"
+              type="button"
+              class="btn btn-link btn-sm"
+              :disabled="orgBusy"
+              @click="switchOrganisation(membership.organisation.id)"
+            >{{ t('ui.connections_org_switch') }}</button>
+          </li>
+        </ul>
+        <ul v-if="pendingOrgMemberships.length" class="teacher-account__member-list mb-2">
+          <li v-for="request in pendingOrgMemberships" :key="request.id">
+            <strong>{{ request.user?.name }}</strong>
+            <span class="teacher-account__member-actions">
+              <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="orgBusy" @click="reviewOrgMembership(request.id, 'reject')">{{ t('teacher.reject') }}</button>
+              <button type="button" class="btn btn-primary btn-sm" :disabled="orgBusy" @click="reviewOrgMembership(request.id, 'approve')">{{ t('teacher.approve') }}</button>
+            </span>
+          </li>
+        </ul>
+        <a class="btn btn-outline-secondary btn-sm teacher-account__action" href="/onboarding/connections">{{ t('ui.connections_connect_action') }}</a>
+      </section>
     </div>
 
     <TeacherDialog :open="Boolean(activeClass)" size="md" :title="activeClass?.name || t('teacher.account_classes')" :close-label="t('teacher.close')" :busy="classLoading || membershipActionId !== null" @close="closeClass">
@@ -71,6 +112,11 @@
           <div class="teacher-account__class-detail-head"><h3>{{ t('teacher.requests') }}</h3><span>{{ t('teacher.pending_count', { n: activeClass.pending_requests || 0 }) }}</span></div>
           <ul v-if="activeClass.requests?.length" class="teacher-account__member-list"><li v-for="request in activeClass.requests" :key="request.id"><strong>{{ request.name }}</strong><span class="teacher-account__member-actions"><button type="button" class="btn btn-outline-secondary btn-sm" :disabled="membershipActionId !== null" @click="reviewMembership(request, 'reject')">{{ t('teacher.reject') }}</button><button type="button" class="btn btn-primary btn-sm" :disabled="membershipActionId !== null" @click="reviewMembership(request, 'approve')">{{ t('teacher.approve') }}</button></span></li></ul>
           <p v-else class="teacher-account__empty">{{ t('teacher.requests_empty') }}</p>
+        </section>
+        <section class="teacher-account__class-detail" :aria-label="t('ui.connections_invite_title')">
+          <div class="teacher-account__class-detail-head"><h3>{{ t('ui.connections_invite_title') }}</h3></div>
+          <button type="button" class="btn btn-primary btn-sm" :disabled="inviteBusy" @click="createInvite">{{ t('ui.connections_invite_title') }}</button>
+          <p v-if="inviteCode" class="teacher-meta mb-0">{{ t('ui.connections_invite_created') }} <strong>{{ inviteCode }}</strong></p>
         </section>
       </template>
     </TeacherDialog>
@@ -90,14 +136,48 @@ export default {
   emits: ['export', 'refresh-classes'],
   data() {
     const uid = Math.random().toString(36).slice(2, 9)
-    return { profileHeadingId: `teacher-account-profile-${uid}`, classesHeadingId: `teacher-account-classes-${uid}`, reportsHeadingId: `teacher-account-reports-${uid}`, practiceHeadingId: `teacher-account-practice-${uid}`, classNameId: `teacher-account-class-name-${uid}`, newClassName: '', creatingClass: false, activeClass: null, classLoading: false, classError: '', membershipActionId: null }
+    return {
+      profileHeadingId: `teacher-account-profile-${uid}`,
+      classesHeadingId: `teacher-account-classes-${uid}`,
+      reportsHeadingId: `teacher-account-reports-${uid}`,
+      practiceHeadingId: `teacher-account-practice-${uid}`,
+      connectionsHeadingId: `teacher-account-connections-${uid}`,
+      classNameId: `teacher-account-class-name-${uid}`,
+      newClassName: '',
+      creatingClass: false,
+      activeClass: null,
+      classLoading: false,
+      classError: '',
+      membershipActionId: null,
+      organisationMemberships: [],
+      pendingOrgMemberships: [],
+      orgBusy: false,
+      inviteBusy: false,
+      inviteCode: '',
+    }
   },
   computed: {
     classes() { return this.groups.filter((group) => group.teaches === true) },
     classStudentCount() { return this.classes.reduce((total, group) => total + Number(group.authorised_students || 0), 0) },
   },
+  mounted() {
+    this.loadOrganisationConnections()
+  },
   methods: {
     errorMessage(error) { const errors = error?.response?.data?.errors; const first = errors ? Object.values(errors).flat().find(Boolean) : ''; return first || error?.response?.data?.message || this.t('teacher.action_failed') },
+    async loadOrganisationConnections() {
+      try {
+        const [memberships, pending] = await Promise.all([
+          learningApi.getOrganisationMemberships(),
+          learningApi.getPendingOrganisationMemberships().catch(() => ({ data: [] })),
+        ])
+        this.organisationMemberships = Array.isArray(memberships?.data) ? memberships.data : []
+        this.pendingOrgMemberships = Array.isArray(pending?.data) ? pending.data : []
+      } catch {
+        this.organisationMemberships = []
+        this.pendingOrgMemberships = []
+      }
+    },
     async createClass() {
       const name = this.newClassName.trim()
       if (!name || this.creatingClass) return
@@ -106,14 +186,52 @@ export default {
     },
     async openClass(group) {
       if (!group?.id || group.teaches !== true) return
-      this.activeClass = { ...group }; this.classLoading = true; this.classError = ''
+      this.activeClass = { ...group }; this.classLoading = true; this.classError = ''; this.inviteCode = ''
       try { this.activeClass = await learningApi.getTeacherGroup(group.id) } catch (error) { this.classError = this.errorMessage(error) } finally { this.classLoading = false }
     },
-    closeClass() { if (this.classLoading || this.membershipActionId !== null) return; this.activeClass = null; this.classError = '' },
+    closeClass() { if (this.classLoading || this.membershipActionId !== null) return; this.activeClass = null; this.classError = ''; this.inviteCode = '' },
     async reviewMembership(membership, action) {
       if (!membership?.id || this.membershipActionId !== null || !this.activeClass?.id) return
       this.membershipActionId = membership.id; this.classError = ''
       try { await learningApi.reviewTeacherMembership(membership.id, action); this.activeClass = await learningApi.getTeacherGroup(this.activeClass.id); this.$emit('refresh-classes') } catch (error) { this.classError = this.errorMessage(error) } finally { this.membershipActionId = null }
+    },
+    async createInvite() {
+      if (!this.activeClass?.id || this.inviteBusy) return
+      this.inviteBusy = true
+      this.classError = ''
+      try {
+        const result = await learningApi.createTeacherClassInvite(this.activeClass.id)
+        this.inviteCode = result?.code || ''
+      } catch (error) {
+        this.classError = this.errorMessage(error)
+      } finally {
+        this.inviteBusy = false
+      }
+    },
+    async switchOrganisation(organisationId) {
+      if (!organisationId || this.orgBusy) return
+      this.orgBusy = true
+      try {
+        await learningApi.switchOrganisation(organisationId)
+        await this.loadOrganisationConnections()
+        this.$emit('refresh-classes')
+      } catch (error) {
+        this.classError = this.errorMessage(error)
+      } finally {
+        this.orgBusy = false
+      }
+    },
+    async reviewOrgMembership(membershipId, action) {
+      if (!membershipId || this.orgBusy) return
+      this.orgBusy = true
+      try {
+        await learningApi.reviewOrganisationMembership(membershipId, action)
+        await this.loadOrganisationConnections()
+      } catch (error) {
+        this.classError = this.errorMessage(error)
+      } finally {
+        this.orgBusy = false
+      }
     },
   },
 }

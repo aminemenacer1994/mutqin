@@ -14,7 +14,13 @@ use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\HifzPlanController;
+use App\Http\Controllers\Api\Learning\LearnerClassInviteController;
+use App\Http\Controllers\Api\Learning\LearnerGuardianController;
 use App\Http\Controllers\Api\Learning\LearnerSupportController;
+use App\Http\Controllers\Api\Organisations\OrganisationMembershipController;
+use App\Http\Controllers\Api\Teacher\TeacherClassInviteController;
+use App\Http\Controllers\Api\Teacher\TeacherMembershipTransferController;
+use App\Http\Controllers\Onboarding\ConnectionOnboardingController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\MutashabihatController;
 use App\Http\Controllers\Api\Learning\ProgressController;
@@ -44,19 +50,19 @@ use App\Http\Middleware\ForwardMarketingClientErrors;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/product-events', [ProductEventController::class, 'store'])
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:60,1,api-product-events')
     ->name('api.product-events.store');
 
 Route::post('/client-errors', [ClientErrorController::class, 'store'])
-    ->middleware([ForwardMarketingClientErrors::class, 'throttle:20,1'])
+    ->middleware([ForwardMarketingClientErrors::class, 'throttle:20,1,api-client-errors'])
     ->name('api.client-errors.store');
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
 Route::post('/contact', [ContactSubmissionController::class, 'store'])
-    ->middleware('throttle:5,1')
+    ->middleware('throttle:5,1,api-contact')
     ->name('api.contact.store');
 
-Route::middleware('throttle:120,1')->group(function () {
+Route::middleware('throttle:120,1,api-public-catalog')->group(function () {
     Route::get('/registration/organisations', [RegistrationOrganisationController::class, 'index'])
         ->middleware('guest')
         ->name('api.registration.organisations');
@@ -151,39 +157,54 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('verified')->group(function () {
         Route::post('/feedback', [FeedbackController::class, 'store'])
-            ->middleware('throttle:10,1')
+            ->middleware('throttle:10,1,api-feedback')
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
         Route::get('/dashboard/progress', [DashboardController::class, 'progress'])->name('api.dashboard.progress');
         Route::get('/referrals', [ReferralController::class, 'show'])->name('api.referrals.show');
         Route::post('/referrals/acknowledge', [ReferralController::class, 'acknowledge'])
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:30,1,api-referrals-ack')
             ->name('api.referrals.acknowledge');
         Route::get('/achievements', [AchievementController::class, 'index'])->name('api.achievements.index');
         Route::post('/achievements/acknowledge', [AchievementController::class, 'acknowledge'])
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:30,1,api-achievements-ack')
             ->name('api.achievements.acknowledge');
         Route::patch('/achievements/settings', [AchievementController::class, 'updateSettings'])
-            ->middleware('throttle:20,1')
+            ->middleware('throttle:20,1,api-achievements-settings')
             ->name('api.achievements.settings');
+        Route::get('/onboarding/connections', [ConnectionOnboardingController::class, 'state'])->name('api.onboarding.connections.show');
+        Route::patch('/onboarding/connections', [ConnectionOnboardingController::class, 'update'])->name('api.onboarding.connections.update');
+
         Route::middleware('learner.teacher.section')->group(function () {
             Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
+            Route::post('/me/class-invites/redeem', [LearnerClassInviteController::class, 'redeem'])->middleware('throttle:10,1,api-me-class-invites-redeem')->name('api.me.class-invites.redeem');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
             Route::post('/me/self-assessments', [LearnerSupportController::class, 'storeSelfAssessment'])->name('api.me.self-assessments.store');
             Route::get('/me/assignments/{recipient}/messages', [LearnerSupportController::class, 'assignmentMessages'])->name('api.me.assignments.messages.index');
-            Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1')->name('api.me.assignments.notes.store');
-            Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1')->name('api.me.teachers.messages.store');
+            Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1,api-me-assignment-notes')->name('api.me.assignments.notes.store');
+            Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1,api-me-teacher-messages')->name('api.me.teachers.messages.store');
             Route::get('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'teacherMessages'])->name('api.me.teachers.messages.index');
             Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
+        Route::middleware('teacher.features')->group(function () {
+            Route::get('/organisations/memberships', [OrganisationMembershipController::class, 'index'])->name('api.organisations.memberships.index');
+            Route::post('/organisations/memberships', [OrganisationMembershipController::class, 'store'])->name('api.organisations.memberships.store');
+            Route::get('/organisations/memberships/pending', [OrganisationMembershipController::class, 'pending'])->name('api.organisations.memberships.pending');
+            Route::post('/organisations/{organisation}/switch', [OrganisationMembershipController::class, 'switchActive'])->name('api.organisations.switch');
+            Route::post('/organisations/memberships/{membership}/approve', [OrganisationMembershipController::class, 'approve'])->name('api.organisations.memberships.approve');
+            Route::post('/organisations/memberships/{membership}/reject', [OrganisationMembershipController::class, 'reject'])->name('api.organisations.memberships.reject');
+        });
+
         Route::middleware('parent.features')->group(function () {
+            Route::post('/me/guardians/{link}/approve', [LearnerGuardianController::class, 'approve'])->name('api.me.guardians.approve');
+            Route::post('/me/guardians/{link}/reject', [LearnerGuardianController::class, 'reject'])->name('api.me.guardians.reject');
             Route::prefix('parent')->group(function () {
-                Route::post('/assistant', [ParentAssistantController::class, 'ask'])->middleware('throttle:10,1')->name('api.parent.assistant');
+                Route::post('/assistant', [ParentAssistantController::class, 'ask'])->middleware('throttle:10,1,api-parent-assistant')->name('api.parent.assistant');
                 Route::get('/reports', [ParentReportController::class, 'index'])->name('api.parent.reports.index');
                 Route::get('/reports/{report}', [ParentReportController::class, 'show'])->whereNumber('report')->name('api.parent.reports.show');
                 Route::get('/reports/{report}/download', [ParentReportController::class, 'download'])->whereNumber('report')->name('api.parent.reports.download');
@@ -196,12 +217,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/notification-preferences', [ParentMessageController::class, 'preferences'])->name('api.parent.notification-preferences.show');
                 Route::put('/notification-preferences', [ParentMessageController::class, 'updatePreferences'])->name('api.parent.notification-preferences.update');
                 Route::get('/messages/{teacher}/{student}', [ParentMessageController::class, 'show'])->whereNumber('teacher')->whereNumber('student')->name('api.parent.messages.show');
-                Route::post('/messages/{teacher}/{student}', [ParentMessageController::class, 'store'])->whereNumber('teacher')->whereNumber('student')->middleware('throttle:20,1')->name('api.parent.messages.store');
-                Route::post('/messages/{note}/report', [ParentMessageController::class, 'report'])->middleware('throttle:10,1')->name('api.parent.messages.report');
-                Route::post('/invitations/accept', [ParentInvitationController::class, 'accept'])->middleware('throttle:10,1')->name('api.parent.invitations.accept');
-                Route::post('/invitations/reject', [ParentInvitationController::class, 'reject'])->middleware('throttle:10,1')->name('api.parent.invitations.reject');
-                Route::post('/link-codes', [ParentInvitationController::class, 'issueCode'])->middleware('throttle:5,1')->name('api.parent.link-codes.store');
-                Route::post('/link-codes/redeem', [ParentInvitationController::class, 'redeemCode'])->middleware('throttle:8,1')->name('api.parent.link-codes.redeem');
+                Route::post('/messages/{teacher}/{student}', [ParentMessageController::class, 'store'])->whereNumber('teacher')->whereNumber('student')->middleware('throttle:20,1,api-parent-messages')->name('api.parent.messages.store');
+                Route::post('/messages/{note}/report', [ParentMessageController::class, 'report'])->middleware('throttle:10,1,api-parent-messages-report')->name('api.parent.messages.report');
+                Route::post('/invitations/accept', [ParentInvitationController::class, 'accept'])->middleware('throttle:10,1,api-parent-invitations-accept')->name('api.parent.invitations.accept');
+                Route::post('/invitations/reject', [ParentInvitationController::class, 'reject'])->middleware('throttle:10,1,api-parent-invitations-reject')->name('api.parent.invitations.reject');
+                Route::post('/link-codes', [ParentInvitationController::class, 'issueCode'])->middleware('throttle:5,1,api-parent-link-codes-store')->name('api.parent.link-codes.store');
+                Route::post('/link-codes/redeem', [ParentInvitationController::class, 'redeemCode'])->middleware('throttle:8,1,api-parent-link-codes-redeem')->name('api.parent.link-codes.redeem');
             });
         });
 
@@ -214,35 +235,40 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/attendance/groups/{group}/students/{student}', [TeacherDashboardController::class, 'setAttendance'])->name('api.teacher.attendance.set');
                 Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
                 Route::get('/students/{student}/guardians', [TeacherGuardianController::class, 'index'])->name('api.teacher.students.guardians');
-                Route::post('/students/{student}/guardians/invitations', [TeacherGuardianController::class, 'store'])->middleware('throttle:10,1')->name('api.teacher.students.guardians.invitations.store');
+                Route::post('/students/{student}/guardians/invitations', [TeacherGuardianController::class, 'store'])->middleware('throttle:10,1,api-teacher-guardian-invites')->name('api.teacher.students.guardians.invitations.store');
                 Route::post('/students/{student}/guardians/links/{link}/revoke', [TeacherGuardianController::class, 'revokeLink'])->name('api.teacher.students.guardians.links.revoke');
-                Route::post('/guardian-invitations/{invitation}/resend', [TeacherGuardianController::class, 'resend'])->middleware('throttle:10,1')->name('api.teacher.guardian-invitations.resend');
+                Route::post('/guardian-invitations/{invitation}/resend', [TeacherGuardianController::class, 'resend'])->middleware('throttle:10,1,api-teacher-guardian-resend')->name('api.teacher.guardian-invitations.resend');
                 Route::post('/guardian-invitations/{invitation}/revoke', [TeacherGuardianController::class, 'revoke'])->name('api.teacher.guardian-invitations.revoke');
                 Route::delete('/students/{student}', [TeacherDashboardController::class, 'deleteStudent'])->name('api.teacher.students.destroy');
                 Route::get('/students/{student}/report', [TeacherDashboardController::class, 'report'])->name('api.teacher.students.report');
                 Route::get('/students/{student}/messages', [TeacherDashboardController::class, 'studentMessages'])->name('api.teacher.students.messages');
-                Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1')->name('api.teacher.students.messages.store');
+                Route::post('/students/{student}/messages', [TeacherDashboardController::class, 'sendStudentMessage'])->middleware('throttle:20,1,api-teacher-student-messages')->name('api.teacher.students.messages.store');
                 Route::delete('/students/{student}/messages/{note}', [TeacherDashboardController::class, 'deleteStudentMessage'])->name('api.teacher.students.messages.destroy');
                 Route::get('/students/{student}/guardian-messages', [TeacherDashboardController::class, 'guardianMessages'])->name('api.teacher.students.guardian-messages');
-                Route::post('/students/{student}/guardian-messages', [TeacherDashboardController::class, 'sendGuardianMessage'])->middleware('throttle:20,1')->name('api.teacher.students.guardian-messages.store');
+                Route::post('/students/{student}/guardian-messages', [TeacherDashboardController::class, 'sendGuardianMessage'])->middleware('throttle:20,1,api-teacher-guardian-messages')->name('api.teacher.students.guardian-messages.store');
                 Route::put('/students/{student}/attempts/{attempt}/assessment', [TeacherDashboardController::class, 'assessRecitation'])->name('api.teacher.students.attempts.assess');
                 Route::get('/students/{student}/attempts/{attempt}/playback', [TeacherRecitationPlaybackController::class, 'show'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback');
                 Route::post('/students/{student}/attempts/{attempt}/playback/review', [TeacherRecitationPlaybackController::class, 'review'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.review');
-                Route::post('/students/{student}/attempts/{attempt}/playback/feedback', [TeacherRecitationPlaybackController::class, 'feedback'])->whereNumber('attempt')->middleware('throttle:20,1')->name('api.teacher.students.attempts.playback.feedback');
-                Route::post('/students/{student}/attempts/{attempt}/playback/private-note', [TeacherRecitationPlaybackController::class, 'privateNote'])->whereNumber('attempt')->middleware('throttle:40,1')->name('api.teacher.students.attempts.playback.private-note');
+                Route::post('/students/{student}/attempts/{attempt}/playback/feedback', [TeacherRecitationPlaybackController::class, 'feedback'])->whereNumber('attempt')->middleware('throttle:20,1,api-teacher-playback-feedback')->name('api.teacher.students.attempts.playback.feedback');
+                Route::post('/students/{student}/attempts/{attempt}/playback/private-note', [TeacherRecitationPlaybackController::class, 'privateNote'])->whereNumber('attempt')->middleware('throttle:40,1,api-teacher-playback-private-note')->name('api.teacher.students.attempts.playback.private-note');
                 Route::post('/students/{student}/attempts/{attempt}/playback/revision', [TeacherRecitationPlaybackController::class, 'revision'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.revision');
-                Route::post('/students/{student}/attempts/{attempt}/playback/words', [TeacherRecitationPlaybackController::class, 'word'])->whereNumber('attempt')->middleware('throttle:30,1')->name('api.teacher.students.attempts.playback.words');
+                Route::post('/students/{student}/attempts/{attempt}/playback/words', [TeacherRecitationPlaybackController::class, 'word'])->whereNumber('attempt')->middleware('throttle:30,1,api-teacher-playback-words')->name('api.teacher.students.attempts.playback.words');
                 Route::delete('/students/{student}/attempts/{attempt}/playback/corrections/{correction}/audio', [TeacherRecitationPlaybackController::class, 'deleteWordAudio'])->whereNumber('attempt')->whereNumber('correction')->name('api.teacher.students.attempts.playback.corrections.audio.destroy');
+                Route::post('/students/{student}/attempts/{attempt}/playback/segments', [TeacherRecitationPlaybackController::class, 'storeSegment'])->whereNumber('attempt')->middleware('throttle:30,1,api-teacher-playback-segments')->name('api.teacher.students.attempts.playback.segments.store');
+                Route::patch('/students/{student}/attempts/{attempt}/playback/segments/{segment}', [TeacherRecitationPlaybackController::class, 'updateSegment'])->whereNumber('attempt')->whereNumber('segment')->name('api.teacher.students.attempts.playback.segments.update');
+                Route::delete('/students/{student}/attempts/{attempt}/playback/segments/{segment}', [TeacherRecitationPlaybackController::class, 'deleteSegment'])->whereNumber('attempt')->whereNumber('segment')->name('api.teacher.students.attempts.playback.segments.destroy');
+                Route::delete('/students/{student}/attempts/{attempt}/playback/segments/{segment}/audio', [TeacherRecitationPlaybackController::class, 'deleteSegmentAudio'])->whereNumber('attempt')->whereNumber('segment')->name('api.teacher.students.attempts.playback.segments.audio.destroy');
                 Route::get('/word-coaching-corrections/{correction}/audio', [TeacherRecitationPlaybackController::class, 'correctionAudio'])->whereNumber('correction')->name('api.teacher.word-coaching-corrections.audio');
+                Route::get('/feedback-segments/{segment}/audio', [TeacherRecitationPlaybackController::class, 'segmentAudio'])->whereNumber('segment')->name('api.teacher.feedback-segments.audio');
                 Route::post('/students/{student}/reviews/{practicePlan}/complete', [TeacherDashboardController::class, 'completeReview'])->name('api.teacher.students.reviews.complete');
                 Route::post('/students/{student}/notes', [TeacherDashboardController::class, 'storeNote'])->name('api.teacher.students.notes');
                 Route::get('/students/{student}/private-notes', [TeacherDashboardController::class, 'privateNotes'])->name('api.teacher.students.private-notes.index');
-                Route::post('/students/{student}/private-notes', [TeacherDashboardController::class, 'storePrivateNote'])->middleware('throttle:40,1')->name('api.teacher.students.private-notes.store');
+                Route::post('/students/{student}/private-notes', [TeacherDashboardController::class, 'storePrivateNote'])->middleware('throttle:40,1,api-teacher-private-notes')->name('api.teacher.students.private-notes.store');
                 Route::patch('/students/{student}/private-notes/{privateNote}', [TeacherDashboardController::class, 'updatePrivateNote'])->name('api.teacher.students.private-notes.update');
                 Route::delete('/students/{student}/private-notes/{privateNote}', [TeacherDashboardController::class, 'destroyPrivateNote'])->name('api.teacher.students.private-notes.destroy');
                 Route::post('/students/{student}/private-notes/{privateNote}/archive', [TeacherDashboardController::class, 'archivePrivateNote'])->name('api.teacher.students.private-notes.archive');
                 Route::post('/students/{student}/private-notes/{privateNote}/unarchive', [TeacherDashboardController::class, 'unarchivePrivateNote'])->name('api.teacher.students.private-notes.unarchive');
-                Route::post('/students/{student}/private-notes/{privateNote}/share', [TeacherDashboardController::class, 'sharePrivateNote'])->middleware('throttle:20,1')->name('api.teacher.students.private-notes.share');
+                Route::post('/students/{student}/private-notes/{privateNote}/share', [TeacherDashboardController::class, 'sharePrivateNote'])->middleware('throttle:20,1,api-teacher-private-notes-share')->name('api.teacher.students.private-notes.share');
                 Route::get('/groups', [TeacherDashboardController::class, 'groups'])->name('api.teacher.groups');
                 Route::post('/groups', [TeacherDashboardController::class, 'storeGroup'])->name('api.teacher.groups.store');
                 Route::get('/groups/{group}', [TeacherDashboardController::class, 'showGroup'])->name('api.teacher.groups.show');
@@ -250,6 +276,9 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/memberships/{membership}/approve', [TeacherDashboardController::class, 'approveMembership'])->name('api.teacher.memberships.approve');
                 Route::post('/memberships/{membership}/reject', [TeacherDashboardController::class, 'rejectMembership'])->name('api.teacher.memberships.reject');
                 Route::post('/memberships/{membership}/remove', [TeacherDashboardController::class, 'removeMembership'])->name('api.teacher.memberships.remove');
+                Route::post('/memberships/{membership}/transfer', [TeacherMembershipTransferController::class, 'store'])->name('api.teacher.memberships.transfer');
+                Route::post('/groups/{group}/invitations', [TeacherClassInviteController::class, 'store'])->middleware('throttle:10,1,api-teacher-class-invites')->name('api.teacher.groups.invitations.store');
+                Route::post('/group-invitations/{invitation}/revoke', [TeacherClassInviteController::class, 'revoke'])->name('api.teacher.group-invitations.revoke');
                 Route::get('/assignments', [TeacherDashboardController::class, 'assignments'])->name('api.teacher.assignments');
                 Route::post('/assignments', [TeacherDashboardController::class, 'storeAssignment'])->name('api.teacher.assignments.store');
                 Route::put('/assignments/{assignment}', [TeacherDashboardController::class, 'updateAssignment'])->name('api.teacher.assignments.update');
@@ -288,11 +317,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sessions/{session}/analysis', [SessionController::class, 'analysis'])
             ->whereNumber('session')
             ->name('api.sessions.analysis');
-        Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1')->name('api.session.store');
-        Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1')->name('api.session.start');
-        Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1')->name('api.session.pause');
-        Route::post('/session/resume', [SessionController::class, 'resume'])->middleware('throttle:60,1')->name('api.session.resume');
-        Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1')->name('api.session.end');
+        Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1,api-session')->name('api.session.store');
+        Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1,api-session')->name('api.session.start');
+        Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1,api-session')->name('api.session.pause');
+        Route::post('/session/resume', [SessionController::class, 'resume'])->middleware('throttle:60,1,api-session')->name('api.session.resume');
+        Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1,api-session')->name('api.session.end');
 
         Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
         Route::get('/ai-recite-attempts/stats', [AiReciteAttemptController::class, 'stats'])
@@ -302,7 +331,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.ai-recite-attempts.show');
         Route::post('/ai-recite-attempts/{attempt}/audio', [AiReciteAttemptController::class, 'storeAudio'])
             ->whereNumber('attempt')
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:30,1,api-ai-recite-audio')
             ->name('api.ai-recite-attempts.audio.store');
         Route::get('/ai-recite-attempts/{attempt}/audio', [AiReciteAttemptController::class, 'audio'])
             ->whereNumber('attempt')
@@ -318,15 +347,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
 
         Route::post('/mutashabihat/compare', [MutashabihatController::class, 'compare'])
-            ->middleware('throttle:60,1')
+            ->middleware('throttle:60,1,api-mutashabihat-compare')
             ->name('api.mutashabihat.compare');
         Route::get('/mutashabihat/progress', [MutashabihatController::class, 'progressIndex'])
             ->name('api.mutashabihat.progress.index');
         Route::post('/mutashabihat/confusion', [MutashabihatController::class, 'recordConfusion'])
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:30,1,api-mutashabihat-confusion')
             ->name('api.mutashabihat.confusion.store');
         Route::post('/mutashabihat/practice', [MutashabihatController::class, 'recordPractice'])
-            ->middleware('throttle:60,1')
+            ->middleware('throttle:60,1,api-mutashabihat-practice')
             ->name('api.mutashabihat.practice.store');
 
         Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
@@ -375,10 +404,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('memorisation.ask-mutqin.voice-metrics');
 
         Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
-            ->middleware(['throttle:20,1'])
+            ->middleware(['throttle:20,1,api-memorisation-assessments'])
             ->name('api.memorisation.assessments.store');
         Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
-            ->middleware(['throttle:20,1'])
+            ->middleware(['throttle:20,1,api-memorisation-assessments-failed'])
             ->name('api.memorisation.assessments.failed');
         Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
             ->name('api.memorisation.assessments.index');
@@ -408,7 +437,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])
             ->name('api.memorisation.practice-plans.complete');
         Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
-            ->middleware(['plan:pro', 'throttle:20,1'])
+            ->middleware(['plan:pro', 'throttle:20,1,api-memorisation-retest'])
             ->name('api.memorisation.practice-plans.retest');
 
         // Automated revision reminders (murājaʿah + teacher tasks).
@@ -428,11 +457,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // Full-fidelity state blob used as the live persistence boundary.
         Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');
         Route::post('/state', [StateSyncController::class, 'store'])
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:30,1,api-state-store')
             ->name('api.state.store');
 
         Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:5,1,api-migrate-local-storage')
             ->name('api.migrate-local-storage');
     });
 });

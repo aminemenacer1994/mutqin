@@ -1,4 +1,4 @@
-/* Achievements — premium, calm, icon-forward */
+/* Achievements — compact premium cards, neutral base, subtle accents */
 
 .dash-achievements__body {
   display: grid;
@@ -12,177 +12,155 @@
 
 .dash-achievements__empty p {
   margin: 0;
+  font-size: 0.875rem;
 }
 
 .dash-achievements__empty-hint {
   margin-top: 0.25rem !important;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   opacity: 0.9;
-}
-
-.dash-achievements__summary {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.dash-achievements__focus {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.85rem;
-  align-items: center;
-  padding: 0.85rem 0.95rem;
-  border-radius: 1rem;
-  border: 1.5px solid color-mix(in srgb, var(--ach-accent, var(--accent)) 55%, transparent);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--ach-accent, var(--accent)) 22%, transparent),
-      color-mix(in srgb, var(--ach-accent, var(--accent)) 6%, transparent) 70%
-    ),
-    color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 92%, transparent);
-}
-
-.dash-achievements__focus--gold { --ach-accent: #c48a18; }
-.dash-achievements__focus--emerald { --ach-accent: #1f8a4d; }
-.dash-achievements__focus--sage { --ach-accent: #2f8a42; }
-.dash-achievements__focus--blue { --ach-accent: #1f6fb8; }
-.dash-achievements__focus--purple { --ach-accent: #7a2fc4; }
-.dash-achievements__focus--orange { --ach-accent: #d9620a; }
-.dash-achievements__focus--red { --ach-accent: #d32f2f; }
-.dash-achievements__focus--black { --ach-accent: #1a1a1a; }
-
-.dash-achievements__focus-copy {
-  min-width: 0;
-  display: grid;
-  gap: 0.15rem;
-}
-
-.dash-achievements__focus-copy strong {
-  font-size: 1rem;
-  color: var(--dash-text, var(--text));
-}
-
-.dash-achievements__focus-copy p {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--dash-muted, var(--muted));
-}
-
-.dash-achievements__hint {
-  font-size: 0.82rem !important;
-}
-
-.dash-achievements__path-summary {
-  margin: 0;
-  font-size: 0.84rem;
-  color: var(--dash-muted, var(--muted));
-}
-
-.dash-achievements__status {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 0.12rem 0.45rem;
-  border-radius: 0.35rem;
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  background: color-mix(in srgb, var(--ach-accent, var(--accent)) 14%, transparent);
-  color: var(--dash-text, var(--text));
-}
-
-.dash-achievements__status--unlocked {
-  background: color-mix(in srgb, var(--ach-accent, var(--accent)) 22%, transparent);
-}
-
-.dash-achievements__status--next {
-  background: color-mix(in srgb, var(--ach-accent, var(--accent)) 28%, transparent);
-  color: var(--ach-accent, var(--dash-text, var(--text)));
-}
-
-.dash-achievements__status--locked {
-  opacity: 0.85;
 }
 
 .dash-achievements__view-all {
   width: 100%;
   justify-content: center;
-  min-height: 2.55rem;
-  border-radius: 0.35rem !important;
-  margin-top: 0.15rem;
+  min-height: 2.75rem;
+  border-radius: var(--dash-radius-sm, 0.35rem) !important;
+  margin-top: 0.35rem;
 }
 
-.dash-achievements__mobile {
+/* Progress page layout */
+
+.ach-progress {
+  display: grid;
+  gap: 1rem;
+}
+
+.ach-progress__heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--dash-text, var(--text));
+}
+
+.ach-progress__summary {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--dash-radius-sm, 0.35rem);
+  border: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 85%, transparent);
+  background: color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 96%, transparent);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted, var(--muted));
+}
+
+.ach-progress__grid {
   display: grid;
   gap: 0.65rem;
+  grid-template-columns: 1fr;
 }
 
-.dash-achievements__desktop {
-  display: none;
+.ach-progress__list {
+  display: grid;
+  gap: 0.55rem;
 }
 
-@media (min-width: 900px) {
-  .dash-achievements__mobile {
-    display: none;
+.ach-progress__tier {
+  display: grid;
+  gap: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 80%, transparent);
+  padding-top: 0.65rem;
+}
+
+.ach-progress__tier-toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.15rem;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--dash-radius-sm, 0.35rem);
+}
+
+.ach-progress__tier-toggle:focus-visible {
+  outline: 2px solid var(--dash-focus, var(--accent));
+  outline-offset: 2px;
+}
+
+.ach-progress__tier-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.ach-progress__tier-title {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--dash-text, var(--text));
+}
+
+.ach-progress__tier-hint {
+  font-size: 0.8125rem;
+  color: var(--dash-muted, var(--muted));
+}
+
+.ach-progress__tier-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted, var(--muted));
+}
+
+.ach-progress__tier-chevron {
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+@media (min-width: 480px) {
+  .ach-progress__grid--earned,
+  .ach-progress__grid--locked {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dash-achievements__desktop {
-    display: block;
+  .ach-progress__grid--earned .ach-card--compact,
+  .ach-progress__grid--locked .ach-card--compact {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
   }
 
-  .dash-achievements__desktop .ach-panel {
-    gap: 1.25rem;
+  .ach-progress__grid--earned .ach-card--compact .ach-card__body,
+  .ach-progress__grid--locked .ach-card--compact .ach-card__body {
+    justify-items: center;
   }
+}
 
-  .dash-achievements__desktop .ach-panel__grid {
+@media (min-width: 1024px) {
+  .ach-progress__grid--earned,
+  .ach-progress__grid--locked {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
 }
 
-@media (min-width: 1200px) {
-  .dash-achievements__desktop .ach-panel__grid {
+@media (min-width: 1280px) {
+  .ach-progress__grid--earned,
+  .ach-progress__grid--locked {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-.dash-achievements__strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.65rem;
-}
-
-.dash-achievements__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.4rem;
-  padding: 0.2rem 0.65rem 0.2rem 0.25rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ach-accent, var(--accent)) 28%, transparent);
-  background: color-mix(in srgb, var(--ach-accent, var(--accent)) 8%, transparent);
-  color: var(--dash-text, var(--text));
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.dash-achievements__chip--gold { --ach-accent: #c48a18; }
-.dash-achievements__chip--emerald { --ach-accent: #1f8a4d; }
-.dash-achievements__chip--sage { --ach-accent: #2f8a42; }
-.dash-achievements__chip--blue { --ach-accent: #1f6fb8; }
-.dash-achievements__chip--purple { --ach-accent: #7a2fc4; }
-.dash-achievements__chip--orange { --ach-accent: #d9620a; }
-.dash-achievements__chip--red { --ach-accent: #d32f2f; }
-.dash-achievements__chip--black { --ach-accent: #1a1a1a; }
-
-.dash-achievements__chip:focus-visible {
-  outline: 2px solid var(--ach-accent, var(--accent));
-  outline-offset: 2px;
-}
+/* Badge art */
 
 .ach-art {
   --ach-accent: #2f8a42;
@@ -203,7 +181,7 @@
 .ach-art--black { --ach-accent: #1a1a1a; }
 
 .ach-art--sm { width: 1.85rem; height: 1.85rem; }
-.ach-art--md { width: 2.75rem; height: 2.75rem; }
+.ach-art--md { width: 2.5rem; height: 2.5rem; }
 .ach-art--lg { width: 3.55rem; height: 3.55rem; }
 
 .ach-art__plate {
@@ -217,288 +195,243 @@
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1;
   color: var(--ach-accent);
 }
 
-.ach-art--md .ach-art__glyph { font-size: 1.15rem; }
-.ach-art--lg .ach-art__glyph { font-size: 1.45rem; }
+.ach-art--md .ach-art__glyph { font-size: 1.05rem; }
 
 .ach-art.is-muted {
-  filter: grayscale(0.2);
+  filter: grayscale(0.35);
+  opacity: 0.72;
+}
+
+/* Achievement card */
+
+.ach-card {
+  --ach-accent: #2f8a42;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--dash-radius-md, 0.65rem);
+  border: 1px solid color-mix(in srgb, var(--dash-border, var(--border)) 88%, var(--ach-accent) 12%);
+  background: color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 97%, var(--ach-accent) 3%);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ach-card--gold { --ach-accent: #c48a18; }
+.ach-card--emerald { --ach-accent: #1f8a4d; }
+.ach-card--sage { --ach-accent: #2f8a42; }
+.ach-card--blue { --ach-accent: #1f6fb8; }
+.ach-card--purple { --ach-accent: #7a2fc4; }
+.ach-card--orange { --ach-accent: #d9620a; }
+.ach-card--red { --ach-accent: #d32f2f; }
+.ach-card--black { --ach-accent: #1a1a1a; }
+
+.ach-card--unlocked {
+  border-color: color-mix(in srgb, var(--ach-accent) 42%, var(--dash-border, var(--border)));
+}
+
+.ach-card--in_progress,
+.ach-card.is-next {
+  border-color: color-mix(in srgb, var(--ach-accent) 38%, var(--dash-border, var(--border)));
+}
+
+.ach-card--locked {
+  opacity: 0.92;
+}
+
+.ach-card--hero {
+  padding: 0.95rem 1rem;
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--ach-accent) 45%, var(--dash-border, var(--border)));
+  background: color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 94%, var(--ach-accent) 6%);
+}
+
+.ach-card--compact {
+  align-content: start;
+  padding: 0.7rem 0.75rem;
+}
+
+.ach-card--compact .ach-card__title {
+  font-size: 0.875rem;
+}
+
+.ach-card--row {
+  align-items: center;
+}
+
+.ach-card.is-path-locked {
   opacity: 0.78;
 }
 
-.ach-badge {
-  --ach-accent: #2f8a42;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  justify-items: center;
-  text-align: center;
-  gap: 0.65rem;
-  min-height: 0;
-  padding: 1rem 0.75rem 0.9rem;
-  border-radius: 1.15rem;
-  border: 1.5px solid color-mix(in srgb, var(--ach-accent) 38%, var(--dash-border, var(--border, #d8d2c8)));
-  background:
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--ach-accent) 16%, transparent),
-      color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 96%, transparent) 55%
-    );
-  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-}
-
-.ach-badge--gold { --ach-accent: #c48a18; }
-.ach-badge--emerald { --ach-accent: #1f8a4d; }
-.ach-badge--sage { --ach-accent: #2f8a42; }
-.ach-badge--blue { --ach-accent: #1f6fb8; }
-.ach-badge--purple { --ach-accent: #7a2fc4; }
-.ach-badge--orange { --ach-accent: #d9620a; }
-.ach-badge--red { --ach-accent: #d32f2f; }
-.ach-badge--black { --ach-accent: #1a1a1a; }
-
-.ach-badge--unlocked {
-  border-color: color-mix(in srgb, var(--ach-accent) 70%, transparent);
-  background:
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--ach-accent) 26%, transparent),
-      color-mix(in srgb, var(--dash-surface, var(--surface, var(--bg))) 94%, transparent) 58%
-    );
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ach-accent) 22%, transparent);
-}
-
-.ach-badge--in_progress {
-  border-color: color-mix(in srgb, var(--ach-accent) 58%, transparent);
-}
-
-.ach-badge--locked {
-  opacity: 0.88;
-}
-
 @media (hover: hover) and (pointer: fine) {
-  .ach-badge:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--ach-accent) 35%, transparent);
+  .ach-card:hover {
+    border-color: color-mix(in srgb, var(--ach-accent) 35%, var(--dash-border, var(--border)));
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ach-accent) 12%, transparent);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ach-badge {
+  .ach-card {
     transition: none;
   }
-  .ach-badge:hover {
-    transform: none;
-  }
 }
 
-.ach-badge__body {
+.ach-card__body {
   min-width: 0;
-  width: 100%;
   display: grid;
   gap: 0.28rem;
-  justify-items: center;
 }
 
-.ach-badge__status {
+.ach-card__head {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.ach-card__status {
   display: inline-flex;
   align-items: center;
-  padding: 0.12rem 0.45rem;
+  gap: 0.25rem;
+  width: fit-content;
+  padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   font-weight: 650;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  background: color-mix(in srgb, var(--ach-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--ach-accent) 12%, transparent);
   color: var(--dash-text, var(--text));
 }
 
-.ach-badge__status--unlocked {
-  background: color-mix(in srgb, var(--ach-accent) 22%, transparent);
+.ach-card__status--unlocked {
+  background: color-mix(in srgb, var(--ach-accent) 18%, transparent);
 }
 
-.ach-badge__status--next {
-  background: color-mix(in srgb, var(--ach-accent) 30%, transparent);
-  color: var(--ach-accent);
+.ach-card__status--next,
+.ach-card__status--in_progress {
+  color: color-mix(in srgb, var(--ach-accent) 88%, var(--dash-text, var(--text)));
 }
 
-.ach-badge__status--locked {
-  opacity: 0.8;
+.ach-card__status--locked {
+  opacity: 0.85;
 }
 
-.ach-badge.is-next {
-  border-color: color-mix(in srgb, var(--ach-accent) 72%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ach-accent) 28%, transparent);
-}
-
-.ach-badge__title {
+.ach-card__title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-weight: 650;
+  line-height: 1.3;
   color: var(--dash-text, var(--text));
-  letter-spacing: 0.01em;
 }
 
-.ach-badge__desc,
-.ach-badge__how,
-.ach-badge__req,
-.ach-badge__unlocked,
-.ach-badge__progress-text {
+.ach-card__how {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   line-height: 1.35;
+  color: var(--dash-text, var(--text));
+}
+
+.ach-card__desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
   color: var(--dash-muted, var(--muted));
 }
 
-.ach-badge__desc {
-  max-width: 12.5rem;
-}
-
-.ach-badge__how {
-  max-width: 13rem;
-  font-size: 0.74rem !important;
-  opacity: 0.95;
-}
-
-.ach-badge.is-path-locked {
-  opacity: 0.72;
-}
-
-.ach-badge.is-path-locked .ach-badge__meter-fill {
-  opacity: 0.35;
-}
-
-.ach-badge__progress {
-  display: grid;
-  gap: 0.3rem;
-  width: 100%;
-  margin-top: 0.15rem;
-}
-
-.ach-badge__meter {
-  height: 0.32rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--dash-border, var(--border, #d8d2c8)) 70%, transparent);
+.ach-card__desc.is-clamped .ach-card__desc-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.ach-badge__meter-fill {
+.ach-card__desc-toggle {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+  min-height: 2.75rem;
+}
+
+.ach-card__desc-toggle:focus-visible {
+  outline: 2px solid var(--dash-focus, var(--accent));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.ach-card__desc-more {
+  display: inline-block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dash-text, var(--text));
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.ach-card__progress {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  margin-top: 0.1rem;
+}
+
+.ach-card__meter {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-border, var(--border)) 75%, transparent);
+  overflow: hidden;
+}
+
+.ach-card__meter-fill {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--ach-accent);
 }
 
-.ach-badge__progress-text {
+.ach-card__progress-text {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  width: 100%;
-  font-size: 0.74rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--dash-muted, var(--muted));
 }
 
-.ach-badge__pct {
+.ach-card__pct {
   color: var(--dash-text, var(--text));
   font-variant-numeric: tabular-nums;
 }
 
-.ach-panel {
-  display: grid;
-  gap: 1.1rem;
-}
-
-.ach-panel__intro {
+.ach-card__earned,
+.ach-card__req {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
+  font-size: 0.8125rem;
   color: var(--dash-muted, var(--muted));
 }
 
-.ach-panel__tier {
-  display: grid;
-  gap: 0.65rem;
-  padding-top: 0.15rem;
+.ach-card__earned .bi {
+  color: var(--ach-accent);
 }
 
-.ach-panel__tier.is-closed {
-  opacity: 0.78;
+.is-path-locked .ach-card__meter-fill {
+  opacity: 0.35;
 }
 
-.ach-panel__tier-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.ach-panel__tier-copy {
-  min-width: 0;
-  display: grid;
-  gap: 0.1rem;
-}
-
-.ach-panel__tier-copy h3 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 650;
-  color: var(--dash-text, var(--text));
-}
-
-.ach-panel__tier-copy p {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--dash-muted, var(--muted));
-}
-
-.ach-panel__tier-count {
-  flex-shrink: 0;
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--dash-muted, var(--muted));
-  padding-top: 0.15rem;
-}
-
-.ach-panel__more {
-  width: 100%;
-  justify-content: center;
-  min-height: 2.55rem;
-  border-radius: 0.35rem !important;
-  margin-top: 0.15rem;
-}
-
-.ach-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-@media (min-width: 900px) {
-  .ach-panel__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.9rem;
-  }
-
-  .ach-badge {
-    padding: 1.15rem 0.9rem 1rem;
-  }
-
-  .ach-badge__title {
-    font-size: 1rem;
-  }
-
-  .ach-badge__desc {
-    font-size: 0.82rem;
-    max-width: 14rem;
-  }
-}
-
-@media (max-width: 359px) {
-  .ach-panel__grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* Unlock toast */
 
 .ach-unlock {
   position: fixed;
@@ -603,37 +536,28 @@ html[data-theme='sepia'] .ach-unlock__card {
 }
 
 html[data-theme='dark'] .ach-art--black,
-html[data-theme='dark'] .ach-badge--black,
-html[data-theme='dark'] .ach-unlock__card--black,
-html[data-theme='dark'] .dash-achievements__focus--black,
-html[data-theme='dark'] .dash-achievements__chip--black {
+html[data-theme='dark'] .ach-card--black,
+html[data-theme='dark'] .ach-unlock__card--black {
   --ach-accent: #e0e0e0;
 }
 
 html[data-theme='dark'] .ach-art--gold,
-html[data-theme='dark'] .ach-badge--gold,
-html[data-theme='dark'] .dash-achievements__focus--gold { --ach-accent: #e0b03a; }
+html[data-theme='dark'] .ach-card--gold { --ach-accent: #e0b03a; }
 html[data-theme='dark'] .ach-art--emerald,
-html[data-theme='dark'] .ach-badge--emerald,
-html[data-theme='dark'] .dash-achievements__focus--emerald { --ach-accent: #3dca72; }
+html[data-theme='dark'] .ach-card--emerald { --ach-accent: #3dca72; }
 html[data-theme='dark'] .ach-art--sage,
-html[data-theme='dark'] .ach-badge--sage,
-html[data-theme='dark'] .dash-achievements__focus--sage { --ach-accent: #4eca62; }
+html[data-theme='dark'] .ach-card--sage { --ach-accent: #4eca62; }
 html[data-theme='dark'] .ach-art--blue,
-html[data-theme='dark'] .ach-badge--blue,
-html[data-theme='dark'] .dash-achievements__focus--blue { --ach-accent: #4a9ae8; }
+html[data-theme='dark'] .ach-card--blue { --ach-accent: #4a9ae8; }
 html[data-theme='dark'] .ach-art--purple,
-html[data-theme='dark'] .ach-badge--purple,
-html[data-theme='dark'] .dash-achievements__focus--purple { --ach-accent: #b06aef; }
+html[data-theme='dark'] .ach-card--purple { --ach-accent: #b06aef; }
 html[data-theme='dark'] .ach-art--orange,
-html[data-theme='dark'] .ach-badge--orange,
-html[data-theme='dark'] .dash-achievements__focus--orange { --ach-accent: #ff8a2a; }
+html[data-theme='dark'] .ach-card--orange { --ach-accent: #ff8a2a; }
 html[data-theme='dark'] .ach-art--red,
-html[data-theme='dark'] .ach-badge--red,
-html[data-theme='dark'] .dash-achievements__focus--red { --ach-accent: #ff5c5c; }
+html[data-theme='dark'] .ach-card--red { --ach-accent: #ff5c5c; }
 
-.app.is-rtl .ach-badge__progress-text,
-[dir='rtl'] .ach-badge__progress-text {
+.app.is-rtl .ach-card__progress-text,
+[dir='rtl'] .ach-card__progress-text {
   flex-direction: row-reverse;
 }
 

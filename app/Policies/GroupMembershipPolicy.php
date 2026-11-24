@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\AccountRole;
 use App\Enums\AnalyticsConsentStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
@@ -63,7 +62,7 @@ class GroupMembershipPolicy
             return false;
         }
 
-        if ($user->account_role !== AccountRole::Teacher || $user->organisation_id === null) {
+        if (! $user->isTeacher() || $user->organisation_id === null) {
             return false;
         }
 

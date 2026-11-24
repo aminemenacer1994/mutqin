@@ -73,6 +73,33 @@ export function sortLearningAssignments(rows, now = new Date()) {
  * Status and category are display filters over the authorised assignment rows.
  * They do not change status, create a submission, or write progress.
  */
+/** @returns {'overdue'|'today'|'upcoming'|'none'} */
+export function dueWindowForRow(row, now = new Date()) {
+  const base = resolveBaseTaskState(row)
+  if (base === TASK_STATE.DONE || base === TASK_STATE.WAITING_REVIEW) return 'none'
+  if (isOverdueRow(row, now)) return 'overdue'
+  const days = daysUntilDueStartOfDay(row?.assignment?.due_at, now)
+  if (days === null) return 'none'
+  if (days === 0) return 'today'
+  if (days > 0) return 'upcoming'
+  return 'none'
+}
+
+export function matchesDueWindow(row, dueWindow = 'all', now = new Date()) {
+  if (!dueWindow || dueWindow === 'all') return true
+  return dueWindowForRow(row, now) === dueWindow
+}
+
+export function countDueWindows(rows, { status = 'todo', category = 'all', now = new Date() } = {}) {
+  const base = filterLearningAssignments(rows, { status, category, now })
+  const counts = { all: base.length, today: 0, upcoming: 0, overdue: 0 }
+  for (const row of base) {
+    const window = dueWindowForRow(row, now)
+    if (window in counts) counts[window] += 1
+  }
+  return counts
+}
+
 export function filterLearningAssignments(rows, { status = 'todo', category = 'all', now = new Date() } = {}) {
   const owned = (rows || []).filter((row) => row?.id && !hidesClosedTeacherAccess(row))
   const typed = category === 'all'

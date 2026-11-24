@@ -12,6 +12,7 @@ use App\Models\LearningGroup;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Organisations\GroupMembershipService;
+use App\Services\Organisations\OrganisationMembershipService;
 use App\Support\Registration\RegistrationOrganisationDirectory;
 use Database\Seeders\RegistrationOrganisationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,50 +44,74 @@ class RegistrationOrganisationTest extends TestCase
         $this->assertSame(0, Organisation::count());
     }
 
-    public function test_student_and_teacher_registration_requires_organisation_details(): void
+    public function test_student_and_teacher_registration_does_not_require_organisation_details(): void
     {
-        $this->from(route('register'))
-            ->post(route('register'), [
-                'name' => 'Missing Org',
-                'email' => 'student-missing@example.com',
-                'password' => 'secret12',
-                'password_confirmation' => 'secret12',
-                'account_role' => 'student',
-            ])->assertRedirect(route('register'))
-            ->assertSessionHasErrors(['organisation_type', 'organisation_name']);
+        $this->post(route('register'), [
+            'name' => 'Org Free Student',
+            'email' => 'student-free@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+            'account_role' => 'student',
+        ])->assertRedirect(route('memorisation'));
 
-        $this->assertGuest();
-        $this->assertSame(0, User::count());
+        $student = User::where('email', 'student-free@example.com')->firstOrFail();
+        $this->assertSame(AccountRole::Student, $student->account_role);
+        $this->assertNull($student->organisation_id);
 
-        $this->from(route('register'))
-            ->post(route('register'), [
-                'name' => 'Missing Name',
-                'email' => 'teacher-missing@example.com',
-                'password' => 'secret12',
-                'password_confirmation' => 'secret12',
-                'account_role' => 'teacher',
-                'organisation_type' => 'school',
-                'organisation_name' => '   ',
-            ])->assertRedirect(route('register'))
-            ->assertSessionHasErrors('organisation_name');
+        $this->post(route('logout'));
 
+        $this->post(route('register'), [
+            'name' => 'Org Free Teacher',
+            'email' => 'teacher-free@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+            'account_role' => 'teacher',
+        ])->assertRedirect(route('teacher.dashboard'));
+
+        $teacher = User::where('email', 'teacher-free@example.com')->firstOrFail();
+        $this->assertSame(AccountRole::Teacher, $teacher->account_role);
+        $this->assertNull($teacher->organisation_id);
         $this->assertSame(0, Organisation::count());
     }
 
-    public function test_matching_names_share_one_organisation_and_do_not_grant_access(): void
+    public function test_registration_ignores_organisation_fields_posted_at_signup(): void
     {
-        $this->register('Student One', 'student-one@example.com', 'student', 'halaqa', '  AL   Noor ');
-        $this->register('Teacher One', 'teacher-one@example.com', 'teacher', 'halaqa', 'al noor');
-        $this->register('Other School', 'school@example.com', 'teacher', 'school', 'Al Noor');
-        $this->register('Hyphenated', 'hyphen@example.com', 'student', 'halaqa', 'Al-Noor');
+        $this->post(route('register'), [
+            'name' => 'Ignored Org',
+            'email' => 'ignored-org@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+            'account_role' => 'teacher',
+            'organisation_type' => 'school',
+            'organisation_name' => 'Should Not Join',
+        ])->assertRedirect(route('teacher.dashboard'));
+
+        $teacher = User::where('email', 'ignored-org@example.com')->firstOrFail();
+        $this->assertNull($teacher->organisation_id);
+        $this->assertSame(0, Organisation::count());
+    }
+
+    public function test_matching_names_share_one_organisation_via_connect_and_do_not_grant_access(): void
+    {
+        $memberships = app(OrganisationMembershipService::class);
+
+        $student = User::factory()->create(['account_role' => AccountRole::Student->value]);
+        $teacher = User::factory()->create(['account_role' => AccountRole::Teacher->value]);
+        $schoolTeacher = User::factory()->create(['account_role' => AccountRole::Teacher->value]);
+        $hyphenStudent = User::factory()->create(['account_role' => AccountRole::Student->value]);
+
+        $memberships->joinOrCreate($student, OrganisationType::Halaqa, '  AL   Noor ', MembershipRole::Student);
+        $memberships->joinOrCreate($teacher, OrganisationType::Halaqa, 'al noor', MembershipRole::Teacher);
+        $memberships->joinOrCreate($schoolTeacher, OrganisationType::School, 'Al Noor', MembershipRole::Teacher);
+        $memberships->joinOrCreate($hyphenStudent, OrganisationType::Halaqa, 'Al-Noor', MembershipRole::Student);
 
         $this->assertSame(3, Organisation::count());
         $this->assertSame(0, GroupMembership::count());
 
-        $student = User::where('email', 'student-one@example.com')->firstOrFail();
-        $teacher = User::where('email', 'teacher-one@example.com')->firstOrFail();
-        $schoolTeacher = User::where('email', 'school@example.com')->firstOrFail();
-        $hyphenStudent = User::where('email', 'hyphen@example.com')->firstOrFail();
+        $student = $student->fresh();
+        $teacher = $teacher->fresh();
+        $schoolTeacher = $schoolTeacher->fresh();
+        $hyphenStudent = $hyphenStudent->fresh();
 
         $this->assertSame($student->organisation_id, $teacher->organisation_id);
         $this->assertNotSame($student->organisation_id, $schoolTeacher->organisation_id);
@@ -226,20 +251,51 @@ class RegistrationOrganisationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_seeded_registration_organisations_link_teacher_and_student_rosters(): void
+    public function test_seeded_registration_organisations_link_teacher_and_student_rosters_via_connect(): void
     {
         $this->seed(RegistrationOrganisationSeeder::class);
 
         $halaqaName = RegistrationOrganisationDirectory::entries()[0]['name'];
-        $this->register('Registered Student', 'registered-student@example.com', 'student', 'halaqa', $halaqaName);
-        $this->register('Registered Teacher', 'registered-teacher@example.com', 'teacher', 'halaqa', $halaqaName);
+        $memberships = app(OrganisationMembershipService::class);
 
-        $student = User::where('email', 'registered-student@example.com')->firstOrFail();
-        $teacher = User::where('email', 'registered-teacher@example.com')->firstOrFail();
+        $student = User::factory()->create(['account_role' => AccountRole::Student->value]);
+        $teacher = User::factory()->create(['account_role' => AccountRole::Teacher->value]);
+
+        $memberships->joinOrCreate($student, OrganisationType::Halaqa, $halaqaName, MembershipRole::Student);
+        $memberships->joinOrCreate($teacher, OrganisationType::Halaqa, $halaqaName, MembershipRole::Teacher);
+
+        $student = $student->fresh();
+        $teacher = $teacher->fresh();
 
         $this->assertSame($student->organisation_id, $teacher->organisation_id);
         $this->assertSame(2, GroupMembership::count());
         $this->assertTrue(Gate::forUser($teacher)->allows('view-student-analytics', $student));
+    }
+
+    public function test_connect_can_join_organisation_after_org_free_signup(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'Connect Later',
+            'email' => 'connect-later@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+            'account_role' => 'teacher',
+        ])->assertRedirect(route('teacher.dashboard'));
+
+        $teacher = User::where('email', 'connect-later@example.com')->firstOrFail();
+        $this->assertNull($teacher->organisation_id);
+
+        $this->actingAs($teacher)
+            ->patchJson(route('api.onboarding.connections.update'), [
+                'step' => 'institution',
+                'organisation_type' => OrganisationType::School->value,
+                'organisation_name' => 'Connect School',
+            ])
+            ->assertOk();
+
+        $teacher = $teacher->fresh();
+        $this->assertNotNull($teacher->organisation_id);
+        $this->assertSame('Connect School', $teacher->organisation->name);
     }
 
     public function test_registration_organisation_catalogue_lists_database_names_by_type(): void
@@ -260,25 +316,11 @@ class RegistrationOrganisationTest extends TestCase
 
         $this->get(route('register'))
             ->assertOk()
-            ->assertSee('data-organisation-catalog', false)
-            ->assertSee('Sunrise Madrassa', false)
-            ->assertSee('name="organisation_type"', false)
-            ->assertSee('organisation-type-madrassa', false)
-            ->assertSee('value="Sunrise Madrassa"', false);
-    }
-
-    private function register(string $name, string $email, string $role, string $type, string $organisation): void
-    {
-        $this->post(route('logout'));
-
-        $this->post(route('register'), [
-            'name' => $name,
-            'email' => $email,
-            'password' => 'secret12',
-            'password_confirmation' => 'secret12',
-            'account_role' => $role,
-            'organisation_type' => $type,
-            'organisation_name' => $organisation,
-        ])->assertRedirect($role === 'teacher' ? route('teacher.dashboard') : route('memorisation'));
+            ->assertDontSee('data-organisation-catalog', false)
+            ->assertDontSee('name="organisation_type"', false)
+            ->assertDontSee('organisation-type-madrassa', false)
+            ->assertSee('data-register-step="account"', false)
+            ->assertSee('data-register-step="purpose"', false)
+            ->assertSee(__('ui.auth_purpose_heading'));
     }
 }

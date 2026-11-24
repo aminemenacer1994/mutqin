@@ -265,6 +265,10 @@ const ParentLinkRedeem = lazyPage(
     () => import(/* webpackChunkName: "parent-link-redeem" */ './views/ParentLinkRedeem.vue'),
     { feature: 'parent-link-redeem' }
 );
+const ConnectionOnboarding = lazyPage(
+    () => import(/* webpackChunkName: "connection-onboarding" */ './views/ConnectionOnboarding.vue'),
+    { feature: 'connection-onboarding' }
+);
 const AdminDashboard = lazyPage(
     () => import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue'),
     { feature: 'admin-dashboard' }
@@ -440,6 +444,7 @@ async function bootstrapApp() {
         'parent-dashboard': ParentDashboardComponent,
         'parent-invitation': ParentInvitationComponent,
         'parent-link-redeem': ParentLinkRedeemComponent,
+        'connection-onboarding': ConnectionOnboarding,
         'admin-dashboard': AdminDashboard,
         'admin-growth': AdminGrowth,
         'admin-feedback': AdminFeedback,

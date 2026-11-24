@@ -10,20 +10,30 @@
             <i class="bi bi-building" aria-hidden="true"></i>
             {{ organisationName }}
           </p>
+          <p v-else class="teacher-meta">{{ t('ui.connections_status_none') }}</p>
         </div>
       </div>
       <button type="button" class="btn btn-primary" @click="$emit('create-assignment')">
         <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.assign_task') }}
       </button>
     </div>
+    <ConnectPrompt
+      v-if="!organisationName"
+      storage-key="mutqin_connect_prompt_teacher"
+      :title="t('ui.connections_connect_title')"
+      :body="t('ui.connections_prompt_teacher')"
+      :status="t('ui.connections_status_none')"
+    />
   </header>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import ConnectPrompt from '../ConnectPrompt.vue'
 
 export default {
   name: 'TeacherHero',
+  components: { ConnectPrompt },
   mixins: [i18nMixin],
   props: {
     firstName: { type: String, required: true },

@@ -16,7 +16,7 @@ Route::middleware(\App\Http\Middleware\EnsureArticlesVisible::class)->group(func
         ->name('marketing.articles.show');
 });
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
-    ->middleware('throttle:5,1')
+    ->middleware('throttle:5,1,marketing-waiting-list')
     ->name('marketing.waiting-list.store');
 
 Route::fallback(function (Request $request) {

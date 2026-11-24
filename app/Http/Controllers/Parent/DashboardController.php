@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Parent;
 use App\Http\Controllers\Controller;
 use App\Support\ParentFeatures;
 use App\Support\PlatformContextResolver;
+use App\Support\Theme;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -32,6 +33,9 @@ class DashboardController extends Controller
                 'parent_dashboard_url' => route('parent.dashboard'),
                 'practice_url' => route('dashboard'),
                 'profile_url' => route('profile.show'),
+                'email_verified' => $user->hasVerifiedEmail(),
+                'locale' => (string) ($user->locale ?: app()->getLocale()),
+                'theme' => Theme::toDataTheme($user->theme),
                 'platform_switch_url' => route('platform.switch'),
                 'available_platforms' => collect($platforms)
                     ->filter()

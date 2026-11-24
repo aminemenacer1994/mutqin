@@ -64,6 +64,7 @@ class DashboardController extends Controller
                     'parent_dashboard_url' => ParentFeatures::enabled() && $user->isParent()
                         ? route('parent.dashboard')
                         : null,
+                    'platform_switch_url' => route('platform.switch'),
                 ],
             ])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');

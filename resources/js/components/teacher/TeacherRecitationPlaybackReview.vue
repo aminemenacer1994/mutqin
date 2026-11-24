@@ -65,6 +65,16 @@
                       <span>{{ formatTime(currentTime) }}</span>
                       <span>{{ formatTime(trackEnd) }}</span>
                     </p>
+                    <p v-if="segmentRangeLabel" class="teacher-playback__hint" role="status">{{ segmentRangeLabel }}</p>
+                  </div>
+                  <div v-if="hasAudio && !audioError && audioReady" class="teacher-playback__segment-mark" role="group" :aria-label="t('teacher.playback_segment_mark')">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="markSegmentStart">{{ t('teacher.playback_segment_mark_start') }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="markSegmentEnd">{{ t('teacher.playback_segment_mark_end') }}</button>
+                    <button v-if="segmentDraftReady" type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="playSegmentDraft">
+                      <i class="bi bi-play-fill" aria-hidden="true"></i>
+                      {{ t('teacher.playback_segment_preview') }}
+                    </button>
+                    <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving) || (segmentMarkStart == null && segmentMarkEnd == null)" @click="clearSegmentMarks">{{ t('teacher.playback_segment_clear') }}</button>
                   </div>
                 </div>
                 <p v-if="hasAudio && !audioError && !audioReady" class="teacher-playback__hint" role="status">{{ t('teacher.recording_state_loading') }}</p>
@@ -165,6 +175,35 @@
                   </dl>
                   <p v-else class="teacher-empty-line">{{ t('teacher.playback_no_assessment') }}</p>
                   <p v-if="assessedWords.length && unassessedWordCount" class="teacher-playback__hint">{{ unassessedWordCount }} · {{ t('teacher.playback_word_unassessed') }}</p>
+                </div>
+                <div v-if="payload.review_summary" class="teacher-playback__rollup" :aria-label="t('teacher.playback_review_summary_title')">
+                  <h3>{{ t('teacher.playback_review_summary_title') }}</h3>
+                  <p class="teacher-playback__hint">{{ t('teacher.playback_review_summary_help') }}</p>
+                  <dl class="teacher-playback__summary-counts">
+                    <div>
+                      <dt>{{ t('teacher.playback_summary_ai_unverified') }}</dt>
+                      <dd>{{ payload.review_summary.ai_flags?.unverified_suggestions ?? 0 }}</dd>
+                    </div>
+                    <div class="is-flagged">
+                      <dt>{{ t('teacher.playback_summary_confirmed') }}</dt>
+                      <dd>{{ payload.review_summary.ai_flags?.teacher_confirmed ?? 0 }}</dd>
+                    </div>
+                    <div class="is-correct">
+                      <dt>{{ t('teacher.playback_summary_dismissed') }}</dt>
+                      <dd>{{ payload.review_summary.ai_flags?.teacher_dismissed ?? 0 }}</dd>
+                    </div>
+                  </dl>
+                  <p v-if="payload.review_summary.passage_feedback" class="teacher-playback__saved">{{ payload.review_summary.passage_feedback }}</p>
+                  <ul v-if="payload.review_summary.segment_comments?.length" class="teacher-playback__history">
+                    <li v-for="line in payload.review_summary.segment_comments" :key="line.id">
+                      <span class="teacher-playback__hint">{{ formatSegmentRange(line.start_ms, line.end_ms) }}</span>
+                      <span v-if="line.body"> · {{ line.body }}</span>
+                      <span v-else-if="line.has_audio"> · {{ t('teacher.voice_note') }}</span>
+                    </li>
+                  </ul>
+                  <p v-if="payload.review_summary.revision?.title" class="teacher-playback__hint">
+                    {{ t('teacher.playback_revision_sent') }}: {{ payload.review_summary.revision.title }}
+                  </p>
                 </div>
                 <details v-if="payload.history?.previous_review" class="teacher-playback__panel">
                   <summary>{{ t('teacher.playback_previous_review') }}</summary>
@@ -336,6 +375,42 @@
                 </div>
               </section>
 
+              <section v-if="hasAudio && !audioError" class="teacher-playback__section teacher-playback__segments" :aria-label="t('teacher.playback_segment_feedback')">
+                <h2>{{ t('teacher.playback_segment_feedback') }}</h2>
+                <p class="teacher-playback__hint">{{ t('teacher.playback_segment_help') }}</p>
+                <div v-if="segmentDraftReady" class="teacher-playback__field">
+                  <p class="teacher-playback__hint">{{ segmentRangeLabel }}</p>
+                  <textarea v-model="segmentNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.playback_segment_placeholder')"></textarea>
+                  <div class="teacher-playback__action-row">
+                    <TeacherVoiceNoteControls ref="segmentVoice" :disabled="Boolean(saving)" @state-change="segmentVoiceState = $event" />
+                    <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || segmentVoiceState.active || (!segmentNote.trim() && !segmentVoiceState.hasRecording)" @click="saveSegment">
+                      {{ saving === 'segment' ? t('teacher.saving') : (editingSegmentId ? t('teacher.playback_segment_update') : t('teacher.playback_segment_save')) }}
+                    </button>
+                    <button v-if="editingSegmentId" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="cancelSegmentEdit">{{ t('teacher.playback_unsaved_cancel') }}</button>
+                  </div>
+                </div>
+                <ul v-if="payload.feedback_segments?.length" class="teacher-playback__history">
+                  <li v-for="item in payload.feedback_segments" :key="item.id">
+                    <button type="button" class="teacher-playback__segment-link" :disabled="Boolean(saving)" @click="seekToSegment(item)">
+                      {{ formatSegmentRange(item.start_ms, item.end_ms) }}
+                    </button>
+                    <p v-if="item.body">{{ item.body }}</p>
+                    <TeacherAudioFeedbackPlayer
+                      v-if="item.audio?.available"
+                      :src="item.audio.url"
+                      :duration-ms="item.audio.duration_ms"
+                      compact
+                    />
+                    <div class="teacher-playback__action-row">
+                      <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="editSegment(item)">{{ t('teacher.coaching_correct_note') }}</button>
+                      <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteSegmentAudio(item.id)">{{ t('teacher.coaching_delete_audio') }}</button>
+                      <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteSegment(item.id)">{{ t('teacher.playback_segment_delete') }}</button>
+                    </div>
+                  </li>
+                </ul>
+                <p v-else class="teacher-empty-line">{{ t('teacher.playback_segment_empty') }}</p>
+              </section>
+
               <section class="teacher-playback__section teacher-playback__response" :aria-label="t('teacher.playback_feedback')">
                 <h2>{{ t('teacher.playback_feedback') }}</h2>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_optional') }}</p>
@@ -394,7 +469,7 @@
           <button type="button" class="btn btn-outline-secondary" :disabled="!hasNext || Boolean(saving) || moving || loading" @click="requestNext">
             {{ t('teacher.playback_next') }}
           </button>
-          <button v-if="!reviewed" type="button" class="btn btn-primary teacher-playback__mark" :disabled="Boolean(saving) || voiceState.active || wordVoiceState.active" @click="completeReview">
+          <button v-if="!reviewed" type="button" class="btn btn-primary teacher-playback__mark" :disabled="Boolean(saving) || voiceState.active || wordVoiceState.active || segmentVoiceState.active" @click="completeReview">
             <i class="bi" :class="saving === 'review' ? 'bi-arrow-repeat' : 'bi-check2-circle'" aria-hidden="true"></i>
             {{ saving === 'review' ? t('teacher.saving') : t('teacher.playback_complete_review') }}
           </button>
@@ -429,6 +504,8 @@ import {
   ayahRepeatWindow,
   flaggedWordAt,
   playbackSummary,
+  isValidSegmentMs,
+  secondsToMs,
   wordKey,
   wordWindow,
 } from '../../scripts/teacher/playbackSync'
@@ -486,6 +563,12 @@ export default {
       editingCorrectionId: null,
       voiceState: { hasRecording: false, active: false },
       wordVoiceState: { hasRecording: false, active: false },
+      segmentVoiceState: { hasRecording: false, active: false },
+      segmentMarkStart: null,
+      segmentMarkEnd: null,
+      segmentNote: '',
+      editingSegmentId: null,
+      segmentClientId: null,
       wordDrafts: {},
       wordStatusDrafts: {},
       wordMetaDrafts: {},
@@ -695,6 +778,18 @@ export default {
     },
     trackEnd() {
       return this.seekMax
+    },
+    recordingDurationMs() {
+      const fromPlayer = this.duration > 0 ? Math.round(this.duration * 1000) : 0
+      const fromPayload = Number(this.payload?.duration_ms) || 0
+      return Math.max(fromPlayer, fromPayload)
+    },
+    segmentDraftReady() {
+      return isValidSegmentMs(this.segmentMarkStart, this.segmentMarkEnd, this.recordingDurationMs || null)
+    },
+    segmentRangeLabel() {
+      if (!this.segmentDraftReady) return ''
+      return this.formatSegmentRange(this.segmentMarkStart, this.segmentMarkEnd)
     },
     showAssignmentPill() {
       const label = this.assignmentLabel
@@ -1062,6 +1157,130 @@ export default {
       if (!window) return
       this.repeatUntil = window.end
       this.seekTo(window.start, true, true)
+    },
+    formatSegmentRange(startMs, endMs) {
+      const start = Math.max(0, Math.floor(Number(startMs) / 1000))
+      const end = Math.max(start + 1, Math.floor(Number(endMs) / 1000))
+      return `${this.formatTime(start)} – ${this.formatTime(end)}`
+    },
+    markSegmentStart() {
+      this.segmentMarkStart = secondsToMs(this.currentTime)
+      if (this.segmentMarkEnd != null && this.segmentMarkEnd <= this.segmentMarkStart) {
+        this.segmentMarkEnd = null
+      }
+    },
+    markSegmentEnd() {
+      const end = secondsToMs(this.currentTime)
+      if (this.segmentMarkStart == null) {
+        this.segmentMarkStart = 0
+      }
+      if (end != null && end > this.segmentMarkStart) {
+        this.segmentMarkEnd = end
+      }
+    },
+    clearSegmentMarks() {
+      this.segmentMarkStart = null
+      this.segmentMarkEnd = null
+      this.editingSegmentId = null
+      this.segmentNote = ''
+      this.segmentClientId = null
+      this.$refs.segmentVoice?.reset?.()
+    },
+    cancelSegmentEdit() {
+      this.clearSegmentMarks()
+    },
+    playSegmentDraft() {
+      if (!this.segmentDraftReady) return
+      const start = Number(this.segmentMarkStart) / 1000
+      const end = Number(this.segmentMarkEnd) / 1000
+      this.repeatUntil = end
+      this.seekTo(start, true, true)
+    },
+    seekToSegment(item) {
+      if (!item?.start_ms && item?.start == null) return
+      const start = item.start != null ? Number(item.start) : Number(item.start_ms) / 1000
+      const end = item.end != null ? Number(item.end) : Number(item.end_ms) / 1000
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return
+      this.repeatUntil = end
+      this.seekTo(start, true, true)
+    },
+    editSegment(item) {
+      if (!item?.id) return
+      this.editingSegmentId = item.id
+      this.segmentMarkStart = Number(item.start_ms)
+      this.segmentMarkEnd = Number(item.end_ms)
+      this.segmentNote = item.body || ''
+      this.segmentClientId = null
+    },
+    async saveSegment() {
+      if (this.saving || !this.segmentDraftReady) return
+      if (this.$refs.segmentVoice?.isRecordingActive) return
+      const recording = this.$refs.segmentVoice?.recordingPayload?.() || null
+      if (!this.segmentNote.trim() && !recording?.blob) {
+        this.actionError = this.t('teacher.playback_segment_required')
+        return
+      }
+      this.saving = 'segment'
+      this.actionError = ''
+      try {
+        const bounds = {
+          start_ms: Math.round(this.segmentMarkStart),
+          end_ms: Math.round(this.segmentMarkEnd),
+          body: this.segmentNote.trim(),
+        }
+        let payload
+        if (this.editingSegmentId) {
+          payload = await learningApi.updateTeacherFeedbackSegment(
+            this.studentId,
+            this.attemptId,
+            this.editingSegmentId,
+            bounds,
+            recording,
+          )
+        } else {
+          if (!this.segmentClientId) this.segmentClientId = createClientMessageId()
+          payload = await learningApi.saveTeacherFeedbackSegment(
+            this.studentId,
+            this.attemptId,
+            { ...bounds, client_message_id: this.segmentClientId },
+            recording,
+          )
+        }
+        this.applyPayload(payload)
+        this.actionMessage = this.t('teacher.playback_segment_saved')
+        this.clearSegmentMarks()
+        this.$refs.segmentVoice?.reset?.()
+      } catch (err) {
+        this.actionError = this.failureMessage(err)
+      } finally {
+        this.saving = ''
+      }
+    },
+    async deleteSegment(segmentId) {
+      if (this.saving || !segmentId) return
+      this.saving = 'segment'
+      try {
+        const payload = await learningApi.deleteTeacherFeedbackSegment(this.studentId, this.attemptId, segmentId)
+        this.applyPayload(payload)
+        this.actionMessage = this.t('teacher.playback_segment_deleted')
+      } catch (err) {
+        this.actionError = this.failureMessage(err)
+      } finally {
+        this.saving = ''
+      }
+    },
+    async deleteSegmentAudio(segmentId) {
+      if (this.saving || !segmentId) return
+      this.saving = 'segment'
+      try {
+        const payload = await learningApi.deleteTeacherFeedbackSegmentAudio(this.studentId, this.attemptId, segmentId)
+        this.applyPayload(payload)
+        this.actionMessage = this.t('teacher.coaching_audio_deleted')
+      } catch (err) {
+        this.actionError = this.failureMessage(err)
+      } finally {
+        this.saving = ''
+      }
     },
     replayAyah() {
       const ayah = this.selectedWord?.ayah || this.currentAyah

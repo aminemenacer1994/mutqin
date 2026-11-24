@@ -40,6 +40,8 @@ final class StudentCircleService
         return [
             'teachers' => $teachers,
             'guardians' => $this->guardians($student),
+            'pending_guardians' => $this->pendingGuardians($student),
+            'memberships' => $this->memberships($student),
             'learning_plans' => $plans,
             'revision_targets' => $this->revisionTargets($student),
             'messaging' => [
@@ -182,6 +184,54 @@ final class StudentCircleService
                     'status' => 'connected',
                 ];
             })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function pendingGuardians(User $student): array
+    {
+        return ParentStudentLink::query()
+            ->where('student_user_id', $student->id)
+            ->where('status', ParentLinkStatus::Pending->value)
+            ->with('parent:id,name')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (ParentStudentLink $link) => $link->parent instanceof User)
+            ->map(function (ParentStudentLink $link) {
+                $relationship = trim((string) ($link->relationship ?? ''));
+
+                return [
+                    'id' => (int) $link->id,
+                    'relationship' => $relationship !== '' ? $relationship : 'guardian',
+                    'display_name' => $this->givenName((string) $link->parent->name),
+                    'status' => ParentLinkStatus::Pending->value,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function memberships(User $student): array
+    {
+        return GroupMembership::query()
+            ->where('user_id', $student->id)
+            ->where('membership_role', MembershipRole::Student->value)
+            ->with('learningGroup:id,name,organisation_id')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (GroupMembership $membership) => [
+                'id' => (int) $membership->id,
+                'status' => $membership->status?->value ?? (string) $membership->status,
+                'consent' => $membership->analytics_consent_status?->value
+                    ?? (string) $membership->analytics_consent_status,
+                'group' => $membership->learningGroup?->only(['id', 'name', 'organisation_id']),
+            ])
             ->values()
             ->all();
     }

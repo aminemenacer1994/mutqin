@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Parent;
 use App\Http\Controllers\Controller;
 use App\Models\ParentLearningReport;
 use App\Models\User;
+use App\Services\Parent\ParentLearningReportExporter;
 use App\Services\Parent\ParentLearningReportReader;
 use App\Support\ParentFeatures;
 use Illuminate\Http\JsonResponse;
@@ -31,18 +32,24 @@ class ParentReportController extends Controller
     {
         return response()->json([
             'report' => $reports->show($this->parent($request), $report),
-            'pdf_supported' => false,
+            'pdf_supported' => true,
         ]);
     }
 
-    public function download(Request $request, ParentLearningReport $report, ParentLearningReportReader $reports): Response
-    {
+    public function download(
+        Request $request,
+        ParentLearningReport $report,
+        ParentLearningReportReader $reports,
+        ParentLearningReportExporter $exporter,
+    ): Response {
         $presented = $reports->show($this->parent($request), $report);
-        $filename = 'mutqin-learning-report-'.$presented['period_start'].'.html';
+        $filename = $exporter->filename($presented);
+        $pdf = $exporter->pdf($presented);
 
-        return response()
-            ->view('parent.learning-report', ['report' => $presented])
-            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 
     private function parent(Request $request): User

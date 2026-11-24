@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { pickDashboardPrimaryKind } from '../../resources/js/scripts/dashboard/primaryAction.js'
-import { homeAttentionAssignments, homeUpcomingAssignments } from '../../resources/js/scripts/dashboard/studentHome.js'
+import {
+  buildHomeAttentionRows,
+  homeAttentionAssignmentIds,
+  homeAttentionAssignments,
+  homeUpcomingAssignments,
+} from '../../resources/js/scripts/dashboard/studentHome.js'
 import { dailyMutqinHref, memorisationGoalHref } from '../../resources/js/scripts/session/sessionGoal.js'
 
 const now = new Date('2026-03-15T12:00:00')
@@ -10,17 +15,26 @@ const correction = { id: 1, status: 'in_progress', review_state: 'needs_correcti
 const overdue = { id: 2, status: 'overdue', assignment: { due_at: '2026-03-10T00:00:00' } }
 const today = { id: 3, status: 'pending', assignment: { due_at: '2026-03-15T18:00:00' } }
 const tomorrow = { id: 4, status: 'pending', assignment: { due_at: '2026-03-16T18:00:00' } }
+const dueSoon = { id: 9, status: 'pending', assignment: { due_at: '2026-03-17T18:00:00' } }
 const later = { id: 5, status: 'pending', assignment: { due_at: '2026-03-25T00:00:00' } }
 const undated = { id: 6, status: 'pending', assignment: {} }
 const submitted = { id: 7, status: 'awaiting_confirmation', review_state: 'submitted', assignment: { due_at: '2026-03-14T00:00:00' } }
 const approved = { id: 8, status: 'completed', review_state: 'approved', assignment: { due_at: '2026-03-12T00:00:00' } }
 
-const rows = [later, approved, undated, tomorrow, submitted, today, overdue, correction]
+const rows = [later, approved, undated, dueSoon, tomorrow, submitted, today, overdue, correction]
 const attention = homeAttentionAssignments(rows, now)
 assert.deepEqual(attention.map((row) => row.id), [1, 2, 3])
 
-const upcoming = homeUpcomingAssignments(rows, attention.map((row) => row.id), now)
-assert.deepEqual(upcoming.map((row) => row.id), [4, 5, 6])
+const feedback = { id: 77, unread: true, created_at: '2026-03-15T08:00:00Z', preview: 'Nice effort' }
+const mixed = buildHomeAttentionRows(rows, feedback, now)
+assert.equal(mixed[0].kind, 'assignment')
+assert.equal(mixed[0].row.id, 1)
+assert.equal(mixed[1].row.id, 2)
+assert.equal(mixed[2].kind, 'feedback')
+assert.equal(mixed[3].row.id, 3)
+
+const upcoming = homeUpcomingAssignments(rows, homeAttentionAssignmentIds(mixed), now)
+assert.deepEqual(upcoming.map((row) => row.id), [4, 9, 5])
 assert.equal(homeUpcomingAssignments([tomorrow], [4], now).length, 0)
 assert.equal(homeAttentionAssignments([submitted, approved, later], now).length, 0)
 assert.equal(homeAttentionAssignments([{ ...today, teacher_access: false }], now).length, 0)
@@ -41,9 +55,12 @@ assert.match(home, /data-testid="dashboard-primary-continue"/)
 assert.match(home, /:href="primaryContinueAction\.href"/)
 assert.match(home, /dashboard\.home_attention/)
 assert.match(home, /dashboard\.home_upcoming/)
-assert.match(home, /learner-home__feedback/)
+assert.match(home, /homeAttentionRows/)
 assert.match(home, /learner-home__skeleton/)
 assert.match(home, /openHomeFeedback/)
+assert.match(home, /learner-home__column--main/)
+assert.match(home, /learner-home__revision-row--link/)
 assert.doesNotMatch(home, /startSession\(/)
+assert.doesNotMatch(home, /homeRecentFeedback/)
 
 console.log('student-home.test.mjs: ok')

@@ -31,7 +31,7 @@ class StudentAccessAuthorizer
             return false;
         }
 
-        if ($actor->account_role !== AccountRole::Teacher || (! $this->isConfiguredAnchor($student) && $student->account_role !== AccountRole::Student)) {
+        if (! $actor->isTeacher() || (! $this->isConfiguredAnchor($student) && ! $student->isStudent())) {
             return false;
         }
 
@@ -51,7 +51,7 @@ class StudentAccessAuthorizer
             return collect();
         }
 
-        if ($actor->trashed() || $actor->account_role !== AccountRole::Teacher || $actor->organisation_id === null) {
+        if ($actor->trashed() || ! $actor->isTeacher() || $actor->organisation_id === null) {
             return collect();
         }
 
@@ -93,7 +93,10 @@ class StudentAccessAuthorizer
             })
             ->whereHas('user', function ($query) {
                 $query->where(function ($inner) {
-                    $inner->where('account_role', AccountRole::Student->value);
+                    $inner->where('account_role', AccountRole::Student->value)
+                        ->orWhereHas('accountRoles', function ($roles) {
+                            $roles->where('role', AccountRole::Student->value);
+                        });
                     $anchors = $this->configuredAnchorEmails();
                     if ($anchors !== []) {
                         $inner->orWhere(function ($emailQuery) use ($anchors) {

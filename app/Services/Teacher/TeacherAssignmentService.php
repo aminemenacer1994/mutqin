@@ -23,6 +23,7 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
@@ -44,6 +45,7 @@ class TeacherAssignmentService
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentMessageAudioService $messageAudio,
         private readonly AiReciteAttemptAudioService $attemptAudio,
+        private readonly TeacherRecitationFeedbackSegmentService $feedbackSegments,
     ) {}
 
     /**
@@ -1701,7 +1703,11 @@ class TeacherAssignmentService
         $words = is_array($latestAttempt?->word_statuses) ? $latestAttempt->word_statuses : [];
 
         $attemptPayload = $latestAttempt
-            ? LearnerCompletionAttempt::present($latestAttempt, $this->attemptAudio)
+            ? LearnerCompletionAttempt::present(
+                $latestAttempt,
+                $this->attemptAudio,
+                $this->feedbackSegments->forStudentAttempt($latestAttempt),
+            )
             : null;
 
         return [

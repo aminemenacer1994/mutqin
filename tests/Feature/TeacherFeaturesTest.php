@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\AccountRole;
-use App\Enums\OrganisationType;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
 use App\Models\Organisation;
@@ -239,10 +238,11 @@ class TeacherFeaturesTest extends TestCase
 
         $this->get(route('register'))
             ->assertOk()
-            ->assertSee(__('ui.auth_role_individual'))
-            ->assertSee(__('ui.auth_role_student'))
-            ->assertSee(__('ui.auth_role_teacher'))
-            ->assertSee('name="organisation_name"', false)
+            ->assertSee(__('ui.auth_role_individual_title'))
+            ->assertSee(__('ui.auth_role_student_title'))
+            ->assertSee(__('ui.auth_role_teacher_title'))
+            ->assertDontSee('name="organisation_name"', false)
+            ->assertSee('data-register-step="purpose"', false)
             ->assertSee(__('ui.continue_google'));
 
         $this->post(route('register'), [
@@ -251,13 +251,11 @@ class TeacherFeaturesTest extends TestCase
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
             'account_role' => 'teacher',
-            'organisation_type' => OrganisationType::School->value,
-            'organisation_name' => 'Al Noor School',
         ])->assertRedirect(route('teacher.dashboard'));
 
         $teacher = User::where('email', 'classroom@example.com')->firstOrFail();
         $this->assertSame(AccountRole::Teacher, $teacher->account_role);
-        $this->assertNotNull($teacher->organisation_id);
+        $this->assertNull($teacher->organisation_id);
 
         $this->actingAs($teacher)
             ->get(route('teacher.dashboard'))

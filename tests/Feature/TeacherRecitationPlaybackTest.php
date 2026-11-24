@@ -629,11 +629,72 @@ class TeacherRecitationPlaybackTest extends TestCase
         $this->assertSame(1, \App\Models\TeacherRecitationAssessment::query()->count());
     }
 
-    private function recitation(User $student): \App\Models\AiReciteAttempt
+    public function test_feedback_segments_validate_bounds_and_surface_to_learner(): void
+    {
+        Storage::fake('user_files');
+        Storage::fake('local');
+        config(['mutqin.audio_privacy.raw_recording_retention' => 'retain']);
+        [$teacher, $student] = array_slice($this->classroom(), 0, 2);
+        $attempt = $this->recitation($student);
+        $attempt->forceFill([
+            'audio_disk' => 'local',
+            'audio_path' => 'ai-recite-audio/'.$student->id.'/'.$attempt->id.'.webm',
+            'audio_mime' => 'audio/webm',
+            'audio_bytes' => 2048,
+            'audio_duration_ms' => 4200,
+        ])->save();
+        Storage::disk('local')->put((string) $attempt->audio_path, str_repeat('R', 2048));
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.segments.store', [$student, $attempt]), [
+                'start_ms' => 5000,
+                'end_ms' => 1000,
+                'body' => 'Invalid order',
+            ])
+            ->assertStatus(422);
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.segments.store', [$student, $attempt]), [
+                'start_ms' => 400,
+                'end_ms' => 1200,
+                'body' => 'Slow this phrase',
+                'client_message_id' => '22222222-2222-4222-8222-222222222222',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('feedback_segments.0.body', 'Slow this phrase')
+            ->assertJsonPath('feedback_segments.0.start_ms', 400)
+            ->assertJsonPath('feedback_segments.0.end_ms', 1200)
+            ->assertJsonPath('review_summary.segment_comments.0.body', 'Slow this phrase');
+
+        $count = \App\Models\TeacherRecitationFeedbackSegment::query()->count();
+        $this->actingAs($teacher)->postJson(route('api.teacher.students.attempts.playback.segments.store', [$student, $attempt]), [
+            'start_ms' => 400,
+            'end_ms' => 1200,
+            'body' => 'Slow this phrase',
+            'client_message_id' => '22222222-2222-4222-8222-222222222222',
+        ])->assertCreated();
+        $this->assertSame($count, \App\Models\TeacherRecitationFeedbackSegment::query()->count());
+
+        $segmentId = (int) \App\Models\TeacherRecitationFeedbackSegment::query()->value('id');
+        $this->actingAs($student)
+            ->getJson(route('api.teacher.feedback-segments.audio', ['segment' => $segmentId]))
+            ->assertNotFound();
+
+        $attemptWithoutAudio = $this->recitation($student, 'segment-no-audio');
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.students.attempts.playback.segments.store', [$student, $attemptWithoutAudio]), [
+                'start_ms' => 0,
+                'end_ms' => 500,
+                'body' => 'No recording',
+            ])
+            ->assertStatus(422);
+    }
+
+    private function recitation(User $student, ?string $idempotencyKey = null): \App\Models\AiReciteAttempt
     {
         $assessment = MemorisationAssessment::query()->create([
             'user_id' => $student->id,
-            'idempotency_key' => 'word-coaching-'.$student->id,
+            'idempotency_key' => $idempotencyKey ?? ('word-coaching-'.$student->id),
             'surah_number' => 114,
             'start_ayah' => 1,
             'end_ayah' => 2,

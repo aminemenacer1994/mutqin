@@ -1699,40 +1699,96 @@
   line-height: 1.55;
 }
 
-.learner-workspace.user-dashboard .student-progress {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--dash-space-3, 12px) var(--dash-space-4, 16px);
+.learner-workspace.user-dashboard .student-progress__chrome {
+  position: sticky;
+  top: calc(var(--learner-header-height, 56px) + 8px);
+  z-index: 6;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--teacher-line, var(--dash-border));
+  border-radius: var(--teacher-radius-card, 14px);
+  background: var(--teacher-surface, var(--dash-surface));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--dash-ink, #1a120c) 6%, transparent);
 }
 
-.learner-workspace.user-dashboard .student-progress__nav {
+.learner-workspace.user-dashboard .student-progress__tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--dash-space-2, 8px);
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
-.learner-workspace.user-dashboard .student-progress__nav a {
+.learner-workspace.user-dashboard .student-progress__tab {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
-  padding: 0 var(--dash-space-3, 12px);
-  border: 1px solid var(--teacher-line, var(--dash-border));
-  border-radius: 999px;
-  background: var(--teacher-surface, var(--dash-surface));
-  color: var(--teacher-text, var(--dash-ink));
+  padding: 0 14px;
+  border-radius: var(--teacher-radius-control, 8px);
+  color: var(--teacher-text-soft, var(--dash-muted));
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.learner-workspace.user-dashboard .student-progress__nav a:hover,
-.learner-workspace.user-dashboard .student-progress__nav a:focus-visible {
-  border-color: var(--teacher-line-strong, var(--dash-border));
+.learner-workspace.user-dashboard .student-progress__tab:hover,
+.learner-workspace.user-dashboard .student-progress__tab:focus-visible {
+  color: var(--teacher-text, var(--dash-ink));
   outline: 2px solid var(--teacher-accent, var(--accent));
   outline-offset: 2px;
+}
+
+.learner-workspace.user-dashboard .student-progress__toolbar {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  max-width: 18rem;
+}
+
+.learner-workspace.user-dashboard .student-progress__filter-hint {
+  margin: 0;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: end;
+}
+
+.learner-workspace.user-dashboard .student-progress__metric-band {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.learner-workspace.user-dashboard .student-progress__metric-band .dash-learning__metrics {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.learner-workspace.user-dashboard .student-progress__next {
+  margin: 4px 0 0;
+}
+
+.learner-workspace.user-dashboard .student-progress__insights {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--teacher-line, var(--dash-border));
+}
+
+.learner-workspace.user-dashboard #dash-progress,
+.learner-workspace.user-dashboard #progress-memorisation,
+.learner-workspace.user-dashboard #progress-recitation,
+.learner-workspace.user-dashboard #progress-feedback,
+.learner-workspace.user-dashboard #achievements {
+  scroll-margin-top: calc(var(--learner-header-height, 56px) + 96px);
 }
 
 .learner-workspace.user-dashboard .student-progress__note,
@@ -1748,7 +1804,7 @@
 
 .learner-workspace.user-dashboard .student-progress__block .teacher-subhead,
 .learner-workspace.user-dashboard .student-progress .teacher-subhead,
-.learner-workspace.user-dashboard #progress-improve .teacher-subhead,
+.learner-workspace.user-dashboard .student-progress__insights .teacher-subhead,
 .learner-workspace.user-dashboard #progress-feedback .teacher-subhead,
 .learner-workspace.user-dashboard #dash-progress .teacher-subhead {
   margin: 0 0 var(--dash-space-2, 8px);
@@ -1796,22 +1852,26 @@
 }
 
 @media (max-width: 767.98px) {
-  .learner-workspace.user-dashboard .student-progress,
-  .learner-workspace.user-dashboard .student-progress__nav {
+  .learner-workspace.user-dashboard .student-progress__chrome {
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
+  }
+
+  .learner-workspace.user-dashboard .student-progress__toolbar {
+    justify-items: stretch;
+    max-width: none;
+  }
+
+  .learner-workspace.user-dashboard .student-progress__filter-hint {
+    text-align: start;
   }
 
   .learner-workspace.user-dashboard .student-progress__split {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .learner-workspace.user-dashboard .student-progress__nav a {
-    flex: 1 1 calc(50% - 8px);
-    justify-content: center;
-  }
-
   .learner-workspace.user-dashboard .dash-fb-card__actions .dash-btn,
-  .learner-workspace.user-dashboard #progress-improve .teacher-mini-list .dash-btn {
+  .learner-workspace.user-dashboard .student-progress__insights .teacher-mini-list .dash-btn {
     min-height: 44px;
   }
 }
@@ -2716,6 +2776,17 @@ html[data-theme="dark"] [data-platform-shell="student"] .dash-achievements {
 
 [data-platform-shell="student"].learner-workspace.teacher-dashboard.user-dashboard--progress #dash-activity :is(.dash-history__kind, .dash-history__detail, time) {
   font-size: 15px !important;
+}
+
+[data-platform-shell="student"].learner-workspace.teacher-dashboard.user-dashboard--progress #dash-messages .learner-messages-workspace {
+  gap: 28px !important;
+}
+
+[data-platform-shell="student"].learner-workspace.teacher-dashboard.user-dashboard--progress #dash-messages .learner-messages__teachers.teacher-pane {
+  border: 1px solid var(--teacher-line, #eadfce) !important;
+  border-radius: 20px !important;
+  background: var(--teacher-surface, #fffdfb) !important;
+  overflow: hidden;
 }
 
 [data-platform-shell="student"].learner-workspace.teacher-dashboard.user-dashboard--progress #dash-messages .learner-teacher__feedback-panel,

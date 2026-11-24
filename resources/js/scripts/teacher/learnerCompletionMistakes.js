@@ -17,12 +17,13 @@ export function resolveLearnerCompletionAttempt(row) {
     return {
       mistakes: Array.isArray(attempt.mistakes) ? attempt.mistakes : [],
       recordingUrl: attempt.recording_url || attempt.recordingUrl || null,
+      feedbackSegments: Array.isArray(attempt.feedback_segments) ? attempt.feedback_segments : [],
       dataGaps: Array.isArray(attempt.data_gaps) ? attempt.data_gaps : [],
       surah,
     }
   }
 
-  return { mistakes: [], recordingUrl: null, dataGaps: ['attempt_payload'], surah }
+  return { mistakes: [], recordingUrl: null, feedbackSegments: [], dataGaps: ['attempt_payload'], surah }
 }
 
 /**

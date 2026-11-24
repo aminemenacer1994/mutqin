@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\AccountRole;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Models\GroupMembership;
@@ -41,7 +40,7 @@ class LearningGroupPolicy
             return false;
         }
 
-        return $user->account_role === AccountRole::Teacher
+        return $user->isTeacher()
             && $user->organisation_id !== null
             && (int) $user->organisation_id === (int) $group->organisation_id;
     }
@@ -52,7 +51,7 @@ class LearningGroupPolicy
             return false;
         }
 
-        return $user->account_role === AccountRole::Student
+        return $user->isStudent()
             && $user->organisation_id !== null
             && (int) $user->organisation_id === (int) $group->organisation_id;
     }

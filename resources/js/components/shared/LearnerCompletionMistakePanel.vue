@@ -55,7 +55,28 @@
       </li>
     </ul>
 
-    <p v-else-if="!perfect || !hidePerfectBanner" class="learner-teacher__mistake-empty">{{ t('teacher.learner_wording_details_empty') }}</p>
+    <section v-if="feedbackSegments.length" class="learner-teacher__segment-feedback" :aria-label="t('teacher.learner_segment_feedback_title')">
+      <h4>{{ t('teacher.learner_segment_feedback_title') }}</h4>
+      <ul>
+        <li v-for="segment in feedbackSegments" :key="segment.id">
+          <p class="learner-teacher__mistake-type">
+            <span>{{ formatSegmentRange(segment) }}</span>
+            <span v-if="segment.authority === 'teacher'" class="learner-teacher__segment-badge">{{ t('teacher.learner_segment_teacher_verified') }}</span>
+          </p>
+          <p v-if="segment.body">{{ segment.body }}</p>
+          <AudioClip
+            v-if="segment.audio?.available && segment.audio?.url"
+            :src="segment.audio.url"
+            :play-label="t('teacher.voice_note')"
+            :pause-label="t('teacher.learner_mistake_pause')"
+            :loading-label="t('teacher.learner_mistake_audio_loading')"
+            :error-label="t('teacher.learner_mistake_audio_error')"
+          />
+        </li>
+      </ul>
+    </section>
+
+    <p v-else-if="(!perfect || !hidePerfectBanner) && !feedbackSegments.length" class="learner-teacher__mistake-empty">{{ t('teacher.learner_wording_details_empty') }}</p>
   </div>
 </template>
 
@@ -81,6 +102,7 @@ export default {
     recordingUrl: { type: String, default: '' },
     surah: { type: Number, default: null },
     hidePerfectBanner: { type: Boolean, default: false },
+    feedbackSegments: { type: Array, default: () => [] },
   },
   data() {
     return {
@@ -147,6 +169,12 @@ export default {
       if (type === 'missed') return this.t('teacher.learner_mistake_type_missed')
       if (type === 'tajweed') return this.t('teacher.learner_mistake_type_tajweed')
       return this.t('teacher.learner_mistake_type_wrong')
+    },
+    formatSegmentRange(segment) {
+      const start = Math.max(0, Math.floor(Number(segment?.start_ms) / 1000))
+      const end = Math.max(start + 1, Math.floor(Number(segment?.end_ms) / 1000))
+      const fmt = (value) => `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
+      return `${fmt(start)} – ${fmt(end)}`
     },
     comparisonLine(mistake) {
       const expected = String(mistake.expected || '').trim()

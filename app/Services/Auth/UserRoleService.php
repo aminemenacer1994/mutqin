@@ -31,14 +31,13 @@ class UserRoleService
             ])->save();
         }
 
-        if ($user->account_role === null && $role !== AccountRole::Parent) {
-            // Primary role column stays unset for supplemental-only grants.
-        } elseif ($user->account_role === null && $role === AccountRole::Parent) {
-            $user->forceFill(['account_role' => AccountRole::Parent->value])->save();
+        if ($user->account_role === null && $role->isSupplementalCapable()) {
+            $user->forceFill(['account_role' => $role->value])->save();
         }
 
         return $record->refresh();
     }
+
 
     public function revoke(User $user, AccountRole $role): void
     {

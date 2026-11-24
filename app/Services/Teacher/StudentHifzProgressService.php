@@ -26,6 +26,9 @@ class StudentHifzProgressService
 {
     public const RECENT_DAYS = 14;
 
+    /** Teacher-confirmed weak spots need at least this many linked attempts. */
+    public const WEAK_SPOT_MIN_EVIDENCE = 2;
+
     /**
      * @return array<string, mixed>
      */
@@ -599,6 +602,7 @@ class StudentHifzProgressService
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->where('teacher_review_status', MemorisationWeakSpot::REVIEW_CONFIRMED)
+            ->where('affected_attempt_count', '>=', self::WEAK_SPOT_MIN_EVIDENCE)
             ->orderByDesc('affected_attempt_count')
             ->limit(8)
             ->get()

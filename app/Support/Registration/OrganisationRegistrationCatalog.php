@@ -6,7 +6,7 @@ use App\Enums\OrganisationType;
 use App\Models\Organisation;
 
 /**
- * Organisations offered during student/teacher registration.
+ * Organisations offered during Connect institution search.
  */
 final class OrganisationRegistrationCatalog
 {

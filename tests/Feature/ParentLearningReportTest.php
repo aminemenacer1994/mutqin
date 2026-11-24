@@ -92,7 +92,7 @@ class ParentLearningReportTest extends TestCase
             ->assertJsonPath('reports.0.activity.practice_rows', 1)
             ->assertJsonPath('reports.0.wording.is_tajweed', false)
             ->assertJsonPath('reports.0.combined_scores', false)
-            ->assertJsonPath('pdf_supported', false)
+            ->assertJsonPath('pdf_supported', true)
             ->getContent();
 
         $this->assertStringContainsString('1 task was set in this period', $body);
@@ -229,9 +229,10 @@ class ParentLearningReportTest extends TestCase
         $download = $this->actingAs($parent)
             ->get(route('api.parent.reports.download', $report))
             ->assertOk();
+        $this->assertSame('application/pdf', $download->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $download->getContent());
         $this->assertStringContainsString('attachment;', (string) $download->headers->get('content-disposition'));
-        $download->assertSee('not a Tajweed grade');
-        $download->assertDontSee('PRIVATE-NOTE-TOKEN');
+        $this->assertStringContainsString('.pdf', (string) $download->headers->get('content-disposition'));
 
         Queue::fake();
         Artisan::call('mutqin:generate-parent-reports', ['--cadence' => 'month']);

@@ -18,6 +18,7 @@ use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\MadaniPageController;
+use App\Http\Controllers\Onboarding\ConnectionOnboardingController;
 use App\Http\Controllers\Parent\DashboardController as ParentDashboardPageController;
 use App\Http\Controllers\Parent\InvitationController as ParentInvitationPageController;
 use App\Http\Controllers\Parent\LinkCodeController as ParentLinkCodePageController;
@@ -159,7 +160,7 @@ Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::middleware(EnsureDonationVisible::class)->group(function (): void {
     Route::view('/donate', 'content.donate')->name('donate');
     Route::post('/donate/checkout', [BillingController::class, 'donationCheckout'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,donate-checkout')
         ->name('donate.checkout');
     Route::get('/donate/success', [BillingController::class, 'donationSuccess'])->name('donate.success');
 });
@@ -171,7 +172,7 @@ Route::middleware(EnsureArticlesVisible::class)->group(function (): void {
         ->name('articles.show');
 });
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
-    ->middleware('throttle:5,1')
+    ->middleware('throttle:5,1,waiting-list')
     ->name('waiting-list.store');
 
 Route::get('/waiting-list/unsubscribe/{entry}', WaitingListUnsubscribeController::class)
@@ -224,6 +225,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/parent', [ParentDashboardPageController::class, 'index'])
         ->middleware('parent.features')
         ->name('parent.dashboard');
+    Route::get('/guardian/children/{student}/messages', [ParentDashboardPageController::class, 'index'])
+        ->middleware('parent.features')
+        ->whereNumber('student')
+        ->name('guardian.children.messages');
     Route::get('/parent/invitations/{token}', [ParentInvitationPageController::class, 'show'])
         ->middleware('parent.features')
         ->where('token', '[A-Za-z0-9]+')
@@ -233,6 +238,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('parent.link-code');
     Route::post('/platform/switch', [PlatformSwitchController::class, 'store'])
         ->name('platform.switch');
+    Route::get('/onboarding/connections', [ConnectionOnboardingController::class, 'show'])
+        ->name('onboarding.connections');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     Route::get('/memorisation/audio-download', function (Request $request) {

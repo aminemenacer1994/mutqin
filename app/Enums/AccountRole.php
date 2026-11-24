@@ -24,6 +24,9 @@ enum AccountRole: string
 
     public function isSupplementalCapable(): bool
     {
-        return $this === self::Parent;
+        return $this === self::Parent
+            || $this === self::Student
+            || $this === self::Teacher;
     }
+
 }

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
+  countDueWindows,
   countLearningBuckets,
+  dueWindowForRow,
   filterLearningAssignments,
   learningCategory,
   learningCategoryCounts,
   learningStatusBucket,
+  matchesDueWindow,
 } from '../../resources/js/scripts/dashboard/learnerLearningView.js'
 
 const now = new Date('2026-03-15T12:00:00')
@@ -61,7 +64,14 @@ assert.equal(categories.nazra, 1)
 assert.equal(categories.hifz, 2)
 assert.equal(categories.all, 3)
 
+assert.equal(dueWindowForRow(rows[1], now), 'overdue')
+assert.equal(dueWindowForRow(rows[0], now), 'upcoming')
+assert.equal(matchesDueWindow(rows[1], 'overdue', now), true)
+assert.equal(countDueWindows(rows, { status: 'todo', now }).overdue, 1)
+
 const section = fs.readFileSync(new URL('../../resources/js/components/teacher/LearnerTeacherSection.vue', import.meta.url), 'utf8')
+assert.match(section, /secondaryDueFilters/)
+assert.match(section, /learner-teacher__task-row/)
 assert.match(section, /id === 'done'/)
 assert.match(section, /activeFilter = 'completed'/)
 assert.match(section, /\$emit\('start'/)

@@ -12,7 +12,6 @@ use App\Support\Analytics\Acquisition;
 use App\Support\AuthRedirect;
 use App\Support\BillingIntent;
 use App\Support\EmailVerification;
-use App\Support\Registration\OrganisationRegistrationCatalog;
 use App\Support\Registration\RegistrationProfile;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\RegistersUsers;
@@ -22,6 +21,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
@@ -63,9 +63,7 @@ class RegisterController extends Controller
         BillingIntent::rememberFromRequest(request());
         Acquisition::remember(request());
 
-        return view('auth.register', [
-            'organisationOptions' => OrganisationRegistrationCatalog::options(),
-        ]);
+        return view('auth.register');
     }
 
     /**
@@ -88,7 +86,7 @@ class RegisterController extends Controller
                 Rule::unique('users', 'pending_email'),
                 Rule::notIn(AdminEmails::reserved()),
             ],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
             ...RegistrationProfile::rules($data),
         ], [
             'email.not_in' => 'This email address is reserved.',

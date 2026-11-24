@@ -29,10 +29,11 @@ final class LearnerCompletionAttempt
      *     mistakes: list<LearnerMistake>,
      *     recording_url: string|null,
      *     recording_available: bool,
+     *     feedback_segments?: list<array<string, mixed>>,
      *     data_gaps: list<string>
      * }|null
      */
-    public static function present(?AiReciteAttempt $attempt, AiReciteAttemptAudioService $audio): ?array
+    public static function present(?AiReciteAttempt $attempt, AiReciteAttemptAudioService $audio, ?array $feedbackSegments = null): ?array
     {
         if ($attempt === null) {
             return null;
@@ -65,12 +66,17 @@ final class LearnerCompletionAttempt
             $gaps[] = 'reference_url:ayah_'.$ayah;
         }
 
-        return [
+        $payload = [
             'mistakes' => $mistakes,
             'recording_url' => $recordingUrl,
             'recording_available' => $recordingUrl !== null && $recordingUrl !== '',
             'data_gaps' => array_values(array_unique($gaps)),
         ];
+        if ($feedbackSegments !== null && $feedbackSegments !== []) {
+            $payload['feedback_segments'] = $feedbackSegments;
+        }
+
+        return $payload;
     }
 
     /**

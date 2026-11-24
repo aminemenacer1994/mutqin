@@ -36,5 +36,8 @@ export function studioHasDraft(state = {}) {
     || Boolean(state.initialWordDueAt && state.wordDueAt !== state.initialWordDueAt)
     || hasVoice(state.voiceState)
     || hasVoice(state.wordVoiceState)
+    || hasVoice(state.segmentVoiceState)
+    || hasText(state.segmentNote)
+    || (state.segmentMarkStart != null && state.segmentMarkEnd != null)
     || Boolean(state.assessmentDirty)
 }

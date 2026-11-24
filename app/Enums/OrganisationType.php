@@ -7,7 +7,10 @@ enum OrganisationType: string
     case Halaqa = 'halaqa';
     case Madrassa = 'madrassa';
     case School = 'school';
+    case Masjid = 'masjid';
+    case Academy = 'academy';
     case Other = 'other';
+
 
     /**
      * @return list<string>

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiReciteAttempt;
+use App\Models\TeacherRecitationFeedbackSegment;
 use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
 use App\Services\Teacher\TeacherRecitationPlaybackService;
+use App\Services\Teacher\TeacherRecitationFeedbackSegmentAudioService;
 use App\Services\Teacher\TeacherWordCoachingAudioService;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
@@ -111,6 +113,97 @@ class TeacherRecitationPlaybackController extends Controller
             $attempt,
             $correction,
         ));
+    }
+
+    public function storeSegment(Request $request, User $student, AiReciteAttempt $attempt, TeacherRecitationPlaybackService $playback): JsonResponse
+    {
+        $data = $request->validate([
+            'start_ms' => ['required', 'integer', 'min:0'],
+            'end_ms' => ['required', 'integer', 'min:1'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'client_message_id' => ['nullable', 'uuid'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+        ]);
+
+        return $this->json($playback->storeSegment(
+            $this->teacher($request),
+            $student,
+            $attempt,
+            $data,
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+        ), 201);
+    }
+
+    public function updateSegment(
+        Request $request,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+        TeacherRecitationPlaybackService $playback,
+    ): JsonResponse {
+        $data = $request->validate([
+            'start_ms' => ['sometimes', 'integer', 'min:0'],
+            'end_ms' => ['sometimes', 'integer', 'min:1'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'audio' => ['nullable', 'file', 'max:8192'],
+            'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+        ]);
+
+        return $this->json($playback->updateSegment(
+            $this->teacher($request),
+            $student,
+            $attempt,
+            $segment,
+            $data,
+            $request->file('audio'),
+            isset($data['duration_ms']) ? (int) $data['duration_ms'] : null,
+        ));
+    }
+
+    public function deleteSegment(
+        Request $request,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+        TeacherRecitationPlaybackService $playback,
+    ): JsonResponse {
+        return $this->json($playback->deleteSegment(
+            $this->teacher($request),
+            $student,
+            $attempt,
+            $segment,
+        ));
+    }
+
+    public function deleteSegmentAudio(
+        Request $request,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+        TeacherRecitationPlaybackService $playback,
+    ): JsonResponse {
+        return $this->json($playback->deleteSegmentAudio(
+            $this->teacher($request),
+            $student,
+            $attempt,
+            $segment,
+        ));
+    }
+
+    public function segmentAudio(
+        Request $request,
+        TeacherRecitationFeedbackSegment $segment,
+        TeacherRecitationFeedbackSegmentAudioService $audio,
+    ): mixed {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+        $response = $audio->stream($user, $segment);
+        abort_unless($response !== null, 404);
+
+        return $response;
     }
 
     public function correctionAudio(

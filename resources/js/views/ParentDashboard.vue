@@ -40,22 +40,36 @@
                 :first-name="firstName"
                 :children="children"
                 :homework="shell?.homework || []"
+                :feedback="visibleFeedback"
+                :activity="visibleActivity"
                 :message-unread="familyUnread"
                 @open-child="openChild"
                 @open-learning="openLearning"
                 @open-messages="openMessages"
                 @open-progress="openProgress"
+                @open-settings="openView('settings')"
               />
               <ParentFamilyChildren
                 v-else-if="view === 'children'"
-                :children="visibleChildren"
-                :all-children="children"
-                :selected-id="selectedChildId"
-                @select-child="selectChild"
+                :children="children"
+                :homework="shell?.homework || []"
+                :loading="loading && !shell"
                 @open-learning="openLearning"
                 @open-progress="openProgress"
                 @open-profile="openProfile"
                 @open-messages="openMessages"
+                @open-settings="openView('settings')"
+              />
+              <ParentChildMessages
+                v-else-if="view === 'child-messages'"
+                :children="children"
+                :feedback="visibleFeedback"
+                :child-id="selectedChildId"
+                :parent-name="shell?.parent?.name || auth.name"
+                :shared="messagesShared"
+                @back="openView('children')"
+                @open-learning="openLearning"
+                @unread-change="messageUnread = $event"
               />
               <ParentChildProfile
                 v-else-if="view === 'child'"
@@ -83,8 +97,7 @@
               />
               <ParentFamilyProgress
                 v-else-if="view === 'progress'"
-                :children="visibleChildren"
-                :all-children="children"
+                :children="children"
                 :selected-id="selectedChildId"
                 :child-id="progressChildId"
                 :shared="progressShared"
@@ -95,6 +108,9 @@
                 @select-child="selectChild"
                 @window="setProgressWindow"
                 @reload="loadProgressDetail"
+                @open-learning="openLearning"
+                @open-reports="openReports"
+                @open-messages="openMessages"
               />
               <ParentFamilyReports
                 v-else-if="view === 'reports'"
@@ -107,16 +123,23 @@
                 :children="children"
                 :feedback="visibleFeedback"
                 :selected-id="selectedChildId"
+                :parent-name="shell?.parent?.name || auth.name"
                 :shared="messagesShared"
                 @select-child="selectChild"
+                @open-learning="openLearning"
                 @unread-change="messageUnread = $event"
               />
               <ParentFamilySettings
                 v-else
                 :parent-name="shell?.parent?.name || auth.name"
                 :email="shell?.parent?.email || auth.email"
+                :email-verified="auth.email_verified !== false"
                 :profile-url="auth.profile_url || ''"
+                :locale="auth.locale || 'en'"
+                :theme="auth.theme || ''"
+                :csrf-token="auth.csrf_token || ''"
                 :children-count="children.length"
+                :connection-links="connectionLinks"
                 :invite-token="inviteToken"
                 :link-code="linkCode"
                 :acting="acting"
@@ -124,12 +147,12 @@
                 :error="actionError"
                 :platforms="platformForms"
                 :switch-url="auth.platform_switch_url || ''"
-                :csrf-token="auth.csrf_token || ''"
                 @open-children="openView('children')"
                 @accept-invite="acceptInvite"
                 @reject-invite="rejectInvite"
                 @create-code="createCode"
                 @update:invite-token="inviteToken = $event"
+                @profile-updated="loadShell"
               />
             </div>
           </div>
@@ -151,6 +174,7 @@
 
 <script>
 import axios from 'axios'
+import { sortLearningRows } from '../scripts/parent/familyLearning'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import ParentFamilyOverview from '../components/parent/ParentFamilyOverview.vue'
@@ -161,6 +185,7 @@ import ParentFamilyMessages from '../components/parent/ParentFamilyMessages.vue'
 import ParentFamilySettings from '../components/parent/ParentFamilySettings.vue'
 import ParentChildProfile from '../components/parent/ParentChildProfile.vue'
 import ParentFamilyReports from '../components/parent/ParentFamilyReports.vue'
+import ParentChildMessages from '../components/parent/ParentChildMessages.vue'
 import { PARENT_NAV, PARENT_VIEWS } from '../scripts/parent/constants'
 import { i18nMixin } from '../mixins/i18nMixin'
 
@@ -177,6 +202,7 @@ export default {
     ParentFamilySettings,
     ParentChildProfile,
     ParentFamilyReports,
+    ParentChildMessages,
   },
   mixins: [i18nMixin],
   props: {
@@ -220,6 +246,9 @@ export default {
     },
     children() {
       return Array.isArray(this.shell?.children) ? this.shell.children : []
+    },
+    connectionLinks() {
+      return Array.isArray(this.shell?.connection_links) ? this.shell.connection_links : []
     },
     visibleChildren() {
       if (!this.selectedChildId) return this.children
@@ -296,7 +325,8 @@ export default {
       return this.children.filter((child) => child.permissions?.assignments).map((child) => child.id)
     },
     navView() {
-      return this.view === 'child' ? 'children' : this.view
+      if (this.view === 'child' || this.view === 'child-messages') return 'children'
+      return this.view
     },
   },
   watch: {
@@ -312,12 +342,23 @@ export default {
     },
   },
   mounted() {
-    const params = new URLSearchParams(window.location.search)
-    const view = params.get('view')
-    if (PARENT_VIEWS.includes(view)) this.view = view
-    const child = Number(params.get('child') || 0)
-    if (child > 0) this.selectedChildId = child
-    this.loadShell()
+    const pathMatch = window.location.pathname.match(/\/guardian\/children\/(\d+)\/messages\/?$/)
+    if (pathMatch) {
+      this.selectedChildId = Number(pathMatch[1])
+      this.view = 'child-messages'
+    } else {
+      const params = new URLSearchParams(window.location.search)
+      const view = params.get('view')
+      if (PARENT_VIEWS.includes(view)) this.view = view
+      const child = Number(params.get('child') || 0)
+      if (child > 0) this.selectedChildId = child
+    }
+    this.loadShell().then(() => {
+      if (this.view === 'progress' && !this.selectedChildId && this.children.length === 1) {
+        this.selectedChildId = this.children[0].id
+        this.syncUrl()
+      }
+    })
   },
   methods: {
     openView(id) {
@@ -347,6 +388,10 @@ export default {
     openMessages(id) {
       this.selectedChildId = id
       this.openView('messages')
+    },
+    openReports(id) {
+      this.selectedChildId = id || this.selectedChildId || (this.children.length === 1 ? this.children[0].id : null)
+      this.openView('reports')
     },
     openProfile(id) {
       this.selectedChildId = id
@@ -381,7 +426,7 @@ export default {
           rows.push(...(data.assignments || []))
           truncated = truncated || Boolean(data.truncated)
         }
-        this.learningRows = rows
+        this.learningRows = sortLearningRows(rows)
         this.learningTruncated = truncated
       } catch {
         this.learningError = true
@@ -426,9 +471,15 @@ export default {
       }
     },
     syncUrl() {
-      const url = new URL(window.location.href)
-      url.searchParams.set('view', this.view)
-      if (this.selectedChildId) url.searchParams.set('child', String(this.selectedChildId))
+      if (this.view === 'child-messages' && this.selectedChildId) {
+        const path = `/guardian/children/${this.selectedChildId}/messages`
+        window.history.replaceState({}, '', path)
+        return
+      }
+      const url = new URL(window.location.origin + '/parent')
+      if (this.view !== 'overview') url.searchParams.set('view', this.view)
+      else url.searchParams.delete('view')
+      if (this.selectedChildId && this.view !== 'child-messages') url.searchParams.set('child', String(this.selectedChildId))
       else url.searchParams.delete('child')
       window.history.replaceState({}, '', url)
     },

@@ -5,6 +5,22 @@ export function formatWhen(value) {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
+export function formatConversationWhen(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const now = new Date()
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  }
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === yesterday.toDateString()) {
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  }
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
 export function activityName(t, activity) {
   if (!activity) return ''
   const key = `parent.activity_${activity}`

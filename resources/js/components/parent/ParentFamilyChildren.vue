@@ -1,5 +1,5 @@
 <template>
-  <section class="parent-home">
+  <section class="parent-home parent-children-page">
     <header class="parent-page">
       <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
       <div>
@@ -7,62 +7,55 @@
         <p>{{ t('parent.children_hint') }}</p>
       </div>
     </header>
-    <div class="parent-filters">
-      <ParentChildFilter :children="allChildren" :selected-id="selectedId" @select="$emit('select-child', $event)" />
-    </div>
-    <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
-    <ul v-else class="parent-child-grid">
-      <li v-for="(child, index) in children" :key="child.id" class="parent-child-card" :style="{ '--parent-i': index }">
-        <button type="button" class="parent-child-card__main" @click="$emit('open-profile', child.id)">
-          <span class="parent-avatar" aria-hidden="true">{{ initial(child.name) }}</span>
-          <span class="parent-child-card__copy">
-            <strong>{{ child.name }}</strong>
-            <small>{{ teacherLine(child) }}</small>
-            <span class="parent-status is-quiet">
-              <i class="bi bi-book" aria-hidden="true"></i>
-              {{ learningLabel(t, child.learning) || t('parent.learning_empty') }}
-            </span>
-          </span>
-          <i class="bi bi-chevron-right parent-child-card__go" aria-hidden="true"></i>
+
+    <ConnectPrompt
+      v-if="!children.length && !loading"
+      storage-key="mutqin_connect_prompt_parent_children"
+      :title="t('ui.connections_connect_title')"
+      :body="t('ui.connections_prompt_parent')"
+      :status="t('ui.connections_status_none')"
+    />
+
+    <section v-if="!children.length && !loading" class="parent-panel parent-home-empty">
+      <TeacherEmpty illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
+      <p class="parent-lead">{{ t('parent.home_empty_support') }}</p>
+      <div class="parent-hub-actions">
+        <button type="button" @click="$emit('open-messages', null)">
+          <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_empty_action_messages') }}
         </button>
-        <div class="parent-child-card__actions">
-          <button type="button" @click="$emit('open-learning', child.id)">
-            <i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.home_homework') }}
-          </button>
-          <button type="button" @click="$emit('open-progress', child.id)">
-            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ t('parent.home_progress') }}
-          </button>
-          <button type="button" @click="$emit('open-messages', child.id)">
-            <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_message') }}
-          </button>
-        </div>
-      </li>
-    </ul>
+        <button type="button" @click="$emit('open-settings')">
+          <i class="bi bi-gear" aria-hidden="true"></i>{{ t('parent.home_empty_action_settings') }}
+        </button>
+      </div>
+    </section>
+
+    <ParentChildrenTable
+      v-else
+      :rows="children"
+      :homework="homework"
+      :loading="loading"
+      @open-learning="$emit('open-learning', $event)"
+      @open-progress="$emit('open-progress', $event)"
+      @open-profile="$emit('open-profile', $event)"
+    />
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { initial, learningLabel } from '../../scripts/parent/dashboard'
-import ParentChildFilter from './ParentChildFilter.vue'
+import ConnectPrompt from '../ConnectPrompt.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
+import ParentChildrenTable from './ParentChildrenTable.vue'
 
 export default {
   name: 'ParentFamilyChildren',
-  components: { ParentChildFilter, TeacherEmpty },
+  components: { ConnectPrompt, TeacherEmpty, ParentChildrenTable },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
-    allChildren: { type: Array, default: () => [] },
-    selectedId: { type: Number, default: null },
+    homework: { type: Array, default: () => [] },
+    loading: { type: Boolean, default: false },
   },
-  emits: ['select-child', 'open-learning', 'open-progress', 'open-profile', 'open-messages'],
-  methods: {
-    initial,
-    learningLabel,
-    teacherLine(child) {
-      return child.teachers?.[0]?.name || this.t('parent.teachers_empty')
-    },
-  },
+  emits: ['open-learning', 'open-progress', 'open-profile', 'open-messages', 'open-settings'],
 }
 </script>

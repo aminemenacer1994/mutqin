@@ -57,13 +57,15 @@ class ParentFamilyDashboardService
         $progressIds = $this->idsAllowing($links, ParentGuardianPermission::ViewProgress);
         $messageIds = $this->idsAllowing($links, ParentGuardianPermission::ViewMessages);
 
-        $teachers = $this->teachersFor($children->pluck('id')->all());
+        $studentIdsList = $children->pluck('id')->all();
+        $teachers = $this->teachersFor($studentIdsList);
+        $groups = $this->groupsFor($studentIdsList);
         $recipients = $this->recipientsFor($assignmentIds);
         $plans = $this->plansFor($progressIds);
         $progress = $this->progressFor($progressIds);
         $feedback = $this->feedbackFor($messageIds);
 
-        $presentedChildren = $children->map(function (User $child) use ($links, $teachers, $recipients, $plans, $progress) {
+        $presentedChildren = $children->map(function (User $child) use ($links, $teachers, $groups, $recipients, $plans, $progress) {
             $id = (int) $child->id;
             $link = $links->get($id);
             $canAssignments = $link instanceof ParentStudentLink && $link->allowsPermission(ParentGuardianPermission::ViewAssignments->value);
@@ -73,6 +75,7 @@ class ParentFamilyDashboardService
             return [
                 'id' => $id,
                 'name' => $child->name,
+                'group_name' => $groups->get($id),
                 'teachers' => $teachers->get($id, collect())->values()->all(),
                 'permissions' => [
                     'assignments' => $canAssignments,
@@ -112,6 +115,19 @@ class ParentFamilyDashboardService
             ],
             'children_count' => $presentedChildren->count(),
             'children' => $presentedChildren->all(),
+            'connection_links' => ParentStudentLink::query()
+                ->where('parent_user_id', $parent->id)
+                ->with('student:id,name')
+                ->orderByDesc('id')
+                ->get()
+                ->map(fn (ParentStudentLink $link) => [
+                    'id' => (int) $link->id,
+                    'status' => $link->status?->value ?? (string) $link->status,
+                    'relationship' => $link->relationship,
+                    'child' => $link->student?->only(['id', 'name']),
+                ])
+                ->values()
+                ->all(),
             'summary' => [
                 'children' => $presentedChildren->count(),
                 'active_assignments' => $active,
@@ -141,6 +157,28 @@ class ParentFamilyDashboardService
             ->map(fn (ParentStudentLink $link) => (int) $link->student_user_id)
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  list<int>  $studentIds
+     * @return Collection<int, string>
+     */
+    private function groupsFor(array $studentIds): Collection
+    {
+        if ($studentIds === []) {
+            return collect();
+        }
+
+        return GroupMembership::query()
+            ->whereIn('user_id', $studentIds)
+            ->where('membership_role', MembershipRole::Student->value)
+            ->where('status', MembershipStatus::Approved->value)
+            ->with('learningGroup:id,name')
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (GroupMembership $membership) => (int) $membership->user_id)
+            ->map(fn (Collection $rows) => $rows->first()?->learningGroup?->name)
+            ->filter();
     }
 
     /**
@@ -298,8 +336,10 @@ class ParentFamilyDashboardService
                     'id' => (int) $note->id,
                     'child_id' => (int) $note->student_id,
                     'child_name' => $note->student?->name,
+                    'teacher_id' => (int) $note->teacher_id,
                     'teacher_name' => $note->teacher?->name,
                     'excerpt' => mb_substr($body, 0, 180),
+                    'unread' => $note->read_at === null,
                     'at' => $note->created_at?->toIso8601String(),
                 ];
             })
@@ -368,6 +408,7 @@ class ParentFamilyDashboardService
             ->map(function (TeacherAssignmentRecipient $recipient) use ($child) {
                 $assignment = $recipient->assignment;
                 $overdue = $this->isOverdue($recipient);
+                $dueAt = $assignment->due_at;
 
                 return [
                     'id' => (int) $recipient->id,
@@ -380,7 +421,8 @@ class ParentFamilyDashboardService
                     'ayah_end' => (int) $assignment->ayah_end,
                     'status' => $overdue ? 'overdue' : $recipient->status?->value,
                     'overdue' => $overdue,
-                    'due_at' => $assignment->due_at?->toIso8601String(),
+                    'due_soon' => ! $overdue && $dueAt !== null && $dueAt->isFuture() && $dueAt->lte(now()->addHours(48)),
+                    'due_at' => $dueAt?->toIso8601String(),
                     'feedback' => $assignment->feedback ? mb_substr(trim((string) $assignment->feedback), 0, 180) : null,
                 ];
             });

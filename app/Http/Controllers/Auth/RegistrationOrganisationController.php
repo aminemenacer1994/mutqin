@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\OrganisationType;
 use App\Http\Controllers\Controller;
+use App\Services\Organisations\OrganisationRegistry;
 use App\Support\Registration\OrganisationRegistrationCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,18 +16,18 @@ class RegistrationOrganisationController extends Controller
         $this->middleware('guest');
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, OrganisationRegistry $organisations): JsonResponse
     {
-        $type = (string) $request->query('type', '');
-        $options = OrganisationRegistrationCatalog::options();
+        $typeRaw = (string) $request->query('type', '');
+        $query = (string) $request->query('q', '');
+        $type = OrganisationType::tryFrom($typeRaw);
 
-        if ($type !== '') {
-            $options = array_values(array_filter(
-                $options,
-                fn (array $row) => $row['type'] === $type,
-            ));
+        if ($query !== '' || $type !== null) {
+            return response()->json([
+                'data' => $organisations->search($type, $query !== '' ? $query : null),
+            ]);
         }
 
-        return response()->json(['data' => $options]);
+        return response()->json(['data' => OrganisationRegistrationCatalog::options()]);
     }
 }

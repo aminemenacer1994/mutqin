@@ -10,14 +10,11 @@ use App\Support\ParentFeatures;
 use App\Support\TeacherFeatures;
 
 /**
- * Stores the account role and, for students and teachers, the organisation link.
- * Linking never creates a group membership and never grants record access.
+ * Stores the account role at signup. Institution and class links happen later via Connect.
  */
 class AccountRegistrationService
 {
     public function __construct(
-        private readonly OrganisationRegistry $organisations,
-        private readonly OrganisationRegistrationRoster $registrationRoster,
         private readonly UserRoleService $roles,
     ) {}
 
@@ -53,28 +50,11 @@ class AccountRegistrationService
             return;
         }
 
-        if (! $role->needsOrganisation()) {
-            $user->forceFill([
-                'account_role' => $role->value,
-                'organisation_id' => null,
-            ])->save();
-
-            $this->roles->syncPrimaryRoleGrant($user->refresh(), $role);
-
-            return;
-        }
-
-        $organisation = $this->organisations->findOrCreate(
-            $profile['organisation_type'],
-            (string) $profile['organisation_name'],
-        );
-
         $user->forceFill([
             'account_role' => $role->value,
-            'organisation_id' => $organisation->id,
+            'organisation_id' => null,
         ])->save();
 
-        $this->registrationRoster->enrollRegisteredMember($user->refresh(), $organisation);
         $this->roles->syncPrimaryRoleGrant($user->refresh(), $role);
     }
 }

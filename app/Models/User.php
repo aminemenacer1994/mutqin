@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AccountRole;
+use App\Enums\PlatformContext;
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
 use App\Support\AdminEmails;
@@ -86,6 +87,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'locale',
         'theme',
         'onboarding_completed_at',
+        'preferred_platform',
+        'connection_onboarding',
         'ai_audio_consent_status',
         'ai_audio_consent_version',
         'ai_audio_consent_at',
@@ -137,6 +140,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
+            'preferred_platform' => PlatformContext::class,
+            'connection_onboarding' => 'array',
             'subscription_cancel_at_period_end' => 'boolean',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_starts_at' => 'datetime',
@@ -190,6 +195,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(GroupMembership::class);
     }
 
+    public function organisationMemberships(): HasMany
+    {
+        return $this->hasMany(OrganisationMembership::class);
+    }
+
     public function accountRoles(): HasMany
     {
         return $this->hasMany(UserAccountRole::class);
@@ -236,18 +246,56 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function isTeacher(): bool
     {
-        return $this->account_role === AccountRole::Teacher;
+        return $this->hasAccountRole(AccountRole::Teacher);
     }
 
     public function isStudent(): bool
     {
-        return $this->account_role === AccountRole::Student;
+        return $this->hasAccountRole(AccountRole::Student);
     }
 
     public function isParent(): bool
     {
         return $this->hasAccountRole(AccountRole::Parent);
     }
+
+    /**
+     * @return array{role: ?string, completed: list<string>, skipped: list<string>, finished: bool}
+     */
+    public function connectionOnboardingState(): array
+    {
+        $state = is_array($this->connection_onboarding) ? $this->connection_onboarding : [];
+
+        return [
+            'role' => isset($state['role']) && is_string($state['role']) ? $state['role'] : null,
+            'completed' => array_values(array_filter(
+                is_array($state['completed'] ?? null) ? $state['completed'] : [],
+                static fn (mixed $step): bool => is_string($step) && $step !== '',
+            )),
+            'skipped' => array_values(array_filter(
+                is_array($state['skipped'] ?? null) ? $state['skipped'] : [],
+                static fn (mixed $step): bool => is_string($step) && $step !== '',
+            )),
+            'finished' => (bool) ($state['finished'] ?? false),
+        ];
+    }
+
+    /**
+     * @param  array{role?: ?string, completed?: list<string>, skipped?: list<string>, finished?: bool}  $state
+     */
+    public function storeConnectionOnboarding(array $state): void
+    {
+        $current = $this->connectionOnboardingState();
+        $this->forceFill([
+            'connection_onboarding' => [
+                'role' => array_key_exists('role', $state) ? $state['role'] : $current['role'],
+                'completed' => array_values($state['completed'] ?? $current['completed']),
+                'skipped' => array_values($state['skipped'] ?? $current['skipped']),
+                'finished' => (bool) ($state['finished'] ?? $current['finished']),
+            ],
+        ])->save();
+    }
+
 
     public function touchLastLogin(): void
     {

@@ -5,7 +5,7 @@ namespace App\Support\Registration;
 use App\Enums\AccountRole;
 
 /**
- * Role and organisation captured on the registration page before Google OAuth.
+ * Role captured on the registration page before Google OAuth.
  * Login-page Google sign-in clears this so it cannot relabel an unrelated account.
  */
 final class RegistrationIntent
@@ -29,8 +29,8 @@ final class RegistrationIntent
         session([
             self::SESSION_KEY => [
                 'account_role' => $role,
-                'organisation_type' => $data['organisation_type'] ?? null,
-                'organisation_name' => $data['organisation_name'] ?? null,
+                'organisation_type' => null,
+                'organisation_name' => null,
                 'expires_at' => now()->addMinutes(self::TTL_MINUTES)->getTimestamp(),
             ],
             self::ARMED_KEY => true,
@@ -61,8 +61,8 @@ final class RegistrationIntent
 
         return [
             'account_role' => $intent['account_role'] ?? null,
-            'organisation_type' => $intent['organisation_type'] ?? null,
-            'organisation_name' => $intent['organisation_name'] ?? null,
+            'organisation_type' => null,
+            'organisation_name' => null,
         ];
     }
 

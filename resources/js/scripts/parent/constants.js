@@ -1,4 +1,4 @@
-export const PARENT_VIEWS = ['overview', 'children', 'child', 'learning', 'progress', 'messages', 'reports', 'settings']
+export const PARENT_VIEWS = ['overview', 'children', 'child', 'child-messages', 'learning', 'progress', 'messages', 'reports', 'settings']
 
 export const PARENT_NAV = [
   { id: 'overview', label: 'parent.nav_home', icon: 'bi bi-house' },

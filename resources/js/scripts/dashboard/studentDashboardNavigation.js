@@ -34,10 +34,24 @@ export function studentDashboardPaneFromLocation(locationLike, fallback = 'home'
   return normalizeStudentDashboardPane(hashPane, fallback)
 }
 
-export function studentDashboardUrlForPane(locationLike, pane, { clearContextHash = false } = {}) {
+export function progressWindowFromSearch(search) {
+  const params = new URLSearchParams(String(search || '').replace(/^\?/, ''))
+  const raw = String(params.get('window') || '').trim().toLowerCase()
+  if (raw === 'week') return 'week'
+  if (raw === 'month') return 'month'
+  return null
+}
+
+export function studentDashboardUrlForPane(locationLike, pane, { clearContextHash = false, progressWindow = null } = {}) {
   const base = locationLike?.href || 'http://localhost/progress'
   const url = new URL(base, 'http://localhost')
-  url.searchParams.set('tab', normalizeStudentDashboardPane(pane))
+  const normalized = normalizeStudentDashboardPane(pane)
+  url.searchParams.set('tab', normalized)
+  if (normalized === 'progress' && (progressWindow === 'week' || progressWindow === 'month')) {
+    url.searchParams.set('window', progressWindow)
+  } else {
+    url.searchParams.delete('window')
+  }
   if (clearContextHash && CONTEXT_HASH_PANES[url.hash.toLowerCase()]) url.hash = ''
   return `${url.pathname}${url.search}${url.hash}`
 }

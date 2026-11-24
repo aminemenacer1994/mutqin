@@ -149,7 +149,9 @@ class ParentFamilyDashboardTest extends TestCase
             ->assertJsonPath('summary.completed_assignments', 1)
             ->assertJsonPath('summary.needs_attention', 1)
             ->assertJsonPath('homework.0.status', 'overdue')
-            ->assertJsonPath('feedback.0.excerpt', 'A calm repetition will help this range.');
+            ->assertJsonPath('homework.0.due_soon', false)
+            ->assertJsonPath('feedback.0.excerpt', 'A calm repetition will help this range.')
+            ->assertJsonPath('feedback.0.unread', true);
 
         $this->assertStringNotContainsString('Hidden Child', $response->getContent());
         $this->assertStringNotContainsString('Hidden family feedback', $response->getContent());

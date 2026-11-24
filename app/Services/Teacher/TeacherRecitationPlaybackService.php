@@ -13,6 +13,7 @@ use App\Models\TeacherNote;
 use App\Models\TeacherPrivateNote;
 use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
+use App\Models\TeacherRecitationFeedbackSegment;
 use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
@@ -35,6 +36,7 @@ class TeacherRecitationPlaybackService
         private readonly TeacherAssignmentService $assignments,
         private readonly TeacherPrivateNoteService $privateNotes,
         private readonly TeacherWordCoachingService $coachings,
+        private readonly TeacherRecitationFeedbackSegmentService $segments,
     ) {}
 
     /**
@@ -266,6 +268,73 @@ class TeacherRecitationPlaybackService
         return $this->present($teacher, $student, $attempt);
     }
 
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function storeSegment(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        array $input,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
+    ): array {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $this->segments->store($teacher, $student, $attempt, $input, $audio, $durationMs);
+
+        return $this->present($teacher, $student, $attempt);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function updateSegment(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+        array $input,
+        ?UploadedFile $audio = null,
+        ?int $durationMs = null,
+    ): array {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $this->segments->update($teacher, $student, $attempt, $segment, $input, $audio, $durationMs);
+
+        return $this->present($teacher, $student, $attempt);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function deleteSegment(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+    ): array {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $this->segments->delete($teacher, $student, $attempt, $segment);
+
+        return $this->present($teacher, $student, $attempt);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function deleteSegmentAudio(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherRecitationFeedbackSegment $segment,
+    ): array {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $this->segments->deleteAudio($teacher, $student, $attempt, $segment);
+
+        return $this->present($teacher, $student, $attempt);
+    }
+
     private function authorisedAttempt(User $teacher, User $student, AiReciteAttempt $attempt): AiReciteAttempt
     {
         TeacherFeatures::abortUnlessEnabled();
@@ -390,6 +459,11 @@ class TeacherRecitationPlaybackService
             $duration = (int) $attempt->duration_ms;
         }
 
+        $coachings = $this->coachings->forAttempt($teacher, $attempt, $words);
+        $feedbackSegments = $this->segments->forAttempt($teacher, $attempt);
+        $presentedReview = $this->presentReview($review);
+        $suggestedRevision = $this->revisionRange($attempt, $words);
+
         return [
             'attempt_id' => (int) $attempt->id,
             'student' => [
@@ -407,11 +481,19 @@ class TeacherRecitationPlaybackService
                 'timed_words' => $timed,
                 'total_words' => count($words),
             ],
-            'suggested_revision' => $this->revisionRange($attempt, $words),
-            'review' => $this->presentReview($review),
+            'suggested_revision' => $suggestedRevision,
+            'review' => $presentedReview,
+            'review_summary' => $this->segments->buildReviewSummary(
+                $words,
+                $coachings,
+                $feedbackSegments,
+                $presentedReview,
+                $suggestedRevision,
+            ),
+            'feedback_segments' => $feedbackSegments,
             'assessment' => $this->presentAssessment($teacher, $attempt),
             'history' => $this->presentHistory($teacher, $student, $attempt),
-            'coachings' => $this->coachings->forAttempt($teacher, $attempt, $words),
+            'coachings' => $coachings,
             'transcript' => $this->transcript($attempt),
         ];
     }

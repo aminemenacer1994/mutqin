@@ -19,6 +19,7 @@ use App\Models\TeacherRecitationAssessment;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Teacher\StudentHifzProgressService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\QuranMetadata;
@@ -38,6 +39,7 @@ class ParentChildLearningService
         private readonly TeacherAssignmentService $assignments,
         private readonly StudentHifzProgressService $hifzProgress,
         private readonly AiReciteAttemptAudioService $attemptAudio,
+        private readonly TeacherRecitationFeedbackSegmentService $feedbackSegments,
     ) {}
 
     /**
@@ -344,6 +346,8 @@ class ParentChildLearningService
         $audioAllowed = $this->attemptAudio->hasPlayableAudio($attempt)
             && $this->attemptAudio->canView($parent, $attempt);
 
+        $segments = $this->feedbackSegments->forStudentAttempt($attempt);
+
         return [
             'attempt_id' => (int) $attempt->id,
             'source' => $reviewed ? 'teacher_reviewed' : 'ai_prediction',
@@ -352,6 +356,7 @@ class ParentChildLearningService
             'band' => $attempt->band,
             'teacher_score' => $human?->tajweed_score !== null ? (int) $human->tajweed_score : null,
             'teacher_note' => $this->teacherAssessmentNote($human),
+            'feedback_segments' => $segments,
             'has_recording' => $audioAllowed,
             'recording_url' => $audioAllowed ? '/api/ai-recite-attempts/'.$attempt->id.'/audio' : null,
             'at' => $attempt->created_at?->toIso8601String(),

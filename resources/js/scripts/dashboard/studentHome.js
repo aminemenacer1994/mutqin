@@ -10,17 +10,52 @@ export function isActionableHomeAssignment(row) {
   return learnerNeedsCorrection(row) || ['pending', 'in_progress', 'overdue'].includes(String(row.status || ''))
 }
 
+const ATTENTION_FEEDBACK_RANK = 2
+
 /**
- * Overdue, due today, due tomorrow, or sent back for correction.
+ * Overdue, due today, due tomorrow, due within two days, or sent back for correction.
  * Later work stays in the upcoming list.
  */
-export function homeAttentionAssignments(assignments, now = new Date()) {
+export function homeAttentionAssignments(assignments, now = new Date(), limit = 3) {
   return (Array.isArray(assignments) ? assignments : [])
     .filter((row) => attentionRank(row, now) !== null)
     .sort((a, b) => attentionRank(a, now) - attentionRank(b, now)
       || String(a?.assignment?.due_at || '').localeCompare(String(b?.assignment?.due_at || ''))
       || Number(a.id) - Number(b.id))
-    .slice(0, 3)
+    .slice(0, limit)
+}
+
+/**
+ * Priority: correction / overdue → unread feedback → due soon.
+ * Used to render Needs your attention without duplicate assignment rows elsewhere.
+ */
+export function buildHomeAttentionRows(assignments, unreadFeedback = null, now = new Date(), limit = 4) {
+  const items = homeAttentionAssignments(assignments, now, limit)
+    .map((row) => ({
+      kind: 'assignment',
+      rank: attentionRank(row, now),
+      row,
+      key: `attention-assignment-${row.id}`,
+    }))
+  if (unreadFeedback && (unreadFeedback.id || unreadFeedback.created_at)) {
+    items.push({
+      kind: 'feedback',
+      rank: ATTENTION_FEEDBACK_RANK,
+      row: unreadFeedback,
+      key: `attention-feedback-${unreadFeedback.id || unreadFeedback.created_at}`,
+    })
+  }
+  return items
+    .sort((a, b) => a.rank - b.rank
+      || (a.kind === 'feedback' ? 1 : 0) - (b.kind === 'feedback' ? 1 : 0)
+      || Number(a.row?.id || 0) - Number(b.row?.id || 0))
+    .slice(0, limit)
+}
+
+export function homeAttentionAssignmentIds(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((item) => item?.kind === 'assignment' && item?.row?.id)
+    .map((item) => Number(item.row.id))
 }
 
 /** Dated work after tomorrow, then undated work, excluding anything already in attention. */
@@ -45,6 +80,6 @@ function attentionRank(row, now) {
   if (learnerNeedsCorrection(row)) return 0
   const days = dueDaysFromNow(row?.assignment?.due_at, now)
   if (String(row.status || '') === 'overdue' || (days !== null && days < 0)) return 1
-  if (days === 0 || days === 1) return 2
+  if (days !== null && days >= 0 && days <= 2) return 3
   return null
 }

@@ -45,7 +45,12 @@ final class PlatformContextResolver
         abort_unless($user instanceof User && self::userCanUsePlatform($user, $context), 403);
 
         $request->session()->put(self::SESSION_KEY, $context->value);
+
+        if ($user->preferred_platform !== $context) {
+            $user->forceFill(['preferred_platform' => $context->value])->save();
+        }
     }
+
 
     /**
      * @return list<PlatformContext>

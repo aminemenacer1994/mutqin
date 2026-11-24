@@ -8,7 +8,6 @@ use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Auth\GoogleSignInService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -610,26 +609,28 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertTrue(Hash::check('brand-new-password', $user->fresh()->password));
     }
 
-    public function test_google_prepare_rejects_a_teacher_without_an_organisation(): void
-    {
-        $this->from(route('register'))
-            ->post(route('auth.google.prepare'), [
-                'account_role' => 'teacher',
-            ])->assertRedirect(route('register'))
-            ->assertSessionHasErrors(['organisation_type', 'organisation_name']);
-
-        $this->assertNull(session('mutqin_registration_intent'));
-        $this->assertSame(0, User::count());
-    }
-
-    public function test_google_registration_stores_the_role_without_granting_student_access(): void
+    public function test_google_prepare_accepts_a_teacher_without_an_organisation(): void
     {
         $this->mockGoogleRedirect();
 
         $this->post(route('auth.google.prepare'), [
             'account_role' => 'teacher',
-            'organisation_type' => 'halaqa',
-            'organisation_name' => '  Al   Noor  ',
+        ])->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+
+        $intent = session('mutqin_registration_intent');
+        $this->assertIsArray($intent);
+        $this->assertSame('teacher', $intent['account_role']);
+        $this->assertNull($intent['organisation_type'] ?? null);
+        $this->assertNull($intent['organisation_name'] ?? null);
+        $this->assertSame(0, User::count());
+    }
+
+    public function test_google_registration_stores_the_role_without_an_organisation(): void
+    {
+        $this->mockGoogleRedirect();
+
+        $this->post(route('auth.google.prepare'), [
+            'account_role' => 'teacher',
         ])->assertRedirect('https://accounts.google.com/o/oauth2/auth');
 
         $this->mockGoogleUser([
@@ -645,10 +646,9 @@ class GoogleAuthControllerTest extends TestCase
 
         $teacher = User::where('email', 'teacher-google@example.com')->firstOrFail();
         $this->assertSame(AccountRole::Teacher, $teacher->account_role);
-        $this->assertSame('Al Noor', $teacher->organisation->name);
-        $this->assertSame('al noor', $teacher->organisation->name_canonical);
+        $this->assertNull($teacher->organisation_id);
+        $this->assertSame(0, Organisation::count());
         $this->assertSame(0, GroupMembership::count());
-        $this->assertFalse(Gate::forUser($teacher)->allows('viewMembers', $teacher->organisation));
     }
 
     public function test_login_google_redirect_discards_a_registration_intent(): void

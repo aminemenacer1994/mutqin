@@ -4682,6 +4682,56 @@ body.teacher-recite-modal-open { overflow: hidden; }
   max-block-size: min(90dvh, 42rem);
 }
 
+.dash-modal-root.user-dashboard .dash-modal.dash-student-dialog--has-foot,
+.user-dashboard .dash-modal.dash-student-dialog--has-foot {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.dash-modal-root.user-dashboard .dash-modal__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--dash-space-3, 0.625rem);
+  padding: var(--dash-space-4, 1rem) var(--dash-space-6, 1.25rem);
+  border-top: 1px solid var(--dash-student-border, var(--dash-border-strong));
+  background: color-mix(in srgb, var(--dash-student-panel-soft, var(--dash-soft)) 72%, var(--dash-student-panel, var(--dash-surface)));
+}
+
+.dash-modal-root.user-dashboard .dash-modal__foot .dash-btn {
+  min-height: var(--dash-ds-control-height-sm, 36px);
+}
+
+.dash-modal-root.user-dashboard .learner-assignment-modal__panel.dash-modal {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: min(90dvh, 44rem);
+  overflow: hidden;
+}
+
+.dash-modal-root.user-dashboard .learner-assignment-modal__body {
+  overflow: auto;
+}
+
+.dash-modal-root.user-dashboard .learner-assignment-modal__foot {
+  justify-content: space-between;
+}
+
+.dash-modal-root.user-dashboard .learner-teacher__submission-actions.dash-modal__foot {
+  justify-content: flex-start;
+}
+
+@media (max-width: 575.98px) {
+  .dash-modal-root.user-dashboard .dash-modal__foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dash-modal-root.user-dashboard .dash-modal__foot .dash-btn {
+    width: 100%;
+  }
+}
+
 .user-dashboard .dash-student-dialog .dash-drawer__head {
   padding: 1rem 1.1rem 0.85rem;
   border-bottom: 1px solid var(--dash-student-border);

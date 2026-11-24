@@ -1,22 +1,41 @@
 <template>
-  <div class="ach-panel">
+  <div class="ach-progress" :class="{ 'ach-progress--preview': mode === 'preview' }">
     <section
-      v-for="tier in visibleTiers"
-      :key="tier.id"
-      class="ach-panel__tier"
-      :class="{ 'is-closed': !tier.open }"
-      :aria-labelledby="`ach-tier-${tier.id}`"
+      v-if="nextMilestone"
+      class="ach-progress__block ach-progress__block--hero"
+      :aria-labelledby="nextHeadingId"
     >
-      <header class="ach-panel__tier-head">
-        <div class="ach-panel__tier-copy">
-          <h3 :id="`ach-tier-${tier.id}`">{{ tierTitle(tier) }}</h3>
-          <p v-if="tierHint(tier)">{{ tierHint(tier) }}</p>
-        </div>
-        <span class="ach-panel__tier-count">{{ tierCount(tier) }}</span>
-      </header>
-      <div class="ach-panel__grid" role="list">
-        <AchievementBadgeCard
-          v-for="item in sortedItems(tier)"
+      <h3 :id="nextHeadingId" class="ach-progress__heading">{{ nextMilestoneLabel }}</h3>
+      <AchievementCard
+        :item="nextMilestone"
+        :locale="locale"
+        :title="nameFor(nextMilestone)"
+        :description="descriptionFor(nextMilestone)"
+        :meaning="resolveMeaning(nextMilestone)"
+        :how-to-earn="resolveHow(nextMilestone)"
+        :status-label="resolveStatus(nextMilestone)"
+        :progress-label="progressFor(nextMilestone)"
+        :requirement="requirementFor(nextMilestone)"
+        :unlock-prefix="unlockPrefix"
+        :expand-desc-label="expandDescLabel"
+        :collapse-desc-label="collapseDescLabel"
+        variant="hero"
+      />
+    </section>
+
+    <p v-if="summaryLine" class="ach-progress__summary" role="status">
+      {{ summaryLine }}
+    </p>
+
+    <section
+      v-if="earnedItems.length"
+      class="ach-progress__block"
+      :aria-labelledby="earnedHeadingId"
+    >
+      <h3 :id="earnedHeadingId" class="ach-progress__heading">{{ earnedSectionLabel }}</h3>
+      <div class="ach-progress__grid ach-progress__grid--earned" role="list">
+        <AchievementCard
+          v-for="item in earnedItems"
           :key="item.id"
           role="listitem"
           :item="item"
@@ -24,55 +43,182 @@
           :title="nameFor(item)"
           :description="descriptionFor(item)"
           :meaning="resolveMeaning(item)"
+          :how-to-earn="resolveHow(item)"
           :status-label="resolveStatus(item)"
           :progress-label="progressFor(item)"
           :requirement="requirementFor(item)"
           :unlock-prefix="unlockPrefix"
+          :expand-desc-label="expandDescLabel"
+          :collapse-desc-label="collapseDescLabel"
+          variant="compact"
         />
       </div>
     </section>
 
-    <button
-      v-if="hasMoreTiers"
-      type="button"
-      class="dash-btn dash-btn--ghost ach-panel__more"
-      :aria-expanded="showMore ? 'true' : 'false'"
-      @click="showMore = !showMore"
+    <section
+      v-if="inProgressItems.length"
+      class="ach-progress__block"
+      :aria-labelledby="inProgressHeadingId"
     >
-      {{ showMore ? showLessLabel : showMoreLabel }}
-    </button>
+      <h3 :id="inProgressHeadingId" class="ach-progress__heading">{{ inProgressSectionLabel }}</h3>
+      <div class="ach-progress__list" role="list">
+        <AchievementCard
+          v-for="item in inProgressItems"
+          :key="item.id"
+          role="listitem"
+          :item="item"
+          :locale="locale"
+          :title="nameFor(item)"
+          :description="descriptionFor(item)"
+          :meaning="resolveMeaning(item)"
+          :how-to-earn="resolveHow(item)"
+          :status-label="resolveStatus(item)"
+          :progress-label="progressFor(item)"
+          :requirement="requirementFor(item)"
+          :unlock-prefix="unlockPrefix"
+          :expand-desc-label="expandDescLabel"
+          :collapse-desc-label="collapseDescLabel"
+          variant="row"
+        />
+      </div>
+    </section>
+
+    <template v-if="showTierGroups">
+      <section
+        v-for="tier in tierGroups"
+        :key="tier.id"
+        class="ach-progress__tier"
+        :class="{ 'is-expanded': tierOpen[tier.id] }"
+      >
+        <header class="ach-progress__tier-head">
+          <button
+            type="button"
+            class="ach-progress__tier-toggle"
+            :aria-expanded="tierOpen[tier.id] ? 'true' : 'false'"
+            :aria-controls="`ach-tier-${tier.id}`"
+            @click="toggleTier(tier.id)"
+          >
+            <span class="ach-progress__tier-copy">
+              <span class="ach-progress__tier-title">{{ tierTitle(tier) }}</span>
+              <span v-if="tierHint(tier)" class="ach-progress__tier-hint">{{ tierHint(tier) }}</span>
+            </span>
+            <span class="ach-progress__tier-meta">
+              <span class="ach-progress__tier-count">{{ tierCount(tier) }}</span>
+              <i class="bi ach-progress__tier-chevron" :class="tierOpen[tier.id] ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+            </span>
+          </button>
+        </header>
+        <div
+          v-show="tierOpen[tier.id]"
+          :id="`ach-tier-${tier.id}`"
+          class="ach-progress__grid ach-progress__grid--locked"
+          role="list"
+        >
+          <AchievementCard
+            v-for="item in lockedInTier(tier)"
+            :key="item.id"
+            role="listitem"
+            :item="item"
+            :locale="locale"
+            :title="nameFor(item)"
+            :description="descriptionFor(item)"
+            :meaning="resolveMeaning(item)"
+            :how-to-earn="resolveHow(item)"
+            :status-label="resolveStatus(item)"
+            :progress-label="progressFor(item)"
+            :requirement="requirementFor(item)"
+            :unlock-prefix="unlockPrefix"
+            :expand-desc-label="expandDescLabel"
+            :collapse-desc-label="collapseDescLabel"
+            variant="compact"
+          />
+        </div>
+      </section>
+    </template>
   </div>
 </template>
 
 <script>
-import AchievementBadgeCard from './AchievementBadgeCard.vue'
+import AchievementCard from './AchievementCard.vue'
+
+const TIER_ORDER = ['beginner', 'intermediate', 'advanced']
 
 export default {
   name: 'AchievementsPanel',
-  components: { AchievementBadgeCard },
+  components: { AchievementCard },
   props: {
     items: { type: Array, default: () => [] },
     tiers: { type: Array, default: () => [] },
+    next: { type: Object, default: null },
+    activeTier: { type: String, default: '' },
+    unlockedCount: { type: Number, default: null },
+    totalCount: { type: Number, default: null },
+    mode: { type: String, default: 'full' },
     locale: { type: String, default: 'en' },
-    showMoreLabel: { type: String, default: 'Show more' },
-    showLessLabel: { type: String, default: 'Show less' },
+    nextMilestoneLabel: { type: String, default: 'Next milestone' },
+    earnedSectionLabel: { type: String, default: 'Earned' },
+    inProgressSectionLabel: { type: String, default: 'In progress' },
+    summaryTemplate: { type: String, default: '{earned} of {total} earned' },
+    expandDescLabel: { type: String, default: 'More' },
+    collapseDescLabel: { type: String, default: 'Less' },
+    unlockPrefix: { type: String, default: '' },
     nameFor: { type: Function, required: true },
     descriptionFor: { type: Function, required: true },
     meaningFor: { type: Function, required: true },
+    howLabelFor: { type: Function, default: null },
     statusFor: { type: Function, required: true },
     progressFor: { type: Function, required: true },
     requirementFor: { type: Function, required: true },
     tierTitleFor: { type: Function, required: true },
     tierHintFor: { type: Function, required: true },
-    unlockPrefix: { type: String, default: '' },
   },
   data() {
     return {
-      showMore: false,
-      autoExpanded: false,
+      tierOpen: { beginner: false, intermediate: false, advanced: false },
+      uid: Math.random().toString(36).slice(2, 9),
     }
   },
   computed: {
+    nextHeadingId() {
+      return `ach-next-${this.uid}`
+    },
+    earnedHeadingId() {
+      return `ach-earned-${this.uid}`
+    },
+    inProgressHeadingId() {
+      return `ach-progress-${this.uid}`
+    },
+    allItems() {
+      return Array.isArray(this.items) ? this.items : []
+    },
+    nextMilestone() {
+      if (this.next?.id) return this.next
+      return this.allItems.find((item) => item.is_next) || null
+    },
+    earnedItems() {
+      const earned = this.allItems.filter((item) => item.state === 'unlocked')
+      earned.sort((a, b) => String(b.unlocked_at || '').localeCompare(String(a.unlocked_at || '')))
+      return earned
+    },
+    inProgressItems() {
+      const nextId = this.nextMilestone?.id
+      return this.allItems.filter((item) => {
+        if (item.state !== 'in_progress') return false
+        if (nextId && item.id === nextId) return false
+        return true
+      })
+    },
+    summaryLine() {
+      const earned = this.unlockedCount != null ? this.unlockedCount : this.earnedItems.length
+      const total = this.totalCount != null ? this.totalCount : this.allItems.length
+      if (total <= 0) return ''
+      return this.summaryTemplate
+        .replace('{earned}', String(earned))
+        .replace('{total}', String(total))
+    },
+    showTierGroups() {
+      return this.mode === 'full'
+    },
     tierGroups() {
       if (Array.isArray(this.tiers) && this.tiers.length) {
         return this.tiers.map((tier) => ({
@@ -80,57 +226,32 @@ export default {
           items: Array.isArray(tier.items) ? tier.items : [],
         }))
       }
-      const order = ['beginner', 'intermediate', 'advanced']
       const map = {}
-      ;(Array.isArray(this.items) ? this.items : []).forEach((item) => {
+      this.allItems.forEach((item) => {
         const id = item?.tier || 'beginner'
         if (!map[id]) {
-          map[id] = {
-            id,
-            open: true,
-            unlocked_count: 0,
-            total_count: 0,
-            complete: false,
-            items: [],
-          }
+          map[id] = { id, items: [], unlocked_count: 0, total_count: 0 }
         }
         map[id].items.push(item)
         map[id].total_count += 1
         if (item.state === 'unlocked') map[id].unlocked_count += 1
       })
-      order.forEach((id) => {
-        if (!map[id]) return
-        map[id].complete = map[id].unlocked_count >= map[id].total_count && map[id].total_count > 0
-        map[id].open = true
-      })
-      return order.map((id) => map[id]).filter(Boolean)
+      return TIER_ORDER.map((id) => map[id]).filter(Boolean)
     },
-    hasMoreTiers() {
-      return this.tierGroups.length > 1
-    },
-    beginnerComplete() {
-      const beginner = this.tierGroups.find((tier) => tier.id === 'beginner')
-      return !!beginner?.complete
-    },
-    nextOutsideBeginner() {
-      return this.tierGroups.slice(1).some((tier) =>
-        (tier.items || []).some((item) => item.is_next || item.state === 'in_progress')
-      )
-    },
-    visibleTiers() {
-      if (this.showMore) return this.tierGroups
-      return this.tierGroups.slice(0, 1)
+    defaultOpenTier() {
+      if (this.activeTier && TIER_ORDER.includes(this.activeTier)) return this.activeTier
+      const fromNext = this.nextMilestone?.tier
+      if (fromNext && TIER_ORDER.includes(fromNext)) return fromNext
+      return 'beginner'
     },
   },
   watch: {
-    tierGroups: {
+    defaultOpenTier: {
       immediate: true,
-      handler() {
-        if (this.autoExpanded) return
-        if (this.beginnerComplete || this.nextOutsideBeginner) {
-          this.showMore = true
-          this.autoExpanded = true
-        }
+      handler(tier) {
+        TIER_ORDER.forEach((id) => {
+          this.tierOpen[id] = id === tier
+        })
       },
     },
   },
@@ -144,27 +265,24 @@ export default {
     tierCount(tier) {
       return `${tier.unlocked_count || 0} / ${tier.total_count || 0}`
     },
-    sortedItems(tier) {
-      const items = Array.isArray(tier?.items) ? [...tier.items] : []
-      const rank = (item) => {
-        if (item.is_next) return 0
-        if (item.state === 'in_progress') return 1
-        if (item.state === 'unlocked') return 2
-        return 3
-      }
-      items.sort((a, b) => {
-        const ra = rank(a)
-        const rb = rank(b)
-        if (ra !== rb) return ra - rb
-        return (a.sort || 0) - (b.sort || 0)
-      })
-      return items
+    lockedInTier(tier) {
+      const items = Array.isArray(tier?.items) ? tier.items : []
+      return items.filter((item) => item.state === 'locked')
+    },
+    toggleTier(id) {
+      this.tierOpen = { ...this.tierOpen, [id]: !this.tierOpen[id] }
     },
     resolveMeaning(item) {
       return this.meaningFor(item) || ''
     },
     resolveStatus(item) {
       return this.statusFor(item) || ''
+    },
+    resolveHow(item) {
+      if (typeof this.howLabelFor === 'function') {
+        return this.howLabelFor(item) || ''
+      }
+      return ''
     },
   },
 }

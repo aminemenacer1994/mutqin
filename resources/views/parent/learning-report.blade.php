@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <title>Learning report {{ $report['period_label'] }}</title>
     <style>
-        body { font-family: Georgia, "Times New Roman", serif; color: #21180f; margin: 32px; line-height: 1.45; }
+        @page { size: A4; margin: 16mm; }
+        body { font-family: Georgia, "Times New Roman", serif; color: #21180f; margin: 0; line-height: 1.45; }
         h1 { font-size: 28px; margin: 0 0 8px; }
         h2 { font-size: 18px; margin: 24px 0 8px; }
         p, li { font-size: 16px; }

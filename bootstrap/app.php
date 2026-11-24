@@ -43,10 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // Public signup must not use web/api stacks — Sanctum treats
             // Origin mutqin.ai as stateful and CSRF-checks /api/* (419).
             Route::post('/join-waiting-list', [WaitingListController::class, 'store'])
-                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1'])
+                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1,waiting-list-public'])
                 ->name('waiting-list.public-store');
             Route::post('/api/waiting-list', [WaitingListController::class, 'store'])
-                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1'])
+                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1,api-waiting-list'])
                 ->name('api.waiting-list.store');
 
             Route::middleware('web')->group(function (): void {

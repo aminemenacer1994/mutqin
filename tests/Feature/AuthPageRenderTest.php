@@ -156,8 +156,13 @@ class AuthPageRenderTest extends TestCase
             ->assertSee(__('ui.auth_register_heading'))
             ->assertDontSee('auth-offer', false)
             ->assertSee(__('ui.continue_google'))
-            ->assertDontSee('class="auth-role"', false)
-            ->assertDontSee('id="account-role-individual"', false)
+            ->assertSee('data-register-step="account"', false)
+            ->assertSee('data-register-step="purpose"', false)
+            ->assertSee('class="auth-role"', false)
+            ->assertSee('id="account-role-individual"', false)
+            ->assertSee(__('ui.auth_role_prompt'))
+            ->assertSee(__('ui.auth_purpose_heading'))
+            ->assertDontSee('name="organisation_type"', false)
             ->assertSee(__('ui.create_account'));
     }
 
@@ -255,7 +260,25 @@ class AuthPageRenderTest extends TestCase
             'auth_role_individual',
             'auth_role_student',
             'auth_role_teacher',
+            'auth_role_parent',
             'auth_role_invalid',
+            'auth_role_individual_title',
+            'auth_role_individual_lede',
+            'auth_role_student_title',
+            'auth_role_student_lede',
+            'auth_role_teacher_title',
+            'auth_role_teacher_lede',
+            'auth_role_parent_title',
+            'auth_role_parent_lede',
+            'auth_register_step',
+            'auth_register_back',
+            'auth_purpose_heading',
+            'auth_purpose_subtitle',
+            'connections_connect_title',
+            'connections_connect_lede',
+            'connections_connect_action',
+            'connections_status_none',
+            'connections_work_independently',
             'auth_org_type',
             'auth_org_type_placeholder',
             'auth_org_type_halaqa',

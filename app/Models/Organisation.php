@@ -31,4 +31,10 @@ class Organisation extends Model
     {
         return $this->hasMany(LearningGroup::class);
     }
+
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(OrganisationMembership::class);
+    }
 }
+

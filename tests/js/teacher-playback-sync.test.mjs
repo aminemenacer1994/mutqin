@@ -6,6 +6,7 @@ import {
   ayahRepeatWindow,
   ayahStartTime,
   flaggedWordAt,
+  isValidSegmentMs,
   playbackSummary,
   wordWindow,
 } from '../../resources/js/scripts/teacher/playbackSync.js'
@@ -54,4 +55,10 @@ test('summary counts checker states without turning uncertain words into flags',
   assert.equal(summary.ayahs[1].start, null)
   assert.equal(summary.items.find((item) => item.status === 'incorrect').recognised, 'اعوذ')
   assert.equal(summary.items.find((item) => item.status === 'skipped').start, null)
+})
+
+test('segment milliseconds reject invalid windows and honour duration', () => {
+  assert.equal(isValidSegmentMs(0, 500, 4200), true)
+  assert.equal(isValidSegmentMs(500, 400, 4200), false)
+  assert.equal(isValidSegmentMs(0, 5000, 4200), false)
 })

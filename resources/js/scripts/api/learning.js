@@ -716,6 +716,48 @@ export const learningApi = {
     const { data } = await http.post(`/me/memberships/${membershipId}/consent`)
     return data
   },
+  async redeemLearnerClassInvite(code) {
+    const { data } = await http.post('/me/class-invites/redeem', { code })
+    return data
+  },
+  async approveLearnerGuardian(linkId) {
+    const { data } = await http.post(`/me/guardians/${linkId}/approve`)
+    return data
+  },
+  async rejectLearnerGuardian(linkId) {
+    const { data } = await http.post(`/me/guardians/${linkId}/reject`)
+    return data
+  },
+  async getOrganisationMemberships() {
+    const { data } = await http.get('/organisations/memberships')
+    return data
+  },
+  async joinOrganisation(payload) {
+    const { data } = await http.post('/organisations/memberships', payload)
+    return data
+  },
+  async switchOrganisation(organisationId) {
+    const { data } = await http.post(`/organisations/${organisationId}/switch`)
+    return data
+  },
+  async getPendingOrganisationMemberships() {
+    const { data } = await http.get('/organisations/memberships/pending')
+    return data
+  },
+  async reviewOrganisationMembership(membershipId, action) {
+    const { data } = await http.post(`/organisations/memberships/${membershipId}/${action}`)
+    return data
+  },
+  async createTeacherClassInvite(groupId, email = '') {
+    const { data } = await http.post(`/teacher/groups/${groupId}/invitations`, { email: email || null })
+    return data
+  },
+  async transferTeacherMembership(membershipId, learningGroupId) {
+    const { data } = await http.post(`/teacher/memberships/${membershipId}/transfer`, {
+      learning_group_id: learningGroupId,
+    })
+    return data
+  },
   async startLearnerAssignment(recipientId) {
     const { data } = await http.post(`/me/assignments/${recipientId}/start`)
     return data
@@ -973,6 +1015,40 @@ export const learningApi = {
   },
   async deleteTeacherWordCoachingAudio(studentId, attemptId, correctionId) {
     const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/corrections/${correctionId}/audio`)
+    return data
+  },
+  async saveTeacherFeedbackSegment(studentId, attemptId, payload = {}, recording = null) {
+    const form = new FormData()
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      form.append(key, String(value))
+    })
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/students/${studentId}/attempts/${attemptId}/playback/segments`, form)
+    return data
+  },
+  async updateTeacherFeedbackSegment(studentId, attemptId, segmentId, payload = {}, recording = null) {
+    const form = new FormData()
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      form.append(key, String(value))
+    })
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.patch(`/teacher/students/${studentId}/attempts/${attemptId}/playback/segments/${segmentId}`, form)
+    return data
+  },
+  async deleteTeacherFeedbackSegment(studentId, attemptId, segmentId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/segments/${segmentId}`)
+    return data
+  },
+  async deleteTeacherFeedbackSegmentAudio(studentId, attemptId, segmentId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/segments/${segmentId}/audio`)
     return data
   },
   async saveTeacherNote(studentId, payload = {}, recording = null) {

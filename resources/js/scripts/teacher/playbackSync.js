@@ -126,6 +126,28 @@ export function ayahAtTime(words, currentTime) {
   return ayah
 }
 
+export function msToSeconds(ms) {
+  const value = Number(ms)
+  if (!Number.isFinite(value) || value < 0) return null
+  return value / 1000
+}
+
+export function secondsToMs(seconds) {
+  const value = Number(seconds)
+  if (!Number.isFinite(value) || value < 0) return null
+  return Math.round(value * 1000)
+}
+
+/** True when 0 <= start < end and end fits duration when known. */
+export function isValidSegmentMs(startMs, endMs, durationMs = null) {
+  const start = Number(startMs)
+  const end = Number(endMs)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) return false
+  const duration = Number(durationMs)
+  if (Number.isFinite(duration) && duration > 0 && end > duration) return false
+  return true
+}
+
 export function playbackSummary(words) {
   const counts = { flagged: 0, uncertain: 0, skipped: 0, correct: 0 }
   const ayahs = new Map()
