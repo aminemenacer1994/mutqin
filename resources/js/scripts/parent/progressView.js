@@ -1,4 +1,5 @@
 const TREND_MIN_BUCKETS = 2
+const EMPTY_METRIC = '—'
 
 function rangeLabel(range) {
   if (!range?.surah_name) return ''
@@ -74,6 +75,25 @@ export function lifetimeMetricRows(t, payload) {
   return rows
 }
 
+function homeworkPeriodMetric(t, assignments) {
+  const due = Number(assignments.due || 0)
+  const completed = Number(assignments.completed || 0)
+  if (due === 0) {
+    return {
+      value: EMPTY_METRIC,
+      hint: t('parent.progress_trends_empty'),
+      empty: true,
+    }
+  }
+  const value = assignments.completion_percent != null
+    ? t('parent.progress_assignments_rate', { n: assignments.completion_percent })
+    : t('parent.progress_assignments_due_completed', { due, completed })
+  const hint = assignments.missed
+    ? t('parent.progress_assignments_missed_count', { n: assignments.missed })
+    : ''
+  return { value, hint, empty: false }
+}
+
 export function periodMetricRows(t, payload, window) {
   const practice = payload?.practice_volume || {}
   const assignments = payload?.assignment_completion || {}
@@ -84,70 +104,53 @@ export function periodMetricRows(t, payload, window) {
       label: t('parent.kpi_practice'),
       value: practice.ayah_rows ?? 0,
       hint: t('parent.progress_practice_hint', { when }),
+      empty: false,
     },
   ]
   if (assignments.due !== undefined) {
-    const due = Number(assignments.due || 0)
-    const completed = Number(assignments.completed || 0)
+    const homework = homeworkPeriodMetric(t, assignments)
     rows.push({
       key: 'assignments',
       label: t('parent.progress_assignments'),
-      value: due === 0
-        ? t('parent.progress_trends_empty')
-        : assignments.completion_percent != null
-          ? t('parent.progress_assignments_rate', { n: assignments.completion_percent })
-          : t('parent.progress_assignments_due_completed', { due, completed }),
-      hint: due > 0 && assignments.missed
-        ? t('parent.progress_assignments_missed_count', { n: assignments.missed })
-        : '',
-    })
-  }
-  const pendingRevision = (payload?.recommendations || []).length
-  if (pendingRevision) {
-    rows.push({
-      key: 'revision_suggested',
-      label: t('parent.progress_revision'),
-      value: pendingRevision,
-      hint: t('parent.progress_suggests'),
+      ...homework,
     })
   }
   return rows
 }
 
-export function coreMetricCards(t, payload, window) {
-  const coverage = payload?.coverage || {}
+/** Period-only overview cards (no lifetime memorisation totals). */
+export function progressSummaryCards(t, payload, window) {
   const practice = payload?.practice_volume || {}
+  const assignments = payload?.assignment_completion || {}
   const when = t(window === 'week' ? 'parent.progress_when_week' : 'parent.progress_when_month')
+  const homework = homeworkPeriodMetric(t, assignments)
   return [
-    {
-      key: 'memorised',
-      label: t('parent.kpi_memorised'),
-      value: coverage.memorised_ayahs ?? 0,
-      detail: bucketLine(coverage.ranges) || t('parent.progress_none_yet'),
-      icon: 'bi bi-journal-bookmark',
-    },
-    {
-      key: 'learning',
-      label: t('parent.progress_current_learning'),
-      value: coverage.learning_ayahs ?? 0,
-      detail: bucketLine(coverage.new_memorisation) || t('parent.learning_empty'),
-      icon: 'bi bi-pencil',
-    },
-    {
-      key: 'revision',
-      label: t('parent.progress_revision'),
-      value: coverage.reviewing_ayahs ?? 0,
-      detail: (payload?.recommendations || []).length
-        ? t('parent.progress_revision_suggested', { n: (payload.recommendations || []).length })
-        : bucketLine(coverage.recent_revision) || t('parent.progress_none_yet'),
-      icon: 'bi bi-arrow-repeat',
-    },
     {
       key: 'practice',
       label: t('parent.kpi_practice'),
       value: practice.ayah_rows ?? 0,
-      detail: t('parent.progress_practice_hint', { when }),
+      hint: t('parent.progress_practice_hint', { when }),
       icon: 'bi bi-activity',
+      empty: false,
+    },
+    {
+      key: 'assignments',
+      label: t('parent.progress_assignments'),
+      value: homework.value,
+      hint: homework.hint || t('parent.progress_period_scope', { when }),
+      icon: 'bi bi-journal-check',
+      empty: homework.empty,
     },
   ]
+}
+
+export function teacherReviewedAssessments(assessments, limit = 3) {
+  return (Array.isArray(assessments) ? assessments : [])
+    .filter((row) => row && typeof row === 'object' && Object.keys(row).length > 0)
+    .filter(
+      (row) =>
+        row.source === 'teacher_reviewed'
+        && (row.teacher_note || row.word_match_percent != null || row.teacher_score != null),
+    )
+    .slice(0, limit)
 }

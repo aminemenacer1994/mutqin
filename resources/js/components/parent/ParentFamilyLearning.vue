@@ -102,8 +102,9 @@
       <DashModalRoot
         :open="Boolean(active)"
         labelled-by="parent-task-title"
-        root-class="parent-modal-root"
-        panel-class="parent-modal"
+        root-class="parent-modal-root parent-homework-detail"
+        panel-class="parent-modal parent-homework-detail__panel"
+        test-id="parent-homework-detail-modal"
         @close="active = null"
       >
         <template v-if="active">
@@ -139,10 +140,20 @@
               <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </header>
-          <div class="parent-modal__body">
-            <p v-if="active.instructions">{{ active.instructions }}</p>
-            <p v-if="teacherNote(active)">{{ teacherNote(active) }}</p>
-            <p v-if="!active.instructions && !teacherNote(active)" class="parent-modal__quiet">{{ t('parent.task_no_note') }}</p>
+          <div class="parent-modal__body parent-homework-detail__body">
+            <section v-if="active.instructions" class="learner-assignment-modal__section">
+              <h3>{{ t('parent.instructions') }}</h3>
+              <p dir="auto">{{ active.instructions }}</p>
+            </section>
+            <section v-if="assignmentFeedback(active)" class="learner-assignment-modal__section parent-homework-detail__feedback">
+              <h3><i class="bi bi-chat-left-quote" aria-hidden="true"></i>{{ t('parent.teacher_feedback') }}</h3>
+              <p dir="auto">{{ assignmentFeedback(active) }}</p>
+            </section>
+            <section v-if="reviewedAssessment(active)" class="learner-assignment-modal__section">
+              <h3>{{ t('parent.assessment_heading') }}</h3>
+              <ParentAssessmentCard :assessment="reviewedAssessment(active)" />
+            </section>
+            <p v-if="!detailHasContent(active)" class="parent-modal__quiet">{{ t('parent.task_no_note') }}</p>
           </div>
         </template>
       </DashModalRoot>
@@ -155,21 +166,25 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { activityIcon, activityName, formatWhen, passageLabel } from '../../scripts/parent/dashboard'
 import {
   hasLearningFiltersActive,
+  homeworkDetailHasContent,
   homeworkDisplayStatusClass,
   homeworkDisplayStatusIcon,
   homeworkDisplayStatusKey,
   passageTitleDirection,
   resetLearningFilters,
+  sharedReviewedAssessment,
   sortLearningRows,
+  visibleAssignmentFeedback,
 } from '../../scripts/parent/familyLearning'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
+import ParentAssessmentCard from './ParentAssessmentCard.vue'
 import ParentChildLearningFilters from './ParentChildLearningFilters.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import NetworkFallback from '../NetworkFallback.vue'
 
 export default {
   name: 'ParentFamilyLearning',
-  components: { DashModalRoot, ParentChildLearningFilters, TeacherEmpty, NetworkFallback },
+  components: { DashModalRoot, ParentAssessmentCard, ParentChildLearningFilters, TeacherEmpty, NetworkFallback },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
@@ -238,25 +253,13 @@ export default {
         assignment.due_at ? this.t('parent.homework_due_short', { when: formatWhen(assignment.due_at) }) : '',
       ].filter(Boolean).join(' · ')
     },
-    taskMeta(item) {
-      const assignment = item.assignment || {}
-      return [
-        item.child_name,
-        activityName(this.t, assignment.activity),
-        assignment.due_at ? this.t('parent.homework_due_short', { when: formatWhen(assignment.due_at) }) : '',
-        item.teacher_name,
-      ].filter(Boolean).join(' · ')
-    },
     dueLabel(item) {
       const dueAt = item.assignment?.due_at
       return dueAt ? this.t('parent.homework_due_short', { when: formatWhen(dueAt) }) : this.t('parent.not_yet')
     },
-    teacherNote(item) {
-      if (item.teacher_feedback) return item.teacher_feedback
-      const assessment = item.latest_assessment
-      if (assessment?.source === 'teacher_reviewed' && assessment.teacher_note) return assessment.teacher_note
-      return ''
-    },
+    assignmentFeedback: visibleAssignmentFeedback,
+    reviewedAssessment: sharedReviewedAssessment,
+    detailHasContent: homeworkDetailHasContent,
     statusLabel(status) {
       const key = `parent.homework_${homeworkDisplayStatusKey(status)}`
       const label = this.t(key)

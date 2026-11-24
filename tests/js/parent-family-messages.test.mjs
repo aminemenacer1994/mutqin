@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { conversationKey, createSearchDebouncer, filterConversations, matchContextFeedback } from '../../resources/js/scripts/parent/messages.js'
+import {
+  contextFeedbackForThread,
+  conversationKey,
+  createSearchDebouncer,
+  filterConversations,
+  matchContextFeedback,
+} from '../../resources/js/scripts/parent/messages.js'
 import { formatConversationWhen } from '../../resources/js/scripts/parent/dashboard.js'
 
 test('createSearchDebouncer batches search updates', async () => {
@@ -26,6 +32,14 @@ test('filterConversations respects child filter, unread toggle, and search', () 
   assert.equal(filterConversations(rows, { unreadOnly: true }).length, 1)
   assert.equal(filterConversations(rows, { query: 'homework' }).length, 1)
   assert.equal(filterConversations(rows, { query: 'missing' }).length, 0)
+})
+
+test('contextFeedbackForThread hides formal feedback already present in the thread', () => {
+  const feedback = [{ child_id: 10, teacher_id: 1, excerpt: 'Good tajweed' }]
+  const active = { child_id: 10, teacher_id: 1 }
+  const messages = [{ body: 'Good tajweed on the first ayah.' }]
+  assert.equal(contextFeedbackForThread(feedback, active, messages), null)
+  assert.deepEqual(contextFeedbackForThread(feedback, active, []), feedback[0])
 })
 
 test('matchContextFeedback only links feedback for the active thread', () => {

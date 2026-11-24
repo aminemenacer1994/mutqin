@@ -1,0 +1,78 @@
+{
+  "parent": [
+    {
+      "viewport": "desktop",
+      "theme": "light",
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "theme": "dark",
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "theme": "ar",
+      "issues": []
+    },
+    {
+      "viewport": "tablet",
+      "theme": "light",
+      "issues": [
+        "nav missing: reports"
+      ]
+    },
+    {
+      "viewport": "tablet",
+      "theme": "dark",
+      "issues": [
+        "nav missing: reports"
+      ]
+    },
+    {
+      "viewport": "tablet",
+      "theme": "ar",
+      "issues": [
+        "nav missing: reports"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "theme": "light",
+      "issues": [
+        "nav missing: reports"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "theme": "dark",
+      "issues": [
+        "nav missing: reports"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "theme": "ar",
+      "issues": [
+        "nav missing: reports"
+      ]
+    }
+  ],
+  "teacher": [
+    {
+      "theme": "light",
+      "tokens": {
+        "fontFamily": "\"Plus Jakarta Sans\", \"Source Sans 3\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "background": "rgb(246, 243, 238)"
+      }
+    },
+    {
+      "theme": "dark",
+      "tokens": {
+        "fontFamily": "\"Plus Jakarta Sans\", \"Source Sans 3\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "background": "rgb(20, 17, 15)"
+      }
+    }
+  ],
+  "integration": []
+}

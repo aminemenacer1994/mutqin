@@ -23,7 +23,7 @@
         <input v-model="search" type="search" :placeholder="searchLabel" autocomplete="off">
       </label>
     </header>
-    <p v-if="contextFeedback" class="teacher-direct-thread__context parent-messages-context-feedback">
+    <p v-if="contextFeedback" class="teacher-direct-thread__context parent-messages-context-feedback is-formal">
       <span class="parent-messages-context-feedback__copy">
         <strong>{{ t('parent.messages_context_feedback') }}</strong>
         <span dir="auto">{{ contextFeedback.excerpt }}</span>

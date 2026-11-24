@@ -4,12 +4,15 @@ import assert from 'node:assert/strict'
 import {
   DEFAULT_LEARNING_FILTERS,
   hasLearningFiltersActive,
+  homeworkDetailHasContent,
   homeworkDisplayStatusClass,
   homeworkDisplayStatusKey,
   isLearningRowOverdue,
   passageTitleDirection,
   resetLearningFilters,
+  sharedReviewedAssessment,
   sortLearningRows,
+  visibleAssignmentFeedback,
 } from '../../resources/js/scripts/parent/familyLearning.js'
 
 test('hasLearningFiltersActive respects defaults', () => {
@@ -49,4 +52,21 @@ test('homework status mapping helpers stay stable', () => {
 test('passageTitleDirection detects Arabic surah names', () => {
   assert.equal(passageTitleDirection('Al-Baqarah'), 'ltr')
   assert.equal(passageTitleDirection('البقرة'), 'rtl')
+})
+
+test('visibleAssignmentFeedback hides duplicates shared with reviewed assessment', () => {
+  const row = {
+    teacher_feedback: 'Steady pace.',
+    latest_assessment: { source: 'teacher_reviewed', teacher_note: 'Steady pace.' },
+  }
+  assert.equal(visibleAssignmentFeedback(row), '')
+  assert.ok(sharedReviewedAssessment(row))
+})
+
+test('sharedReviewedAssessment ignores automatic checks', () => {
+  const row = {
+    latest_assessment: { source: 'ai_prediction', word_match_percent: 88, teacher_note: '' },
+  }
+  assert.equal(sharedReviewedAssessment(row), null)
+  assert.equal(homeworkDetailHasContent({ instructions: 'Read aloud.' }), true)
 })

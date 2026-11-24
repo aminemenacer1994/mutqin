@@ -46,6 +46,23 @@ export function matchContextFeedback(feedback, active) {
   )
 }
 
+function normaliseThreadText(value) {
+  return String(value || '').trim().toLocaleLowerCase()
+}
+
+export function contextFeedbackForThread(feedback, active, messages = []) {
+  const row = matchContextFeedback(feedback, active)
+  if (!row?.excerpt) return null
+  const excerpt = normaliseThreadText(row.excerpt)
+  if (!excerpt) return null
+  const rows = Array.isArray(messages) ? messages : []
+  const duplicated = rows.some((message) => {
+    const body = normaliseThreadText(message?.body)
+    return body && (body === excerpt || body.includes(excerpt) || excerpt.includes(body))
+  })
+  return duplicated ? null : row
+}
+
 export function conversationKey(row) {
   return `${row.teacher_id}-${row.child_id}`
 }

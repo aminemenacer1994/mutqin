@@ -1,10 +1,10 @@
 <template>
-  <section class="parent-home">
-    <header class="parent-page parent-progress__head">
-      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+  <section class="parent-home parent-progress-page teacher-stack">
+    <header class="teacher-page-header parent-progress__head">
       <div class="parent-progress__head-copy">
-        <h1>{{ t('parent.nav_progress') }}</h1>
-        <p>{{ t('parent.progress_detail_hint') }}</p>
+        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('parent.nav_progress') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('parent.progress_detail_hint') }}</p>
       </div>
       <div v-if="children.length" class="parent-progress__toolbar parent-filters">
         <ParentChildFilter
@@ -44,67 +44,78 @@
     </div>
     <NetworkFallback v-else-if="error" @retry="$emit('reload')" />
     <template v-else-if="payload">
-      <section class="parent-panel parent-progress-summary" :aria-label="t('parent.progress_summary_title')">
+      <section class="parent-panel parent-progress-summary" :aria-labelledby="overviewHeadingId">
+        <h2 :id="overviewHeadingId" class="parent-report__subhead">{{ t('parent.progress_summary_title') }}</h2>
         <p class="parent-lead">{{ summaryLine }}</p>
-        <div class="parent-stats parent-stats--compact" role="list">
-          <article v-for="card in summaryCards" :key="card.key" class="parent-stat" role="listitem">
+        <div class="parent-stats parent-stats--compact parent-progress-overview" role="list">
+          <article v-for="card in overviewCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
             <span aria-hidden="true"><i :class="card.icon"></i></span>
-            <strong>{{ card.value }}</strong>
+            <strong :class="{ 'parent-metric__empty': card.empty }">{{ card.value }}</strong>
             <small>{{ card.label }}</small>
+            <p v-if="card.hint" class="parent-stat__hint">{{ card.hint }}</p>
           </article>
         </div>
       </section>
 
-      <div class="parent-progress-stack">
-        <section class="parent-panel" :aria-labelledby="lifetimeHeadingId">
-          <h2 :id="lifetimeHeadingId" class="parent-report__subhead">{{ t('parent.reports_lifetime_stats') }}</h2>
-          <ul class="parent-report-metrics">
-            <li v-for="row in lifetimeRows" :key="row.key">
-              <span>{{ row.label }}</span>
-              <strong>{{ row.value }}</strong>
-            </li>
-          </ul>
-          <p v-for="row in lifetimeHints" :key="row.key" class="parent-stat__hint">{{ row.hint }}</p>
-        </section>
-
-        <section class="parent-panel" :aria-labelledby="periodHeadingId">
-          <h2 :id="periodHeadingId" class="parent-report__subhead">{{ t('parent.reports_period_stats') }}</h2>
-          <ul class="parent-report-metrics">
-            <li v-for="row in periodRows" :key="row.key">
-              <span>{{ row.label }}</span>
-              <strong>{{ row.value }}</strong>
-            </li>
-          </ul>
-        </section>
-      </div>
-
-      <section class="parent-progress-metrics" :aria-label="t('parent.progress_coverage')">
-        <article v-for="card in metricCards" :key="card.key" class="parent-stat parent-progress-metric">
-          <span aria-hidden="true"><i :class="card.icon"></i></span>
-          <strong>{{ card.value }}</strong>
-          <small>{{ card.label }}</small>
-          <p class="parent-stat__hint">{{ card.detail }}</p>
-        </article>
-      </section>
-
-      <section v-if="showTrends" class="parent-panel" :aria-label="t('parent.progress_assignments')">
-        <h2 class="parent-report__subhead">{{ t('parent.progress_assignments') }}</h2>
-        <ul class="parent-progress-trends">
-          <li v-for="bucket in trendBuckets" :key="bucket.week_start">
-            <span>{{ formatTrendWeek(bucket.week_start) }}</span>
-            <span>{{ t('parent.progress_trend_line', { due: bucket.due, completed: bucket.completed, overdue: bucket.overdue }) }}</span>
+      <section class="parent-panel" :aria-labelledby="memorisationHeadingId">
+        <h2 :id="memorisationHeadingId" class="parent-report__subhead">{{ t('parent.progress_section_memorisation') }}</h2>
+        <p class="parent-stat__hint">{{ t('parent.progress_lifetime_scope') }}</p>
+        <ul class="parent-report-metrics">
+          <li v-for="row in lifetimeRows" :key="row.key">
+            <span>{{ row.label }}</span>
+            <strong>{{ row.value }}</strong>
           </li>
         </ul>
+        <p v-for="row in lifetimeHints" :key="`${row.key}-hint`" class="parent-stat__hint">{{ row.hint }}</p>
       </section>
 
-      <section v-else-if="payload.assignment_trends?.length" class="parent-panel">
-        <p class="parent-stat__hint">{{ t('parent.progress_trends_empty') }}</p>
+      <section class="parent-panel" :aria-labelledby="activityHeadingId">
+        <h2 :id="activityHeadingId" class="parent-report__subhead">{{ t('parent.progress_section_activity') }}</h2>
+        <template v-if="showTrends">
+          <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.progress_assignments') }}</h3>
+          <ul class="parent-progress-trends">
+            <li v-for="bucket in trendBuckets" :key="bucket.week_start">
+              <span>{{ formatTrendWeek(bucket.week_start) }}</span>
+              <span>{{ t('parent.progress_trend_line', { due: bucket.due, completed: bucket.completed, overdue: bucket.overdue }) }}</span>
+            </li>
+          </ul>
+        </template>
+        <TeacherEmpty
+          v-else-if="payload.assignment_trends?.length"
+          inline
+          icon="bi bi-journal-check"
+          :message="t('parent.progress_trends_empty')"
+        />
+        <template v-if="showWording">
+          <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.progress_wording_match') }}</h3>
+          <p>{{ t('parent.progress_wording_direction', { direction: t(wordingDirection) }) }}</p>
+          <small class="parent-stat__hint">{{ t('parent.progress_wording_note') }}</small>
+        </template>
       </section>
 
-      <section v-if="showWording" class="parent-panel">
-        <h2 class="parent-report__subhead">{{ t('parent.progress_wording_match') }}</h2>
-        <p>{{ t('parent.progress_wording_direction', { direction: t(wordingDirection) }) }}</p>
-        <small class="parent-stat__hint">{{ t('parent.progress_wording_note') }}</small>
+      <section class="parent-panel" :aria-labelledby="feedbackHeadingId">
+        <h2 :id="feedbackHeadingId" class="parent-report__subhead">{{ t('parent.progress_section_feedback') }}</h2>
+        <div v-if="suggestions.length" class="parent-suggest parent-suggest--inline">
+          <h3 class="parent-report__subhead parent-report__subhead--minor">
+            <i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('parent.progress_suggests') }}
+          </h3>
+          <ul>
+            <li v-for="item in suggestions" :key="item.id">{{ recommendationTitle(item) }}</li>
+          </ul>
+        </div>
+        <div v-if="teacherAssessments.length" class="parent-progress-assessments">
+          <ParentAssessmentCard
+            v-for="row in teacherAssessments"
+            :key="row.attempt_id"
+            :assessment="row"
+          />
+        </div>
+        <TeacherEmpty
+          v-if="!suggestions.length && !teacherAssessments.length"
+          inline
+          icon="bi bi-chat-square-quote"
+          :message="t('parent.profile_feedback_empty')"
+        />
       </section>
 
       <nav class="parent-progress-links parent-hub-actions" :aria-label="t('parent.home_quick_actions')">
@@ -118,13 +129,6 @@
           <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_message') }}
         </button>
       </nav>
-
-      <section v-if="suggestions.length" class="parent-suggest">
-        <h2><i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('parent.progress_suggests') }}</h2>
-        <ul>
-          <li v-for="item in suggestions" :key="item.id">{{ recommendationTitle(item) }}</li>
-        </ul>
-      </section>
     </template>
   </section>
 </template>
@@ -133,21 +137,22 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { activityName, formatWhen, passageLabel } from '../../scripts/parent/dashboard'
 import {
-  coreMetricCards,
   lifetimeMetricRows,
-  periodMetricRows,
+  progressSummaryCards,
   progressSummaryLine,
   showAssignmentTrends,
   showWordingTrend,
+  teacherReviewedAssessments,
   wordingDirectionKey,
 } from '../../scripts/parent/progressView'
+import ParentAssessmentCard from './ParentAssessmentCard.vue'
 import ParentChildFilter from './ParentChildFilter.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import NetworkFallback from '../NetworkFallback.vue'
 
 export default {
   name: 'ParentFamilyProgress',
-  components: { ParentChildFilter, TeacherEmpty, NetworkFallback },
+  components: { ParentAssessmentCard, ParentChildFilter, TeacherEmpty, NetworkFallback },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
@@ -161,28 +166,23 @@ export default {
   },
   emits: ['select-child', 'window', 'reload', 'open-learning', 'open-reports', 'open-messages'],
   computed: {
-    lifetimeHeadingId() {
-      return `parent-progress-lifetime-${this.childId || 'none'}`
+    overviewHeadingId() {
+      return `parent-progress-overview-${this.childId || 'none'}`
     },
-    periodHeadingId() {
-      return `parent-progress-period-${this.childId || 'none'}`
+    memorisationHeadingId() {
+      return `parent-progress-memorisation-${this.childId || 'none'}`
+    },
+    activityHeadingId() {
+      return `parent-progress-activity-${this.childId || 'none'}`
+    },
+    feedbackHeadingId() {
+      return `parent-progress-feedback-${this.childId || 'none'}`
     },
     summaryLine() {
       return progressSummaryLine(this.t, this.payload, this.window)
     },
-    summaryCards() {
-      const coverage = this.payload?.coverage || {}
-      const practice = this.payload?.practice_volume || {}
-      return [
-        { key: 'memorised', label: this.t('parent.kpi_memorised'), value: coverage.memorised_ayahs || 0, icon: 'bi bi-journal-bookmark' },
-        { key: 'practice', label: this.t('parent.kpi_practice'), value: practice.ayah_rows || 0, icon: 'bi bi-activity' },
-        {
-          key: 'assignments',
-          label: this.t('parent.kpi_active'),
-          value: this.payload?.assignment_completion?.completed ?? 0,
-          icon: 'bi bi-journal-check',
-        },
-      ]
+    overviewCards() {
+      return progressSummaryCards(this.t, this.payload, this.window)
     },
     lifetimeRows() {
       return lifetimeMetricRows(this.t, this.payload)
@@ -190,14 +190,11 @@ export default {
     lifetimeHints() {
       return this.lifetimeRows.filter((row) => row.hint)
     },
-    periodRows() {
-      return periodMetricRows(this.t, this.payload, this.window)
-    },
-    metricCards() {
-      return coreMetricCards(this.t, this.payload, this.window)
-    },
     suggestions() {
       return (this.payload?.recommendations || []).slice(0, 3)
+    },
+    teacherAssessments() {
+      return teacherReviewedAssessments(this.payload?.assessments)
     },
     showTrends() {
       return showAssignmentTrends(this.payload?.assignment_trends)

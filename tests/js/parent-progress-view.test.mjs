@@ -3,9 +3,11 @@ import test from 'node:test'
 import {
   lifetimeMetricRows,
   periodMetricRows,
+  progressSummaryCards,
   progressSummaryLine,
   showAssignmentTrends,
   showWordingTrend,
+  teacherReviewedAssessments,
 } from '../../resources/js/scripts/parent/progressView.js'
 
 const t = (key, vars = {}) => {
@@ -28,6 +30,8 @@ const t = (key, vars = {}) => {
     'parent.progress_assignments_rate': '{n}% completed',
     'parent.progress_assignments_due_completed': '{due} due · {completed} finished',
     'parent.progress_suggests': 'The teacher suggests',
+    'parent.progress_period_scope': 'period {when}',
+    'parent.progress_assignments_missed_count': '{n} missed',
   }
   return strings[key]?.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? '')) ?? key
 }
@@ -72,7 +76,25 @@ test('wording trend requires comparable passages', () => {
   assert.equal(showWordingTrend({ comparable_passages: 3, direction: 'insufficient' }), false)
 })
 
-test('period metrics separate homework from practice', () => {
+test('overview cards exclude lifetime memorisation', () => {
+  const cards = progressSummaryCards(
+    t,
+    {
+      coverage: { memorised_ayahs: 9 },
+      practice_volume: { ayah_rows: 2 },
+      assignment_completion: { due: 4, completed: 3, completion_percent: 75 },
+    },
+    'week',
+  )
+  assert.equal(cards.length, 2)
+  assert.equal(cards[0].key, 'practice')
+  assert.equal(cards[0].value, 2)
+  assert.match(cards[0].hint, /this week/)
+  assert.equal(cards[1].value, '75% completed')
+  assert.equal(cards.some((card) => card.key === 'memorised'), false)
+})
+
+test('period homework empty state stays out of the metric value', () => {
   const rows = periodMetricRows(
     t,
     {
@@ -83,5 +105,16 @@ test('period metrics separate homework from practice', () => {
     'week',
   )
   assert.equal(rows[0].value, 4)
-  assert.match(String(rows[1]?.value), /No homework/)
+  assert.equal(rows[1]?.value, '—')
+  assert.equal(rows[1]?.empty, true)
+  assert.match(String(rows[1]?.hint), /No homework/)
+})
+
+test('teacher reviewed assessments filter ai-only rows', () => {
+  const rows = teacherReviewedAssessments([
+    { source: 'ai_prediction', word_match_percent: 80 },
+    { source: 'teacher_reviewed', teacher_note: 'Well done', attempt_id: 1 },
+  ])
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].attempt_id, 1)
 })

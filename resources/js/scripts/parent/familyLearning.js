@@ -73,3 +73,33 @@ export function homeworkDisplayStatusIcon(status) {
 export function passageTitleDirection(text) {
   return ARABIC_RE.test(String(text || '')) ? 'rtl' : 'ltr'
 }
+
+function normaliseNote(text) {
+  return String(text || '').trim().toLocaleLowerCase()
+}
+
+export function sharedReviewedAssessment(item) {
+  const assessment = item?.latest_assessment
+  if (!assessment || assessment.source !== 'teacher_reviewed') return null
+  const hasNote = Boolean(String(assessment.teacher_note || '').trim())
+  const hasRecording = Boolean(assessment.has_recording && assessment.recording_url)
+  const hasScore = assessment.word_match_percent !== null && assessment.word_match_percent !== undefined
+  if (!hasNote && !hasRecording && !hasScore) return null
+  return assessment
+}
+
+export function visibleAssignmentFeedback(item) {
+  const feedback = String(item?.teacher_feedback || '').trim()
+  if (!feedback) return ''
+  const reviewNote = String(sharedReviewedAssessment(item)?.teacher_note || '').trim()
+  if (reviewNote && normaliseNote(feedback) === normaliseNote(reviewNote)) return ''
+  return feedback
+}
+
+export function homeworkDetailHasContent(item) {
+  return Boolean(
+    String(item?.instructions || '').trim()
+    || visibleAssignmentFeedback(item)
+    || sharedReviewedAssessment(item),
+  )
+}

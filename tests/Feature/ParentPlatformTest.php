@@ -38,6 +38,8 @@ class ParentPlatformTest extends TestCase
         app(UserRoleService::class)->grant($parent, AccountRole::Parent);
 
         $this->get(route('parent.dashboard'))->assertNotFound();
+        $this->get(route('parent.settings'))->assertNotFound();
+        $this->get(route('parent.children'))->assertNotFound();
         $this->getJson(route('api.parent.shell'))->assertNotFound();
 
         $this->actingAs($parent)->get(route('parent.dashboard'))->assertNotFound();
@@ -68,6 +70,16 @@ class ParentPlatformTest extends TestCase
 
         $this->actingAs($teacher)
             ->get(route('parent.dashboard'))
+            ->assertOk()
+            ->assertSee('parent-dashboard', false);
+
+        $this->actingAs($teacher)
+            ->get(route('parent.settings'))
+            ->assertOk()
+            ->assertSee('parent-dashboard', false);
+
+        $this->actingAs($teacher)
+            ->get(route('parent.children'))
             ->assertOk()
             ->assertSee('parent-dashboard', false);
 

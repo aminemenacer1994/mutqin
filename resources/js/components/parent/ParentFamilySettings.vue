@@ -51,10 +51,6 @@
             <p class="parent-settings__help">{{ t('parent.settings_email_help') }}</p>
           </div>
 
-          <span class="parent-settings__label">{{ t('parent.settings_phone_label') }}</span>
-          <p class="parent-settings__readonly parent-settings__readonly--muted">{{ t('parent.settings_phone_empty') }}</p>
-          <p class="parent-settings__help">{{ t('parent.settings_phone_help') }}</p>
-
           <div class="parent-settings__actions">
             <a class="btn btn-outline-secondary btn-sm" :href="passwordUrl">{{ t('parent.settings_security') }}</a>
             <button type="submit" class="btn btn-primary btn-sm" :disabled="savingProfile || !profileDirty || !profileDraft.name.trim()">
@@ -76,8 +72,8 @@
           </div>
         </div>
 
-        <ul v-if="connectionLinks.length" class="teacher-account__member-list">
-          <li v-for="link in connectionLinks" :key="link.id">
+        <ul v-if="approvedConnectionLinks.length" class="teacher-account__member-list">
+          <li v-for="link in approvedConnectionLinks" :key="link.id">
             <span>
               <strong>{{ link.child?.name || ('#' + link.id) }}</strong>
               <small>{{ link.status }}{{ link.relationship ? ` · ${link.relationship}` : '' }}</small>
@@ -137,30 +133,51 @@
         </div>
 
         <form class="parent-settings__form" @submit.prevent="savePreferences">
-          <fieldset
-            v-for="group in notificationGroups"
-            :key="group.id"
-            class="parent-settings__group"
-          >
-            <legend class="parent-settings__group-title">{{ t(group.titleKey) }}</legend>
-            <p class="parent-settings__help">{{ t(group.hintKey) }}</p>
-            <ul class="parent-settings__pref-list">
-              <li v-for="key in group.keys" :key="key">
-                <div class="parent-settings__pref">
-                  <div class="parent-settings__pref-copy">
-                    <span class="parent-settings__pref-label" :id="`${uid}-notice-${key}-label`">{{ t(`parent.notice_${key}`) }}</span>
-                    <span class="parent-settings__help">{{ t(`parent.notice_${key}_help`) }}</span>
+          <template v-for="group in notificationGroups" :key="group.id">
+            <fieldset
+              v-if="!group.collapsible"
+              class="parent-settings__group"
+            >
+              <legend class="parent-settings__group-title">{{ t(group.titleKey) }}</legend>
+              <p class="parent-settings__help">{{ t(group.hintKey) }}</p>
+              <ul class="parent-settings__pref-list">
+                <li v-for="key in group.keys" :key="key">
+                  <div class="parent-settings__pref">
+                    <div class="parent-settings__pref-copy">
+                      <span class="parent-settings__pref-label" :id="`${uid}-notice-${key}-label`">{{ t(`parent.notice_${key}`) }}</span>
+                      <span class="parent-settings__help">{{ t(`parent.notice_${key}_help`) }}</span>
+                    </div>
+                    <TeacherSettingToggle
+                      :id="`${uid}-notice-${key}`"
+                      v-model="preferences[key]"
+                      :disabled="savingPreferences"
+                      :aria-label="t(`parent.notice_${key}`)"
+                    />
                   </div>
-                  <TeacherSettingToggle
-                    :id="`${uid}-notice-${key}`"
-                    v-model="preferences[key]"
-                    :disabled="savingPreferences"
-                    :aria-label="t(`parent.notice_${key}`)"
-                  />
-                </div>
-              </li>
-            </ul>
-          </fieldset>
+                </li>
+              </ul>
+            </fieldset>
+            <details v-else class="parent-settings__details parent-settings__details--group">
+              <summary>{{ t(group.titleKey) }}</summary>
+              <p class="parent-settings__help">{{ t(group.hintKey) }}</p>
+              <ul class="parent-settings__pref-list">
+                <li v-for="key in group.keys" :key="key">
+                  <div class="parent-settings__pref">
+                    <div class="parent-settings__pref-copy">
+                      <span class="parent-settings__pref-label" :id="`${uid}-notice-${key}-label`">{{ t(`parent.notice_${key}`) }}</span>
+                      <span class="parent-settings__help">{{ t(`parent.notice_${key}_help`) }}</span>
+                    </div>
+                    <TeacherSettingToggle
+                      :id="`${uid}-notice-${key}`"
+                      v-model="preferences[key]"
+                      :disabled="savingPreferences"
+                      :aria-label="t(`parent.notice_${key}`)"
+                    />
+                  </div>
+                </li>
+              </ul>
+            </details>
+          </template>
 
           <button type="submit" class="btn btn-primary btn-sm teacher-account__action" :disabled="savingPreferences || !preferencesDirty">
             {{ savingPreferences ? t('parent.settings_saving') : t('parent.notice_save') }}
@@ -312,22 +329,25 @@ export default {
       themeModes: THEME_MODES,
       notificationGroups: [
         {
-          id: 'academic',
-          titleKey: 'parent.settings_notice_group_academic',
-          hintKey: 'parent.settings_notice_group_academic_hint',
-          keys: ['reports', 'weekly_summary'],
-        },
-        {
           id: 'alerts',
           titleKey: 'parent.settings_notice_group_alerts',
           hintKey: 'parent.settings_notice_group_alerts_hint',
           keys: ['homework', 'deadlines', 'updates'],
+          collapsible: false,
+        },
+        {
+          id: 'academic',
+          titleKey: 'parent.settings_notice_group_academic',
+          hintKey: 'parent.settings_notice_group_academic_hint',
+          keys: ['reports', 'weekly_summary'],
+          collapsible: true,
         },
         {
           id: 'system',
           titleKey: 'parent.settings_notice_group_system',
           hintKey: 'parent.settings_notice_group_system_hint',
           keys: ['feedback', 'messages'],
+          collapsible: true,
         },
       ],
     }
@@ -359,6 +379,12 @@ export default {
     },
     switchablePlatforms() {
       return this.platforms.filter((platform) => platform?.id && platform.id !== 'parent')
+    },
+    approvedConnectionLinks() {
+      return (this.connectionLinks || []).filter((link) => {
+        const status = String(link?.status || '').toLowerCase()
+        return status === 'approved' && link?.child?.name
+      })
     },
   },
   watch: {

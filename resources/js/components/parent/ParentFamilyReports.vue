@@ -93,9 +93,16 @@
 
         <section v-if="showOverview" class="parent-panel">
           <h2><i class="bi bi-card-text" aria-hidden="true"></i>{{ t('parent.reports_overview') }}</h2>
-          <div v-if="active.narrative?.text" class="parent-report-prose">
-            <p>{{ active.narrative.text }}</p>
-          </div>
+          <template v-if="active.narrative?.text">
+            <p v-if="!needsFold(active.narrative.text)" class="parent-report-prose">{{ active.narrative.text }}</p>
+            <template v-else>
+              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.narrative.text) }}</p>
+              <details class="parent-report-details">
+                <summary>{{ t('parent.reports_read_more') }}</summary>
+                <p class="parent-report-prose">{{ active.narrative.text }}</p>
+              </details>
+            </template>
+          </template>
           <div v-if="periodStats.length || lifetimeStats.length" class="parent-report-split">
             <div v-if="periodStats.length">
               <h3 class="parent-report__subhead">{{ t('parent.reports_period_stats') }}</h3>
@@ -116,16 +123,22 @@
               </ul>
             </div>
           </div>
-          <p v-if="active.comparison?.plain" class="parent-report-prose">{{ active.comparison.plain }}</p>
-          <p v-if="active.goals?.plain" class="parent-report-prose">{{ active.goals.plain }}</p>
-          <div v-if="sourceLabels.length" class="parent-report-sources">
-            <span class="parent-report__subhead">{{ t('parent.reports_sources') }}</span>
+          <details v-if="active.comparison?.plain" class="parent-report-details">
+            <summary>{{ t('parent.reports_compare') }}</summary>
+            <p class="parent-report-prose">{{ active.comparison.plain }}</p>
+          </details>
+          <details v-if="active.goals?.plain" class="parent-report-details">
+            <summary>{{ t('parent.reports_goals') }}</summary>
+            <p class="parent-report-prose">{{ active.goals.plain }}</p>
+          </details>
+          <details v-if="sourceLabels.length" class="parent-report-details">
+            <summary>{{ t('parent.reports_sources') }}</summary>
             <ul class="parent-pills--sources" role="list">
               <li v-for="(label, index) in sourceLabels" :key="`${label}-${index}`" role="listitem">
                 <span class="parent-report-source">{{ label }}</span>
               </li>
             </ul>
-          </div>
+          </details>
           <div class="parent-report-attention parent-report-attention--spaced">
             <h3 class="parent-report__subhead">{{ t('parent.reports_attention') }}</h3>
             <p v-if="!hasAttention" class="parent-report-prose">{{ t('parent.reports_attention_empty') }}</p>
@@ -137,7 +150,16 @@
 
         <section v-if="showHomework" class="parent-panel">
           <h2><i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.reports_section_homework') }}</h2>
-          <p v-if="active.assignments?.plain" class="parent-report-prose">{{ active.assignments.plain }}</p>
+          <template v-if="active.assignments?.plain">
+            <p v-if="!needsFold(active.assignments.plain)" class="parent-report-prose">{{ active.assignments.plain }}</p>
+            <template v-else>
+              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.assignments.plain) }}</p>
+              <details class="parent-report-details">
+                <summary>{{ t('parent.reports_read_more') }}</summary>
+                <p class="parent-report-prose">{{ active.assignments.plain }}</p>
+              </details>
+            </template>
+          </template>
           <ul v-if="assignmentItems.length" class="parent-report-items">
             <li v-for="(item, index) in assignmentItems" :key="`${item.label}-${index}`">
               <span class="parent-report-item__label" :title="item.label">{{ item.label }}</span>
@@ -148,11 +170,20 @@
 
         <section v-if="showPractice" class="parent-panel">
           <h2><i class="bi bi-activity" aria-hidden="true"></i>{{ t('parent.reports_section_practice') }}</h2>
-          <p v-if="active.activity?.plain" class="parent-report-prose">{{ active.activity.plain }}</p>
-          <p v-if="active.wording?.plain" class="parent-report-prose">
-            <strong>{{ t('parent.reports_wording') }}.</strong>
-            {{ active.wording.plain }}
-          </p>
+          <template v-if="active.activity?.plain">
+            <p v-if="!needsFold(active.activity.plain)" class="parent-report-prose">{{ active.activity.plain }}</p>
+            <template v-else>
+              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.activity.plain) }}</p>
+              <details class="parent-report-details">
+                <summary>{{ t('parent.reports_read_more') }}</summary>
+                <p class="parent-report-prose">{{ active.activity.plain }}</p>
+              </details>
+            </template>
+          </template>
+          <details v-if="active.wording?.plain" class="parent-report-details">
+            <summary>{{ t('parent.reports_wording') }}</summary>
+            <p class="parent-report-prose">{{ active.wording.plain }}</p>
+          </details>
         </section>
 
         <section v-if="showFeedback" class="parent-panel">
@@ -189,6 +220,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatWhen } from '../../scripts/parent/dashboard'
+import { periodMetricRowsFromReport, proseNeedsFold, prosePreview } from '../../scripts/parent/reportsView'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 
 export default {
@@ -284,40 +316,8 @@ export default {
       )
     },
     periodStats() {
-      if (!this.active) return []
-      const rows = []
-      const activity = this.active.activity
-      const assignments = this.active.assignments
-      if (assignments) {
-        rows.push({
-          key: 'assigned',
-          label: this.t('parent.reports_period_assigned'),
-          value: String(assignments.assigned ?? 0),
-        })
-        rows.push({
-          key: 'completed',
-          label: this.t('parent.reports_period_completed'),
-          value: String(assignments.completed ?? 0),
-        })
-      }
-      if (activity) {
-        rows.push({
-          key: 'practice',
-          label: this.t('parent.reports_period_practice'),
-          value: String(activity.practice_rows ?? 0),
-        })
-        rows.push({
-          key: 'revision',
-          label: this.t('parent.reports_period_revision'),
-          value: String(activity.revision_sessions ?? 0),
-        })
-        rows.push({
-          key: 'memorised',
-          label: this.t('parent.reports_period_memorised'),
-          value: String(activity.memorised_in_period ?? 0),
-        })
-      }
-      return rows
+      if (!this.active || this.kpiCards.length) return []
+      return periodMetricRowsFromReport(this.t, this.active)
     },
     lifetimeStats() {
       const current = this.active?.activity?.current_memorised
@@ -413,6 +413,12 @@ export default {
       if (status === 'awaiting_confirmation') return 'is-wait'
       if (status === 'needs_correction') return 'is-late'
       return 'is-open'
+    },
+    needsFold(text) {
+      return proseNeedsFold(text)
+    },
+    prosePreview(text) {
+      return prosePreview(text)
     },
   },
 }

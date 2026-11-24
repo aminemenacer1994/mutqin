@@ -225,6 +225,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/parent', [ParentDashboardPageController::class, 'index'])
         ->middleware('parent.features')
         ->name('parent.dashboard');
+    Route::get('/parent/settings', [ParentDashboardPageController::class, 'index'])
+        ->middleware('parent.features')
+        ->name('parent.settings');
+    Route::get('/parent/children', [ParentDashboardPageController::class, 'index'])
+        ->middleware('parent.features')
+        ->name('parent.children');
     Route::get('/guardian/children/{student}/messages', [ParentDashboardPageController::class, 'index'])
         ->middleware('parent.features')
         ->whereNumber('student')

@@ -55,6 +55,15 @@
               >
                 <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
               </button>
+              <button
+                v-if="child.permissions?.messages"
+                type="button"
+                class="parent-children-table__action"
+                :aria-label="t('parent.home_message')"
+                @click.stop="$emit('open-messages', child.id)"
+              >
+                <i class="bi bi-chat-heart" aria-hidden="true"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -93,7 +102,7 @@ export default {
     homework: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
   },
-  emits: ['open-learning', 'open-progress', 'open-profile'],
+  emits: ['open-learning', 'open-progress', 'open-messages', 'open-profile'],
   methods: {
     initial,
     teacherName(child) {

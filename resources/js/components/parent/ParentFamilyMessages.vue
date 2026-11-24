@@ -149,7 +149,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatConversationWhen, initial } from '../../scripts/parent/dashboard'
-import { conversationKey, createSearchDebouncer, filterConversations, matchContextFeedback } from '../../scripts/parent/messages'
+import { contextFeedbackForThread, conversationKey, createSearchDebouncer, filterConversations } from '../../scripts/parent/messages'
 import GuardianConversation from '../shared/GuardianConversation.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
@@ -202,7 +202,7 @@ export default {
       return this.conversations.reduce((sum, row) => sum + Number(row.unread || 0), 0)
     },
     contextFeedback() {
-      return matchContextFeedback(this.feedback, this.active)
+      return contextFeedbackForThread(this.feedback, this.active, this.thread)
     },
     inboxFiltersActive() {
       return Boolean(this.searchDraft.trim() || this.searchQuery.trim() || this.unreadOnly || this.selectedId)

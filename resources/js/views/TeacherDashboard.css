@@ -1147,6 +1147,7 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
   .teacher-account__export { align-items: stretch; flex-direction: column; }
   .teacher-account__export .btn { align-self: flex-start; }
   .teacher-account__grid { grid-template-columns: 1fr; }
+  [data-platform-shell="parent"] .parent-settings__grid { grid-template-columns: 1fr; }
   .teacher-account__classes-panel { grid-row: auto; }
   .teacher-account-page .teacher-account { padding: 16px; }
   .teacher-account__member-list li { align-items: flex-start; }
@@ -2186,7 +2187,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   --teacher-danger: #9b3d3d;
   --teacher-danger-soft: #fbeaea;
   --teacher-radius: 20px;
-  --teacher-gap: 40px;
+  --teacher-gap: 28px;
   --teacher-nav-width: 248px;
   --teacher-shadow: 0 1px 2px rgba(80, 52, 28, 0.04), 0 14px 32px rgba(80, 52, 28, 0.06);
   --parent-ink: var(--teacher-text);
@@ -2222,7 +2223,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 }
 [data-platform-shell="parent"] .teacher-nav-shell--desktop .teacher-nav__label { white-space: nowrap; }
 [data-platform-shell="parent"] .teacher-view-stage { animation: parent-rise 420ms cubic-bezier(.2, .7, .2, 1); }
-[data-platform-shell="parent"] .parent-home { display: grid; gap: 36px; align-content: start; }
+[data-platform-shell="parent"] .parent-home { display: grid; gap: 24px; align-content: start; }
 [data-platform-shell="parent"] .parent-home.parent-home-dashboard { gap: 28px; }
 [data-platform-shell="parent"] .parent-home-hero { padding: 4px 2px 0; }
 [data-platform-shell="parent"] .parent-home-hero__row {
@@ -2596,6 +2597,21 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   border-bottom: 1px solid var(--teacher-line);
   background: var(--teacher-surface-soft);
 }
+[data-platform-shell="parent"] .parent-messages-context-feedback.is-formal strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-platform-shell="parent"] .parent-messages-context-feedback.is-formal strong::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--teacher-accent);
+}
 [data-platform-shell="parent"] .parent-messages-context-feedback__copy {
   display: grid;
   gap: 4px;
@@ -2890,7 +2906,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 [data-platform-shell="parent"] .parent-suggest,
 [data-platform-shell="parent"] .parent-panel,
 [data-platform-shell="parent"] .parent-report {
-  padding: 28px 28px 24px;
+  padding: 18px 20px 16px;
   border: 1px solid var(--parent-line);
   border-radius: 20px;
   background: var(--parent-paper);
@@ -2903,7 +2919,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 18px;
+  margin: 0 0 12px;
   font-size: 16px;
 }
 [data-platform-shell="parent"] .parent-attention ul,
@@ -3006,6 +3022,68 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 }
 [data-platform-shell="parent"] .parent-child-card__actions button { flex-direction: row; gap: 6px; }
 [data-platform-shell="parent"] .parent-hub-actions button { flex-direction: row; gap: 6px; padding: 8px 14px; font-size: 13px; }
+[data-platform-shell="parent"] .parent-child-summary {
+  display: grid;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--parent-line);
+  border-radius: 16px;
+  background: var(--parent-paper);
+  box-shadow: var(--teacher-shadow);
+}
+[data-platform-shell="parent"] .parent-child-summary__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+[data-platform-shell="parent"] .parent-child-summary__identity {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+[data-platform-shell="parent"] .parent-child-summary__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+[data-platform-shell="parent"] .parent-child-summary__profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: start;
+}
+[data-platform-shell="parent"] .parent-child-summary__profile-link:focus-visible {
+  outline: 2px solid var(--teacher-accent-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+[data-platform-shell="parent"] .parent-child-summary__meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--parent-muted);
+}
+[data-platform-shell="parent"] .parent-child-summary__stats { margin: 0; }
+[data-platform-shell="parent"] .parent-child-summary__section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 650;
+}
+[data-platform-shell="parent"] .parent-child-summary__section .teacher-activity-list {
+  margin: 0;
+}
+[data-platform-shell="parent"] .parent-child-summary__actions {
+  margin: 0;
+  flex-wrap: wrap;
+}
 [data-platform-shell="parent"] .parent-children-table-wrap {
   overflow-x: auto;
   overflow-y: visible;
@@ -3180,8 +3258,8 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   animation: parent-rise 220ms ease;
 }
 [data-platform-shell="parent"] .parent-task__detail p { display: flex; gap: 8px; margin: 0; font-size: 14.5px; }
-[data-platform-shell="parent"] .parent-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-[data-platform-shell="parent"] .parent-stat { display: grid; gap: 6px; padding: 24px; }
+[data-platform-shell="parent"] .parent-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+[data-platform-shell="parent"] .parent-stat { display: grid; gap: 4px; padding: 16px 18px; }
 [data-platform-shell="parent"] .parent-stat span {
   display: grid;
   place-items: center;
@@ -3194,29 +3272,36 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 }
 [data-platform-shell="parent"] .parent-stat strong { font-size: 28px; line-height: 1; }
 [data-platform-shell="parent"] .parent-stat small { color: var(--parent-muted); font-size: 13px; }
-[data-platform-shell="parent"] .parent-progress__head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 18px;
-  align-items: center;
-}
-[data-platform-shell="parent"] .parent-progress__head-copy { min-width: 0; }
+[data-platform-shell="parent"] .parent-progress__head { flex-wrap: wrap; align-items: flex-end; }
+[data-platform-shell="parent"] .parent-progress__head-copy { flex: 1 1 16rem; min-width: 0; }
 [data-platform-shell="parent"] .parent-progress__toolbar {
-  grid-column: 1 / -1;
+  flex: 1 1 18rem;
   margin: 0;
+  justify-content: flex-end;
 }
 [data-platform-shell="parent"] .parent-progress-summary {
   display: grid;
-  gap: 16px;
-  padding: 22px 24px;
+  gap: 12px;
+  padding: 16px 18px;
 }
-[data-platform-shell="parent"] .parent-stats--compact .parent-stat strong { font-size: 24px; }
-[data-platform-shell="parent"] .parent-progress-stack {
+[data-platform-shell="parent"] .parent-progress-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-platform-shell="parent"] .parent-stats--compact .parent-stat strong { font-size: 22px; }
+[data-platform-shell="parent"] .parent-stat--compact { border-radius: 14px; }
+[data-platform-shell="parent"] .parent-metric__empty { font-size: 20px; font-weight: 600; color: var(--parent-muted); }
+[data-platform-shell="parent"] .parent-report__subhead--minor {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 650;
+}
+[data-platform-shell="parent"] .parent-suggest--inline { margin-top: 0; }
+[data-platform-shell="parent"] .parent-progress-assessments {
   display: grid;
-  gap: 18px;
+  gap: 12px;
+  margin-top: 12px;
 }
-@media (min-width: 768px) {
-  [data-platform-shell="parent"] .parent-progress-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 575.98px) {
+  [data-platform-shell="parent"] .parent-progress-overview { grid-template-columns: 1fr; }
+  [data-platform-shell="parent"] .parent-progress__toolbar { justify-content: flex-start; width: 100%; }
 }
 [data-platform-shell="parent"] .parent-progress-metrics {
   display: grid;
@@ -3367,6 +3452,32 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+[data-platform-shell="parent"] .parent-report-prose--preview {
+  margin-bottom: 8px;
+  color: var(--parent-ink);
+}
+[data-platform-shell="parent"] .parent-report-details {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--parent-line);
+  border-radius: 14px;
+  background: rgba(248, 241, 232, 0.4);
+}
+[data-platform-shell="parent"] .parent-report-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--parent-accent, #9a6236);
+  list-style: none;
+}
+[data-platform-shell="parent"] .parent-report-details summary::-webkit-details-marker { display: none; }
+[data-platform-shell="parent"] .parent-report-details summary:focus-visible {
+  outline: 2px solid #9a6236;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+[data-platform-shell="parent"] .parent-report-details .parent-report-prose { margin-bottom: 0; }
+[data-platform-shell="parent"] .parent-report-details > * + * { margin-top: 10px; }
 [data-platform-shell="parent"] .parent-report-prose small {
   display: block;
   margin-top: 8px;
@@ -3948,6 +4059,49 @@ html[data-theme="dark"] [data-platform-shell="parent"] .teacher-account.card {
   gap: 18px;
   padding: 12px 28px 32px;
 }
+.parent-modal-root.parent-homework-detail.dash-modal-root.user-dashboard .parent-modal.dash-modal {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: min(88dvh, 720px);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+.parent-modal-root.parent-homework-detail .parent-homework-detail__body {
+  gap: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.parent-modal-root.parent-homework-detail .learner-assignment-modal__section {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.parent-modal-root.parent-homework-detail .learner-assignment-modal__section h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #7d6a59;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.parent-modal-root.parent-homework-detail .learner-assignment-modal__section p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #3c2f26;
+}
+.parent-modal-root.parent-homework-detail .parent-homework-detail__feedback {
+  padding: 12px 14px;
+  border: 1px solid #eadfce;
+  border-radius: 16px;
+  background: #fdf9f4;
+}
+.parent-modal-root.parent-homework-detail .parent-assessment {
+  margin: 0;
+}
 .parent-modal__body > p { margin: 0; font-size: 16px; line-height: 1.55; color: #3c2f26; }
 .parent-modal__quiet { color: #7d6a59 !important; }
 .parent-modal__field { display: grid; gap: 8px; }
@@ -4057,13 +4211,16 @@ html[data-theme="dark"] .parent-modal__primary { background: #e6d3bc; color: #1b
 
 /* Parent settings — four constrained cards, Mutqin form + toggles */
 [data-platform-shell="parent"] .parent-settings__grid {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  max-width: 720px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  max-width: none;
 }
 [data-platform-shell="parent"] .parent-settings__card {
   width: 100%;
-  max-width: 720px;
+  max-width: none;
+}
+[data-platform-shell="parent"] .parent-settings__details--group {
+  margin-top: 0;
 }
 [data-platform-shell="parent"] .parent-settings__flash,
 [data-platform-shell="parent"] .parent-settings__notice { margin: 0; }

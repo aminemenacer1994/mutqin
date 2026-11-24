@@ -1,10 +1,10 @@
 <template>
-  <section class="parent-home parent-children-page">
-    <header class="parent-page">
-      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
+  <section class="parent-home parent-children-page teacher-stack">
+    <header class="teacher-page-header">
       <div>
-        <h1>{{ t('parent.nav_children') }}</h1>
-        <p>{{ t('parent.children_hint') }}</p>
+        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('parent.nav_children') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('parent.children_hint') }}</p>
       </div>
     </header>
 
@@ -29,6 +29,17 @@
       </div>
     </section>
 
+    <ParentSingleChildSummary
+      v-else-if="children.length === 1"
+      :child="children[0]"
+      :homework="homework"
+      :activity="activity"
+      @open-learning="$emit('open-learning', $event)"
+      @open-progress="$emit('open-progress', $event)"
+      @open-messages="$emit('open-messages', $event)"
+      @open-profile="$emit('open-profile', $event)"
+    />
+
     <ParentChildrenTable
       v-else
       :rows="children"
@@ -36,6 +47,7 @@
       :loading="loading"
       @open-learning="$emit('open-learning', $event)"
       @open-progress="$emit('open-progress', $event)"
+      @open-messages="$emit('open-messages', $event)"
       @open-profile="$emit('open-profile', $event)"
     />
   </section>
@@ -46,14 +58,16 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import ConnectPrompt from '../ConnectPrompt.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import ParentChildrenTable from './ParentChildrenTable.vue'
+import ParentSingleChildSummary from './ParentSingleChildSummary.vue'
 
 export default {
   name: 'ParentFamilyChildren',
-  components: { ConnectPrompt, TeacherEmpty, ParentChildrenTable },
+  components: { ConnectPrompt, TeacherEmpty, ParentChildrenTable, ParentSingleChildSummary },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
     homework: { type: Array, default: () => [] },
+    activity: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
   },
   emits: ['open-learning', 'open-progress', 'open-profile', 'open-messages', 'open-settings'],

@@ -53,6 +53,7 @@
                 v-else-if="view === 'children'"
                 :children="children"
                 :homework="shell?.homework || []"
+                :activity="visibleActivity"
                 :loading="loading && !shell"
                 @open-learning="openLearning"
                 @open-progress="openProgress"
@@ -346,6 +347,10 @@ export default {
     if (pathMatch) {
       this.selectedChildId = Number(pathMatch[1])
       this.view = 'child-messages'
+    } else if (/\/parent\/settings\/?$/.test(window.location.pathname)) {
+      this.view = 'settings'
+    } else if (/\/parent\/children\/?$/.test(window.location.pathname)) {
+      this.view = 'children'
     } else {
       const params = new URLSearchParams(window.location.search)
       const view = params.get('view')
@@ -474,6 +479,14 @@ export default {
       if (this.view === 'child-messages' && this.selectedChildId) {
         const path = `/guardian/children/${this.selectedChildId}/messages`
         window.history.replaceState({}, '', path)
+        return
+      }
+      if (this.view === 'settings') {
+        window.history.replaceState({}, '', '/parent/settings')
+        return
+      }
+      if (this.view === 'children' && !this.selectedChildId) {
+        window.history.replaceState({}, '', '/parent/children')
         return
       }
       const url = new URL(window.location.origin + '/parent')

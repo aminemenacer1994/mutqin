@@ -73,7 +73,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { initial } from '../../scripts/parent/dashboard'
-import { conversationKey, matchContextFeedback } from '../../scripts/parent/messages'
+import { contextFeedbackForThread, conversationKey } from '../../scripts/parent/messages'
 import GuardianConversation from '../shared/GuardianConversation.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
@@ -117,7 +117,7 @@ export default {
       return this.conversations.filter((row) => row.child_id === this.childId)
     },
     contextFeedback() {
-      return matchContextFeedback(this.feedback, this.active)
+      return contextFeedbackForThread(this.feedback, this.active, this.thread)
     },
     headerLine() {
       if (!this.active) return ''
