@@ -3,6 +3,8 @@
 **Date:** 2026-11-25  
 **Scope:** Individual (learner), Teacher, Student (connected), Parent platforms; auth; institutions; learning network; AI recitation; billing.
 
+**UI/UX ecosystem pass:** [mutqin-2.0-ecosystem-integration.md](./mutqin-2.0-ecosystem-integration.md)
+
 ## Executive summary
 
 Core memorisation, AI assessment, and the teacher–student–parent triangle (when feature flags are on) are **well tested** in PHPUnit. The architecture deliberately separates **account role**, **platform context**, and **relationship authorizers** (`StudentAccessAuthorizer`, `ParentAccessAuthorizer`). Institution membership does **not** grant teacher visibility; class membership + student analytics consent does.

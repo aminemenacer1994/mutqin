@@ -9340,6 +9340,7 @@
     "nav_messages": "Messages",
     "nav_assistant": "AI Learning Assistant",
     "nav_reports": "Reports",
+    "nav_reports_short": "Reports",
     "nav_assistant_short": "Ask",
     "nav_settings": "Settings",
     "workspace_label": "Parent workspace",

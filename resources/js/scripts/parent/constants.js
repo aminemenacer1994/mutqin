@@ -6,5 +6,5 @@ export const PARENT_NAV = [
   { id: 'learning', label: 'parent.nav_learning_short', icon: 'bi bi-journal-check' },
   { id: 'progress', label: 'parent.nav_progress', icon: 'bi bi-graph-up-arrow' },
   { id: 'messages', label: 'parent.nav_messages', icon: 'bi bi-chat-heart' },
-  { id: 'reports', label: 'parent.nav_reports', mobile: false, icon: 'bi bi-calendar2-heart' },
+  { id: 'reports', label: 'parent.nav_reports', shortLabel: 'parent.nav_reports_short', icon: 'bi bi-calendar2-heart' },
 ]
