@@ -17,10 +17,14 @@ const viewports = [
 
 const parentNav = [
   { id: 'overview', pattern: /home/i },
-  { id: 'children', pattern: /children/i },
-  { id: 'learning', pattern: /homework|learning/i },
   { id: 'progress', pattern: /progress/i },
   { id: 'messages', pattern: /messages/i },
+  { id: 'more', pattern: /more/i },
+]
+
+const parentMoreDestinations = [
+  { id: 'children', pattern: /children/i },
+  { id: 'learning', pattern: /homework|learning/i },
   { id: 'reports', pattern: /reports/i },
   { id: 'settings', pattern: /settings/i },
 ]
@@ -47,6 +51,16 @@ async function openParentNav(page, pattern) {
   return false
 }
 
+async function openMoreHubTile(page, pattern) {
+  const tile = page.locator('.parent-more-tile').filter({ hasText: pattern })
+  if (await tile.count()) {
+    await tile.first().click()
+    await page.waitForTimeout(400)
+    return true
+  }
+  return false
+}
+
 async function auditParent(page, viewport, theme) {
   await page.evaluate((value) => {
     document.documentElement.dataset.theme = value
@@ -69,6 +83,17 @@ async function auditParent(page, viewport, theme) {
       path: path.join(outDir, `parent-${item.id}-${viewport.name}-${theme}.png`),
       fullPage: true,
     })
+    if (item.id === 'more') {
+      for (const dest of parentMoreDestinations) {
+        const opened = await openMoreHubTile(page, dest.pattern)
+        if (!opened) issues.push(`more missing: ${dest.id}`)
+        await page.screenshot({
+          path: path.join(outDir, `parent-${dest.id}-${viewport.name}-${theme}.png`),
+          fullPage: true,
+        })
+        await openParentNav(page, /more/i)
+      }
+    }
   }
   return issues
 }

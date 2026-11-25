@@ -262,6 +262,13 @@
         </section>
 
         <div class="learner-teacher__sidebar">
+        <LearnerHifzOverview
+          v-if="hifzSummary && !hifzSummary.empty"
+          embedded
+          class="learner-teacher__hifz-panel"
+          :summary="hifzSummary"
+          @open-progress="$emit('open-progress')"
+        />
         <LearnerRevisionTargets
           v-if="revisionTargets.length"
           embedded
@@ -769,6 +776,7 @@ import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import LearnerTeacherLearning from './LearnerTeacherLearning.vue'
 import LearnerWordCorrections from './LearnerWordCorrections.vue'
 import LearnerTeacherUpcoming from './LearnerTeacherUpcoming.vue'
+import LearnerHifzOverview from './LearnerHifzOverview.vue'
 import LearnerRevisionTargets from './LearnerRevisionTargets.vue'
 import LearnerAttemptPlaybackModal from '@/components/shared/LearnerAttemptPlaybackModal.vue'
 import LearnerCompletionMistakePanel from '@/components/shared/LearnerCompletionMistakePanel.vue'
@@ -787,6 +795,7 @@ export default {
     LearnerTeacherLearning,
     LearnerWordCorrections,
     LearnerTeacherUpcoming,
+    LearnerHifzOverview,
     LearnerRevisionTargets,
     LearnerCompletionMistakePanel,
     LearnerAttemptPlaybackModal,
@@ -805,7 +814,7 @@ export default {
     onSendNote: { type: Function, required: true },
     onSendDirectMessage: { type: Function, required: true },
   },
-  emits: ['start', 'complete', 'self-assess', 'view-completed', 'dismiss-completion', 'support-thread-update'],
+  emits: ['start', 'complete', 'self-assess', 'view-completed', 'dismiss-completion', 'support-thread-update', 'open-progress'],
   data() {
     return {
       activeFilter: 'todo',
@@ -1018,6 +1027,9 @@ export default {
     },
     assignments() {
       return Array.isArray(this.support?.assignments) ? this.support.assignments : []
+    },
+    hifzSummary() {
+      return this.support?.hifz_summary || null
     },
     detailItem() {
       if (!this.detailItemId) return null

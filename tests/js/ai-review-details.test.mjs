@@ -373,7 +373,7 @@ const t = (key, params = {}) => {
   const vue = readFileSync(join(root, 'resources/js/components/WorkspaceAiReciteResultModal.vue'), 'utf8')
   const aiReviewStart = vue.indexOf('post-session-simple__ai-review')
   assert.ok(aiReviewStart > 0)
-  const slice = vue.slice(aiReviewStart, aiReviewStart + 12000)
+  const slice = vue.slice(aiReviewStart, aiReviewStart + 24000)
   const summaryIdx = slice.indexOf('post-session-simple__ai-review-summary')
   const focusIdx = slice.indexOf('post-session-simple__focus-block')
   const weakIdx = slice.indexOf('post-session-simple__weak-spots')

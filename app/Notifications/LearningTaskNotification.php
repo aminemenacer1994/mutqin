@@ -40,6 +40,7 @@ class LearningTaskNotification extends Notification
             'teacher_note_id' => $this->payload['teacher_note_id'] ?? null,
             'teacher_lesson_id' => $this->payload['teacher_lesson_id'] ?? null,
             'teacher_assignment_recipient_id' => $this->payload['teacher_assignment_recipient_id'] ?? null,
+            'child_user_id' => isset($this->payload['child_user_id']) ? (int) $this->payload['child_user_id'] : null,
         ];
     }
 }

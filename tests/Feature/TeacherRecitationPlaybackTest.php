@@ -69,6 +69,29 @@ class TeacherRecitationPlaybackTest extends TestCase
                         ['ayah' => 1, 'word_index' => 1, 'start' => 0.4, 'end' => 0.9, 'confidence' => 0.62],
                     ],
                 ],
+                'tajweed_practice_check' => [
+                    'version' => 2,
+                    'assessed' => true,
+                    'band' => 'needs_work',
+                    'headline' => 'Hold madd a little longer.',
+                    'summary' => 'One segment was short.',
+                    'segments' => [
+                        [
+                            'verseKey' => '114:1',
+                            'wordIndex' => 1,
+                            'ruleKey' => 'madd',
+                            'word' => 'أَعُوذُ',
+                            'outcome' => 'practice',
+                            'hold' => 'short',
+                        ],
+                        [
+                            'verseKey' => '114:1',
+                            'wordIndex' => 2,
+                            'ruleKey' => 'silent',
+                            'outcome' => 'strong',
+                        ],
+                    ],
+                ],
             ],
         ]);
         $attempt = AiReciteAttempt::query()->create([
@@ -98,6 +121,11 @@ class TeacherRecitationPlaybackTest extends TestCase
             ->assertJsonPath('range.to', 2)
             ->assertJsonPath('duration_ms', 4200)
             ->assertJsonPath('accuracy_percent', 80)
+            ->assertJsonPath('tajweed_practice_suggestion.authority', 'ai_practice_check')
+            ->assertJsonPath('tajweed_practice_suggestion.is_tajweed_assessment', false)
+            ->assertJsonPath('tajweed_practice_suggestion.band', 'needs_work')
+            ->assertJsonPath('tajweed_practice_suggestion.segments.0.rule_key', 'madd')
+            ->assertJsonCount(1, 'tajweed_practice_suggestion.segments')
             ->assertJsonPath('review.status', 'pending')
             ->assertJsonPath('timing.timed_words', 2)
             ->assertJsonPath('suggested_revision.focused', true)

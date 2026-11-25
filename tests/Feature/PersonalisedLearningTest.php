@@ -212,6 +212,7 @@ class PersonalisedLearningTest extends TestCase
         $this->assertTrue($student->fresh()->notifications->contains(
             fn ($notification) => ($notification->data['type'] ?? null) === 'teacher_feedback'
                 && (int) ($notification->data['teacher_note_id'] ?? 0) === (int) $note->id
+                && str_contains((string) ($notification->data['href'] ?? ''), 'feedback='.(int) $note->id)
         ));
 
         $other = User::factory()->create([

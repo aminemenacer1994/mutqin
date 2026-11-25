@@ -1,7 +1,7 @@
 <article class="seo-ssr">
     <h1>Qur’an memorisation, revision, and AI recitation</h1>
     <p>Listen, repeat, and recite a short passage. Then come back and revise it.</p>
-    <p>Memorise, revise, and use optional AI Recite. Mutqin is for beginners and anyone returning to Hifz.</p>
+    <p>Memorise, revise, and use optional AI Recite. Mutqin is a Quran memorisation app for Hifz — for beginners and anyone returning.</p>
     <p><a href="/register?intent=first">Start Memorising — Free</a>.</p>
 
     <h2>Your first 10 minutes with Mutqin</h2>
@@ -27,6 +27,7 @@
     <h2>Questions about memorising with Mutqin</h2>
     <p>Mutqin is a Qur’an memorisation companion. It helps you listen, recite, review and return, and supports practice between lessons. It does not replace a teacher.</p>
     <nav aria-label="Explore Mutqin">
+        <a href="/memorisation">Open memorisation</a>
         <a href="/about">About us</a>
         <a href="/privacy">Privacy</a>
         <a href="/pricing">Pricing</a>

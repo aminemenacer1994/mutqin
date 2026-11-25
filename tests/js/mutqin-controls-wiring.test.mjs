@@ -248,7 +248,7 @@ includesAll('welcome back continue session flow', [
   assert.doesNotMatch(welcomeBlock, /welcome-back-meta-line/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-intention/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
-  assert.match(en, /"continuePreviousSession": "Continue"/)
+  assert.match(en, /"continuePreviousSession": "Return to your place"/)
   assert.match(
     welcomeBlock,
     /v-if="canResumePreviousSession"/,
@@ -601,7 +601,7 @@ for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 're
 
 includesAll('offcanvas main-card linkage', [
   /topCardAppliedPills\(\) \{\s*return \[\]\s*\}/s,
-  /reviewPriorityLabel\(\) \{\s*return ''\s*\}/s,
+  /reviewPriorityLabel\(\) \{\s*return this\.previousAiCheckNotice \|\| ''\s*\}/s,
   /this\.syncSettingsDraft\(\)\s*this\.persistUiState\(\)/,
   /toggleTajweed\(\) \{\s*this\.setTajweedEnabled\(!this\.tajweedEnabled/,
   /selectFont\(_fontValue\) \{\s*this\.quranFont = QURAN_FONT_DEFAULT/,
@@ -844,7 +844,7 @@ includesAll('planner ui gated by premium tier', [
   /showHifzPlannerUi\(\) \{\s*return this\.canUsePremiumTechniques\s*\}/s,
   /showAiMemorisationButton\(\) \{\s*return this\.aiTestModalsEnabled && this\.canUseProFeatures\s*\}/s,
   /requirePremiumTechniqueAccess\(\) \{\s*if \(this\.canUsePremiumTechniques\) return true/s,
-  /enforceSubscriptionFeatureLimits\(\) \{\s*if \(this\.canUsePremiumTechniques\) return/s,
+  /enforceSubscriptionFeatureLimits\(\) \{[\s\S]*?if \(!this\.canUsePremiumTechniques\)/s,
   /'is-locked': !canUsePremiumTechniques/,
 ])
 
@@ -1159,7 +1159,7 @@ assert.doesNotMatch(
 includesAll('ai recitation simplified workspace', [
   /\.self-check-header-tools/,
   /v-if="shouldShowOffcanvasTabs"/,
-  /shouldShowOffcanvasTabs\(\) \{\s*return true\s*\}/s,
+  /shouldShowOffcanvasTabs\(\) \{[\s\S]*?return true\s*\}/s,
   /if \(this\.recitationCheckRecording \|\| this\.recitationCheckPreparing\) return false/,
   /recitation-premium-review/,
   /recitation-premium-meter/,

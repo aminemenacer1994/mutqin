@@ -157,6 +157,19 @@
                 <h2>{{ t('teacher.playback_wording_summary') }}</h2>
                 <p v-if="checkerScore" class="teacher-playback__score">{{ checkerScore }}</p>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_ai_wording_only') }}</p>
+                <details v-if="payload.tajweed_practice_suggestion" class="teacher-playback__panel teacher-playback__practice-aid">
+                  <summary>{{ t('teacher.playback_tajweed_practice_title') }}</summary>
+                  <p class="teacher-playback__hint">{{ t('teacher.playback_tajweed_practice_disclaimer') }}</p>
+                  <p v-if="payload.tajweed_practice_suggestion.headline" class="teacher-playback__saved">{{ payload.tajweed_practice_suggestion.headline }}</p>
+                  <p v-if="payload.tajweed_practice_suggestion.summary">{{ payload.tajweed_practice_suggestion.summary }}</p>
+                  <ul v-if="practiceAidSegments.length" class="teacher-playback__history">
+                    <li v-for="(seg, index) in practiceAidSegments" :key="`${seg.rule_key}-${seg.word_index}-${index}`">
+                      <span v-if="seg.word">{{ seg.word }}</span>
+                      <span class="teacher-playback__hint"> · {{ seg.rule_key || seg.outcome }}</span>
+                      <span v-if="seg.hold && seg.hold !== 'na'" class="teacher-playback__hint"> · {{ seg.hold }}</span>
+                    </li>
+                  </ul>
+                </details>
                 <p v-if="hasAudio && !audioError" class="teacher-playback__hint">{{ t('teacher.playback_listen_first') }}</p>
                 <div class="teacher-playback__summary" :aria-label="t('teacher.playback_wording_summary')">
                   <dl v-if="assessedWords.length" class="teacher-playback__summary-counts">
@@ -669,6 +682,9 @@ export default {
       if (followUp.approved) return this.t('teacher.playback_follow_up_approved')
       if (followUp.submitted) return this.t('teacher.playback_follow_up_submitted')
       return this.t('teacher.playback_follow_up_open')
+    },
+    practiceAidSegments() {
+      return this.payload?.tajweed_practice_suggestion?.segments || []
     },
     words() {
       return this.payload?.words || []

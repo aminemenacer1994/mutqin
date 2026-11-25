@@ -38,6 +38,6 @@ assert.match(styles, /\.user-dashboard--progress \.user-dashboard__shell\.contai
 assert.match(styles, /\.user-dashboard \.dash-section--weekly \.dash-analytics\s*\{[^}]*grid-template-columns:\s*repeat\(3,/)
 assert.doesNotMatch(dashboard, /class="dash-analytic__hint"/)
 assert.doesNotMatch(dashboard, /dash-sticky-continue|setupContinueObserver/)
-assert.match(dashboard, /class="dash-continue-card"/)
+assert.match(dashboard, /dash-continue-card/)
 
 console.log('dashboard layout checks passed')

@@ -961,6 +961,30 @@ export const learningApi = {
     const { data } = await http.put('/parent/notification-preferences', preferences)
     return data
   },
+  async getParentNotifications(params = {}) {
+    const { data } = await http.get('/parent/notifications', { params })
+    return data
+  },
+  async markParentNotificationRead(notificationId) {
+    const { data } = await http.post(`/parent/notifications/${notificationId}/read`)
+    return data
+  },
+  async markAllParentNotificationsRead() {
+    const { data } = await http.post('/parent/notifications/read-all')
+    return data
+  },
+  async getStudentNotifications(params = {}) {
+    const { data } = await http.get('/me/notifications', { params })
+    return data
+  },
+  async markStudentNotificationRead(notificationId) {
+    const { data } = await http.post(`/me/notifications/${notificationId}/read`)
+    return data
+  },
+  async markAllStudentNotificationsRead() {
+    const { data } = await http.post('/me/notifications/read-all')
+    return data
+  },
   async saveTeacherRecitationAssessment(studentId, attemptId, payload, annotation) {
     const body = payload && typeof payload === 'object'
       ? payload

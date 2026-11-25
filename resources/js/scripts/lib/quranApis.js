@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { attachHttpErrorTracking } from '../observability/errorTracking'
+import { attachHttpErrorTracking } from '../observability/errorTracking.js'
 import { getMushafLayout, MUSHAF_LAYOUT_MADANI_V2 } from '../mushaf/mushafLayouts.js'
 
 /** Madani V2 printed-page ceiling for Quran.com mushaf APIs (not IndoPak). */

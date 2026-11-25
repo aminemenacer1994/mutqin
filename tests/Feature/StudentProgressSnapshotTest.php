@@ -188,7 +188,7 @@ class StudentProgressSnapshotTest extends TestCase
         $this->assertCount(1, $payload['improve']['weak_passages']);
         $this->assertCount(1, $payload['improve']['recurring_mistakes']);
         $this->assertGreaterThanOrEqual(2, $payload['improve']['recurring_mistakes'][0]['count']);
-        $this->assertFalse($payload['improve']['recurring_mistakes'][0]['is_tajweed_assessment']);
+        $this->assertTrue($payload['improve']['recurring_mistakes'][0]['is_tajweed_assessment']);
         $this->assertStringNotContainsString('Private coaching note', json_encode($payload));
         $this->assertStringNotContainsString('This failed check must stay out.', json_encode($payload));
         $this->assertTrue(collect($payload['feedback'])->contains(fn (array $item) => $item['body'] === 'Reviewed and ready to continue.' && $item['recipient_id'] === $completed->id));
@@ -275,7 +275,7 @@ class StudentProgressSnapshotTest extends TestCase
             'teacher_word_coaching_id' => $coaching->id,
             'teacher_id' => $teacher->id,
             'body' => $body,
-            'focus' => 'pronunciation',
+            'focus' => 'qalqalah',
             'finding' => 'difficulty',
         ])->save();
     }

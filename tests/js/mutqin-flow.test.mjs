@@ -360,6 +360,6 @@ assert.match(memorisationSource, /setActiveVerse\(verseKey, \{[^}]*queueIndex: t
 assert.match(memorisationSource, /queueIndex: Number\.isFinite\(options\.queueIndex\)/, 'playback must not reset repeated ayah entries to first queue match')
 assert.doesNotMatch(memorisationSource, /createAyahSegments/, 'linking must be ayah-level, not word-segment based')
 assert.match(chainingQueueSource, /linking:single:\$\{verseKey\(verse\)\}/, 'linking must include individual ayah practice')
-assert.match(chainingQueueSource, /linking:\$\{verseKey\(verse\)\}->\$\{verseKey\(nextVerse\)\}/, 'linking must include adjacent ayah pairs')
+assert.match(chainingQueueSource, /linking:\$\{verseKey\(current\)\}->\$\{verseKey\(next\)\}/, 'linking must include adjacent ayah pairs')
 
 console.log('mutqin-flow composable integration passed')

@@ -9,9 +9,11 @@ use App\Models\MemorisationProgress;
 use App\Models\ParentStudentLink;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Notifications\LearningTaskNotification;
+use App\Services\Achievements\PracticePreferences;
 use App\Support\ParentFeatures;
 
 /**
@@ -23,6 +25,7 @@ final class ParentNoticeService
     public function __construct(
         private readonly ParentAccessAuthorizer $access,
         private readonly ParentNoticePreferences $preferences,
+        private readonly PracticePreferences $practicePreferences,
     ) {}
 
     public function homework(User $student, int $recipientId): void
@@ -103,6 +106,7 @@ final class ParentNoticeService
             'body' => 'Open messages to read it.',
             'href' => '/parent?view=messages&child='.$student->id,
             'teacher_note_id' => (int) $note->id,
+            'child_user_id' => (int) $student->id,
         ]);
     }
 
@@ -159,6 +163,47 @@ final class ParentNoticeService
         return $sent;
     }
 
+    public function overdueHomework(int $limit = 200): int
+    {
+        if (! ParentFeatures::enabled()) {
+            return 0;
+        }
+
+        $recipients = TeacherAssignmentRecipient::query()
+            ->whereIn('status', [AssignmentStatus::Pending->value, AssignmentStatus::InProgress->value])
+            ->whereHas('assignment', fn ($query) => $query->where('due_at', '<', now()->startOfDay()))
+            ->with('assignment')
+            ->limit($limit)
+            ->get();
+
+        $sent = 0;
+        foreach ($recipients as $recipient) {
+            $student = User::query()->find($recipient->student_id);
+            $assignment = $recipient->assignment;
+            if (! $student instanceof User || ! $assignment instanceof TeacherAssignment) {
+                continue;
+            }
+            $sent += $this->overdueCount($student, 'parent-overdue:'.$recipient->id);
+        }
+
+        return $sent;
+    }
+
+    public function attendanceException(User $student, TeacherAttendanceRecord $record): void
+    {
+        if (! in_array($record->status, ['absent', 'late'], true)) {
+            return;
+        }
+
+        $title = $record->status === 'late' ? 'Late to class' : 'Absent from class';
+        $this->fanout($student, ParentGuardianPermission::ViewAttendance, 'attendance', 'parent-attendance:'.$record->id, [
+            'type' => 'parent_attendance',
+            'title' => $title,
+            'body' => 'Attendance was recorded for a recent class.',
+            'href' => '/parent?view=progress&child='.$student->id,
+        ]);
+    }
+
     public function weeklySummaries(int $limit = 200): int
     {
         if (! ParentFeatures::enabled()) {
@@ -185,6 +230,9 @@ final class ParentNoticeService
             if (! $this->preferences->allows($parent, 'weekly_summary')) {
                 continue;
             }
+            if ($this->isQuietHours($parent)) {
+                continue;
+            }
             if (! $this->hadRecentProgress($student)) {
                 continue;
             }
@@ -193,6 +241,7 @@ final class ParentNoticeService
                 'title' => 'Weekly progress summary',
                 'body' => 'A weekly learning summary is ready.',
                 'href' => '/parent?view=progress&child='.$student->id,
+                'child_user_id' => (int) $student->id,
             ])) {
                 $sent++;
             }
@@ -224,11 +273,15 @@ final class ParentNoticeService
             if (! $allowed) {
                 continue;
             }
+            if ($this->isQuietHours($parent)) {
+                continue;
+            }
             $this->once($parent, 'parent-learning-report:'.$reportId, [
                 'type' => 'parent_learning_report',
                 'title' => 'Learning report',
                 'body' => 'A learning report is ready.',
                 'href' => '/parent?view=reports&child='.$student->id,
+                'child_user_id' => (int) $student->id,
             ]);
         }
     }
@@ -255,11 +308,40 @@ final class ParentNoticeService
 
         $sent = 0;
         foreach ($this->guardians($student, ParentGuardianPermission::ViewAssignments, 'deadlines') as $parent) {
+            if ($this->isQuietHours($parent)) {
+                continue;
+            }
             if ($this->once($parent, $sourceKey, [
                 'type' => 'parent_deadline',
                 'title' => 'Homework deadline',
                 'body' => 'A homework deadline is coming up.',
                 'href' => '/parent?view=learning&child='.$student->id,
+                'child_user_id' => (int) $student->id,
+            ])) {
+                $sent++;
+            }
+        }
+
+        return $sent;
+    }
+
+    private function overdueCount(User $student, string $sourceKey): int
+    {
+        if (! ParentFeatures::enabled()) {
+            return 0;
+        }
+
+        $sent = 0;
+        foreach ($this->guardians($student, ParentGuardianPermission::ViewAssignments, 'deadlines') as $parent) {
+            if ($this->isQuietHours($parent)) {
+                continue;
+            }
+            if ($this->once($parent, $sourceKey, [
+                'type' => 'parent_overdue',
+                'title' => 'Homework overdue',
+                'body' => 'Homework passed its due date.',
+                'href' => '/parent?view=learning&child='.$student->id,
+                'child_user_id' => (int) $student->id,
             ])) {
                 $sent++;
             }
@@ -273,6 +355,7 @@ final class ParentNoticeService
      */
     private function fanout(User $student, ParentGuardianPermission $permission, string $preference, string $sourceKey, array $payload): void
     {
+        $payload['child_user_id'] = (int) $student->id;
         foreach ($this->guardians($student, $permission, $preference) as $parent) {
             $this->once($parent, $sourceKey, $payload);
         }
@@ -318,5 +401,23 @@ final class ParentNoticeService
         $user->notify(new LearningTaskNotification($sourceKey, $payload));
 
         return true;
+    }
+
+    private function isQuietHours(User $parent): bool
+    {
+        $tz = $this->practicePreferences->timezone($parent);
+        $hour = (int) now()->timezone($tz)->format('G');
+        $start = (int) config('mutqin.revision_reminders.quiet_hours.start', 22);
+        $end = (int) config('mutqin.revision_reminders.quiet_hours.end', 7);
+
+        if ($start === $end) {
+            return false;
+        }
+
+        if ($start > $end) {
+            return $hour >= $start || $hour < $end;
+        }
+
+        return $hour >= $start && $hour < $end;
     }
 }

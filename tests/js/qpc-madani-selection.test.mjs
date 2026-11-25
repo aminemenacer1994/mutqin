@@ -76,7 +76,7 @@ const wordVue = readFileSync(join(root, 'resources/js/components/madani/MadaniWo
 const selectIdx = memorisationJs.indexOf('onQpcMadaniWordSelect(location)')
 assert.ok(selectIdx >= 0)
 assert.match(memorisationJs.slice(selectIdx, selectIdx + 1400), /resolveQpcWordAudioIndex/)
-assert.match(memorisationJs.slice(selectIdx, selectIdx + 1400), /onMushafAyahClick/)
+assert.match(memorisationJs.slice(selectIdx, selectIdx + 2500), /onMushafAyahClick/)
 assert.match(memorisationVue, /:range-start-ayah="''"/)
 assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/)
 assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/)

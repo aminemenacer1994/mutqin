@@ -1,5 +1,5 @@
-import { getChapters } from '../lib/quranApis'
-import { loadSurahAyahs } from '../dashboardAiRecite/ayahText'
+import { getChapters } from '../lib/quranApis.js'
+import { loadSurahAyahs } from '../dashboardAiRecite/ayahText.js'
 
 // Keep common demo chapters readable even when the upstream Quran proxy is offline.
 const fallbackNames = {

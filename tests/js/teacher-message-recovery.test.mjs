@@ -76,6 +76,7 @@ async function environment({ withoutRandomUUID = false } = {}) {
       export function revokeObjectUrl(url) { if (url) URL.revokeObjectURL(url) }
       export async function stopMediaRecorderAndCollectBlob() { return new Blob() }
     `
+    else if (filename.endsWith('.css')) source = 'export default {}'
     else {
       source = await fs.readFile(filename, 'utf8')
       if (filename.endsWith('.vue')) source = source.match(/<script[^>]*>([\s\S]*?)<\/script>/)[1]
@@ -384,7 +385,15 @@ test('a support refresh started during a message POST cannot overwrite its confi
   }
   const send = await actualMethod('resources/js/views/Dashboard.vue', 'sendSupportNote', { learningApi: api, applyAssignmentThreadUpdate: env.threadHelpers.applyAssignmentThreadUpdate })
   const load = await actualMethod('resources/js/views/Dashboard.vue', 'loadLearnerSupport', { learningApi: api })
-  const dashboard = { auth: { learner_teacher_section_enabled: true }, supportRequestId: 0, supportLoading: false, assignmentSavingId: 0, support: { assignments: [{ id: 7, messages: [] }] } }
+  const dashboard = {
+    auth: { learner_teacher_section_enabled: true, learner_learning_network_connected: true },
+    supportRequestId: 0,
+    supportLoading: false,
+    assignmentSavingId: 0,
+    support: { assignments: [{ id: 7, messages: [] }] },
+    applyLearnerSupport(payload) { this.support = payload },
+    $nextTick: (cb) => { cb?.() },
+  }
   const delivery = send.call(dashboard, { id: 7 }, 'Confirmed message', null, 'stable-id')
   const staleRefresh = load.call(dashboard)
   finishPost({ message: { id: 92, body: 'Confirmed message', sender: 'student' } })

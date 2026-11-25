@@ -50,4 +50,5 @@ return [
     'stripe_checkout_note' => 'Pro unlocks Join ayahs together, highlight memory words, and AI checks. Session setup, audio, and beginner tools stay free.',
     'stripe_subscription_description' => 'Pro: join ayahs, memory-word highlights, AI checks, unlimited saves.',
     'stripe_lifetime_description' => 'Pro lifetime: join ayahs, memory-word highlights, AI checks, unlimited saves. Pay once.',
+    'saved_sessions_limit' => 'You have reached the saved-session limit on your plan. Upgrade for more saved sessions.',
 ];

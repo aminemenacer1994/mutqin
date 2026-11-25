@@ -39,7 +39,7 @@ for (const file of files) {
   while ((match = KEY_PATTERN.exec(source))) {
     const key = match[1]
     // Dotless arguments are not translation paths (e.g. t(variable) helpers).
-    if (!key.includes('.') || hasKey(key)) continue
+    if (!key.includes('.') || key.endsWith('.') || hasKey(key)) continue
     const line = source.slice(0, match.index).split('\n').length
     if (!missing.has(key)) missing.set(key, [])
     missing.get(key).push(`${path.relative(root, file)}:${line}`)

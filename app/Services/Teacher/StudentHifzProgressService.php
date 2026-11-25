@@ -88,6 +88,27 @@ class StudentHifzProgressService
      *
      * @return array<string, mixed>
      */
+    /**
+     * Compact Hifz summary for the student My Learning sidebar (no teacher scope).
+     *
+     * @return array<string, mixed>
+     */
+    public function forMyLearningPane(User $student): array
+    {
+        $coverage = $this->publicCoverage($this->coverage($student));
+        $validated = $this->validatedMemorisationForStudent($student);
+
+        return [
+            'coverage' => $coverage,
+            'validated_memorisation' => $validated,
+            'empty' => ((int) ($coverage['memorised_ayahs'] ?? 0)) === 0
+                && ((int) ($validated['validated_ayahs'] ?? 0)) === 0
+                && empty($coverage['new_memorisation']['items'] ?? [])
+                && empty($coverage['recent_revision']['items'] ?? [])
+                && empty($coverage['older_revision']['items'] ?? []),
+        ];
+    }
+
     public function forLearner(User $student, string $window = 'month'): array
     {
         $bounds = $this->periodBounds($window);
@@ -171,6 +192,8 @@ class StudentHifzProgressService
                         (int) $recipient->assignment->ayah_start,
                         (int) ($recipient->assignment->ayah_end ?: $recipient->assignment->ayah_start),
                     ),
+                    'activity' => (string) $recipient->assignment->activity,
+                    'hifz_category' => $recipient->assignment->hifz_category,
                     'status' => $status,
                     'due_at' => $dueAt?->toIso8601String(),
                 ];

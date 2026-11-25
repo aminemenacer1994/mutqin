@@ -19,6 +19,7 @@ final class ParentNoticePreferences
         'feedback',
         'messages',
         'updates',
+        'attendance',
         'weekly_summary',
         'reports',
     ];

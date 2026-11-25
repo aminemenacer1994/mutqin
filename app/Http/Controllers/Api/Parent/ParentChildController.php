@@ -40,7 +40,7 @@ class ParentChildController extends Controller
         $parent = $request->user();
         abort_unless($parent instanceof User && $access->allows($parent, $student), 404);
 
-        return response()->json($learning->progress($parent, $student, (string) $request->query('window', 'month')));
+        return response()->json($learning->progress($parent, $student, (string) $request->query('window', 'week')));
     }
 
     public function profile(

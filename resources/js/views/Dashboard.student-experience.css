@@ -2946,6 +2946,14 @@ html[data-theme="dark"] [data-platform-shell="student"] .dash-word.is-unassessed
   gap: 28px !important;
 }
 
+.learner-workspace.user-dashboard .learner-practice__intro {
+  margin: 0 0 var(--dash-space-4, 16px);
+}
+
+.learner-workspace.user-dashboard .learner-practice__continue {
+  margin-bottom: var(--dash-space-5, 20px);
+}
+
 [data-platform-shell="student"].learner-workspace.teacher-dashboard.user-dashboard--progress #dash-practice .teacher-pane {
   border-radius: var(--teacher-radius, var(--radius-card, 12px)) !important;
   background: var(--teacher-surface) !important;

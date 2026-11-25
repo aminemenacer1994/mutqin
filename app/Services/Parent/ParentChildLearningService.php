@@ -116,7 +116,7 @@ class ParentChildLearningService
     /**
      * @return array<string, mixed>
      */
-    public function progress(User $parent, User $student, string $window = 'month'): array
+    public function progress(User $parent, User $student, string $window = 'week'): array
     {
         $this->assertPermission($parent, $student, ParentGuardianPermission::ViewProgress);
 

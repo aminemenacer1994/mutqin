@@ -1,26 +1,14 @@
 <template>
-  <section class="parent-home">
-    <header class="parent-page">
-      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-calendar2-heart"></i></span>
+  <section class="parent-home parent-reports-page teacher-stack">
+    <header class="teacher-page-header">
       <div>
-        <h1>{{ t('parent.reports_title') }}</h1>
-        <p>{{ t('parent.reports_hint') }}</p>
+        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('parent.reports_title') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('parent.reports_hint') }}</p>
       </div>
     </header>
 
     <div class="parent-filters parent-report-controls">
-      <label v-if="children.length" class="parent-report-field">
-        <span class="parent-report-field__label">{{ t('parent.child_filter') }}</span>
-        <select
-          class="parent-report-select"
-          :value="childSelectValue"
-          :aria-label="t('parent.child_filter')"
-          @change="onChildChange"
-        >
-          <option value="">{{ t('parent.child_all') }}</option>
-          <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }}</option>
-        </select>
-      </label>
       <div class="parent-pills" role="group" :aria-label="t('parent.reports_cadence')">
         <button type="button" :class="{ 'is-active': cadence === 'week' }" :aria-pressed="cadence === 'week' ? 'true' : 'false'" @click="setCadence('week')">{{ t('parent.reports_week') }}</button>
         <button type="button" :class="{ 'is-active': cadence === 'month' }" :aria-pressed="cadence === 'month' ? 'true' : 'false'" @click="setCadence('month')">{{ t('parent.reports_month') }}</button>
@@ -42,10 +30,7 @@
       <div v-for="n in 3" :key="n" class="teacher-skeleton"></div>
       <span class="visually-hidden">{{ t('parent.reports_loading') }}</span>
     </div>
-    <p v-else-if="error" class="alert alert-danger" role="alert">
-      {{ t('parent.reports_failed') }}
-      <button type="button" class="btn btn-link" @click="load">{{ t('parent.reports_retry') }}</button>
-    </p>
+    <NetworkFallback v-else-if="error" @retry="load" />
 
     <template v-else>
       <p v-if="!selectedId && family?.plain" class="parent-lead">{{ t('parent.reports_family_hint') }}</p>
@@ -82,6 +67,21 @@
           </a>
         </header>
 
+        <section v-if="parentHighlights.length" class="parent-panel parent-reports-parent-focus">
+          <h2 class="parent-report__subhead">{{ t('parent.reports_parent_summary') }}</h2>
+          <ul class="parent-report-parent-list">
+            <li v-for="(line, index) in parentHighlights" :key="index">{{ line }}</li>
+          </ul>
+        </section>
+
+        <div v-if="chartPanels.length" class="parent-reports-charts">
+          <section v-for="panel in chartPanels" :key="panel.key" class="parent-panel parent-reports-chart-panel">
+            <h2 class="parent-report__subhead">{{ panel.title }}</h2>
+            <p v-if="panel.hint" class="parent-stat__hint">{{ panel.hint }}</p>
+            <ParentSimpleBarChart :bars="panel.bars" :aria-label="panel.title" />
+          </section>
+        </div>
+
         <div v-if="kpiCards.length" class="parent-stats parent-stats--reports" role="list">
           <article v-for="card in kpiCards" :key="card.key" class="parent-stat" role="listitem">
             <span aria-hidden="true"><i :class="card.icon"></i></span>
@@ -91,9 +91,13 @@
           </article>
         </div>
 
-        <section v-if="showOverview" class="parent-panel">
+        <section v-if="showOverview" class="parent-panel" :class="{ 'parent-reports-overview--parent': parentFirstLayout }">
           <h2><i class="bi bi-card-text" aria-hidden="true"></i>{{ t('parent.reports_overview') }}</h2>
-          <template v-if="active.narrative?.text">
+          <details v-if="parentFirstLayout && active.narrative?.text" class="parent-report-details parent-reports-detail-fold">
+            <summary>{{ t('parent.reports_read_more') }}</summary>
+            <p class="parent-report-prose">{{ active.narrative.text }}</p>
+          </details>
+          <template v-else-if="active.narrative?.text">
             <p v-if="!needsFold(active.narrative.text)" class="parent-report-prose">{{ active.narrative.text }}</p>
             <template v-else>
               <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.narrative.text) }}</p>
@@ -131,6 +135,7 @@
             <summary>{{ t('parent.reports_goals') }}</summary>
             <p class="parent-report-prose">{{ active.goals.plain }}</p>
           </details>
+          <p v-if="sourceLabels.length" class="parent-stat__hint">{{ t('parent.reports_evidence_note') }}</p>
           <details v-if="sourceLabels.length" class="parent-report-details">
             <summary>{{ t('parent.reports_sources') }}</summary>
             <ul class="parent-pills--sources" role="list">
@@ -168,6 +173,31 @@
           </ul>
         </section>
 
+        <section v-if="showAttendance" class="parent-panel">
+          <h2><i class="bi bi-calendar-week" aria-hidden="true"></i>{{ t('parent.reports_section_attendance') }}</h2>
+          <p v-if="active.attendance?.plain" class="parent-report-prose">{{ active.attendance.plain }}</p>
+          <div v-if="attendanceCards.length" class="parent-stats parent-stats--compact" role="list">
+            <article v-for="card in attendanceCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
+              <span aria-hidden="true"><i :class="card.icon"></i></span>
+              <strong>{{ card.value }}</strong>
+              <small>{{ card.label }}</small>
+            </article>
+          </div>
+        </section>
+
+        <section v-if="showHomePractice" class="parent-panel">
+          <h2><i class="bi bi-house-heart" aria-hidden="true"></i>{{ t('parent.reports_home_practice') }}</h2>
+          <p class="parent-stat__hint">{{ t('parent.reports_home_practice_hint') }}</p>
+          <p v-if="active.home_practice?.plain" class="parent-report-prose">{{ active.home_practice.plain }}</p>
+          <p v-if="!homePracticeItems.length" class="parent-report-prose">{{ t('parent.reports_home_practice_empty') }}</p>
+          <ul v-else class="parent-suggest">
+            <li v-for="(item, index) in homePracticeItems" :key="`${item.label}-${index}`">
+              <strong v-if="item.label">{{ item.label }}</strong>
+              <span v-if="item.text">{{ item.text }}</span>
+            </li>
+          </ul>
+        </section>
+
         <section v-if="showPractice" class="parent-panel">
           <h2><i class="bi bi-activity" aria-hidden="true"></i>{{ t('parent.reports_section_practice') }}</h2>
           <template v-if="active.activity?.plain">
@@ -180,10 +210,6 @@
               </details>
             </template>
           </template>
-          <details v-if="active.wording?.plain" class="parent-report-details">
-            <summary>{{ t('parent.reports_wording') }}</summary>
-            <p class="parent-report-prose">{{ active.wording.plain }}</p>
-          </details>
         </section>
 
         <section v-if="showFeedback" class="parent-panel">
@@ -202,15 +228,6 @@
           </ul>
         </section>
 
-        <section v-if="recommendations.length" class="parent-suggest">
-          <h2><i class="bi bi-lightbulb" aria-hidden="true"></i>{{ t('parent.reports_next_steps') }}</h2>
-          <ul>
-            <li v-for="(item, index) in recommendations" :key="`${item.label}-${index}`">
-              <strong v-if="item.label">{{ item.label }}</strong>
-              <span v-if="item.text">{{ item.text }}</span>
-            </li>
-          </ul>
-        </section>
       </div>
     </template>
   </section>
@@ -221,11 +238,14 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatWhen } from '../../scripts/parent/dashboard'
 import { periodMetricRowsFromReport, proseNeedsFold, prosePreview } from '../../scripts/parent/reportsView'
+import { reportAttendanceChart, reportHomeworkChart, reportParentHighlights, reportPracticeChart } from '../../scripts/parent/reportCharts'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
+import NetworkFallback from '../NetworkFallback.vue'
+import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
 
 export default {
   name: 'ParentFamilyReports',
-  components: { TeacherEmpty },
+  components: { TeacherEmpty, NetworkFallback, ParentSimpleBarChart },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
@@ -343,15 +363,85 @@ export default {
       const notes = this.active?.feedback?.notes
       return Array.isArray(notes) ? notes : []
     },
-    recommendations() {
-      const rows = this.active?.feedback?.recommendations
+    homePracticeItems() {
+      const rows = this.active?.home_practice?.items
       return Array.isArray(rows) ? rows : []
+    },
+    showHomePractice() {
+      return this.active?.home_practice !== null && this.active?.home_practice !== undefined
+    },
+    showAttendance() {
+      return Boolean(this.active?.attendance && (this.active.attendance.plain || this.attendanceCards.length))
+    },
+    attendanceCards() {
+      const counts = this.active?.attendance?.counts
+      if (!counts) return []
+      const cards = []
+      if (this.active.attendance.rate_percent !== null && this.active.attendance.rate_percent !== undefined) {
+        cards.push({
+          key: 'rate',
+          icon: 'bi bi-percent',
+          label: this.t('parent.progress_attendance_rate'),
+          value: `${this.active.attendance.rate_percent}%`,
+        })
+      }
+      const chips = [
+        { key: 'present', icon: 'bi bi-check-circle', label: this.t('teacher.attendance_present'), field: 'present' },
+        { key: 'late', icon: 'bi bi-clock', label: this.t('teacher.attendance_late'), field: 'late' },
+        { key: 'absent', icon: 'bi bi-x-circle', label: this.t('teacher.attendance_absent'), field: 'absent' },
+        { key: 'excused', icon: 'bi bi-slash-circle', label: this.t('teacher.attendance_excused'), field: 'excused' },
+      ]
+      for (const chip of chips) {
+        const value = Number(counts[chip.field] || 0)
+        if (value > 0) {
+          cards.push({ key: chip.key, icon: chip.icon, label: chip.label, value: String(value) })
+        }
+      }
+      return cards
     },
     showHomework() {
       return Boolean(this.active?.assignments && (this.active.assignments.plain || this.assignmentItems.length))
     },
     showPractice() {
-      return Boolean(this.active?.activity?.plain || this.active?.wording?.plain)
+      return Boolean(this.active?.activity?.plain)
+    },
+    parentHighlights() {
+      return reportParentHighlights(this.t, this.active)
+    },
+    parentFirstLayout() {
+      return this.parentHighlights.length > 0 || this.chartPanels.length > 0
+    },
+    chartPanels() {
+      if (!this.active) return []
+      const panels = []
+      const homeworkBars = reportHomeworkChart(this.t, this.active.assignments)
+      if (homeworkBars.length) {
+        panels.push({
+          key: 'homework',
+          title: this.t('parent.reports_chart_homework_title'),
+          hint: this.t('parent.reports_chart_homework_hint'),
+          bars: homeworkBars,
+        })
+      }
+      const practiceBars = reportPracticeChart(this.t, this.active.activity)
+      if (practiceBars.length) {
+        panels.push({
+          key: 'practice',
+          title: this.t('parent.reports_chart_practice_title'),
+          hint: this.t('parent.reports_chart_practice_hint'),
+          bars: practiceBars,
+        })
+      }
+      const attendanceBars = reportAttendanceChart(this.t, this.active.attendance)
+      if (attendanceBars.length) {
+        panels.push({
+          key: 'attendance',
+          title: this.t('parent.reports_chart_attendance_title'),
+          hint: this.t('parent.reports_chart_attendance_hint'),
+          bars: attendanceBars,
+        })
+      }
+      return panels
     },
     showFeedback() {
       return this.active?.feedback !== null && this.active?.feedback !== undefined

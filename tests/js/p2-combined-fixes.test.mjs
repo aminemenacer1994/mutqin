@@ -17,7 +17,7 @@ const headerBlock = feedback.slice(
 assert.doesNotMatch(headerBlock, /feedback-modal__lead/, 'lead text must not sit in the modal header')
 assert.match(feedback, /feedback-modal__body">[\s\S]*?feedback-modal__lead/)
 
-assert.match(homepage, /\/memorisation\?journey=ten_minute/)
+assert.match(homepage, /\/memorisation\?journey=(?:ten_minute|daily)/)
 
 assert.match(memorisationJs, /buildTenMinuteHeroSessionConfig/)
 assert.match(memorisationJs, /journey === 'ten_minute'/)

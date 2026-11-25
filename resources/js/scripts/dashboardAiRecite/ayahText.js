@@ -1,5 +1,5 @@
-import { getSurahEdition } from '../lib/quranApis'
-import { surahName } from './location'
+import { getSurahEdition } from '../lib/quranApis.js'
+import { surahName } from './location.js'
 
 const surahCache = new Map()
 

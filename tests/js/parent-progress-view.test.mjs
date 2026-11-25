@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  filterProgressHomeworkItems,
   lifetimeMetricRows,
+  parentWeakPassages,
   periodMetricRows,
+  progressHomeworkDueState,
   progressSummaryCards,
   progressSummaryLine,
   showAssignmentTrends,
@@ -117,4 +120,23 @@ test('teacher reviewed assessments filter ai-only rows', () => {
   ])
   assert.equal(rows.length, 1)
   assert.equal(rows[0].attempt_id, 1)
+})
+
+test('homework filter and due state respect activity and deadlines', () => {
+  const items = [
+    { id: 1, activity: 'nazra', status: 'pending', due_at: '2020-01-01T00:00:00Z' },
+    { id: 2, activity: 'hifz', status: 'completed', due_at: '2030-01-01T00:00:00Z' },
+  ]
+  assert.equal(filterProgressHomeworkItems(items, 'hifz').length, 1)
+  assert.equal(progressHomeworkDueState(items[0]), 'overdue')
+  assert.equal(progressHomeworkDueState(items[1]), 'completed')
+})
+
+test('weak passages require teacher-confirmed evidence', () => {
+  const rows = parentWeakPassages([
+    { id: 1, label: 'Al-Ikhlas · 1', count: 1 },
+    { id: 2, label: 'Al-Ikhlas · 2', count: 2 },
+  ])
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].count, 2)
 })

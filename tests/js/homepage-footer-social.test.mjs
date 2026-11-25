@@ -22,7 +22,7 @@ assert.match(homepage, /https:\/\/www\.linkedin\.com\/company\/146569969\//)
 assert.match(homepage, /bi-youtube/)
 assert.match(homepage, /https:\/\/www\.youtube\.com\/@Mutqin-w7h/)
 assert.match(homepage, /href="\/articles"/)
-assert.match(homepage, /href="\/#purpose"/)
+assert.match(homepage, /href="\/about"/)
 assert.match(homepage, /class="footer__copy"/)
 
 assert.match(css, /\.footer__social-link \{/)

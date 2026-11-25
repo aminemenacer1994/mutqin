@@ -72,6 +72,7 @@ class ParentMessageController extends Controller
             'updates' => ['sometimes', 'boolean'],
             'weekly_summary' => ['sometimes', 'boolean'],
             'reports' => ['sometimes', 'boolean'],
+            'attendance' => ['sometimes', 'boolean'],
         ]);
 
         return response()->json([

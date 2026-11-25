@@ -83,8 +83,9 @@ export function activityFiltersActive(filters) {
 }
 
 export function syncActivityFiltersUrl(locationLike, filters, { pane = 'activity' } = {}) {
-  if (typeof window === 'undefined' || !window.URL) return ''
-  const base = locationLike?.href || window.location.href
+  const href = locationLike?.href || (typeof window !== 'undefined' ? window.location.href : '')
+  if (!href) return ''
+  const base = href
   const url = new URL(base, 'http://localhost')
   url.searchParams.set('tab', pane)
 

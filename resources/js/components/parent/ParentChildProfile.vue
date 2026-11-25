@@ -1,5 +1,5 @@
 <template>
-  <section class="parent-home">
+  <section class="parent-home teacher-stack">
     <div v-if="loading" class="teacher-skeletons" role="status">
       <div v-for="n in 3" :key="n" class="teacher-skeleton"></div>
       <span class="visually-hidden">{{ t('parent.loading') }}</span>
@@ -7,21 +7,17 @@
     <NetworkFallback v-else-if="error" @retry="$emit('reload')" />
     <TeacherEmpty v-else-if="!profile" illustrated :message="t('parent.profile_empty')" />
     <template v-else>
-      <header class="parent-page">
-        <span class="parent-avatar parent-avatar--lg" aria-hidden="true">{{ initials(profile.child?.name) }}</span>
-        <div>
+      <header class="teacher-page-header">
+        <div class="parent-progress__head-copy">
           <button type="button" class="parent-back" @click="$emit('back')">
             <i class="bi bi-arrow-left" aria-hidden="true"></i>{{ t('parent.back_children') }}
           </button>
-          <h1>{{ profile.child?.name }}</h1>
-          <p>{{ teacherLine }}</p>
+          <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+          <h1 class="teacher-page-header__title">{{ profile.child?.name }}</h1>
+          <p class="teacher-page-header__hint">{{ teacherLine }}</p>
         </div>
+        <span class="parent-avatar parent-avatar--lg" aria-hidden="true">{{ initials(profile.child?.name) }}</span>
       </header>
-
-      <div class="parent-child-card__actions parent-hub-actions">
-        <button type="button" @click="$emit('open-learning')"><i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.home_homework') }}</button>
-        <button type="button" @click="$emit('open-progress')"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ t('parent.home_progress') }}</button>
-      </div>
 
       <div v-if="cards.length" class="parent-stats" role="list">
         <article v-for="card in cards" :key="card.key" class="parent-stat" role="listitem">

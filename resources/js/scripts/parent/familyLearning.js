@@ -100,6 +100,7 @@ export function homeworkDetailHasContent(item) {
   return Boolean(
     String(item?.instructions || '').trim()
     || visibleAssignmentFeedback(item)
-    || sharedReviewedAssessment(item),
+    || sharedReviewedAssessment(item)
+    || (Array.isArray(item?.history) && item.history.length),
   )
 }

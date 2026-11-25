@@ -1,5 +1,9 @@
+import { filterWeakPassagesForDisplay } from '../dashboard/studentProgressView.js'
+
 const TREND_MIN_BUCKETS = 2
 const EMPTY_METRIC = '—'
+
+export const PARENT_PROGRESS_ACTIVITIES = ['nazra', 'hifz', 'tajweed', 'revision']
 
 function rangeLabel(range) {
   if (!range?.surah_name) return ''
@@ -153,4 +157,31 @@ export function teacherReviewedAssessments(assessments, limit = 3) {
         && (row.teacher_note || row.word_match_percent != null || row.teacher_score != null),
     )
     .slice(0, limit)
+}
+
+export function parentWeakPassages(passages) {
+  return filterWeakPassagesForDisplay(passages)
+}
+
+export function filterProgressHomeworkItems(items, activity = null) {
+  const rows = Array.isArray(items) ? items : []
+  if (!activity) return rows
+  return rows.filter((row) => String(row?.activity || '') === activity)
+}
+
+export function progressHomeworkDueState(item, now = Date.now()) {
+  if (!item || item.status === 'completed') return 'completed'
+  const due = item.due_at ? Date.parse(item.due_at) : NaN
+  if (Number.isFinite(due) && due < now) return 'overdue'
+  if (item.status === 'awaiting_confirmation') return 'awaiting_confirmation'
+  if (item.status === 'in_progress') return 'in_progress'
+  return 'pending'
+}
+
+export function progressHomeworkStatusKey(state) {
+  if (state === 'completed') return 'parent.homework_completed'
+  if (state === 'overdue') return 'parent.homework_overdue'
+  if (state === 'awaiting_confirmation') return 'parent.homework_awaiting_confirmation'
+  if (state === 'in_progress') return 'parent.homework_in_progress'
+  return 'parent.homework_pending'
 }

@@ -332,7 +332,7 @@ export default {
           id: 'alerts',
           titleKey: 'parent.settings_notice_group_alerts',
           hintKey: 'parent.settings_notice_group_alerts_hint',
-          keys: ['homework', 'deadlines', 'updates'],
+          keys: ['homework', 'deadlines', 'updates', 'attendance'],
           collapsible: false,
         },
         {

@@ -6,6 +6,7 @@ const workspace = fs.readFileSync(new URL('../../resources/js/components/teacher
 const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
 
 assert.match(section, /learner-teacher__assignments-toolbar/)
+assert.match(section, /LearnerHifzOverview/)
 assert.match(section, /LearnerRevisionTargets/)
 assert.match(section, /learner-teacher__task-row__status.*pillClass/)
 assert.match(section, /activeFilter === 'completed'[\s\S]*ALL_TAB_COMPLETED_PREVIEW/)

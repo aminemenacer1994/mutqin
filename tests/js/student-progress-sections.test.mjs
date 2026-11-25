@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const dashboard = readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
+const progressView = readFileSync(new URL('../../resources/js/scripts/dashboard/studentProgressView.js', import.meta.url), 'utf8')
 const achievements = readFileSync(new URL('../../resources/js/components/achievements/DashboardAchievementsWidget.vue', import.meta.url), 'utf8')
 
 for (const id of [
@@ -24,7 +25,7 @@ assert.match(dashboard, /student-progress__tabs/)
 assert.match(dashboard, /progressWindowFromSearch/)
 assert.match(dashboard, /data-testid="review-focus-workspace"/)
 assert.match(dashboard, /id="ai-recite-results"/)
-assert.match(dashboard, /progress_memorised_lifetime/)
+assert.match(progressView, /progress_memorised_lifetime/)
 assert.match(dashboard, /progress_wording_not_tajweed/)
 assert.match(dashboard, /canUseAdvancedAnalytics/)
 assert.doesNotMatch(dashboard, /word_match_percent/)

@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\RevisionReminderController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
+use App\Http\Controllers\Api\Learning\StudentNotificationController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\Api\Organisations\OrganisationInstitutionController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Api\Parent\ParentChildController;
 use App\Http\Controllers\Api\Parent\ParentDashboardController;
 use App\Http\Controllers\Api\Parent\ParentInvitationController;
 use App\Http\Controllers\Api\Parent\ParentMessageController;
+use App\Http\Controllers\Api\Parent\ParentNotificationController;
 use App\Http\Controllers\Api\Parent\ParentReportController;
 use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\ReferralController;
@@ -164,6 +166,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
         Route::get('/dashboard/progress', [DashboardController::class, 'progress'])->name('api.dashboard.progress');
+        Route::get('/me/notifications', [StudentNotificationController::class, 'index'])->name('api.me.notifications.index');
+        Route::post('/me/notifications/read-all', [StudentNotificationController::class, 'markAllRead'])->name('api.me.notifications.read-all');
+        Route::post('/me/notifications/{notification}/read', [StudentNotificationController::class, 'markRead'])->name('api.me.notifications.read');
         Route::get('/referrals', [ReferralController::class, 'show'])->name('api.referrals.show');
         Route::post('/referrals/acknowledge', [ReferralController::class, 'acknowledge'])
             ->middleware('throttle:30,1,api-referrals-ack')
@@ -233,6 +238,9 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/messages', [ParentMessageController::class, 'index'])->name('api.parent.messages.index');
                 Route::get('/notification-preferences', [ParentMessageController::class, 'preferences'])->name('api.parent.notification-preferences.show');
                 Route::put('/notification-preferences', [ParentMessageController::class, 'updatePreferences'])->name('api.parent.notification-preferences.update');
+                Route::get('/notifications', [ParentNotificationController::class, 'index'])->name('api.parent.notifications.index');
+                Route::post('/notifications/read-all', [ParentNotificationController::class, 'markAllRead'])->name('api.parent.notifications.read-all');
+                Route::post('/notifications/{notification}/read', [ParentNotificationController::class, 'markRead'])->name('api.parent.notifications.read');
                 Route::get('/messages/{teacher}/{student}', [ParentMessageController::class, 'show'])->whereNumber('teacher')->whereNumber('student')->name('api.parent.messages.show');
                 Route::post('/messages/{teacher}/{student}', [ParentMessageController::class, 'store'])->whereNumber('teacher')->whereNumber('student')->middleware('throttle:20,1,api-parent-messages')->name('api.parent.messages.store');
                 Route::post('/messages/{note}/report', [ParentMessageController::class, 'report'])->middleware('throttle:10,1,api-parent-messages-report')->name('api.parent.messages.report');

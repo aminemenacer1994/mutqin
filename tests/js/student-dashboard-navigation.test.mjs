@@ -12,18 +12,18 @@ import {
 } from '../../resources/js/scripts/dashboard/studentDashboardNavigation.js'
 import { buildCheckAgainHref, buildReviewHref } from '../../resources/js/scripts/dashboard/progressView.js'
 
-assert.deepEqual(STUDENT_DASHBOARD_PANES, ['home', 'learning', 'progress', 'activity', 'messages', 'settings'])
+assert.deepEqual(STUDENT_DASHBOARD_PANES, ['home', 'learning', 'practice', 'progress', 'activity', 'messages', 'settings'])
 const nav = studentNavItems({ learning: true, messaging: true })
-assert.deepEqual(nav.map((item) => item.id), ['home', 'learning', 'progress', 'activity', 'messages'])
+assert.deepEqual(nav.map((item) => item.id), ['home', 'learning', 'practice', 'progress', 'activity', 'messages'])
 assert.deepEqual(
   studentNavItems({ learning: false, messaging: false }).map((item) => item.id),
-  ['home', 'progress', 'activity'],
+  ['home', 'practice', 'progress', 'activity'],
 )
-assert.deepEqual(studentNavItems({ learning: true, messaging: false }).map((item) => item.id), ['home', 'learning', 'progress', 'activity'])
+assert.deepEqual(studentNavItems({ learning: true, messaging: false }).map((item) => item.id), ['home', 'learning', 'practice', 'progress', 'activity'])
 assert.ok(nav.every((item) => item.label.startsWith('dashboard.jump_') && item.icon.startsWith('bi ')))
 assert.equal(normalizeStudentDashboardPane('my-learning'), 'learning')
 assert.equal(normalizeStudentDashboardPane('unknown'), 'home')
-assert.equal(normalizeStudentDashboardPane('practice'), 'home')
+assert.equal(normalizeStudentDashboardPane('practice'), 'practice')
 assert.equal(normalizeStudentDashboardPane('messages'), 'messages')
 assert.equal(normalizeStudentDashboardPane('settings'), 'settings')
 assert.equal(studentDashboardPaneFromLocation({ search: '?source=teacher&tab=activity', hash: '' }), 'activity')
@@ -72,12 +72,14 @@ assert.match(dashboard, /:items="studentNavItems"/)
 assert.doesNotMatch(dashboard, /:show-account="false"/)
 assert.match(dashboard, /studentPane === 'messages'/)
 assert.match(dashboard, /studentPane === 'settings'/)
+assert.match(dashboard, /studentPane === 'practice'/)
+assert.match(dashboard, /id="dash-practice"/)
 assert.match(dashboard, /teacher-dashboard__shell/)
 assert.doesNotMatch(dashboard, /<nav class="teacher-nav dash-jump"/)
 const teacherNav = fs.readFileSync(new URL('../../resources/js/components/teacher/TeacherNav.vue', import.meta.url), 'utf8')
 assert.match(teacherNav, /showAccount: \{ type: Boolean, default: true \}/)
 assert.doesNotMatch(fs.readFileSync(new URL('../../resources/js/views/TeacherDashboard.vue', import.meta.url), 'utf8'), /show-account="false"/)
-assert.doesNotMatch(fs.readFileSync(new URL('../../resources/js/views/ParentDashboard.vue', import.meta.url), 'utf8'), /show-account="false"/)
+assert.match(fs.readFileSync(new URL('../../resources/js/views/ParentDashboard.vue', import.meta.url), 'utf8'), /show-account="false"/, 'parent keeps account out of primary nav')
 assert.match(dashboard, /window\.addEventListener\('popstate'/)
 assert.match(dashboard, /window\.history\.scrollRestoration = 'manual'/)
 assert.match(dashboard, /if \(next === previous\)/, 'reselecting a tab must not reset it')

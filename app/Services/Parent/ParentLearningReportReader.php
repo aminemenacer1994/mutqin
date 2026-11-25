@@ -103,7 +103,14 @@ class ParentLearningReportReader
             : null;
         $progress = $this->access->allows($parent, $child, ParentGuardianPermission::ViewProgress->value);
         $messages = $this->access->allows($parent, $child, ParentGuardianPermission::ViewMessages->value);
+        $attendanceShared = $this->access->allows($parent, $child, ParentGuardianPermission::ViewAttendance->value);
         $activity = $progress ? ($payload['activity'] ?? null) : null;
+        $attendance = $attendanceShared ? ($payload['attendance'] ?? null) : null;
+        $homePractice = $this->visibleHomePractice(
+            is_array($payload['home_practice'] ?? null) ? $payload['home_practice'] : null,
+            $assignments !== null,
+            $progress,
+        );
         $goals = $progress ? ($payload['goals'] ?? null) : null;
         $wording = $progress ? ($payload['wording'] ?? null) : null;
         $feedback = [
@@ -127,17 +134,18 @@ class ParentLearningReportReader
         ));
         $sources = array_values(array_filter(
             is_array($payload['sources'] ?? null) ? $payload['sources'] : [],
-            function (array $source) use ($assignments, $progress, $messages): bool {
+            function (array $source) use ($assignments, $progress, $messages, $attendanceShared): bool {
                 return match ((string) ($source['kind'] ?? '')) {
                     'assignments' => $assignments !== null,
                     'teacher_feedback' => $messages,
+                    'attendance' => $attendanceShared,
                     'plans', 'memorisation', 'revision', 'teacher_recommendation', 'ai_word_match' => $progress,
                     default => false,
                 };
             }
         ));
 
-        $visible = $assignments !== null || $activity !== null || $goals !== null || $feedback !== null;
+        $visible = $assignments !== null || $activity !== null || $goals !== null || $feedback !== null || $attendance !== null;
         abort_unless($visible, 404);
 
         $start = $report->period_start instanceof Carbon ? $report->period_start : Carbon::parse((string) $report->period_start);
@@ -162,8 +170,10 @@ class ParentLearningReportReader
             'comparison' => $comparison,
             'attention' => $attention,
             'wording' => $wording,
+            'attendance' => $attendance,
+            'home_practice' => $homePractice,
             'sources' => $sources,
-            'insufficient' => $this->insufficient($assignments, $activity, $goals, $feedback, $wording),
+            'insufficient' => $this->insufficient($assignments, $activity, $goals, $feedback, $wording, $attendance),
         ];
         if ($withNarrative) {
             $presented['narrative'] = $this->narrative($presented);
@@ -185,7 +195,38 @@ class ParentLearningReportReader
     {
         return $this->access->allows($parent, $child, ParentGuardianPermission::ViewAssignments->value)
             || $this->access->allows($parent, $child, ParentGuardianPermission::ViewProgress->value)
-            || $this->access->allows($parent, $child, ParentGuardianPermission::ViewMessages->value);
+            || $this->access->allows($parent, $child, ParentGuardianPermission::ViewMessages->value)
+            || $this->access->allows($parent, $child, ParentGuardianPermission::ViewAttendance->value);
+    }
+
+    /**
+     * @param  array{items?: list<array<string, mixed>>, plain?: string}|null  $block
+     * @return array{items: list<array<string, mixed>>, plain: string}|null
+     */
+    private function visibleHomePractice(?array $block, bool $assignments, bool $progress): ?array
+    {
+        if (! $assignments && ! $progress) {
+            return null;
+        }
+        if (! is_array($block)) {
+            $block = ['items' => [], 'plain' => ''];
+        }
+        $items = array_values(array_filter(
+            is_array($block['items'] ?? null) ? $block['items'] : [],
+            function (array $item) use ($assignments, $progress): bool {
+                return match ((string) ($item['kind'] ?? '')) {
+                    'assignment' => $assignments,
+                    'recommendation' => $progress,
+                    default => false,
+                };
+            },
+        ));
+        $plain = is_string($block['plain'] ?? null) ? $block['plain'] : '';
+        if ($items === [] && $plain === '') {
+            return ['items' => [], 'plain' => 'No teacher-set homework or revision tasks are open for home practice in this period.'];
+        }
+
+        return ['items' => $items, 'plain' => $plain];
     }
 
     /**
@@ -232,7 +273,7 @@ class ParentLearningReportReader
      * @param  array<string, mixed>|null  $feedback
      * @param  array<string, mixed>|null  $wording
      */
-    private function insufficient(?array $assignments, ?array $activity, ?array $goals, ?array $feedback, ?array $wording): bool
+    private function insufficient(?array $assignments, ?array $activity, ?array $goals, ?array $feedback, ?array $wording, ?array $attendance): bool
     {
         $assigned = (int) ($assignments['assigned'] ?? 0);
         $practice = (int) ($activity['practice_rows'] ?? 0);
@@ -242,6 +283,7 @@ class ParentLearningReportReader
         $recommendations = is_array($feedback['recommendations'] ?? null) ? $feedback['recommendations'] : [];
         $direction = (string) ($wording['direction'] ?? 'insufficient');
         $current = $activity['current_memorised'] ?? null;
+        $attendanceTotal = (int) ($attendance['total'] ?? 0);
 
         return $assigned === 0
             && $practice === 0
@@ -250,7 +292,8 @@ class ParentLearningReportReader
             && $notes === []
             && $recommendations === []
             && $direction === 'insufficient'
-            && (int) ($current ?? 0) === 0;
+            && (int) ($current ?? 0) === 0
+            && $attendanceTotal === 0;
     }
 
     /**
@@ -267,7 +310,7 @@ class ParentLearningReportReader
         }
 
         $parts = [];
-        foreach (['assignments', 'activity', 'goals', 'comparison'] as $key) {
+        foreach (['assignments', 'activity', 'goals', 'attendance', 'comparison'] as $key) {
             $plain = $report[$key]['plain'] ?? null;
             if (is_string($plain) && $plain !== '') {
                 $parts[] = $plain;

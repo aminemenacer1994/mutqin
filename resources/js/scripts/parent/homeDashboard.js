@@ -50,11 +50,20 @@ export function homeStatusSubtitle(t, { homework = [], feedback = [], messageUnr
   return t('parent.home_status_clear')
 }
 
+const ATTENTION_REASON_KEYS = {
+  overdue: 'parent.attention_why_overdue',
+  due_soon: 'parent.attention_why_due_soon',
+  feedback: 'parent.attention_why_feedback',
+  messages: 'parent.attention_why_messages',
+  attendance: 'parent.attention_why_attendance',
+}
+
 export function buildAttentionItems({
   t,
   homework = [],
   feedback = [],
   messageUnread = 0,
+  attendanceAlerts = [],
   formatWhen,
   activityName,
   passageLabel,
@@ -73,6 +82,7 @@ export function buildAttentionItems({
       detail: task
         ? t('parent.attention_overdue_when', { task, when: formatWhen(row.due_at) || t('parent.homework_overdue') })
         : t('parent.attention_overdue', { task: t('parent.nav_learning') }),
+      reason: t(ATTENTION_REASON_KEYS.overdue),
       action: t('parent.attention_open_homework'),
     })
   })
@@ -89,6 +99,7 @@ export function buildAttentionItems({
       detail: task
         ? t('parent.attention_due', { task, when: formatWhen(row.due_at) })
         : t('parent.attention_due_soon'),
+      reason: t(ATTENTION_REASON_KEYS.due_soon),
       action: t('parent.attention_open_homework'),
     })
   })
@@ -102,6 +113,25 @@ export function buildAttentionItems({
       childId: row.child_id,
       name: row.child_name,
       detail: row.excerpt,
+      reason: t(ATTENTION_REASON_KEYS.feedback),
+      action: t('parent.attention_open_progress'),
+    })
+  })
+
+  ;(attendanceAlerts || []).forEach((row) => {
+    const when = formatWhen(row.date) || row.date
+    items.push({
+      id: `attendance-${row.child_id}-${row.date}`,
+      rank: 2.5,
+      kind: 'attendance',
+      icon: row.status === 'late' ? 'bi bi-clock' : 'bi bi-calendar-x',
+      childId: row.child_id,
+      name: row.child_name,
+      detail: t('parent.attention_attendance_detail', {
+        status: t(`parent.attendance_${row.status}`),
+        when,
+      }),
+      reason: t(ATTENTION_REASON_KEYS.attendance),
       action: t('parent.attention_open_progress'),
     })
   })
@@ -116,11 +146,82 @@ export function buildAttentionItems({
       childId: null,
       name: t('parent.attention_messages_name'),
       detail: unread === 1 ? t('parent.attention_messages_one') : t('parent.attention_messages', { count: unread }),
+      reason: t(ATTENTION_REASON_KEYS.messages),
       action: t('parent.attention_open_messages'),
     })
   }
 
   return items.sort((a, b) => a.rank - b.rank || String(a.name).localeCompare(String(b.name)))
+}
+
+export function attentionHomeworkIds(items = []) {
+  return new Set(
+    (items || [])
+      .filter((row) => row.kind === 'overdue' || row.kind === 'due_soon')
+      .map((row) => Number(String(row.id).replace(/^(overdue|due-soon)-/, ''))),
+  )
+}
+
+export function attentionFeedbackIds(items = []) {
+  return new Set(
+    (items || [])
+      .filter((row) => row.kind === 'feedback')
+      .map((row) => Number(String(row.id).replace(/^feedback-/, ''))),
+  )
+}
+
+export function homeworkExcludingAttention(homework = [], attentionItems = []) {
+  const skip = attentionHomeworkIds(attentionItems)
+  return (homework || []).filter((row) => !skip.has(Number(row.id)))
+}
+
+export function feedbackExcludingAttention(feedback = [], attentionItems = []) {
+  const skip = attentionFeedbackIds(attentionItems)
+  return (feedback || []).filter((row) => !row.unread || !skip.has(Number(row.id)))
+}
+
+export function resolveFocusChild(children = [], selectedChildId = null) {
+  const list = Array.isArray(children) ? children : []
+  if (selectedChildId) {
+    return list.find((row) => Number(row.id) === Number(selectedChildId)) || null
+  }
+  if (list.length === 1) return list[0]
+  return null
+}
+
+export function nextScheduledHomework(homework = [], childId = null) {
+  const rows = (homework || []).filter((row) => {
+    if (childId && Number(row.child_id) !== Number(childId)) return false
+    return Boolean(row.due_at) && !isHomeworkOverdue(row)
+  })
+  return upcomingHomeworkRows(rows, 1)[0] || null
+}
+
+export function weeklyProgressCards(t, children = [], selectedChildId = null) {
+  const list = (children || []).filter((child) => child.permissions?.progress || child.permissions?.assignments)
+  const scoped = selectedChildId ? list.filter((row) => Number(row.id) === Number(selectedChildId)) : list
+  return scoped
+    .map((child) => {
+      const weekly = child.weekly || { completed: 0, due: 0, practice_ayahs: 0 }
+      const total = Number(weekly.completed || 0) + Number(weekly.due || 0)
+      return {
+        childId: child.id,
+        childName: child.name,
+        completed: Number(weekly.completed || 0),
+        due: Number(weekly.due || 0),
+        practiceAyahs: Number(weekly.practice_ayahs || 0),
+        total,
+        label: total
+          ? t('parent.home_weekly_progress', { done: weekly.completed, total })
+          : t('parent.home_weekly_progress_none'),
+        practiceLabel: weekly.practice_ayahs
+          ? (weekly.practice_ayahs === 1
+            ? t('parent.home_weekly_practice_one')
+            : t('parent.home_weekly_practice', { count: weekly.practice_ayahs }))
+          : t('parent.home_weekly_practice_none'),
+      }
+    })
+    .filter((row) => row.total > 0 || row.practiceAyahs > 0)
 }
 
 export function upcomingHomeworkRows(homework = [], limit = 5, now = new Date()) {

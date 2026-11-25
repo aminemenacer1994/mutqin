@@ -30,7 +30,7 @@
       <h3><i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.single_child_homework') }}</h3>
       <ul class="teacher-activity-list">
         <li v-for="row in upcoming" :key="row.id">
-          <button type="button" @click="$emit('open-learning', child.id)">
+          <button type="button" @click="$emit('open-learning', child.id, row.id)">
             <span class="teacher-activity-list__avatar" aria-hidden="true"><i :class="activityIcon(row.activity)"></i></span>
             <span class="teacher-activity-list__copy">
               <strong>{{ taskTitle(row) }}</strong>
@@ -59,17 +59,6 @@
       </ul>
     </section>
 
-    <nav class="parent-hub-actions parent-child-summary__actions" :aria-label="t('parent.home_quick_actions')">
-      <button v-if="child.permissions?.assignments" type="button" @click="$emit('open-learning', child.id)">
-        <i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.home_homework') }}
-      </button>
-      <button v-if="child.permissions?.progress" type="button" @click="$emit('open-progress', child.id)">
-        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ t('parent.home_progress') }}
-      </button>
-      <button v-if="child.permissions?.messages" type="button" @click="$emit('open-messages', child.id)">
-        <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_message') }}
-      </button>
-    </nav>
   </article>
 </template>
 

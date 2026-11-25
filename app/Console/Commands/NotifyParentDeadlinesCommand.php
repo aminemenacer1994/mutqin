@@ -9,12 +9,14 @@ class NotifyParentDeadlinesCommand extends Command
 {
     protected $signature = 'mutqin:notify-parent-deadlines {--limit=200 : Maximum assignments to consider}';
 
-    protected $description = 'Notify parents when linked homework is due within two days.';
+    protected $description = 'Notify parents when linked homework is due soon or overdue.';
 
     public function handle(ParentNoticeService $notices): int
     {
-        $sent = $notices->approachingDeadlines(max(1, (int) $this->option('limit')));
-        $this->line('Parent deadline notices='.$sent.'.');
+        $limit = max(1, (int) $this->option('limit'));
+        $soon = $notices->approachingDeadlines($limit);
+        $overdue = $notices->overdueHomework($limit);
+        $this->line('Parent deadline notices='.$soon.', overdue='.$overdue.'.');
 
         return self::SUCCESS;
     }

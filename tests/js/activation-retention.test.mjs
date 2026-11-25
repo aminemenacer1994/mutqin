@@ -105,9 +105,9 @@ assert.match(dashboardVue, /journey=daily|dailyMutqinHref/)
 assert.match(dashboardVue, /data-testid="dashboard-primary-continue"/)
 assert.match(dashboardVue, /dash-continue-card--daily-mutqin/)
 {
-  const heroIdx = dashboardVue.indexOf('dash-hero__stack')
+  const continueIdx = dashboardVue.indexOf('dash-continue-card')
   const historyIdx = dashboardVue.indexOf('dash-history-heading')
-  assert.ok(heroIdx >= 0 && historyIdx > heroIdx, 'Daily Mutqin primary continue must sit above learning history')
+  assert.ok(continueIdx >= 0 && historyIdx > continueIdx, 'Daily Mutqin primary continue must sit above learning history')
 }
 
 console.log('activation-retention passed')

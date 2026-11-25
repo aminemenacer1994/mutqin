@@ -76,6 +76,21 @@
           :action-label="t('ui.connections_settings_manage')"
         />
 
+        <LearnerStudentNotifications
+          v-if="!homeNotificationsExpanded"
+          compact
+          :limit="4"
+          @expand="homeNotificationsExpanded = true"
+          @open="openStudentNotice"
+          @unread-change="studentNoticeUnread = $event"
+        />
+        <LearnerStudentNotifications
+          v-else
+          :compact="false"
+          @open="openStudentNotice"
+          @unread-change="studentNoticeUnread = $event"
+        />
+
         <div class="learner-home__stack">
           <section
             v-if="showHomeNextAction"
@@ -308,7 +323,10 @@
 
           <section class="teacher-pane learner-home__tools-pane" aria-labelledby="home-tools-title">
             <header class="teacher-pane__head learner-home__section-head">
-              <h2 id="home-tools-title" class="teacher-pane__title">{{ t('dashboard.home_tools') }}</h2>
+              <div class="teacher-pane__titles">
+                <h2 id="home-tools-title" class="teacher-pane__title">{{ t('dashboard.home_tools') }}</h2>
+              </div>
+              <button type="button" class="dash-text-link" @click="openStudentNav('practice')">{{ t('dashboard.home_all_practice') }}</button>
             </header>
             <div class="teacher-pane__body learner-home__tools">
               <template v-for="tool in homePracticeTools" :key="tool.key">
@@ -374,6 +392,7 @@
           @view-completed="showCompletedAssignments"
           @dismiss-completion="dismissAssignmentCompletion"
           @support-thread-update="patchLearnerSupportThread"
+          @open-progress="openStudentNav('progress')"
         >
           <template #learning-plan>
             <LearnerMyLearningPlan
@@ -433,6 +452,54 @@
           </div>
         </section>
         <TeacherEmpty v-else inline class="dash-pane__empty" :message="t('dashboard.jump_learning_empty')" />
+        </div>
+
+        <div v-show="studentPane === 'practice'" id="dash-practice" class="dash-pane teacher-view-stage" tabindex="-1">
+          <StudentPageHeading
+            :title="t('dashboard.jump_practice')"
+            :subtitle="t('dashboard.nav_practice_hint')"
+            :crumb-label="t('dashboard.breadcrumb_label')"
+            :home-label="t('dashboard.jump_home')"
+            :section-label="t('dashboard.jump_practice')"
+            section-id="practice"
+            @select="openStudentNav"
+          />
+          <p class="dash-section__hint learner-practice__intro">{{ t('dashboard.practice_hub_intro') }}</p>
+          <a
+            v-if="showHomeContinue && primaryContinueAction"
+            class="teacher-pane dash-continue-card learner-practice__continue"
+            :href="primaryContinueAction.href"
+            data-testid="dashboard-primary-continue"
+          >
+            <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
+            <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
+            <span v-if="primaryContinueAction.hint" class="dash-continue-card__hint">{{ primaryContinueAction.hint }}</span>
+          </a>
+          <section class="teacher-pane" aria-labelledby="practice-modes-title">
+            <header class="teacher-pane__head">
+              <h2 id="practice-modes-title" class="teacher-pane__title">{{ t('dashboard.practice_modes_title') }}</h2>
+            </header>
+            <div class="teacher-pane__body learner-home__tools">
+              <template v-for="tool in studentPracticeTools" :key="tool.key">
+                <a
+                  v-if="!tool.locked"
+                  class="learner-home__tool"
+                  :href="tool.href"
+                >
+                  <i class="bi" :class="tool.icon" aria-hidden="true"></i>
+                  <strong>{{ tool.label }}</strong>
+                  <span>{{ tool.hint }}</span>
+                </a>
+                <div v-else class="learner-home__tool is-locked" :aria-label="tool.label">
+                  <i class="bi" :class="tool.icon" aria-hidden="true"></i>
+                  <strong>{{ tool.label }}</strong>
+                  <span>{{ tool.hint }}</span>
+                  <span class="learner-home__tool-lock">{{ t('dashboard.home_tool_locked') }}</span>
+                  <a class="dash-text-link learner-home__tool-upsell" :href="tool.upsellHref">{{ t('dashboard.home_tool_upgrade') }}</a>
+                </div>
+              </template>
+            </div>
+          </section>
         </div>
 
         <div v-show="studentPane === 'progress'" class="dash-pane user-dashboard__content teacher-view-stage">
@@ -1925,6 +1992,7 @@ import ConnectPrompt from '../components/ConnectPrompt.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
 import TeacherEmpty from '../components/teacher/TeacherEmpty.vue'
 import LearnerSettingsSection from '../components/teacher/LearnerSettingsSection.vue'
+import LearnerStudentNotifications from '../components/teacher/LearnerStudentNotifications.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import DashModalRoot from '../components/dashboard/DashModalRoot.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
@@ -1936,7 +2004,7 @@ import {
   homeNextActionItem,
   homeUpcomingAssignments,
 } from '../scripts/dashboard/studentHome.js'
-import { practiceToolHref } from '../scripts/dashboard/studentPractice.js'
+import { buildStudentPracticeTools, STUDENT_HOME_PRACTICE_TOOL_IDS } from '../scripts/dashboard/studentPractice.js'
 import { isLearnerSubmitted, isLearnerTaskApproved, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import LearnerMyLearningPlan from '../components/teacher/LearnerMyLearningPlan.vue'
@@ -2109,6 +2177,7 @@ export default {
     TeacherEmpty,
     LearnerSettingsSection,
     LearnerTeacherSection,
+    LearnerStudentNotifications,
     LearnerStudentMessages,
     StudentPageHeading,
     StudentActivityFilters,
@@ -2150,6 +2219,8 @@ export default {
       lastDashboardFetchedAt: initial ? Date.now() : 0,
       lastChartFingerprint: '',
       dashboardQuietTtlMs: 45000,
+      homeNotificationsExpanded: false,
+      studentNoticeUnread: 0,
       postSessionCompletedSessionId: Number(postSessionMarker?.completedSessionId || 0) || null,
       visibilityHandler: null,
       focusHandler: null,
@@ -2309,7 +2380,11 @@ export default {
         0,
       )
       const total = feedbackUnread + dmUnread
-      return total > 0 ? { messages: total } : {}
+      const badges = {}
+      if (total > 0) badges.messages = total
+      const notices = Number(this.studentNoticeUnread || 0)
+      if (notices > 0) badges.home = notices
+      return badges
     },
     settingsInitial() {
       const name = String(this.auth?.name || this.auth?.email || '?').trim()
@@ -2506,37 +2581,21 @@ export default {
       return !!this.data && !this.isNewStudentHome && this.homeStatCards.length > 0
     },
     homePracticeTools() {
-      const base = this.memorisationUrl
-      const pricingHref = String(this.auth?.pricing_url || '/pricing')
-      return [
-        {
-          key: 'memorise',
-          href: practiceToolHref(base, 'memorise'),
-          icon: 'bi-journal-bookmark',
-          label: this.t('dashboard.home_tool_memorise'),
-          hint: this.t('dashboard.home_tool_memorise_hint'),
-          locked: false,
-          upsellHref: pricingHref,
-        },
-        {
-          key: 'mushaf',
-          href: practiceToolHref(base, 'mushaf'),
-          icon: 'bi-book',
-          label: this.t('dashboard.home_tool_mushaf'),
-          hint: this.t('dashboard.home_tool_mushaf_hint'),
-          locked: false,
-          upsellHref: pricingHref,
-        },
-        {
-          key: 'ai',
-          href: practiceToolHref(base, 'recite'),
-          icon: 'bi-mic',
-          label: this.t('dashboard.home_tool_ai'),
-          hint: this.t('dashboard.home_tool_ai_hint'),
-          locked: false,
-          upsellHref: pricingHref,
-        },
-      ]
+      return buildStudentPracticeTools({
+        t: this.t.bind(this),
+        base: this.memorisationUrl,
+        pricingHref: String(this.auth?.pricing_url || '/pricing'),
+        returnTab: 'home',
+        toolIds: STUDENT_HOME_PRACTICE_TOOL_IDS,
+      })
+    },
+    studentPracticeTools() {
+      return buildStudentPracticeTools({
+        t: this.t.bind(this),
+        base: this.memorisationUrl,
+        pricingHref: String(this.auth?.pricing_url || '/pricing'),
+        returnTab: 'practice',
+      })
     },
     homeAchievementPreview() {
       if (this.isNewStudentHome) return ''
@@ -4126,8 +4185,7 @@ export default {
       return formatTaskDueUrgency(task?.assignment?.due_at, { t: this.t.bind(this) })
     },
     openTeacherMessage(teacherId) {
-      this.navigateDashboardPane('learning', { history: 'push', restoreScroll: true })
-      this.$nextTick(() => this.$refs.learnerTeacherSection?.openTeacherThread(teacherId))
+      this.openCircleTeacherMessage(teacherId)
     },
     openMessageFeedback(item) {
       if (!item) return
@@ -4143,13 +4201,44 @@ export default {
         this.$refs.learnerTeacherSection?.openFeedbackFromPanel(item)
       })
     },
+    openStudentNotice(item) {
+      const href = String(item?.href || '').trim()
+      if (!href) return
+      if (href.startsWith('/memorisation')) {
+        window.location.assign(href)
+        return
+      }
+      try {
+        const url = new URL(href, window.location.origin)
+        const tab = url.searchParams.get('tab')
+        const assignmentId = url.searchParams.get('assignment_recipient') || url.searchParams.get('assignment')
+        const feedbackId = url.searchParams.get('feedback')
+        if (tab) this.navigateDashboardPane(tab, { history: 'push', focus: true })
+        else if (assignmentId || feedbackId) this.navigateDashboardPane('learning', { history: 'push', focus: true })
+        this.$nextTick(() => {
+          if (feedbackId) {
+            const row = (this.support?.learning?.feedback_inbox || []).find((r) => String(r.id) === String(feedbackId))
+            if (row) this.openMessageFeedback(row)
+          } else if (assignmentId) {
+            this.$refs.learnerTeacherSection?.openAssignmentById?.(assignmentId)
+          }
+        })
+      } catch (_) {
+        window.location.assign(href)
+      }
+    },
     openLinkedLearnerRecord() {
       if (this.learnerRecordOpened || typeof window === 'undefined') return
       const params = new URLSearchParams(window.location.search)
       const feedbackId = params.get('feedback')
       const assignmentId = params.get('assignment_recipient') || params.get('assignment')
-      if (!feedbackId && !assignmentId) return
+      const teacherId = params.get('teacher')
+      if (!feedbackId && !assignmentId && !teacherId) return
       this.learnerRecordOpened = true
+      if (teacherId && !feedbackId && !assignmentId) {
+        this.openCircleTeacherMessage(Number(teacherId))
+        return
+      }
       if (feedbackId) {
         const item = (this.support?.learning?.feedback_inbox || []).find((row) => String(row.id) === String(feedbackId))
         if (item) this.openMessageFeedback(item)

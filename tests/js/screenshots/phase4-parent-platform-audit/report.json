@@ -3,7 +3,9 @@
     {
       "viewport": "desktop",
       "theme": "light",
-      "issues": []
+      "issues": [
+        "nav missing: overview"
+      ]
     },
     {
       "viewport": "desktop",
@@ -18,44 +20,32 @@
     {
       "viewport": "tablet",
       "theme": "light",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     },
     {
       "viewport": "tablet",
       "theme": "dark",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     },
     {
       "viewport": "tablet",
       "theme": "ar",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     },
     {
       "viewport": "mobile",
       "theme": "light",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     },
     {
       "viewport": "mobile",
       "theme": "dark",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     },
     {
       "viewport": "mobile",
       "theme": "ar",
-      "issues": [
-        "nav missing: reports"
-      ]
+      "issues": []
     }
   ],
   "teacher": [

@@ -169,7 +169,7 @@ assert.doesNotMatch(dashboard, /dash-ai-results__word-detail/, 'often-missed doe
 
 assert.equal(en.dashboard.ai_recite.cta_label, 'Recite')
 assert.match(en.dashboard.ai_recite.cta_hint, /memorisation/i)
-assert.match(dashboard, /heroProgressSummary/, 'hero keeps a single summary line under the greeting')
+assert.match(dashboard, /homeWelcomeContext/, 'hero keeps a single summary line under the greeting')
 assert.match(dashboard, /currently_learning_with_surah/, 'hifz hero names the current surah with its ayah range')
 assert.equal(en.dashboard.hero_context_ai_recite, 'AI Recite')
 

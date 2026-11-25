@@ -5,17 +5,22 @@ namespace App\Services\Parent;
 use App\Enums\AssignmentStatus;
 use App\Enums\LearningPlanItemStatus;
 use App\Enums\LearningPlanStatus;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
 use App\Enums\RevisionRecommendationStatus;
 use App\Enums\TeacherNoteKind;
 use App\Enums\UserSessionStatus;
+use App\Models\GroupMembership;
 use App\Models\LearningPlan;
 use App\Models\MemorisationProgress;
 use App\Models\RevisionRecommendation;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Teacher\StudentHifzProgressService;
+use App\Services\Teacher\TeacherAttendanceService;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 
@@ -37,6 +42,7 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
         $activity = $this->activity($student, $from, $to, is_array($hifz['coverage'] ?? null) ? $hifz['coverage'] : []);
         $goals = $this->goals($student, $from, $to);
         $feedback = $this->feedback($student, $from, $to);
+        $attendance = $this->attendance($student, $from, $to);
         $wording = $this->wording($hifz);
         [$previousFrom, $previousTo] = $this->periods->previous($cadence, $from);
         $previousAssignments = $this->assignmentCounts($student, $previousFrom, $previousTo);
@@ -52,18 +58,21 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             && $feedback['notes'] === []
             && $feedback['recommendations'] === []
             && ($wording['direction'] ?? 'insufficient') === 'insufficient'
-            && (int) ($activity['current_memorised'] ?? 0) === 0;
+            && (int) ($activity['current_memorised'] ?? 0) === 0
+            && (int) ($attendance['total'] ?? 0) === 0;
 
         return [
             'assignments' => $assignments,
             'activity' => $activity,
             'goals' => $goals,
             'feedback' => $feedback,
+            'attendance' => $attendance,
+            'home_practice' => $this->homePractice($assignments, $feedback),
             'comparison' => $comparison,
             'attention' => $attention,
             'wording' => $wording,
             'insufficient' => $insufficient,
-            'sources' => $this->sources($assignments, $activity, $goals, $feedback, $wording),
+            'sources' => $this->sources($assignments, $activity, $goals, $feedback, $wording, $attendance),
         ];
     }
 
@@ -280,6 +289,99 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
     /**
      * @return array<string, mixed>
      */
+    private function attendance(User $student, Carbon $from, Carbon $to): array
+    {
+        $teacherIds = $this->linkedTeacherIds($student);
+
+        if ($teacherIds === []) {
+            return [
+                'counts' => ['present' => 0, 'absent' => 0, 'late' => 0, 'excused' => 0],
+                'total' => 0,
+                'rate_percent' => null,
+                'source' => 'teacher_recorded',
+                'plain' => 'No attendance was recorded in this period.',
+            ];
+        }
+
+        $counts = TeacherAttendanceRecord::query()
+            ->where('student_id', $student->id)
+            ->whereIn('teacher_id', $teacherIds)
+            ->whereBetween('attendance_date', [$from->toDateString(), $to->toDateString()])
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+        $payload = app(TeacherAttendanceService::class)->presentCounts($counts->all());
+        $plain = $payload['total'] === 0
+            ? 'No attendance was recorded in this period.'
+            : sprintf(
+                'Attendance was marked on %d %s: %d present, %d late, %d absent, %d excused.',
+                $payload['total'],
+                $payload['total'] === 1 ? 'day' : 'days',
+                $payload['present'],
+                $payload['late'],
+                $payload['absent'],
+                $payload['excused'],
+            );
+        if ($payload['rate_percent'] !== null) {
+            $plain .= sprintf(' Present or on-time rate: %d%%.', (int) $payload['rate_percent']);
+        }
+
+        return [
+            'counts' => [
+                'present' => $payload['present'],
+                'absent' => $payload['absent'],
+                'late' => $payload['late'],
+                'excused' => $payload['excused'],
+            ],
+            'total' => $payload['total'],
+            'rate_percent' => $payload['rate_percent'],
+            'source' => 'teacher_recorded',
+            'plain' => $plain,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $assignments
+     * @param  array<string, mixed>  $feedback
+     * @return array{items: list<array{kind: string, label: string, text: string}>, plain: string}
+     */
+    private function homePractice(array $assignments, array $feedback): array
+    {
+        $items = [];
+        foreach ($assignments['items'] as $item) {
+            $status = (string) ($item['status'] ?? '');
+            if (! in_array($status, [AssignmentStatus::Pending->value, AssignmentStatus::InProgress->value], true)) {
+                continue;
+            }
+            $items[] = [
+                'kind' => 'assignment',
+                'label' => (string) ($item['label'] ?? 'Homework'),
+                'text' => ($item['overdue'] ?? false) === true
+                    ? 'This teacher-set task was still open after the due date.'
+                    : 'This teacher-set task is still open.',
+            ];
+            if (count($items) >= 4) {
+                break;
+            }
+        }
+        foreach ($feedback['recommendations'] as $recommendation) {
+            $items[] = [
+                'kind' => 'recommendation',
+                'label' => (string) ($recommendation['label'] ?? 'Revision'),
+                'text' => (string) ($recommendation['text'] ?? ''),
+            ];
+            if (count($items) >= 6) {
+                break;
+            }
+        }
+
+        $plain = $items === []
+            ? 'No teacher-set homework or revision tasks are open for home practice in this period.'
+            : $this->noun(count($items), 'teacher-approved item is', 'teacher-approved items are').' listed for home practice.';
+
+        return ['items' => $items, 'plain' => $plain];
+    }
+
     /**
      * @param  array<string, mixed>  $hifz
      * @return array<string, mixed>
@@ -378,13 +480,16 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
      * @param  array<string, mixed>  $wording
      * @return list<array{kind: string, label: string}>
      */
-    private function sources(array $assignments, array $activity, array $goals, array $feedback, array $wording): array
+    private function sources(array $assignments, array $activity, array $goals, array $feedback, array $wording, array $attendance): array
     {
         $sources = [
             ['kind' => 'assignments', 'label' => 'Homework records'],
             ['kind' => 'memorisation', 'label' => 'Memorisation records'],
             ['kind' => 'revision', 'label' => 'Revision sessions'],
         ];
+        if ((int) ($attendance['total'] ?? 0) > 0) {
+            $sources[] = ['kind' => 'attendance', 'label' => 'Teacher attendance marks'];
+        }
         if ($goals['plans'] !== []) {
             $sources[] = ['kind' => 'plans', 'label' => 'Learning plans'];
         }
@@ -484,5 +589,43 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
         }
 
         return rtrim(mb_substr($value, 0, $limit - 1)).'…';
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function linkedTeacherIds(User $student): array
+    {
+        $ids = collect();
+        $groupIds = GroupMembership::query()
+            ->where('user_id', $student->id)
+            ->where('membership_role', MembershipRole::Student->value)
+            ->where('status', MembershipStatus::Approved->value)
+            ->pluck('learning_group_id');
+        if ($groupIds->isNotEmpty()) {
+            $ids = $ids->merge(
+                GroupMembership::query()
+                    ->whereIn('learning_group_id', $groupIds)
+                    ->where('membership_role', MembershipRole::Teacher->value)
+                    ->where('status', MembershipStatus::Approved->value)
+                    ->pluck('user_id')
+            );
+        }
+
+        $ids = $ids->merge(
+            TeacherAssignmentRecipient::query()
+                ->where('student_id', $student->id)
+                ->whereHas('assignment')
+                ->with('assignment:id,teacher_id')
+                ->get()
+                ->map(fn (TeacherAssignmentRecipient $recipient) => $recipient->assignment?->teacher_id)
+        );
+
+        return $ids
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

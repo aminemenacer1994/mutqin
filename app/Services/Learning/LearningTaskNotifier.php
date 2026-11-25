@@ -71,7 +71,10 @@ final class LearningTaskNotifier
                     'type' => 'deadline',
                     'title' => 'Task deadline',
                     'body' => $this->noticeBody($assignment),
-                    'href' => route('dashboard'),
+                    'href' => $this->dashboardHref([
+                        'tab' => 'learning',
+                        'assignment_recipient' => (int) $recipient->id,
+                    ]),
                     'surah_number' => (int) $assignment->surah_number,
                     'ayah_start' => (int) $assignment->ayah_start,
                     'ayah_end' => (int) $assignment->ayah_end,
@@ -104,7 +107,10 @@ final class LearningTaskNotifier
                 'type' => 'deadline',
                 'title' => 'Deadline updated',
                 'body' => $this->noticeBody($assignment),
-                'href' => route('dashboard'),
+                'href' => $this->dashboardHref([
+                    'tab' => 'learning',
+                    'assignment_recipient' => (int) $recipient->id,
+                ]),
                 'due_on' => $due,
                 'surah_number' => (int) $assignment->surah_number,
                 'ayah_start' => (int) $assignment->ayah_start,
@@ -160,7 +166,10 @@ final class LearningTaskNotifier
             'type' => 'teacher_feedback',
             'title' => 'Teacher feedback',
             'body' => $body === '' ? null : mb_substr($body, 0, 180),
-            'href' => route('dashboard'),
+            'href' => $this->dashboardHref([
+                'tab' => 'learning',
+                'feedback' => (int) $note->id,
+            ]),
             'surah_number' => $note->surah_number ? (int) $note->surah_number : null,
             'ayah_start' => $note->ayah_start ? (int) $note->ayah_start : null,
             'ayah_end' => $note->ayah_end ? (int) $note->ayah_end : null,
@@ -194,7 +203,10 @@ final class LearningTaskNotifier
             'type' => $approved ? 'assignment_approved' : 'assignment_correction',
             'title' => $approved ? 'Task reviewed' : 'Correction requested',
             'body' => $approved ? 'A teacher reviewed submitted work.' : 'A teacher asked for a correction.',
-            'href' => route('dashboard'),
+            'href' => $this->dashboardHref([
+                'tab' => 'learning',
+                'assignment_recipient' => (int) $recipient->id,
+            ]),
             'teacher_assignment_recipient_id' => (int) $recipient->id,
         ]);
         $this->parents->reviewed($student, (int) $recipient->id, $stamp, $approved);
@@ -276,5 +288,22 @@ final class LearningTaskNotifier
         $name = QuranMetadata::name($surah) ?? 'Surah '.$surah;
 
         return $start === $end ? $name.' · '.$start : $name.' · '.$start.'–'.$end;
+    }
+
+    /**
+     * @param  array<string, scalar|null>  $query
+     */
+    private function dashboardHref(array $query = []): string
+    {
+        $base = route('dashboard');
+        $clean = [];
+        foreach ($query as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $clean[$key] = $value;
+        }
+
+        return $clean === [] ? $base : $base.'?'.http_build_query($clean);
     }
 }

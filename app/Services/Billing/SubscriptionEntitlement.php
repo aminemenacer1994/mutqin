@@ -88,6 +88,20 @@ class SubscriptionEntitlement
         return $this->freeSavedSessionsLimit();
     }
 
+    public function wouldExceedSavedSessionsLimit(User $user, int $incomingCount, int $previousCount = 0): bool
+    {
+        if ($incomingCount <= $previousCount) {
+            return false;
+        }
+
+        $limit = $this->savedSessionsLimit($user);
+        if ($limit === null) {
+            return false;
+        }
+
+        return $incomingCount > $limit;
+    }
+
     public function canStartAiAssessment(User $user): bool
     {
         return true;

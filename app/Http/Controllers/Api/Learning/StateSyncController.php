@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SyncStateRequest;
 use App\Jobs\DeriveLearningStateJob;
 use App\Models\MemorisationSyncState;
+use App\Services\Billing\SubscriptionEntitlement;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AudioPrivacy;
+use App\Support\MemorisationEngineState;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,7 +69,8 @@ class StateSyncController extends Controller
 
     public function store(
         SyncStateRequest $request,
-        LearningHistoryRetentionService $retention
+        LearningHistoryRetentionService $retention,
+        SubscriptionEntitlement $entitlement,
     ): JsonResponse {
         $user = $request->user();
         $validated = $request->validated();
@@ -93,8 +96,30 @@ class StateSyncController extends Controller
 
         $existing = MemorisationSyncState::query()
             ->where('user_id', $user->id)
-            ->first(['id', 'payload_hash', 'state_updated_at']);
+            ->first(['id', 'state', 'payload_hash', 'state_updated_at']);
         $unchanged = $existing && $existing->payload_hash === $payloadHash;
+
+        $previousState = null;
+        if (is_string($existing?->state ?? null) && $existing->state !== '') {
+            $previousState = json_decode($existing->state, true);
+            if (! is_array($previousState)) {
+                $previousState = null;
+            }
+        }
+
+        $previousSaved = MemorisationEngineState::countSavedSessions($previousState);
+        $incomingSaved = MemorisationEngineState::countSavedSessions($validated['state']);
+        if ($entitlement->wouldExceedSavedSessionsLimit($user, $incomingSaved, $previousSaved)) {
+            return response()->json([
+                'saved' => false,
+                'quota' => [
+                    'feature' => 'saved_sessions',
+                    'limit' => $entitlement->savedSessionsLimit($user),
+                    'pricing_url' => route('pricing'),
+                ],
+                'message' => __('billing.saved_sessions_limit'),
+            ], 403);
+        }
 
         // No-op autosaves: skip rewriting the longText blob and re-deriving tables.
         if ($unchanged) {

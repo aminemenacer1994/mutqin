@@ -12,6 +12,7 @@ use App\Models\TeacherWordCoachingRetry;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Support\QuranMetadata;
+use App\Support\TeacherTajweedFocus;
 use App\Support\RecitationAlignmentStatus;
 use App\Support\TeacherRecitationWordEvidence;
 use Illuminate\Http\UploadedFile;
@@ -173,7 +174,7 @@ class TeacherWordCoachingService
                 'word_index' => (int) $coaching->word_index,
                 'note' => trim((string) $correction->body) !== '' ? trim((string) $correction->body) : null,
                 'ai_wording_flag' => false,
-                'is_tajweed_assessment' => false,
+                'is_tajweed_assessment' => TeacherTajweedFocus::isTajweedFocus($category),
             ], (int) $coaching->ai_recite_attempt_id, $correction->created_at, in_array($coaching->review_status, [TeacherWordCoaching::IMPROVED, TeacherWordCoaching::RESOLVED], true));
         }
 
@@ -215,7 +216,7 @@ class TeacherWordCoachingService
                     'word_index' => null,
                     'note' => $note !== '' ? $note : null,
                     'ai_wording_flag' => false,
-                    'is_tajweed_assessment' => false,
+                    'is_tajweed_assessment' => TeacherTajweedFocus::isTajweedAssessmentArea($area),
                 ], (int) $assessment->ai_recite_attempt_id, $assessment->updated_at, false);
             }
         }

@@ -1,27 +1,28 @@
 <template>
-  <section class="parent-home parent-child-messages">
-    <header class="parent-page parent-child-messages__head">
-      <button type="button" class="parent-messages-back" @click="$emit('back')">
-        <i class="bi bi-arrow-left" aria-hidden="true"></i>
-        {{ t('parent.nav_children') }}
-      </button>
-      <div v-if="child">
-        <h1>{{ t('parent.messages_child_title', { name: child.name }) }}</h1>
-        <p>{{ t('parent.messages_hint') }}</p>
+  <section class="parent-home parent-child-messages teacher-stack">
+    <header class="teacher-page-header parent-child-messages__head">
+      <div class="parent-progress__head-copy">
+        <button type="button" class="parent-back" @click="$emit('back')">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          {{ t('parent.nav_children') }}
+        </button>
+        <template v-if="child">
+          <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+          <h1 class="teacher-page-header__title">{{ t('parent.messages_child_title', { name: child.name }) }}</h1>
+          <p class="teacher-page-header__hint">{{ t('parent.messages_hint') }}</p>
+        </template>
       </div>
     </header>
 
     <TeacherEmpty v-if="!child" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
-    <TeacherSectionPane v-else-if="!shared" :title="t('parent.nav_messages')" icon="bi bi-chat-dots" flat>
-      <TeacherEmpty inline icon="bi bi-lock" :message="t('parent.permission_messages')" />
-    </TeacherSectionPane>
+    <TeacherEmpty v-else-if="!shared" illustrated icon="bi bi-lock" :message="t('parent.permission_messages')" />
+    <NetworkFallback v-else-if="loadError" @retry="loadInbox" />
+    <div v-else-if="loading && !conversations.length" class="teacher-skeletons" role="status">
+      <div v-for="n in 2" :key="n" class="teacher-skeleton"></div>
+      <span class="visually-hidden">{{ t('parent.loading') }}</span>
+    </div>
     <template v-else>
-      <p v-if="loadError" class="alert alert-danger" role="alert">
-        {{ t('parent.messages_failed') }}
-        <button type="button" class="btn btn-link btn-sm" @click="loadInbox">{{ t('parent.retry') }}</button>
-      </p>
-      <p v-if="loading && !conversations.length" class="teacher-meta">{{ t('parent.loading') }}</p>
-      <div v-else-if="childConversations.length > 1 && !active" class="parent-child-messages__pick">
+      <div v-if="childConversations.length > 1 && !active" class="parent-child-messages__pick">
         <p class="parent-lead">{{ t('parent.messages_pick_teacher') }}</p>
         <ul class="parent-messages-list">
           <li v-for="row in childConversations" :key="conversationKey(row)">
@@ -74,13 +75,13 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { initial } from '../../scripts/parent/dashboard'
 import { contextFeedbackForThread, conversationKey } from '../../scripts/parent/messages'
+import NetworkFallback from '../NetworkFallback.vue'
 import GuardianConversation from '../shared/GuardianConversation.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
-import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
 
 export default {
   name: 'ParentChildMessages',
-  components: { GuardianConversation, TeacherEmpty, TeacherSectionPane },
+  components: { GuardianConversation, NetworkFallback, TeacherEmpty },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },

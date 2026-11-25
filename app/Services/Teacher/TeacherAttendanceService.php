@@ -197,7 +197,12 @@ class TeacherAttendanceService
             Cache::forget(sprintf('teacher.overview.%d.%d', $teacher->id, $days));
         }
 
-        return $record->fresh();
+        $fresh = $record->fresh();
+        if ($fresh instanceof TeacherAttendanceRecord) {
+            app(\App\Services\Parent\ParentNoticeService::class)->attendanceException($student, $fresh);
+        }
+
+        return $fresh;
     }
 
     /**

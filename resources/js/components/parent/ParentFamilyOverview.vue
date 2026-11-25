@@ -1,26 +1,10 @@
 <template>
-  <section class="parent-home parent-home-dashboard" aria-labelledby="parent-overview-heading">
-    <header class="dash-reveal parent-home-hero">
-      <div class="parent-home-hero__row">
-        <div class="parent-home-hero__identity">
-          <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-house-heart"></i></span>
-          <div>
-            <p class="parent-home-hero__eyebrow">{{ t('parent.workspace_label') }}</p>
-            <h1 id="parent-overview-heading" class="parent-home-hero__title">{{ t('parent.greeting', { name: firstName }) }}</h1>
-            <p class="parent-home-hero__subtitle" role="status">{{ statusSubtitle }}</p>
-          </div>
-        </div>
-        <nav v-if="children.length" class="parent-hub-actions" :aria-label="t('parent.home_quick_actions')">
-          <button type="button" @click="$emit('open-learning', null)">
-            <i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.home_homework') }}
-          </button>
-          <button type="button" @click="$emit('open-progress', null)">
-            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ t('parent.home_progress') }}
-          </button>
-          <button type="button" @click="$emit('open-messages', null)">
-            <i class="bi bi-chat-heart" aria-hidden="true"></i>{{ t('parent.home_message') }}
-          </button>
-        </nav>
+  <section class="parent-home parent-home-dashboard teacher-stack" aria-labelledby="parent-overview-heading">
+    <header class="teacher-page-header parent-home-hero dash-reveal">
+      <div class="parent-progress__head-copy">
+        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+        <h1 id="parent-overview-heading" class="teacher-page-header__title">{{ t('parent.greeting', { name: firstName }) }}</h1>
+        <p class="teacher-page-header__hint" role="status">{{ statusSubtitle }}</p>
       </div>
     </header>
 
@@ -47,6 +31,57 @@
 
     <template v-else>
       <TeacherSectionPane
+        class="parent-home-snapshot parent-home-snapshot--featured"
+        :title="t('parent.home_snapshot_title')"
+        icon="bi bi-sun"
+        flat
+      >
+        <p class="parent-lead">{{ todayLead }}</p>
+        <div v-if="homeworkStatusBars.length" class="parent-home-snapshot__chart">
+          <p class="parent-stat__hint">{{ t('parent.home_homework_chart_hint') }}</p>
+          <ParentSimpleBarChart :bars="homeworkStatusBars" :aria-label="t('parent.home_homework_chart')" />
+        </div>
+        <div class="parent-home-snapshot__body">
+          <dl v-if="nextLesson" class="parent-home-today__facts parent-home-snapshot__next">
+            <div>
+              <dt>{{ t('parent.home_next_lesson') }}</dt>
+              <dd>
+                <button
+                  type="button"
+                  class="parent-home-link"
+                  @click="$emit('open-learning', nextLesson.child_id, nextLesson.id)"
+                >
+                  {{ nextLessonLabel }}<i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </button>
+              </dd>
+            </div>
+          </dl>
+          <div v-if="weeklyCards.length" class="parent-home-snapshot__week" role="list">
+            <article
+              v-for="card in weeklyCards"
+              :key="card.childId"
+              class="parent-stat parent-home-weekly-card parent-home-snapshot__stat"
+              role="listitem"
+            >
+              <button type="button" @click="$emit('open-progress', card.childId)">
+                <span aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+                <strong>{{ card.label }}</strong>
+                <small>
+                  {{ children.length > 1 ? `${card.childName} · ` : '' }}{{ card.practiceLabel }}
+                </small>
+              </button>
+            </article>
+          </div>
+        </div>
+        <TeacherEmpty
+          v-if="!nextLesson && !weeklyCards.length && !upcoming.length"
+          inline
+          icon="bi bi-check2-circle"
+          :message="t('parent.homework_empty')"
+        />
+      </TeacherSectionPane>
+
+      <TeacherSectionPane
         v-if="attention.length"
         class="parent-home-attention"
         :title="t('parent.home_attention_title')"
@@ -68,16 +103,22 @@
           </li>
         </ul>
       </TeacherSectionPane>
-      <div class="parent-home-columns">
-        <TeacherSectionPane :title="t('parent.overview_homework')" icon="bi bi-journal-check" flat>
+
+      <div v-if="showDetailColumns" class="parent-home-columns parent-home-columns--split">
+        <TeacherSectionPane
+          v-if="showHomeworkPane"
+          :title="t('parent.overview_homework')"
+          icon="bi bi-journal-check"
+          flat
+        >
           <TeacherEmpty v-if="!upcoming.length" inline icon="bi bi-check2-circle" :message="t('parent.homework_empty')" />
           <template v-else>
             <ul class="teacher-activity-list parent-home-task-list">
               <li v-for="row in upcoming" :key="row.id">
-                <button type="button" @click="$emit('open-learning', row.child_id)">
+                <button type="button" @click="$emit('open-learning', row.child_id, row.id)">
                   <span class="teacher-activity-list__avatar" aria-hidden="true"><i :class="activityIcon(row.activity)"></i></span>
                   <span class="teacher-activity-list__copy">
-                    <strong>{{ row.child_name }} · {{ taskTitle(row) }}</strong>
+                    <strong>{{ taskChildPrefix(row) }}{{ taskTitle(row) }}</strong>
                     <small>{{ taskMeta(row) }}</small>
                   </span>
                   <span class="parent-status" :class="taskStatusClass(row)">
@@ -88,23 +129,29 @@
               </li>
             </ul>
             <div class="parent-home-section-foot">
-              <button type="button" class="parent-home-link" @click="$emit('open-learning', null)">
+              <button
+                type="button"
+                class="parent-home-link"
+                @click="$emit('open-learning', focusChild?.id || selectedChildId || (children.length === 1 ? children[0].id : null))"
+              >
                 {{ t('parent.home_view_homework') }}<i class="bi bi-arrow-right" aria-hidden="true"></i>
               </button>
             </div>
           </template>
         </TeacherSectionPane>
 
-        <TeacherSectionPane :title="t('parent.overview_feedback')" icon="bi bi-chat-square-quote" flat>
+        <TeacherSectionPane
+          v-if="showFeedbackPane"
+          :title="t('parent.overview_feedback')"
+          icon="bi bi-chat-square-quote"
+          flat
+        >
           <TeacherEmpty v-if="!recentFeedback.length" inline icon="bi bi-chat-left" :message="t('parent.feedback_empty')" />
           <ul v-else class="parent-report parent-home-feedback">
             <li v-for="row in recentFeedback" :key="row.id">
-              <header>
-                <div>
-                  <strong>{{ row.child_name }}</strong>
-                  <p>{{ row.teacher_name }}</p>
-                </div>
-                <span v-if="row.unread" class="parent-status is-open">{{ t('parent.messages_unread', { n: 1 }) }}</span>
+              <header class="parent-home-feedback__head">
+                <strong v-if="showFeedbackChildName">{{ row.child_name }}</strong>
+                <p>{{ row.teacher_name }}</p>
               </header>
               <blockquote>
                 <p>{{ row.excerpt }}</p>
@@ -118,9 +165,32 @@
         </TeacherSectionPane>
       </div>
 
-      <TeacherSectionPane :title="t('parent.overview_activity')" icon="bi bi-activity" flat>
-        <TeacherEmpty v-if="!activity.length" inline icon="bi bi-calendar2" :message="t('parent.activity_empty')" />
-        <ul v-else class="teacher-activity-list">
+      <TeacherSectionPane
+        v-if="showChildrenSummary"
+        :title="t('parent.home_children_title')"
+        icon="bi bi-people"
+        flat
+      >
+        <div class="parent-home-children-grid">
+          <ParentHomeChildCard
+            v-for="child in children"
+            :key="child.id"
+            :child="child"
+            :homework="homework"
+            @open-learning="(id, assignmentId) => $emit('open-learning', id, assignmentId)"
+            @open-progress="$emit('open-progress', $event)"
+            @open-profile="$emit('open-child', $event)"
+          />
+        </div>
+      </TeacherSectionPane>
+
+      <TeacherSectionPane
+        v-if="activity.length"
+        :title="t('parent.overview_activity')"
+        icon="bi bi-activity"
+        flat
+      >
+        <ul class="teacher-activity-list">
           <li v-for="row in activity" :key="row.id">
             <button type="button" @click="$emit('open-progress', row.child_id)">
               <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.child_name) }}</span>
@@ -149,18 +219,26 @@ import {
 } from '../../scripts/parent/dashboard'
 import {
   buildAttentionItems,
+  feedbackExcludingAttention,
   homeStatusSubtitle,
+  homeworkExcludingAttention,
   homeworkRowStatusClass,
   latestFeedbackRows,
+  nextScheduledHomework,
+  resolveFocusChild,
   upcomingHomeworkRows,
+  weeklyProgressCards,
 } from '../../scripts/parent/homeDashboard'
 import ConnectPrompt from '../ConnectPrompt.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
+import ParentHomeChildCard from './ParentHomeChildCard.vue'
+import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
+import { homeHomeworkStatusBars } from '../../scripts/parent/homeworkBreakdown'
 
 export default {
   name: 'ParentFamilyOverview',
-  components: { ConnectPrompt, TeacherEmpty, TeacherSectionPane },
+  components: { ConnectPrompt, ParentHomeChildCard, ParentSimpleBarChart, TeacherEmpty, TeacherSectionPane },
   mixins: [i18nMixin],
   props: {
     firstName: { type: String, required: true },
@@ -169,9 +247,14 @@ export default {
     feedback: { type: Array, default: () => [] },
     activity: { type: Array, default: () => [] },
     messageUnread: { type: Number, default: 0 },
+    attendanceAlerts: { type: Array, default: () => [] },
+    selectedChildId: { type: Number, default: null },
   },
   emits: ['open-child', 'open-learning', 'open-messages', 'open-progress', 'open-settings'],
   computed: {
+    focusChild() {
+      return resolveFocusChild(this.children, this.selectedChildId)
+    },
     statusSubtitle() {
       return homeStatusSubtitle(this.t, {
         homework: this.homework,
@@ -181,27 +264,78 @@ export default {
       })
     },
     attention() {
+      const alerts = this.selectedChildId
+        ? this.attendanceAlerts.filter((row) => Number(row.child_id) === Number(this.selectedChildId))
+        : this.attendanceAlerts
       return buildAttentionItems({
         t: this.t,
         homework: this.homework,
         feedback: this.feedback,
         messageUnread: this.messageUnread,
+        attendanceAlerts: alerts,
         formatWhen,
         activityName,
         passageLabel,
       })
     },
     upcoming() {
-      return upcomingHomeworkRows(this.homework, 5)
+      const rows = homeworkExcludingAttention(this.homework, this.attention)
+      return upcomingHomeworkRows(rows, 5)
     },
     recentFeedback() {
-      return latestFeedbackRows(this.feedback, 3)
+      return latestFeedbackRows(feedbackExcludingAttention(this.feedback, this.attention), 3)
+    },
+    nextLesson() {
+      return nextScheduledHomework(this.homework, this.focusChild?.id || null)
+    },
+    nextLessonLabel() {
+      if (!this.nextLesson) return ''
+      const task = this.taskTitle(this.nextLesson)
+      const name = this.children.length > 1 ? `${this.nextLesson.child_name} · ` : ''
+      const due = this.nextLesson.due_at
+        ? this.t('parent.homework_due_short', { when: formatWhen(this.nextLesson.due_at) })
+        : ''
+      return [name + task, due].filter(Boolean).join('. ')
+    },
+    todayLead() {
+      if (this.focusChild) {
+        return this.t('parent.home_today_child', { name: this.focusChild.name })
+      }
+      return this.t('parent.home_today_family', { count: this.children.length })
+    },
+    weeklyCards() {
+      return weeklyProgressCards(this.t, this.children, this.selectedChildId)
+    },
+    showChildrenSummary() {
+      return this.children.length > 1 && !this.selectedChildId
+    },
+    showHomeworkPane() {
+      return this.children.some((child) => child.permissions?.assignments)
+    },
+    showFeedbackPane() {
+      return this.children.some((child) => child.permissions?.messages)
+    },
+    showDetailColumns() {
+      return this.showHomeworkPane || this.showFeedbackPane
+    },
+    showFeedbackChildName() {
+      return this.children.length > 1 && !this.selectedChildId
+    },
+    homeworkStatusBars() {
+      const rows = this.focusChild
+        ? this.homework.filter((row) => Number(row.child_id) === Number(this.focusChild.id))
+        : this.homework
+      return homeHomeworkStatusBars(this.t, rows)
     },
   },
   methods: {
     initial,
     formatWhen,
     activityIcon,
+    taskChildPrefix(row) {
+      if (this.children.length <= 1 || this.selectedChildId) return ''
+      return `${row.child_name} · `
+    },
     taskTitle(row) {
       return [activityName(this.t, row.activity), passageLabel(row)].filter(Boolean).join(' · ') || this.t('parent.nav_learning')
     },
@@ -234,11 +368,13 @@ export default {
         this.$emit('open-messages', null)
         return
       }
-      if (item.kind === 'feedback') {
+      if (item.kind === 'feedback' || item.kind === 'attendance') {
         this.$emit('open-progress', item.childId)
         return
       }
-      this.$emit('open-learning', item.childId)
+      const match = String(item.id || '').match(/^(?:overdue|due-soon)-(\d+)$/)
+      const assignmentId = match ? Number(match[1]) : null
+      this.$emit('open-learning', item.childId, assignmentId)
     },
   },
 }

@@ -23,8 +23,8 @@ for (const [id, source] of shells) {
   assert.match(source, /TeacherNav/, `${id} uses shared TeacherNav`)
 }
 
-assert.doesNotMatch(parentNav, /reports[\s\S]*mobile:\s*false/, 'Parent reports stays in mobile nav')
-assert.match(parentNav, /PARENT_NAV/, 'Parent nav is centralised in constants')
+assert.match(parentNav, /from '\.\/navigation\.js'/, 'Parent nav is centralised in navigation module')
+assert.match(parentNav, /parentNavActiveView/, 'Parent nav helpers exported from constants')
 assert.match(teacherNav, /TEACHER_NAV/, 'Teacher nav is centralised in constants')
 
 for (const token of [

@@ -191,9 +191,9 @@ function t(key, params = {}) {
 
 // Missing data: focus / why / previous attempt optional
 {
-  assert.match(canonicalResult, /view\.infoArchitecture\?\.mainFocus\?\.explanation \|\| view\.focusAyahRows\?\.length/)
-  assert.match(canonicalResult, /v-if="view\.infoArchitecture\.mainFocus\.explanation"/)
-  assert.match(canonicalResult, /v-if="view\.infoArchitecture\?\.weakAreas\?\.items\?\.length"/)
+  assert.match(canonicalResult, /showMainFocusBlock/)
+  assert.match(canonicalResult, /showMainFocusExplanation/)
+  assert.match(canonicalResult, /visibleWeakAreaItems\.length/)
   assert.match(js, /postSessionPracticeScopeLabel\(\)/)
   assert.match(js, /postSessionPreviousAttemptNote\(\)/)
   assert.match(js, /previous_attempts|related_attempts/)

@@ -618,6 +618,7 @@ class TeacherDashboardService
             'circle' => $circle = $this->circle->present($user),
             'learning_plan' => $circle['learning_plans'][0] ?? null,
             'recitation_difficulties' => $this->learnerRecitationDifficulties($user),
+            'hifz_summary' => app(StudentHifzProgressService::class)->forMyLearningPane($user),
         ];
 
         $attendance = $this->attendance->learnerSummary($user);

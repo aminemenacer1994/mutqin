@@ -1,25 +1,22 @@
 <template>
-  <section class="parent-home parent-messages">
-    <header class="parent-page">
-      <span class="parent-page__icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></span>
+  <section class="parent-home parent-messages teacher-stack">
+    <header class="teacher-page-header">
       <div>
-        <h1>{{ t('parent.nav_messages') }}</h1>
-        <p>{{ t('parent.messages_hint') }}</p>
+        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('parent.nav_messages') }}</h1>
+        <p class="teacher-page-header__hint">{{ t('parent.messages_hint') }}</p>
       </div>
     </header>
     <TeacherEmpty v-if="!children.length" illustrated icon="bi bi-people" :message="t('parent.children_empty')" />
-    <TeacherSectionPane v-else-if="!shared" :title="t('parent.nav_messages')" icon="bi bi-chat-dots" flat>
-      <TeacherEmpty inline icon="bi bi-lock" :message="t('parent.permission_messages')" />
-    </TeacherSectionPane>
+    <TeacherEmpty v-else-if="!shared" illustrated icon="bi bi-lock" :message="t('parent.permission_messages')" />
+    <NetworkFallback v-else-if="loadError" @retry="loadInbox" />
+    <div v-else-if="loading && !conversations.length" class="teacher-skeletons" role="status">
+      <div v-for="n in 3" :key="n" class="teacher-skeleton"></div>
+      <span class="visually-hidden">{{ t('parent.loading') }}</span>
+    </div>
     <template v-else>
-      <p v-if="loadError" class="alert alert-danger" role="alert">
-        {{ t('parent.messages_failed') }}
-        <button type="button" class="btn btn-link btn-sm" @click="loadInbox">{{ t('parent.retry') }}</button>
-      </p>
-      <TeacherSectionPane :title="t('parent.nav_messages')" icon="bi bi-chat-dots" flat>
-        <p v-if="loading" class="teacher-meta">{{ t('parent.loading') }}</p>
+      <TeacherSectionPane flat>
         <div
-          v-else
           class="parent-messages-workspace"
           :class="{
             'is-detail-open': Boolean(active) && isMobileViewport,
@@ -151,6 +148,7 @@ import { learningApi } from '../../scripts/api/learning'
 import { formatConversationWhen, initial } from '../../scripts/parent/dashboard'
 import { contextFeedbackForThread, conversationKey, createSearchDebouncer, filterConversations } from '../../scripts/parent/messages'
 import GuardianConversation from '../shared/GuardianConversation.vue'
+import NetworkFallback from '../NetworkFallback.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
 
@@ -158,7 +156,7 @@ const MOBILE_DETAIL_MQ = '(max-width: 767.98px)'
 
 export default {
   name: 'ParentFamilyMessages',
-  components: { GuardianConversation, TeacherEmpty, TeacherSectionPane },
+  components: { GuardianConversation, NetworkFallback, TeacherEmpty, TeacherSectionPane },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
@@ -288,7 +286,9 @@ export default {
         const data = await learningApi.getParentMessages()
         this.conversations = Array.isArray(data.conversations) ? data.conversations : []
         this.$emit('unread-change', this.unreadTotal)
-        if (this.active) {
+        if (!this.active && !this.isMobileViewport && this.visibleConversations.length === 1) {
+          this.openConversation(this.visibleConversations[0])
+        } else if (this.active) {
           const refreshed = this.conversations.find((row) => this.isActive(row))
           if (refreshed) this.active = refreshed
           else this.closeConversation()

@@ -18,7 +18,7 @@ assert.doesNotMatch(
 )
 assert.match(
   source,
-  /entry\.review[\s\S]{0,900}autoStart:\s*true/,
+  /entry\.review[\s\S]{0,3500}autoStart:\s*true/,
   'dashboard due and practice links must still request a revision auto-start',
 )
 

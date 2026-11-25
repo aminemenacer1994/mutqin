@@ -38,10 +38,10 @@ const disconnectedAfterSupport = learnerHasLearningNetwork({
 assert.equal(disconnectedAfterSupport, false)
 
 const navStandalone = studentNavItems({ learning: false, messaging: false })
-assert.deepEqual(navStandalone.map((item) => item.id), ['home', 'progress', 'activity'])
+assert.deepEqual(navStandalone.map((item) => item.id), ['home', 'practice', 'progress', 'activity'])
 
 const navConnected = studentNavItems({ learning: true, messaging: true })
-assert.deepEqual(navConnected.map((item) => item.id), ['home', 'learning', 'progress', 'activity', 'messages'])
+assert.deepEqual(navConnected.map((item) => item.id), ['home', 'learning', 'practice', 'progress', 'activity', 'messages'])
 
 const dashboard = readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
 assert.match(dashboard, /learnerHasLearningNetwork/)

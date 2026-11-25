@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
   PRACTICE_SELF_TOOL_IDS,
+  STUDENT_HOME_PRACTICE_TOOL_IDS,
+  buildStudentPracticeTools,
   practiceSessionContext,
   practiceToolHref,
 } from '../../resources/js/scripts/dashboard/studentPractice.js'
@@ -54,6 +56,19 @@ const saved = new URL(practiceToolHref(base, 'saved'), 'https://mutqin.test')
 assert.equal(saved.searchParams.get('panel'), 'saved')
 assert.equal(saved.searchParams.get('return'), 'dashboard')
 
+const hubMemorise = new URL(practiceToolHref(base, 'memorise', { returnTab: 'practice' }), 'https://mutqin.test')
+assert.equal(hubMemorise.searchParams.get('return_tab'), 'practice')
+
+const hubTools = buildStudentPracticeTools({
+  t: (key) => key,
+  base,
+  toolIds: STUDENT_HOME_PRACTICE_TOOL_IDS,
+})
+assert.equal(hubTools.length, 3)
+const allTools = buildStudentPracticeTools({ t: (key) => key, base, returnTab: 'practice' })
+assert.equal(allTools.length, PRACTICE_SELF_TOOL_IDS.length)
+assert.ok(allTools.every((row) => row.href.includes('return_tab=practice')))
+
 assert.equal(practiceSessionContext(0), 'practice')
 assert.equal(practiceSessionContext(null), 'practice')
 assert.equal(practiceSessionContext(42), 'assignment')
@@ -77,11 +92,12 @@ assert.equal(acceptRecitationProviderResponse('a', 'b'), false)
 assert.equal(acceptRecitationProviderResponse('a', 'a'), true)
 
 const navigation = fs.readFileSync(new URL('../../resources/js/scripts/dashboard/studentDashboardNavigation.js', import.meta.url), 'utf8')
-assert.doesNotMatch(navigation, /id: 'practice'/)
+assert.match(navigation, /id: 'practice'/)
 assert.match(navigation, /pane === 'practice'/)
 
 const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
-assert.doesNotMatch(dashboard, /studentPane === 'practice'/)
+assert.match(dashboard, /studentPane === 'practice'/)
+assert.match(dashboard, /id="dash-practice"/)
 assert.match(dashboard, /filterLearningAssignments/)
 
 const memorisation = fs.readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')

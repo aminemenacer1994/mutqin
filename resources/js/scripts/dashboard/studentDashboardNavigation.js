@@ -1,4 +1,4 @@
-export const STUDENT_DASHBOARD_PANES = Object.freeze(['home', 'learning', 'progress', 'activity', 'messages', 'settings'])
+export const STUDENT_DASHBOARD_PANES = Object.freeze(['home', 'learning', 'practice', 'progress', 'activity', 'messages', 'settings'])
 
 const PANE_SET = new Set(STUDENT_DASHBOARD_PANES)
 const CONTEXT_HASH_PANES = Object.freeze({
@@ -14,6 +14,7 @@ export function studentNavItems({ learning = false, messaging = false } = {}) {
     items.push({ id: 'learning', label: 'dashboard.jump_learning', mobileLabel: 'dashboard.jump_learning_mobile', icon: 'bi bi-journal-check' })
   }
   items.push(
+    { id: 'practice', label: 'dashboard.jump_practice', mobileLabel: 'dashboard.jump_practice_mobile', icon: 'bi bi-play-circle' },
     { id: 'progress', label: 'dashboard.jump_progress', icon: 'bi bi-graph-up' },
     { id: 'activity', label: 'dashboard.jump_activity', icon: 'bi bi-clock-history' },
   )
@@ -26,7 +27,7 @@ export function studentNavItems({ learning = false, messaging = false } = {}) {
 export function normalizeStudentDashboardPane(value, fallback = 'home') {
   const pane = String(value || '').trim().toLowerCase()
   if (pane === 'my-learning' || pane === 'my_learning') return 'learning'
-  if (pane === 'practice') return 'home'
+  if (pane === 'practice') return 'practice'
   return PANE_SET.has(pane) ? pane : (PANE_SET.has(fallback) ? fallback : 'home')
 }
 

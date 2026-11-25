@@ -90,6 +90,7 @@ class ParentLearningReportTest extends TestCase
             ->assertJsonPath('reports.0.assignments.completed', 0)
             ->assertJsonPath('reports.0.assignments.overdue', 1)
             ->assertJsonPath('reports.0.activity.practice_rows', 1)
+            ->assertJsonPath('reports.0.home_practice.items.0.kind', 'assignment')
             ->assertJsonPath('reports.0.wording.is_tajweed', false)
             ->assertJsonPath('reports.0.combined_scores', false)
             ->assertJsonPath('pdf_supported', true)
@@ -154,7 +155,10 @@ class ParentLearningReportTest extends TestCase
 
         $this->actingAs($limited)
             ->getJson(route('api.parent.reports.show', $report))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertJsonPath('report.assignments', null)
+            ->assertJsonPath('report.activity', null)
+            ->assertJsonStructure(['report' => ['attendance']]);
         $this->actingAs($outsider)
             ->getJson(route('api.parent.reports.show', $report))
             ->assertNotFound();

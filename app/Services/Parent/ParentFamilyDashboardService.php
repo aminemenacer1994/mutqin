@@ -14,6 +14,7 @@ use App\Models\LearningPlan;
 use App\Models\MemorisationProgress;
 use App\Models\ParentStudentLink;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Support\PlatformContextResolver;
@@ -56,7 +57,7 @@ class ParentFamilyDashboardService
         $assignmentIds = $this->idsAllowing($links, ParentGuardianPermission::ViewAssignments);
         $progressIds = $this->idsAllowing($links, ParentGuardianPermission::ViewProgress);
         $messageIds = $this->idsAllowing($links, ParentGuardianPermission::ViewMessages);
-
+        $attendanceIds = $this->idsAllowing($links, ParentGuardianPermission::ViewAttendance);
         $studentIdsList = $children->pluck('id')->all();
         $teachers = $this->teachersFor($studentIdsList);
         $groups = $this->groupsFor($studentIdsList);
@@ -70,6 +71,7 @@ class ParentFamilyDashboardService
             $link = $links->get($id);
             $canAssignments = $link instanceof ParentStudentLink && $link->allowsPermission(ParentGuardianPermission::ViewAssignments->value);
             $canProgress = $link instanceof ParentStudentLink && $link->allowsPermission(ParentGuardianPermission::ViewProgress->value);
+            $canAttendance = $link instanceof ParentStudentLink && $link->allowsPermission(ParentGuardianPermission::ViewAttendance->value);
             $childRecipients = $recipients->get($id, collect());
 
             return [
@@ -81,6 +83,7 @@ class ParentFamilyDashboardService
                     'assignments' => $canAssignments,
                     'progress' => $canProgress,
                     'messages' => $link instanceof ParentStudentLink && $link->allowsPermission(ParentGuardianPermission::ViewMessages->value),
+                    'attendance' => $canAttendance,
                 ],
                 'learning' => $canProgress ? $this->learningArea($plans->get($id), $childRecipients) : null,
                 'progress' => $canProgress ? ($progress->get($id) ?? [
@@ -88,6 +91,12 @@ class ParentFamilyDashboardService
                     'last_activity_at' => null,
                 ]) : null,
                 'assignments' => $canAssignments ? $this->assignmentCounts($childRecipients) : null,
+                'weekly' => $this->weeklyProgressSnapshot(
+                    $childRecipients,
+                    $canProgress ? (int) (($progress->get($id) ?? [])['practice_ayahs_week'] ?? 0) : 0,
+                    $canAssignments,
+                    $canProgress,
+                ),
             ];
         })->values();
 
@@ -141,6 +150,7 @@ class ParentFamilyDashboardService
             'homework' => $homework->all(),
             'activity' => $activity,
             'feedback' => $feedback->all(),
+            'attendance_alerts' => $this->attendanceAlerts($attendanceIds, $children),
             'platforms' => PlatformContextResolver::routeUrls($parent),
             'phase' => 'learning',
         ];
@@ -275,12 +285,16 @@ class ParentFamilyDashboardService
 
         $since = now()->subDays(self::RECENT_DAYS);
 
+        $weekStart = now()->startOfWeek();
+
         return MemorisationProgress::query()
             ->whereIn('user_id', $studentIds)
             ->groupBy('user_id')
             ->selectRaw(
-                'user_id, MAX(created_at) as last_activity_at, SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_ayahs',
-                [$since],
+                'user_id, MAX(created_at) as last_activity_at, '
+                .'SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_ayahs, '
+                .'SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as practice_ayahs_week',
+                [$since, $weekStart],
             )
             ->get()
             ->mapWithKeys(function (MemorisationProgress $row) {
@@ -288,6 +302,7 @@ class ParentFamilyDashboardService
 
                 return [(int) $row->user_id => [
                     'recent_ayahs' => (int) $row->getAttribute('recent_ayahs'),
+                    'practice_ayahs_week' => (int) $row->getAttribute('practice_ayahs_week'),
                     'last_activity_at' => $latest ? Carbon::parse($latest)->toIso8601String() : null,
                 ]];
             });
@@ -482,5 +497,82 @@ class ParentFamilyDashboardService
         }
 
         return in_array($recipient->status, [AssignmentStatus::Pending, AssignmentStatus::InProgress], true);
+    }
+
+    /**
+     * @param  Collection<int, TeacherAssignmentRecipient>  $recipients
+     * @return array{completed: int, due: int, practice_ayahs: int}|null
+     */
+    private function weeklyProgressSnapshot(
+        Collection $recipients,
+        int $practiceAyahsWeek,
+        bool $canAssignments,
+        bool $canProgress,
+    ): ?array {
+        if (! $canAssignments && ! $canProgress) {
+            return null;
+        }
+
+        $completed = 0;
+        $due = 0;
+        if ($canAssignments) {
+            $start = now()->startOfWeek();
+            $end = now()->endOfWeek();
+            foreach ($recipients as $recipient) {
+                $assignment = $recipient->assignment;
+                if ($assignment === null) {
+                    continue;
+                }
+                $dueAt = $assignment->due_at;
+                if ($recipient->status === AssignmentStatus::Completed) {
+                    $finished = $recipient->completed_at ?? $recipient->updated_at;
+                    if ($finished !== null && $finished->between($start, $end)) {
+                        $completed++;
+                    }
+
+                    continue;
+                }
+                if ($dueAt !== null && $dueAt->between($start, $end)) {
+                    $due++;
+                }
+            }
+        }
+
+        return [
+            'completed' => $completed,
+            'due' => $due,
+            'practice_ayahs' => $canProgress ? $practiceAyahsWeek : 0,
+        ];
+    }
+
+    /**
+     * @param  list<int>  $studentIds
+     * @param  Collection<int, User>  $children
+     * @return list<array{child_id: int, child_name: string, date: string, status: string}>
+     */
+    private function attendanceAlerts(array $studentIds, Collection $children): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+
+        $names = $children->mapWithKeys(fn (User $child) => [(int) $child->id => $child->name]);
+
+        return TeacherAttendanceRecord::query()
+            ->whereIn('student_id', $studentIds)
+            ->whereIn('status', ['absent', 'late'])
+            ->whereDate('attendance_date', '>=', now()->subDays(14)->toDateString())
+            ->orderByDesc('attendance_date')
+            ->limit(6)
+            ->get(['student_id', 'attendance_date', 'status'])
+            ->map(fn (TeacherAttendanceRecord $record) => [
+                'child_id' => (int) $record->student_id,
+                'child_name' => (string) ($names->get((int) $record->student_id) ?? ''),
+                'date' => $record->attendance_date->toDateString(),
+                'status' => (string) $record->status,
+            ])
+            ->filter(fn (array $row) => $row['child_name'] !== '')
+            ->values()
+            ->all();
     }
 }
