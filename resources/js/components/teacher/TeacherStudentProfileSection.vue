@@ -102,7 +102,7 @@
             @return-to-messages="returnToMessages"
             @unsent-change="unsent.tasks = $event"
           />
-          <div v-else-if="section === 'messages'" key="student-messages" class="teacher-stack">
+          <div v-else-if="section === 'messages'" key="student-messages" class="teacher-stack teacher-messages-inbox">
             <TeacherStudentProfileMessages
               :profile="tabProfile"
               :format-when="formatWhen"

@@ -15,6 +15,7 @@ use App\Services\Parent\ParentNoticeService;
 use App\Services\RevisionReminders\RevisionReminderHrefBuilder;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * In-app notices for lessons, revision, deadlines and published feedback.
@@ -37,9 +38,11 @@ final class LearningTaskNotifier
         $isRevision = $activity === 'revision'
             || ($activity === '' && $kind !== AssignmentKind::AiRecite->value && in_array($category, ['sabqi', 'manzil'], true));
 
+        $students = $this->studentsById($assignment->recipients->pluck('student_id'));
+
         foreach ($assignment->recipients as $recipient) {
-            $student = User::query()->find($recipient->student_id);
-            if (! $student) {
+            $student = $students->get((int) $recipient->student_id);
+            if (! $student instanceof User) {
                 continue;
             }
             if ($isRevision) {
@@ -90,9 +93,11 @@ final class LearningTaskNotifier
         }
         $assignment->loadMissing('recipients');
         $due = $assignment->due_at->toDateString();
+        $students = $this->studentsById($assignment->recipients->pluck('student_id'));
+
         foreach ($assignment->recipients as $recipient) {
-            $student = User::query()->find($recipient->student_id);
-            if (! $student) {
+            $student = $students->get((int) $recipient->student_id);
+            if (! $student instanceof User) {
                 continue;
             }
             $this->once($student, 'deadline:'.$recipient->id.':'.$due, [
@@ -125,9 +130,10 @@ final class LearningTaskNotifier
         }
 
         $title = trim((string) ($lesson->title ?? ''));
-        foreach ($studentIds as $studentId) {
-            $student = User::query()->find((int) $studentId);
-            if (! $student) {
+        $students = $this->studentsById($studentIds);
+
+        foreach ($students as $student) {
+            if (! $student instanceof User) {
                 continue;
             }
             $localDate = $this->preferences->localDate($date->copy()->startOfDay(), $student);
@@ -192,6 +198,28 @@ final class LearningTaskNotifier
             'teacher_assignment_recipient_id' => (int) $recipient->id,
         ]);
         $this->parents->reviewed($student, (int) $recipient->id, $stamp, $approved);
+    }
+
+    /**
+     * @param  iterable<int, int|string|null>  $studentIds
+     * @return Collection<int, User>
+     */
+    private function studentsById(iterable $studentIds): Collection
+    {
+        $ids = collect($studentIds)
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereIn('id', $ids->all())
+            ->get()
+            ->keyBy('id');
     }
 
     /**

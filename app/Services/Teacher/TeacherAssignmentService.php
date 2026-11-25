@@ -27,7 +27,9 @@ use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
+use App\Support\AssignmentDisplayStatus;
 use App\Support\AssignmentListeningSettings;
+use App\Support\AssignmentRecipientLifecycle;
 use App\Support\LearnerCompletionAttempt;
 use App\Support\TeacherOverviewCache;
 use App\Support\QuranMetadata;
@@ -95,7 +97,10 @@ class TeacherAssignmentService
         [$activity, $recordingRequired, $kind] = $this->coachingActivity($input, $kind);
         $duplicateExists = TeacherAssignmentRecipient::query()
             ->whereIn('student_id', $recipients)
-            ->where('status', '!=', AssignmentStatus::Completed->value)
+            ->whereNotIn('status', [
+                AssignmentStatus::Completed->value,
+                AssignmentStatus::Cancelled->value,
+            ])
             ->whereHas('assignment', function ($query) use ($teacher, $kind, $input, $surah, $start, $end, $activity) {
                 $query->where('teacher_id', $teacher->id)
                     ->where('kind', $kind->value)
@@ -110,7 +115,7 @@ class TeacherAssignmentService
                     ->where('ayah_end', $end);
             })
             ->exists();
-        if ($duplicateExists) {
+        if ($duplicateExists && empty($input['allow_duplicate'])) {
             throw ValidationException::withMessages([
                 'assignment' => 'This student already has an unresolved task for the same passage and action.',
             ]);
@@ -264,6 +269,201 @@ class TeacherAssignmentService
         TeacherOverviewCache::forget((int) $teacher->id);
     }
 
+    public function cancelRecipientByTeacher(
+        User $teacher,
+        TeacherAssignmentRecipient $recipient,
+        ?string $note = null,
+    ): TeacherAssignmentRecipient {
+        TeacherFeatures::abortUnlessEnabled();
+
+        return DB::transaction(function () use ($teacher, $recipient, $note) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with(['assignment', 'student'])
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $assignment = $locked->assignment;
+            if ($assignment === null
+                || (int) $assignment->teacher_id !== (int) $teacher->id
+                || ! $teacher->isTeacher()
+                || ! $this->access->allows($teacher, $locked->student)) {
+                abort(404);
+            }
+
+            if ($this->lifecycleStatus($locked) === AssignmentStatus::Completed->value) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'Completed tasks cannot be cancelled.',
+                ]);
+            }
+
+            if (AssignmentRecipientLifecycle::isClosed($locked)) {
+                return $locked->refresh()->load('assignment');
+            }
+
+            $evidence = is_array($locked->completion_evidence) ? $locked->completion_evidence : [];
+            $evidence = AssignmentRecipientLifecycle::appendEvent($evidence, AssignmentRecipientLifecycle::EVENT_CANCELLED, array_filter([
+                'note' => $note !== null && trim($note) !== '' ? trim($note) : null,
+            ]));
+            $evidence['lifecycle_closure'] = AssignmentRecipientLifecycle::CLOSURE_CANCELLED;
+            $evidence['cancelled_at'] = now()->toIso8601String();
+            if ($note !== null && trim($note) !== '') {
+                $evidence['cancel_note'] = trim($note);
+            }
+
+            $locked->forceFill([
+                'status' => AssignmentStatus::Cancelled->value,
+                'completion_evidence' => $evidence,
+            ])->save();
+            try {
+                app(RevisionReminderSyncService::class)->completeAssignmentReminder($locked->refresh(), 'cancelled');
+            } catch (\Throwable $error) {
+                report($error);
+            }
+            TeacherOverviewCache::forget((int) $teacher->id);
+
+            return $locked->refresh()->load('assignment');
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    public function reassignRecipientByTeacher(
+        User $teacher,
+        TeacherAssignmentRecipient $recipient,
+        array $overrides = [],
+    ): array {
+        TeacherFeatures::abortUnlessEnabled();
+
+        return DB::transaction(function () use ($teacher, $recipient, $overrides) {
+            $locked = TeacherAssignmentRecipient::query()
+                ->with(['assignment', 'student'])
+                ->lockForUpdate()
+                ->findOrFail($recipient->id);
+            $assignment = $locked->assignment;
+            if ($assignment === null
+                || (int) $assignment->teacher_id !== (int) $teacher->id
+                || ! $teacher->isTeacher()
+                || ! $this->access->allows($teacher, $locked->student)) {
+                abort(404);
+            }
+
+            if ($this->lifecycleStatus($locked) === AssignmentStatus::Completed->value) {
+                throw ValidationException::withMessages([
+                    'assignment' => 'Completed tasks cannot be reassigned.',
+                ]);
+            }
+
+            if (AssignmentRecipientLifecycle::isClosed($locked)) {
+                $successorId = AssignmentRecipientLifecycle::successorRecipientId($locked);
+                if ($successorId !== null) {
+                    $successor = TeacherAssignmentRecipient::query()->with('assignment')->find($successorId);
+                    if ($successor !== null) {
+                        return [
+                            'previous' => $this->presentRecipient($locked, false, null, null, null, (int) $teacher->id),
+                            'assignment' => $this->presentAssignment($successor->assignment),
+                            'recipients' => [$this->presentRecipient($successor, false, null, null, null, (int) $teacher->id)],
+                        ];
+                    }
+                }
+            }
+
+            $replacement = $this->duplicateAssignment($teacher, $assignment, array_merge($overrides, [
+                'student_id' => (int) $locked->student_id,
+                'allow_duplicate' => true,
+            ]));
+            $newRecipient = TeacherAssignmentRecipient::query()
+                ->where('teacher_assignment_id', $replacement->id)
+                ->where('student_id', $locked->student_id)
+                ->firstOrFail();
+
+            $evidence = is_array($locked->completion_evidence) ? $locked->completion_evidence : [];
+            $evidence = AssignmentRecipientLifecycle::appendEvent($evidence, AssignmentRecipientLifecycle::EVENT_REASSIGNED, [
+                'successor_recipient_id' => (int) $newRecipient->id,
+                'successor_assignment_id' => (int) $replacement->id,
+            ]);
+            $evidence['lifecycle_closure'] = AssignmentRecipientLifecycle::CLOSURE_REASSIGNED;
+            $evidence['successor_recipient_id'] = (int) $newRecipient->id;
+            $evidence['reassigned_at'] = now()->toIso8601String();
+            $locked->forceFill([
+                'status' => AssignmentStatus::Cancelled->value,
+                'completion_evidence' => $evidence,
+            ])->save();
+
+            $newEvidence = is_array($newRecipient->completion_evidence) ? $newRecipient->completion_evidence : [];
+            $newEvidence['predecessor_recipient_id'] = (int) $locked->id;
+            $newEvidence['predecessor_assignment_id'] = (int) $assignment->id;
+            $newRecipient->forceFill(['completion_evidence' => $newEvidence])->save();
+
+            try {
+                app(RevisionReminderSyncService::class)->completeAssignmentReminder($locked->refresh(), 'reassigned');
+                app(RevisionReminderSyncService::class)->syncTeacherAssignmentRecipient($newRecipient->refresh());
+            } catch (\Throwable $error) {
+                report($error);
+            }
+            TeacherOverviewCache::forget((int) $teacher->id);
+
+            $newRecipient->load('assignment');
+
+            return [
+                'previous' => $this->presentRecipient($locked->refresh(), false, null, null, null, (int) $teacher->id),
+                'assignment' => $this->presentAssignment($newRecipient->assignment),
+                'recipients' => [$this->presentRecipient($newRecipient, false, null, null, null, (int) $teacher->id)],
+            ];
+        });
+    }
+
+    /**
+     * Clone passage, coaching category and targets for the same or another student.
+     *
+     * @param  array<string, mixed>  $overrides
+     */
+    public function duplicateAssignment(User $teacher, TeacherAssignment $assignment, array $overrides = []): TeacherAssignment
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        if ((int) $assignment->teacher_id !== (int) $teacher->id
+            || ! $teacher->isTeacher()
+            || (int) $assignment->organisation_id !== (int) $teacher->organisation_id) {
+            abort(404);
+        }
+
+        $input = array_merge([
+            'kind' => $assignment->kind instanceof AssignmentKind ? $assignment->kind->value : (string) $assignment->kind,
+            'hifz_category' => $assignment->hifz_category,
+            'activity' => $assignment->activity,
+            'recording_required' => (bool) $assignment->recording_required,
+            'surah_number' => (int) $assignment->surah_number,
+            'ayah_start' => (int) $assignment->ayah_start,
+            'ayah_end' => (int) $assignment->ayah_end,
+            'repetition_target' => $assignment->repetition_target,
+            'due_at' => ($overrides['due_at'] ?? null) ?: optional($assignment->due_at)->toDateString(),
+            'priority' => $assignment->priority,
+            'feedback' => $assignment->feedback,
+            'session_settings' => $assignment->session_settings,
+            'source_ai_recite_attempt_id' => $assignment->source_ai_recite_attempt_id,
+            'student_id' => $overrides['student_id'] ?? null,
+            'learning_group_id' => $overrides['learning_group_id'] ?? $assignment->learning_group_id,
+            'learning_plan_id' => $overrides['learning_plan_id'] ?? $assignment->learning_plan_id,
+            'learning_plan_item_id' => $overrides['learning_plan_item_id'] ?? $assignment->learning_plan_item_id,
+        ], $overrides);
+
+        if (($input['student_id'] ?? null) === null && ($input['learning_group_id'] ?? null) === null) {
+            $studentIds = $assignment->recipients()->pluck('student_id')->unique()->values()->all();
+            if (count($studentIds) === 1) {
+                $input['student_id'] = (int) $studentIds[0];
+            }
+        }
+
+        if (! empty($overrides['allow_duplicate'])) {
+            $input['allow_duplicate'] = true;
+        }
+
+        if (! empty($input['student_id'])) {
+            unset($input['learning_group_id']);
+        }
+
+        return $this->create($teacher, $input);
+    }
+
     private function assertManageable(User $teacher, TeacherAssignment $assignment, bool $forUpdate = false): void
     {
         TeacherFeatures::abortUnlessEnabled();
@@ -322,7 +522,7 @@ class TeacherAssignmentService
                 ? $recipient->status
                 : AssignmentStatus::tryFrom((string) $recipient->status);
 
-            if ($current === AssignmentStatus::Completed) {
+            if ($current === AssignmentStatus::Completed || $current === AssignmentStatus::Cancelled) {
                 continue;
             }
 
@@ -803,6 +1003,12 @@ class TeacherAssignmentService
             ]);
         }
 
+        if ($status === AssignmentStatus::Cancelled->value) {
+            throw ValidationException::withMessages([
+                'assignment' => 'This task was cancelled by the teacher.',
+            ]);
+        }
+
         if ($status === AssignmentStatus::AwaitingConfirmation->value && ! $allowSubmitted) {
             throw ValidationException::withMessages([
                 'assignment' => 'This task is waiting for teacher review and cannot be changed.',
@@ -1078,6 +1284,8 @@ class TeacherAssignmentService
         $payload['task_state'] = $stateSnapshot['base'];
         $payload['task_state_display'] = $stateSnapshot['display'];
         $payload['task_overdue_overlay'] = $stateSnapshot['overdue_overlay'];
+        $payload['display_status'] = $this->displayStatusForRecipient($recipient);
+        $payload['lifecycle'] = AssignmentRecipientLifecycle::present($recipient);
         $dueUrgency = TeacherTaskState::dueUrgency(
             $assignment?->due_at,
             $stateSnapshot['base'] === TeacherTaskState::DONE,
@@ -1114,7 +1322,8 @@ class TeacherAssignmentService
                 AssignmentStatus::Pending->value,
                 AssignmentStatus::InProgress->value,
                 AssignmentStatus::Completed->value,
-            ], true);
+            ], true)
+                && ! AssignmentRecipientLifecycle::isClosed($recipient);
             $payload['href'] = $this->practiceHref(
                 $assignment,
                 $resumeSessionId,
@@ -1537,7 +1746,20 @@ class TeacherAssignmentService
                 : AssignmentStatus::Pending->value;
         }
 
+        if ($status === AssignmentStatus::Cancelled->value) {
+            return AssignmentStatus::Cancelled->value;
+        }
+
         return $status;
+    }
+
+    public function displayStatusForRecipient(TeacherAssignmentRecipient $recipient): string
+    {
+        return AssignmentDisplayStatus::resolve(
+            $recipient,
+            $this->reviewState($recipient),
+            $recipient->assignment,
+        );
     }
 
     /**
@@ -1566,6 +1788,10 @@ class TeacherAssignmentService
             ? $recipient->status->value
             : (string) $recipient->status;
 
+        if (AssignmentRecipientLifecycle::isClosed($recipient)) {
+            return AssignmentRecipientLifecycle::closure($recipient);
+        }
+
         if ($status === AssignmentStatus::Completed->value) {
             return 'approved';
         }
@@ -1590,6 +1816,8 @@ class TeacherAssignmentService
     private function assignmentWorkflowState(string $status, ?string $reviewState): string
     {
         return match (true) {
+            in_array($reviewState, [AssignmentRecipientLifecycle::CLOSURE_CANCELLED, AssignmentRecipientLifecycle::CLOSURE_REASSIGNED], true) => $reviewState,
+            $status === AssignmentStatus::Cancelled->value => 'cancelled',
             $reviewState === 'needs_correction' => 'needs_correction',
             $status === AssignmentStatus::Completed->value => 'completed',
             $status === AssignmentStatus::AwaitingConfirmation->value || $reviewState === 'submitted' => 'submitted',

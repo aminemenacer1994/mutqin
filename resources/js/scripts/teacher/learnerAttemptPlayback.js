@@ -10,6 +10,16 @@ export function markerAnchorMs(mistake = {}) {
   return null
 }
 
+export function segmentAnchorMs(segment = {}) {
+  const start = Number(segment.start_ms ?? segment.startMs)
+  const end = Number(segment.end_ms ?? segment.endMs)
+  if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+    return Math.round((start + end) / 2)
+  }
+  if (Number.isFinite(start) && start >= 0) return start
+  return null
+}
+
 /**
  * @param {number} ms
  * @param {number} durationMs
@@ -31,11 +41,58 @@ export function buildTimelineMarkers(mistakes = [], durationMs = 0) {
     const anchorMs = markerAnchorMs(mistake)
     return {
       index,
+      markerKind: 'mistake',
       mistake,
       anchorMs,
       percent: anchorMs === null ? null : markerPercentFromMs(anchorMs, durationMs),
     }
   }).filter((item) => item.percent !== null)
+}
+
+/**
+ * @param {object[]} segments
+ * @param {number} durationMs
+ */
+export function buildFeedbackSegmentMarkers(segments = [], durationMs = 0) {
+  return (Array.isArray(segments) ? segments : []).map((segment, segmentIndex) => {
+    const anchorMs = segmentAnchorMs(segment)
+    const id = segment?.id ?? segmentIndex
+    return {
+      index: `feedback-${id}`,
+      segmentIndex,
+      markerKind: 'feedback',
+      segment,
+      mistake: { type: 'feedback' },
+      anchorMs,
+      percent: anchorMs === null ? null : markerPercentFromMs(anchorMs, durationMs),
+    }
+  }).filter((item) => item.percent !== null)
+}
+
+function sortedFeedbackTimeline(segments = [], durationMs = 0) {
+  return buildFeedbackSegmentMarkers(segments, durationMs)
+    .slice()
+    .sort((a, b) => (a.anchorMs ?? 0) - (b.anchorMs ?? 0))
+}
+
+export function nextFeedbackSegmentIndex(segments, currentIndex = null, durationMs = 0) {
+  const timeline = sortedFeedbackTimeline(segments, durationMs)
+  if (!timeline.length) return null
+  if (currentIndex === null || currentIndex === undefined) return timeline[0].segmentIndex
+  const pos = timeline.findIndex((item) => item.segmentIndex === currentIndex)
+  if (pos < 0) return timeline[0].segmentIndex
+  return timeline[(pos + 1) % timeline.length].segmentIndex
+}
+
+export function previousFeedbackSegmentIndex(segments, currentIndex = null, durationMs = 0) {
+  const timeline = sortedFeedbackTimeline(segments, durationMs)
+  if (!timeline.length) return null
+  if (currentIndex === null || currentIndex === undefined) {
+    return timeline[timeline.length - 1].segmentIndex
+  }
+  const pos = timeline.findIndex((item) => item.segmentIndex === currentIndex)
+  if (pos < 0) return timeline[timeline.length - 1].segmentIndex
+  return timeline[(pos - 1 + timeline.length) % timeline.length].segmentIndex
 }
 
 /**
@@ -155,6 +212,7 @@ export function resolvePlaybackAttempt(row) {
     recordingAvailable: Boolean(attempt.recording_available ?? attempt.recordingUrl ?? attempt.recording_url),
     durationMs: Number(attempt.duration_ms ?? attempt.durationMs ?? row?.evidence?.audio?.duration_ms) || null,
     mistakes: Array.isArray(attempt.mistakes) ? attempt.mistakes : [],
+    feedbackSegments: Array.isArray(attempt.feedback_segments) ? attempt.feedback_segments : [],
     referenceByAyah,
     taskReferenceUrl,
     surah,

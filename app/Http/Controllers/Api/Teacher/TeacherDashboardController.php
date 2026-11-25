@@ -491,6 +491,53 @@ class TeacherDashboardController extends Controller
         ]);
     }
 
+    public function cancelAssignmentRecipient(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+        $updated = $assignments->cancelRecipientByTeacher($teacher, $recipient, $data['note'] ?? null);
+
+        return $this->json([
+            'recipient' => $assignments->presentRecipient($updated, false, null, null, null, (int) $teacher->id),
+        ]);
+    }
+
+    public function reassignAssignmentRecipient(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'due_at' => ['nullable', 'date'],
+            'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
+            'feedback' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $result = $assignments->reassignRecipientByTeacher($teacher, $recipient, $data);
+
+        return $this->json($result, 201);
+    }
+
+    public function duplicateAssignment(Request $request, TeacherAssignment $assignment, TeacherAssignmentService $assignments): JsonResponse
+    {
+        $teacher = $this->teacher($request);
+        $data = $request->validate([
+            'student_id' => ['nullable', 'integer', 'required_without:learning_group_id'],
+            'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
+            'due_at' => ['nullable', 'date'],
+            'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
+            'feedback' => ['nullable', 'string', 'max:2000'],
+            'allow_duplicate' => ['nullable', 'boolean'],
+        ]);
+        $created = $assignments->duplicateAssignment($teacher, $assignment, $data);
+
+        return $this->json([
+            'assignment' => $assignments->presentAssignment($created),
+            'recipients' => $created->recipients->map(
+                fn ($row) => $assignments->presentRecipient($row->setRelation('assignment', $created)),
+            )->values()->all(),
+        ], 201);
+    }
+
     public function storeNote(Request $request, User $student, TeacherDashboardService $dashboard): JsonResponse
     {
         $teacher = $this->teacher($request);

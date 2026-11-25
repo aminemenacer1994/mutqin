@@ -55,4 +55,21 @@ class ParentChildController extends Controller
 
         return response()->json($learning->profile($parent, $student));
     }
+
+    public function attendance(
+        Request $request,
+        User $student,
+        ParentAccessAuthorizer $access,
+        ParentChildLearningService $learning,
+    ): JsonResponse {
+        ParentFeatures::abortUnlessEnabled();
+        $parent = $request->user();
+        abort_unless($parent instanceof User && $access->allows($parent, $student), 404);
+
+        return response()->json($learning->attendance($parent, $student, [
+            'from' => $request->query('from'),
+            'to' => $request->query('to'),
+            'group_id' => $request->query('group_id'),
+        ]));
+    }
 }

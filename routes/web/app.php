@@ -389,7 +389,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
         }
 
-        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId) {
+        return $rateLimit->runExclusiveMint($userId, function () use ($usageCap, $userId, $user, $isFindAyah) {
             $cap = $usageCap->inspect($userId);
             if (! $cap['allowed']) {
                 return response()->json([
@@ -503,6 +503,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
 
             $usageCap->recordSuccessfulMint($userId);
+
+            if ($isFindAyah && $user instanceof User) {
+                app(SubscriptionEntitlement::class)->consumeFindAyah($user);
+            }
 
             return response()->json([
                 'access_token' => $accessToken,

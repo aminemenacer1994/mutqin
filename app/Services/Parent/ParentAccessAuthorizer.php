@@ -33,7 +33,7 @@ class ParentAccessAuthorizer
             return false;
         }
 
-        if ($student->account_role !== AccountRole::Student && ! $this->isConfiguredAnchor($student)) {
+        if (! $this->isConfiguredAnchor($student) && ! $student->isStudent()) {
             return false;
         }
 
@@ -68,7 +68,10 @@ class ParentAccessAuthorizer
             ->where('status', ParentLinkStatus::Approved->value)
             ->whereHas('student', function ($query) {
                 $query->where(function ($inner) {
-                    $inner->where('account_role', AccountRole::Student->value);
+                    $inner->where('account_role', AccountRole::Student->value)
+                        ->orWhereHas('accountRoles', function ($roles) {
+                            $roles->where('role', AccountRole::Student->value);
+                        });
                     $anchors = $this->configuredAnchorEmails();
                     if ($anchors !== []) {
                         $inner->orWhere(function ($emailQuery) use ($anchors) {

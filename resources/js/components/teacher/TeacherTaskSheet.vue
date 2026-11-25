@@ -132,11 +132,13 @@
       </div>
     </form>
     <template #footer>
-      <button type="button" class="btn btn-outline-secondary" :disabled="saving" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
-      <span class="teacher-task-form__submit">
-        <span v-if="!canSubmit" :id="`${formId}-submit-hint`" class="teacher-task-form__submit-hint" aria-live="polite">{{ submitHint }}</span>
-        <button type="submit" class="btn btn-primary" :form="formId" :disabled="saving || !canSubmit" :aria-describedby="!canSubmit ? `${formId}-submit-hint` : undefined" :title="!canSubmit ? submitHint : undefined">{{ editing ? t('teacher.task_save') : t('teacher.assign_task') }}</button>
-      </span>
+      <div class="teacher-task-form__footer">
+        <span v-if="!canSubmit && submitHint" :id="`${formId}-submit-hint`" class="teacher-task-form__submit-hint" aria-live="polite">{{ submitHint }}</span>
+        <div class="teacher-task-form__actions">
+          <button type="button" class="btn btn-outline-secondary" :disabled="saving" @click="$refs.dialog.requestClose()">{{ t('teacher.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" :form="formId" :disabled="saving || !canSubmit" :aria-describedby="!canSubmit && submitHint ? `${formId}-submit-hint` : undefined" :title="!canSubmit && submitHint ? submitHint : undefined">{{ editing ? t('teacher.task_save') : t('teacher.assign_task') }}</button>
+        </div>
+      </div>
     </template>
   </TeacherDialog>
 </template>
@@ -270,7 +272,7 @@ export default {
       if (!this.form.task_type) return this.t('teacher.task_submit_choose_type')
       if (!this.form.surah_number || !this.form.ayah_start || !this.form.ayah_end || this.rangeError) return this.t('teacher.task_submit_choose_passage')
       if (this.targetError) return this.t('teacher.task_submit_choose_target')
-      if (this.dueError) return this.t('teacher.task_submit_choose_due_date')
+      if (this.dueError) return ''
       return this.t('teacher.complete_required_fields')
     },
     canSubmit() {

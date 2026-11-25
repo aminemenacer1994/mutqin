@@ -1,6 +1,6 @@
 import { ALQURAN_RECITER_OPTIONS } from '../memorisationRuntime.js'
 import { SPEED_OPTIONS } from '../settings/workspacePreferences.js'
-import { globalAyahNumber } from '../quran/contentIntegrity.js'
+import { globalAyahNumber } from '../quran/globalAyahNumber.js'
 
 /** Reciters teachers see first for memorisation homework (Murattal / measured). */
 export const TEACHER_MEMORISATION_RECITER_ORDER = [

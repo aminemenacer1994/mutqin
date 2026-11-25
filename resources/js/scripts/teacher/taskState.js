@@ -7,6 +7,7 @@ export const TASK_STATE = {
   NEEDS_CORRECTION: 'NEEDS_CORRECTION',
   DONE: 'DONE',
   OVERDUE: 'OVERDUE',
+  CANCELLED: 'CANCELLED',
 }
 
 function startOfLocalDay(date) {
@@ -56,6 +57,10 @@ export function resolveBaseTaskState(row) {
     return TASK_STATE.NEEDS_CORRECTION
   }
 
+  if (status === 'cancelled') {
+    return TASK_STATE.CANCELLED
+  }
+
   if (status === 'in_progress') {
     return TASK_STATE.IN_PROGRESS
   }
@@ -72,7 +77,7 @@ export function resolveBaseTaskState(row) {
 }
 
 export function isTaskDoneState(state) {
-  return state === TASK_STATE.DONE
+  return state === TASK_STATE.DONE || state === TASK_STATE.CANCELLED
 }
 
 export function isOverdueOverlay(row, baseState = resolveBaseTaskState(row)) {
@@ -104,6 +109,7 @@ const TASK_STATE_LABEL_KEYS = {
   [TASK_STATE.NEEDS_CORRECTION]: 'teacher.status_needs_correction',
   [TASK_STATE.DONE]: 'teacher.task_state_done',
   [TASK_STATE.OVERDUE]: 'teacher.task_state_overdue',
+  [TASK_STATE.CANCELLED]: 'teacher.task_state_cancelled',
 }
 
 export function taskStateLabelKey(displayState) {
@@ -111,6 +117,7 @@ export function taskStateLabelKey(displayState) {
 }
 
 export function taskStateTone(displayState) {
+  if (displayState === TASK_STATE.CANCELLED) return 'muted'
   if (displayState === TASK_STATE.DONE) return 'approved'
   if (displayState === TASK_STATE.OVERDUE) return 'overdue'
   if (displayState === TASK_STATE.WAITING_REVIEW) return 'submitted'
@@ -120,6 +127,7 @@ export function taskStateTone(displayState) {
 }
 
 export function taskStateIcon(displayState) {
+  if (displayState === TASK_STATE.CANCELLED) return 'bi-slash-circle'
   if (displayState === TASK_STATE.DONE) return 'bi-check2-circle'
   if (displayState === TASK_STATE.OVERDUE) return 'bi-exclamation-circle'
   if (displayState === TASK_STATE.WAITING_REVIEW) return 'bi-hourglass-split'

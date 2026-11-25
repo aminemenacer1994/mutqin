@@ -1,11 +1,17 @@
 <template>
-  <TeacherSectionPane :title="t('teacher.guardian_messages')" icon="bi bi-people" flat>
-    <p class="teacher-meta">{{ t('teacher.guardian_messages_hint') }}</p>
+  <TeacherSectionPane
+    class="teacher-messages-pane teacher-messages-pane--parent"
+    :title="t('teacher.messages_parent_title')"
+    :hint="t('teacher.messages_parent_hint')"
+    icon="bi bi-people"
+    flat
+  >
     <p v-if="loadError" class="alert alert-danger" role="alert">{{ t('teacher.guardian_messages_failed') }}</p>
     <p v-else-if="loading" class="teacher-meta">{{ t('teacher.loading') }}</p>
     <TeacherEmpty v-else-if="!threads.length" inline icon="bi bi-chat" :message="t('teacher.guardian_messages_empty')" />
-    <div v-else class="teacher-messages-layout">
-      <ul class="teacher-activity-list">
+    <div v-else class="teacher-messages-layout teacher-messages-layout--profile teacher-messages-layout--guardian">
+      <p class="teacher-meta teacher-messages-parent__pick">{{ t('teacher.messages_parent_pick') }}</p>
+      <ul class="teacher-activity-list teacher-messages-parent__threads">
         <li v-for="row in threads" :key="row.parent_id">
           <button type="button" :aria-current="active && active.parent_id === row.parent_id ? 'true' : null" @click="openThread(row)">
             <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.parent_name) }}</span>

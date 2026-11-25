@@ -62,7 +62,7 @@
         <div class="learner-playback-track__markers" aria-hidden="false">
           <button
             v-for="marker in markers"
-            :key="marker.index"
+            :key="String(marker.index)"
             type="button"
             class="learner-playback-track__marker"
             :class="`is-${marker.mistake.type}`"
@@ -200,6 +200,7 @@ export default {
   },
   methods: {
     markerIcon(type) {
+      if (type === 'feedback') return 'bi-chat-left-quote-fill'
       if (type === 'missed') return 'bi-dash-circle-fill'
       if (type === 'tajweed') return 'bi-bookmark-star-fill'
       return 'bi-x-circle-fill'
@@ -436,6 +437,7 @@ export default {
 .learner-playback-track__marker.is-missed { color: var(--danger, #a84638); }
 .learner-playback-track__marker.is-wrong { color: var(--danger, #a84638); }
 .learner-playback-track__marker.is-tajweed { color: var(--dash-accent-strong); }
+.learner-playback-track__marker.is-feedback { color: var(--dash-info, #2a6f97); }
 
 .learner-playback-track__tooltip {
   position: absolute;

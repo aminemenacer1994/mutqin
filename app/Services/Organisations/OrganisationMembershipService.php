@@ -139,7 +139,16 @@ class OrganisationMembershipService
     {
         TeacherFeatures::abortUnlessEnabled();
         abort_unless($actor->isTeacher(), 403);
-        abort_unless((int) $actor->organisation_id === (int) $membership->organisation_id, 403);
+        abort_unless(
+            (int) $actor->organisation_id === (int) $membership->organisation_id
+            && OrganisationMembership::query()
+                ->where('user_id', $actor->id)
+                ->where('organisation_id', $membership->organisation_id)
+                ->where('membership_role', MembershipRole::Teacher->value)
+                ->where('status', MembershipStatus::Approved->value)
+                ->exists(),
+            403,
+        );
 
         if ($membership->status !== MembershipStatus::Pending) {
             throw ValidationException::withMessages([

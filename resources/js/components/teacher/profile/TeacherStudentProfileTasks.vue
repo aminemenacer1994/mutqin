@@ -65,7 +65,8 @@
     </div>
 
     <TeacherDialog
-      :open="Boolean(selectedAssignment)"
+      :open="Boolean(selectedAssignment) && !composing && !playbackAttemptId"
+      class="teacher-task-detail-dialog"
       :title="selectedTitle"
       size="lg"
       :close-label="t('teacher.close')"
@@ -186,14 +187,14 @@
 
     <TeacherDialog
       class="teacher-feedback-dialog"
-      :open="composing"
+      :open="composing && Boolean(selectedAssignment)"
       :title="t('teacher.task_give_feedback')"
       :eyebrow="selectedTitle"
       size="md"
       compact
       :dirty="feedbackUnsent"
       :close-label="t('teacher.close')"
-      @close="composing = false"
+      @close="closeFeedback"
     >
       <TeacherAudioFeedbackComposer
         v-if="composerReady && selectedAssignment"
@@ -551,7 +552,14 @@ export default {
     },
     toggleFeedback() {
       this.composerReady = true
-      this.composing = !this.composing
+      this.composing = true
+    },
+    closeFeedback() {
+      if (this.feedbackUnsent) {
+        this.pendingClose = true
+        return
+      }
+      this.composing = false
     },
     openTask(id, extras = {}) {
       this.selectedTaskKey = id
@@ -564,12 +572,20 @@ export default {
       if (extras.review) this.playbackAttemptId = extras.review
     },
     closeTask() {
+      if (this.composing) {
+        if (this.feedbackUnsent) {
+          this.pendingClose = true
+          return
+        }
+        this.composing = false
+      }
       if (this.feedbackUnsent) {
         this.pendingClose = true
         return
       }
       this.selectedTaskKey = null
       this.composing = false
+      this.playbackAttemptId = null
     },
     cancelPending() {
       this.pendingTaskId = null
@@ -581,11 +597,17 @@ export default {
       if (draftId) sessionStorage.removeItem(`mutqin-teacher-task-draft:${draftId}`)
       this.feedbackUnsent = false
       const next = this.pendingTaskId
+      const closing = this.pendingClose
       this.pendingTaskId = null
       this.pendingClose = false
+      this.composing = false
+      if (closing) {
+        this.selectedTaskKey = null
+        this.playbackAttemptId = null
+        return
+      }
       if (next === null) this.selectedTaskKey = null
       else this.openTask(next)
-      this.composing = false
     },
     onReminded(result) {
       const key = this.remindRow?.key

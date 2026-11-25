@@ -87,6 +87,12 @@
           <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="!hasTimedMistakes || !playback.recordingUrl" @click="goNextMistake">
             {{ t('teacher.learner_playback_next_mistake') }}
           </button>
+          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="!hasFeedbackSegments || !playback.recordingUrl" @click="goPreviousFeedback">
+            {{ t('teacher.learner_playback_prev_feedback') }}
+          </button>
+          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="!hasFeedbackSegments || !playback.recordingUrl" @click="goNextFeedback">
+            {{ t('teacher.learner_playback_next_feedback') }}
+          </button>
           <button
             type="button"
             class="dash-btn dash-btn--ghost dash-btn--sm"
@@ -98,6 +104,30 @@
             {{ t('teacher.learner_playback_compare') }}
           </button>
         </div>
+
+        <section
+          v-if="playback.feedbackSegments.length"
+          class="learner-playback-shell__segments"
+          :aria-label="t('teacher.learner_segment_feedback_title')"
+        >
+          <h3 class="learner-playback-shell__segments-title">{{ t('teacher.learner_segment_feedback_title') }}</h3>
+          <ul class="learner-playback-shell__segments-list">
+            <li v-for="(segment, index) in playback.feedbackSegments" :key="segment.id || index">
+              <button
+                type="button"
+                class="dash-text-link learner-playback-shell__segment-btn"
+                :class="{ 'is-active': selectedFeedbackIndex === index }"
+                :disabled="!playback.recordingUrl"
+                @click="focusFeedbackSegment(segment, index)"
+              >
+                <span class="learner-playback-shell__segment-range">{{ formatSegmentRange(segment) }}</span>
+                <span v-if="segmentLabel(segment)" class="learner-playback-shell__segment-body">{{ segmentLabel(segment) }}</span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <audio ref="teacherFeedbackAudio" preload="none" class="visually-hidden" aria-hidden="true"></audio>
       </div>
     </template>
   </DashModalRoot>
@@ -112,9 +142,12 @@ import {
   getRememberedPlaybackSpeed,
 } from '@/scripts/audio/attemptPlaybackSpeed.js'
 import {
+  buildFeedbackSegmentMarkers,
   buildTimelineMarkers,
   loopBoundsForAyah,
+  nextFeedbackSegmentIndex,
   nextMistakeIndex,
+  previousFeedbackSegmentIndex,
   previousMistakeIndex,
   referenceUrlForSelectedAyah,
   resolvePlaybackAttempt,
@@ -141,6 +174,9 @@ export default {
       compareActive: false,
       compareStep: 'idle',
       referenceDurationMs: null,
+      selectedFeedbackIndex: null,
+      feedbackLoopStartSec: null,
+      feedbackLoopEndSec: null,
     }
   },
   computed: {
@@ -169,23 +205,34 @@ export default {
       return loopBoundsForAyah(this.playback.mistakes, this.selectedAyah, this.studentDurationMs || 0)
     },
     loopStartSec() {
+      if (this.feedbackLoopStartSec !== null) return this.feedbackLoopStartSec
       if (!this.loopAyahEnabled) return null
       return (this.loopBounds.startMs || 0) / 1000
     },
     loopEndSec() {
+      if (this.feedbackLoopEndSec !== null) return this.feedbackLoopEndSec
       if (!this.loopAyahEnabled || this.loopBounds.endMs === null) return null
       return this.loopBounds.endMs / 1000
     },
     studentMarkers() {
       const duration = this.studentDurationMs || 1
-      return buildTimelineMarkers(this.playback.mistakes, duration).map((item) => ({
+      const mistakes = buildTimelineMarkers(this.playback.mistakes, duration).map((item) => ({
         ...item,
         ariaLabel: this.markerAria(item.mistake),
         text: this.markerTooltip(item.mistake),
       }))
+      const feedback = buildFeedbackSegmentMarkers(this.playback.feedbackSegments, duration).map((item) => ({
+        ...item,
+        ariaLabel: this.feedbackMarkerAria(item.segment),
+        text: this.segmentLabel(item.segment),
+      }))
+      return mistakes.concat(feedback).sort((a, b) => (a.anchorMs ?? 0) - (b.anchorMs ?? 0))
     },
     hasTimedMistakes() {
-      return this.studentMarkers.length > 0
+      return buildTimelineMarkers(this.playback.mistakes, this.studentDurationMs || 1).length > 0
+    },
+    hasFeedbackSegments() {
+      return buildFeedbackSegmentMarkers(this.playback.feedbackSegments, this.studentDurationMs || 1).length > 0
     },
   },
   watch: {
@@ -209,6 +256,7 @@ export default {
       this.selectedAyah = Number(first?.ayah) || Number(this.row?.assignment?.ayah_start) || 1
       this.selectedMistakeIndex = first ? 0 : null
       this.loopAyahEnabled = false
+      this.clearFeedbackLoop()
     },
     onOpen() {
       this.playbackRate = getRememberedPlaybackSpeed()
@@ -223,6 +271,7 @@ export default {
       stopAllTrackPlayback()
       this.$refs.referenceTrack?.pauseExternal?.()
       this.$refs.studentTrack?.pauseExternal?.()
+      this.stopTeacherFeedbackAudio()
       this.compareStep = 'idle'
     },
     close() {
@@ -262,6 +311,7 @@ export default {
       this.focusMistake(prev)
     },
     focusMistake(index) {
+      this.clearFeedbackLoop()
       this.selectedMistakeIndex = index
       const mistake = this.playback.mistakes[index]
       if (!mistake) return
@@ -270,8 +320,101 @@ export default {
       const seek = Number.isFinite(startMs) ? startMs / 1000 : 0
       this.$refs.studentTrack?.playFrom(seek)
     },
+    clearFeedbackLoop() {
+      this.selectedFeedbackIndex = null
+      this.feedbackLoopStartSec = null
+      this.feedbackLoopEndSec = null
+      this.stopTeacherFeedbackAudio()
+    },
+    segmentBoundsSec(segment) {
+      const startMs = Number(segment?.start_ms ?? segment?.startMs)
+      const endMs = Number(segment?.end_ms ?? segment?.endMs)
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+        return null
+      }
+      return { start: startMs / 1000, end: endMs / 1000 }
+    },
+    segmentLabel(segment) {
+      return String(segment?.body || '').trim()
+    },
+    formatSegmentRange(segment) {
+      const bounds = this.segmentBoundsSec(segment)
+      if (!bounds) return ''
+      const fmt = (seconds) => {
+        const total = Math.max(0, Math.floor(seconds))
+        return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+      }
+      return `${fmt(bounds.start)} – ${fmt(bounds.end)}`
+    },
+    feedbackMarkerAria(segment) {
+      const range = this.formatSegmentRange(segment)
+      const note = this.segmentLabel(segment)
+      return this.t('teacher.learner_playback_marker_feedback_aria', {
+        range,
+        note: note || this.t('teacher.learner_segment_feedback_title'),
+      })
+    },
+    async focusFeedbackSegment(segment, index = null) {
+      const bounds = this.segmentBoundsSec(segment)
+      if (!bounds) return
+      this.loopAyahEnabled = false
+      this.selectedMistakeIndex = null
+      this.selectedFeedbackIndex = index ?? this.playback.feedbackSegments.findIndex((row) => row?.id === segment?.id)
+      this.feedbackLoopStartSec = bounds.start
+      this.feedbackLoopEndSec = bounds.end
+      await this.$refs.studentTrack?.playFrom(bounds.start)
+      await this.playTeacherFeedbackAudio(segment)
+    },
+    async playTeacherFeedbackAudio(segment) {
+      const url = String(segment?.audio?.url || '').trim()
+      const el = this.$refs.teacherFeedbackAudio
+      if (!url || !el) return
+      this.stopTeacherFeedbackAudio()
+      try {
+        el.src = url
+        el.playbackRate = Number(this.playbackRate) || 1
+        await el.play()
+      } catch {
+        /* ignore playback errors */
+      }
+    },
+    stopTeacherFeedbackAudio() {
+      const el = this.$refs.teacherFeedbackAudio
+      if (!el) return
+      if (!el.paused) {
+        try { el.pause() } catch { /* ignore */ }
+      }
+      el.removeAttribute('src')
+      try { el.load() } catch { /* ignore */ }
+    },
+    goNextFeedback() {
+      const next = nextFeedbackSegmentIndex(
+        this.playback.feedbackSegments,
+        this.selectedFeedbackIndex,
+        this.studentDurationMs || 1,
+      )
+      if (next === null) return
+      const segment = this.playback.feedbackSegments[next]
+      if (segment) this.focusFeedbackSegment(segment, next)
+    },
+    goPreviousFeedback() {
+      const prev = previousFeedbackSegmentIndex(
+        this.playback.feedbackSegments,
+        this.selectedFeedbackIndex,
+        this.studentDurationMs || 1,
+      )
+      if (prev === null) return
+      const segment = this.playback.feedbackSegments[prev]
+      if (segment) this.focusFeedbackSegment(segment, prev)
+    },
     onMarkerActivate(marker) {
-      this.focusMistake(marker.index)
+      if (marker.markerKind === 'feedback' && marker.segment) {
+        this.focusFeedbackSegment(marker.segment, marker.segmentIndex)
+        return
+      }
+      if (marker.markerKind === 'mistake') {
+        this.focusMistake(marker.index)
+      }
     },
     async toggleCompare() {
       this.compareActive = !this.compareActive
@@ -340,5 +483,41 @@ export default {
 
 .learner-playback-shell__speed strong {
   font-variant-numeric: tabular-nums;
+}
+
+.learner-playback-shell__segments-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.learner-playback-shell__segments-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.learner-playback-shell__segment-btn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+  text-align: start;
+  width: 100%;
+}
+
+.learner-playback-shell__segment-btn.is-active {
+  font-weight: 600;
+}
+
+.learner-playback-shell__segment-range {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.learner-playback-shell__segment-body {
+  color: var(--dash-text-muted, #5c6570);
 }
 </style>

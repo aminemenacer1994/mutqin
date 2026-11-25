@@ -22,6 +22,8 @@ final class TeacherTaskState
     /** Display overlay when past due and not done. */
     public const OVERDUE = 'OVERDUE';
 
+    public const CANCELLED = 'CANCELLED';
+
     /**
      * @param  array<string, mixed>|null  $assignment
      */
@@ -32,6 +34,10 @@ final class TeacherTaskState
         ?CarbonInterface $studentSubmittedAt,
     ): string {
         $status = $status ?? AssignmentStatus::Pending->value;
+
+        if ($status === AssignmentStatus::Cancelled->value) {
+            return self::CANCELLED;
+        }
 
         if ($status === AssignmentStatus::Completed->value
             && ($reviewState === 'approved' || $studentSubmittedAt === null)) {

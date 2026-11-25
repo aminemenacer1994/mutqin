@@ -16,12 +16,16 @@ use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\TeacherRecitationAssessment;
+use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
+use App\Services\Learning\StudentCircleService;
+use App\Services\Teacher\TeacherAttendanceService;
 use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Teacher\StudentHifzProgressService;
 use App\Services\Teacher\TeacherAssignmentService;
+use App\Support\AssignmentRecipientLifecycle;
 use App\Support\QuranMetadata;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
@@ -88,7 +92,7 @@ class ParentChildLearningService
                     return true;
                 }
                 if ($statusFilter === 'active') {
-                    return $row['status'] !== AssignmentStatus::Completed->value;
+                    return ! in_array($row['display_status'], ['completed', 'cancelled', 'reassigned'], true);
                 }
 
                 return $row['display_status'] === $statusFilter;
@@ -252,9 +256,93 @@ class ParentChildLearningService
             return 'all';
         }
 
-        return in_array($status, ['active', 'completed', 'overdue', 'awaiting_confirmation', 'in_progress', 'pending', 'needs_correction'], true)
+        return in_array($status, [
+            'active',
+            'completed',
+            'overdue',
+            'awaiting_confirmation',
+            'in_progress',
+            'pending',
+            'needs_correction',
+            'cancelled',
+            'reassigned',
+        ], true)
             ? $status
             : 'all';
+    }
+
+    /**
+     * @param  array{from?: ?string, to?: ?string, group_id?: ?int}  $filters
+     * @return array<string, mixed>
+     */
+    public function attendance(User $parent, User $student, array $filters = []): array
+    {
+        $this->assertPermission($parent, $student, ParentGuardianPermission::ViewAttendance);
+
+        $from = $this->parseDate($filters['from'] ?? null)?->toDateString();
+        $to = $this->parseDate($filters['to'] ?? null)?->toDateString();
+        $groupId = isset($filters['group_id']) ? (int) $filters['group_id'] : null;
+
+        $teacherIds = collect(app(StudentCircleService::class)->present($student)['teachers'] ?? [])
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($teacherIds === []) {
+            return [
+                'child_id' => (int) $student->id,
+                'filters' => ['from' => $from, 'to' => $to, 'group_id' => $groupId],
+                'counts' => ['present' => 0, 'absent' => 0, 'late' => 0, 'excused' => 0],
+                'total' => 0,
+                'rate_percent' => null,
+                'history' => [],
+                'source' => 'teacher_recorded',
+                'read_only' => true,
+            ];
+        }
+
+        $query = TeacherAttendanceRecord::query()
+            ->where('student_id', $student->id)
+            ->whereIn('teacher_id', $teacherIds)
+            ->when($groupId !== null, fn ($builder) => $builder->where('learning_group_id', $groupId))
+            ->when($from, fn ($builder) => $builder->whereDate('attendance_date', '>=', $from))
+            ->when($to, fn ($builder) => $builder->whereDate('attendance_date', '<=', $to));
+
+        $counts = (clone $query)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $attendance = app(TeacherAttendanceService::class);
+        $countsPayload = $attendance->presentCounts($counts->all());
+
+        $history = (clone $query)
+            ->with('learningGroup:id,name')
+            ->orderByDesc('attendance_date')
+            ->limit(60)
+            ->get()
+            ->map(fn (TeacherAttendanceRecord $record) => [
+                'date' => $record->attendance_date->toDateString(),
+                'status' => $record->status,
+                'group' => $record->learningGroup?->name ?: '',
+                'notes' => $record->notes,
+                'source' => 'teacher_recorded',
+            ])
+            ->all();
+
+        return [
+            'child_id' => (int) $student->id,
+            'filters' => ['from' => $from, 'to' => $to, 'group_id' => $groupId],
+            'counts' => [
+                'present' => $countsPayload['present'],
+                'absent' => $countsPayload['absent'],
+                'late' => $countsPayload['late'],
+                'excused' => $countsPayload['excused'],
+            ],
+            'total' => $countsPayload['total'],
+            'rate_percent' => $countsPayload['rate_percent'],
+            'history' => $history,
+            'source' => 'teacher_recorded',
+            'read_only' => true,
+        ];
     }
 
     /**
@@ -265,7 +353,7 @@ class ParentChildLearningService
         $assignment = $recipient->assignment;
         abort_if($assignment === null, 500);
 
-        $display = $this->displayStatus($recipient);
+        $display = $this->assignments->displayStatusForRecipient($recipient);
         $reviewState = $this->assignments->reviewState($recipient);
         $instructions = LearningPlanItem::query()
             ->where('teacher_assignment_id', $assignment->id)
@@ -294,6 +382,7 @@ class ParentChildLearningService
             'instructions' => $instructions !== '' ? $instructions : null,
             'teacher_feedback' => $assignment->feedback ? trim((string) $assignment->feedback) : null,
             'history' => $this->completionHistory($recipient, $assignment),
+            'lifecycle' => AssignmentRecipientLifecycle::present($recipient),
             'latest_assessment' => $latestAttempt
                 ? $this->presentAssessment($parent, $recipient->student_id, $latestAttempt)
                 : null,
@@ -317,6 +406,13 @@ class ParentChildLearningService
         }
         if ($recipient->completed_at !== null) {
             $rows[] = ['label' => 'completed', 'at' => $recipient->completed_at->toIso8601String()];
+        }
+        $evidence = is_array($recipient->completion_evidence) ? $recipient->completion_evidence : [];
+        if (! empty($evidence['cancelled_at'])) {
+            $rows[] = ['label' => 'cancelled', 'at' => $evidence['cancelled_at']];
+        }
+        if (! empty($evidence['reassigned_at'])) {
+            $rows[] = ['label' => 'reassigned', 'at' => $evidence['reassigned_at']];
         }
 
         return $rows;
@@ -378,25 +474,6 @@ class ParentChildLearningService
         return $published !== '' ? $published : null;
     }
 
-    private function displayStatus(TeacherAssignmentRecipient $recipient): string
-    {
-        $review = $this->assignments->reviewState($recipient);
-        if ($review === 'needs_correction') {
-            return 'needs_correction';
-        }
-        if ($review === 'approved') {
-            return 'completed';
-        }
-        if ($review === 'submitted') {
-            return 'awaiting_confirmation';
-        }
-        if ($this->isOverdue($recipient)) {
-            return 'overdue';
-        }
-
-        return $this->assignments->lifecycleStatus($recipient);
-    }
-
     private function refreshSharedStatuses(User $student): void
     {
         if (! TeacherFeatures::enabled()) {
@@ -445,12 +522,7 @@ class ParentChildLearningService
 
     private function isOverdue(TeacherAssignmentRecipient $recipient): bool
     {
-        $due = $recipient->assignment?->due_at;
-        if ($due === null || ! $due->isPast()) {
-            return false;
-        }
-
-        return in_array($recipient->status, [AssignmentStatus::Pending, AssignmentStatus::InProgress], true);
+        return $this->assignments->displayStatusForRecipient($recipient) === 'overdue';
     }
 
     /**

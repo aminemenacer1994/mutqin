@@ -9,6 +9,7 @@ enum AssignmentStatus: string
     case AwaitingConfirmation = 'awaiting_confirmation';
     case Completed = 'completed';
     case Overdue = 'overdue';
+    case Cancelled = 'cancelled';
 
     /**
      * @return list<string>

@@ -1,10 +1,17 @@
 <template>
-  <TeacherSectionPane tone="neutral" flat>
-    <div class="teacher-messages-layout">
-    <section class="teacher-direct-thread teacher-direct-thread--chat" :aria-label="t('teacher.messages')">
+  <TeacherSectionPane
+    class="teacher-messages-pane teacher-messages-pane--student"
+    tone="neutral"
+    flat
+    :title="t('teacher.messages_private_title')"
+    :hint="t('teacher.messages_private_hint')"
+    icon="bi bi-chat-dots"
+  >
+    <div class="teacher-messages-layout teacher-messages-layout--profile">
+    <section class="teacher-direct-thread teacher-direct-thread--chat teacher-direct-thread--full" :aria-label="t('teacher.messages_private_title')">
       <header class="teacher-direct-thread__head">
-        <div class="teacher-direct-thread__head-copy">
-          <p>{{ t('teacher.messages_context') }}</p>
+        <div class="teacher-direct-thread__head-copy visually-hidden">
+          <p>{{ t('teacher.messages_private_title') }}</p>
         </div>
         <label class="teacher-direct-thread__search">
           <span class="visually-hidden">{{ t('teacher.message_search') }}</span>

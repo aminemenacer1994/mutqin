@@ -229,6 +229,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/children/{student}/assignments', [ParentChildController::class, 'assignments'])->name('api.parent.children.assignments');
                 Route::get('/children/{student}/progress', [ParentChildController::class, 'progress'])->name('api.parent.children.progress');
                 Route::get('/children/{student}/profile', [ParentChildController::class, 'profile'])->name('api.parent.children.profile');
+                Route::get('/children/{student}/attendance', [ParentChildController::class, 'attendance'])->name('api.parent.children.attendance');
                 Route::get('/messages', [ParentMessageController::class, 'index'])->name('api.parent.messages.index');
                 Route::get('/notification-preferences', [ParentMessageController::class, 'preferences'])->name('api.parent.notification-preferences.show');
                 Route::put('/notification-preferences', [ParentMessageController::class, 'updatePreferences'])->name('api.parent.notification-preferences.update');
@@ -303,6 +304,9 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::delete('/notes/{note}', [TeacherDashboardController::class, 'destroyAssignmentMessage'])->name('api.teacher.notes.destroy');
                 Route::post('/assignment-recipients/{recipient}/approve', [TeacherDashboardController::class, 'approveAssignmentRecipient'])->name('api.teacher.assignment-recipients.approve');
                 Route::post('/assignment-recipients/{recipient}/correction', [TeacherDashboardController::class, 'requestAssignmentCorrection'])->name('api.teacher.assignment-recipients.correction');
+                Route::post('/assignment-recipients/{recipient}/cancel', [TeacherDashboardController::class, 'cancelAssignmentRecipient'])->name('api.teacher.assignment-recipients.cancel');
+                Route::post('/assignment-recipients/{recipient}/reassign', [TeacherDashboardController::class, 'reassignAssignmentRecipient'])->name('api.teacher.assignment-recipients.reassign');
+                Route::post('/assignments/{assignment}/duplicate', [TeacherDashboardController::class, 'duplicateAssignment'])->name('api.teacher.assignments.duplicate');
                 Route::get('/recitation-difficulties', [TeacherDashboardController::class, 'recitationDifficultyQueue'])->name('api.teacher.recitation-difficulties.queue');
                 Route::get('/students/{student}/recitation-difficulties', [TeacherDashboardController::class, 'studentRecitationDifficulties'])->name('api.teacher.students.recitation-difficulties.index');
                 Route::get('/students/{student}/recitation-difficulties/{spot}', [TeacherDashboardController::class, 'showStudentRecitationDifficulty'])->name('api.teacher.students.recitation-difficulties.show');

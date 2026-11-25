@@ -1,12 +1,12 @@
 <template>
   <Teleport to="body">
     <template v-if="open">
-      <div class="modal-backdrop fade show teacher-dialog-backdrop" @click="onBackdrop"></div>
+      <div v-if="!stacked" class="modal-backdrop fade show teacher-dialog-backdrop" @click="onBackdrop"></div>
       <div
         ref="root"
         v-bind="$attrs"
         class="modal fade show d-block teacher-dialog"
-        :class="{ 'is-compact': compact, 'has-footer': hasFooter }"
+        :class="{ 'is-compact': compact, 'has-footer': hasFooter, 'is-stacked': stacked }"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"
@@ -80,6 +80,7 @@ export default {
     compact: { type: Boolean, default: false },
     busy: { type: Boolean, default: false },
     dirty: { type: Boolean, default: null },
+    stacked: { type: Boolean, default: false },
   },
   emits: ['close'],
   data() {

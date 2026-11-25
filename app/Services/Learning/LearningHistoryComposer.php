@@ -11,6 +11,7 @@ use App\Models\TeacherNote;
 use App\Models\TeacherWordCoaching;
 use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
+use App\Support\AssignmentRecipientLifecycle;
 use App\Support\QuranMetadata;
 
 /**
@@ -33,7 +34,8 @@ class LearningHistoryComposer
                 $query->whereNotNull('student_completed_at')
                     ->orWhereNotNull('completed_at')
                     ->orWhere('status', AssignmentStatus::Completed->value)
-                    ->orWhere('status', AssignmentStatus::AwaitingConfirmation->value);
+                    ->orWhere('status', AssignmentStatus::AwaitingConfirmation->value)
+                    ->orWhere('status', AssignmentStatus::Cancelled->value);
             })
             ->with('assignment.teacher:id,name')
             ->latest('id')
@@ -82,6 +84,9 @@ class LearningHistoryComposer
                 'activity_status' => match ($status) {
                     AssignmentStatus::Completed->value => 'completed',
                     AssignmentStatus::AwaitingConfirmation->value => 'awaiting_review',
+                    AssignmentStatus::Cancelled->value => AssignmentRecipientLifecycle::closure($recipient) === AssignmentRecipientLifecycle::CLOSURE_REASSIGNED
+                        ? 'reassigned'
+                        : 'cancelled',
                     default => 'submitted',
                 },
                 'recipient_id' => (int) $recipient->id,

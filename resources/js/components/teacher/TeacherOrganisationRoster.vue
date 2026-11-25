@@ -1,19 +1,8 @@
 <template>
-  <section class="dash-section dash-section--flat teacher-roster" :aria-labelledby="headingId">
-    <div class="dash-section__head">
-      <div class="dash-section__title">
-        <span class="dash-section__icon" aria-hidden="true"><i class="bi bi-building"></i></span>
-        <div class="dash-section__title-copy">
-          <h2 :id="headingId">{{ t('teacher.org_roster_title') }}</h2>
-          <span v-if="organisation" class="teacher-pill teacher-pill--school">
-            {{ organisation.name }}
-          </span>
-        </div>
-      </div>
-    </div>
+  <section v-if="organisation" class="dash-section dash-section--flat teacher-roster" :aria-labelledby="headingId">
+    <h2 :id="headingId" class="visually-hidden">{{ t('teacher.org_roster_team') }}</h2>
     <div class="dash-section__body dash-section__body--spacious">
-      <TeacherEmpty v-if="!organisation" inline :message="t('teacher.org_none')" />
-      <div v-else class="teacher-roster__columns">
+      <div class="teacher-roster__columns">
         <div class="teacher-roster__column">
           <h4>{{ t('teacher.org_teachers_heading') }} <span class="teacher-roster__count">{{ teachers.length }}</span></h4>
           <TeacherEmpty v-if="!teachers.length" inline :message="t('teacher.org_teachers_empty')" />

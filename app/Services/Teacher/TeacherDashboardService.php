@@ -1082,7 +1082,10 @@ class TeacherDashboardService
 
             return $due !== null
                 && $due->isSameDay($today)
-                && $status !== AssignmentStatus::Completed->value;
+                && ! in_array($status, [
+                    AssignmentStatus::Completed->value,
+                    AssignmentStatus::Cancelled->value,
+                ], true);
         })->count();
 
         $submitted = $assignments->filter(fn (TeacherAssignmentRecipient $recipient) => (
@@ -3528,6 +3531,7 @@ class TeacherDashboardService
             AssignmentStatus::InProgress->value => 2,
             AssignmentStatus::AwaitingConfirmation->value => 2,
             AssignmentStatus::Completed->value => 4,
+            AssignmentStatus::Cancelled->value => 5,
             default => 4,
         };
 

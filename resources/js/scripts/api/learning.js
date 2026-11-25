@@ -1167,6 +1167,22 @@ export const learningApi = {
     const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/correction`, { note })
     return data
   },
+  async cancelTeacherAssignmentRecipient(recipientId, note = '') {
+    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/cancel`, { note: note || undefined })
+    return data
+  },
+  async reassignTeacherAssignmentRecipient(recipientId, payload = {}) {
+    const { data } = await http.post(`/teacher/assignment-recipients/${recipientId}/reassign`, payload)
+    return data
+  },
+  async duplicateTeacherAssignment(assignmentId, payload = {}) {
+    const { data } = await http.post(`/teacher/assignments/${assignmentId}/duplicate`, payload)
+    return data
+  },
+  async getParentChildAttendance(studentId, params = {}) {
+    const { data } = await http.get(`/parent/children/${studentId}/attendance`, { params })
+    return data
+  },
   async getTeacherLearningPlans(studentId = null) {
     const { data } = await http.get('/teacher/learning-plans', {
       params: studentId ? { student_id: studentId } : {},

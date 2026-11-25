@@ -1,6 +1,7 @@
 <template>
   <TeacherDialog
     :open="open"
+    :stacked="stacked"
     class="teacher-playback-studio"
     :class="{ 'is-unavailable': !loading && !payload }"
     size="xl"
@@ -217,30 +218,30 @@
 
               <section v-if="hasAttention" class="teacher-playback__section teacher-playback__attention" :aria-label="t('teacher.playback_attention_title')">
                 <h2>{{ t('teacher.playback_attention_title') }}</h2>
-                <div v-if="summary.ayahs.length" class="teacher-playback__ayah-row">
-                  <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
-                    <button
-                      v-for="ayah in summary.ayahs"
-                      :key="ayah.ayah"
-                      type="button"
-                      :class="{ 'is-current': ayah.ayah === currentAyah }"
-                      @click="selectAyah(ayah.ayah)"
-                    >{{ t('teacher.ayah_n', { n: ayah.ayah }) }}</button>
-                  </div>
-                </div>
-                <ul v-if="visibleItems.length" class="teacher-playback__words">
-                  <li v-for="item in visibleItems" :key="item.key">
-                    <button
-                      type="button"
-                      :class="[attentionTone(item), { 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }]"
-                      :aria-pressed="item.key === selectedKey"
-                      :aria-label="attentionLabel(item)"
-                      :disabled="Boolean(saving)"
-                      @click="selectAttention(item)"
-                    >
-                      <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
-                      <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
-                    </button>
+                <ul v-if="attentionByAyah.length" class="teacher-playback__attention-rows">
+                  <li v-for="group in attentionByAyah" :key="group.ayah" class="teacher-playback__attention-row">
+                    <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
+                      <button
+                        type="button"
+                        :class="{ 'is-current': group.ayah === currentAyah }"
+                        @click="selectAyah(group.ayah)"
+                      >{{ t('teacher.ayah_n', { n: group.ayah }) }}</button>
+                    </div>
+                    <ul class="teacher-playback__words">
+                      <li v-for="item in group.items" :key="item.key">
+                        <button
+                          type="button"
+                          :class="[attentionTone(item), { 'is-current': item.key === activeKey, 'is-selected': item.key === selectedKey }]"
+                          :aria-pressed="item.key === selectedKey"
+                          :aria-label="attentionLabel(item)"
+                          :disabled="Boolean(saving)"
+                          @click="selectAttention(item)"
+                        >
+                          <span v-if="glyphForKey(item.key)" class="teacher-playback__arabic" lang="ar" dir="rtl" :style="{ fontFamily: glyphForKey(item.key).fontFamily }">{{ glyphForKey(item.key).text }}</span>
+                          <span v-else>{{ item.ayah ? t('teacher.ayah_n', { n: item.ayah }) : t('teacher.unavailable') }}</span>
+                        </button>
+                      </li>
+                    </ul>
                   </li>
                 </ul>
                 <p v-else class="teacher-empty-line">{{ attentionEmpty }}</p>
@@ -523,6 +524,7 @@ export default {
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
+    stacked: { type: Boolean, default: false },
     studentId: { type: [Number, String], default: null },
     attemptId: { type: [Number, String], default: null },
     autoplay: { type: Boolean, default: false },
@@ -700,6 +702,19 @@ export default {
     },
     visibleItems() {
       return this.showAllAttention ? this.filteredItems : this.filteredItems.slice(0, 6)
+    },
+    attentionByAyah() {
+      const buckets = new Map()
+      this.visibleItems.forEach((item) => {
+        const ayah = Number(item.ayah) || 0
+        const key = ayah > 0 ? ayah : 0
+        const rows = buckets.get(key) || []
+        rows.push(item)
+        buckets.set(key, rows)
+      })
+      return [...buckets.entries()]
+        .sort((left, right) => left[0] - right[0])
+        .map(([ayah, items]) => ({ ayah: ayah || null, items }))
     },
     reviewed() {
       return this.payload?.review?.status === 'reviewed'

@@ -57,7 +57,7 @@
         <a class="btn btn-outline-secondary btn-sm teacher-account__action" :href="practiceUrl">{{ t('teacher.my_practice') }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
       </section>
 
-      <section class="card teacher-account" :aria-labelledby="connectionsHeadingId">
+      <section class="card teacher-account teacher-account__connections" :aria-labelledby="connectionsHeadingId">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
           <div>

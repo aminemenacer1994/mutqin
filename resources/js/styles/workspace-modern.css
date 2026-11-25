@@ -911,16 +911,57 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
   margin-inline-start: auto;
 }
 
-/* Profile messaging keeps the existing card treatment, but reads as a focused
-   conversation rather than a full-width data panel. The rail also prevents a
-   long unbroken message or audio preview from widening the page. */
-.teacher-profile .teacher-direct-thread--chat {
-  --teacher-thread-reading-width: 52rem;
+/* Profile messaging uses the full pane width for the thread list, bubbles, and composer. */
+.teacher-messages-inbox .teacher-messages-pane {
+  width: 100%;
+  max-width: none;
 }
 
+.teacher-messages-inbox .teacher-messages-pane .teacher-pane__head .teacher-pane__title {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.teacher-messages-parent__pick {
+  margin: 0 0 4px;
+  padding-inline: 4px;
+  font-size: 13px;
+}
+
+.teacher-messages-layout--guardian .teacher-direct-thread--chat {
+  margin-top: 4px;
+  border: 1px solid var(--teacher-line, var(--border));
+  border-radius: 12px;
+}
+
+.teacher-messages-inbox .teacher-messages-pane .teacher-pane__body {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.teacher-messages-layout--profile {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.teacher-messages-layout--guardian {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.teacher-messages-layout--profile .teacher-activity-list,
+.teacher-messages-layout--profile .teacher-direct-thread--chat {
+  width: 100%;
+  min-width: 0;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__head,
 .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__context,
-.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer {
-  padding-inline: max(1rem, calc((100% - var(--teacher-thread-reading-width)) / 2));
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer,
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__list {
+  padding-inline: 16px;
 }
 
 .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__list {
@@ -928,22 +969,36 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
   min-width: 0;
   min-height: clamp(10rem, 20dvh, 14rem);
   max-height: clamp(20rem, 48dvh, 34rem);
-  padding-inline: max(1rem, calc((100% - var(--teacher-thread-reading-width)) / 2));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
 
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__replies,
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer-foot {
+  width: 100%;
+}
+
+.teacher-profile .teacher-direct-thread--chat textarea,
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer-actions {
+  width: 100%;
+  max-width: none;
+}
+
+.teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__composer-actions {
+  justify-content: flex-end;
+}
+
 .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__bubble {
   width: fit-content;
-  max-width: min(100%, 46rem);
+  max-width: 100%;
   min-width: 0;
 }
 
 .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__bubble p,
 .teacher-profile .teacher-direct-thread--chat .teacher-direct-thread__task {
-  max-inline-size: 66ch;
+  max-inline-size: none;
   overflow-wrap: anywhere;
   word-break: break-word;
 }

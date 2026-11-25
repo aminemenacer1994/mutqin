@@ -62,14 +62,6 @@
       </TeacherSectionPane>
     </div>
 
-    <TeacherOrganisationRoster
-      v-if="overview?.roster"
-      :organisation="overview.roster.organisation"
-      :teachers="overview.roster.teachers || []"
-      :students="overview.roster.students || []"
-      @open-student="$emit('open-student', $event)"
-    />
-
     <section class="teacher-insights teacher-overview-trends" :aria-labelledby="trendHeadingId">
       <header class="teacher-insights__head">
         <div class="teacher-insights__copy">
@@ -132,7 +124,6 @@ import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
-import TeacherOrganisationRoster from './TeacherOrganisationRoster.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
@@ -143,7 +134,6 @@ export default {
     TeacherActivityChart,
     TeacherEmpty,
     TeacherKpiGrid,
-    TeacherOrganisationRoster,
     TeacherSectionPane,
     TeacherWordingMatch,
   },
@@ -173,16 +163,16 @@ export default {
       return this.overview?.trends?.revision_consistency || { points: [], is_empty: true, completed_sample_size: 0, scheduled_sample_size: 0 }
     },
     assignmentCaption() {
-      return this.t('teacher.assignment_completion_caption', {
-        completed: this.assignmentTrend.completed_sample_size || 0,
-        scheduled: this.assignmentTrend.scheduled_sample_size || 0,
-      })
+      const completed = this.assignmentTrend.completed_sample_size || 0
+      const due = this.assignmentTrend.scheduled_sample_size || 0
+      if (!completed && !due) return ''
+      return this.t('teacher.assignment_completion_caption_short', { completed, due })
     },
     revisionCaption() {
-      return this.t('teacher.revision_consistency_caption', {
-        completed: this.revisionTrend.completed_sample_size || 0,
-        scheduled: this.revisionTrend.scheduled_sample_size || 0,
-      })
+      const completed = this.revisionTrend.completed_sample_size || 0
+      const scheduled = this.revisionTrend.scheduled_sample_size || 0
+      if (!completed && !scheduled) return ''
+      return this.t('teacher.revision_consistency_caption_short', { completed, scheduled })
     },
     assignmentChartData() {
       return this.trendSeries(this.assignmentTrend.points, this.t('teacher.trend_due'))

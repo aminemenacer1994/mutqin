@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\AccountRole;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Organisations\OrganisationInstitutionAccess;
@@ -42,7 +41,7 @@ class OrganisationPolicy
             return false;
         }
 
-        return $user->account_role === AccountRole::Teacher
+        return $user->isTeacher()
             && $user->organisation_id !== null
             && (int) $user->organisation_id === (int) $organisation->id;
     }

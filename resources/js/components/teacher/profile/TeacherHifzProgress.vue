@@ -2,7 +2,6 @@
   <section class="teacher-profile-sheet teacher-hifz" :aria-label="t('teacher.hifz_progress_title')">
     <header class="teacher-hifz__head">
       <strong>{{ t('teacher.hifz_progress_title') }}</strong>
-      <span v-if="validated.validated_ayahs">{{ t('teacher.hifz_validated_ayahs', { n: validated.validated_ayahs }) }}</span>
     </header>
 
     <div class="teacher-hifz__summary">
@@ -11,16 +10,15 @@
           <span class="teacher-hifz__label">{{ t('teacher.hifz_summary_validated') }}</span>
           <span class="teacher-hifz__count">{{ validated.validated_ayahs }}</span>
         </header>
-        <p v-if="validatedLine" class="teacher-hifz__lead">{{ validatedLine }}</p>
+        <p v-if="validatedLead" class="teacher-hifz__lead">{{ validatedLead }}</p>
         <p v-else class="teacher-hifz__quiet">{{ t('teacher.hifz_validated_empty') }}</p>
-        <p v-if="validated.last_validated_at" class="teacher-hifz__quiet">{{ t('teacher.hifz_last_validated', { when: formatWhen(validated.last_validated_at) }) }}</p>
-        <p v-if="coverage.memorised_ayahs" class="teacher-hifz__quiet">{{ t('teacher.hifz_recorded_progress', { n: coverage.memorised_ayahs }) }}</p>
+        <p v-if="validated.last_validated_at && validated.validated_ayahs" class="teacher-hifz__quiet">{{ t('teacher.hifz_last_validated', { when: formatWhen(validated.last_validated_at) }) }}</p>
       </section>
 
       <section class="teacher-hifz__summary-section">
         <header>
           <span class="teacher-hifz__label">{{ t('teacher.hifz_summary_learning') }}</span>
-          <span v-if="coverage.learning_ayahs || lessons.pending" class="teacher-hifz__count">{{ coverage.learning_ayahs || lessons.pending }}</span>
+          <span v-if="learningCount" class="teacher-hifz__count">{{ learningCount }}</span>
         </header>
         <p v-if="sabaqLine" class="teacher-hifz__lead">{{ sabaqLine }}</p>
         <p v-else-if="nextLesson" class="teacher-hifz__lead">{{ nextLesson.label }}</p>
@@ -42,7 +40,7 @@
       </section>
     </div>
 
-    <aside class="teacher-hifz__evidence" aria-label="AI wording match">
+    <aside v-if="wording.comparable_passages" class="teacher-hifz__evidence" :aria-label="t('teacher.hifz_wording_match_title')">
       <strong>{{ t('teacher.hifz_wording_match_title') }}</strong>
       <span>{{ wordingSummary }}</span>
       <small>{{ t('teacher.hifz_wording_not_validation') }}</small>
@@ -104,6 +102,15 @@ export default {
     validatedLine() {
       return this.bucketLine(this.validated.ranges)
     },
+    validatedLead() {
+      if (this.validatedLine) return this.validatedLine
+      const recorded = Number(this.coverage.memorised_ayahs || 0)
+      if (recorded > 0) return this.t('teacher.hifz_recorded_progress', { n: recorded })
+      return ''
+    },
+    learningCount() {
+      return Number(this.coverage.learning_ayahs || 0) || Number(this.lessons.pending || 0)
+    },
     wordingSummary() {
       if (!this.wording.comparable_passages) return this.t('teacher.hifz_wording_empty')
       return this.t('teacher.hifz_wording_summary', {
@@ -127,7 +134,8 @@ export default {
       return this.recommendations[0] || (this.next?.activity === 'revision' ? this.next : null)
     },
     revisionCount() {
-      return this.recommendations.length || Number(this.coverage.reviewing_ayahs || 0)
+      if (this.recommendations.length) return this.recommendations.length
+      return Number(this.coverage.reviewing_ayahs || 0)
     },
     revisionLine() {
       if (this.nextRevision?.label) return this.nextRevision.label
