@@ -1,11 +1,18 @@
 <template>
-  <section class="teacher-pane" :aria-label="t('dashboard.revision_targets_title')">
-    <header class="teacher-pane__head">
+  <section
+    class="learner-revision-targets"
+    :class="embedded ? 'learner-revision-targets--embedded' : 'teacher-pane'"
+    :aria-label="t('dashboard.revision_targets_title')"
+  >
+    <header v-if="embedded" class="learner-circle__subhead-wrap">
+      <h3 class="teacher-pane__title learner-circle__subhead">{{ t('dashboard.revision_targets_title') }}</h3>
+    </header>
+    <header v-else class="teacher-pane__head">
       <div class="teacher-pane__titles">
         <h2 class="teacher-pane__title">{{ t('dashboard.revision_targets_title') }}</h2>
       </div>
     </header>
-    <div class="teacher-pane__body">
+    <div :class="embedded ? 'learner-revision-targets__body' : 'teacher-pane__body'">
       <p v-if="!targets.length" class="teacher-meta">{{ t('dashboard.revision_targets_empty') }}</p>
       <ul v-else class="learner-circle__list">
         <li v-for="target in targets" :key="target.id" class="learner-circle__teacher">
@@ -34,6 +41,7 @@ export default {
   mixins: [i18nMixin],
   props: {
     targets: { type: Array, default: () => [] },
+    embedded: { type: Boolean, default: false },
   },
 }
 </script>

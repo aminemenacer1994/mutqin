@@ -1,4 +1,5 @@
 import { defaultAyahRange } from './taskTypes'
+import { defaultAssignmentSessionSettings } from './assignmentListeningSettings'
 
 export const TEACHER_VIEWS = ['overview', 'students', 'student', 'plans', 'assignments', 'reviews', 'settings']
 
@@ -45,6 +46,7 @@ export function defaultAssignmentForm(surahs = []) {
     due_at: '',
     priority: 'normal',
     feedback: '',
+    session_settings: defaultAssignmentSessionSettings(),
   }
 }
 

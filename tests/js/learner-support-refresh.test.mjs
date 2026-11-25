@@ -2,10 +2,24 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 
 const source = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
-const body = source.match(/async loadLearnerSupport\(\) \{([\s\S]*?)\n    \},\n    async startSupportAssignment/)[1]
+const loadBody = source.match(/async loadLearnerSupport\(\) \{([\s\S]*?)\n    \},\n    applyLearnerSupport\(payload\) \{([\s\S]*?)\n    \},/)[1]
+const applyBody = source.match(/async loadLearnerSupport\(\) \{([\s\S]*?)\n    \},\n    applyLearnerSupport\(payload\) \{([\s\S]*?)\n    \},/)[2]
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
-const refresh = new AsyncFunction('learningApi', body)
-const state = { supportRequestId: 0, assignmentSavingId: 0, support: null, supportLoading: false, supportError: '', t: key => key }
+const refresh = new AsyncFunction(
+  'learningApi',
+  `this.applyLearnerSupport = function applyLearnerSupport(payload) { ${applyBody} }; ${loadBody}`,
+)
+const state = {
+  supportRequestId: 0,
+  assignmentSavingId: 0,
+  support: null,
+  supportLoading: false,
+  supportError: '',
+  t: key => key,
+  auth: { learner_teacher_section_enabled: true, learner_learning_network_connected: true },
+  $nextTick: (fn) => Promise.resolve().then(fn),
+  openLinkedLearnerRecord() {},
+}
 const pending = []
 const api = { getLearnerSupport: () => new Promise((resolve, reject) => pending.push({ resolve, reject })) }
 

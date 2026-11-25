@@ -62,6 +62,14 @@
       </TeacherSectionPane>
     </div>
 
+    <TeacherOrganisationRoster
+      v-if="overview?.roster"
+      :organisation="overview.roster.organisation"
+      :teachers="overview.roster.teachers || []"
+      :students="overview.roster.students || []"
+      @open-student="$emit('open-student', $event)"
+    />
+
     <section class="teacher-insights teacher-overview-trends" :aria-labelledby="trendHeadingId">
       <header class="teacher-insights__head">
         <div class="teacher-insights__copy">
@@ -124,6 +132,7 @@ import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
+import TeacherOrganisationRoster from './TeacherOrganisationRoster.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
@@ -134,6 +143,7 @@ export default {
     TeacherActivityChart,
     TeacherEmpty,
     TeacherKpiGrid,
+    TeacherOrganisationRoster,
     TeacherSectionPane,
     TeacherWordingMatch,
   },

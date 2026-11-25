@@ -10,10 +10,12 @@ use App\Enums\UserSessionStatus;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\RevisionReminder;
+use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Achievements\PracticePreferences;
+use App\Support\AssignmentListeningSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -173,12 +175,30 @@ final class RevisionReminderSyncService
             'due_at' => $dueAt->utc(),
             'priority' => $priority,
             'teacher_assignment_recipient_id' => $recipient->id,
-            'session_settings' => [
-                'review' => true,
-                'assignment_recipient' => (int) $recipient->id,
-            ],
+            'session_settings' => $this->sessionSettingsForTeacherAssignment($assignment, (int) $recipient->id),
             ...($dueMoved ? ['notified_in_app_at' => null, 'emailed_at' => null] : []),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sessionSettingsForTeacherAssignment(TeacherAssignment $assignment, int $recipientId): array
+    {
+        $settings = [
+            'review' => true,
+            'assignment_recipient' => $recipientId,
+        ];
+        $listening = is_array($assignment->session_settings) ? $assignment->session_settings : null;
+        if (AssignmentListeningSettings::hasListeningRecommendation($listening)) {
+            foreach (['reciter', 'speed', 'repetitions', 'technique'] as $key) {
+                if (isset($listening[$key]) && $listening[$key] !== '' && $listening[$key] !== null) {
+                    $settings[$key] = $listening[$key];
+                }
+            }
+        }
+
+        return $settings;
     }
 
     public function syncPracticePlan(MemorisationPracticePlan $plan): ?RevisionReminder

@@ -27,6 +27,7 @@ use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
+use App\Support\AssignmentListeningSettings;
 use App\Support\LearnerCompletionAttempt;
 use App\Support\TeacherOverviewCache;
 use App\Support\QuranMetadata;
@@ -124,6 +125,9 @@ class TeacherAssignmentService
         }
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? 'normal')->value;
+        $sessionSettings = AssignmentListeningSettings::sanitize(
+            array_key_exists('session_settings', $input) ? $input['session_settings'] : null
+        );
         $sourceAttemptId = isset($input['source_ai_recite_attempt_id']) ? (int) $input['source_ai_recite_attempt_id'] : 0;
         if ($sourceAttemptId > 0) {
             $sourceOwned = $studentId !== null && AiReciteAttempt::query()
@@ -139,7 +143,7 @@ class TeacherAssignmentService
             $sourceAttemptId = null;
         }
 
-        $created = DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired, $sourceAttemptId) {
+        $created = DB::transaction(function () use ($teacher, $kind, $surah, $start, $end, $target, $input, $groupId, $recipients, $priority, $activity, $recordingRequired, $sourceAttemptId, $sessionSettings) {
             $assignment = new TeacherAssignment;
             $assignment->forceFill([
                 'teacher_id' => $teacher->id,
@@ -158,6 +162,7 @@ class TeacherAssignmentService
                 'due_at' => $input['due_at'] ?? null,
                 'priority' => $priority,
                 'feedback' => $this->nullableText($input['feedback'] ?? null),
+                'session_settings' => $sessionSettings,
                 'source_ai_recite_attempt_id' => $sourceAttemptId,
             ])->save();
 
@@ -210,11 +215,14 @@ class TeacherAssignmentService
         }
 
         $priority = RevisionReminderPriority::normalise($input['priority'] ?? $assignment->priority ?? 'normal')->value;
+        $sessionSettings = array_key_exists('session_settings', $input)
+            ? AssignmentListeningSettings::sanitize($input['session_settings'])
+            : $assignment->session_settings;
 
         $kind = AssignmentKind::tryFrom((string) ($input['kind'] ?? '')) ?? $assignment->kind;
         [$activity, $recordingRequired, $kind] = $this->coachingActivity($input, $kind instanceof AssignmentKind ? $kind : AssignmentKind::Practice);
 
-        $updated = DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind) {
+        $updated = DB::transaction(function () use ($teacher, $assignment, $input, $surah, $start, $end, $priority, $activity, $recordingRequired, $kind, $sessionSettings) {
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
             $previousDue = $locked->due_at?->toDateString();
@@ -230,6 +238,7 @@ class TeacherAssignmentService
                 'due_at' => $input['due_at'] ?? null,
                 'priority' => $priority,
                 'feedback' => $this->nullableText($input['feedback'] ?? null),
+                'session_settings' => $sessionSettings,
             ])->save();
 
             $loaded = $locked->refresh()->load('recipients');
@@ -866,6 +875,41 @@ class TeacherAssignmentService
             $params['assignment_recipient'] = $recipientId;
         }
 
+        $settings = is_array($assignment->session_settings) ? $assignment->session_settings : null;
+        $params = AssignmentListeningSettings::mergeIntoMemorisationQuery($params, $settings);
+
+        return route('memorisation').'?'.http_build_query($params);
+    }
+
+    public function listenHref(
+        TeacherAssignment $assignment,
+        ?int $recipientId = null,
+    ): ?string {
+        $settings = is_array($assignment->session_settings) ? $assignment->session_settings : null;
+        if (! AssignmentListeningSettings::hasListeningRecommendation($settings)) {
+            return null;
+        }
+
+        $params = [
+            'surah' => $assignment->surah_number,
+            'from' => $assignment->ayah_start,
+            'to' => $assignment->ayah_end,
+            'return' => 'dashboard',
+            'return_tab' => 'learning',
+            'review' => '1',
+            'practice_tool' => 'talqin',
+        ];
+
+        if ($recipientId !== null && $recipientId > 0) {
+            $params['assignment_recipient'] = $recipientId;
+        }
+
+        $merged = array_merge(
+            is_array($settings) ? $settings : [],
+            ['technique' => $settings['technique'] ?? 'talqin']
+        );
+        $params = AssignmentListeningSettings::mergeIntoMemorisationQuery($params, $merged);
+
         return route('memorisation').'?'.http_build_query($params);
     }
 
@@ -1076,6 +1120,9 @@ class TeacherAssignmentService
                 $resumeSessionId,
                 $canLinkPractice ? (int) $recipient->id : null,
             );
+            $payload['listen_href'] = $canLinkPractice
+                ? $this->listenHref($assignment, (int) $recipient->id)
+                : null;
             $payload['messages'] = $this->assignmentMessages(
                 $assignment,
                 (int) $recipient->student_id,
@@ -1140,6 +1187,9 @@ class TeacherAssignmentService
             'due_at' => $assignment->due_at?->toIso8601String(),
             'priority' => RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value,
             'feedback' => $assignment->feedback,
+            'session_settings' => AssignmentListeningSettings::present(
+                is_array($assignment->session_settings) ? $assignment->session_settings : null
+            ),
             'source_attempt_id' => $assignment->source_ai_recite_attempt_id ? (int) $assignment->source_ai_recite_attempt_id : null,
             'learning_group_id' => $assignment->learning_group_id ? (int) $assignment->learning_group_id : null,
             'created_at' => $assignment->created_at?->toIso8601String(),

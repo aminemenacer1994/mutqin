@@ -31,7 +31,7 @@
         </div>
         <a
           v-if="practiseHref(item)"
-          class="btn btn-sm btn-primary"
+          class="dash-btn dash-btn--primary dash-btn--sm"
           :href="practiseHref(item)"
         >{{ t('teacher.difficulty_practise_again') }}</a>
       </li>

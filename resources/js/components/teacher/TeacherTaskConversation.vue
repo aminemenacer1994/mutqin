@@ -40,6 +40,7 @@
               :voice-aria-label="t('teacher.voice_note')"
               :grouped="Boolean(group.messages[index - 1] && group.messages[index - 1].senderRole === message.senderRole)"
               @retry="retryFailed"
+              @open-assignment="$emit('open-assignment', $event)"
             />
           </article>
         </section>
@@ -233,7 +234,7 @@ const MAX_RECORDING_MS = 120000
 export default {
   name: 'TeacherTaskConversation',
   directives: { autoGrow },
-  emits: ['sending-change'],
+  emits: ['sending-change', 'open-assignment'],
   components: { MessageBubble, AudioClip, TeacherAudioFeedbackPlayer },
   mixins: [i18nMixin],
   props: {

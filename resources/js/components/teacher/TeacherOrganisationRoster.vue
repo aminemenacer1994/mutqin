@@ -22,6 +22,7 @@
               <span class="teacher-list__avatar" aria-hidden="true">{{ studentInitial(member.name) }}</span>
               <span class="teacher-tile__copy">
                 <strong>{{ member.name }}</strong>
+                <span v-if="member.is_institution_admin" class="teacher-pill">{{ t('teacher.org_admin_badge') }}</span>
                 <span v-if="member.is_you" class="teacher-pill teacher-pill--you">{{ t('teacher.org_you') }}</span>
               </span>
             </article>

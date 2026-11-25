@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import {
   learnerCircleHasNetwork,
+  learnerConnectionPhase,
   learnerHasLearningNetwork,
 } from '../../resources/js/scripts/dashboard/learnerConnection.js'
 import { studentNavItems } from '../../resources/js/scripts/dashboard/studentDashboardNavigation.js'
@@ -13,6 +14,10 @@ assert.equal(
   learnerCircleHasNetwork({ teachers: [], memberships: [{ status: 'pending' }] }),
   true,
 )
+
+assert.equal(learnerConnectionPhase(null), 'none')
+assert.equal(learnerConnectionPhase({ teachers: [{ id: 1 }], memberships: [] }), 'connected')
+assert.equal(learnerConnectionPhase({ teachers: [], memberships: [{ status: 'pending' }] }), 'pending')
 
 const standalone = learnerHasLearningNetwork({
   auth: { learner_teacher_section_enabled: true, learner_learning_network_connected: false },
@@ -43,5 +48,7 @@ assert.match(dashboard, /learnerHasLearningNetwork/)
 assert.match(dashboard, /learnerLearningNetworkConnected/)
 assert.match(dashboard, /v-if="showLearnerTeacherSection"[\s\S]*id="progress-feedback"/)
 assert.match(dashboard, /learning: this\.learnerLearningNetworkConnected/)
+assert.match(dashboard, /LearnerSettingsSection/)
+assert.match(dashboard, /learnerConnectSettingsHref/)
 
 console.log('learner-connection.test.mjs: ok')

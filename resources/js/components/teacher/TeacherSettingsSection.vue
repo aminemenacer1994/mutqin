@@ -97,6 +97,8 @@
         </ul>
         <a class="btn btn-outline-secondary btn-sm teacher-account__action" href="/onboarding/connections">{{ t('ui.connections_connect_action') }}</a>
       </section>
+
+      <TeacherInstitutionAdminPanel v-if="teacher?.organisation?.id" :current-user-id="teacher?.id" />
     </div>
 
     <TeacherDialog :open="Boolean(activeClass)" size="md" :title="activeClass?.name || t('teacher.account_classes')" :close-label="t('teacher.close')" :busy="classLoading || membershipActionId !== null" @close="closeClass">
@@ -127,10 +129,11 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import TeacherDialog from './TeacherDialog.vue'
+import TeacherInstitutionAdminPanel from './TeacherInstitutionAdminPanel.vue'
 
 export default {
   name: 'TeacherSettingsSection',
-  components: { TeacherDialog },
+  components: { TeacherDialog, TeacherInstitutionAdminPanel },
   mixins: [i18nMixin],
   props: { teacher: { type: Object, default: null }, teacherName: { type: String, required: true }, studentInitial: { type: Function, required: true }, practiceUrl: { type: String, required: true }, profileUrl: { type: String, required: true }, groups: { type: Array, default: () => [] } },
   emits: ['export', 'refresh-classes'],

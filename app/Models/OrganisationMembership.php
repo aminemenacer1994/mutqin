@@ -16,6 +16,7 @@ class OrganisationMembership extends Model
         'status',
         'decided_by',
         'decided_at',
+        'is_institution_admin',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class OrganisationMembership extends Model
             'membership_role' => MembershipRole::class,
             'status' => MembershipStatus::class,
             'decided_at' => 'datetime',
+            'is_institution_admin' => 'boolean',
         ];
     }
 

@@ -728,7 +728,10 @@ class StudentHifzProgressService
                 'label' => QuranMetadata::name($surah).' · '.$start.($end !== $start ? '–'.$end : ''),
                 'scores' => [],
             ];
-            $groups[$key]['scores'][] = (float) $attempt->accuracy_percent;
+            $groups[$key]['scores'][] = [
+                'value' => (float) $attempt->accuracy_percent,
+                'at' => $attempt->created_at?->toIso8601String(),
+            ];
         }
 
         $passages = [];
@@ -740,7 +743,9 @@ class StudentHifzProgressService
             }
             $first = $group['scores'][0];
             $last = $group['scores'][count($group['scores']) - 1];
-            $delta = round($last - $first, 1);
+            $firstValue = is_array($first) ? (float) ($first['value'] ?? 0) : (float) $first;
+            $lastValue = is_array($last) ? (float) ($last['value'] ?? 0) : (float) $last;
+            $delta = round($lastValue - $firstValue, 1);
             $direction = abs($delta) < 5 ? 'steady' : ($delta > 0 ? 'up' : 'down');
             if ($direction === 'up') {
                 $up++;
@@ -750,10 +755,12 @@ class StudentHifzProgressService
             $passages[] = [
                 'label' => $group['label'],
                 'checks' => count($group['scores']),
-                'first' => round($first, 1),
-                'latest' => round($last, 1),
+                'first' => round($firstValue, 1),
+                'latest' => round($lastValue, 1),
                 'delta' => $delta,
                 'direction' => $direction,
+                'first_at' => is_array($first) ? ($first['at'] ?? null) : null,
+                'latest_at' => is_array($last) ? ($last['at'] ?? null) : null,
             ];
         }
 

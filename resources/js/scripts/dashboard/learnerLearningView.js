@@ -151,3 +151,43 @@ function historyKey(row) {
   const ms = Date.parse(row?.teacher_approved_at || row?.student_submitted_at || row?.completed_at || '')
   return Number.isNaN(ms) ? 0 : ms
 }
+
+export const LEARNER_MY_LEARNING_FILTER_KEY = 'mutqin-learner-my-learning-filters'
+
+const PRIMARY_FILTER_IDS = new Set(['todo', 'progress', 'review', 'completed'])
+const DUE_FILTER_IDS = new Set(['all', 'today', 'upcoming', 'overdue'])
+const CATEGORY_FILTER_IDS = new Set(['all', 'nazra', 'hifz', 'tajweed', 'revision'])
+
+/** @returns {{ status?: string, due?: string, category?: string } | null} */
+export function readLearnerMyLearningFilters(storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null) {
+  if (!storage) return null
+  try {
+    const raw = storage.getItem(LEARNER_MY_LEARNING_FILTER_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    if (!data || typeof data !== 'object') return null
+    const out = {}
+    if (PRIMARY_FILTER_IDS.has(data.status)) out.status = data.status
+    if (DUE_FILTER_IDS.has(data.due)) out.due = data.due
+    if (CATEGORY_FILTER_IDS.has(data.category)) out.category = data.category
+    return Object.keys(out).length ? out : null
+  } catch {
+    return null
+  }
+}
+
+export function writeLearnerMyLearningFilters(
+  { status = 'todo', due = 'all', category = 'all' } = {},
+  storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null,
+) {
+  if (!storage) return
+  try {
+    storage.setItem(LEARNER_MY_LEARNING_FILTER_KEY, JSON.stringify({
+      status: PRIMARY_FILTER_IDS.has(status) ? status : 'todo',
+      due: DUE_FILTER_IDS.has(due) ? due : 'all',
+      category: CATEGORY_FILTER_IDS.has(category) ? category : 'all',
+    }))
+  } catch {
+    /* quota / private mode */
+  }
+}

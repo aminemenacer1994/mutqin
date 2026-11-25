@@ -4,7 +4,10 @@ import {
   STUDENT_PROGRESS_SECTION_IDS,
   buildProgressOverviewGroups,
   filterWeakPassagesForDisplay,
+  flattenProgressOverviewStats,
+  mapWordingPassageRows,
   progressMetricDisplay,
+  progressOverviewLeadLine,
   wordingTrendSummary,
 } from '../../resources/js/scripts/dashboard/studentProgressView.js'
 import { progressWindowFromSearch, studentDashboardUrlForPane } from '../../resources/js/scripts/dashboard/studentDashboardNavigation.js'
@@ -17,6 +20,8 @@ const t = (key, params = {}) => {
   if (key === 'dashboard.progress_recitation_wording_empty') return 'empty'
   if (key === 'dashboard.progress_wording_improving') return 'improving'
   if (key === 'dashboard.progress_period_heading') return `last ${params.days} days`
+  if (key === 'dashboard.progress_wording_sample') return `${params.n} checks`
+  if (key === 'dashboard.progress_overview_lead_quiet') return 'quiet'
   return key
 }
 
@@ -42,6 +47,40 @@ test('wording summary skips steady judgement for a single passage', () => {
   assert.match(raw, /1 raw/)
   const trend = wordingTrendSummary(t, { comparable_passages: 2, direction: 'improving' })
   assert.match(trend, /improving/)
+})
+
+test('overview stat cards use compact values and lifetime scope', () => {
+  const groups = buildProgressOverviewGroups(t, {
+    memorised: { value: 5, period_days: null },
+    revised: { value: 0, period_days: 7 },
+    recited: { value: 2, period_days: 7 },
+    ai_checks: { value: 0, period_value: 0 },
+  }, { periodDays: 7 })
+  const cards = flattenProgressOverviewStats(groups)
+  assert.equal(cards.find((row) => row.metricKey === 'memorised').scope, 'lifetime')
+  assert.equal(cards.find((row) => row.metricKey === 'revised').value, '—')
+})
+
+test('wording rows expose sample size instead of raw strings only', () => {
+  const rows = mapWordingPassageRows(t, [{
+    label: 'Al-Fatiha · 1',
+    first: 82,
+    latest: 90,
+    checks: 3,
+    direction: 'up',
+    latest_at: '2026-01-01T00:00:00Z',
+  }])
+  assert.match(rows[0].sampleLabel, /3/)
+  assert.equal(rows[0].directionClass, 'is-improving')
+})
+
+test('overview lead stays quiet without activity', () => {
+  const line = progressOverviewLeadLine(t, {
+    revised: { value: 0, period_days: 7 },
+    recited: { value: 0, period_days: 7 },
+    ai_checks: { period_value: 0 },
+  }, { periodDays: 7 })
+  assert.match(line, /quiet|dashboard.progress_overview_lead_quiet/)
 })
 
 test('weak passages respect minimum evidence', () => {

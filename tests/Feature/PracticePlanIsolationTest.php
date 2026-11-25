@@ -22,13 +22,13 @@ class PracticePlanIsolationTest extends TestCase
         $this->postJson('/api/memorisation/assessments/failed', [])->assertUnauthorized();
     }
 
-    public function test_free_user_cannot_submit_an_assessment(): void
+    public function test_free_user_stays_owner_scoped_for_ai_voice_checks(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->postJson('/api/memorisation/assessments', $this->validAssessment())
-            ->assertForbidden();
+            ->assertCreated();
 
         $this->actingAs($user)
             ->postJson('/api/memorisation/assessments/failed', [
@@ -37,7 +37,10 @@ class PracticePlanIsolationTest extends TestCase
                 'end_ayah' => 1,
                 'failure_reason' => 'provider_network_error',
             ])
-            ->assertForbidden();
+            ->assertCreated();
+
+        $this->assertSame(2, MemorisationAssessment::query()->where('user_id', $user->id)->count());
+        $this->assertSame(0, MemorisationAssessment::query()->where('user_id', '!=', $user->id)->count());
     }
 
     public function test_assessment_rejects_an_inverted_range_and_missing_ayahs(): void

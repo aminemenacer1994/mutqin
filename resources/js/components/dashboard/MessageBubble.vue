@@ -7,7 +7,13 @@
     <div v-if="showContext" class="message-bubble__context">
       <span v-if="feedbackTypeLabel" class="message-bubble__kind">{{ feedbackTypeLabel }}</span>
       <span v-if="message.senderName" class="message-bubble__sender">{{ message.senderName }}</span>
-      <span v-if="assignmentLabel" class="message-bubble__assignment">{{ assignmentLabel }}</span>
+      <button
+        v-if="assignmentLabel && relatedAssignmentId"
+        type="button"
+        class="message-bubble__assignment message-bubble__assignment-link"
+        @click="$emit('open-assignment', message.relatedAssignment)"
+      >{{ assignmentLabel }}</button>
+      <span v-else-if="assignmentLabel" class="message-bubble__assignment">{{ assignmentLabel }}</span>
     </div>
     <p v-if="message.body" class="message-bubble__body">{{ message.body }}</p>
     <div
@@ -66,7 +72,7 @@ export default {
     grouped: { type: Boolean, default: false },
     richPlayer: { type: Boolean, default: true },
   },
-  emits: ['retry'],
+  emits: ['retry', 'open-assignment'],
   computed: {
     useRichPlayer() {
       return this.richPlayer !== false
@@ -76,6 +82,11 @@ export default {
     },
     voiceUnavailable() {
       return this.message.type === 'voice' && !this.message.audioUrl && this.message.audioReason === 'missing'
+    },
+    relatedAssignmentId() {
+      const assignment = this.message.relatedAssignment
+      if (!assignment) return null
+      return Number(assignment.recipient_id || assignment.id || 0) || null
     },
     assignmentLabel() {
       const assignment = this.message.relatedAssignment
@@ -118,6 +129,8 @@ export default {
           'has-voice': this.showVoice,
           'has-text': Boolean(this.message.body),
           'is-voice-only': this.showVoice && !this.message.body,
+          'is-feedback-correction': this.message.feedbackType === 'correction_request',
+          'is-feedback-formal': ['written_feedback', 'voice_feedback', 'recitation_feedback'].includes(this.message.feedbackType),
         },
       ]
     },

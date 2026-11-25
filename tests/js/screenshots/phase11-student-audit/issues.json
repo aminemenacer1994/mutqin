@@ -1,0 +1,734 @@
+[
+  {
+    "pane": "home",
+    "width": 320,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 320,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 320,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 320,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 320,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 320,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 320,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 320,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 360,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 360,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 360,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 360,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 360,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 360,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 360,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 360,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 375,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 375,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 375,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 375,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 375,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 375,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 375,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 375,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 390,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 390,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 390,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 390,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 390,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 390,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 390,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 390,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 430,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 430,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 430,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 430,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 430,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 430,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 430,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 430,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 768,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 768,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 768,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 768,
+    "theme": "light",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 768,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 768,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 768,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 768,
+    "theme": "dark",
+    "type": "pane-unavailable"
+  },
+  {
+    "pane": "home",
+    "width": 1024,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1024,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1024,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1024,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "home",
+    "width": 1024,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1024,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1024,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1024,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "home",
+    "width": 1280,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1280,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1280,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1280,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "home",
+    "width": 1280,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1280,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1280,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1280,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "home",
+    "width": 1440,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1440,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1440,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1440,
+    "theme": "light",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "home",
+    "width": 1440,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "progress",
+    "width": 1440,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "activity",
+    "width": 1440,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  },
+  {
+    "pane": "messages",
+    "width": 1440,
+    "theme": "dark",
+    "type": "missing-focus-ring",
+    "focus": {
+      "outline": "none",
+      "width": 0,
+      "boxShadow": "none"
+    }
+  }
+]

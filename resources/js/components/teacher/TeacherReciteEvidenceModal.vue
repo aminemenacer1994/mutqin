@@ -1,8 +1,9 @@
 <template>
   <TeacherDialog
+    v-if="shell !== 'student'"
     :open="open"
     size="xl"
-    :title="row?.title || t('teacher.profile_recite_attempt')"
+    :title="modalTitle"
     :eyebrow="eyebrowLabel"
     :close-label="t('teacher.close')"
     @close="$emit('close')"
@@ -10,72 +11,72 @@
     <template #pills>
       <span v-if="row?.hint" class="badge rounded-pill text-bg-light border">{{ row.hint }}</span>
     </template>
-    <div class="teacher-recite-modal">
-          <div v-if="hasAudio" class="teacher-recite-modal__audio">
-            <audio
-              ref="player"
-              :src="row.audio.url"
-              preload="metadata"
-              @loadedmetadata="onMetadata"
-              @timeupdate="onTimeUpdate"
-              @play="playing = true"
-              @pause="playing = false"
-              @ended="playing = false"
-            ></audio>
-            <button type="button" class="teacher-recite-modal__play" :aria-label="playing ? t('teacher.pause_recording') : t('teacher.play_recording')" @click="togglePlayback">
-              <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-mic-fill'" aria-hidden="true"></i>
-            </button>
-            <div class="teacher-recite-modal__timeline">
-              <input type="range" min="0" :max="Math.max(duration, 0)" step="0.1" :value="currentTime" :aria-label="t('teacher.audio_position')" @input="seek">
-              <div><span>{{ formatTime(currentTime) }}</span><span>{{ formatTime(duration) }}</span></div>
-            </div>
-          </div>
-          <p v-else-if="evidenceProcessing" class="teacher-recite-modal__muted" role="status">{{ t('teacher.evidence_processing') }}</p>
-          <p v-else-if="mode === 'audio'" class="teacher-recite-modal__muted">{{ audioUnavailableLabel }}</p>
-
-          <div v-if="mode === 'mushaf'" class="teacher-recite-modal__body">
-            <section v-if="hasAssignedRange" class="teacher-recite-mushaf__block is-assigned">
-              <h3>{{ t('teacher.assigned_task_passage') }}</h3>
-              <p v-if="loading" class="teacher-recite-modal__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
-              <TeacherReciteMushafAyahs v-else-if="assignedAyahs.length" :ayahs="assignedAyahs" />
-              <p v-else class="teacher-recite-modal__muted">{{ t('teacher.madani_text_unavailable') }}</p>
-            </section>
-
-            <section class="teacher-recite-mushaf__block">
-              <div class="teacher-recite-mushaf__block-head">
-                <h3>{{ t('teacher.recitation_compare_label') }}</h3>
-              </div>
-              <p v-if="loading" class="teacher-recite-modal__muted" role="status">{{ t('teacher.loading_quran_text') }}</p>
-              <TeacherReciteMushafAyahs v-else-if="ayahs.length" :ayahs="ayahs" />
-              <p v-else class="teacher-recite-modal__muted">{{ t('teacher.madani_text_unavailable') }}</p>
-            </section>
-
-            <details v-if="row?.transcript" class="teacher-recite-modal__asr">
-              <summary>{{ t('teacher.transcript_label') }}</summary>
-              <p class="teacher-recognition-transcript" lang="ar" dir="rtl">{{ row.transcript }}</p>
-              <small>{{ t('teacher.transcript_asr_note') }}</small>
-            </details>
-          </div>
-    </div>
+    <TeacherReciteEvidenceContent
+      ref="content"
+      v-bind="contentProps"
+      @metadata="onMetadata"
+      @timeupdate="onTimeUpdate"
+      @play-state="playing = $event"
+      @toggle-playback="togglePlayback"
+      @seek="seek"
+    />
   </TeacherDialog>
+
+  <DashModalRoot
+    v-else
+    :open="open && Boolean(row)"
+    :labelled-by="titleId"
+    root-class="dash-student-dialog-root teacher-recite-modal"
+    panel-class="dash-student-dialog dash-student-dialog--wide teacher-recite-modal__panel"
+    @close="$emit('close')"
+  >
+    <template v-if="row">
+      <header class="dash-drawer__head teacher-recite-modal__head">
+        <div class="dash-drawer__head-main">
+          <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-journal-richtext"></i></span>
+          <div class="dash-drawer__head-copy">
+            <p class="teacher-recite-modal__eyebrow">{{ eyebrowLabel }}</p>
+            <h2 :id="titleId" class="dash-drawer__title">{{ modalTitle }}</h2>
+            <p v-if="row.hint" class="dash-drawer__subtitle">{{ row.hint }}</p>
+          </div>
+        </div>
+        <button type="button" class="dash-icon-btn dash-drawer__close teacher-recite-modal__close" :aria-label="t('common.close')" @click="$emit('close')">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="dash-student-dialog__body">
+        <TeacherReciteEvidenceContent
+          ref="content"
+          v-bind="contentProps"
+          @metadata="onMetadata"
+          @timeupdate="onTimeUpdate"
+          @play-state="playing = $event"
+          @toggle-playback="togglePlayback"
+          @seek="seek"
+        />
+      </div>
+    </template>
+  </DashModalRoot>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { buildTeacherReciteMushafView } from '../../scripts/teacher/teacherReciteMushafView'
+import DashModalRoot from '../dashboard/DashModalRoot.vue'
 import TeacherDialog from './TeacherDialog.vue'
-import TeacherReciteMushafAyahs from './TeacherReciteMushafAyahs.vue'
+import TeacherReciteEvidenceContent from './TeacherReciteEvidenceContent.vue'
 
 let modalUid = 0
 
 export default {
   name: 'TeacherReciteEvidenceModal',
-  components: { TeacherDialog, TeacherReciteMushafAyahs },
+  components: { DashModalRoot, TeacherDialog, TeacherReciteEvidenceContent },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
     row: { type: Object, default: null },
     mode: { type: String, default: 'mushaf' },
+    shell: { type: String, default: 'teacher' },
   },
   emits: ['close'],
   data() {
@@ -92,6 +93,9 @@ export default {
     }
   },
   computed: {
+    modalTitle() {
+      return this.row?.title || this.t('teacher.profile_recite_attempt')
+    },
     hasAudio() {
       return Boolean(this.row?.audio?.available && this.row?.audio?.url)
     },
@@ -115,10 +119,40 @@ export default {
       if (reason === 'expired' || reason === 'purged' || reason === 'missing') return this.t('teacher.recording_not_retained')
       return this.t('teacher.recording_unavailable')
     },
+    contentProps() {
+      return {
+        row: this.row,
+        mode: this.mode,
+        ayahs: this.ayahs,
+        assignedAyahs: this.assignedAyahs,
+        loading: this.loading,
+        hasAudio: this.hasAudio,
+        evidenceProcessing: this.evidenceProcessing,
+        hasAssignedRange: this.hasAssignedRange,
+        playing: this.playing,
+        currentTime: this.currentTime,
+        duration: this.duration,
+        audioUnavailableLabel: this.audioUnavailableLabel,
+        processingLabel: this.t('teacher.evidence_processing'),
+        assignedPassageLabel: this.t('teacher.assigned_task_passage'),
+        loadingQuranLabel: this.t('teacher.loading_quran_text'),
+        madaniUnavailableLabel: this.t('teacher.madani_text_unavailable'),
+        compareLabel: this.t('teacher.recitation_compare_label'),
+        transcriptLabel: this.t('teacher.transcript_label'),
+        transcriptNoteLabel: this.t('teacher.transcript_asr_note'),
+        positionLabel: this.t('teacher.audio_position'),
+        playPauseLabels: {
+          play: this.t('teacher.play_recording'),
+          pause: this.t('teacher.pause_recording'),
+        },
+      }
+    },
   },
   watch: {
     open(value) {
-      document.body.classList.toggle('teacher-recite-modal-open', value)
+      if (this.shell === 'teacher') {
+        document.body.classList.toggle('teacher-recite-modal-open', value)
+      }
       if (value) {
         this.resetPlayer()
         this.loadMushaf()
@@ -126,7 +160,7 @@ export default {
           if (this.mode === 'audio' && this.hasAudio) this.togglePlayback()
         })
       } else {
-        this.$refs.player?.pause()
+        this.$refs.content?.player?.()?.pause()
       }
     },
     row() {
@@ -160,14 +194,14 @@ export default {
       this.currentTime = 0
       this.duration = Number(this.row?.audio?.duration_ms || 0) / 1000
       this.playing = false
-      const player = this.$refs.player
+      const player = this.$refs.content?.player?.()
       if (player) {
         player.pause()
         player.currentTime = 0
       }
     },
     async togglePlayback() {
-      const player = this.$refs.player
+      const player = this.$refs.content?.player?.()
       if (!player) return
       if (player.paused) {
         try { await player.play() } catch { this.playing = false }
@@ -176,20 +210,17 @@ export default {
       }
     },
     onMetadata() {
-      const seconds = Number(this.$refs.player?.duration)
+      const seconds = Number(this.$refs.content?.player?.()?.duration)
       if (Number.isFinite(seconds)) this.duration = seconds
     },
     onTimeUpdate() {
-      this.currentTime = Number(this.$refs.player?.currentTime || 0)
+      this.currentTime = Number(this.$refs.content?.player?.()?.currentTime || 0)
     },
     seek(event) {
       const seconds = Number(event.target.value || 0)
       this.currentTime = seconds
-      if (this.$refs.player) this.$refs.player.currentTime = seconds
-    },
-    formatTime(value) {
-      const seconds = Math.max(0, Math.floor(Number(value) || 0))
-      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+      const player = this.$refs.content?.player?.()
+      if (player) player.currentTime = seconds
     },
   },
 }

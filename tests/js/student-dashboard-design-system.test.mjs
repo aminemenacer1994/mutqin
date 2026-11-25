@@ -58,7 +58,16 @@ assert.match(system, /html\[data-theme="dark"\][\s\S]*?--dash-ds-surface: var\(-
 assert.doesNotMatch(system, /\.dash-word|\.teacher-quran-ayah__word|\.recitation-word-/, 'The shared component layer does not override Qur\'an word-level colours')
 assert.match(studentCss, /\.recitation-word-incorrect|\.teacher-quran-ayah__word\.is-coaching-focus/, 'Existing Qur\'an word-level states remain available')
 assert.doesNotMatch(studentCss, /learner-home__task-footer \.dash-btn \{ min-height: 40px/, 'The conflicting one-off 40px Home button was removed')
+assert.doesNotMatch(studentCss, /\.user-dashboard \.app-btn/, 'The duplicate app-btn layer was removed in favour of dash-btn')
+assert.match(system, /\.student-activity__toolbar/, 'Activity filters use the shared student toolbar primitive')
+assert.match(system, /\.dash-filter-field/, 'Advanced activity filters use the shared form field primitive')
 const studentExperience = readFileSync(new URL('../../resources/js/views/Dashboard.student-experience.css', import.meta.url), 'utf8')
+assert.doesNotMatch(studentExperience, /Page canvas stays the original cream/, 'Student workspace does not fork a parallel palette')
+assert.doesNotMatch(
+  studentExperience,
+  /#dash-my-learning \.learner-teacher__filters--segmented \.learner-teacher__filter\.is-active[\s\S]*#241910/,
+  'My Learning filters reuse the shared active state',
+)
 assert.doesNotMatch(studentExperience, /learner-home__task-footer \.dash-btn \{[^}]*min-height: 40px/, 'Home task actions use the shared control height')
 assert.match(studentExperience, /#dash-my-learning :is\([\s\S]*?overflow: visible/, 'My Learning cards keep focus rings visible')
 assert.doesNotMatch(studentCss, /#dash-my-learning \.learner-teacher__filter \{ min-height: 38px/, 'The conflicting one-off 38px filter was removed')

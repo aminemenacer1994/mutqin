@@ -38,9 +38,10 @@
             link-class="dash-jump__link"
             nav-label-key="dashboard.jump_label"
             settings-label-key="dashboard.jump_settings"
+            style="--dash-delay: 40ms"
             @select="openStudentNav"
           />
-        <div class="teacher-dashboard__main">
+        <div class="teacher-dashboard__main dash-reveal" style="--dash-delay: 80ms">
 
         <div v-show="studentPane === 'home'" class="dash-pane dash-home-pane teacher-view-stage">
         <header id="dash-home" class="teacher-hero learner-home__header" tabindex="-1">
@@ -71,17 +72,92 @@
           :title="t('ui.connections_connect_title')"
           :body="t('ui.connections_prompt_learner')"
           :status="learnerConnectionStatus"
+          :href="learnerConnectSettingsHref"
+          :action-label="t('ui.connections_settings_manage')"
         />
 
-        <div class="learner-home__grid">
-          <div class="learner-home__column learner-home__column--main">
+        <div class="learner-home__stack">
+          <section
+            v-if="showHomeNextAction"
+            class="learner-home__next-action"
+            data-testid="dashboard-home-next-action"
+            :aria-labelledby="homeNextActionTitleId"
+          >
+            <p :id="homeNextActionTitleId" class="learner-home__next-action-eyebrow">{{ t('dashboard.home_next_action') }}</p>
+            <div
+              class="learner-home__next-action-body"
+              :class="{ 'learner-home__next-action-body--feedback': homeNextAction.kind === 'feedback' }"
+            >
+              <div class="learner-home__task-head">
+                <span class="learner-home__task-icon" aria-hidden="true">
+                  <i
+                    class="bi"
+                    :class="homeNextAction.kind === 'feedback' ? 'bi-chat-left-text' : (homeNextAction.row.assignment?.kind === 'ai_recite' ? 'bi-mic' : 'bi-book')"
+                  ></i>
+                </span>
+                <div class="learner-home__task-copy">
+                  <h2>
+                    {{
+                      homeNextAction.kind === 'feedback'
+                        ? homeAttentionFeedbackTitle(homeNextAction.row)
+                        : assignmentRangeLabel(homeNextAction.row)
+                    }}
+                  </h2>
+                  <p v-if="homeNextAction.kind === 'assignment'">{{ assignmentNextActionMeta(homeNextAction.row) }}</p>
+                  <p v-else class="learner-home__feedback-preview">{{ homeAttentionFeedbackPreview(homeNextAction.row) }}</p>
+                </div>
+                <span
+                  class="learner-home__status"
+                  :class="homeNextAction.kind === 'feedback' ? 'is-warning' : `is-${assignmentTone(homeNextAction.row)}`"
+                >
+                  {{ homeNextAction.kind === 'feedback' ? t('teacher.unread') : assignmentStatusLabel(homeNextAction.row) }}
+                </span>
+              </div>
+              <p
+                v-if="homeNextAction.kind === 'assignment' && assignmentDue(homeNextAction.row).text"
+                class="learner-home__due"
+                :class="`is-${assignmentDue(homeNextAction.row).tone}`"
+              >
+                <i class="bi bi-calendar3" aria-hidden="true"></i>{{ assignmentDue(homeNextAction.row).text }}
+              </p>
+              <time
+                v-else-if="homeNextAction.kind === 'feedback' && homeNextAction.row.created_at"
+                class="teacher-meta"
+                :datetime="homeNextAction.row.created_at"
+              >{{ formatLearnerFeedbackWhen(homeNextAction.row.created_at) }}</time>
+              <button
+                v-if="homeNextAction.kind === 'assignment'"
+                type="button"
+                class="dash-btn dash-btn--primary learner-home__next-action-cta"
+                :disabled="Boolean(assignmentSavingId)"
+                @click="taskReadyToSubmit(homeNextAction.row) ? promptSupportAssignmentCompletion(homeNextAction.row) : startSupportAssignment(homeNextAction.row)"
+              >
+                <i class="bi" :class="assignmentActionIcon(homeNextAction.row)" aria-hidden="true"></i>
+                {{
+                  assignmentSavingId === homeNextAction.row.id
+                    ? t('teacher.loading')
+                    : assignmentActionLabel(homeNextAction.row)
+                }}
+              </button>
+              <button
+                v-else
+                type="button"
+                class="dash-btn dash-btn--primary learner-home__next-action-cta"
+                @click="openHomeFeedback"
+              >
+                {{ t('dashboard.home_open_feedback') }}
+              </button>
+            </div>
+          </section>
+
           <a
             v-if="showHomeContinue && primaryContinueAction"
             class="teacher-pane dash-continue-card learner-home__continue"
             data-testid="dashboard-primary-continue"
             :data-kind="primaryContinueAction.kind"
             :class="{
-              'dash-continue-card--primary': true,
+              'dash-continue-card--primary': !showHomeNextAction,
+              'dash-continue-card--secondary': showHomeNextAction,
               'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
               'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
               'dash-continue-card--revise': primaryContinueAction.kind === 'revise',
@@ -94,7 +170,7 @@
               <i :class="primaryContinueAction.icon" aria-hidden="true"></i>
             </span>
             <div class="dash-continue-card__main">
-              <span class="dash-continue-card__label">{{ t('dashboard.home_your_practice') }} · {{ primaryContinueAction.label }}</span>
+              <span class="dash-continue-card__label">{{ homeContinueEyebrow }} · {{ primaryContinueAction.label }}</span>
               <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
               <p v-if="primaryContinueAction.hint" class="dash-continue-card__hint">
                 {{ primaryContinueAction.hint }}
@@ -128,7 +204,7 @@
               </div>
               <template v-else>
                 <div
-                  v-for="item in homeAttentionRows"
+                  v-for="item in homeMoreAttentionRows"
                   :key="item.key"
                   class="learner-home__priority"
                   :class="{ 'learner-home__priority--feedback': item.kind === 'feedback' }"
@@ -140,7 +216,7 @@
                     </span>
                     <div class="learner-home__task-copy">
                       <h3>{{ item.kind === 'feedback' ? homeAttentionFeedbackTitle(item.row) : assignmentRangeLabel(item.row) }}</h3>
-                      <p v-if="item.kind === 'assignment'">{{ assignmentTypeLabel(item.row) }}</p>
+                      <p v-if="item.kind === 'assignment'">{{ assignmentNextActionMeta(item.row) }}</p>
                       <p v-else class="learner-home__feedback-preview">{{ homeAttentionFeedbackPreview(item.row) }}</p>
                     </div>
                     <span class="learner-home__status" :class="item.kind === 'feedback' ? 'is-warning' : `is-${assignmentTone(item.row)}`">
@@ -197,7 +273,7 @@
                   <strong>{{ assignmentRangeLabel(task) }}</strong>
                   <span class="learner-home__revision-meta">
                     <span v-if="assignmentDue(task).text" class="learner-home__due" :class="`is-${assignmentDue(task).tone}`">{{ assignmentDue(task).text }}</span>
-                    <span v-else class="learner-home__revision-type">{{ assignmentTypeLabel(task) }}</span>
+                    <span v-else class="learner-home__revision-type">{{ assignmentUpcomingMeta(task) }}</span>
                   </span>
                 </span>
                 <span class="learner-home__status" :class="`is-${assignmentTone(task)}`">{{ assignmentStatusLabel(task) }}</span>
@@ -205,30 +281,36 @@
               </button>
             </div>
           </section>
-          </div>
 
-          <div class="learner-home__column learner-home__column--side">
           <section v-if="showHomeStats" class="teacher-pane learner-home__progress" aria-labelledby="home-progress-title">
             <header class="teacher-pane__head learner-home__section-head">
-              <h2 id="home-progress-title" class="teacher-pane__title">{{ t('dashboard.learning_title') }}</h2>
+              <div class="teacher-pane__titles">
+                <h2 id="home-progress-title" class="teacher-pane__title">{{ t('dashboard.learning_title') }}</h2>
+                <p class="teacher-meta learner-home__progress-period">{{ t('dashboard.learning_period', { days: chartDays }) }}</p>
+              </div>
               <button type="button" class="dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
             </header>
-            <div class="teacher-metric-strip" :aria-label="t('dashboard.learning_title')">
-              <button v-for="metric in homeStatCards" :key="metric.key" type="button" class="teacher-metric" @click="openStudentNav('progress')">
-                <span class="teacher-metric__icon" aria-hidden="true"><i class="bi" :class="metric.icon"></i></span>
-                <span class="teacher-metric__copy">
-                  <strong class="teacher-metric__value">{{ metric.value }}</strong>
-                  <span class="teacher-metric__label">{{ metric.label }}</span>
-                </span>
-              </button>
+            <div class="teacher-pane__body">
+              <ul class="learner-home__progress-metrics dash-learning__metrics dash-learning__metrics--compact" :aria-label="t('dashboard.learning_title')">
+                <li v-for="metric in homeStatCards" :key="metric.key">
+                  <button type="button" class="dash-learning__metric" @click="openStudentNav('progress')">
+                    <div class="dash-learning__metric-top">
+                      <span class="dash-learning__metric-icon" aria-hidden="true"><i class="bi" :class="metric.icon"></i></span>
+                    </div>
+                    <strong class="dash-learning__metric-value">{{ metric.value }}</strong>
+                    <span class="dash-learning__metric-title">{{ metric.shortLabel }}</span>
+                    <span v-if="metric.unitHint" class="learner-home__metric-unit">{{ metric.unitHint }}</span>
+                  </button>
+                </li>
+              </ul>
             </div>
           </section>
 
-          <section class="teacher-pane" aria-labelledby="home-tools-title">
+          <section class="teacher-pane learner-home__tools-pane" aria-labelledby="home-tools-title">
             <header class="teacher-pane__head learner-home__section-head">
               <h2 id="home-tools-title" class="teacher-pane__title">{{ t('dashboard.home_tools') }}</h2>
             </header>
-            <div class="learner-home__tools">
+            <div class="teacher-pane__body learner-home__tools">
               <template v-for="tool in homePracticeTools" :key="tool.key">
                 <a
                   v-if="!tool.locked"
@@ -252,14 +334,13 @@
 
           <section v-if="homeAchievementPreview" class="teacher-pane learner-home__achievement" aria-labelledby="home-achievement-title">
             <header class="teacher-pane__head learner-home__section-head">
-              <div>
+              <div class="teacher-pane__titles">
                 <h2 id="home-achievement-title" class="teacher-pane__title">{{ t('dashboard.home_next_achievement') }}</h2>
-                <p class="teacher-meta">{{ homeAchievementPreview }}</p>
+                <p class="teacher-pane__hint">{{ homeAchievementPreview }}</p>
               </div>
               <button type="button" class="dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
             </header>
           </section>
-          </div>
 
         </div>
         </div>
@@ -325,24 +406,33 @@
                       {{ t('teacher.learner_teachers_classes_title') }}
                       <span v-if="learnerTeachersClassesCount">({{ learnerTeachersClassesCount }})</span>
                     </h2>
-                    <p class="dash-section__hint">{{ t('ui.connections_circle_hint') }}</p>
+                    <p class="dash-section__hint">{{ t('ui.connections_settings_teachers_hint') }}</p>
                   </span>
                 </span>
                 <i class="bi dash-section__chevron" :class="isSectionCollapsed('learning-connections') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
               </button>
+              <button
+                type="button"
+                class="dash-text-link learner-learning-connections__settings"
+                @click="openStudentConnectionsSettings"
+              >
+                {{ t('ui.connections_settings_manage') }}
+              </button>
             </div>
           </div>
-          <div v-show="!isSectionCollapsed('learning-connections')" id="learner-learning-connections-body">
-            <LearnerRevisionTargets :targets="support?.circle?.revision_targets || []" />
-            <LearnerCirclePanel
-              :circle="support?.circle || null"
-              @message="openCircleTeacherMessage"
-              @learning="openStudentNav('learning')"
-              @updated="applyLearnerSupport"
-            />
+          <div
+            v-show="!isSectionCollapsed('learning-connections')"
+            id="learner-learning-connections-body"
+            class="learner-learning-connections__body learner-learning-connections__body--hub-link"
+          >
+            <p v-if="learnerConnectionStatus" class="learner-settings__status" :class="`is-${learnerConnectionPhaseLabel}`">{{ learnerConnectionStatus }}</p>
+            <p class="teacher-meta">{{ learnerConnectionsHubSummary }}</p>
+            <button type="button" class="dash-btn dash-btn--secondary dash-btn--sm" @click="openStudentConnectionsSettings">
+              {{ t('ui.connections_settings_manage') }}
+            </button>
           </div>
         </section>
-        <p v-else class="dash-pane__empty">{{ t('dashboard.jump_learning_empty') }}</p>
+        <TeacherEmpty v-else inline class="dash-pane__empty" :message="t('dashboard.jump_learning_empty')" />
         </div>
 
         <div v-show="studentPane === 'progress'" class="dash-pane user-dashboard__content teacher-view-stage">
@@ -401,51 +491,34 @@
               </span>
             </div>
           </div>
-          <div id="dash-learning-body" class="dash-section__body dash-learning__body">
-            <div class="student-progress__metric-band">
-              <h3 class="teacher-subhead">{{ t('dashboard.progress_memorised_lifetime') }}</h3>
-              <ul class="dash-learning__metrics dash-learning__metrics--compact dash-learning__metrics--aa" role="list">
-                <li v-for="metric in progressOverviewGroups.lifetime" :key="metric.key">
-                  <button
-                    type="button"
-                    class="dash-learning__metric dash-learning__metric--aa"
-                    :title="metric.hint"
-                    :aria-label="`${metric.label}: ${metric.value}. ${metric.hint}`"
-                    @click="onProgressOverviewMetric(metric)"
-                  >
-                    <span class="dash-learning__metric-top">
-                      <span class="dash-learning__metric-icon" aria-hidden="true">
-                        <i class="bi" :class="metric.icon"></i>
-                      </span>
-                    </span>
-                    <span class="dash-learning__metric-title">{{ metric.label }}</span>
-                    <strong class="dash-learning__metric-value">{{ metric.value }}</strong>
-                  </button>
-                </li>
-              </ul>
+          <div id="dash-learning-body" class="dash-section__body dash-learning__body student-progress__overview">
+            <p class="parent-lead student-progress__lead">{{ progressOverviewLead }}</p>
+            <div class="parent-stats parent-stats--compact student-progress__stats" role="list">
+              <button
+                v-for="card in progressOverviewStatCards"
+                :key="card.key"
+                type="button"
+                class="parent-stat parent-stat--compact student-progress__stat"
+                role="listitem"
+                :title="card.hint"
+                :aria-label="`${card.label}: ${card.value}. ${card.hint}`"
+                @click="onProgressOverviewMetric(card)"
+              >
+                <span aria-hidden="true"><i :class="card.icon"></i></span>
+                <strong :class="{ 'parent-metric__empty': card.empty }">{{ card.value }}</strong>
+                <small>{{ card.label }}</small>
+                <p v-if="card.scope === 'lifetime'" class="parent-stat__hint">{{ t('dashboard.progress_lifetime_scope') }}</p>
+                <p v-else-if="card.hint" class="parent-stat__hint">{{ card.hint }}</p>
+              </button>
             </div>
-            <div class="student-progress__metric-band">
-              <h3 class="teacher-subhead">{{ progressOverviewGroups.periodLabel }}</h3>
-              <ul class="dash-learning__metrics dash-learning__metrics--compact dash-learning__metrics--aa" role="list">
-                <li v-for="metric in progressOverviewGroups.period" :key="metric.key">
-                  <button
-                    type="button"
-                    class="dash-learning__metric dash-learning__metric--aa"
-                    :title="metric.hint"
-                    :aria-label="`${metric.label}: ${metric.value}. ${metric.hint}`"
-                    @click="onProgressOverviewMetric(metric)"
-                  >
-                    <span class="dash-learning__metric-top">
-                      <span class="dash-learning__metric-icon" aria-hidden="true">
-                        <i class="bi" :class="metric.icon"></i>
-                      </span>
-                    </span>
-                    <span class="dash-learning__metric-title">{{ metric.label }}</span>
-                    <strong class="dash-learning__metric-value">{{ metric.value }}</strong>
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <nav v-if="progressSectionLinks.length" class="student-progress__quick-links" :aria-label="t('dashboard.progress_sections_label')">
+              <a
+                v-for="link in progressSectionLinks"
+                :key="link.id"
+                class="dash-btn dash-btn--ghost dash-btn--sm"
+                :href="link.href"
+              >{{ link.label }}</a>
+            </nav>
             <p v-if="progressOverviewNextStep" class="student-progress__next">
               <a
                 v-if="progressOverviewNextStep.href"
@@ -498,8 +571,8 @@
               </div>
             </div>
 
-            <section class="student-progress__block" :aria-label="t('dashboard.progress_assignments_title')">
-              <h3 class="teacher-subhead">{{ t('dashboard.progress_assignments_title') }}</h3>
+            <section class="parent-panel student-progress__panel" :aria-label="t('dashboard.progress_assignments_title')">
+              <h3 class="parent-report__subhead">{{ t('dashboard.progress_assignments_title') }}</h3>
               <p v-if="!progressSnapshot && !progressSnapshotError" class="dash-section__hint" role="status">{{ t('dashboard.progress_loading') }}</p>
               <p v-else-if="progressSnapshotError" class="dash-section__hint" role="alert">
                 {{ t('dashboard.progress_error') }}
@@ -507,15 +580,13 @@
               </p>
               <p v-else-if="!progressAssignmentDue" class="dash-section__hint">{{ t('dashboard.progress_assignments_empty') }}</p>
               <template v-else>
-                <ul class="dash-learning__metrics dash-learning__metrics--compact" role="list">
-                  <li v-for="card in progressAssignmentCards" :key="card.key">
-                    <div class="dash-learning__metric dash-learning__metric--aa">
-                      <span class="dash-learning__metric-title">{{ card.label }}</span>
-                      <strong class="dash-learning__metric-value">{{ card.value }}</strong>
-                    </div>
-                  </li>
-                </ul>
-                <p v-if="progressAssignmentRate" class="dash-section__hint">{{ progressAssignmentRate }}</p>
+                <div class="parent-stats parent-stats--compact student-progress__stats" role="list">
+                  <article v-for="card in progressAssignmentCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
+                    <strong>{{ card.value }}</strong>
+                    <small>{{ card.label }}</small>
+                  </article>
+                </div>
+                <p v-if="progressAssignmentRate" class="parent-stat__hint">{{ progressAssignmentRate }}</p>
               </template>
             </section>
           </div>
@@ -535,12 +606,13 @@
             <p v-else-if="progressSnapshotError" class="dash-section__hint" role="alert">{{ t('dashboard.progress_error') }}</p>
             <p v-else-if="progressMemorisationEmpty" class="dash-section__hint">{{ t('dashboard.progress_ranges_empty') }}</p>
             <template v-else>
-              <div class="teacher-hifz__summary">
+              <div class="teacher-hifz__summary student-progress__hifz-summary">
                 <section class="teacher-hifz__summary-section">
                   <header>
                     <span class="teacher-hifz__label">{{ t('dashboard.progress_memorised') }}</span>
                     <span class="teacher-hifz__count">{{ progressCoverage.memorised_ayahs || 0 }}</span>
                   </header>
+                  <p class="teacher-kicker student-progress__stage-kicker">{{ t('dashboard.progress_self_tracked') }}</p>
                   <p v-if="progressCoverage.memorised_ayahs" class="teacher-hifz__quiet">{{ t('dashboard.progress_coverage', { n: progressCoverage.coverage_percent }) }}</p>
                 </section>
                 <section class="teacher-hifz__summary-section">
@@ -548,6 +620,7 @@
                     <span class="teacher-hifz__label">{{ t('dashboard.progress_learning') }}</span>
                     <span class="teacher-hifz__count">{{ progressCoverage.learning_ayahs || 0 }}</span>
                   </header>
+                  <p class="teacher-kicker student-progress__stage-kicker">{{ t('teacher.hifz_sabaq') }} · {{ t('teacher.hifz_sabaq_help') }}</p>
                   <p class="teacher-hifz__lead">{{ progressRangeLine(progressCoverage.new_memorisation) || t('dashboard.progress_none_yet') }}</p>
                 </section>
                 <section class="teacher-hifz__summary-section">
@@ -555,13 +628,20 @@
                     <span class="teacher-hifz__label">{{ t('dashboard.progress_reviewing') }}</span>
                     <span class="teacher-hifz__count">{{ progressCoverage.reviewing_ayahs || 0 }}</span>
                   </header>
+                  <p class="teacher-kicker student-progress__stage-kicker">
+                    <template v-if="progressRangeLine(progressCoverage.recent_revision)">{{ t('teacher.hifz_sabqi') }}</template>
+                    <template v-else-if="progressRangeLine(progressCoverage.older_revision)">{{ t('teacher.hifz_manzil') }}</template>
+                    <template v-else>{{ t('teacher.hifz_sabqi') }} / {{ t('teacher.hifz_manzil') }}</template>
+                  </p>
                   <p class="teacher-hifz__lead">{{ progressRangeLine(progressCoverage.recent_revision) || progressRangeLine(progressCoverage.older_revision) || t('dashboard.progress_none_yet') }}</p>
                 </section>
               </div>
-              <p class="teacher-hifz__quiet student-progress__inset">{{ t('dashboard.progress_newly_hint') }} {{ progressNewlyMemorised }}</p>
-              <p v-if="progressValidated.validated_ayahs" class="teacher-hifz__quiet student-progress__inset">
+              <p class="teacher-hifz__quiet student-progress__inset">{{ t('dashboard.progress_newly_hint') }} {{ progressNewlyMemorised > 0 ? progressNewlyMemorised : '—' }}</p>
+              <p v-if="progressValidated.validated_ayahs" class="teacher-hifz__quiet student-progress__inset student-progress__validated">
                 {{ t('dashboard.progress_validated') }}: {{ progressValidated.validated_ayahs }}
+                <span class="teacher-kicker">{{ t('dashboard.progress_teacher_confirmed') }}</span>
               </p>
+              <p v-else class="teacher-hifz__quiet student-progress__inset">{{ t('dashboard.progress_validated_empty') }}</p>
               <button
                 v-if="progressHasRevisionHistory"
                 type="button"
@@ -644,12 +724,28 @@
             </div>
           </div>
           <div class="dash-section__body student-progress__split">
-        <section class="student-progress__block" :aria-label="t('dashboard.progress_recitation_wording')">
-          <h3 class="teacher-subhead">{{ t('dashboard.progress_recitation_wording') }}</h3>
+        <section class="student-progress__block parent-panel student-progress__panel" :aria-label="t('dashboard.progress_recitation_wording')">
+          <h3 class="parent-report__subhead">{{ t('dashboard.progress_recitation_wording') }}</h3>
           <p class="dash-section__hint">{{ progressWordingSummary }}</p>
-          <ul v-if="progressWordingPassages.length" class="teacher-mini-list">
-            <li v-for="passage in progressWordingPassages" :key="passage.label">
-              {{ t('dashboard.progress_wording_passage', { label: passage.label, first: passage.first, latest: passage.latest }) }}
+          <ul v-if="progressWordingPassageRows.length" class="student-progress__wording-trends" role="list">
+            <li v-for="row in progressWordingPassageRows" :key="row.key" class="student-progress__wording-row" role="listitem">
+              <div class="student-progress__wording-row-head">
+                <strong>{{ row.label }}</strong>
+                <span class="teacher-pill student-progress__wording-direction" :class="row.directionClass">{{ row.directionLabel }}</span>
+              </div>
+              <div class="student-progress__wording-row-scores" aria-hidden="true">
+                <span class="student-progress__wording-score">{{ row.first }}%</span>
+                <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                <span class="student-progress__wording-score is-latest">{{ row.latest }}%</span>
+              </div>
+              <p class="parent-stat__hint student-progress__wording-meta">
+                <span v-if="row.sampleLabel">{{ row.sampleLabel }}</span>
+                <time v-if="row.latestAt" :datetime="row.latestAt">{{ t('dashboard.progress_wording_latest', { when: formatHistoryClock(row.latestAt) }) }}</time>
+              </p>
+              <p class="visually-hidden">
+                {{ t('dashboard.progress_wording_passage', { label: row.label, first: row.first, latest: row.latest }) }}
+                <template v-if="row.sampleLabel">. {{ row.sampleLabel }}</template>
+              </p>
             </li>
           </ul>
         </section>
@@ -706,9 +802,11 @@
             </div>
 
             <div id="dash-murajaah-body">
-            <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty dash-empty">
-              <p class="dash-murajaah-block__empty-title">{{ t('dashboard.revisit_empty_title') }}</p>
-              <p class="dash-murajaah-block__empty-hint">{{ t('dashboard.revisit_empty_hint') }}</p>
+            <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty dash-empty teacher-empty-panel">
+              <TeacherEmpty illustrated>
+                <span class="dash-murajaah-block__empty-title">{{ t('dashboard.revisit_empty_title') }}</span>
+                <span class="dash-murajaah-block__empty-hint">{{ t('dashboard.revisit_empty_hint') }}</span>
+              </TeacherEmpty>
             </div>
 
             <template v-else>
@@ -826,12 +924,11 @@
                 {{ t('dashboard.retry') }}
               </button>
             </div>
-            <div v-else-if="!aiReciteView || aiReciteView.empty" class="dash-ai-results__empty">
-              <span class="dash-ai-results__empty-icon" aria-hidden="true">
-                <i class="bi bi-mic" aria-hidden="true"></i>
-              </span>
-              <p class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</p>
-              <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
+            <div v-else-if="!aiReciteView || aiReciteView.empty" class="dash-ai-results__empty teacher-empty-panel">
+              <TeacherEmpty illustrated icon="bi bi-mic">
+                <span class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</span>
+                <span class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</span>
+              </TeacherEmpty>
               <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="testRecitationHref">
                 <i class="bi bi-mic" aria-hidden="true"></i>
                 {{ t('dashboard.ai_recite.test_cta') || t('dashboard.open_practice') }}
@@ -914,10 +1011,16 @@
             <p v-if="!progressSnapshot && !progressSnapshotError" class="dash-section__hint" role="status">{{ t('dashboard.progress_loading') }}</p>
             <p v-else-if="progressSnapshotError" class="dash-section__hint" role="alert">{{ t('dashboard.progress_error') }}</p>
             <template v-else>
-              <section class="student-progress__block" :aria-label="t('dashboard.progress_teacher_assessments')">
-                <h3 class="teacher-subhead">{{ t('dashboard.progress_teacher_assessments') }}</h3>
+              <section class="student-progress__block parent-panel student-progress__panel" :aria-label="t('dashboard.progress_teacher_assessments')">
+                <h3 class="parent-report__subhead">{{ t('dashboard.progress_teacher_assessments') }}</h3>
+                <p class="parent-stat__hint">{{ t('dashboard.progress_teacher_tajweed_note') }}</p>
                 <p v-if="progressTeacherAverage" class="dash-section__hint">{{ progressTeacherAverage }}</p>
-                <p v-if="!progressTeacherAssessments.length" class="dash-section__hint">{{ t('dashboard.progress_teacher_assessments_empty') }}</p>
+                <TeacherEmpty
+                  v-if="!progressTeacherAssessments.length"
+                  inline
+                  icon="bi bi-chat-square-quote"
+                  :message="t('dashboard.progress_teacher_assessments_empty')"
+                />
                 <ul v-else class="teacher-mini-list">
                   <li v-for="item in progressTeacherAssessments" :key="item.id">
                     <strong>{{ item.label || item.teacher_name }}</strong>
@@ -927,9 +1030,14 @@
                   </li>
                 </ul>
               </section>
-              <section class="student-progress__block" :aria-label="t('dashboard.progress_section_feedback')">
-                <h3 class="teacher-subhead">{{ t('dashboard.progress_section_feedback') }}</h3>
-                <p v-if="!progressFeedback.length" class="dash-section__hint">{{ t('dashboard.progress_feedback_empty') }}</p>
+              <section class="student-progress__block parent-panel student-progress__panel" :aria-label="t('dashboard.progress_section_feedback')">
+                <h3 class="parent-report__subhead">{{ t('dashboard.progress_section_feedback') }}</h3>
+                <TeacherEmpty
+                  v-if="!progressFeedback.length"
+                  inline
+                  icon="bi bi-journal-text"
+                  :message="t('dashboard.progress_feedback_empty')"
+                />
                 <ul v-else class="teacher-mini-list">
                   <li v-for="item in progressFeedback" :key="item.id">
                     <strong>{{ item.teacher_name || t('dashboard.progress_feedback_comment') }}</strong>
@@ -991,11 +1099,14 @@
         <section
           id="dash-activity"
           tabindex="-1"
-          class="dash-section dash-section--flat dash-history"
-          :class="{ 'is-collapsed': isSectionCollapsed('history') }"
+          class="dash-section dash-section--flat dash-history student-activity__panel"
+          :class="{ 'is-collapsed': studentPane !== 'activity' && isSectionCollapsed('history') }"
           aria-labelledby="dash-history-heading"
         >
-          <div class="dash-section__head dash-section__head--compact">
+          <div
+            v-if="studentPane !== 'activity'"
+            class="dash-section__head dash-section__head--compact"
+          >
             <div class="dash-section__head-row">
               <button
                 type="button"
@@ -1014,8 +1125,9 @@
               </button>
             </div>
           </div>
-          <div v-show="!isSectionCollapsed('history')" id="dash-history-body">
-          <div class="student-activity__toolbar parent-homework-toolbar" :class="{ 'is-expanded': activityFiltersOpen }">
+          <h2 v-else id="dash-history-heading" class="visually-hidden">{{ t('dashboard.history_title') }}</h2>
+          <div v-show="studentPane === 'activity' || !isSectionCollapsed('history')" id="dash-history-body">
+          <div class="student-activity__toolbar" :class="{ 'is-expanded': activityFiltersOpen }">
             <nav class="student-activity__tabs dash-range-toggle" role="tablist" :aria-label="t('dashboard.activity_filter_type')">
               <button
                 v-for="filter in activityPageTypes"
@@ -1031,7 +1143,8 @@
             </nav>
             <button
               type="button"
-              class="parent-homework-toolbar__toggle student-activity__open"
+              class="student-activity__open"
+              :class="{ 'is-set': activityMoreFilterCount > 0 }"
               :aria-expanded="activityFiltersOpen ? 'true' : 'false'"
               @click="activityFiltersOpen = !activityFiltersOpen"
             >
@@ -1042,7 +1155,7 @@
             <button
               v-if="activityPageFiltersActive"
               type="button"
-              class="parent-homework-reset"
+              class="dash-btn dash-btn--tertiary dash-btn--sm"
               @click="clearActivityFilters"
             >{{ t('parent.filter_reset') }}</button>
             <StudentActivityFilters
@@ -1050,7 +1163,6 @@
               :status="activityStatus"
               :from="activityFrom"
               :to="activityTo"
-              :expanded="activityFiltersOpen"
               :area-options="activityPageAreas"
               :status-options="activityPageStatuses"
               @area="setActivityArea"
@@ -1078,7 +1190,7 @@
             <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="loadLearningHistory">{{ t('dashboard.retry') }}</button>
           </p>
           <div v-else-if="!historyGroups.length" class="dash-history__status student-activity__empty">
-            <p>{{ historyEmptyMessage }}</p>
+            <TeacherEmpty inline icon="bi bi-clock-history" :message="historyEmptyMessage" />
             <button
               v-if="activityPageFiltersActive"
               type="button"
@@ -1166,8 +1278,26 @@
                 </li>
               </ul>
             </section>
+            <div
+              v-if="historyPage === 1 && (historyHasMore || historyCanCollapse)"
+              class="dash-history__toggle-row"
+            >
+              <button
+                v-if="historyHasMore && !historyCanCollapse"
+                type="button"
+                class="dash-btn dash-btn--ghost dash-btn--sm dash-history__more w-100"
+                :disabled="historyLoadingMore"
+                @click="expandHistory"
+              >{{ historyLoadingMore ? t('dashboard.loading') : t('dashboard.history_more') }}</button>
+              <button
+                v-else-if="historyCanCollapse"
+                type="button"
+                class="dash-btn dash-btn--ghost dash-btn--sm dash-history__less w-100"
+                @click="collapseHistory"
+              >{{ t('dashboard.history_less') }}</button>
+            </div>
             <nav
-              v-if="historyPage > 1 || historyHasMore"
+              v-if="historyPage > 1"
               class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2 dash-history__pagination"
               :aria-label="t('teacher.pagination_label')"
             >
@@ -1206,77 +1336,41 @@
             @select="openStudentNav"
           />
           <p v-if="messagingRestricted" class="teacher-meta">{{ t('dashboard.messaging_age_restricted') }}</p>
+          <p v-else-if="auth.learner_teacher_section_enabled" class="teacher-meta learner-messages__connections-hint">
+            {{ t('ui.connections_settings_teachers_hint') }}
+            <button type="button" class="dash-text-link" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
+          </p>
           <LearnerStudentMessages
             v-if="messagingEnabled"
+            ref="studentMessages"
             :threads="studentDirectThreads"
-            :learning="support && support.learning"
             :pending="supportLoading && !support"
-            @open-teacher="openStudentTeacherThread"
-            @open-feedback="openMessageFeedback"
+            :error="supportError"
+            :on-send="sendDirectTeacherMessage"
+            :pick-teacher-id="messagesPickTeacherId"
+            @threads-updated="onStudentMessagesThreadsUpdated"
+            @open-assignment="openMessageAssignment"
           />
-          <p v-else class="dash-pane__empty">{{ t('dashboard.jump_learning_empty') }}</p>
+          <TeacherEmpty v-else inline class="dash-pane__empty" :message="t('dashboard.jump_learning_empty')" />
         </div>
 
-        <div v-show="studentPane === 'settings'" id="dash-settings" class="dash-pane teacher-view-stage teacher-stack teacher-account-page" tabindex="-1">
-          <StudentPageHeading
-            :title="t('dashboard.jump_settings')"
-            :subtitle="t('dashboard.nav_settings_hint')"
-            :crumb-label="t('dashboard.breadcrumb_label')"
-            :home-label="t('dashboard.jump_home')"
-            :section-label="t('dashboard.jump_settings')"
-            section-id="settings"
-            @select="openStudentNav"
+        <div v-show="studentPane === 'settings'" id="dash-settings" class="dash-pane teacher-view-stage teacher-account-page" tabindex="-1">
+          <LearnerSettingsSection
+            :name="auth.name || ''"
+            :email="auth.email || ''"
+            :initial="settingsInitial"
+            :teacher-section-enabled="auth.learner_teacher_section_enabled === true"
+            :parent-features-enabled="auth.parent_features_enabled === true"
+            :circle="activeLearnerCircle"
+            :circle-loading="learnerCircleLoading"
+            :circle-error="learnerCircleError"
+            :platform-switch-options="platformSwitchOptions"
+            :platform-switch-url="auth.platform_switch_url || ''"
+            :csrf-token="auth.csrf_token || ''"
+            @message="openCircleTeacherMessage"
+            @learning="openStudentNav('learning')"
+            @circle-updated="applyLearnerCirclePayload"
           />
-          <div class="teacher-account__grid">
-            <section class="card teacher-account teacher-account__profile">
-              <div class="teacher-account__section-head">
-                <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-person"></i></span>
-                <div>
-                  <h2>{{ t('parent.account_title') }}</h2>
-                  <p>{{ t('teacher.account_profile_hint') }}</p>
-                </div>
-              </div>
-              <div class="teacher-account__identity">
-                <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ settingsInitial }}</span>
-                <div>
-                  <p class="teacher-account__role">{{ t('dashboard.settings_role') }}</p>
-                  <h3>{{ auth.name }}</h3>
-                  <p v-if="auth.email" class="teacher-account__email">{{ auth.email }}</p>
-                </div>
-              </div>
-              <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action" href="/profile">{{ t('parent.manage_profile') }}</a>
-            </section>
-            <section v-if="auth.teacher_dashboard_url || auth.parent_dashboard_url" class="card teacher-account">
-              <div class="teacher-account__section-head">
-                <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-arrow-left-right"></i></span>
-                <div>
-                  <h2>{{ t('parent.platform_switch_title') }}</h2>
-                  <p>{{ t('parent.platform_switch_hint') }}</p>
-                </div>
-              </div>
-              <ParentPlatformSwitch
-                v-if="platformSwitchOptions.length && auth.platform_switch_url"
-                :platforms="platformSwitchOptions"
-                :switch-url="auth.platform_switch_url"
-                :csrf-token="auth.csrf_token || ''"
-              />
-              <div v-else class="parent-child-actions">
-                <a v-if="auth.teacher_dashboard_url" class="dash-btn dash-btn--secondary dash-btn--sm" :href="auth.teacher_dashboard_url">{{ t('dashboard.settings_teacher_workspace') }}</a>
-                <a v-if="auth.parent_dashboard_url" class="dash-btn dash-btn--secondary dash-btn--sm" :href="auth.parent_dashboard_url">{{ t('dashboard.settings_parent_workspace') }}</a>
-              </div>
-            </section>
-            <section v-if="showLearnerTeacherSection" class="card teacher-account">
-              <div class="teacher-account__section-head">
-                <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-people"></i></span>
-                <div>
-                  <h2>{{ t('ui.connections_my_title') }}</h2>
-                  <p>{{ t('ui.connections_connect_lede') }}</p>
-                </div>
-              </div>
-              <p class="teacher-meta mb-2">{{ learnerConnectionStatus }}</p>
-              <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action" href="/onboarding/connections">{{ t('ui.connections_connect_action') }}</a>
-            </section>
-          </div>
         </div>
         </div>
         </div>
@@ -1829,8 +1923,8 @@ import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import ConnectPrompt from '../components/ConnectPrompt.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
-import ParentPlatformSwitch from '../components/parent/ParentPlatformSwitch.vue'
-import LearnerCirclePanel from '../components/teacher/LearnerCirclePanel.vue'
+import TeacherEmpty from '../components/teacher/TeacherEmpty.vue'
+import LearnerSettingsSection from '../components/teacher/LearnerSettingsSection.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import DashModalRoot from '../components/dashboard/DashModalRoot.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
@@ -1838,12 +1932,14 @@ import { latestLearnerHomeFeedback } from '../scripts/teacher/learnerHome.js'
 import {
   buildHomeAttentionRows,
   homeAttentionAssignmentIds,
+  homeAttentionTailRows,
+  homeNextActionItem,
   homeUpcomingAssignments,
 } from '../scripts/dashboard/studentHome.js'
+import { practiceToolHref } from '../scripts/dashboard/studentPractice.js'
 import { isLearnerSubmitted, isLearnerTaskApproved, learnerPrimaryActionKey, mergeFeedbackReadState, persistFeedbackRead, readFeedbackReadMap } from '../scripts/teacher/learnerDashboard.js'
 import { formatTaskDueUrgency, resolveDisplayTaskState, TASK_STATE, taskStateLabelKey } from '../scripts/teacher/taskState.js'
 import LearnerMyLearningPlan from '../components/teacher/LearnerMyLearningPlan.vue'
-import LearnerRevisionTargets from '../components/teacher/LearnerRevisionTargets.vue'
 import { assignmentProgressLabel } from '../scripts/teacher/formatters.js'
 import { assignmentDisplayLabel } from '../scripts/teacher/taskTypes.js'
 import { formatLearnerDisplayDate } from '../utils/learnerDisplayDate.js'
@@ -1883,19 +1979,25 @@ import {
 } from '../scripts/dashboard/studentActivity.js'
 import LearnerStudentMessages from '../components/teacher/LearnerStudentMessages.vue'
 import { pickDashboardPrimaryKind } from '../scripts/dashboard/primaryAction'
-import { learnerHasLearningNetwork } from '../scripts/dashboard/learnerConnection'
+import { learnerConnectionPhase, learnerHasLearningNetwork } from '../scripts/dashboard/learnerConnection'
+import { learnerCircleCompactSummary } from '../scripts/dashboard/learnerCirclePresentation'
 import {
   studentNavItems as buildStudentNavItems,
   normalizeStudentDashboardPane,
   studentDashboardHistoryState,
   studentDashboardPaneFromHistory,
   studentDashboardPaneFromLocation,
+  studentDashboardReturnHref,
   studentDashboardUrlForPane,
   progressWindowFromSearch,
 } from '../scripts/dashboard/studentDashboardNavigation.js'
 import {
   buildProgressOverviewGroups,
   filterWeakPassagesForDisplay,
+  flattenProgressOverviewStats,
+  mapWordingPassageRows,
+  progressOverviewLeadLine,
+  progressSectionDeepLinks,
   recitationChecksReconciliationNote,
   wordingTrendSummary,
 } from '../scripts/dashboard/studentProgressView.js'
@@ -1921,12 +2023,7 @@ import {
 import DashboardAchievementsWidget from '../components/achievements/DashboardAchievementsWidget.vue'
 import AchievementsPanel from '../components/achievements/AchievementsPanel.vue'
 import AchievementUnlockToast from '../components/achievements/AchievementUnlockToast.vue'
-import './Dashboard.css'
-import './Dashboard.learner-teacher.css'
-import './Dashboard.progress.css'
-import './Dashboard.student-premium.css'
-import '../styles/workspace-modern.css'
-import './Dashboard.student-experience.css'
+/* Workspace + student pane styles ship in teacher-dashboard.css and student-dashboard.css (see layouts/app.blade.php). */
 import '../components/achievements/achievements.css'
 
 const SessionAnalysisModal = defineAsyncComponent(() => import(
@@ -2009,16 +2106,14 @@ export default {
     NetworkFallback,
     ConnectPrompt,
     TeacherNav,
-    ParentPlatformSwitch,
-    LearnerCirclePanel,
+    TeacherEmpty,
+    LearnerSettingsSection,
     LearnerTeacherSection,
     LearnerStudentMessages,
     StudentPageHeading,
     StudentActivityFilters,
     DashModalRoot,
     LearnerMyLearningPlan,
-    LearnerRevisionTargets,
-    LearnerRevisionTargets,
     DashAnimatedNumber,
     DashAiReciteAttemptCard,
     SessionAnalysisModal,
@@ -2101,8 +2196,13 @@ export default {
       supportLoading: false,
       supportRequestId: 0,
       supportError: '',
+      learnerCircle: null,
+      learnerCircleLoading: false,
+      learnerCircleRequestId: 0,
+      learnerCircleError: '',
       assignmentSavingId: 0,
       feedbackReadVersion: 0,
+      messagesPickTeacherId: null,
       learnerRecordOpened: false,
       assignmentCompletionMessage: '',
       reflectionPrompt: null,
@@ -2203,8 +2303,13 @@ export default {
     navBadges() {
       void this.feedbackReadVersion
       const raw = Array.isArray(this.support?.learning?.feedback_inbox) ? this.support.learning.feedback_inbox : []
-      const unread = mergeFeedbackReadState(raw, readFeedbackReadMap()).filter((item) => item.unread).length
-      return unread > 0 ? { messages: unread } : {}
+      const feedbackUnread = mergeFeedbackReadState(raw, readFeedbackReadMap()).filter((item) => item.unread).length
+      const dmUnread = this.studentDirectThreads.reduce(
+        (sum, thread) => sum + (thread.messages || []).filter((message) => message.unread && message.sender === 'teacher').length,
+        0,
+      )
+      const total = feedbackUnread + dmUnread
+      return total > 0 ? { messages: total } : {}
     },
     settingsInitial() {
       const name = String(this.auth?.name || this.auth?.email || '?').trim()
@@ -2274,26 +2379,40 @@ export default {
       return this.auth?.learner_teacher_section_enabled === true
         && this.learnerLearningNetworkConnected
     },
+    activeLearnerCircle() {
+      return this.support?.circle || this.learnerCircle
+    },
     learnerTeachersClassesCount() {
-      const teachers = Array.isArray(this.support?.circle?.teachers) ? this.support.circle.teachers.length : 0
-      const groups = Array.isArray(this.support?.circle?.groups) ? this.support.circle.groups.length : 0
-      return teachers + groups
+      const circle = this.activeLearnerCircle
+      const teachers = Array.isArray(circle?.teachers) ? circle.teachers.length : 0
+      const memberships = Array.isArray(circle?.memberships)
+        ? circle.memberships.filter((row) => row.status === 'pending' || row.status === 'approved').length
+        : 0
+      return teachers + memberships
     },
     learnerConnectionStatus() {
-      const teachers = this.support?.circle?.teachers
-      if (Array.isArray(teachers) && teachers.length) {
-        return this.t('ui.connections_status_connected')
-      }
-      if (this.auth?.learner_teacher_section_enabled) {
-        return this.t('ui.connections_status_none')
-      }
+      const phase = learnerConnectionPhase(this.activeLearnerCircle)
+      if (phase === 'connected') return this.t('ui.connections_status_connected')
+      if (phase === 'pending') return this.t('ui.connections_status_partial')
+      if (this.auth?.learner_teacher_section_enabled) return this.t('ui.connections_status_none')
       return ''
+    },
+    learnerConnectionPhaseLabel() {
+      return learnerConnectionPhase(this.activeLearnerCircle)
+    },
+    learnerConnectionsHubSummary() {
+      return learnerCircleCompactSummary(this.activeLearnerCircle, (key, params) => this.t(key, params))
+    },
+    learnerConnectSettingsHref() {
+      if (typeof window === 'undefined') return '/dashboard?tab=settings'
+      return studentDashboardReturnHref(window.location.href, 'settings')
     },
     showLearnerConnectPrompt() {
       return this.auth?.learner_teacher_section_enabled === true
         && this.studentPane === 'home'
         && !this.supportLoading
-        && !(Array.isArray(this.support?.circle?.teachers) && this.support.circle.teachers.length)
+        && !this.learnerCircleLoading
+        && learnerConnectionPhase(this.activeLearnerCircle) === 'none'
     },
     homeFeedback() {
       void this.feedbackReadVersion
@@ -2314,6 +2433,22 @@ export default {
       const unread = this.homeFeedback?.unread ? this.homeFeedback : null
       return buildHomeAttentionRows(this.support.assignments, unread)
     },
+    homeNextAction() {
+      if (!this.showLearnerTeacherSection || this.supportLoading || this.supportError || !this.support) return null
+      return homeNextActionItem(this.homeAttentionRows)
+    },
+    homeMoreAttentionRows() {
+      return homeAttentionTailRows(this.homeAttentionRows, this.homeNextAction)
+    },
+    showHomeNextAction() {
+      return !!this.homeNextAction
+    },
+    homeNextActionTitleId() {
+      return 'learner-home-next-action'
+    },
+    homeContinueEyebrow() {
+      return this.t('dashboard.home_your_practice')
+    },
     homeUpcomingTasks() {
       if (!this.showLearnerTeacherSection || !this.support) return []
       return homeUpcomingAssignments(
@@ -2325,7 +2460,7 @@ export default {
       if (!this.showLearnerTeacherSection) return false
       if (this.supportError) return true
       if (this.supportLoading && !this.support) return true
-      return this.homeAttentionRows.length > 0
+      return this.homeMoreAttentionRows.length > 0
     },
     showHomeNoAssignmentsNote() {
       if (!this.showLearnerTeacherSection || !this.support || this.supportLoading || this.supportError) return false
@@ -2343,6 +2478,7 @@ export default {
           ? this.t('teacher.learner_weekly_streak_one')
           : this.t('teacher.learner_weekly_streak_other', { n: streak })
       }
+      if (this.showHomeNextAction) return ''
       const urgent = this.homeAttentionRows.find((item) => item.kind === 'assignment')?.row
       if (urgent) {
         const due = this.assignmentDue(urgent)
@@ -2357,17 +2493,25 @@ export default {
       return ''
     },
     homeStatCards() {
-      return this.learningCards.filter((card) => Number(card.value) > 0).slice(0, 3)
+      return this.learningCards
+        .filter((card) => Number(card.value) > 0)
+        .slice(0, 3)
+        .map((card) => ({
+          ...card,
+          shortLabel: card.label,
+          unitHint: card.hint,
+        }))
     },
     showHomeStats() {
       return !!this.data && !this.isNewStudentHome && this.homeStatCards.length > 0
     },
     homePracticeTools() {
+      const base = this.memorisationUrl
       const pricingHref = String(this.auth?.pricing_url || '/pricing')
       return [
         {
           key: 'memorise',
-          href: this.freshMemoriseHref,
+          href: practiceToolHref(base, 'memorise'),
           icon: 'bi-journal-bookmark',
           label: this.t('dashboard.home_tool_memorise'),
           hint: this.t('dashboard.home_tool_memorise_hint'),
@@ -2376,7 +2520,7 @@ export default {
         },
         {
           key: 'mushaf',
-          href: this.mushafReaderHref,
+          href: practiceToolHref(base, 'mushaf'),
           icon: 'bi-book',
           label: this.t('dashboard.home_tool_mushaf'),
           hint: this.t('dashboard.home_tool_mushaf_hint'),
@@ -2385,7 +2529,7 @@ export default {
         },
         {
           key: 'ai',
-          href: this.testRecitationHref,
+          href: practiceToolHref(base, 'recite'),
           icon: 'bi-mic',
           label: this.t('dashboard.home_tool_ai'),
           hint: this.t('dashboard.home_tool_ai_hint'),
@@ -2581,6 +2725,15 @@ export default {
     progressOverviewGroups() {
       return buildProgressOverviewGroups(this.t, this.progressPracticeMetrics, { periodDays: this.chartDays })
     },
+    progressOverviewStatCards() {
+      return flattenProgressOverviewStats(this.progressOverviewGroups)
+    },
+    progressOverviewLead() {
+      return progressOverviewLeadLine(this.t, this.progressPracticeMetrics, { periodDays: this.chartDays })
+    },
+    progressSectionLinks() {
+      return progressSectionDeepLinks(this.t, this.progressSections)
+    },
     progressRecitationReconciliation() {
       return recitationChecksReconciliationNote(this.t, this.progressPracticeMetrics)
     },
@@ -2665,6 +2818,9 @@ export default {
     },
     progressWordingPassages() {
       return Array.isArray(this.progressWording?.passages) ? this.progressWording.passages : []
+    },
+    progressWordingPassageRows() {
+      return mapWordingPassageRows(this.t, this.progressWordingPassages)
     },
     progressWordingSummary() {
       return wordingTrendSummary(this.t, this.progressWording)
@@ -3536,7 +3692,7 @@ export default {
         { key: 'session', label: this.t('dashboard.activity_filter_sessions') },
         { key: 'assignment', label: this.t('dashboard.activity_type_assignments') },
         { key: 'ai_check', label: this.t('dashboard.activity_filter_ai') },
-        { key: 'teacher_review', label: this.t('dashboard.activity_type_teacher_review') },
+        { key: 'teacher_review', label: this.t('dashboard.activity_filter_notes') },
       ]
     },
     activityPageAreas() {
@@ -3647,6 +3803,7 @@ export default {
 
     this.refreshActiveSessionSnapshot()
     this.loadLearnerSupport()
+    this.loadLearnerCircle()
     if (postSessionArrival) {
       if (postSessionArrival.saveFailed) {
         this.$nextTick(() => this.showToast(this.t('memorisation.sync.status.failed')))
@@ -3827,6 +3984,7 @@ export default {
         this.syncActivityFiltersInHistory()
         this.loadLearningHistory()
       }
+      if (next === 'settings') this.loadLearnerCircle()
       if (typeof window !== 'undefined' && window.history && options.history !== 'none') {
         const method = options.history === 'replace' ? 'replaceState' : 'pushState'
         const stateScroll = Number.isFinite(Number(nextScroll)) ? Number(nextScroll) : this.dashboardPaneTop()
@@ -3891,6 +4049,18 @@ export default {
         ? this.t('dashboard.ayah_n', { n: assignment.ayah_start })
         : this.t('dashboard.ayah_range', { start: assignment.ayah_start, end: assignment.ayah_end })
       return assignment.surah_name ? `${assignment.surah_name} · ${range}` : range
+    },
+    assignmentTeacherLabel(task) {
+      const name = String(task?.teacher_name || task?.assignment?.teacher_name || '').trim()
+      return name ? this.t('dashboard.home_teacher_named', { name }) : ''
+    },
+    assignmentNextActionMeta(task) {
+      const parts = [this.assignmentTypeLabel(task), this.assignmentTeacherLabel(task)].filter(Boolean)
+      return parts.join(' · ')
+    },
+    assignmentUpcomingMeta(task) {
+      const parts = [this.assignmentTypeLabel(task), this.assignmentTeacherLabel(task)].filter(Boolean)
+      return parts.join(' · ')
     },
     assignmentTypeLabel(task) {
       const assignment = task?.assignment || {}
@@ -4681,10 +4851,15 @@ export default {
         const activityLabel = this.historyActivityLabel(item)
         if (activityLabel) return activityLabel
       }
+      if (type === 'teacher_feedback') return this.t('dashboard.activity_type_feedback')
+      if (type === 'teacher_finding') return this.t('dashboard.activity_type_finding')
+      if (type === 'self_assessment') return this.t('dashboard.activity_type_reflection')
       if (type && type !== 'session' && !type.startsWith('session_')) {
         const label = this.activityTypeLabel(type)
         if (label) return label
       }
+      const practiceLabel = this.historyActivityLabel(item)
+      if (practiceLabel) return practiceLabel
       const kind = String(item?.practice_kind || '')
       if (kind === 'memorisation') return this.t('dashboard.history_memorisation_practice')
       if (kind === 'revision') return this.t('dashboard.history_filter_revision')
@@ -5515,6 +5690,7 @@ export default {
       this.fetchDashboard(this.chartDays, { force, announce: force })
       this.loadAiReciteResults()
       this.loadLearnerSupport()
+      this.loadLearnerCircle()
     },
     async retryPendingPostSessionWrites() {
       const sessionRetry = readSessionCompletionRetry()
@@ -5561,13 +5737,84 @@ export default {
     applyLearnerSupport(payload) {
       if (!payload || typeof payload !== 'object') return
       this.support = payload
+      if (payload.circle) this.learnerCircle = payload.circle
+    },
+    applyLearnerCirclePayload(payload) {
+      if (!payload || typeof payload !== 'object') return
+      if (payload.circle) {
+        this.learnerCircle = payload.circle
+        if (this.support) this.support = { ...this.support, circle: payload.circle }
+        return
+      }
+      this.applyLearnerSupport(payload)
+      if (this.auth?.learner_learning_network_connected) {
+        void this.loadLearnerSupport()
+      }
+    },
+    async loadLearnerCircle() {
+      if (this.auth?.learner_teacher_section_enabled !== true) return
+      const requestId = ++this.learnerCircleRequestId
+      this.learnerCircleLoading = true
+      try {
+        const payload = await learningApi.getLearnerCircle()
+        if (requestId !== this.learnerCircleRequestId) return
+        if (payload?.circle) {
+          this.learnerCircle = payload.circle
+          if (this.support) this.support = { ...this.support, circle: payload.circle }
+        }
+        this.learnerCircleError = ''
+      } catch (error) {
+        if (requestId !== this.learnerCircleRequestId) return
+        this.learnerCircleError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        if (requestId === this.learnerCircleRequestId) this.learnerCircleLoading = false
+      }
+    },
+    openStudentConnectionsSettings() {
+      this.openStudentNav('settings')
+      this.$nextTick(() => {
+        const target = document.getElementById('learner-settings-connections')
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
     },
     openCircleTeacherMessage(teacherId) {
       this.openStudentNav('messages')
       this.$nextTick(() => this.openStudentTeacherThread(teacherId))
     },
     openStudentTeacherThread(teacherId) {
+      if (this.studentPane === 'messages') {
+        this.messagesPickTeacherId = Number(teacherId) || null
+        this.$nextTick(() => {
+          this.$refs.studentMessages?.openTeacherById?.(teacherId)
+          this.messagesPickTeacherId = null
+        })
+        return
+      }
       this.$refs.learnerTeacherSection?.openTeacherThread(teacherId)
+    },
+    onStudentMessagesThreadsUpdated(payload) {
+      if (payload?.refreshSupport) {
+        this.loadLearnerSupport(true)
+        return
+      }
+      const teacherId = Number(payload?.teacherId || 0)
+      const messages = payload?.messages
+      if (!teacherId || !Array.isArray(messages)) return
+      const directThreads = (this.support?.direct_threads || []).map((row) => (
+        Number(row.teacher_id) === teacherId ? { ...row, messages } : row
+      ))
+      this.support = { ...this.support, direct_threads: directThreads }
+    },
+    openMessageAssignment(assignment) {
+      const recipientId = Number(assignment?.recipient_id || assignment?.id || 0)
+      if (!recipientId) return
+      const open = () => this.$refs.learnerTeacherSection?.openAssignmentById?.(recipientId)
+      if (this.studentPane === 'messages') {
+        this.navigateDashboardPane('learning', { history: 'push', restoreScroll: true })
+        this.$nextTick(open)
+        return
+      }
+      open()
     },
     async startSupportAssignment(item) {
       if (this.auth?.learner_teacher_section_enabled !== true || !item?.id || item.teacher_access === false || this.assignmentSavingId) return

@@ -1,5 +1,5 @@
 /* Student feedback: shared presentation for the inbox and conversation. */
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact {
+:is(.learner-task-thread-modal, .dash-student-dialog--thread, .dash-student-dialog--feedback-list) .teacher-audio-feedback-player.is-compact {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
@@ -11,7 +11,7 @@
   border-radius: 10px;
   background: var(--surface, #f7f4ef);
 }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(.teacher-audio-feedback-player__play, .teacher-audio-feedback-player__speed) {
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(.teacher-audio-feedback-player__play, .teacher-audio-feedback-player__speed) {
   display: grid;
   place-items: center;
   min-width: 44px;
@@ -24,20 +24,20 @@
   font-size: var(--dash-type-secondary, 0.875rem);
   font-weight: 600;
 }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact .teacher-audio-feedback-player__play { background: var(--accent-light, #f1e9e1); }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-playing .teacher-audio-feedback-player__play { background: var(--accent, #895c3e); color: var(--on-accent, #fff); }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-loading .teacher-audio-feedback-player__play .bi { animation: dash-ds-spin 0.8s linear infinite; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.has-error .teacher-audio-feedback-player__error { color: var(--danger-strong, #a03f35); }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(button, input):focus-visible { outline: 2px solid var(--accent, #895c3e); outline-offset: 2px; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__timeline { min-width: 0; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__scrub { width: 100%; margin: 0; accent-color: var(--accent, #895c3e); }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__times { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: var(--dash-type-secondary, 0.875rem); line-height: 1.4; font-variant-numeric: tabular-nums; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__wave { display: none; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player :is(.teacher-audio-feedback-player__status, .teacher-audio-feedback-player__error) { grid-column: 1 / -1; margin: 0; font-size: var(--dash-type-secondary, 0.875rem); line-height: 1.45; }
-:is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__retry { margin-inline-start: 8px; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact .teacher-audio-feedback-player__play { background: var(--accent-light, #f1e9e1); }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-playing .teacher-audio-feedback-player__play { background: var(--accent, #895c3e); color: var(--on-accent, #fff); }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-loading .teacher-audio-feedback-player__play .bi { animation: dash-ds-spin 0.8s linear infinite; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.has-error .teacher-audio-feedback-player__error { color: var(--danger-strong, #a03f35); }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(button, input):focus-visible { outline: 2px solid var(--accent, #895c3e); outline-offset: 2px; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__timeline { min-width: 0; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__scrub { width: 100%; margin: 0; accent-color: var(--accent, #895c3e); }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__times { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: var(--dash-type-secondary, 0.875rem); line-height: 1.4; font-variant-numeric: tabular-nums; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__wave { display: none; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player :is(.teacher-audio-feedback-player__status, .teacher-audio-feedback-player__error) { grid-column: 1 / -1; margin: 0; font-size: var(--dash-type-secondary, 0.875rem); line-height: 1.45; }
+:is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player__retry { margin-inline-start: 8px; }
 @media (max-width: 480px) {
-  :is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact { grid-template-columns: 44px minmax(0, 1fr) 44px; }
-  :is(.learner-feedback-list-modal, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(.teacher-audio-feedback-player__play, .teacher-audio-feedback-player__speed) { min-width: 44px; min-height: 44px; }
+  :is(.learner-task-thread-modal, .dash-student-dialog--thread, .dash-student-dialog--feedback-list) .teacher-audio-feedback-player.is-compact { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+  :is(.dash-student-dialog--feedback-list, .learner-task-thread-modal, .dash-student-dialog--thread) .teacher-audio-feedback-player.is-compact :is(.teacher-audio-feedback-player__play, .teacher-audio-feedback-player__speed) { min-width: 44px; min-height: 44px; }
 }
 
 .learner-task-thread-modal.user-dashboard,

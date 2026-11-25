@@ -16,6 +16,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
+use App\Models\OrganisationMembership;
 use App\Models\LearningPlan;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
@@ -526,7 +527,7 @@ class TeacherDashboardService
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $user->id)
             ->whereHas('assignment')
-            ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
+            ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.learningGroup:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
             ->latest('id')
             ->limit(50)
             ->get();
@@ -542,7 +543,7 @@ class TeacherDashboardService
             $assignments = TeacherAssignmentRecipient::query()
                 ->where('student_id', $user->id)
                 ->whereHas('assignment')
-                ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
+                ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.learningGroup:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
                 ->latest('id')
                 ->limit(50)
                 ->get();
@@ -596,6 +597,8 @@ class TeacherDashboardService
                 $payload['teacher_name'] = $teacher?->name;
                 $payload['teacher_id'] = $recipient->assignment?->teacher_id ? (int) $recipient->assignment->teacher_id : null;
                 $payload['organisation_name'] = $recipient->assignment?->organisation?->name;
+                $groupName = trim((string) ($recipient->assignment?->learningGroup?->name ?? ''));
+                $payload['group_name'] = $groupName !== '' ? $groupName : null;
                 $payload['teacher_access'] = $teacher instanceof User && $this->access->allows($teacher, $user);
 
                 return $payload;
@@ -3047,7 +3050,7 @@ class TeacherDashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, string>  $names
+     * @param  Collection<int, string>  $names
      * @return array<string, mixed>
      */
     private function presentRecitationQueueRow(AiReciteAttempt $attempt, $names, string $status): array
@@ -3295,17 +3298,31 @@ class TeacherDashboardService
             ];
         }
 
-        $teachers = User::query()
+        $teacherRows = OrganisationMembership::query()
+            ->with('user:id,name,email,account_role')
             ->where('organisation_id', $organisation->id)
-            ->where('account_role', AccountRole::Teacher->value)
-            ->orderBy('name')
-            ->get(['id', 'name', 'email'])
-            ->map(fn (User $user) => [
-                'id' => (int) $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_you' => (int) $user->id === (int) $teacher->id,
-            ])
+            ->where('membership_role', MembershipRole::Teacher->value)
+            ->where('status', MembershipStatus::Approved->value)
+            ->orderBy('id')
+            ->get();
+
+        $teachers = $teacherRows
+            ->map(function (OrganisationMembership $row) use ($teacher) {
+                $user = $row->user;
+                if (! $user instanceof User) {
+                    return null;
+                }
+
+                return [
+                    'id' => (int) $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_you' => (int) $user->id === (int) $teacher->id,
+                    'is_institution_admin' => (bool) $row->is_institution_admin,
+                ];
+            })
+            ->filter()
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
 
@@ -3340,17 +3357,29 @@ class TeacherDashboardService
     private function teacherProfile(User $teacher): array
     {
         $teacher->loadMissing('organisation');
+        $institutionAdmin = false;
+        if ($teacher->organisation !== null) {
+            $institutionAdmin = OrganisationMembership::query()
+                ->where('user_id', $teacher->id)
+                ->where('organisation_id', $teacher->organisation->id)
+                ->where('membership_role', MembershipRole::Teacher->value)
+                ->where('status', MembershipStatus::Approved->value)
+                ->where('is_institution_admin', true)
+                ->exists();
+        }
 
         return [
             'id' => (int) $teacher->id,
             'name' => $teacher->name,
             'email' => $teacher->email,
+            'is_institution_admin' => $institutionAdmin,
             'organisation' => $teacher->organisation ? [
                 'id' => (int) $teacher->organisation->id,
                 'name' => $teacher->organisation->name,
                 'type' => $teacher->organisation->type instanceof OrganisationType
                     ? $teacher->organisation->type->value
                     : (string) $teacher->organisation->type,
+                'profile_summary' => $teacher->organisation->profile_summary,
             ] : null,
             'practice_url' => route('dashboard'),
             'profile_url' => route('profile.show'),

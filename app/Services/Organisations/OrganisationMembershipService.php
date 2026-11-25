@@ -232,10 +232,21 @@ class OrganisationMembershipService
 
     private function approveMembership(OrganisationMembership $membership, User $actor): OrganisationMembership
     {
+        $makeAdmin = false;
+        if ($membership->membership_role === MembershipRole::Teacher) {
+            $makeAdmin = ! OrganisationMembership::query()
+                ->where('organisation_id', $membership->organisation_id)
+                ->where('membership_role', MembershipRole::Teacher->value)
+                ->where('status', MembershipStatus::Approved->value)
+                ->where('id', '!=', $membership->id)
+                ->exists();
+        }
+
         $membership->forceFill([
             'status' => MembershipStatus::Approved->value,
             'decided_by' => $actor->id,
             'decided_at' => now(),
+            'is_institution_admin' => $makeAdmin ? true : (bool) $membership->is_institution_admin,
         ])->save();
 
         return $membership->refresh();

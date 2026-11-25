@@ -1,18 +1,127 @@
 [data-platform-shell="student"] .learner-messages-workspace {
+  --learner-messages-pane-height: calc(100dvh - 13.5rem - var(--teacher-mobile-nav-offset, 0px));
   display: grid;
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
   min-width: 0;
+  height: var(--learner-messages-pane-height);
+  max-height: var(--learner-messages-pane-height);
+  min-height: 280px;
 }
 
-[data-platform-shell="student"] .learner-messages__teachers .teacher-pane__body {
-  padding-top: 4px;
+[data-platform-shell="student"] .learner-messages-inbox,
+[data-platform-shell="student"] .learner-messages-thread-pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+[data-platform-shell="student"] .learner-messages-inbox {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--teacher-line, var(--dash-border));
+  border-radius: 14px;
+  background: var(--teacher-surface, var(--dash-card-bg));
+  overflow: hidden;
+}
+
+[data-platform-shell="student"] .learner-messages-inbox__head {
+  flex: 0 0 auto;
+  padding: 16px 18px 10px;
+  border-bottom: 1px solid var(--teacher-line, var(--dash-border));
+}
+
+[data-platform-shell="student"] .learner-messages-inbox__title {
+  margin: 0;
+  font-size: 17px;
+}
+
+[data-platform-shell="student"] .learner-messages-inbox__hint {
+  margin: 4px 0 0;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 14px;
+}
+
+[data-platform-shell="student"] .learner-messages-inbox-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--teacher-line, var(--dash-border));
+  background: var(--teacher-surface, var(--dash-card-bg));
+}
+
+[data-platform-shell="student"] .learner-messages-search {
+  display: flex;
+  flex: 1 1 12rem;
+  align-items: center;
+  gap: 8px;
+  min-width: min(14rem, 100%);
+  padding: 8px 14px;
+  border: 1px solid var(--teacher-line, var(--dash-border));
+  border-radius: 999px;
+  background: var(--teacher-surface-soft, var(--surface-strong));
+  color: var(--teacher-text-soft, var(--dash-muted));
+}
+
+[data-platform-shell="student"] .learner-messages-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--teacher-text, var(--dash-ink));
+  font: inherit;
+}
+
+[data-platform-shell="student"] .learner-messages-search input:focus {
+  outline: none;
+}
+
+[data-platform-shell="student"] .learner-messages-search:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--teacher-accent, var(--accent)) 55%, transparent);
+  outline-offset: 2px;
+}
+
+[data-platform-shell="student"] .learner-messages-unread-toggle {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid var(--teacher-line, var(--dash-border));
+  border-radius: 999px;
+  background: var(--teacher-surface-soft, var(--surface-strong));
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+[data-platform-shell="student"] .learner-messages-unread-toggle.is-active {
+  border-color: color-mix(in srgb, var(--teacher-accent, var(--accent)) 42%, var(--teacher-line, var(--dash-border)));
+  background: var(--teacher-accent-soft, var(--accent-light));
+  color: var(--teacher-accent-ink, var(--accent-strong));
+}
+
+[data-platform-shell="student"] .learner-messages-inbox__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+[data-platform-shell="student"] .learner-messages-inbox-empty {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 18px 12px 24px;
 }
 
 [data-platform-shell="student"] .learner-messages__empty {
   display: grid;
   gap: 8px;
   justify-items: start;
-  padding: 8px 0 4px;
+  padding: 20px 18px;
   color: var(--teacher-text-soft, var(--dash-muted));
   font-size: 15px;
   line-height: 1.5;
@@ -26,7 +135,7 @@
 [data-platform-shell="student"] .learner-messages__list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 6px 8px;
 }
 
 [data-platform-shell="student"] .learner-messages__list > li {
@@ -39,12 +148,13 @@
 }
 
 [data-platform-shell="student"] .learner-messages__list > li > button {
+  position: relative;
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
   width: 100%;
-  padding: 14px 6px;
+  padding: 12px 10px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -53,11 +163,27 @@
   cursor: pointer;
 }
 
-[data-platform-shell="student"] .learner-messages__list > li > button:hover,
+[data-platform-shell="student"] .learner-messages__list > li:hover > button,
+[data-platform-shell="student"] .learner-messages__list > li.is-active > button,
 [data-platform-shell="student"] .learner-messages__list > li > button:focus-visible {
   background: var(--teacher-surface-hover, color-mix(in srgb, var(--accent) 6%, var(--surface-strong)));
   outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
   outline-offset: 2px;
+}
+
+[data-platform-shell="student"] .learner-messages__list > li.is-active > button {
+  background: var(--teacher-accent-soft, color-mix(in srgb, var(--accent) 12%, var(--surface-strong)));
+}
+
+[data-platform-shell="student"] .learner-messages__list > li.has-unread > button::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 14px;
+  inset-inline-start: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--teacher-accent, var(--accent));
 }
 
 [data-platform-shell="student"] .learner-messages__avatar {
@@ -93,6 +219,10 @@
   font-size: 15px;
 }
 
+[data-platform-shell="student"] .learner-messages__list > li.has-unread .learner-messages__title-row strong {
+  font-weight: 700;
+}
+
 [data-platform-shell="student"] .learner-messages__title-row time {
   flex: 0 0 auto;
   color: var(--teacher-text-soft, var(--dash-muted));
@@ -100,14 +230,46 @@
   white-space: nowrap;
 }
 
+[data-platform-shell="student"] .learner-messages__kind {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+[data-platform-shell="student"] .learner-messages__kind.is-feedback {
+  background: color-mix(in srgb, var(--warning, #b7791f) 12%, var(--teacher-surface));
+  color: color-mix(in srgb, var(--warning, #b7791f) 85%, var(--teacher-text));
+}
+
+[data-platform-shell="student"] .learner-messages__kind.is-assignment {
+  background: color-mix(in srgb, var(--teacher-accent, var(--accent)) 14%, var(--teacher-surface));
+  color: var(--teacher-accent-ink, var(--accent-strong));
+}
+
+[data-platform-shell="student"] .learner-messages__blocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 12px;
+  font-weight: 600;
+}
+
 [data-platform-shell="student"] .learner-messages__preview {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   color: var(--teacher-text-soft, var(--dash-muted));
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 [data-platform-shell="student"] .learner-messages__preview.is-muted {
@@ -115,31 +277,208 @@
 }
 
 [data-platform-shell="student"] .learner-messages__badge {
+  display: grid;
+  place-items: center;
   min-width: 22px;
-  padding: 2px 7px;
+  height: 22px;
+  padding: 0 6px;
   border-radius: 999px;
   background: var(--teacher-accent, var(--accent));
   color: var(--on-accent, #fff);
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1;
   text-align: center;
 }
 
-[data-platform-shell="student"] .learner-messages__list > li.has-unread .learner-messages__title-row strong {
-  color: var(--teacher-text, var(--dash-ink));
+[data-platform-shell="student"] .learner-messages-thread-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--teacher-line, var(--dash-border));
+  border-radius: 14px;
+  background: var(--teacher-surface, var(--dash-card-bg));
+  overflow: hidden;
 }
 
-[data-platform-shell="student"] .learner-messages__feedback.learner-teacher__feedback-panel.is-drawer {
-  border: 0;
+[data-platform-shell="student"] .learner-messages-thread-head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--teacher-line, var(--dash-border));
+}
+
+[data-platform-shell="student"] .learner-messages-thread-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-head p {
+  margin: 2px 0 0;
+  color: var(--teacher-text-soft, var(--dash-muted));
+  font-size: 13px;
+}
+
+[data-platform-shell="student"] .learner-messages-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0;
+  border: 0;
   background: transparent;
+  color: var(--teacher-accent-ink, var(--accent-strong));
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-@media (min-width: 992px) {
+[data-platform-shell="student"] .learner-messages-readonly {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--teacher-line, var(--dash-border));
+  background: var(--teacher-warning-soft, var(--teacher-surface-soft, var(--surface-strong)));
+  color: var(--teacher-text, var(--dash-ink));
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-alert {
+  margin: 0;
+  padding: 10px 16px;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 12px 12px;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation.is-learner.is-compact {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 4px;
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--teacher-line, var(--dash-border));
+  background: var(--teacher-surface, var(--dash-card-bg));
+}
+
+[data-platform-shell="student"] .learner-messages-thread-empty {
+  display: grid;
+  place-items: center;
+  flex: 1 1 auto;
+  min-height: min(48dvh, 420px);
+  padding: 24px;
+  border: 1px dashed var(--teacher-line, var(--dash-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--teacher-surface-soft, var(--surface-strong)) 62%, var(--teacher-surface, var(--dash-card-bg)));
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .learner-messages-thread .message-bubble.is-feedback-correction {
+  border-color: color-mix(in srgb, var(--warning, #b7791f) 40%, var(--dash-border));
+  background: color-mix(in srgb, var(--warning, #b7791f) 8%, var(--surface));
+}
+
+[data-platform-shell="student"] .learner-messages-thread-pane .learner-messages-thread .message-bubble.is-feedback-formal {
+  border-color: color-mix(in srgb, var(--teacher-accent, var(--accent)) 28%, var(--dash-border));
+}
+
+@media (min-width: 768px) {
   [data-platform-shell="student"] .learner-messages-workspace {
-    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: minmax(280px, 34%) minmax(0, 1fr);
+    align-items: stretch;
     gap: 24px;
   }
+
+  [data-platform-shell="student"] .learner-messages-workspace.is-empty-inbox {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-platform-shell="student"] .learner-messages-workspace.is-empty-inbox .learner-messages-thread-pane {
+    display: none;
+  }
+
+  [data-platform-shell="student"] .learner-messages-inbox,
+  [data-platform-shell="student"] .learner-messages-thread-pane {
+    height: 100%;
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  [data-platform-shell="student"] .learner-messages-workspace.is-detail-open .learner-messages-inbox {
+    display: none;
+  }
+
+  [data-platform-shell="student"] .learner-messages-workspace:not(.is-detail-open) .learner-messages-thread-pane {
+    display: none;
+  }
+
+  [data-platform-shell="student"] .learner-messages-workspace {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  [data-platform-shell="student"] .learner-messages-inbox {
+    max-height: none;
+  }
+
+  [data-platform-shell="student"] .learner-messages-inbox-bar {
+    gap: 12px;
+  }
+
+  [data-platform-shell="student"] .learner-messages-search {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  [data-platform-shell="student"] .learner-messages-thread-pane {
+    min-height: calc(100dvh - 17rem - var(--teacher-mobile-nav-offset, 0px));
+    max-height: calc(100dvh - 17rem - var(--teacher-mobile-nav-offset, 0px));
+  }
+
+  [data-platform-shell="student"] .learner-messages-thread-pane .teacher-task-conversation.is-learner.is-compact .teacher-task-conversation__composer {
+    bottom: var(--teacher-mobile-nav-offset, 0px);
+  }
+}
+
+html[data-theme="dark"] [data-platform-shell="student"] .learner-messages-search {
+  background: var(--teacher-surface-soft);
+  border-color: var(--teacher-line);
+}
+
+html[data-theme="dark"] [data-platform-shell="student"] .learner-messages-search input {
+  color: var(--teacher-text);
 }

@@ -11,6 +11,10 @@ import {
   defaultStudentFilters,
 } from '../teacher/constants'
 import {
+  sanitizeTeacherAssignmentSessionSettings,
+  sessionSettingsFromAssignment,
+} from '../teacher/assignmentListeningSettings'
+import {
   assignmentLabel,
   formatTeacherWhen,
   isTeacherNavActive,
@@ -491,6 +495,7 @@ export function useTeacherDashboard(authRef) {
       due_at: source.due_at ? String(source.due_at).slice(0, 10) : '',
       priority: source.priority || 'normal',
       feedback: source.feedback || '',
+      session_settings: sessionSettingsFromAssignment(source),
     }
     formError.value = ''
     formSuccess.value = ''
@@ -559,6 +564,7 @@ export function useTeacherDashboard(authRef) {
       due_at: source.due_at ? source.due_at.slice(0, 10) : '',
       priority: source.priority || 'normal',
       feedback: source.feedback || '',
+      session_settings: sessionSettingsFromAssignment(source),
     }
     formError.value = ''
     formSuccess.value = ''
@@ -581,6 +587,7 @@ export function useTeacherDashboard(authRef) {
       due_at: assignment.value.due_at || null,
       priority: assignment.value.priority || 'normal',
       feedback: assignment.value.feedback || null,
+      session_settings: sanitizeTeacherAssignmentSessionSettings(assignment.value.session_settings),
     }
     const studentIds = !editingAssignmentId.value && Array.isArray(assignment.value.student_ids) && assignment.value.student_ids.length
       ? [...new Set(assignment.value.student_ids.map((id) => Number(id)).filter((id) => id > 0))]

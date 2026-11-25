@@ -30,6 +30,7 @@ class TeacherAssignment extends Model
             'due_at' => 'datetime',
             'priority' => 'string',
             'source_ai_recite_attempt_id' => 'integer',
+            'session_settings' => 'array',
         ];
     }
 

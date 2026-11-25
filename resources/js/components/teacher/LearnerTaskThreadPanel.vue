@@ -2,8 +2,8 @@
   <DashModalRoot
     :open="open && Boolean(task)"
     :labelled-by="titleId"
-    root-class="learner-task-thread-modal"
-    panel-class="learner-task-thread-modal__panel"
+    root-class="dash-student-dialog-root learner-task-thread-modal"
+    panel-class="dash-student-dialog dash-student-dialog--thread learner-task-thread-modal__panel dash-modal"
     :dir="textDirection"
     :close-on-backdrop="!sending"
     :close-on-escape="!sending"

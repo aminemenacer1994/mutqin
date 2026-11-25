@@ -8,6 +8,8 @@ use App\Models\LearningGroup;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\User;
+use App\Services\Learning\LearnerConnectionGate;
+use App\Services\Learning\StudentCircleService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Teacher\StudentSelfAssessmentService;
 use App\Services\Teacher\TeacherAssignmentMessageAudioService;
@@ -50,6 +52,29 @@ class LearnerSupportController extends Controller
         $memberships->grantAnalyticsConsent($user, $membership);
 
         return response()->json($dashboard->learnerSupport($user));
+    }
+
+    public function rejectMembership(
+        Request $request,
+        GroupMembership $membership,
+        GroupMembershipService $memberships,
+        TeacherDashboardService $dashboard,
+        StudentCircleService $circle,
+    ): JsonResponse {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+        $memberships->reject($user, $membership);
+        $user->refresh();
+
+        if (app(LearnerConnectionGate::class)->connected($user)) {
+            return response()->json($dashboard->learnerSupport($user))
+                ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+        }
+
+        return response()->json([
+            'circle' => $circle->present($user),
+        ])->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
     public function startAssignment(Request $request, TeacherAssignmentRecipient $recipient, TeacherAssignmentService $assignments): JsonResponse

@@ -120,6 +120,12 @@
         @endphp
         <link rel="stylesheet" href="{{ $teacherStylesUrl }}" id="mutqin-teacher-dashboard-styles">
     @endif
+    @if(request()->routeIs('dashboard', 'progress.dashboard'))
+        @php
+            $studentStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/student-dashboard.css', $mixManifestPath);
+        @endphp
+        <link rel="stylesheet" href="{{ $studentStylesUrl }}" id="mutqin-student-dashboard-styles">
+    @endif
     <style id="mutqin-no-horizontal-scroll">
       html, body {
         width: 100%;
@@ -8386,9 +8392,10 @@
                             @endif
                             @endunless
                             @endauth
+                            @php($globalNavUsesWorkspaceHomeLabel = request()->routeIs('dashboard', 'progress.dashboard', 'teacher.dashboard', 'parent.dashboard'))
                             <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
                                 <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong><small class="d-lg-none">{{ __('ui.nav_home_sub') }}</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="home">{{ $globalNavUsesWorkspaceHomeLabel ? __('ui.mutqin_brand') : __('ui.home') }}</strong><small class="d-lg-none">{{ $globalNavUsesWorkspaceHomeLabel ? __('ui.nav_mutqin_site_sub') : __('ui.nav_home_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">

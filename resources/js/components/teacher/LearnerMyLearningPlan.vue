@@ -45,7 +45,7 @@
       <button
         v-if="showContinue && nextRecipient"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="dash-btn dash-btn--primary dash-btn--sm"
         @click="$emit('continue', nextRecipient)"
       >
         {{ t('teacher.learner_continue_learning') }}

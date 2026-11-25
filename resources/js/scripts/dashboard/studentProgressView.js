@@ -128,3 +128,87 @@ export function recitationChecksReconciliationNote(t, metrics) {
   if (!recited && !checks) return ''
   return t('dashboard.progress_recitation_totals_note', { ayahs: recited, checks })
 }
+
+function metricIconClass(icon) {
+  if (!icon) return 'bi bi-activity'
+  const raw = String(icon)
+  return raw.startsWith('bi ') ? raw : `bi ${raw}`
+}
+
+/** Flat overview stats for the parent-style compact card grid. */
+export function flattenProgressOverviewStats(groups) {
+  const mapRow = (metric, scope) => ({
+    key: `${scope}-${metric.key}`,
+    metricKey: metric.key,
+    label: metric.label,
+    value: metric.value,
+    hint: metric.hint,
+    icon: metricIconClass(metric.icon),
+    action: metric.action,
+    scope,
+    empty: metric.value === '—',
+  })
+  const lifetime = Array.isArray(groups?.lifetime) ? groups.lifetime : []
+  const period = Array.isArray(groups?.period) ? groups.period : []
+  return [...lifetime.map((row) => mapRow(row, 'lifetime')), ...period.map((row) => mapRow(row, 'period'))]
+}
+
+export function progressOverviewLeadLine(t, metrics, { periodDays = 30 } = {}) {
+  const revised = progressPeriodMetricValue(metrics?.revised)
+  const recited = progressPeriodMetricValue(metrics?.recited)
+  const checks = metrics?.ai_checks?.period_value != null
+    ? Number(metrics.ai_checks.period_value)
+    : progressPeriodMetricValue(metrics?.ai_checks)
+  const bits = []
+  if (Number.isFinite(revised) && revised > 0) {
+    bits.push(t('dashboard.progress_overview_lead_revised', { n: revised }))
+  }
+  if (Number.isFinite(recited) && recited > 0) {
+    bits.push(t('dashboard.progress_overview_lead_recited', { n: recited }))
+  }
+  if (Number.isFinite(checks) && checks > 0) {
+    bits.push(t('dashboard.progress_overview_lead_checks', { n: checks }))
+  }
+  if (!bits.length) return t('dashboard.progress_overview_lead_quiet', { days: periodDays })
+  return t('dashboard.progress_overview_lead', { detail: bits.join(' · '), days: periodDays })
+}
+
+const WORDING_DIRECTION_CLASS = Object.freeze({
+  up: 'is-improving',
+  down: 'is-slipping',
+  steady: 'is-steady',
+})
+
+/** Readable wording history rows (not raw "82% then 80%" strings). */
+export function mapWordingPassageRows(t, passages) {
+  return (Array.isArray(passages) ? passages : []).map((passage) => {
+    const direction = String(passage?.direction || 'steady')
+    const checks = Number(passage?.checks || 0)
+    const first = passage?.first
+    const latest = passage?.latest
+    return {
+      key: `${passage?.label || 'passage'}-${first}-${latest}`,
+      label: passage?.label || '',
+      checks,
+      first: first != null ? Number(first) : null,
+      latest: latest != null ? Number(latest) : null,
+      delta: passage?.delta != null ? Number(passage.delta) : null,
+      direction,
+      directionLabel: t(`dashboard.progress_wording_${direction === 'up' ? 'improving' : direction === 'down' ? 'slipping' : 'steady'}`),
+      directionClass: WORDING_DIRECTION_CLASS[direction] || 'is-steady',
+      sampleLabel: checks > 0 ? t('dashboard.progress_wording_sample', { n: checks }) : '',
+      firstAt: passage?.first_at || null,
+      latestAt: passage?.latest_at || null,
+    }
+  })
+}
+
+export function progressSectionDeepLinks(t, sections) {
+  return (Array.isArray(sections) ? sections : [])
+    .filter((row) => row?.id && row?.label)
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      href: `#${row.id}`,
+    }))
+}

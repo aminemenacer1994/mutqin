@@ -82,41 +82,56 @@ class LearningGroupInvitationService
      * Short classroom codes stay reusable until expiry/revoke. Personal invite
      * URLs (token) and email-targeted invites are single-use.
      */
+    /**
+     * Resolve an invite for confirmation UI. Does not create or change memberships.
+     *
+     * @return array{
+     *     class_name: string,
+     *     organisation_name: string|null,
+     *     organisation_type: string|null,
+     *     independent: bool,
+     *     already_joined: bool,
+     *     membership_status: string|null,
+     * }
+     */
+    public function preview(User $student, string $tokenOrCode): array
+    {
+        TeacherFeatures::abortUnlessEnabled();
+
+        $invitation = $this->resolveOpenInvitation($tokenOrCode, $student);
+        $group = $invitation->learningGroup;
+        abort_unless($group instanceof LearningGroup, 404);
+
+        $organisation = $group->organisation;
+        $membership = GroupMembership::query()
+            ->where('learning_group_id', $group->id)
+            ->where('user_id', $student->id)
+            ->where('membership_role', MembershipRole::Student->value)
+            ->first();
+
+        $alreadyJoined = $membership !== null
+            && $membership->status === MembershipStatus::Approved;
+
+        return [
+            'class_name' => (string) $group->name,
+            'organisation_name' => $organisation?->name !== null ? (string) $organisation->name : null,
+            'organisation_type' => $organisation?->type !== null
+                ? ($organisation->type instanceof \BackedEnum ? $organisation->type->value : (string) $organisation->type)
+                : null,
+            'independent' => $organisation === null,
+            'already_joined' => $alreadyJoined,
+            'membership_status' => $membership?->status?->value ?? ($membership ? (string) $membership->status : null),
+        ];
+    }
+
     public function redeem(User $student, string $tokenOrCode): GroupMembership
     {
         TeacherFeatures::abortUnlessEnabled();
 
         $trimmed = $this->normalizeInviteInput($tokenOrCode);
-        $hash = $this->hash(strtoupper($trimmed));
-        $altHash = $this->hash($trimmed);
+        $invitation = $this->resolveOpenInvitation($trimmed, $student);
 
-        $invitation = LearningGroupInvitation::query()
-            ->where(function ($query) use ($hash, $altHash) {
-                $query->where('token_hash', $altHash)
-                    ->orWhere('code_hash', $hash)
-                    ->orWhere('code_hash', $altHash);
-            })
-            ->latest('id')
-            ->first();
-
-        if ($invitation === null || ! $invitation->isOpen()) {
-            if ($invitation !== null && $invitation->status === LearningGroupInvitationStatus::Pending) {
-                $invitation->forceFill(['status' => LearningGroupInvitationStatus::Expired])->save();
-            }
-
-            throw ValidationException::withMessages([
-                'code' => __('ui.connections_invite_invalid'),
-            ]);
-        }
-
-        if ($invitation->invited_email !== null
-            && strcasecmp($invitation->invited_email, (string) $student->email) !== 0) {
-            throw ValidationException::withMessages([
-                'code' => __('ui.connections_invite_invalid'),
-            ]);
-        }
-
-        $matchedByToken = hash_equals((string) $invitation->token_hash, $altHash);
+        $matchedByToken = hash_equals((string) $invitation->token_hash, $this->hash($trimmed));
         $consumeInvite = $matchedByToken || $invitation->invited_email !== null;
 
         $invitation->loadMissing('learningGroup.organisation');
@@ -142,6 +157,12 @@ class LearningGroupInvitationService
             if ($membership && $membership->membership_role !== MembershipRole::Student) {
                 throw ValidationException::withMessages([
                     'code' => __('ui.connections_invite_invalid'),
+                ]);
+            }
+
+            if ($membership !== null && $membership->status === MembershipStatus::Approved) {
+                throw ValidationException::withMessages([
+                    'code' => __('ui.connections_already_joined'),
                 ]);
             }
 
@@ -192,6 +213,43 @@ class LearningGroupInvitationService
         }
 
         return $trimmed;
+    }
+
+    private function resolveOpenInvitation(string $tokenOrCode, ?User $student = null): LearningGroupInvitation
+    {
+        $trimmed = $this->normalizeInviteInput($tokenOrCode);
+        $hash = $this->hash(strtoupper($trimmed));
+        $altHash = $this->hash($trimmed);
+
+        $invitation = LearningGroupInvitation::query()
+            ->with('learningGroup.organisation')
+            ->where(function ($query) use ($hash, $altHash) {
+                $query->where('token_hash', $altHash)
+                    ->orWhere('code_hash', $hash)
+                    ->orWhere('code_hash', $altHash);
+            })
+            ->latest('id')
+            ->first();
+
+        if ($invitation === null || ! $invitation->isOpen()) {
+            if ($invitation !== null && $invitation->status === LearningGroupInvitationStatus::Pending) {
+                $invitation->forceFill(['status' => LearningGroupInvitationStatus::Expired])->save();
+            }
+
+            throw ValidationException::withMessages([
+                'code' => __('ui.connections_invite_invalid'),
+            ]);
+        }
+
+        if ($student instanceof User
+            && $invitation->invited_email !== null
+            && strcasecmp($invitation->invited_email, (string) $student->email) !== 0) {
+            throw ValidationException::withMessages([
+                'code' => __('ui.connections_invite_invalid'),
+            ]);
+        }
+
+        return $invitation;
     }
 
     private function hash(string $value): string

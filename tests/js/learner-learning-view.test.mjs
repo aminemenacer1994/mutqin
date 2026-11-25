@@ -9,6 +9,8 @@ import {
   learningCategoryCounts,
   learningStatusBucket,
   matchesDueWindow,
+  readLearnerMyLearningFilters,
+  writeLearnerMyLearningFilters,
 } from '../../resources/js/scripts/dashboard/learnerLearningView.js'
 
 const now = new Date('2026-03-15T12:00:00')
@@ -76,7 +78,21 @@ assert.match(section, /id === 'done'/)
 assert.match(section, /activeFilter = 'completed'/)
 assert.match(section, /\$emit\('start'/)
 assert.match(section, /\$emit\('complete'/)
+assert.match(section, /teacher\.view_submission/)
+assert.match(section, /readLearnerMyLearningFilters/)
+assert.match(section, /learner-assignment-modal__technical/)
+assert.match(section, /assignmentStatusRationale/)
 assert.doesNotMatch(section, /createAssignment|submitAssignment\(/)
+
+const memory = {
+  getItem: (key) => memory.store[key] ?? null,
+  setItem: (key, value) => { memory.store[key] = value },
+  store: {},
+}
+writeLearnerMyLearningFilters({ status: 'review', due: 'today', category: 'hifz' }, memory)
+assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'review', due: 'today', category: 'hifz' })
+writeLearnerMyLearningFilters({ status: 'invalid', due: 'nope' }, memory)
+assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'todo', due: 'all', category: 'all' })
 
 const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
 assert.match(dashboard, /setFilter\('done'\)/)

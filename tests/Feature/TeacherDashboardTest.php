@@ -7,6 +7,7 @@ use App\Enums\AnalyticsConsentStatus;
 use App\Enums\AssignmentStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\TeacherNoteKind;
 use App\Models\AiReciteAttempt;
 use App\Models\GroupMembership;
 use App\Models\LearningGroup;
@@ -14,6 +15,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
+use App\Models\OrganisationMembership;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
@@ -21,6 +23,7 @@ use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\GroupMembershipService;
+use App\Support\DemoRecitationAudio;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -158,7 +161,7 @@ class TeacherDashboardTest extends TestCase
             'body' => 'Listen to this note.',
             'audio' => UploadedFile::fake()->createWithContent(
                 'voice.wav',
-                \App\Support\DemoRecitationAudio::silentWavBytes(800),
+                DemoRecitationAudio::silentWavBytes(800),
             ),
             'duration_ms' => 800,
         ])->assertCreated()
@@ -670,7 +673,7 @@ class TeacherDashboardTest extends TestCase
         $task = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
             'kind' => 'ai_recite', 'hifz_category' => 'sabqi', 'student_id' => $student->id,
             'surah_number' => 114, 'ayah_start' => 1, 'ayah_end' => 1,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $attempt->forceFill(['teacher_assignment_recipient_id' => $task['recipients'][0]['id']])->save();
         $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'ai']))
@@ -782,7 +785,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated();
         $this->assertCount(1, $this->actingAs($teacher)->getJson(route('api.teacher.assignments'))->assertOk()->json('data'));
 
@@ -964,7 +967,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
 
         $recipientId = $created['recipients'][0]['id'];
@@ -1053,7 +1056,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
 
         $recipientId = $created['recipients'][0]['id'];
@@ -1334,7 +1337,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $recipientId = $created['recipients'][0]['id'];
 
@@ -1546,7 +1549,7 @@ class TeacherDashboardTest extends TestCase
         $voice = $this->actingAs($teacher)->post(route('api.teacher.assignment-recipients.notes.store', $recipientIds[0]), [
             'audio' => UploadedFile::fake()->createWithContent(
                 'feedback.wav',
-                \App\Support\DemoRecitationAudio::silentWavBytes(900),
+                DemoRecitationAudio::silentWavBytes(900),
             ),
             'duration_ms' => 900,
         ], ['Accept' => 'application/json'])->assertCreated()->json('message');
@@ -1564,7 +1567,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 2,
             'ayah_start' => 1,
             'ayah_end' => 5,
-            'kind' => \App\Enums\TeacherNoteKind::Feedback->value,
+            'kind' => TeacherNoteKind::Feedback->value,
             'body' => '',
             'audio_disk' => 'user_files',
             'audio_path' => 'teacher-task-audio/missing.webm',
@@ -1725,7 +1728,7 @@ class TeacherDashboardTest extends TestCase
             'surah_number' => 1,
             'ayah_start' => 1,
             'ayah_end' => 7,
-        'due_at' => today()->addDays(7)->toDateString(),
+            'due_at' => today()->addDays(7)->toDateString(),
         ])->assertCreated()->json();
         $recipientId = $created['recipients'][0]['id'];
 
@@ -1873,7 +1876,8 @@ class TeacherDashboardTest extends TestCase
 
         $this->actingAs($user)->get(route('dashboard'))->assertOk();
         $this->actingAs($user)->get(route('progress.dashboard'))->assertOk();
-        $this->actingAs($user)->getJson(route('api.me.support'))->assertOk()->assertJsonPath('assignments', []);
+        $this->actingAs($user)->getJson(route('api.me.support'))->assertNotFound();
+        $this->actingAs($user)->getJson(route('api.me.circle'))->assertOk();
     }
 
     public function test_attendance_is_teacher_recorded_roster_scoped_and_does_not_change_task_status(): void
@@ -2365,6 +2369,55 @@ class TeacherDashboardTest extends TestCase
         ));
     }
 
+    public function test_teacher_assignment_can_include_optional_listening_settings_in_start_links(): void
+    {
+        [$teacher, $student] = $this->classroom();
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'activity' => 'hifz',
+            'recording_required' => false,
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 3,
+            'due_at' => today()->addDays(3)->toDateString(),
+            'session_settings' => [
+                'reciter' => 'ar.husary',
+                'speed' => 0.75,
+                'repetitions' => 3,
+                'technique' => 'talqin',
+            ],
+        ])->assertCreated()->json();
+
+        $this->assertSame('ar.husary', data_get($created, 'assignment.session_settings.reciter'));
+        $this->assertSame('Mahmoud Khalil Al-Husary', data_get($created, 'assignment.session_settings.reciter_label'));
+
+        $recipientId = (int) $created['recipients'][0]['id'];
+        $learner = $this->actingAs($student)->getJson(route('api.me.support'))
+            ->assertOk()
+            ->json('assignments.0');
+
+        $this->assertStringContainsString('reciter=ar.husary', (string) ($learner['href'] ?? ''));
+        $this->assertStringContainsString('speed=0.75', (string) ($learner['href'] ?? ''));
+        $this->assertStringContainsString('practice_tool=talqin', (string) ($learner['listen_href'] ?? ''));
+
+        $without = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'activity' => 'hifz',
+            'recording_required' => false,
+            'student_id' => $student->id,
+            'surah_number' => 2,
+            'ayah_start' => 1,
+            'ayah_end' => 3,
+            'due_at' => today()->addDays(4)->toDateString(),
+        ])->assertCreated()->json('recipients.0');
+
+        $this->assertNull($without['listen_href'] ?? null);
+    }
+
     /**
      * @return array{0: User, 1: User, 2: User, 3: LearningGroup}
      */
@@ -2374,6 +2427,15 @@ class TeacherDashboardTest extends TestCase
         $teacher = User::factory()->create([
             'account_role' => AccountRole::Teacher->value,
             'organisation_id' => $organisation->id,
+        ]);
+        OrganisationMembership::query()->create([
+            'user_id' => $teacher->id,
+            'organisation_id' => $organisation->id,
+            'membership_role' => MembershipRole::Teacher->value,
+            'status' => MembershipStatus::Approved->value,
+            'decided_by' => $teacher->id,
+            'decided_at' => now(),
+            'is_institution_admin' => true,
         ]);
         $student = User::factory()->create([
             'account_role' => AccountRole::Student->value,

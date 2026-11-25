@@ -83,3 +83,16 @@ function attentionRank(row, now) {
   if (days !== null && days >= 0 && days <= 2) return 3
   return null
 }
+
+/** Highest-priority teacher assignment or unread feedback for the Home next-action card. */
+export function homeNextActionItem(rows) {
+  return Array.isArray(rows) && rows.length ? rows[0] : null
+}
+
+/** Remaining attention rows after the promoted next-action item. */
+export function homeAttentionTailRows(rows, nextAction = null) {
+  const list = Array.isArray(rows) ? rows : []
+  const key = nextAction?.key
+  if (!key) return list
+  return list.filter((item) => item?.key !== key)
+}

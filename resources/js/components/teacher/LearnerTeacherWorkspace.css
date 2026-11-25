@@ -67,19 +67,75 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters-row {
-  align-items: center;
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
 }
-.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented {
-  flex: 1 1 auto;
-  min-width: 0;
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-hint {
+  margin: 0;
+  color: var(--dash-ds-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 10px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar__tools {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__type-btn-label {
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__revision-panel {
+  padding: 16px;
+  border: 1px solid var(--dash-ds-line);
+  border-radius: 14px;
+  background: var(--dash-ds-surface);
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar .learner-teacher__filters--segmented {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
   margin: 0;
   padding: 4px;
   border: 1px solid var(--dash-ds-line);
   border-radius: 12px;
   background: var(--dash-ds-surface-soft);
+  box-shadow: none;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented .learner-teacher__filter {
+  justify-content: center;
+  min-width: 0;
 }
 .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filter {
   min-height: 40px;
@@ -363,10 +419,13 @@
 }
 
 .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--secondary {
-  display: flex;
+  display: inline-flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 12px;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
 }
 .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filter--due {
   min-height: 36px;
@@ -387,6 +446,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  min-height: 72px;
   padding: 12px 14px;
   border-radius: 12px;
 }
@@ -401,7 +461,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
+}
+.learner-workspace.user-dashboard #dash-my-learning .learner-teacher__task-row__status {
+  margin-inline-start: auto;
 }
 .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__task-row__title {
   font-size: 15px;
@@ -449,8 +512,25 @@
   gap: 8px;
 }
 @media (max-width: 767.98px) {
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__filters--segmented {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__assignments-toolbar__tools {
+    justify-content: space-between;
+    width: 100%;
+    margin-inline-start: 0;
+  }
   .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__task-row {
     flex-direction: column;
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+  .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__task-row__status {
+    margin-inline-start: 0;
   }
   .learner-workspace.user-dashboard #dash-my-learning .learner-teacher__task-row__actions {
     width: 100%;

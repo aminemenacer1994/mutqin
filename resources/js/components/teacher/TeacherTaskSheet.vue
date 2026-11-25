@@ -119,6 +119,12 @@
           </select>
         </div>
         </div>
+        <TeacherAssignmentListeningFields
+          :form-id="formId"
+          :form="form"
+          :saving="saving"
+          @update:form="$emit('update:form', $event)"
+        />
         <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
           <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
@@ -138,6 +144,7 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherDialog from './TeacherDialog.vue'
+import TeacherAssignmentListeningFields from './TeacherAssignmentListeningFields.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
 import { assignmentRequirementLabel } from '../../scripts/teacher/formatters'
 import {
@@ -151,7 +158,7 @@ let sheetUid = 0
 
 export default {
   name: 'TeacherTaskSheet',
-  components: { TeacherDialog, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherAssignmentListeningFields, TeacherSurahSelect },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },

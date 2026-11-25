@@ -34,6 +34,7 @@ class OrganisationMembershipController extends Controller
                 'role' => $row->membership_role?->value ?? $row->membership_role,
                 'organisation' => $row->organisation?->only(['id', 'name', 'type']),
                 'active' => (int) $user->organisation_id === (int) $row->organisation_id,
+                'is_institution_admin' => (bool) $row->is_institution_admin,
             ])
             ->values()
             ->all();

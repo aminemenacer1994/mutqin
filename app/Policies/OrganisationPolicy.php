@@ -5,10 +5,19 @@ namespace App\Policies;
 use App\Enums\AccountRole;
 use App\Models\Organisation;
 use App\Models\User;
+use App\Services\Organisations\OrganisationInstitutionAccess;
 use App\Support\TeacherFeatures;
 
 class OrganisationPolicy
 {
+    public function manageInstitution(User $user, Organisation $organisation): bool
+    {
+        if (! TeacherFeatures::enabled() || ! $user->isTeacher()) {
+            return false;
+        }
+
+        return app(OrganisationInstitutionAccess::class)->isInstitutionAdmin($user, $organisation);
+    }
     public function view(User $user, Organisation $organisation): bool
     {
         if (! TeacherFeatures::enabled()) {
@@ -40,7 +49,7 @@ class OrganisationPolicy
 
     public function update(User $user, Organisation $organisation): bool
     {
-        return false;
+        return $this->manageInstitution($user, $organisation);
     }
 
     public function delete(User $user, Organisation $organisation): bool

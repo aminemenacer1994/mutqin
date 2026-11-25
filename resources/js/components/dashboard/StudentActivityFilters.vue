@@ -1,12 +1,9 @@
 <template>
-  <div
-    class="parent-homework-toolbar__filters student-activity__filter-fields"
-    :class="{ 'is-expanded': expanded }"
-  >
-    <label class="parent-report-field">
-      <span class="parent-report-field__label">{{ t('dashboard.activity_filter_area') }}</span>
+  <div class="student-activity__filter-fields dash-filter-fields">
+    <label class="dash-filter-field">
+      <span class="dash-filter-field__label">{{ t('dashboard.activity_filter_area') }}</span>
       <select
-        class="parent-report-select"
+        class="form-select"
         :value="area"
         :aria-label="t('dashboard.activity_filter_area')"
         @change="onAreaChange"
@@ -14,10 +11,10 @@
         <option v-for="option in areaOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
       </select>
     </label>
-    <label class="parent-report-field">
-      <span class="parent-report-field__label">{{ t('dashboard.activity_filter_status') }}</span>
+    <label class="dash-filter-field">
+      <span class="dash-filter-field__label">{{ t('dashboard.activity_filter_status') }}</span>
       <select
-        class="parent-report-select"
+        class="form-select"
         :value="status"
         :aria-label="t('dashboard.activity_filter_status')"
         @change="onStatusChange"
@@ -25,27 +22,23 @@
         <option v-for="option in statusOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
       </select>
     </label>
-    <label class="parent-report-field parent-homework-date">
-      <span class="parent-report-field__label">{{ t('dashboard.activity_from') }}</span>
-      <span class="parent-date">
-        <input
-          type="date"
-          :value="from"
-          :aria-label="t('dashboard.activity_from')"
-          @change="$emit('from', $event.target.value)"
-        >
-      </span>
+    <label class="dash-filter-field">
+      <span class="dash-filter-field__label">{{ t('dashboard.activity_from') }}</span>
+      <input
+        type="date"
+        :value="from"
+        :aria-label="t('dashboard.activity_from')"
+        @change="$emit('from', $event.target.value)"
+      >
     </label>
-    <label class="parent-report-field parent-homework-date">
-      <span class="parent-report-field__label">{{ t('dashboard.activity_to') }}</span>
-      <span class="parent-date">
-        <input
-          type="date"
-          :value="to"
-          :aria-label="t('dashboard.activity_to')"
-          @change="$emit('to', $event.target.value)"
-        >
-      </span>
+    <label class="dash-filter-field">
+      <span class="dash-filter-field__label">{{ t('dashboard.activity_to') }}</span>
+      <input
+        type="date"
+        :value="to"
+        :aria-label="t('dashboard.activity_to')"
+        @change="$emit('to', $event.target.value)"
+      >
     </label>
   </div>
 </template>
@@ -61,7 +54,6 @@ export default {
     status: { type: String, default: 'all' },
     from: { type: String, default: '' },
     to: { type: String, default: '' },
-    expanded: { type: Boolean, default: false },
     areaOptions: { type: Array, default: () => [] },
     statusOptions: { type: Array, default: () => [] },
   },

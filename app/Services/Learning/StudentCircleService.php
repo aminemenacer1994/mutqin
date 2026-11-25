@@ -8,6 +8,7 @@ use App\Enums\OrganisationType;
 use App\Enums\ParentLinkStatus;
 use App\Enums\RevisionRecommendationStatus;
 use App\Models\GroupMembership;
+use App\Models\Organisation;
 use App\Models\ParentStudentLink;
 use App\Models\RevisionRecommendation;
 use App\Models\TeacherAssignment;
@@ -37,6 +38,8 @@ final class StudentCircleService
         $teachers = $this->teachers($student);
         $plans = $this->plans->plansForLearner($student);
 
+        $student->loadMissing('organisation');
+
         return [
             'teachers' => $teachers,
             'guardians' => $this->guardians($student),
@@ -44,6 +47,7 @@ final class StudentCircleService
             'memberships' => $this->memberships($student),
             'learning_plans' => $plans,
             'revision_targets' => $this->revisionTargets($student),
+            'institution' => $this->institution($student),
             'messaging' => [
                 'direct_allowed' => collect($teachers)->contains(fn (array $teacher) => (bool) $teacher['can_message']),
             ],
@@ -78,6 +82,7 @@ final class StudentCircleService
         $teacherIds = $teacherMemberships->keys()->map(fn ($id) => (int) $id)->all();
         $teachers = User::query()
             ->whereIn('id', $teacherIds)
+            ->with('organisation:id,name,type')
             ->get(['id', 'name', 'account_role', 'organisation_id'])
             ->keyBy('id');
 
@@ -111,12 +116,16 @@ final class StudentCircleService
                 }
             }
 
+            $org = $teacher->organisation;
             $rows[] = [
                 'id' => (int) $teacher->id,
                 'name' => (string) $teacher->name,
                 'learning_areas' => array_values($areas),
                 'can_message' => $decision['allowed'],
                 'messaging_reason' => $decision['reason'],
+                'independent' => $teacher->organisation_id === null,
+                'organisation_name' => $org instanceof Organisation ? (string) $org->name : null,
+                'organisation_type' => $this->organisationTypeValue($org),
             ];
         }
 
@@ -222,18 +231,59 @@ final class StudentCircleService
         return GroupMembership::query()
             ->where('user_id', $student->id)
             ->where('membership_role', MembershipRole::Student->value)
-            ->with('learningGroup:id,name,organisation_id')
+            ->with('learningGroup.organisation:id,name,type')
             ->orderByDesc('id')
             ->get()
-            ->map(fn (GroupMembership $membership) => [
-                'id' => (int) $membership->id,
-                'status' => $membership->status?->value ?? (string) $membership->status,
-                'consent' => $membership->analytics_consent_status?->value
-                    ?? (string) $membership->analytics_consent_status,
-                'group' => $membership->learningGroup?->only(['id', 'name', 'organisation_id']),
-            ])
+            ->map(function (GroupMembership $membership) {
+                $group = $membership->learningGroup;
+                $org = $group?->organisation;
+                $status = $membership->status?->value ?? (string) $membership->status;
+                $orgType = $this->organisationTypeValue($org);
+
+                return [
+                    'id' => (int) $membership->id,
+                    'status' => $status,
+                    'consent' => $membership->analytics_consent_status?->value
+                        ?? (string) $membership->analytics_consent_status,
+                    'group' => $group?->only(['id', 'name', 'organisation_id']),
+                    'organisation_name' => $org instanceof Organisation ? (string) $org->name : null,
+                    'organisation_type' => $orgType,
+                    'independent' => $org === null,
+                    'can_leave' => $status === MembershipStatus::Pending->value,
+                    'leave_restricted' => $status === MembershipStatus::Approved->value
+                        && $orgType === OrganisationType::School->value,
+                ];
+            })
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function institution(User $student): ?array
+    {
+        $organisation = $student->organisation;
+        if (! $organisation instanceof Organisation) {
+            return null;
+        }
+
+        return [
+            'id' => (int) $organisation->id,
+            'name' => (string) $organisation->name,
+            'type' => $this->organisationTypeValue($organisation),
+        ];
+    }
+
+    private function organisationTypeValue(?Organisation $organisation): ?string
+    {
+        if (! $organisation instanceof Organisation || $organisation->type === null) {
+            return null;
+        }
+
+        $type = $organisation->type;
+
+        return $type instanceof OrganisationType ? $type->value : (string) $type;
     }
 
     /**

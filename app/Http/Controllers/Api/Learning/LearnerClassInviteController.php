@@ -12,6 +12,22 @@ use Illuminate\Http\Request;
 
 class LearnerClassInviteController extends Controller
 {
+    public function preview(
+        Request $request,
+        LearningGroupInvitationService $invites,
+    ): JsonResponse {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:2048'],
+        ]);
+
+        return response()->json($invites->preview($user, (string) $data['code']))
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
     public function redeem(
         Request $request,
         LearningGroupInvitationService $invites,

@@ -14,13 +14,10 @@ use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\HifzPlanController;
+use App\Http\Controllers\Api\Learning\LearnerCircleController;
 use App\Http\Controllers\Api\Learning\LearnerClassInviteController;
 use App\Http\Controllers\Api\Learning\LearnerGuardianController;
 use App\Http\Controllers\Api\Learning\LearnerSupportController;
-use App\Http\Controllers\Api\Organisations\OrganisationMembershipController;
-use App\Http\Controllers\Api\Teacher\TeacherClassInviteController;
-use App\Http\Controllers\Api\Teacher\TeacherMembershipTransferController;
-use App\Http\Controllers\Onboarding\ConnectionOnboardingController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\MutashabihatController;
 use App\Http\Controllers\Api\Learning\ProgressController;
@@ -30,6 +27,8 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\Organisations\OrganisationInstitutionController;
+use App\Http\Controllers\Api\Organisations\OrganisationMembershipController;
 use App\Http\Controllers\Api\Parent\ParentAssistantController;
 use App\Http\Controllers\Api\Parent\ParentChildController;
 use App\Http\Controllers\Api\Parent\ParentDashboardController;
@@ -38,13 +37,16 @@ use App\Http\Controllers\Api\Parent\ParentMessageController;
 use App\Http\Controllers\Api\Parent\ParentReportController;
 use App\Http\Controllers\Api\ProductEventController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\Teacher\TeacherClassInviteController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
 use App\Http\Controllers\Api\Teacher\TeacherGuardianController;
+use App\Http\Controllers\Api\Teacher\TeacherMembershipTransferController;
 use App\Http\Controllers\Api\Teacher\TeacherRecitationPlaybackController;
 use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
+use App\Http\Controllers\Onboarding\ConnectionOnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\ForwardMarketingClientErrors;
 use Illuminate\Support\Facades\Route;
@@ -177,9 +179,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/onboarding/connections', [ConnectionOnboardingController::class, 'update'])->name('api.onboarding.connections.update');
 
         Route::middleware('learner.teacher.section')->group(function () {
+            Route::get('/me/circle', [LearnerCircleController::class, 'show'])->name('api.me.circle');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
+            Route::post('/me/memberships/{membership}/reject', [LearnerSupportController::class, 'rejectMembership'])->name('api.me.memberships.reject');
+            Route::post('/me/class-invites/preview', [LearnerClassInviteController::class, 'preview'])->middleware('throttle:20,1,api-me-class-invites-preview')->name('api.me.class-invites.preview');
             Route::post('/me/class-invites/redeem', [LearnerClassInviteController::class, 'redeem'])->middleware('throttle:10,1,api-me-class-invites-redeem')->name('api.me.class-invites.redeem');
+            // Participants authorised in TeacherAssignmentMessageAudioService (teachers are not learning-network learners).
+            Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
         Route::middleware(['learner.teacher.section', 'learner.learning.network'])->group(function () {
@@ -191,7 +198,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/me/assignments/{recipient}/notes', [LearnerSupportController::class, 'storeAssignmentMessage'])->middleware('throttle:20,1,api-me-assignment-notes')->name('api.me.assignments.notes.store');
             Route::post('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'storeTeacherMessage'])->middleware('throttle:20,1,api-me-teacher-messages')->name('api.me.teachers.messages.store');
             Route::get('/me/teachers/{teacher}/messages', [LearnerSupportController::class, 'teacherMessages'])->name('api.me.teachers.messages.index');
-            Route::get('/task-messages/{note}/audio', [LearnerSupportController::class, 'assignmentMessageAudio'])->name('api.task-messages.audio');
         });
 
         Route::middleware('teacher.features')->group(function () {
@@ -201,6 +207,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/organisations/{organisation}/switch', [OrganisationMembershipController::class, 'switchActive'])->name('api.organisations.switch');
             Route::post('/organisations/memberships/{membership}/approve', [OrganisationMembershipController::class, 'approve'])->name('api.organisations.memberships.approve');
             Route::post('/organisations/memberships/{membership}/reject', [OrganisationMembershipController::class, 'reject'])->name('api.organisations.memberships.reject');
+            Route::get('/organisations/active/institution', [OrganisationInstitutionController::class, 'show'])->name('api.organisations.active.institution');
+            Route::patch('/organisations/active/institution', [OrganisationInstitutionController::class, 'update'])->name('api.organisations.active.institution.update');
+            Route::post('/organisations/active/staff/{membership}/revoke', [OrganisationInstitutionController::class, 'revokeStaff'])->name('api.organisations.active.staff.revoke');
+            Route::post('/organisations/active/staff/{membership}/admin', [OrganisationInstitutionController::class, 'setStaffAdmin'])->name('api.organisations.active.staff.admin');
+            Route::post('/organisations/active/teacher-invitations', [OrganisationInstitutionController::class, 'storeTeacherInvitation'])->middleware('throttle:10,1,api-org-teacher-invites')->name('api.organisations.active.teacher-invitations.store');
+            Route::post('/organisations/active/teacher-invitations/{invitation}/revoke', [OrganisationInstitutionController::class, 'revokeTeacherInvitation'])->name('api.organisations.active.teacher-invitations.revoke');
+            Route::post('/organisations/teacher-invitations/accept', [OrganisationInstitutionController::class, 'acceptTeacherInvitation'])->middleware('throttle:10,1,api-org-teacher-invites-accept')->name('api.organisations.teacher-invitations.accept');
         });
 
         Route::middleware('parent.features')->group(function () {

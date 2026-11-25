@@ -1,14 +1,11 @@
-/* Feedback and results use the same centered dialog shell as conversations. */
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-feedback-list-modal__panel {
-  display: grid;
+/* Feedback and results share the student dialog shell with conversations. */
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list,
+.dash-modal-root.user-dashboard .dash-student-dialog--results {
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(40rem, 100%);
-  max-height: min(85dvh, 42rem);
-  color: var(--text, #29221e);
-  background: var(--surface-strong, #fff);
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__head {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .dash-drawer__head,
+.dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__head {
   position: static;
   display: flex;
   align-items: flex-start;
@@ -19,95 +16,99 @@
   background: transparent;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__head-main {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .dash-drawer__head-main,
+.dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__head-main {
   display: flex;
   min-width: 0;
   align-items: flex-start;
   gap: 12px;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__title {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .dash-drawer__title,
+.dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__title {
   margin: 0;
   font-size: 19px;
   font-weight: 650;
   line-height: 1.35;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__subtitle,
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__count {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list :is(.dash-drawer__subtitle, .dash-drawer__count),
+.dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__subtitle {
   margin: 4px 0 0;
   color: var(--text-muted, #6b5c4f);
   font-size: 14px;
   line-height: 1.45;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__close {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .dash-drawer__close,
+.dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__close {
   flex: 0 0 44px;
   min-width: 44px;
   min-height: 44px;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-feedback-list-modal__body {
+.dash-modal-root.user-dashboard :is(.learner-student-feedback-modal__body, .learner-student-results-modal__body) {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 20px 24px 24px;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-panel.is-drawer {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-panel.is-drawer {
   position: static;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-grid {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-item {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-item {
   padding: 16px;
   border-radius: 12px;
   background: var(--surface-strong, #fff);
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-row {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-row {
   padding: 0;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-main-hit {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-main-hit {
   width: 100%;
   gap: 12px;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-teacher__feedback-top strong {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .learner-teacher__feedback-top strong {
   font-size: 16px;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal :is(.learner-teacher__feedback-preview, .learner-teacher__feedback-sender, .learner-teacher__feedback-read) {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list :is(.learner-teacher__feedback-preview, .learner-teacher__feedback-sender, .learner-teacher__feedback-read) {
   font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
-.dash-modal-root.user-dashboard.learner-feedback-list-modal :is(.learner-teacher__feedback-audio, .learner-teacher__feedback-correction-action) {
+.dash-modal-root.user-dashboard .dash-student-dialog--feedback-list :is(.learner-teacher__feedback-audio, .learner-teacher__feedback-correction-action) {
   margin-top: 12px;
 }
 
 @media (max-width: 575.98px) {
-  .dash-modal-root.user-dashboard.learner-feedback-list-modal {
+  .dash-modal-root.user-dashboard:has(.dash-student-dialog--feedback-list),
+  .dash-modal-root.user-dashboard:has(.dash-student-dialog--results) {
     place-items: center;
     padding: 12px;
   }
-  .dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-feedback-list-modal__panel {
+
+  .dash-modal-root.user-dashboard .dash-student-dialog--feedback-list,
+  .dash-modal-root.user-dashboard .dash-student-dialog--results {
     max-height: calc(100dvh - 24px);
     border-radius: 16px;
   }
-  .dash-modal-root.user-dashboard.learner-feedback-list-modal .dash-drawer__head {
-    padding: 16px;
-  }
-  .dash-modal-root.user-dashboard.learner-feedback-list-modal .learner-feedback-list-modal__body {
+
+  .dash-modal-root.user-dashboard .dash-student-dialog--feedback-list .dash-drawer__head,
+  .dash-modal-root.user-dashboard .dash-student-dialog--results .dash-drawer__head {
     padding: 16px;
   }
 }

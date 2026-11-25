@@ -571,6 +571,10 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .learner-circle__teacher, .learner-circle__guardian { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; align-items: center; }
 .learner-circle__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .learner-circle__subhead { margin: 18px 0 8px; padding-top: 14px; border-top: 1px solid var(--teacher-line, rgba(90, 70, 40, 0.12)); }
+.learner-circle__groups { display: grid; gap: 12px; }
+.learner-circle__group { padding: 14px; border: 1px solid var(--teacher-line, rgba(90, 70, 40, 0.12)); border-radius: 12px; background: var(--teacher-surface-soft, var(--teacher-surface)); }
+.learner-circle__group-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.learner-circle__group-head h4 { margin: 0; font-size: 15px; font-weight: 650; }
 .teacher-account-page .teacher-account { display: grid; gap: 16px; max-width: none; padding: 18px; border-radius: var(--teacher-radius); overflow: visible; }
 .teacher-account__classes-panel { grid-row: span 2; }
 .teacher-account__section-head { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
@@ -691,6 +695,13 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .teacher-task-form__recording .bi { margin-right: 4px; color: var(--teacher-accent-ink); }
 .teacher-task-form__submit { display: grid; justify-items: end; gap: 3px; }
 .teacher-task-form__submit-hint { max-width: 230px; color: var(--teacher-text-soft); font-size: 11px; line-height: 1.3; text-align: right; }
+.teacher-assignment-listening { display: grid; gap: 10px; padding-top: 4px; }
+.teacher-assignment-listening__hint { line-height: 1.35; }
+.teacher-assignment-listening__preview { margin-top: 8px; }
+.teacher-assignment-listening__prefs { border: 1px solid var(--teacher-line); border-radius: 12px; padding: 10px 12px; background: var(--teacher-surface-soft); }
+.teacher-assignment-listening__prefs-summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--teacher-text); list-style: none; }
+.teacher-assignment-listening__prefs-summary::-webkit-details-marker { display: none; }
+.teacher-form-grid--listening { margin-top: 12px; gap: 12px; }
 .teacher-form-field--third { grid-column: span 4; }
 .teacher-form-field--full { grid-column: 1 / -1; }
 .teacher-plan-modal__body { display: grid; gap: 16px; }
@@ -4164,6 +4175,25 @@ html[data-theme="dark"] .parent-modal__primary { background: #e6d3bc; color: #1b
 }
 [data-platform-shell="student"] .teacher-nav-shell--desktop .teacher-nav.dash-jump { width: 100%; }
 [data-platform-shell="student"] .teacher-nav-shell--mobile .teacher-nav.dash-jump { width: auto; }
+[data-platform-shell="student"].teacher-dashboard .teacher-nav-shell .teacher-nav.dash-jump {
+  flex-direction: column;
+  align-self: stretch;
+}
+[data-platform-shell="student"].teacher-dashboard .teacher-nav-shell .teacher-nav__link.dash-jump__link:hover:not(.is-active) {
+  background: var(--teacher-surface-hover);
+  color: var(--teacher-text);
+}
+[data-platform-shell="student"].teacher-dashboard .teacher-nav-shell .teacher-nav__link.dash-jump__link.is-active {
+  color: #fff !important;
+  background: var(--accent-strong) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: 650;
+}
+html[data-theme="dark"] [data-platform-shell="student"].teacher-dashboard .teacher-nav-shell .teacher-nav__link.dash-jump__link.is-active {
+  color: #21180f !important;
+  background: var(--accent) !important;
+}
 @media (max-width: 1200px) {
   [data-platform-shell="student"].teacher-dashboard .teacher-dashboard__shell.container-fluid { padding-inline: 24px; }
 }

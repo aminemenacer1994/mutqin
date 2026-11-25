@@ -716,8 +716,20 @@ export const learningApi = {
     const { data } = await http.post(`/me/memberships/${membershipId}/consent`)
     return data
   },
+  async getLearnerCircle() {
+    const { data } = await http.get('/me/circle', { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async previewLearnerClassInvite(code) {
+    const { data } = await http.post('/me/class-invites/preview', { code })
+    return data
+  },
   async redeemLearnerClassInvite(code) {
     const { data } = await http.post('/me/class-invites/redeem', { code })
+    return data
+  },
+  async rejectLearnerMembership(membershipId) {
+    const { data } = await http.post(`/me/memberships/${membershipId}/reject`)
     return data
   },
   async approveLearnerGuardian(linkId) {
@@ -746,6 +758,30 @@ export const learningApi = {
   },
   async reviewOrganisationMembership(membershipId, action) {
     const { data } = await http.post(`/organisations/memberships/${membershipId}/${action}`)
+    return data
+  },
+  async getInstitutionDashboard() {
+    const { data } = await http.get('/organisations/active/institution')
+    return data
+  },
+  async updateInstitutionProfile(payload) {
+    const { data } = await http.patch('/organisations/active/institution', payload)
+    return data
+  },
+  async inviteInstitutionTeacher(email) {
+    const { data } = await http.post('/organisations/active/teacher-invitations', { email })
+    return data
+  },
+  async revokeInstitutionStaff(membershipId) {
+    const { data } = await http.post(`/organisations/active/staff/${membershipId}/revoke`)
+    return data
+  },
+  async setInstitutionStaffAdmin(membershipId, admin) {
+    const { data } = await http.post(`/organisations/active/staff/${membershipId}/admin`, { admin })
+    return data
+  },
+  async acceptInstitutionTeacherInvite(token) {
+    const { data } = await http.post('/organisations/teacher-invitations/accept', { token })
     return data
   },
   async createTeacherClassInvite(groupId, email = '') {

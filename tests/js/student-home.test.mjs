@@ -5,6 +5,8 @@ import {
   buildHomeAttentionRows,
   homeAttentionAssignmentIds,
   homeAttentionAssignments,
+  homeAttentionTailRows,
+  homeNextActionItem,
   homeUpcomingAssignments,
 } from '../../resources/js/scripts/dashboard/studentHome.js'
 import { dailyMutqinHref, memorisationGoalHref } from '../../resources/js/scripts/session/sessionGoal.js'
@@ -33,6 +35,12 @@ assert.equal(mixed[1].row.id, 2)
 assert.equal(mixed[2].kind, 'feedback')
 assert.equal(mixed[3].row.id, 3)
 
+const next = homeNextActionItem(mixed)
+assert.equal(next.row.id, 1)
+const tail = homeAttentionTailRows(mixed, next)
+assert.equal(tail.length, 3)
+assert.equal(tail[0].row.id, 2)
+
 const upcoming = homeUpcomingAssignments(rows, homeAttentionAssignmentIds(mixed), now)
 assert.deepEqual(upcoming.map((row) => row.id), [4, 9, 5])
 assert.equal(homeUpcomingAssignments([tomorrow], [4], now).length, 0)
@@ -51,14 +59,19 @@ assert.equal(new URL(setup, 'https://mutqin.test').searchParams.get('session'), 
 
 const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
 const home = dashboard.slice(dashboard.indexOf("studentPane === 'home'"), dashboard.indexOf("studentPane === 'learning'"))
+assert.match(home, /data-testid="dashboard-home-next-action"/)
 assert.match(home, /data-testid="dashboard-primary-continue"/)
 assert.match(home, /:href="primaryContinueAction\.href"/)
+assert.match(home, /homeMoreAttentionRows/)
+assert.match(dashboard, /practiceToolHref/)
 assert.match(home, /dashboard\.home_attention/)
 assert.match(home, /dashboard\.home_upcoming/)
-assert.match(home, /homeAttentionRows/)
+assert.match(home, /homeMoreAttentionRows/)
 assert.match(home, /learner-home__skeleton/)
 assert.match(home, /openHomeFeedback/)
-assert.match(home, /learner-home__column--main/)
+assert.match(home, /learner-home__stack/)
+assert.match(home, /learner-home__tools-pane/)
+assert.match(home, /learner-home__progress-metrics/)
 assert.match(home, /learner-home__revision-row--link/)
 assert.doesNotMatch(home, /startSession\(/)
 assert.doesNotMatch(home, /homeRecentFeedback/)

@@ -392,6 +392,13 @@ class TeacherDashboardController extends Controller
             'due_at' => ['required', 'date'],
             'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
+            'session_settings' => ['nullable', 'array'],
+            'session_settings.reciter' => ['nullable', 'string', 'max:64'],
+            'session_settings.speed' => ['nullable', 'numeric', 'min:0.5', 'max:2'],
+            'session_settings.repetitions' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'session_settings.technique' => ['nullable', 'string', 'in:talqin,focus,blur'],
+            'session_settings.repetitions_per_ayah' => ['nullable', 'array', 'max:50'],
+            'session_settings.repetitions_per_ayah.*' => ['integer', 'min:1', 'max:8'],
             'student_id' => ['nullable', 'integer', 'required_without:learning_group_id'],
             'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
         ]);
@@ -419,6 +426,13 @@ class TeacherDashboardController extends Controller
             'due_at' => ['required', 'date'],
             'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
+            'session_settings' => ['nullable', 'array'],
+            'session_settings.reciter' => ['nullable', 'string', 'max:64'],
+            'session_settings.speed' => ['nullable', 'numeric', 'min:0.5', 'max:2'],
+            'session_settings.repetitions' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'session_settings.technique' => ['nullable', 'string', 'in:talqin,focus,blur'],
+            'session_settings.repetitions_per_ayah' => ['nullable', 'array', 'max:50'],
+            'session_settings.repetitions_per_ayah.*' => ['integer', 'min:1', 'max:8'],
         ]);
 
         return $this->json(['assignment' => $assignments->presentAssignment($assignments->update($teacher, $assignment, $data))]);

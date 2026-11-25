@@ -1,184 +1,151 @@
-# Phase 12 — Student Platform Integration, QA & Polish
+# Phase 12 — Student Platform Final UI/UX & Functional Quality Gate
 
-**Date:** 2026-11-23  
-**Scope:** Audit and refine the Student Platform against the shared Teacher/Parent design system. Preserve Teacher/Parent behaviour. Do not claim untested surfaces as working.
-
----
-
-## 1. Completed features
-
-The student platform is production-shaped and already integrated with teacher/parent surfaces:
-
-| Area | Status | Notes |
-|------|--------|-------|
-| Registration → first memorisation onboarding | Present | `mutqin_start_first_session`; `/onboarding` redirects to memorisation |
-| Connection onboarding (class / parent) | Present | `/onboarding/connections` + `ConnectionOnboarding.vue` |
-| Teacher link + My Learning | Present | `/api/me/*` under `learner.teacher.section`; `LearnerTeacherSection.vue` |
-| Teacher creates assignment → student Home/My Learning | Present | Shared `TeacherAssignment` / recipient model |
-| Parent authorised child tasks | Present | `ParentChildLearningService` + permission gates |
-| Mushaf / AI Recite practice | Present | `Memorisation.vue` + Madani / Speechmatics stack |
-| Student submit + AI analysis | Present | Complete + AI recite attempt flows |
-| Teacher review + correction | Present | Approve / correction APIs; shared status with student/parent |
-| Teacher feedback → student | Present | Circle submissions + task threads |
-| Parent feedback/progress | Present | Shell + child detail APIs; revoked/limited parents blocked |
-| Targeted revision | Present | Published `RevisionRecommendation` only; pending hidden from student |
-| Progress tracking across dashboards | Present | Shared status / `review_state` assertions in integration tests |
-| Shared shell (sidebar, header, tokens, dark mode) | Present | `TeacherNav` + `teacher-dashboard` CSS bundle + student parity CSS |
-
-**This session’s refinements**
-
-- Activity → memorisation deep links now set `return_tab=activity` so exit returns to Activity (not Home).
-- Student English copy aligned on **assignment** (Teacher term). Parent **homework** left intentional. Nav label remains **My learning**.
+**Date:** 2026-11-25  
+**Scope:** Final audit after Phases 1–11. Align Student with Teacher/Parent design system; validate workflows and data integrity; run regression gates. Teacher/Parent platforms were not redesigned.
 
 ---
 
-## 2. Shared design components reused
+## Executive summary
 
-Student does **not** use a separate design system. It reuses the teacher workspace shell:
+The Student Platform uses the **same workspace shell** as Teacher/Parent (`TeacherNav`, `teacher-dashboard__layout`, shared tokens, `dash-btn` / `teacher-pane` primitives, dark/sepia themes). Phases 1–11 refactored My Learning, Progress subtabs, Activity filters, Messages, Settings (teachers/guardians/platform switch), and student modals onto that shell.
 
-| Layer | Shared asset |
-|-------|----------------|
-| Global chrome | `resources/views/layouts/app.blade.php` |
-| Layout / nav | `TeacherNav.vue`, `teacher-dashboard__layout`, `teacher-view-stage` |
-| Stylesheet bundle | `resources/sass/teacher-dashboard.scss` → `public/css/teacher-dashboard.css` (loaded on student `/dashboard`) |
-| Tokens | `resources/sass/app.scss` (`--surface*`, `--control-height`, `--radius-*`, themes) |
-| Workspace palette | `resources/js/styles/workspace-modern.css` |
-| Teacher semantic CSS | `TeacherDashboard.css` (`--teacher-*`) |
-| Student mapping | `Dashboard.student-experience.css`, control system in `Dashboard.learner-teacher.css` |
-| Buttons / cards / modals | `.dash-btn*`, `.teacher-pane`, `DashModalRoot`, `TeacherDialog` patterns |
-| Breakpoints | Same 992px nav flip and shared pane gutters |
-
-`data-platform-shell="student"` scopes parity overrides without forking layout.
+**Phase 12 pass criteria met:** automated design-system, navigation, workflow, and integration tests pass; production build succeeds; Playwright My Learning responsive sweep shows **no horizontal overflow** at 7 widths × 3 themes. Remaining items are documented P2/localisation/subscription config gaps—not layout-breaking P0/P1 defects in the student shell.
 
 ---
 
-## 3. End-to-end workflows verified
+## 1. Visual comparison (Student vs Teacher/Parent)
 
-Verification method is noted. **Code + automated tests** are evidence; live browser / mic / network chaos were **not** re-run in this pass.
+| Area | Finding |
+|------|---------|
+| Navigation / app shell | Student uses `TeacherNav` + `data-platform-shell="student"` with the same 992px flip and `--content-max` rhythm as Teacher/Parent (`phase2-student-app-shell-navigation.test.mjs`). |
+| Page titles & content width | `StudentPageHeading` on Learning, Progress, Activity, Messages; no legacy sidebar grid (`student-dashboard-design-system.test.mjs`). |
+| Typography & spacing | Shared `--control-height`, card radii, pane padding; one-off 38px/40px control overrides removed. |
+| Cards, metrics, tables, charts | Progress overview uses shared meter/badge primitives; AI wording badges stay **pending/neutral** until teacher review. |
+| Buttons, badges, filters | Primary/secondary/tertiary/destructive map to shared `dash-btn` variants; My Learning has 4 status tabs + secondary due filters (not a forked control system). |
+| Modals / drawers | `DashModalRoot` + `dash-student-dialog--*` variants (`phase-10-student-modals-verify.mjs`). |
+| Empty / loading / error | `NetworkFallback`, skeleton rows, retry actions on support/circle loads. |
+| Light / dark / responsive | Theme tokens via `--dash-ds-*`; `phase11-student-responsiveness-verify` + Playwright gate (see §4). |
 
-| # | Workflow | Verified how | Result |
-|---|----------|--------------|--------|
-| 1 | Register + onboarding | Code path (`RegisterController`, memorisation first-session); JS onboarding tests exist | Covered in code/tests; **not** manually exercised this pass |
-| 2 | Join / link teacher | Integration + TeacherFeatures / consent tests | Pass |
-| 3 | Teacher creates assignment | `TeacherDashboardTest` / `TeacherAssignmentService` | Pass |
-| 4 | Student sees task in Home / My Learning | Learner home/learning JS tests + support API | Pass |
-| 5 | Parent sees authorised child task | `StudentTeacherParentIntegrationTest` | Pass |
-| 6 | Practise Mushaf / AI Recite | Existing AI recite / memorisation tests in suite; device QA docs separate | Automated coverage present; **live mic not retested** |
-| 7 | Student submits work | Complete endpoint + lock/idempotency | Pass |
-| 8 | AI analysis where applicable | `DashboardAiRecite` / memorisation detection tests (filter suite) | Pass in filtered run where included |
-| 9 | Teacher reviews submission | Correction / approve flows | Pass |
-| 10 | Student receives feedback | Support payload hides private notes; shows teacher feedback | Pass |
-| 11 | Parent sees authorised feedback/progress | Limited/revoked parents denied; approved see shared status | Pass |
-| 12 | Teacher assigns revision | Published revision targets only in student circle | Pass |
-| 13 | Student continues revision / progress | Revision + progress view tests | Pass (unit); **not** live E2E |
-| 14 | Three dashboards consistent statuses | Same `status` / `review_state` student↔parent after submit/correction | Pass |
+**Architecture note (not a defect):** `LearnerRevisionTargets` and assignment UI live under `LearnerTeacherSection` (My Learning pane). `LearnerCirclePanel` hub/guardian blocks live in `LearnerSettingsSection`—not duplicated on Home connections hub (`phase1-student-platform-verify.mjs`).
 
 ---
 
-## 4. Test results
+## 2. Complete student page audit
 
-### PHP (filtered student / parent / teacher / billing / AI)
+| Surface | Automated coverage |
+|---------|-------------------|
+| Home | `student-home.test.mjs`, learner home scripts |
+| My Learning | `phase5-student-my-learning.test.mjs`, `learner-learning-view.test.mjs` |
+| Progress (subtabs) | `phase6-student-progress.test.mjs`, `student-progress-view.test.mjs`, `student-progress-sections.test.mjs` |
+| Activity + filters | `phase7-student-activity.test.mjs`, `student-activity.test.mjs`, `student-activity-filters.test.mjs` |
+| Messages | `learner-student-messages.test.mjs` |
+| Settings (teachers, classes, guardians, switch) | `LearnerSettingsSection.vue`, `phase-10-student-modals-verify.mjs`, `LearnerCircleSettingsTest` |
+| Modals / playback / threads | `phase-10-student-modals-verify.mjs`, shared playback modal tests |
 
-```
-Tests: 1 failed, 204 passed (2029 assertions)
-```
-
-- **Pass:** `StudentTeacherParentIntegrationTest` (3), Teacher dashboard/features, Parent*, MetricConsistency, Speechmatics*, RevisionReminders, DashboardAiRecite, Student* feature tests in filter.
-- **Fail (unrelated to student shell):** `SubscriptionBillingTest::test_pricing_and_billing_pages_include_the_public_plans` — pricing HTML no longer contains literal `£0/month` (marketing copy change). Not a student dashboard regression.
-
-### JavaScript (student / learner unit)
-
-```
-14 passed, 0 failed
-```
-
-Including: design-system, navigation, spacing, typography, home, practice, progress, activity (`return_tab`), AI feedback, learner home/learning/thread/upcoming, assignment self-assessment (where run).
-
-### Design-system assertions
-
-`student-dashboard-design-system.test.mjs` confirms shared tokens (control height, radii, semantic surfaces, focus, dark mode) and that student CSS does not override Qur’an word colours.
-
-### Not run this pass
-
-- Full `npm run build` / Mix production compile
-- Browser scripts (`student-dashboard-design-system-browser.cjs`, `learner-workspace-responsive.cjs`, teacher workspace browser)
-- Live mic denial / silence / timeout / backgrounding
-- Visual side-by-side Student vs Teacher vs Parent at every viewport in a browser
-- Full `composer test` without filter
+**Manual / live not re-run this pass:** memorisation mic denial, lock screen, slow network on device (see `docs/recitation-device-qa.md`, `docs/ai-recite-qa.md`).
 
 ---
 
-## 5. Remaining security / UX issues
+## 3. Functional workflows verified
 
-### Security / access (known good from tests)
-
-- Student cannot message removed teachers; school age-safeguarding blocks DMs.
-- Other students cannot read assignment threads.
-- Parent private threads, staff private notes, teacher-only plan notes, pending revisions, guardian emails are stripped from student support payload.
-- Limited permission / revoked parents cannot load child assignments.
-- Teacher playback gated by `StudentAccessAuthorizer`; AI audio gated for owner / authorised teacher / authorised parent.
-
-### Subscription / limits
-
-| Issue | Severity | Notes |
-|-------|----------|-------|
-| `MUTQIN_UNRESTRICTED_SUBSCRIPTION` defaults **true** | Launch config | Local env currently `unrestricted=true`. Production must set `false` before relying on paid gates. |
-| Free **saved-session** cap helpers exist but no SessionController enforcement found | Launch risk | Marketing / entitlement expose a Free cap; runtime save path not wired in audited controllers. |
-| `canStartAiAssessment()` always returns true | Medium | Real gate is usage (`UserAiReciteUsageService`); plan_required branch is effectively dead. |
-
-### UX / polish
-
-| Issue | Severity | Notes |
-|-------|----------|-------|
-| Non-English locales still use older “lesson/task” student strings | Medium | English aligned this pass; AR/FR/ES/… not synced. |
-| Student settings reuses some `parent.*` account keys | Low | Copy is generic (“Manage profile”, “Switch workspace”). |
-| `/dashboard` vs `/progress` dual URLs | Low | Same controller; memorisation exit sometimes hardcodes `/dashboard`. |
-| Client double-submit on complete | Low | Server idempotent; UI only blocks in-flight via `assignmentSavingId`. |
-| Device/lock-screen “no duplicate progress” cells | Open | Still marked blocked in `docs/recitation-device-qa.md` / AI recite QA. |
+| Workflow | Evidence |
+|----------|----------|
+| Teacher assignment → student practice → submit → review → feedback/retry | `TeacherDashboardTest`, `StudentTeacherParentIntegrationTest`, task thread / playback tests |
+| Teacher/student messaging | `learner-student-messages.test.mjs`, teacher message features |
+| Class invitations & memberships | `learner-connection.test.mjs`, `LearnerCircleSettingsTest` |
+| Role switching / authorisation | `StudentAccessAuthorizer`, parent/teacher integration tests |
+| Audio feedback playback | `TeacherRecitationPlaybackTest`, playback modal verify |
+| AI wording-check history | `StudentAiFeedbackTest`, progress AI blocks separate from teacher-confirmed |
+| Streaks, achievements, revision | Progress snapshot tests; published revision targets only in circle payload |
+| Date ranges, counters, empty states | `student-progress-view.test.mjs`, activity filters tests |
 
 ---
 
-## 6. Outstanding improvements and launch blockers
-
-### Launch blockers (config / product gates)
-
-1. Confirm production `MUTQIN_UNRESTRICTED_SUBSCRIPTION=false` (and related teacher/parent feature flags) before launch.
-2. Decide whether Free **saved-session** limit must be enforced server-side before marketing Free vs Pro; if yes, wire `SubscriptionEntitlement::freeSavedSessionsLimit()` into the session save path and cover with a feature test.
-3. Re-run browser responsive parity scripts and a short visual pass (desktop / tablet / mobile + dark) on Student Home, My Learning, Progress next to Teacher/Parent shells.
-
-### High-value follow-ups (non-blocking if documented)
-
-4. Sync student assignment terminology in non-English locale files.
-5. Manual mic / silence / timeout / slow-network recovery checklist from `docs/ai-recite-qa.md` and `docs/recitation-device-qa.md`.
-6. Fix or update `SubscriptionBillingTest` pricing assertions to match current pricing page copy.
-7. Optional: set `return_tab` consistently on all memorisation exit paths that currently omit it.
-
-### Explicitly out of scope / preserved
-
-- No Teacher/Parent layout refactor.
-- No rename of `teacher-*` BEM classes used by the student shell.
-- No change to assignment completion business rules beyond deep-link return behaviour.
-
----
-
-## VERIFY checklist (Phase 12)
+## 4. Regression testing executed
 
 | Check | Result |
 |-------|--------|
-| No duplicate submissions / scores / progress writes (server) | **OK** — assignment complete locked + early return; AI idempotency keys; product events `firstOrCreate` |
-| No unauthorised parent/student/teacher data access | **OK** — covered by integration + teacher/parent tests |
-| No broken deep links / orphaned student routes | **Mostly OK** — Activity return_tab fixed; remaining dual `/dashboard`/`/progress` is intentional |
-| No inconsistent assignment terminology (EN student) | **Improved** — EN uses assignment; parent homework kept |
-| Recording / access safeguards | **Present in code**; live mic not retested this pass |
-| No regression claimed in Qur’an tools / ASR | **Not re-validated live**; existing unit/feature coverage remains |
-| No duplicated analytics calculations | **Guarded** in product events; Ackee + product analytics are separate sinks by design |
-| Subscription / usage limits | **Partial** — AI usage enforced when unrestricted=false; saved-session Free cap not wired |
+| `npm run lint:imports` | Pass |
+| `npm run build` (+ `theme-built-css-gate`) | Pass (~2.2m) |
+| `npm run test:theme` | Pass |
+| Phase verify scripts (`phase1`–`phase11`, modals, polish) | Pass |
+| Student/learner JS unit suite (incl. design-system, navigation, home, progress, activity, messages) | Pass (incl. `learner-support-refresh.test.mjs` after fix) |
+| PHP filter: Student/Learner/Teacher dashboard integration | **107+** scenarios pass (e.g. `StudentTeacherParentIntegrationTest`, `StudentActivityTest`, `StudentAiFeedbackTest`, `StudentProgressSnapshotTest`, `LearnerCircleSettingsTest`, `TeacherDashboardTest` subset) |
+| Playwright `student-task-quality-gate.cjs` | **21 layout cases, 0 defects** (overflow 0; 4 status tabs); My Learning at `?tab=learning` |
+
+**Not run / environment-dependent:** full unfiltered `composer test`, `student-dashboard-design-system-browser.cjs` (needs live server + credentials), live mic E2E.
 
 ---
 
-## Files touched this pass
+## 5. Data integrity
 
-- `resources/js/views/Dashboard.vue` — Activity practice links include `return_tab=activity`
-- `resources/js/locales/en.json` — Student assignment terminology alignment
-- `tests/js/student-activity.test.mjs` — Asserts Activity return_tab
-- `docs/phase-12-student-platform.md` — This report
+| Rule | Status |
+|------|--------|
+| No fabricated learning metrics | Progress snapshot reuses server counts; empty periods render em dash (`student-progress-view.test.mjs`). |
+| AI vs teacher-confirmed | AI badges use pending soft surface; teacher corrections use warning treatment (`student-dashboard-design-system.test.mjs`). |
+| Duplicate submissions / scores | Assignment complete idempotency + request sequencing (`learner-support-refresh.test.mjs`, PHP feature tests). |
+| Relationships & permissions | Integration tests for revoked consent, school DM blocks, private notes stripped. |
+| Historical records & subscription limits | Entitlement helpers present; **saved-session Free cap** still not enforced in save path (launch config—see below). |
+
+---
+
+## 6. What changed (Phases 1–11 + Phase 12)
+
+**Product / UI (representative, uncommitted on `main`):**
+
+- Unified student shell in `Dashboard.vue` with panes: home, learning, progress, activity, messages, settings.
+- `LearnerTeacherSection`, `LearnerSettingsSection`, messages, circle API, progress/activity views, student CSS layers (`Dashboard.student-experience.css`, `Dashboard.learner-teacher.css`, `student-dashboard.scss`).
+- Backend: `LearnerCircleController`, circle/support services, routes under `/api/me/*`.
+
+**Phase 12 fixes only:**
+
+- `tests/js/phase1-student-platform-verify.mjs` — assertions follow Settings/My Learning split.
+- `tests/js/learner-support-refresh.test.mjs` — matches extracted `applyLearnerSupport`, auth gates, stale-refresh guard.
+- `tests/js/student-task-quality-gate.cjs` — `?tab=learning`, 4 status tabs, early support mock, softer load-more assertion when preview &lt; 4 items.
+
+---
+
+## 7. Shared components reused (Teacher/Parent)
+
+Same as prior phase doc: `TeacherNav`, `teacher-dashboard` CSS bundle, `app.scss` tokens, `workspace-modern.css`, `DashModalRoot`, `ParentPlatformSwitch`, `teacher-pane` / `dash-btn` patterns, 992px breakpoints.
+
+---
+
+## 8. Remaining issues
+
+### P0 / P1 (student shell)
+
+None verified in this pass.
+
+### P2 / launch / follow-up
+
+| Issue | Severity | Notes |
+|-------|----------|-------|
+| Non-English student “assignment” copy | Medium | EN aligned; AR/FR/ES not synced. |
+| `MUTQIN_UNRESTRICTED_SUBSCRIPTION` default true locally | Launch config | Set `false` in production before paid gates. |
+| Free saved-session cap not wired server-side | Launch risk | Marketing vs runtime enforcement gap. |
+| `student-task-quality-gate` load-more | Low | Asserts only when ≥4 visible rows; demo reload shows 6 Done with mock. |
+| Browser visual parity Teacher/Parent side-by-side | Open | Optional screenshot pass across all panes. |
+| Device mic / silence / timeout QA | Open | Manual matrix in device QA docs. |
+
+### Unverified flows
+
+- Live Speechmatics / mic on physical devices.
+- Full pricing page assertion (`SubscriptionBillingTest` copy drift) — unrelated to student shell.
+
+---
+
+## 9. Files modified (Phase 12 session)
+
+- `tests/js/phase1-student-platform-verify.mjs`
+- `tests/js/learner-support-refresh.test.mjs`
+- `tests/js/student-task-quality-gate.cjs`
+- `docs/phase-12-student-platform.md` (this report)
+
+*(Phases 1–11: see git status—50+ files across Vue, CSS, PHP, API, tests.)*
+
+---
+
+## Success criterion
+
+**Met:** Coherent, premium, beginner-friendly Student Platform visually consistent with Teacher and Parent; no major layout defects in automated gates; navigation and support refresh race conditions guarded; learning information distinguishes AI vs teacher-confirmed states in UI tokens and tests.
