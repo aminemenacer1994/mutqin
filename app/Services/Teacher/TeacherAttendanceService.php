@@ -14,6 +14,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class TeacherAttendanceService
 {
@@ -58,7 +59,18 @@ class TeacherAttendanceService
         }
 
         if (! $group) {
-            return ['groups' => [], 'group_id' => null, 'week_start' => $rangeStart, 'month' => $start->format('Y-m'), 'days' => $days, 'source' => 'teacher_recorded', 'students' => [], 'student_id' => $studentId, 'lessons' => []];
+            return [
+                'groups' => [],
+                'group_id' => null,
+                'week_start' => $rangeStart,
+                'month' => $start->format('Y-m'),
+                'days' => $days,
+                'source' => 'teacher_recorded',
+                'students' => [],
+                'student_id' => $studentId,
+                'summary' => array_merge($this->presentCounts([]), ['source' => 'teacher_recorded']),
+                'lessons' => [],
+            ];
         }
 
         $authorized = $this->access->authorizedStudentIds($teacher);
@@ -83,6 +95,15 @@ class TeacherAttendanceService
             ->get()
             ->groupBy('student_id');
 
+        $statusTotals = ['present' => 0, 'absent' => 0, 'late' => 0, 'excused' => 0];
+        foreach ($records as $rows) {
+            foreach ($rows as $record) {
+                if (isset($statusTotals[$record->status])) {
+                    $statusTotals[$record->status]++;
+                }
+            }
+        }
+
         return [
             'groups' => $groups->map(fn (LearningGroup $row) => ['id' => (int) $row->id, 'name' => $row->name])->all(),
             'group_id' => (int) $group->id,
@@ -91,6 +112,7 @@ class TeacherAttendanceService
             'days' => $days,
             'source' => 'teacher_recorded',
             'student_id' => $studentId,
+            'summary' => array_merge($this->presentCounts($statusTotals), ['source' => 'teacher_recorded']),
             'lessons' => $this->lessonsBetween($teacher, (int) $group->id, $start, $end),
             'students' => User::query()->whereIn('id', $studentIds)->orderBy('name')->get(['id', 'name'])
                 ->map(fn (User $student) => [
@@ -203,6 +225,70 @@ class TeacherAttendanceService
         }
 
         return $fresh;
+    }
+
+    /**
+     * @param  list<int>  $studentIds
+     * @return list<array{student_id: int, status: string, notes: string|null}>
+     */
+    public function bulkSetStatus(User $teacher, LearningGroup $group, string $date, string $status, array $studentIds): array
+    {
+        abort_unless(in_array($status, self::STATUSES, true), 422);
+        abort_unless($this->access->teacherGroupIds($teacher)->contains((int) $group->id), 404);
+
+        $studentIds = collect($studentIds)->map(fn ($id) => (int) $id)->filter(fn (int $id) => $id > 0)->unique()->values()->all();
+        if ($studentIds === []) {
+            return [];
+        }
+
+        $saved = DB::transaction(function () use ($teacher, $group, $date, $status, $studentIds) {
+            $rows = [];
+            foreach ($studentIds as $studentId) {
+                $student = User::query()->findOrFail($studentId);
+                $record = $this->setStatus($teacher, $group, $student, $date, $status);
+                $rows[] = [
+                    'student_id' => $studentId,
+                    'status' => $status,
+                    'notes' => $record?->notes,
+                ];
+            }
+
+            return $rows;
+        });
+
+        return $saved;
+    }
+
+    public function unmarkedTodayCount(User $teacher): int
+    {
+        $today = now()->toDateString();
+        $groupIds = $this->access->teacherGroupIds($teacher);
+        if ($groupIds->isEmpty()) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($groupIds as $groupId) {
+            $authorized = $this->access->authorizedStudentIds($teacher);
+            $roster = GroupMembership::query()
+                ->where('learning_group_id', $groupId)
+                ->where('membership_role', MembershipRole::Student->value)
+                ->where('status', MembershipStatus::Approved->value)
+                ->whereIn('user_id', $authorized)
+                ->pluck('user_id');
+            if ($roster->isEmpty()) {
+                continue;
+            }
+            $marked = TeacherAttendanceRecord::query()
+                ->where('teacher_id', $teacher->id)
+                ->where('learning_group_id', $groupId)
+                ->whereIn('student_id', $roster)
+                ->whereDate('attendance_date', $today)
+                ->count();
+            $total += max(0, $roster->count() - $marked);
+        }
+
+        return $total;
     }
 
     /**

@@ -125,6 +125,13 @@
           :saving="saving"
           @update:form="$emit('update:form', $event)"
         />
+        <TeacherAssignmentProgressiveHidingFields
+          :form-id="formId"
+          :form="form"
+          :saving="saving"
+          :memorisation-url="memorisationUrl"
+          @update:form="$emit('update:form', $event)"
+        />
         <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
           <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
@@ -147,6 +154,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherAssignmentListeningFields from './TeacherAssignmentListeningFields.vue'
+import TeacherAssignmentProgressiveHidingFields from './TeacherAssignmentProgressiveHidingFields.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
 import { assignmentRequirementLabel } from '../../scripts/teacher/formatters'
 import {
@@ -160,7 +168,7 @@ let sheetUid = 0
 
 export default {
   name: 'TeacherTaskSheet',
-  components: { TeacherDialog, TeacherAssignmentListeningFields, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherAssignmentListeningFields, TeacherAssignmentProgressiveHidingFields, TeacherSurahSelect },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -170,6 +178,7 @@ export default {
     error: { type: String, default: '' },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
+    memorisationUrl: { type: String, default: '/memorisation' },
   },
   emits: ['close', 'submit', 'update:form'],
   data() {

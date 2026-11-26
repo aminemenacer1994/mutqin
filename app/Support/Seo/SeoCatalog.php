@@ -156,6 +156,7 @@ final class SeoCatalog
             'Allow: /guides',
             'Allow: /tools',
             ArticlesVisibility::enabled() ? 'Allow: /articles' : 'Disallow: /articles',
+            'Disallow: /preview',
             'Disallow: /login',
             'Disallow: /register',
             'Disallow: /password',

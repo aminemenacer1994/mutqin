@@ -6,9 +6,6 @@
         <h1 id="teacher-reviews-heading" class="teacher-page-header__title">{{ t('teacher.nav_reviews') }}</h1>
         <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
       </div>
-      <button v-if="deskCounts.reviews" type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('open-assignments', 'submitted')">
-        {{ t('teacher.today_review_submissions') }}
-      </button>
     </header>
 
     <div v-if="!overview" class="teacher-skeletons" role="status">
@@ -79,12 +76,12 @@ export default {
     overview: { type: Object, default: null },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['open-student', 'open-assignments'],
+  emits: ['open-student'],
   data() {
     return {
       preview: PREVIEW,
       shown: PREVIEW,
-      filterId: 'awaiting',
+      filterId: 'history',
     }
   },
   computed: {
@@ -93,9 +90,9 @@ export default {
     },
     filters() {
       return [
+        { id: 'history', label: this.t('teacher.reviews_filter_history'), count: this.deskCounts.recitationHistory },
         { id: 'awaiting', label: this.t('teacher.reviews_filter_awaiting'), count: this.deskCounts.recitations },
         { id: 'reviewed', label: this.t('teacher.reviews_filter_reviewed'), count: this.deskCounts.reviewedRecitations },
-        { id: 'history', label: this.t('teacher.reviews_filter_history'), count: this.deskCounts.recitationHistory },
       ]
     },
     filterHint() {

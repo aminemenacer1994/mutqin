@@ -195,7 +195,7 @@
   background: var(--teacher-accent-soft, var(--accent-light));
   color: var(--teacher-accent-ink, var(--accent-strong));
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 [data-platform-shell="student"] .learner-messages__copy {
@@ -237,14 +237,14 @@
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 [data-platform-shell="student"] .learner-messages__kind.is-feedback {
-  background: color-mix(in srgb, var(--warning, #b7791f) 12%, var(--teacher-surface));
-  color: color-mix(in srgb, var(--warning, #b7791f) 85%, var(--teacher-text));
+  background: var(--sem-info-bg);
+  color: var(--sem-info-ink);
 }
 
 [data-platform-shell="student"] .learner-messages__kind.is-assignment {

@@ -1031,6 +1031,9 @@ export default {
       // Present only while a teacher-task deep link is being consumed. The API
       // validates the recipient, task kind, and exact ayah range independently.
       teacherAssignmentRecipientId: null,
+      /** Teacher assignment locks Progressive Hiding controls for this sitting. */
+      teacherAssignmentHidingLock: false,
+      teacherAssignmentHintsAllowed: true,
       wordCoachingId: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
@@ -14578,6 +14581,12 @@ export default {
         // Technique links are deliberately opt-in. At present Progressive Hiding
         // is the teacher-facing beginner tool; recommendations remain advisory.
         const technique = techniqueParam === 'blur' ? 'blur' : null
+        const assignmentHiding = params.get('assignment_hiding') === '1'
+        const blurIntensityParam = params.has('blur_intensity') ? Number(params.get('blur_intensity')) : null
+        const blurIntensity = Number.isFinite(blurIntensityParam) && blurIntensityParam >= 4 && blurIntensityParam <= 18
+          ? Math.round(blurIntensityParam)
+          : null
+        const hintsAllowed = params.get('hints_allowed') !== '0'
         const practiceToolParam = String(params.get('practice_tool') || '').trim().toLowerCase()
         const practiceTool = practiceToolParam === 'talqin' || practiceToolParam === 'focus'
           ? practiceToolParam
@@ -14629,6 +14638,9 @@ export default {
             weak: weak || null,
             priorAssessment: priorAssessment > 0 ? priorAssessment : null,
             technique,
+            assignmentHiding,
+            blurIntensity,
+            hintsAllowed,
             goal: hasGoal ? goal : null,
             reciter: voiceReciter,
             speed: voiceSpeed,
@@ -14646,7 +14658,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'return_tab', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt', 'technique', 'practice_tool']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'return_tab', 'assignment_recipient', 'word_coaching', 'journey', 'view', 'layout', 'weak', 'goal', 'reciter', 'speed', 'repetitions', 'prior_assessment', 'attempt', 'technique', 'practice_tool', 'assignment_hiding', 'blur_intensity', 'hints_allowed']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -14661,6 +14673,7 @@ export default {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
       this.teacherAssignmentRecipientId = Number(entry.assignmentRecipientId || 0) || null
+      this.applyTeacherAssignmentHidingFromEntry(entry)
       this.wordCoachingId = Number(entry.wordCoachingId || 0) || null
       this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
         ? studentDashboardReturnHref(this.learnerDashboardUrl || '/dashboard', entry.returnTab || 'home')
@@ -28187,6 +28200,20 @@ export default {
     },
     openAiMemorisationCheckerForSession() {
       this.openAiRecitationCheckForSession()
+    },
+    applyTeacherAssignmentHidingFromEntry(entry = {}) {
+      const locked = Boolean(entry.assignmentHiding && Number(entry.assignmentRecipientId || 0) > 0)
+      this.teacherAssignmentHidingLock = locked
+      this.teacherAssignmentHintsAllowed = entry.hintsAllowed !== false
+      if (entry.blurIntensity != null) {
+        this.blurIntensity = Math.max(4, Math.min(18, Number(entry.blurIntensity)))
+      }
+      if (locked || entry.technique === 'blur') {
+        this.blurModeEnabled = true
+        this.focusModeEnabled = false
+        this.talqinModeEnabled = false
+        this.syncPracticeToolSectionOpen('blur_mode', true)
+      }
     },
     async ensureTeacherAssignmentStarted(recipientId = null) {
       const id = Number(recipientId || this.teacherAssignmentRecipientId || 0)
@@ -42967,6 +42994,9 @@ export default {
       if (event.key === ' ' || event.code === 'Space') {
         if (this.blurModeEnabled) {
           event.preventDefault()
+          if (this.teacherAssignmentHidingLock && this.teacherAssignmentHintsAllowed === false) {
+            return
+          }
           if (!this.blurPeekHoldingSpace) this.recordSessionHint()
           this.blurPeekHoldingSpace = true
           return
@@ -48625,6 +48655,7 @@ export default {
     },
 
     toggleTalqinModeRadio() {
+      if (this.teacherAssignmentHidingLock) return
       this.talqinModeEnabled = !this.talqinModeEnabled
       this.syncPracticeToolSectionOpen('talqin_mode', this.talqinModeEnabled)
       this.persistUiState()
@@ -48639,11 +48670,13 @@ export default {
       )
     },
     toggleFocusModeRadio() {
+      if (this.teacherAssignmentHidingLock) return
       this.focusModeEnabled = !this.focusModeEnabled
       this.syncPracticeToolSectionOpen('focus_mode', this.focusModeEnabled)
       this.persistUiState()
     },
     toggleBlurModeRadio() {
+      if (this.teacherAssignmentHidingLock) return
       this.blurModeEnabled = !this.blurModeEnabled
       this.syncPracticeToolSectionOpen('blur_mode', this.blurModeEnabled)
       this.persistUiState()

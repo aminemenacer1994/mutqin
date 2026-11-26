@@ -7,7 +7,7 @@ const revision = readFileSync(new URL('../../resources/js/components/teacher/Lea
 const learner = readFileSync(new URL('../../resources/js/components/teacher/LearnerTeacherSection.vue', import.meta.url), 'utf8')
 const settings = readFileSync(new URL('../../resources/js/components/teacher/LearnerSettingsSection.vue', import.meta.url), 'utf8')
 const layout = readFileSync(new URL('../../resources/views/layouts/app.blade.php', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../../resources/js/views/Dashboard.student-experience.css', import.meta.url), 'utf8')
+const css = readFileSync(new URL('../../resources/js/views/Dashboard.student.css', import.meta.url), 'utf8')
 
 assert.match(dashboard, /learner-learning-connections__body/, 'My Learning connections use a dedicated body wrapper')
 assert.match(learner, /LearnerRevisionTargets[\s\S]*embedded/, 'Revision targets render in embedded mode under My Teachers & Classes')

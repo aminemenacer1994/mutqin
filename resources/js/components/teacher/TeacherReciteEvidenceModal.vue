@@ -22,7 +22,7 @@
     />
   </TeacherDialog>
 
-  <DashModalRoot
+  <DashModalRoot workspace
     v-else
     :open="open && Boolean(row)"
     :labelled-by="titleId"

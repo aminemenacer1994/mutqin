@@ -28,6 +28,9 @@ const t = (key, params = {}) => {
 test('progress metric display uses em dash for empty period values', () => {
   assert.equal(progressMetricDisplay(0, { treatZeroAsEmpty: true }), '—')
   assert.equal(progressMetricDisplay(3), '3')
+  assert.equal(progressMetricDisplay(null), '—')
+  assert.equal(progressMetricDisplay(undefined), '—')
+  assert.equal(progressMetricDisplay(0), '0')
 })
 
 test('overview groups separate lifetime memorised from period checks', () => {
@@ -58,7 +61,7 @@ test('overview stat cards use compact values and lifetime scope', () => {
   }, { periodDays: 7 })
   const cards = flattenProgressOverviewStats(groups)
   assert.equal(cards.find((row) => row.metricKey === 'memorised').scope, 'lifetime')
-  assert.equal(cards.find((row) => row.metricKey === 'revised').value, '—')
+  assert.equal(cards.find((row) => row.metricKey === 'revised').value, '0')
 })
 
 test('wording rows expose sample size instead of raw strings only', () => {

@@ -108,6 +108,29 @@
         <button type="button" class="btn btn-link btn-sm" @click="$emit('open-plan')">{{ t('teacher.task_open_plan') }}</button>
       </p>
 
+      <section
+        v-if="selectedMemorisationSummary"
+        class="teacher-student-tasks__memorisation-summary"
+        :aria-label="t('teacher.assignment_hiding_review_title')"
+      >
+        <h4>{{ t('teacher.assignment_hiding_review_title') }}</h4>
+        <p class="text-body-secondary small mb-2">{{ t('teacher.assignment_hiding_review_disclaimer') }}</p>
+        <dl class="teacher-student-tasks__facts">
+          <div v-if="selectedMemorisationSummary.session_count != null">
+            <dt>{{ t('teacher.assignment_hiding_sessions') }}</dt>
+            <dd>{{ selectedMemorisationSummary.session_count }}</dd>
+          </div>
+          <div v-if="selectedMemorisationSummary.repetitions_recorded">
+            <dt>{{ t('teacher.assignment_session_repetitions') }}</dt>
+            <dd>{{ selectedMemorisationSummary.repetitions_recorded }}</dd>
+          </div>
+          <div v-if="selectedMemorisationSummary.ai_assessment?.scored">
+            <dt>{{ t('teacher.assignment_hiding_ai_check') }}</dt>
+            <dd>{{ selectedMemorisationSummary.ai_assessment.accuracy_percent }}%</dd>
+          </div>
+        </dl>
+      </section>
+
       <section v-if="selectedSelfAssessment" class="teacher-student-tasks__self-assessment" :aria-label="t('teacher.assignment_self_assessment')">
         <div>
           <span>{{ t('teacher.assignment_self_assessment') }}</span>
@@ -347,6 +370,11 @@ export default {
     },
     selectedInstructions() {
       return String(this.selectedAssignment?.assignment?.feedback || '').trim()
+    },
+    selectedMemorisationSummary() {
+      const summary = this.selectedAssignment?.memorisation_summary
+      if (!summary || !summary.configured) return null
+      return summary
     },
     selectedMessages() {
       return this.selectedAssignment?.messages || []

@@ -120,6 +120,7 @@
           {{ t('dashboard.messaging_age_restricted') }}
         </p>
         <p v-if="threadLoading" class="teacher-meta learner-messages-thread-alert" role="status" aria-live="polite">{{ t('teacher.loading') }}</p>
+        <button v-if="threadNextBefore" type="button" class="btn btn-outline-secondary btn-sm align-self-start" :disabled="threadLoading" @click="loadActiveThread(true)">{{ t('dashboard.messages_load_older') }}</button>
         <TeacherTaskConversation
           ref="conversation"
           :messages="activeMessages"
@@ -192,6 +193,7 @@ export default {
       directSending: false,
       sentOptimistic: {},
       pollVersions: {},
+      threadNextBefore: null,
       pollTimer: null,
       disposed: false,
       isMobileViewport: false,
@@ -345,6 +347,8 @@ export default {
         ? teacherIdOrRow
         : this.inbox.find((item) => Number(item.teacher_id) === Number(teacherIdOrRow))
       if (!row) return
+      this.activeMessages = []
+      this.threadNextBefore = null
       this.active = row
       this.threadLoadError = ''
       this.sentOptimistic = {}
@@ -360,7 +364,7 @@ export default {
       this.threadLoadError = ''
       this.threadLoading = false
     },
-    async loadActiveThread() {
+    async loadActiveThread(older = false) {
       if (!this.active?.teacher_id) return
       const teacherId = Number(this.active.teacher_id)
       this.threadLoading = true
@@ -368,9 +372,10 @@ export default {
       const request = Number(this.pollVersions[teacherId] || 0) + 1
       this.pollVersions = { ...this.pollVersions, [teacherId]: request }
       try {
-        const payload = await learningApi.getLearnerTeacherMessages(teacherId)
-        if (this.disposed || request !== this.pollVersions[teacherId]) return
-        const merged = mergeThreadMessages(payload?.messages || [], this.sentOptimistic[teacherId] || [])
+        const payload = await learningApi.getLearnerTeacherMessages(teacherId, { before: older ? this.threadNextBefore : undefined })
+        if (this.disposed || request !== this.pollVersions[teacherId] || Number(this.active?.teacher_id) !== teacherId) return
+        if (older || !this.activeMessages.length) this.threadNextBefore = payload?.next_before || null
+        const merged = mergeThreadMessages([...this.activeMessages, ...(payload?.messages || [])], this.sentOptimistic[teacherId] || [])
         this.activeMessages = merged
         this.inbox = patchThreadRow(this.inbox, teacherId, merged)
         if (this.active?.teacher_id === teacherId) {
@@ -378,11 +383,11 @@ export default {
         }
         this.$emit('threads-updated', { teacherId, messages: merged })
       } catch {
-        if (this.disposed || request !== this.pollVersions[teacherId]) return
+        if (this.disposed || request !== this.pollVersions[teacherId] || Number(this.active?.teacher_id) !== teacherId) return
         this.threadLoadError = this.t('dashboard.messages_thread_failed')
         this.activeMessages = this.active?.messages || []
       } finally {
-        if (request === this.pollVersions[teacherId]) this.threadLoading = false
+        if (request === this.pollVersions[teacherId] && Number(this.active?.teacher_id) === teacherId) this.threadLoading = false
       }
     },
     reloadActiveThread() {

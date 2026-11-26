@@ -13,7 +13,7 @@
           <p v-else class="teacher-meta">{{ t('ui.connections_status_none') }}</p>
         </div>
       </div>
-      <button type="button" class="btn btn-primary" @click="$emit('create-assignment')">
+      <button type="button" class="btn btn-primary" data-sandbox-tour="teacher-new-assignment" @click="$emit('create-assignment')">
         <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.assign_task') }}
       </button>
     </div>

@@ -225,6 +225,20 @@ const PricingPage = lazyPage(
     () => import(/* webpackChunkName: "pricing" */ './views/PricingPage.vue'),
     { feature: 'pricing' }
 );
+const PreviewAudiencePage = lazyPage(
+    () => import(/* webpackChunkName: "preview-audience" */ './views/PreviewAudiencePage.vue'),
+    { feature: 'preview-audience' }
+);
+const PreviewDemoPage = lazyPage(
+    () => import(/* webpackChunkName: "preview-demo" */ './views/PreviewDemoPage.vue'),
+    { feature: 'preview-demo' }
+);
+import PreviewSandboxToolbar from './components/preview/PreviewSandboxToolbar.vue';
+import PreviewSandboxWalkthrough from './components/preview/PreviewSandboxWalkthrough.vue';
+const PreviewResourcesPage = lazyPage(
+    () => import(/* webpackChunkName: "preview-resources" */ './views/PreviewResourcesPage.vue'),
+    { feature: 'preview-resources' }
+);
 const OurMissionPage = lazyPage(
     () => import(/* webpackChunkName: "our-mission" */ './views/OurMission.vue'),
     { feature: 'our-mission' }
@@ -452,6 +466,11 @@ async function bootstrapApp() {
         about: About,
         'about-us-page': AboutUsPage,
         'pricing-page': PricingPage,
+        'preview-audience-page': PreviewAudiencePage,
+        'preview-demo-page': PreviewDemoPage,
+        'preview-sandbox-toolbar': PreviewSandboxToolbar,
+        'preview-sandbox-walkthrough': PreviewSandboxWalkthrough,
+        'preview-resources-page': PreviewResourcesPage,
         'our-mission-page': OurMissionPage,
         'donation-page': DonationPage,
         'waiting-list-page': WaitingListPage,

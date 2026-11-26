@@ -1,11 +1,16 @@
 <template>
-  <div class="pricing-page" :data-theme="currentTheme">
+  <div
+    ref="pageRoot"
+    class="pricing-page"
+    :class="{ 'pricing-page--preview': landingPreview }"
+    :data-theme="currentTheme"
+  >
     <section class="pricing-intro">
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.pricing.kicker') }}</p>
-          <h1 class="pricing-title">{{ t('pricingPage.title') }}</h1>
-          <p class="section-sub">{{ t('pricingPage.subtitle') }}</p>
+          <h1 class="pricing-title">{{ pricingT('title') }}</h1>
+          <p class="section-sub">{{ pricingT('subtitle') }}</p>
         </header>
 
         <div v-if="showBillingSwitch" class="pricing-toolbar" data-reveal>
@@ -117,6 +122,16 @@
         </div>
 
         <p class="pricing-assurance" data-reveal>{{ t('pricingPage.trustCancel') }} · {{ t('pricingPage.trustSecure') }}</p>
+
+        <div v-if="landingPreview" class="pricing-preview-notes wrap" data-reveal>
+          <p class="pricing-preview-notes__lead">{{ pricingT('disclaimer') }}</p>
+          <ul class="pricing-preview-notes__list">
+            <li>{{ pricingT('limitsNote') }}</li>
+            <li>{{ pricingT('teacherNote') }}</li>
+            <li>{{ pricingT('institutionNote') }}</li>
+            <li>{{ pricingT('pdfMismatchNote') }}</li>
+          </ul>
+        </div>
       </div>
     </section>
   </div>
@@ -128,6 +143,7 @@ import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
 import { publicRegisterHref } from '../scripts/analytics/registerLinks.js';
+import { bindRevealObserver, mountPreviewPageEnter } from '../composables/usePreviewMotion.js';
 
 function readBillingDisplay() {
   const billing = window.mutqinBilling || {};
@@ -157,8 +173,31 @@ function featureRow(name, value, included = true, highlight = false) {
 
 export default {
   name: 'PricingPage',
-  setup() {
-    const { t } = useI18n();
+  props: {
+    landingPreview: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup(props) {
+    const { t, te } = useI18n();
+    const landingPreview = computed(() => {
+      if (props.landingPreview) {
+        return true;
+      }
+
+      return typeof window !== 'undefined' && window.mutqinLandingPreview === true;
+    });
+    const pricingT = (key) => {
+      if (landingPreview.value) {
+        const previewKey = `pricingPage.preview.${key}`;
+        if (te(previewKey)) {
+          return t(previewKey);
+        }
+      }
+
+      return t(`pricingPage.${key}`);
+    };
     const billingDisplay = readBillingDisplay();
     const currencySymbol = billingDisplay.currencySymbol;
     const annualEnabled = billingDisplay.annualEnabled;
@@ -176,7 +215,9 @@ export default {
 
       return new URL('/checkout', window.location.href).href;
     });
-    let revealObserver = null;
+    const pageRoot = ref(null);
+    let disconnectReveals = () => {};
+    let cleanupPageEnter = () => {};
     const subscriptionTier = computed(() => String(window.mutqinSubscriptionTier || 'free').toLowerCase());
     const hasPaidAccess = computed(() => !!window.mutqinHasPaidAccess);
     const canManageBilling = computed(() => !!window.mutqinCanManageBilling);
@@ -188,17 +229,23 @@ export default {
       setGlobalTheme(getSavedTheme(), { dispatchEvent: false, persist: false });
       currentTheme.value = getSavedTheme();
       window.addEventListener('mutqin:theme-change', handleThemeChange);
-      observeReveals();
+      if (landingPreview.value) {
+        cleanupPageEnter = mountPreviewPageEnter(pageRoot.value);
+      }
+      disconnectReveals = bindRevealObserver({
+        root: pageRoot.value || document,
+        selector: '[data-reveal]',
+        threshold: 0.08,
+        rootMargin: '0px 0px -4% 0px',
+      });
       startCheckoutIfRequested();
       trackAckeeEvent(ACKEE_EVENTS.PRICING_VIEWED);
     });
 
     onUnmounted(() => {
       window.removeEventListener('mutqin:theme-change', handleThemeChange);
-      if (revealObserver) {
-        revealObserver.disconnect();
-        revealObserver = null;
-      }
+      disconnectReveals();
+      cleanupPageEnter();
     });
 
     function handleThemeChange() {
@@ -249,23 +296,6 @@ export default {
         trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
         form.submit();
       }, 0);
-    }
-
-    function observeReveals() {
-      const nodes = document.querySelectorAll('.pricing-page [data-reveal]');
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion) {
-        nodes.forEach((el) => el.classList.add('is-in'));
-        return;
-      }
-      revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-in');
-          revealObserver.unobserve(entry.target);
-        });
-      }, { threshold: 0.08, rootMargin: '0px 0px -4% 0px' });
-      nodes.forEach((el) => revealObserver.observe(el));
     }
 
     function tierPrice(prefix, amounts) {
@@ -422,6 +452,9 @@ export default {
 
     return {
       t,
+      landingPreview,
+      pageRoot,
+      pricingT,
       annualEnabled,
       lifetimeEnabled,
       showBillingSwitch,
@@ -441,3 +474,4 @@ export default {
 
 <style src="../styles/pricing-page.css"></style>
 <style src="./Homepage.css"></style>
+<style src="../styles/preview-motion.css"></style>

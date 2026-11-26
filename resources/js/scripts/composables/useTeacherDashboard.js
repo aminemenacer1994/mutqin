@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { learningApi } from '../api/learning'
 import { classifyRequestFailure } from '../../utils/networkStatus'
 import {
+  TEACHER_ADMIN_NAV,
   TEACHER_CHART_DAY_OPTIONS,
   TEACHER_NAV,
   TEACHER_PROFILE_TABS,
@@ -233,6 +234,16 @@ export function useTeacherDashboard(authRef) {
     }
     if (nextView === 'reviews' && !overview.value) loadOverview()
     if (nextView === 'overview') loadOverview()
+    if (nextView === 'attendance') loadTeacherGroups()
+    if (nextView === 'messages') {
+      loadStudents(1)
+      loadAssignmentRoster()
+      loadOverview()
+    }
+    if (nextView === 'plans') {
+      loadStudents(1)
+      loadAssignmentRoster()
+    }
     if (nextView === 'settings') loadTeacherGroups()
   }
 
@@ -394,8 +405,7 @@ export function useTeacherDashboard(authRef) {
 
   function profileFetchSection(section) {
     if (section === 'revision') return 'focus'
-    if (section === 'plan') return 'overview'
-    if (section === 'guardians') return 'overview'
+    if (section === 'plan' || section === 'attendance' || section === 'guardians') return 'overview'
     return section
   }
 
@@ -774,6 +784,7 @@ export function useTeacherDashboard(authRef) {
 
   return {
     t,
+    TEACHER_ADMIN_NAV,
     TEACHER_NAV,
     TEACHER_PROFILE_TABS,
     TEACHER_CHART_DAY_OPTIONS,

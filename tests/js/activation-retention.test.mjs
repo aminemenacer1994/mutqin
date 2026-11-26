@@ -103,9 +103,9 @@ assert.match(dashboardVue, /open_practice/)
 assert.match(dashboardVue, /dailyMutqinEntryHref/)
 assert.match(dashboardVue, /journey=daily|dailyMutqinHref/)
 assert.match(dashboardVue, /data-testid="dashboard-primary-continue"/)
-assert.match(dashboardVue, /dash-continue-card--daily-mutqin/)
+assert.match(dashboardVue, /<StudentContinueCard[\s\S]*?:action="primaryContinueAction"/)
 {
-  const continueIdx = dashboardVue.indexOf('dash-continue-card')
+  const continueIdx = dashboardVue.indexOf('<StudentContinueCard')
   const historyIdx = dashboardVue.indexOf('dash-history-heading')
   assert.ok(continueIdx >= 0 && historyIdx > continueIdx, 'Daily Mutqin primary continue must sit above learning history')
 }

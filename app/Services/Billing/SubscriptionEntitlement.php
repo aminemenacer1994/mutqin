@@ -3,7 +3,11 @@
 namespace App\Services\Billing;
 
 use App\Models\User;
+use App\Services\Preview\PreviewSandboxService;
 use App\Services\UserAiReciteUsageService;
+use App\Support\PreviewSandbox;
+use App\Support\PreviewSandboxEntitlement;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -38,6 +42,11 @@ class SubscriptionEntitlement
 
     public function getEffectivePlan(User $user): string
     {
+        $request = request();
+        if ($request instanceof Request) {
+            return PreviewSandboxEntitlement::effectiveTier($request, $user);
+        }
+
         return $user->effectiveSubscriptionTier();
     }
 
@@ -48,8 +57,8 @@ class SubscriptionEntitlement
             self::AI_ASSESSMENT => $this->canStartAiAssessment($user),
             self::PREMIUM_TOOLS,
             self::WORD_BY_WORD,
-            self::WEAK_AYAH_INSIGHTS => $user->hasPremiumAccess(),
-            self::PRO_TOOLS, self::OFFLINE_AUDIO => $user->hasProAccess(),
+            self::WEAK_AYAH_INSIGHTS => $this->userHasPremiumAccess($user),
+            self::PRO_TOOLS, self::OFFLINE_AUDIO => $this->userHasProAccess($user),
             self::FIND_AYAH => $this->canStartFindAyah($user),
             default => false,
         };
@@ -57,11 +66,11 @@ class SubscriptionEntitlement
 
     public function canStartFindAyah(User $user): bool
     {
-        if ($user->hasProAccess()) {
+        if ($this->userHasProAccess($user)) {
             return true;
         }
 
-        if (! $user->hasPremiumAccess()) {
+        if (! $this->userHasPremiumAccess($user)) {
             return false;
         }
 
@@ -77,11 +86,11 @@ class SubscriptionEntitlement
 
     public function savedSessionsLimit(User $user): ?int
     {
-        if ($user->hasProAccess()) {
+        if ($this->userHasProAccess($user)) {
             return null;
         }
 
-        if ($user->hasPremiumAccess()) {
+        if ($this->userHasPremiumAccess($user)) {
             return max(0, (int) config('billing.limits.premium.saved_sessions', 10));
         }
 
@@ -113,8 +122,8 @@ class SubscriptionEntitlement
     public function getRemainingUsage(User $user, string $feature): array
     {
         if ($feature === self::FIND_AYAH) {
-            $limit = $user->hasProAccess() ? null : ($user->hasPremiumAccess() ? $this->findAyahDailyLimit($user) : 0);
-            $used = $user->hasPremiumAccess() ? $this->findAyahUsedToday($user) : 0;
+            $limit = $this->userHasProAccess($user) ? null : ($this->userHasPremiumAccess($user) ? $this->findAyahDailyLimit($user) : 0);
+            $used = $this->userHasPremiumAccess($user) ? $this->findAyahUsedToday($user) : 0;
             $remaining = $limit === null ? null : max(0, $limit - $used);
 
             return [
@@ -138,6 +147,11 @@ class SubscriptionEntitlement
             ];
         }
 
+        $sandboxUsage = $this->sandboxAiUsage($user);
+        if ($sandboxUsage !== null) {
+            return $sandboxUsage;
+        }
+
         $snapshot = $this->usage->inspect($user);
 
         return [
@@ -153,11 +167,11 @@ class SubscriptionEntitlement
     public function checkAndConsumeUsage(User $user, string $feature): bool
     {
         if ($feature === self::FIND_AYAH) {
-            if ($user->hasProAccess()) {
+            if ($this->userHasProAccess($user)) {
                 return true;
             }
 
-            if (! $user->hasPremiumAccess()) {
+            if (! $this->userHasPremiumAccess($user)) {
                 return false;
             }
 
@@ -175,6 +189,11 @@ class SubscriptionEntitlement
 
         if (! $this->canStartAiAssessment($user)) {
             return false;
+        }
+
+        $sandbox = PreviewSandbox::resolveSession(request());
+        if ($sandbox !== null) {
+            return app(PreviewSandboxService::class)->consumeAiAssessmentQuota($sandbox);
         }
 
         $snapshot = $this->usage->inspect($user);
@@ -224,7 +243,7 @@ class SubscriptionEntitlement
         return [
             'message' => $this->usage->learnerMessageForReason($reason),
             'reason' => $reason,
-            'upgrade' => $reason === UserAiReciteUsageService::REASON_DAILY && ! $user->hasProAccess(),
+            'upgrade' => $reason === UserAiReciteUsageService::REASON_DAILY && ! $this->userHasProAccess($user),
             'remaining' => $usage['remaining'],
             'limit' => $usage['limit'],
             'resets_at' => $usage['resets_at'],
@@ -232,13 +251,62 @@ class SubscriptionEntitlement
         ];
     }
 
-    private function findAyahDailyLimit(User $user): ?int
+    private function userHasPremiumAccess(User $user): bool
     {
-        if ($user->hasProAccess()) {
+        $request = request();
+        if ($request instanceof Request) {
+            return PreviewSandboxEntitlement::hasPremiumAccess($request, $user);
+        }
+
+        return $user->hasPremiumAccess();
+    }
+
+    private function userHasProAccess(User $user): bool
+    {
+        $request = request();
+        if ($request instanceof Request) {
+            return PreviewSandboxEntitlement::hasProAccess($request, $user);
+        }
+
+        return $user->hasProAccess();
+    }
+
+    /**
+     * @return array{limit: int|null, used: int, remaining: int|null, resets_at: string, allowed: bool, reason: string|null}|null
+     */
+    private function sandboxAiUsage(User $user): ?array
+    {
+        $session = PreviewSandbox::resolveSession(request());
+        if ($session === null) {
             return null;
         }
 
-        if ($user->hasPremiumAccess()) {
+        $service = app(PreviewSandboxService::class);
+        $limit = $service->aiAssessmentQuota();
+        if ($limit === 0) {
+            return null;
+        }
+
+        $used = $session->quotaCount('ai_assessments');
+        $remaining = max(0, $limit - $used);
+
+        return [
+            'limit' => $limit,
+            'used' => $used,
+            'remaining' => $remaining,
+            'resets_at' => $this->resetsAt()->toIso8601String(),
+            'allowed' => $remaining > 0 && $this->canStartAiAssessment($user),
+            'reason' => $remaining === 0 ? UserAiReciteUsageService::REASON_DAILY : null,
+        ];
+    }
+
+    private function findAyahDailyLimit(User $user): ?int
+    {
+        if ($this->userHasProAccess($user)) {
+            return null;
+        }
+
+        if ($this->userHasPremiumAccess($user)) {
             $value = (int) config('billing.limits.premium.find_ayah_per_day', 10);
 
             return $value > 0 ? $value : null;

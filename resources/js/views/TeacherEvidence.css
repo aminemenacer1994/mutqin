@@ -753,3 +753,345 @@ body.teacher-recite-modal-open { overflow: hidden; }
   padding: 0;
   background: transparent;
 }
+
+/* Attendance workspace — full-width register layout */
+.teacher-dashboard .teacher-attendance--workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 1rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem 1rem;
+  width: 100%;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .65rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__toolbar,
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .5rem .75rem;
+  width: 100%;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__toolbar--history {
+  padding: .65rem .75rem;
+  border: 1px solid var(--teacher-line);
+  border-radius: 12px;
+  background: var(--teacher-surface-raised);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__field {
+  display: grid;
+  gap: .2rem;
+  min-width: min(100%, 170px);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__field--grow { flex: 1 1 220px; min-width: min(100%, 220px); }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__field-label {
+  color: var(--teacher-text-soft);
+  font-size: .68rem;
+  font-weight: 650;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__lesson-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0;
+  padding: .35rem .55rem;
+  color: var(--teacher-accent-ink);
+  border: 1px solid color-mix(in srgb, var(--teacher-accent) 35%, var(--teacher-line));
+  border-radius: 999px;
+  background: var(--teacher-accent-soft);
+  font-size: .72rem;
+  font-weight: 650;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__controls {
+  flex-direction: column;
+  align-items: stretch;
+  gap: .55rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__weekbar {
+  width: 100%;
+  flex: none;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__day-strip {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__day-strip button.has-lesson strong {
+  box-shadow: inset 0 -2px 0 var(--teacher-accent);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(3.5rem, auto)) minmax(12rem, 1fr);
+  align-items: end;
+  gap: .45rem .75rem;
+  width: 100%;
+  padding: .55rem .75rem;
+  border: 1px solid var(--teacher-line);
+  border-radius: 12px;
+  background: var(--teacher-surface-raised);
+}
+@media (max-width: 900px) {
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metrics {
+    grid-template-columns: repeat(3, minmax(3.5rem, 1fr));
+  }
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__completion {
+    grid-column: 1 / -1;
+  }
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric {
+  display: grid;
+  gap: .08rem;
+  min-width: 4.5rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong {
+  color: var(--teacher-text);
+  font-size: .95rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong.is-present { color: var(--teacher-positive); }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong.is-absent { color: var(--teacher-danger); }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong.is-late { color: var(--teacher-warning); }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong.is-excused { color: var(--teacher-accent-ink); }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric strong.is-muted,
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric span { color: var(--teacher-text-soft); font-size: .66rem; font-weight: 650; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__completion {
+  flex: 1 1 220px;
+  display: grid;
+  gap: .3rem;
+  align-content: center;
+  min-width: min(100%, 220px);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__completion > span {
+  color: var(--teacher-text-soft);
+  font-size: .68rem;
+  font-weight: 650;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--teacher-surface-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teacher-accent);
+  transition: width .2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__progress i { transition: none; }
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__register {
+  display: grid;
+  gap: .65rem;
+  width: 100%;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__register-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, auto) auto;
+  align-items: end;
+  gap: .45rem .65rem;
+  width: 100%;
+}
+@media (max-width: 720px) {
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__register-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__scroll {
+  width: 100%;
+  max-width: none;
+  overflow: auto;
+  border: 1px solid var(--teacher-line);
+  border-radius: 12px;
+  background: var(--teacher-surface-raised);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register {
+  table-layout: fixed;
+  width: 100%;
+  min-width: min(100%, 720px);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register thead th {
+  padding: .45rem .65rem;
+  color: var(--teacher-text-soft);
+  font-size: .68rem;
+  font-weight: 650;
+  text-align: start;
+  vertical-align: middle;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__col-name { width: 32%; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__col-status { width: 38%; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__col-notes { width: 30%; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register tbody th,
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register tbody td {
+  padding: .5rem .65rem;
+  vertical-align: middle;
+  text-align: start;
+  border-bottom: 1px solid var(--teacher-line);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register tbody tr { min-height: 56px; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register tbody th {
+  display: table-cell;
+  max-width: 0;
+  font-weight: 620;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register tbody td:nth-child(2) {
+  min-width: 0;
+  max-width: 0;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__student {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  width: 100%;
+  min-width: 0;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--teacher-surface-soft);
+  color: var(--teacher-text);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__student-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .8rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__saving {
+  color: var(--teacher-text-soft);
+  font-size: .62rem;
+  font-weight: 650;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--teacher-line);
+  border-radius: 10px;
+  background: var(--teacher-surface-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: .25rem .4rem;
+  color: var(--teacher-text-soft);
+  border: 0;
+  border-inline-end: 1px solid var(--teacher-line);
+  border-radius: 0;
+  background: transparent;
+  font-size: .65rem;
+  font-weight: 650;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button:last-child { border-inline-end: 0; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button.is-active.is-present {
+  color: var(--teacher-positive);
+  background: var(--teacher-positive-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button.is-active.is-absent {
+  color: var(--teacher-danger);
+  background: var(--teacher-danger-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button.is-active.is-late {
+  color: var(--teacher-warning);
+  background: var(--teacher-warning-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button.is-active.is-excused {
+  color: var(--teacher-accent-ink);
+  background: var(--teacher-accent-soft);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button:focus-visible {
+  outline: 3px solid var(--teacher-accent-ink);
+  outline-offset: -2px;
+  z-index: 1;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__notes-col { vertical-align: middle; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__note-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 36px;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .45rem;
+  text-align: start;
+  color: var(--teacher-text-soft);
+  border: 1px solid var(--teacher-line);
+  border-radius: 8px;
+  background: var(--teacher-surface);
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__note-toggle.has-note {
+  color: var(--teacher-text);
+  border-color: color-mix(in srgb, var(--teacher-accent) 35%, var(--teacher-line));
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__note-preview {
+  overflow: hidden;
+  font-size: .68rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__note-preview.is-muted { opacity: .75; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__period-summary {
+  margin: 0 0 .35rem;
+  color: var(--teacher-text-soft);
+  font-size: .72rem;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__history { width: 100%; }
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--history thead th,
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--history tbody td,
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--history tbody th {
+  padding: .45rem .65rem;
+  text-align: start;
+  vertical-align: middle;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__empty {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px dashed var(--teacher-line-strong);
+  border-radius: 12px;
+  text-align: center;
+}
+.teacher-dashboard .teacher-attendance--workspace .teacher-attendance__month-grid { display: grid; gap: .35rem; }
+@media (max-width: 720px) {
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__segmented button {
+    min-width: 44px;
+    padding-inline: .35rem;
+    font-size: .62rem;
+  }
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__table--register { min-width: 100%; }
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metrics { gap: .35rem; }
+  .teacher-dashboard .teacher-attendance--workspace .teacher-attendance__metric { min-width: calc(33% - .35rem); }
+}

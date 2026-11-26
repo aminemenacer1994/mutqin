@@ -704,6 +704,16 @@ export const learningApi = {
     return data?.recommendation ?? null
   },
 
+  async getLearnerAssignment(id) {
+    const { data } = await http.get(`/me/assignments/${id}`)
+    return data.assignment
+  },
+
+  async getLearnerAssignments(params = {}) {
+    const { data } = await http.get('/me/assignments', { params })
+    return data
+  },
+
   async getLearnerSupport() {
     const { data } = await http.get('/me/support', { headers: { 'Cache-Control': 'no-cache' } })
     return data
@@ -825,7 +835,7 @@ export const learningApi = {
     const { data } = await http.post(`/me/teachers/${teacherId}/messages`, { body, client_message_id: createClientMessageId() })
     return data
   },
-  async getLearnerTeacherMessages(teacherId) {
+  async getLearnerTeacherMessages(teacherId, params = {}) {
     const { data } = await http.get(`/me/teachers/${teacherId}/messages`, { headers: { 'Cache-Control': 'no-cache' } })
     return data
   },
@@ -849,6 +859,14 @@ export const learningApi = {
     const payload = { date, status }
     if (notes !== undefined) payload.notes = notes
     const { data } = await http.put(`/teacher/attendance/groups/${groupId}/students/${studentId}`, payload)
+    return data
+  },
+  async bulkTeacherAttendance(groupId, date, status, studentIds) {
+    const { data } = await http.post(`/teacher/attendance/groups/${groupId}/bulk`, {
+      date,
+      status,
+      student_ids: studentIds,
+    })
     return data
   },
   async getTeacherStudent(studentId, section = 'overview') {

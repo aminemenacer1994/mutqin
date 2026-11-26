@@ -4,7 +4,7 @@
     :class="sectionClass"
     :aria-label="hub ? t('dashboard.settings_teachers_title') : t('teacher.learner_teachers_classes_title')"
   >
-    <header v-if="!embedded && !hub" class="teacher-pane__head">
+    <header v-if="!embedded && !hub && !guardiansSection" class="teacher-pane__head">
       <div class="teacher-pane__titles">
         <h2 class="teacher-pane__title">{{ t('ui.connections_my_title') }}</h2>
         <p class="teacher-pane__hint">{{ t('ui.connections_circle_hint') }}</p>
@@ -26,7 +26,7 @@
               :placeholder="t('ui.connections_join_code')"
               :disabled="busy"
             >
-            <button type="submit" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="busy || !inviteCode.trim()">
+            <button type="submit" class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm" :disabled="busy || !inviteCode.trim()">
               {{ invitePreview ? t('ui.connections_continue') : t('ui.connections_join_code_action') }}
             </button>
           </div>
@@ -48,14 +48,14 @@
               <dd>{{ invitePreview.organisation_name }}</dd>
             </div>
           </dl>
-          <p v-if="invitePreview.already_joined" class="teacher-account__error" role="alert">{{ t('ui.connections_already_joined') }}</p>
+          <p v-if="invitePreview.already_joined" class="alert alert-danger" role="alert">{{ t('ui.connections_already_joined') }}</p>
           <div class="learner-circle__actions learner-circle__actions--wrap">
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="busy" @click="clearInvitePreview">
+            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" :disabled="busy" @click="clearInvitePreview">
               {{ t('ui.connections_invite_cancel') }}
             </button>
             <button
               type="button"
-              class="dash-btn dash-btn--primary dash-btn--sm"
+              class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm"
               :disabled="busy || invitePreview.already_joined"
               @click="confirmRedeem"
             >
@@ -65,8 +65,8 @@
         </div>
       </template>
 
-      <p v-if="error" class="teacher-account__error" role="alert">{{ error }}</p>
-      <p v-if="notice" class="teacher-meta" role="status">{{ notice }}</p>
+      <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
+      <p v-if="notice" class="alert alert-success" role="status">{{ notice }}</p>
 
       <div
         v-if="showRelationshipHub && studentInstitution"
@@ -87,7 +87,7 @@
         <ul class="learner-circle__list">
           <li v-for="membership in needsConsent" :key="membership.id" class="learner-circle__guardian">
             <strong>{{ displayClassName(membership.group?.name) }}</strong>
-            <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="busy" @click="grantConsent(membership.id)">
+            <button type="button" class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm" :disabled="busy" @click="grantConsent(membership.id)">
               {{ t('ui.connections_continue') }}
             </button>
           </li>
@@ -98,19 +98,19 @@
         <h3 class="teacher-pane__title learner-circle__subhead">{{ t('ui.connections_relationship_groups_title') }}</h3>
         <p v-if="!relationshipGroups.length" class="teacher-meta">{{ t('ui.connections_empty') }}</p>
         <div v-else class="learner-circle__groups">
-          <section
+          <details
             v-for="group in relationshipGroups"
             :key="group.key"
             class="learner-circle__group"
             :aria-label="groupOrganisationLabel(group)"
           >
-            <header class="learner-circle__group-head">
+            <summary class="learner-circle__group-head">
               <h4>{{ groupOrganisationLabel(group) }}</h4>
               <span
                 class="learner-circle__badge"
                 :class="group.independent ? 'is-muted' : 'is-institution'"
               >{{ group.independent ? t('ui.connections_teacher_independent') : t('ui.connections_teacher_institution') }}</span>
-            </header>
+            </summary>
             <ul v-if="group.classes.length" class="learner-circle__list learner-circle__list--memberships">
               <li v-for="classRow in group.classes" :key="`class-${classRow.id}`" class="learner-circle__membership">
                 <div class="learner-circle__copy">
@@ -123,7 +123,7 @@
                 <button
                   v-if="classRow.canLeave"
                   type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm"
                   :disabled="busy"
                   :title="t('ui.connections_membership_leave_impact')"
                   @click="leaveMembership(classRow.id)"
@@ -140,16 +140,16 @@
                   <p v-if="teacherClassLine(teacher)" class="teacher-meta">{{ teacherClassLine(teacher) }}</p>
                 </div>
                 <div class="learner-circle__actions">
-                  <button v-if="teacher.can_message" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('message', teacher.id)">
+                  <button v-if="teacher.can_message" type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('message', teacher.id)">
                     {{ t('dashboard.circle_message') }}
                   </button>
-                  <button v-if="showLearning" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('learning')">
+                  <button v-if="showLearning" type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('learning')">
                     {{ t('dashboard.circle_open_learning') }}
                   </button>
                 </div>
               </li>
             </ul>
-          </section>
+          </details>
         </div>
       </template>
 
@@ -169,7 +169,7 @@
               <button
                 v-if="membership.can_leave"
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
+                class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm"
                 :disabled="busy"
                 :title="t('ui.connections_membership_leave_impact')"
                 @click="leaveMembership(membership.id)"
@@ -197,10 +197,10 @@
               </p>
             </div>
             <div class="learner-circle__actions">
-              <button v-if="teacher.can_message" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('message', teacher.id)">
+              <button v-if="teacher.can_message" type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('message', teacher.id)">
                 {{ t('dashboard.circle_message') }}
               </button>
-              <button v-if="showLearning" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('learning')">
+              <button v-if="showLearning" type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('learning')">
                 {{ t('dashboard.circle_open_learning') }}
               </button>
             </div>
@@ -221,10 +221,10 @@
                 </p>
               </div>
               <span class="learner-circle__actions">
-                <button type="button" class="dash-btn dash-btn--secondary dash-btn--sm" :disabled="busy" @click="rejectGuardian(guardian.id)">
+                <button type="button" class="dash-btn dash-btn--secondary dash-btn--sm btn btn-outline-secondary btn-sm" :disabled="busy" @click="rejectGuardian(guardian.id)">
                   {{ t('ui.connections_reject_guardian') }}
                 </button>
-                <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" :disabled="busy" @click="approveGuardian(guardian.id)">
+                <button type="button" class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm" :disabled="busy" @click="approveGuardian(guardian.id)">
                   {{ t('ui.connections_approve_guardian') }}
                 </button>
               </span>
@@ -254,7 +254,7 @@
       </template>
 
       <p v-if="compact" class="learner-circle__compact-meta teacher-meta">{{ compactSummary }}</p>
-      <button v-if="compact" type="button" class="dash-btn dash-btn--secondary dash-btn--sm" @click="$emit('open-settings')">
+      <button v-if="compact" type="button" class="dash-btn dash-btn--secondary dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('open-settings')">
         {{ t('ui.connections_settings_manage') }}
       </button>
     </div>

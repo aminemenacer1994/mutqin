@@ -24,7 +24,9 @@ assert.match(learner, /next_milestone/, 'Student receives one persisted next mil
 assert.match(plan, /plan_completion_criteria/, 'Teacher sees measurable completion criteria')
 assert.match(learner, /learner-my-plan__facts/, 'Student plan uses a compact progress summary')
 assert.match(plan, /teacher-plan-card__stats/, 'Teacher plan uses the same compact progress summary')
-assert.match(learnerStyles, /Plus Jakarta Sans/, 'Learner workspace matches the teacher platform typeface')
+assert.match(plan, /teacher-table--plans/, 'Learning plans list uses a structured table layout')
+assert.match(plan, /teacher-table--plan-items/, 'Plan detail activities use a table layout')
+assert.match(learnerStyles, /font-family: inherit/, 'Learner plan inherits the shared workspace typeface')
 assert.match(learnerStyles, /grid-template-columns: minmax\(0, 1fr\) !important/, 'Progress review panels use a balanced single-column workspace')
 assert.match(teacherStyles, /teacher-plan-card__stats/, 'Teacher plan summary styles are present')
 

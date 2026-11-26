@@ -67,6 +67,20 @@ final class AssignmentListeningSettings
             }
         }
 
+        $progressive = AssignmentProgressiveHidingSettings::sanitize(
+            is_array($input['progressive_hiding'] ?? null) ? $input['progressive_hiding'] : null
+        );
+        if ($progressive !== null) {
+            $clean['progressive_hiding'] = $progressive;
+        }
+
+        $merged = AssignmentProgressiveHidingSettings::mergeListeningSettings($clean);
+        if (! $merged['ok']) {
+            unset($merged['session_settings']['progressive_hiding']);
+        }
+
+        $clean = $merged['session_settings'];
+
         return $clean === [] ? null : $clean;
     }
 
@@ -92,7 +106,7 @@ final class AssignmentListeningSettings
             $params[$key] = $value;
         }
 
-        return $params;
+        return AssignmentProgressiveHidingSettings::mergeIntoMemorisationQuery($settings, $params);
     }
 
     public static function reciterLabel(?string $reciterId): ?string

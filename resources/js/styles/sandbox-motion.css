@@ -1,0 +1,88 @@
+/**
+ * Group J4 — motion inside the live demo sandbox (toolbar, role switch, dashboards).
+ * Reuses Group I tokens from preview-motion.css where loaded on marketing pages.
+ */
+
+html.mutqin-preview-sandbox-active {
+  --motion-instant: 100ms;
+  --motion-press: 140ms;
+  --motion-hover: 200ms;
+  --motion-dropdown: 240ms;
+  --motion-tab: 320ms;
+  --motion-product: 480ms;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar {
+  animation: sandbox-toolbar-enter var(--motion-product) var(--motion-ease-enter) both;
+}
+
+html.mutqin-preview-sandbox-active .teacher-view-stage {
+  animation: sandbox-view-enter var(--motion-tab) var(--motion-ease-out) both;
+}
+
+html.mutqin-preview-sandbox-active .modal.fade .modal-dialog {
+  transition: transform var(--motion-product) var(--motion-ease-enter), opacity var(--motion-hover) var(--motion-ease-out);
+}
+
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__select,
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__btn,
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__cta {
+  transition:
+    transform var(--motion-press) var(--motion-ease-out),
+    background var(--motion-hover) var(--motion-ease-out),
+    border-color var(--motion-hover) var(--motion-ease-out),
+    box-shadow var(--motion-hover) var(--motion-ease-out);
+}
+
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__btn:active,
+html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__cta:active {
+  transform: scale(0.98);
+}
+
+html[data-sandbox-guided="1"].mutqin-preview-sandbox-active .mutqin-preview-toolbar__badge {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #d4a574 55%, transparent);
+}
+
+html.mutqin-preview-sandbox-active[data-theme] {
+  transition:
+    color var(--motion-tab) var(--motion-ease-in-out, cubic-bezier(0.45, 0, 0.2, 1)),
+    background-color var(--motion-tab) var(--motion-ease-in-out, cubic-bezier(0.45, 0, 0.2, 1));
+}
+
+@keyframes sandbox-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sandbox-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.mutqin-preview-sandbox-active .mutqin-preview-toolbar,
+  html.mutqin-preview-sandbox-active .teacher-view-stage {
+    animation: none;
+  }
+
+  html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__select,
+  html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__btn,
+  html.mutqin-preview-sandbox-active .mutqin-preview-toolbar__cta,
+  html.mutqin-preview-sandbox-active .modal.fade .modal-dialog {
+    transition: none;
+  }
+}

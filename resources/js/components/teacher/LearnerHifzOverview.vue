@@ -4,7 +4,7 @@
     :class="embedded ? 'learner-hifz-overview--embedded' : 'teacher-pane'"
     :aria-label="t('dashboard.hifz_overview_title')"
   >
-    <header v-if="embedded" class="learner-circle__subhead-wrap">
+    <header v-if="embedded" class="teacher-pane__head learner-circle__subhead-wrap">
       <h3 class="teacher-pane__title learner-circle__subhead">{{ t('dashboard.hifz_overview_title') }}</h3>
       <p class="teacher-meta">{{ t('dashboard.hifz_overview_hint') }}</p>
     </header>
@@ -18,7 +18,7 @@
     <div v-else class="teacher-hifz__summary">
       <section class="teacher-hifz__summary-section">
         <header>
-          <span class="teacher-hifz__label">{{ t('dashboard.student_stage_new') }}</span>
+          <span class="teacher-meta">{{ t('dashboard.student_stage_new') }}</span>
           <span v-if="sabaqCount" class="teacher-hifz__count">{{ sabaqCount }}</span>
         </header>
         <p class="teacher-hifz__quiet">{{ t('teacher.hifz_sabaq_help') }}</p>
@@ -26,7 +26,7 @@
       </section>
       <section class="teacher-hifz__summary-section">
         <header>
-          <span class="teacher-hifz__label">{{ t('dashboard.student_stage_recent') }}</span>
+          <span class="teacher-meta">{{ t('dashboard.student_stage_recent') }}</span>
           <span v-if="sabqiCount" class="teacher-hifz__count">{{ sabqiCount }}</span>
         </header>
         <p class="teacher-hifz__quiet">{{ t('teacher.hifz_sabqi_help') }}</p>
@@ -34,7 +34,7 @@
       </section>
       <section class="teacher-hifz__summary-section">
         <header>
-          <span class="teacher-hifz__label">{{ t('dashboard.student_stage_older') }}</span>
+          <span class="teacher-meta">{{ t('dashboard.student_stage_older') }}</span>
           <span v-if="manzilCount" class="teacher-hifz__count">{{ manzilCount }}</span>
         </header>
         <p class="teacher-hifz__quiet">{{ t('teacher.hifz_manzil_help') }}</p>
@@ -46,7 +46,7 @@
       {{ t('dashboard.progress_validated') }}: {{ validatedCount }}
       <span class="teacher-kicker">{{ t('dashboard.progress_teacher_confirmed') }}</span>
     </p>
-    <button type="button" class="dash-text-link learner-hifz-overview__more" @click="$emit('open-progress')">
+    <button type="button" class="btn btn-link learner-hifz-overview__more" @click="$emit('open-progress')">
       {{ t('dashboard.hifz_overview_open_progress') }}
     </button>
   </section>

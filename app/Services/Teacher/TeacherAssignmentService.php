@@ -29,6 +29,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
 use App\Support\AssignmentDisplayStatus;
 use App\Support\AssignmentListeningSettings;
+use App\Support\AssignmentProgressiveHidingSettings;
 use App\Support\AssignmentRecipientLifecycle;
 use App\Support\LearnerCompletionAttempt;
 use App\Support\TeacherOverviewCache;
@@ -1204,6 +1205,86 @@ class TeacherAssignmentService
     }
 
     /**
+     * Compact Progressive Mushaf Hiding summary for teacher review (practice completion only).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function memorisationPracticeSummary(
+        TeacherAssignmentRecipient $recipient,
+        ?Collection $completedSessions = null,
+    ): ?array {
+        $assignment = $recipient->assignment;
+        if ($assignment === null) {
+            return null;
+        }
+        $settings = is_array($assignment->session_settings) ? $assignment->session_settings : null;
+        if (! AssignmentProgressiveHidingSettings::isEnabled($settings)) {
+            return null;
+        }
+
+        $sessions = $completedSessions ?? UserSession::query()
+            ->where('user_id', (int) $recipient->student_id)
+            ->where('teacher_assignment_recipient_id', $recipient->id)
+            ->where('is_onboarding_example', false)
+            ->where('status', UserSessionStatus::Completed->value)
+            ->orderBy('completed_at')
+            ->get();
+
+        $blurSessions = $sessions->filter(function (UserSession $session) {
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+            if (! empty($config['blurModeEnabled']) || ! empty($meta['blurModeEnabled'])) {
+                return true;
+            }
+            $completion = is_array($meta['final_settings'] ?? null) ? $meta['final_settings'] : [];
+            if (! empty($completion['blur_enabled'])) {
+                return true;
+            }
+
+            return false;
+        });
+
+        if ($blurSessions->isEmpty()) {
+            return [
+                'configured' => true,
+                'session_count' => 0,
+                'practice_complete' => false,
+                'ai_assessment' => null,
+                'disclaimer' => 'practice_completion',
+            ];
+        }
+
+        $repetitionTotal = 0;
+        foreach ($blurSessions as $session) {
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $repetitionTotal += max(0, (int) ($meta['repetitions_completed'] ?? $meta['successful_repeats'] ?? 0));
+        }
+
+        $latestAttempt = AiReciteAttempt::query()
+            ->validScored()
+            ->where('user_id', (int) $recipient->student_id)
+            ->where('teacher_assignment_recipient_id', $recipient->id)
+            ->latest('created_at')
+            ->latest('id')
+            ->first();
+
+        return [
+            'configured' => true,
+            'session_count' => $blurSessions->count(),
+            'repetitions_recorded' => $repetitionTotal,
+            'hints' => null,
+            'reveals' => null,
+            'practice_complete' => $blurSessions->count() > 0,
+            'ai_assessment' => $latestAttempt ? [
+                'accuracy_percent' => (int) $latestAttempt->accuracy_percent,
+                'scored' => true,
+            ] : null,
+            'teacher_verification' => null,
+            'disclaimer' => 'practice_completion',
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function comparison(TeacherAssignment $assignment, int $studentId): array
@@ -1313,6 +1394,7 @@ class TeacherAssignmentService
                 $scoredAttempts,
                 $unfinishedSessions,
             );
+            $payload['memorisation_summary'] = $this->memorisationPracticeSummary($recipient, $completedSessions);
             $payload['assignment_state'] = $this->assignmentWorkflowState($status, $payload['review_state']);
             $payload['workflow_state'] = $this->learnerWorkflowState($recipient, $status, $payload['review_state'], $payload['progress']);
             $payload['ai_practice_state'] = $this->aiPracticeState($assignment, $payload['progress'], $recipient);
@@ -1396,8 +1478,15 @@ class TeacherAssignmentService
             'due_at' => $assignment->due_at?->toIso8601String(),
             'priority' => RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value,
             'feedback' => $assignment->feedback,
-            'session_settings' => AssignmentListeningSettings::present(
-                is_array($assignment->session_settings) ? $assignment->session_settings : null
+            'session_settings' => array_merge(
+                AssignmentListeningSettings::present(
+                    is_array($assignment->session_settings) ? $assignment->session_settings : null
+                ),
+                [
+                    'progressive_hiding' => AssignmentProgressiveHidingSettings::present(
+                        is_array($assignment->session_settings) ? $assignment->session_settings : null
+                    ),
+                ]
             ),
             'source_attempt_id' => $assignment->source_ai_recite_attempt_id ? (int) $assignment->source_ai_recite_attempt_id : null,
             'learning_group_id' => $assignment->learning_group_id ? (int) $assignment->learning_group_id : null,

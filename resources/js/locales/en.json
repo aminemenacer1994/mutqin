@@ -713,6 +713,194 @@
         }
       },
       "stepOf": "Step {current} of {total}"
+    },
+    "preview": {
+      "bannerLabel": "Mutqin 2.0 preview",
+      "bannerDetail": "Private draft for review. The public homepage is unchanged.",
+      "hero": {
+        "title": "Qur'an learning for your class, your family, and your own practice",
+        "desc": "Mutqin connects teachers, students and parents on one account. Assign work, hear recitation, and keep personal memorisation in the same calm workspace.",
+        "mobileDesc": "One Mutqin account for class learning and personal memorisation.",
+        "audience": "For halaqas, madrasas, families and learners practising on their own.",
+        "startFree": "Start memorising, free",
+        "startFirstSession": "Open memorisation",
+        "seeFirstSession": "Compare Individual Premium",
+        "pillars": {
+          "class": "Teacher-led class",
+          "memorise": "Memorise and revise",
+          "parents": "Parent visibility",
+          "personal": "AI recitation check"
+        }
+      },
+      "heroShowcase": {
+        "tabsLabel": "Choose whose workspace to preview",
+        "roles": {
+          "teacher": {
+            "label": "Teacher",
+            "caption": "Overview shows class size, open assignments and who needs attention today.",
+            "alt": "Teacher dashboard with today's priorities"
+          },
+          "student": {
+            "label": "Student",
+            "caption": "Students open assignments, see due dates and submit practice from the same account.",
+            "alt": "Student assignment detail with practice progress"
+          },
+          "parent": {
+            "label": "Parent",
+            "caption": "After accepting an invitation, parents follow progress without a separate family product.",
+            "alt": "Parents and guardians invitation tab"
+          },
+          "personal": {
+            "label": "Personal",
+            "caption": "Personal learning stays on the same login with Mushaf and memorisation tools.",
+            "alt": "Memorisation workspace on phone"
+          }
+        }
+      },
+      "workflow": {
+        "kicker": "Connected workflow",
+        "title": "How a class assignment moves through Mutqin",
+        "subtitle": "These screens are from real teacher and learner sessions. Step through manually or press play.",
+        "controls": {
+          "play": "Play",
+          "pause": "Pause",
+          "prev": "Previous",
+          "next": "Next",
+          "replay": "Replay",
+          "progress": "Workflow demonstration progress"
+        },
+        "steps": {
+          "assign": {
+            "platform": "Teacher workspace",
+            "title": "Teacher creates an assignment",
+            "body": "Choose the student, passage, due date and required practice attempts.",
+            "alt": "New assignment form"
+          },
+          "receive": {
+            "platform": "Student workspace",
+            "title": "Student sees the task",
+            "body": "Assignments appear in the list with status, due date and any recording notes.",
+            "alt": "Assignments list for the class"
+          },
+          "practise": {
+            "platform": "Student workspace",
+            "title": "Student practises and submits",
+            "body": "They practise the passage, then submit when the assignment asks for it.",
+            "alt": "Memorisation practice session"
+          },
+          "aiCheck": {
+            "platform": "AI assistance",
+            "title": "AI highlights wording for review",
+            "body": "Word match colours help the teacher see what still needs a human listen.",
+            "alt": "Recitation review with wording match colours"
+          },
+          "feedback": {
+            "platform": "Teacher workspace",
+            "title": "Teacher reviews and messages",
+            "body": "Complete the review and leave short written feedback in the private thread.",
+            "alt": "Teacher-student message thread"
+          },
+          "progress": {
+            "platform": "Student and parent",
+            "title": "Progress becomes visible",
+            "body": "Confirmed results and guardian access appear once the teacher has finished the review.",
+            "alt": "Parents and guardians progress view"
+          }
+        }
+      },
+      "ecosystem": {
+        "kicker": "One learning network",
+        "title": "Built for the whole journey",
+        "subtitle": "Every role uses the same Mutqin account model. Essential teacher-led learning stays free; Individual Premium is optional for deeper personal tools.",
+        "accountNote": "Independent Premium is a subscription on your existing login, not a separate product or role.",
+        "roles": {
+          "teacher": {
+            "title": "Teachers",
+            "body": "See who needs attention, assign revision or hifz, review submissions and message students from one dashboard."
+          },
+          "student": {
+            "title": "Students",
+            "body": "Open assignments, practise the set passage, submit recordings when asked, and read teacher feedback in context."
+          },
+          "parent": {
+            "title": "Parents and guardians",
+            "body": "Accept an invitation, then follow progress and message the teacher without a second family account."
+          },
+          "personal": {
+            "title": "Personal learning",
+            "body": "Memorise and revise alone with Mushaf, audio and AI wording checks on the same account."
+          },
+          "institution": {
+            "title": "Institutions",
+            "body": "Support staff invites and class structure where your organisation already uses Mutqin."
+          }
+        }
+      },
+      "demo": {
+        "kicker": "Try it safely",
+        "title": "Try the demo sandbox",
+        "subtitle": "Pick Teacher, Student, Parent or Personal learning with real app screenshots.",
+        "cta": "Try Mutqin for yourself"
+      },
+      "resources": {
+        "cta": "Reviewer resources"
+      },
+      "classroom": {
+        "kicker": "From the live app",
+        "title": "What teachers see today",
+        "subtitle": "Screens below are taken from the Mutqin teacher dashboard. They show real layouts, not mock-ups.",
+        "heroShotAlt": "Mutqin teacher overview with class priorities and recent submissions",
+        "authenticCaption": "Captured from a local teacher session, November 2026. Names and figures reflect that environment.",
+        "spotlights": {
+          "overview": {
+            "title": "Start with today's priorities",
+            "body": "Overview surfaces recitations waiting, overdue assignments and students who need a nudge before class.",
+            "alt": "Teacher overview dashboard with priorities and recent activity"
+          },
+          "assignments": {
+            "title": "Assign revision or hifz in a few fields",
+            "body": "Choose the student, surah range, due date and practice attempts. Teachers can preview the recommended reciter before sending.",
+            "alt": "New assignment form with surah range and due date"
+          },
+          "review": {
+            "title": "Review recitation word by word",
+            "body": "Open a submission to see wording match, flagged words and teacher confirmation before you complete the review.",
+            "alt": "Recitation review with colour-coded Mushaf and match statistics"
+          },
+          "parents": {
+            "title": "Invite parents when you are ready",
+            "body": "Send a guardian email from the student profile. Parents get their own access to progress and messages after they accept.",
+            "alt": "Parents and guardians tab with invitation form"
+          }
+        }
+      },
+      "access": {
+        "available": {
+          "detail": "Create a free account to begin. Individual Premium is optional and stays on the same login.",
+          "mobileDetail": "Free core learning; Premium is optional"
+        }
+      },
+      "practiceTypes": {
+        "subtitle": "Learn new ayahs, keep earlier ones firm, and check them aloud. Core practice stays free on your account."
+      },
+      "focused_quran_memorisation_tools_for_recitation_ch": "Personal Qur'an memorisation and revision in one account, with optional Individual Premium for deeper practice history.",
+      "footer": {
+        "tagline": "Built for calm, consistent Qur'an practice."
+      },
+      "faq": {
+        "items": {
+          "whatIsMutqin": {
+            "answer": "Mutqin is a Qur'an memorisation companion on one account. It helps you listen, practise, recite and return between lessons. Teacher-led learning stays free when your teacher uses Mutqin."
+          },
+          "freeAccess": {
+            "question": "What stays free on my account?",
+            "answer": "Memorisation, revision, and teacher-linked assignments stay free. Individual Premium adds more recitation checks and saved history if you choose it later."
+          },
+          "whoFor": {
+            "answer": "Anyone memorising or revising the Qur'an on their own, and students connected to a teacher or parent through the same Mutqin account."
+          }
+        }
+      }
     }
   },
   "memorisation": {
@@ -4605,9 +4793,722 @@
     "reliable_revision": "Reliable review",
     "cleaner_decisions": "Clearer choices"
   },
+  "previewTeachers": {
+    "nav": {
+      "back": "Back to preview home",
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents"
+    },
+    "hero": {
+      "kicker": "For teachers and halaqas",
+      "title": "See your class clearly, then act",
+      "subtitle": "The teacher dashboard shows who needs help, what is due, and which recitations are waiting for your ear."
+    },
+    "capabilities": {
+      "title": "What you can do today",
+      "items": {
+        "priorities": {
+          "title": "Today's priorities",
+          "body": "Overview lists recitations to review, overdue work, and students who need attention before your next lesson."
+        },
+        "assignments": {
+          "title": "Assignments with context",
+          "body": "Set hifz, revision or nazra with a surah range, due date, required practice attempts, and an optional reciter preview before you send."
+        },
+        "learningPlan": {
+          "title": "Learning plans",
+          "body": "Build weekly or term plans with activities and goals where your programme uses structured hifz planning in Mutqin."
+        },
+        "reviews": {
+          "title": "Human review on top of AI",
+          "body": "Open a submission to hear the recording, see wording match, and confirm or dismiss flags before you finish the review."
+        },
+        "guardians": {
+          "title": "Parent invitations",
+          "body": "Invite a guardian from the student profile when you want them to follow progress without another login for you."
+        }
+      }
+    },
+    "spotlights": {
+      "primary": {
+        "asset": "overview",
+        "title": "A calm start to the day",
+        "body": "Metrics link through to students, assignments and reviews so you are not hunting through menus.",
+        "alt": "Teacher overview with class metrics and next actions"
+      },
+      "secondary": {
+        "asset": "review-detail",
+        "title": "Confirm flags before you finish",
+        "body": "See wording match on the Mushaf, hear when a recording exists, and confirm or dismiss AI suggestions before you complete the review.",
+        "alt": "Recitation review with colour-coded Mushaf and match statistics"
+      }
+    },
+    "footnote": "Teacher-led learning stays free on Mutqin. You enable it for your class when you invite students.",
+    "authenticCaption": "Screens from the teacher app, captured locally in November 2026."
+  },
+  "previewStudents": {
+    "nav": {
+      "back": "Back to preview home",
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents"
+    },
+    "hero": {
+      "kicker": "For connected students",
+      "title": "Know what is due and what to practise",
+      "subtitle": "Assignments, submission rules, and teacher feedback stay in one student dashboard on the same Mutqin account."
+    },
+    "capabilities": {
+      "title": "How class work flows",
+      "items": {
+        "assignments": {
+          "title": "Clear assignment states",
+          "body": "See whether work is not started, in progress, awaiting review, needs revision, or complete, with the real deadline visible."
+        },
+        "practice": {
+          "title": "Practise the set passage",
+          "body": "Open the assigned surah and ayahs in the workspace, complete required practice attempts, and submit when the task allows it."
+        },
+        "feedback": {
+          "title": "Feedback in context",
+          "body": "Read teacher notes, listen to audio feedback, and see what to fix before you resubmit."
+        },
+        "messages": {
+          "title": "Messages with your teacher",
+          "body": "Use quick replies or write a short note when you need clarification on an assignment."
+        }
+      }
+    },
+    "spotlights": {
+      "primary": {
+        "asset": "assignment-detail",
+        "title": "One place for requirements",
+        "body": "The assignment modal shows practice attempts, submission history, and whether a recording was attached.",
+        "alt": "Assignment detail showing practice attempts and submission"
+      },
+      "secondary": {
+        "asset": "reviews",
+        "title": "After you submit",
+        "body": "Recitation checks queue for teacher review. You see wording match when it is available, not as a Tajweed certificate.",
+        "alt": "Recitation history list with wording match scores"
+      }
+    },
+    "footnote": "Students need a class connection and consent where your teacher or institution requires it.",
+    "authenticCaption": "Screens from the connected student flow, November 2026."
+  },
+  "previewParents": {
+    "nav": {
+      "back": "Back to preview home",
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents"
+    },
+    "hero": {
+      "kicker": "For parents and guardians",
+      "title": "Follow progress without running the class",
+      "subtitle": "Accept an invitation from your child's teacher, then see homework, memorisation and messages within the permissions they set."
+    },
+    "capabilities": {
+      "title": "What guardians get",
+      "items": {
+        "invite": {
+          "title": "Invitation by email",
+          "body": "Teachers send a guardian link from the student profile. You create or sign in to Mutqin, then approve the connection."
+        },
+        "progress": {
+          "title": "Progress in plain view",
+          "body": "See recent activity and assignment status for linked children without editing their work."
+        },
+        "messages": {
+          "title": "Message the teacher",
+          "body": "Ask questions in the same thread your child uses for class communication, with safeguarding rules applied."
+        },
+        "consent": {
+          "title": "Consent and privacy",
+          "body": "Approvals and class consent gates control what teachers can see. Revoke access if the link should stop working."
+        }
+      }
+    },
+    "spotlights": {
+      "primary": {
+        "asset": "parents",
+        "title": "Invite when you are ready",
+        "body": "The teacher enters a guardian email, sends the invite, and sees pending or linked parents in one list.",
+        "alt": "Parents and guardians tab with invitation form"
+      },
+      "secondary": {
+        "asset": "messages",
+        "title": "Stay in the loop",
+        "body": "Private messages between teacher and student stay separate from your parent view, but you can message about class work.",
+        "alt": "Teacher and student messages with quick replies"
+      }
+    },
+    "footnote": "Parent access is free. It does not require Individual Premium on the child's account.",
+    "authenticCaption": "Screens from parent and guardian flows, November 2026."
+  },
+  "previewResources": {
+    "nav": {
+      "back": "Back to preview home"
+    },
+    "hero": {
+      "kicker": "Reviewer kit",
+      "title": "Resources for the private preview",
+      "subtitle": "Editorial links, repository documentation pointers and gated downloads. Nothing here is indexed or public."
+    },
+    "pages": {
+      "title": "Preview pages",
+      "items": {
+        "home": "Preview home",
+        "homeNote": "Ecosystem narrative and authentic teacher UI captures",
+        "pricing": "Pricing (aligned to config)",
+        "pricingNote": "Commercial notes vs business PDF proposals",
+        "teachers": "Teachers",
+        "learning": "Personal learning",
+        "institutions": "Institutions",
+        "demo": "Labelled demo sandbox"
+      }
+    },
+    "docs": {
+      "title": "Documentation in this repository",
+      "progress": "Groups A–G status, reconciliation tables and test commands",
+      "audit": "Product behaviour matrix used for marketing claims",
+      "demoDoc": "How synthetic personas and banners work",
+      "manifest": "Teacher screenshot basenames under /preview/assets"
+    },
+    "downloads": {
+      "title": "Downloads (preview gate)",
+      "businessModel": "Mutqin 2.0 Business Model PDF",
+      "businessPlan": "Mutqin 2.0 Business Plan PDF",
+      "proposedOnly": "Illustrative commercial proposals — verify against config before launch"
+    },
+    "quality": {
+      "title": "Responsive and accessibility pass",
+      "intro": "Preview marketing CSS targets 390–1440px widths, light/sepia/dark themes, and landmarks on audience pages.",
+      "items": [
+        "No horizontal overflow: homepage--preview uses overflow-x clip; preview-browser images are width 100%",
+        "Focus: ecosystem and audience nav links use focus-visible styles from preview CSS",
+        "Landmarks: audience, demo and resources pages expose main#main-content",
+        "Breakpoints checked: 390, 768, 1280, 1440 (see landing-preview-responsive-audit.cjs when a server is running)"
+      ]
+    }
+  },
+  "previewDemo": {
+    "nav": {
+      "back": "Back to preview home"
+    },
+    "hero": {
+      "title": "Try Mutqin for yourself",
+      "subtitle": "Choose an experience and explore how Mutqin works."
+    },
+    "experiences": {
+      "label": "Experiences",
+      "teacher": {
+        "label": "Teacher",
+        "summary": "Class overview, assignments and reviews",
+        "body": "Walk through the teacher dashboard with synthetic pupils, open assignments, hear recitations and message learners.",
+        "previewAsset": "/preview/assets/overview-priorities.png",
+        "shotAlt": "Mutqin teacher overview with class priorities"
+      },
+      "student": {
+        "label": "Student",
+        "summary": "Assignments and practice on a connected account",
+        "body": "See the learner workspace: assignments, practice rules, teacher feedback and progress for one demo pupil.",
+        "previewAsset": "/preview/assets/students.png",
+        "shotAlt": "Mutqin student list in the teacher dashboard"
+      },
+      "parent": {
+        "label": "Parent",
+        "summary": "Guardian progress and messaging",
+        "body": "View linked learners, follow progress and read teacher messages from a demo guardian account.",
+        "previewAsset": "/preview/assets/parents.png",
+        "shotAlt": "Parents and guardians tab in Mutqin"
+      },
+      "personal": {
+        "label": "Personal learning",
+        "summary": "Memorise and revise on your own",
+        "body": "Try session setup, listen and repeat, and AI wording checks. Progress stays in this browser until you leave.",
+        "previewAsset": "/images/landing/2026-11-session-setup.jpg",
+        "shotAlt": "Memorisation session setup"
+      },
+      "connected": {
+        "label": "Full classroom loop",
+        "summary": "Teacher, student, and parent in one flow",
+        "body": "Walk through assignment creation, learner practice, teacher review, and guardian visibility with shared demo data.",
+        "previewAsset": "/preview/assets/overview-priorities.png",
+        "shotAlt": "Connected teacher, student, and parent demo"
+      }
+    },
+    "launch": {
+      "modeLegend": "How to explore",
+      "explore": "Explore freely",
+      "exploreHint": "Open the real app and move at your own pace.",
+      "guided": "Guided experience",
+      "guidedHint": "Keep short tips visible from the demo toolbar.",
+      "cta": "Launch demo",
+      "seedRequired": "Seed demo data locally first",
+      "footnote": "Synthetic data only. Your preview allowlist login stays separate from demo accounts."
+    },
+    "toolbar": {
+      "region": "Demo sandbox",
+      "demoMode": "Demo mode",
+      "switchLabel": "Switch experience",
+      "guidedOn": "Guided on",
+      "guidedOff": "Guided off",
+      "guidedNote": "Guided tips are on. Use Restart walkthrough to begin again from step one.",
+      "restart": "Restart walkthrough",
+      "reset": "Reset demo",
+      "resetConfirm": "Reset this sandbox session? Timers and guided tips will clear. Your preview account subscription is not changed.",
+      "resetRestoreConfirm": "Also restore the synthetic classroom from seed data? This reverts demo assignments and progress you changed during this session.",
+      "entitlementLabel": "Preview plan tier",
+      "tierFree": "Free (demo)",
+      "tierPremium": "Premium (demo)",
+      "tierPremiumPlus": "Premium Plus (demo)",
+      "exit": "Exit demo",
+      "getStarted": "Get started",
+      "more": "More",
+      "expiresSoon": "Session ends in {minutes} min"
+    },
+    "conversion": {
+      "region": "Ready to use Mutqin for real",
+      "accountNote": "Premium unlocks extra personal learning tools on the same account. Teacher-led student and parent access stay free.",
+      "viewPlans": "View plans",
+      "continueExploring": "Keep exploring the demo",
+      "planCompareTitle": "Compare plans (optional)",
+      "headline": {
+        "teacher": "You have seen the classroom workflow",
+        "student": "You have seen the learner experience",
+        "parent": "You have seen guardian visibility",
+        "personal": "You have tried personal practice"
+      },
+      "body": {
+        "teacher": "Create your class, assign surah ranges, and review recitations with the same tools you used in this demo.",
+        "student": "Keep assignments, practice rules, and teacher feedback on a real learner account, or join your teacher’s class with an invite.",
+        "parent": "Accept a teacher invitation to follow your child’s progress and messages on a dedicated parent account.",
+        "personal": "Save sessions, sync progress, and unlock deeper analytics when you register — guest practice in the demo does not persist."
+      },
+      "cta": {
+        "teacher": "Start managing your students",
+        "student": "Start learning or join your teacher",
+        "parent": "Connect with your child’s teacher",
+        "personal": "Start learning for free"
+      },
+      "planCompare": {
+        "teacher": [
+          "Free: your class, assignments, reviews, and parent invites.",
+          "Premium / Premium Plus: mainly personal memorisation tools on your account — not a separate teacher product.",
+          "Student and parent access for your class stays free."
+        ],
+        "student": [
+          "Free: connected learning with your teacher’s assignments.",
+          "Premium: optional personal memorisation extras on the same login.",
+          "No paywall to join a teacher-led class."
+        ],
+        "parent": [
+          "Free: guardian view after you accept a teacher invite.",
+          "Premium: personal learning add-ons for parents who also memorise on their own.",
+          "Child progress with their teacher is not a paid feature."
+        ],
+        "personal": [
+          "Free: core memorisation workspace with sensible limits.",
+          "Premium: more AI checks and personal analytics on one account.",
+          "Classroom teacher/student features stay separate and free where connected."
+        ]
+      }
+    },
+    "exit": {
+      "dialogLabel": "Leave the sandbox demo",
+      "title": "Leave demo",
+      "subtitle": "Your preview account stays signed in. Synthetic demo users are cleared.",
+      "continueExploring": "Continue exploring",
+      "restartDemo": "Return to demo hub",
+      "viewPlans": "View relevant plans",
+      "startRegistration": "Start registration",
+      "returnLanding": "Return to preview landing",
+      "returnHub": "End demo and open demo hub",
+      "close": "Close"
+    },
+    "walkthrough": {
+      "region": "Guided demo tips",
+      "dialogLabel": "Interactive guided tour",
+      "progress": "Step {current} of {total}",
+      "skip": "Skip tour",
+      "pause": "Pause",
+      "resume": "Resume",
+      "back": "Back",
+      "continue": "Continue",
+      "done": "Done",
+      "targetMissing": "Open the matching screen in the app, then tap Continue.",
+      "personaHint": "Use the role switcher to open the {persona} demo account.",
+      "kicker": "Step {step} of {total}",
+      "next": "Next",
+      "dismiss": "Dismiss tips",
+      "teacher": {
+        "welcome": {
+          "title": "Teacher overview",
+          "body": "Priorities and class health appear here. Move at your own pace — the tour never blocks clicks elsewhere."
+        },
+        "students": {
+          "title": "Open Students",
+          "body": "Tap Students to browse the demo roster and open a learner profile."
+        },
+        "assignments": {
+          "title": "Assignments",
+          "body": "Create surah ranges, due dates, and practice rules for your class."
+        },
+        "create": {
+          "title": "New assignment",
+          "body": "Start a draft assignment. Saving counts as completing this step."
+        },
+        "reviews": {
+          "title": "Recitation reviews",
+          "body": "Hear submissions and confirm AI wording flags."
+        },
+        "switch": {
+          "title": "Connected roles",
+          "body": "Switch to the student or parent in the same seeded classroom without leaving the sandbox."
+        }
+      },
+      "student": {
+        "welcome": {
+          "title": "My learning",
+          "body": "Assignments, practice, and teacher feedback for this demo learner."
+        },
+        "assignments": {
+          "title": "Next assignment",
+          "body": "Open the highlighted task to practise or submit."
+        },
+        "practice": {
+          "title": "Continue practice",
+          "body": "Resume a session or start the recommended attempt."
+        }
+      },
+      "parent": {
+        "welcome": {
+          "title": "Guardian view",
+          "body": "Linked-child progress and messages for the platform demo."
+        },
+        "children": {
+          "title": "Family overview",
+          "body": "Pick a child to see homework and activity."
+        },
+        "progress": {
+          "title": "Progress detail",
+          "body": "Review wording-match trends and assignment status."
+        }
+      },
+      "personal": {
+        "setup": {
+          "title": "Session setup",
+          "body": "Choose surah, ayahs, and listening preferences before you practise."
+        },
+        "practice": {
+          "title": "Practice workspace",
+          "body": "Listen, repeat, and hide ayahs — guest progress stays in this browser."
+        },
+        "start": {
+          "title": "Start session",
+          "body": "Launch a sitting when you are ready. AI checks stay labelled as practice feedback."
+        }
+      },
+      "connected": {
+        "teacherIntro": {
+          "title": "Connected classroom",
+          "body": "This tour follows one assignment from teacher → student → review → parent."
+        },
+        "create": {
+          "title": "Create work",
+          "body": "Open New assignment and save a range for the platform demo student."
+        },
+        "switchStudent": {
+          "title": "Become the student",
+          "body": "Choose the platform student in the toolbar switcher."
+        },
+        "studentOpen": {
+          "title": "Student dashboard",
+          "body": "Confirm you see the learner home for the same classroom."
+        },
+        "studentWork": {
+          "title": "Practise the task",
+          "body": "Open the assignment or continue card, then return when you have attempted it."
+        },
+        "switchTeacher": {
+          "title": "Back to teacher",
+          "body": "Switch to the platform teacher account again."
+        },
+        "review": {
+          "title": "Review submission",
+          "body": "Open Reviews and complete a check on the latest demo submission."
+        },
+        "switchParent": {
+          "title": "Guardian view",
+          "body": "Switch to the linked parent persona."
+        },
+        "parentView": {
+          "title": "Authorised progress",
+          "body": "Parents only see data the teacher has shared — explore the overview."
+        }
+      },
+      "steps": {
+        "teacher": [
+          {
+            "title": "Start on the overview",
+            "body": "Check today’s priorities, then open a student who needs attention."
+          },
+          {
+            "title": "Create or review work",
+            "body": "Use Assignments for new surah ranges, and Reviews to hear recent submissions."
+          },
+          {
+            "title": "Switch to the learner",
+            "body": "Use the demo toolbar to jump to the connected student or parent in the same classroom."
+          }
+        ],
+        "student": [
+          {
+            "title": "Open My learning",
+            "body": "Assignments from your teacher appear here with due dates and practice rules."
+          },
+          {
+            "title": "Practise and submit",
+            "body": "Complete a practice attempt, then run an AI wording check where it is enabled."
+          },
+          {
+            "title": "Read teacher feedback",
+            "body": "Messages and corrections from your teacher show in the student thread."
+          }
+        ],
+        "parent": [
+          {
+            "title": "Pick a linked child",
+            "body": "Guardian accounts only see learners your teacher has linked."
+          },
+          {
+            "title": "Follow assignments",
+            "body": "Track what is due and whether submissions are waiting for review."
+          },
+          {
+            "title": "Message when needed",
+            "body": "Use the teacher thread for questions — outbound mail is suppressed in demo mode."
+          }
+        ],
+        "personal": [
+          {
+            "title": "Set up a session",
+            "body": "Choose surah, ayahs, and reciter, then practise with listen and repeat."
+          },
+          {
+            "title": "Try an AI check",
+            "body": "AI wording match is labelled practice feedback, not Tajweed grading."
+          },
+          {
+            "title": "Preview plan limits",
+            "body": "Use the toolbar tier selector to compare Free, Premium and Premium Plus gates safely."
+          }
+        ]
+      }
+    },
+    "personas": {
+      "title": "Choose a demonstration",
+      "account": "Demo account",
+      "catalog": "Catalogue: {catalog}",
+      "open": "Open demo",
+      "seedRequired": "Seed demo data locally",
+      "items": {
+        "org_halaqa_teacher": {
+          "title": "Teacher — Nur al-Huda Halaqa",
+          "description": "Explore assignments, reviews, messaging and guardian tools with synthetic pupils.",
+          "roleLabel": "Teacher",
+          "catalog": "OrganisationNetworkCatalog",
+          "email": "org.demo.halaqa.teacher@example.com",
+          "simulated": [
+            "AI wording match scores",
+            "Recitation history",
+            "Class metrics"
+          ]
+        },
+        "org_halaqa_student": {
+          "title": "Student in the same halaqa",
+          "description": "See connected assignments, practice rules and feedback as a learner.",
+          "roleLabel": "Student",
+          "catalog": "OrganisationNetworkCatalog",
+          "email": "org.demo.halaqa.student1@example.com",
+          "simulated": [
+            "Assignment states",
+            "Practice attempts",
+            "Teacher messages"
+          ]
+        },
+        "platform_teacher": {
+          "title": "Platform demo teacher",
+          "description": "Interconnected teacher/student/parent fixtures from the platform demo seeder.",
+          "roleLabel": "Teacher",
+          "catalog": "PlatformDemoCatalog",
+          "email": "platform.demo.teacher.01@mutqin.test",
+          "simulated": [
+            "Multiple groups",
+            "Parent threads",
+            "Revision plans"
+          ]
+        },
+        "platform_classroom_student": {
+          "title": "Student in the same platform halaqa",
+          "description": "Learner assignments and practice in the shared platform demo classroom.",
+          "roleLabel": "Student",
+          "catalog": "PlatformDemoCatalog",
+          "email": "platform.demo.student.01@mutqin.test",
+          "simulated": [
+            "Assignments",
+            "Practice attempts",
+            "Teacher feedback"
+          ]
+        },
+        "platform_classroom_parent": {
+          "title": "Parent in the same platform halaqa",
+          "description": "Guardian visibility and messaging for linked children in the platform demo.",
+          "roleLabel": "Parent",
+          "catalog": "PlatformDemoCatalog",
+          "email": "platform.demo.parent.01@mutqin.test",
+          "simulated": [
+            "Child progress",
+            "Teacher threads",
+            "Invitations (synthetic)"
+          ]
+        },
+        "memorisation_guest": {
+          "title": "Guest memorisation",
+          "description": "Listen, repeat and try AI checks without persisting to a real learner account.",
+          "roleLabel": "Guest",
+          "catalog": "memorisation.demo",
+          "simulated": [
+            "Local session state",
+            "AI checks",
+            "Progress widgets"
+          ]
+        }
+      }
+    }
+  },
+  "previewLearning": {
+    "nav": {
+      "back": "Back to preview home",
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents",
+      "learning": "Personal learning",
+      "institutions": "Institutions"
+    },
+    "hero": {
+      "kicker": "On your own schedule",
+      "title": "Memorise and revise in the Mutqin workspace",
+      "subtitle": "Listen, repeat, and check recitation without a class connection. Join a teacher later on the same account if you choose."
+    },
+    "capabilities": {
+      "title": "What works without a teacher",
+      "items": {
+        "memorise": {
+          "title": "Memorisation sessions",
+          "body": "Pick a surah and ayah range, listen to a reciter, and work through the Mushaf at your pace."
+        },
+        "revise": {
+          "title": "Revision you can return to",
+          "body": "Resume where you stopped, review earlier ayahs, and keep session history on your dashboard."
+        },
+        "aiRecite": {
+          "title": "AI wording checks",
+          "body": "Recite aloud and see which words may need another pass. Free accounts include a daily allowance aligned with billing settings; wording match is a practice aid, not Tajweed grading."
+        },
+        "account": {
+          "title": "One login for class and home",
+          "body": "Connect to a teacher when you are ready. Class tools unlock on the same account without a separate student product."
+        }
+      }
+    },
+    "spotlights": {
+      "primary": {
+        "asset": "/images/landing/2026-11-session-setup.jpg",
+        "title": "Simple session setup",
+        "body": "Choose what you are working on, then move straight into listen and repeat practice.",
+        "alt": "Memorisation session setup screen"
+      },
+      "secondary": {
+        "asset": "/images/landing/2026-11-recite-active.jpg",
+        "title": "Check while you practise",
+        "body": "AI Recite highlights possible wording issues so you can correct them before the next repetition.",
+        "alt": "AI recitation check with highlighted words"
+      }
+    },
+    "premium": {
+      "note": "Individual Premium is optional. It stays on this login and raises your daily AI check allowance and saved-session limit.",
+      "cta": "Compare plans"
+    },
+    "footnote": "Core memorisation and any teacher-linked learning you use stay free. Premium is an entitlement, not a new role.",
+    "authenticCaption": "Product shots from the public Mutqin memorisation workspace, also used on the live homepage."
+  },
+  "previewInstitutions": {
+    "nav": {
+      "back": "Back to preview home",
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents",
+      "learning": "Personal learning",
+      "institutions": "Institutions"
+    },
+    "hero": {
+      "kicker": "For madrasas and programmes",
+      "title": "Organise staff without blurring student consent",
+      "subtitle": "Institution tools help you invite teachers and run classes. Visibility still follows class membership and the consent rules in Mutqin."
+    },
+    "capabilities": {
+      "title": "How organisations fit in",
+      "items": {
+        "staff": {
+          "title": "Staff invitations",
+          "body": "Institution admins can invite teachers with audited actions where institution tooling is enabled. Staff access does not replace class enrolment for seeing student work."
+        },
+        "classes": {
+          "title": "Classes and halaqas",
+          "body": "Teachers manage students through class membership. Lists, assignments and reviews use the same teacher dashboard you saw on the preview home."
+        },
+        "consent": {
+          "title": "Consent before analytics",
+          "body": "Teachers see learning analytics when students are in their class and consent allows it. Institution membership alone does not open every student record."
+        },
+        "scope": {
+          "title": "Honest limits",
+          "body": "Cross-institution student transfer is not built today. Plan around onboarding and class links that match how your programme runs."
+        }
+      }
+    },
+    "spotlights": {
+      "primary": {
+        "asset": "students",
+        "title": "A single place for your class list",
+        "body": "Student rows show attention signals and last activity so coordinators know where to support teachers.",
+        "alt": "Teacher students list with filters"
+      },
+      "secondary": {
+        "asset": "assignments",
+        "title": "Workload across the programme",
+        "body": "Assignments roll up by student and status so coordinators see what is waiting for review, in progress, or overdue across teachers.",
+        "alt": "Assignments list filtered by status with student and surah rows"
+      }
+    },
+    "footnote": "Institution features depend on configuration, staff roles, and teacher features being enabled for your site. Ask us if you need a walkthrough before rollout.",
+    "authenticCaption": "Screens from a teacher session in the Nur al-Huda demo halaqa, 26 November 2026. Institution admin flows are available where enabled."
+  },
   "pricingPage": {
     "title": "Choose your plan",
     "subtitle": "Start on Free. Upgrade to Premium or Premium Plus when you want more help with memorisation.",
+    "preview": {
+      "title": "Individual Premium on your Mutqin account",
+      "subtitle": "Core memorisation and any teacher-linked learning stay free. Premium and Premium Plus are optional upgrades on the same login, not a separate product or role.",
+      "disclaimer": "Prices, trials and feature limits on this page come from live billing configuration in this environment. They override illustrative figures in the November 2026 business model PDF until those tiers are explicitly launched.",
+      "teacherNote": "Teacher-led assignments, reviews, messaging and parent access stay free. Teacher Pro and paid institution licence tiers in the business model are not available to purchase in this build.",
+      "institutionNote": "Staff invitations and organisation tooling work where enabled in code, but institution list prices (from £24.99 in the model) are not connected to checkout.",
+      "limitsNote": "AI check and saved-session numbers on each card match config/billing.limits and are enforced server-side.",
+      "pdfMismatchNote": "The business model proposes Premium Plus at £5.99 and Teacher Pro at £7.99; configured individual Premium Plus is £4.99/month and there is no teacher subscription plan key yet."
+    },
     "simple": {
       "freeDescription": "Everything you need to begin your Qur'an memorisation journey.",
       "proDescription": "More tools to help you memorise, revise and stay consistent.",
@@ -5285,7 +6186,7 @@
     "settings_preferences_hint": "Language, appearance, and practice options.",
     "settings_preferences_action": "Open preferences",
     "settings_security_title": "Security",
-    "settings_security_hint": "Password, sign-in methods, and account access.",
+    "settings_security_hint": "Manage your password and sign-in methods in your account.",
     "settings_security_action": "Password & security",
     "jump_learning_empty": "Teacher assignments appear here once a teacher is linked to your account.",
     "supporting_message": "",
@@ -5893,7 +6794,7 @@
     "progress_memorised_lifetime_hint": "Distinct ayahs you marked memorised or mastered. Not affected by the period filter.",
     "progress_ai_checks_period": "Wording checks",
     "progress_ai_checks_period_hint": "Scored AI readings in this period. One ayah can have several checks.",
-    "progress_recitation_totals_note": "You recited {ayahs} different ayahs with stored alignment in this period, from {checks} scored checks. Checks can repeat an ayah; some readings are not saved; some saved sessions have no scored check.",
+    "progress_recitation_totals_note": "{checks} valid checks and {ayahs} distinct ayahs recited in this period. Repeating a passage adds checks, not new ayahs. Scored progress requires a completed linked assessment; older checks without one remain in Recitation history.",
     "progress_recitation_totals_aria": "Why wording check count can differ from ayahs recited",
     "progress_recitation_next": "Start a practice reading",
     "progress_overview_next_revisit": "Review {label}",
@@ -6358,7 +7259,23 @@
     "home_recent_feedback": "Latest teacher feedback",
     "home_open_feedback": "Read feedback",
     "home_waiting_review": "Sent in. Keep practising while it is reviewed.",
-    "home_waiting_review_hint": "You can keep practising while this is reviewed."
+    "home_waiting_review_hint": "You can keep practising while this is reviewed.",
+    "student_assignment_search": "Search assignments",
+    "student_assignment_teacher": "All teachers",
+    "student_assignment_deadline": "Deadline",
+    "student_assignment_deadlines": "All deadlines",
+    "student_assignment_sort": "Sort assignments",
+    "student_assignment_priority": "Priority",
+    "student_assignment_recent": "Most recent",
+    "student_assignment_reset": "Reset filters",
+    "student_assignment_revision": "Needs revision",
+    "practice_group_core": "Core learning",
+    "practice_group_techniques": "Practice techniques",
+    "practice_group_utilities": "Your practice tools",
+    "messages_load_older": "Load older messages",
+    "settings_profile_tab": "Profile",
+    "settings_preferences_tab": "Preferences",
+    "settings_security_tab": "Security"
   },
   "admin": {
     "loading": "Loading…",
@@ -7479,6 +8396,8 @@
     "nav_assignments": "Assignments",
     "nav_groups": "Groups",
     "nav_settings": "Account",
+    "nav_admin": "Admin",
+    "nav_logout": "Log out",
     "nav_assignments_desk": "Assignments",
     "nav_assignments_short": "Assignments",
     "nav_reviews": "Recitation reviews",
@@ -7730,6 +8649,12 @@
     "tasks_feedback_for": "This note is sent with {passage}.",
     "messages_page_desc": "A private note. This student reads it in My learning.",
     "plan_page_desc": "Organise memorisation, revision and recitation for your students.",
+    "plan_table_region": "Learning plans table",
+    "plan_col_plan": "Plan",
+    "plan_col_period": "Duration",
+    "plan_col_next": "Next milestone",
+    "plan_col_passage": "Passage",
+    "plan_col_schedule": "Schedule",
     "plan_create": "Create learning plan",
     "plan_view": "View plan",
     "plan_back": "All plans",
@@ -7875,6 +8800,24 @@
     "progressive_hiding_description": "Use Progressive Hiding after a learner can follow the passage: words fade gradually with each repetition.",
     "progressive_hiding_launch": "Open Progressive Hiding",
     "progressive_hiding_scope": "Opens your practice workspace. It does not change this student's records.",
+    "assignment_progressive_hiding": "Progressive Mushaf Hiding",
+    "assignment_progressive_hiding_enable": "Gradual hiding for this task",
+    "assignment_hiding_stage_repetitions": "Reps per stage",
+    "assignment_hiding_stage_repetitions_help": "Successful repeats before more text is hidden.",
+    "assignment_hiding_start_visibility": "Start visibility",
+    "assignment_hiding_visibility_option": "{n}% visible",
+    "assignment_hiding_hints_allowed": "Peek hints (Space / hold)",
+    "assignment_hiding_final_hidden": "End with hidden recitation",
+    "assignment_hiding_final_ai": "Optional AI wording check",
+    "assignment_hiding_preview": "Preview setup",
+    "assignment_hiding_preview_hint": "Opens your practice workspace; does not change student records.",
+    "assignment_hiding_incompatible": "Turn off Progressive Hiding or remove conflicting listening options.",
+    "assignment_hiding_incompatible_focus": "Progressive Hiding cannot be used with One ayah at a time on the same task.",
+    "assignment_hiding_incompatible_per_ayah": "Progressive Hiding cannot be combined with per-ayah repeat maps.",
+    "assignment_hiding_review_title": "Memorisation practice",
+    "assignment_hiding_review_disclaimer": "Practice completion only — not proof of full memorisation mastery.",
+    "assignment_hiding_sessions": "Completed hiding sessions",
+    "assignment_hiding_ai_check": "AI wording check (latest)",
     "learning_recite_lead": "Scores from recitation checks. Choose a passage to listen.",
     "learning_revision_lead": "Verses to practise again, and revisions that are due.",
     "learning_plan_lead": "The plan you set for this student. Turning it on sends real assignments.",
@@ -8280,6 +9223,9 @@
     "messages_parent_title": "Parent messages",
     "messages_parent_hint": "Separate from the student chat. Parents see progress updates you share here — the student does not.",
     "messages_parent_pick": "Choose a parent to open their thread.",
+    "messages_tab_students": "Students",
+    "messages_tab_parents": "Parents",
+    "messages_pick_student": "Choose a student to open the conversation.",
     "guardian_messages_empty": "No linked parent can message this student.",
     "guardian_messages_failed": "Parent messages could not be loaded.",
     "guardian_about": "About {student}",
@@ -8511,6 +9457,15 @@
     "today_chip_overdue_label": "{count} overdue assignments",
     "today_chip_plans_label": "{count} plans awaiting a decision",
     "today_chip_messages_label": "{count} unread messages",
+    "today_chip_attendance": "Attendance to mark",
+    "today_chip_go_attendance": "Open register",
+    "today_chip_clear_attendance": "Everyone marked for today.",
+    "today_chip_attendance_label": "{count} students not marked today",
+    "attendance_export_csv": "Export CSV",
+    "attendance_period_summary": "{present} present · {absent} absent · {late} late · {excused} excused · {total} marks",
+    "attendance_register_completion": "{marked} of {total} students marked",
+    "attendance_mark_filtered_hint": "Marks students matching the current search and filters.",
+    "attendance_history_to": "To",
     "today_review_submissions": "Review submissions",
     "today_overdue_tasks": "View overdue assignments",
     "today_review_plans": "Review recommendations",

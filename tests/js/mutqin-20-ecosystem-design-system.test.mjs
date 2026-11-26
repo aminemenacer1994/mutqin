@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 const read = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 const teacherCss = read('../../resources/js/views/TeacherDashboard.css')
-const studentMarkers = read('../../resources/js/views/Dashboard.learner-teacher.css')
+const studentMarkers = read('../../resources/js/views/Dashboard.student-tokens.css')
 const parentVue = read('../../resources/js/views/ParentDashboard.vue')
 const teacherVue = read('../../resources/js/views/TeacherDashboard.vue')
 const studentVue = read('../../resources/js/views/Dashboard.vue')
@@ -37,8 +37,7 @@ for (const token of [
   assert.ok(teacherCss.includes(token), `Teacher design tokens expose ${token}`)
 }
 
-const studentSystem = studentMarkers.slice(studentMarkers.lastIndexOf('/* Student dashboard control system.'))
-assert.ok(studentSystem.length > 500, 'Student shares canonical control system layer')
+assert.match(studentMarkers, /--dash-ds-surface: var\(--teacher-surface\)/, 'Student inherits canonical Teacher surface')
 assert.match(teacherCss, /\.teacher-nav__link:focus-visible/, 'Teacher/parent mobile nav exposes keyboard focus')
 
 assert.match(onboarding, /ConnectionOnboarding/, 'Auth onboarding view is wired')

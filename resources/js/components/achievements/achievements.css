@@ -39,7 +39,7 @@
 .ach-progress__heading {
   margin: 0 0 0.5rem;
   font-size: 0.875rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--dash-text, var(--text));
 }
@@ -102,7 +102,7 @@
 
 .ach-progress__tier-title {
   font-size: 0.875rem;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--dash-text, var(--text));
 }
 
@@ -223,14 +223,8 @@
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.ach-card--gold { --ach-accent: #c48a18; }
-.ach-card--emerald { --ach-accent: #1f8a4d; }
-.ach-card--sage { --ach-accent: #2f8a42; }
-.ach-card--blue { --ach-accent: #1f6fb8; }
-.ach-card--purple { --ach-accent: #7a2fc4; }
-.ach-card--orange { --ach-accent: #d9620a; }
-.ach-card--red { --ach-accent: #d32f2f; }
-.ach-card--black { --ach-accent: #1a1a1a; }
+.ach-card--brand { --ach-accent: var(--teacher-accent, var(--accent)); }
+.ach-card--success { --ach-accent: var(--teacher-positive, var(--success)); }
 
 .ach-card--unlocked {
   border-color: color-mix(in srgb, var(--ach-accent) 42%, var(--dash-border, var(--border)));
@@ -301,9 +295,9 @@
   padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
   font-size: 0.6875rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.03em;
-  text-transform: uppercase;
+  text-transform: none;
   background: color-mix(in srgb, var(--ach-accent) 12%, transparent);
   color: var(--dash-text, var(--text));
 }
@@ -324,7 +318,7 @@
 .ach-card__title {
   margin: 0;
   font-size: 0.9375rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.3;
   color: var(--dash-text, var(--text));
 }
@@ -477,7 +471,7 @@
   margin: 0;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--muted);
 }
 

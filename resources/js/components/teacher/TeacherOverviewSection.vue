@@ -148,7 +148,7 @@ export default {
     trendLoading: { type: Boolean, default: false },
     trendError: { type: String, default: '' },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'create-assignment'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'open-attendance', 'open-messages', 'create-assignment'],
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
@@ -271,6 +271,17 @@ export default {
             ? this.t('teacher.today_chip_messages_label', { count: counts.unread })
             : this.t('teacher.today_chip_clear_messages'),
           tone: '',
+        },
+        {
+          id: 'attendance',
+          count: counts.attendanceUnmarked,
+          label: this.t('teacher.today_chip_attendance'),
+          action: this.t('teacher.today_chip_go_attendance'),
+          clear: this.t('teacher.today_chip_clear_attendance'),
+          aria: counts.attendanceUnmarked
+            ? this.t('teacher.today_chip_attendance_label', { count: counts.attendanceUnmarked })
+            : this.t('teacher.today_chip_clear_attendance'),
+          tone: 'is-attendance',
         },
       ]
     },
@@ -395,7 +406,15 @@ export default {
       }
       if (item.id === 'messages') {
         const studentId = Number(this.overview?.snapshot?.unread_student_id || 0)
-        if (studentId > 0) this.openStudent(studentId, 'messages')
+        if (studentId > 0) {
+          this.openStudent(studentId, 'messages')
+          return
+        }
+        this.$emit('open-messages')
+        return
+      }
+      if (item.id === 'attendance') {
+        this.$emit('open-attendance')
         return
       }
       this.$emit('open-assignments', 'overdue')

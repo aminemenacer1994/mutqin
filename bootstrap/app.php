@@ -3,7 +3,10 @@
 use App\Http\Controllers\WaitingListController;
 use App\Http\Middleware\ApplySeoRobotsHeader;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\BlockPreviewSandboxSideEffects;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
+use App\Http\Middleware\EnsureActivePreviewSandbox;
+use App\Http\Middleware\EnsureLandingPreviewAccess;
 use App\Http\Middleware\EnsureLearnerLearningNetworkConnected;
 use App\Http\Middleware\EnsureLearnerTeacherSectionEnabled;
 use App\Http\Middleware\EnsureParentFeaturesEnabled;
@@ -91,6 +94,8 @@ return Application::configure(basePath: dirname(__DIR__))
             PreventStaleHtmlCache::class,
             ApplySeoRobotsHeader::class,
             SetMutqinContentSecurityPolicy::class,
+            EnsureActivePreviewSandbox::class,
+            BlockPreviewSandboxSideEffects::class,
         ]);
 
         // Enable Sanctum SPA (cookie-based) authentication for the API routes so
@@ -112,6 +117,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'parent.features' => EnsureParentFeaturesEnabled::class,
             'learner.teacher.section' => EnsureLearnerTeacherSectionEnabled::class,
             'learner.learning.network' => EnsureLearnerLearningNetworkConnected::class,
+            'landing.preview' => EnsureLandingPreviewAccess::class,
+            'preview.sandbox' => EnsureActivePreviewSandbox::class,
         ]);
 
         // Run before auth so a disabled feature is a 404, including for guests.

@@ -19,7 +19,7 @@ export function studentNavItems({ learning = false, messaging = false } = {}) {
     { id: 'activity', label: 'dashboard.jump_activity', icon: 'bi bi-clock-history' },
   )
   if (messaging) {
-    items.push({ id: 'messages', label: 'dashboard.jump_messages', mobileLabel: 'dashboard.jump_messages_mobile', icon: 'bi bi-chat-left-text' })
+    items.push({ id: 'messages', label: 'dashboard.jump_messages', icon: 'bi bi-chat-left-text' })
   }
   return items
 }

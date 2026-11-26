@@ -2,14 +2,16 @@
   <section class="teacher-stack learner-settings" aria-labelledby="learner-settings-heading">
     <header class="teacher-page-header learner-settings__header">
       <div>
-        <p class="teacher-kicker">{{ t('dashboard.jump_settings') }}</p>
         <h1 id="learner-settings-heading" class="teacher-page-header__title">{{ t('dashboard.jump_settings') }}</h1>
         <p class="teacher-page-header__hint">{{ t('dashboard.nav_settings_hint') }}</p>
       </div>
     </header>
 
+    <nav class="teacher-tabs" :aria-label="t('dashboard.jump_settings')">
+      <button v-for="tab in settingsTabs" :key="tab.id" type="button" class="teacher-tabs__tab" :class="{ 'is-active': selectedSection === tab.id }" :aria-pressed="selectedSection === tab.id" @click="selectSection(tab.id)">{{ tab.label }}</button>
+    </nav>
     <div class="teacher-account__grid learner-settings__grid">
-      <section class="card teacher-account learner-settings__card learner-settings__card--profile" :aria-labelledby="`${uid}-profile`">
+      <section v-show="selectedSection === 'profile'" class="card teacher-account learner-settings__card learner-settings__card--profile" :aria-labelledby="`${uid}-profile`">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-person"></i></span>
           <div>
@@ -25,11 +27,12 @@
             <p v-if="email" class="teacher-account__email">{{ email }}</p>
           </div>
         </div>
-        <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action" href="/profile">{{ t('parent.manage_profile') }}</a>
+        <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action btn btn-outline-secondary btn-sm" href="/profile">{{ t('parent.manage_profile') }}</a>
       </section>
 
       <section
         v-if="teacherSectionEnabled"
+        v-show="selectedSection === 'teachers'"
         id="learner-settings-connections"
         class="card teacher-account learner-settings__card learner-settings__card--connections"
         :aria-labelledby="`${uid}-connections`"
@@ -57,6 +60,7 @@
 
       <section
         v-if="parentFeaturesEnabled"
+        v-show="selectedSection === 'guardians'"
         id="learner-settings-guardians"
         class="card teacher-account learner-settings__card learner-settings__card--guardians"
         :aria-labelledby="`${uid}-guardians`"
@@ -78,21 +82,30 @@
         />
       </section>
 
-      <section class="card teacher-account learner-settings__card learner-settings__card--prefs" :aria-labelledby="`${uid}-prefs`">
+      <section v-show="selectedSection === 'preferences'" class="card teacher-account learner-settings__card learner-settings__card--prefs" :aria-labelledby="`${uid}-prefs`">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-sliders"></i></span>
           <div>
-            <h2 :id="`${uid}-prefs`">{{ t('dashboard.settings_preferences_security_title') }}</h2>
+            <h2 :id="`${uid}-prefs`">{{ t('dashboard.settings_preferences_tab') }}</h2>
             <p>{{ t('dashboard.settings_preferences_security_hint') }}</p>
           </div>
         </div>
         <div class="learner-settings__inline-actions">
-          <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action" href="/profile">{{ t('dashboard.settings_preferences_action') }}</a>
-          <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action" href="/profile">{{ t('dashboard.settings_security_action') }}</a>
+          <a class="dash-btn dash-btn--secondary dash-btn--sm teacher-account__action btn btn-outline-secondary btn-sm" href="/profile#appearance-preferences">{{ t('dashboard.settings_preferences_action') }}</a>
+
         </div>
       </section>
 
+      <section v-show="selectedSection === 'security'" class="card teacher-account learner-settings__card">
+        <div class="teacher-account__section-head">
+          <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
+          <div><h2>{{ t('dashboard.settings_security_tab') }}</h2><p>{{ t('dashboard.settings_security_hint') }}</p></div>
+        </div>
+        <a class="btn btn-outline-secondary align-self-start" href="/profile#password">{{ t('dashboard.settings_security_action') }}</a>
+      </section>
+
       <section
+        v-show="selectedSection === 'profile'"
         v-if="platformSwitchOptions.length && platformSwitchUrl"
         class="card teacher-account learner-settings__card learner-settings__card--platform"
         :aria-labelledby="`${uid}-switch`"
@@ -140,10 +153,38 @@ export default {
   emits: ['message', 'learning', 'circle-updated'],
   data() {
     return {
+      selectedSection: 'profile',
       uid: `learner-settings-${Math.random().toString(36).slice(2, 9)}`,
     }
   },
+  mounted() {
+    this.syncLocation()
+    window.addEventListener('popstate', this.syncLocation)
+  },
+  beforeUnmount() { window.removeEventListener('popstate', this.syncLocation) },
+  methods: {
+    syncLocation() {
+      const id = new URL(window.location.href).searchParams.get('settings_section')
+      this.selectedSection = this.settingsTabs.some(tab => tab.id === id) ? id : 'profile'
+    },
+    selectSection(id) {
+      if (!this.settingsTabs.some(tab => tab.id === id)) return
+      this.selectedSection = id
+      const url = new URL(window.location.href)
+      url.searchParams.set('settings_section', id)
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+    },
+  },
   computed: {
+    settingsTabs() {
+      return [
+        { id: 'profile', label: this.t('dashboard.settings_profile_tab') },
+        ...(this.teacherSectionEnabled ? [{ id: 'teachers', label: this.t('dashboard.settings_teachers_title') }] : []),
+        ...(this.parentFeaturesEnabled ? [{ id: 'guardians', label: this.t('dashboard.settings_guardians_title') }] : []),
+        { id: 'preferences', label: this.t('dashboard.settings_preferences_tab') },
+        { id: 'security', label: this.t('dashboard.settings_security_tab') },
+      ]
+    },
     connectionPhase() {
       return learnerConnectionPhase(this.circle)
     },

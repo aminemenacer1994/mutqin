@@ -1,9 +1,8 @@
 <template>
-  <main id="mainContent" class="user-dashboard user-dashboard--progress learner-workspace teacher-dashboard" data-platform-shell="student" :style="{ '--learner-header-height': `${learnerHeaderHeight}px` }" tabindex="-1">
-    <div class="container-fluid user-dashboard__shell teacher-dashboard__shell">
-      <div v-if="loading && !data" class="user-dashboard__loading" role="status" aria-live="polite">
-        <div class="dash-spinner" aria-hidden="true"></div>
-        <span>{{ t('dashboard.loading') }}</span>
+  <main id="mainContent" class="user-dashboard learner-workspace teacher-dashboard" data-platform-shell="student" :style="{ '--learner-header-height': `${learnerHeaderHeight}px` }" tabindex="-1">
+    <div class="container user-dashboard__shell teacher-dashboard__shell">
+      <div v-if="loading && !data" class="teacher-skeletons" role="status" aria-live="polite" :aria-label="t('dashboard.loading')">
+        <div v-for="n in 4" :key="n" class="teacher-skeleton"></div>
       </div>
 
       <NetworkFallback
@@ -34,8 +33,6 @@
             :items="studentNavItems"
             :badges="navBadges"
             :active-view="studentPane"
-            nav-class="dash-jump"
-            link-class="dash-jump__link"
             nav-label-key="dashboard.jump_label"
             settings-label-key="dashboard.jump_settings"
             style="--dash-delay: 40ms"
@@ -47,24 +44,13 @@
         <header id="dash-home" class="teacher-hero learner-home__header" tabindex="-1">
           <div class="teacher-hero__row">
           <div class="teacher-hero__copy">
-            <p class="teacher-hero__eyebrow">{{ t('dashboard.jump_home') }}</p>
             <h1 class="teacher-hero__title">{{ greetingText }}</h1>
             <p v-if="homeWelcomeContext" class="teacher-meta">{{ homeWelcomeContext }}</p>
           </div>
-            <button
-              type="button"
-              class="dash-icon-btn"
-              :disabled="loading"
-              :aria-label="t('dashboard.refresh')"
-              :title="t('dashboard.refresh')"
-              @click="reload(true)"
-            >
-              <i class="bi bi-arrow-clockwise" :class="{ 'is-spinning': loading }" aria-hidden="true"></i>
-            </button>
           </div>
         </header>
 
-        <p v-if="assignmentCompletionMessage" class="learner-home__confirmation" role="status" aria-live="polite"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ assignmentCompletionMessage }}</p>
+        <p v-if="assignmentCompletionMessage" class="alert alert-success" role="status" aria-live="polite"><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ assignmentCompletionMessage }}</p>
 
         <ConnectPrompt
           v-if="showLearnerConnectPrompt"
@@ -76,26 +62,12 @@
           :action-label="t('ui.connections_settings_manage')"
         />
 
-        <LearnerStudentNotifications
-          v-if="!homeNotificationsExpanded"
-          compact
-          :limit="4"
-          @expand="homeNotificationsExpanded = true"
-          @open="openStudentNotice"
-          @unread-change="studentNoticeUnread = $event"
-        />
-        <LearnerStudentNotifications
-          v-else
-          :compact="false"
-          @open="openStudentNotice"
-          @unread-change="studentNoticeUnread = $event"
-        />
-
         <div class="learner-home__stack">
           <section
             v-if="showHomeNextAction"
             class="learner-home__next-action"
             data-testid="dashboard-home-next-action"
+            data-sandbox-tour="student-assignments"
             :aria-labelledby="homeNextActionTitleId"
           >
             <p :id="homeNextActionTitleId" class="learner-home__next-action-eyebrow">{{ t('dashboard.home_next_action') }}</p>
@@ -122,8 +94,8 @@
                   <p v-else class="learner-home__feedback-preview">{{ homeAttentionFeedbackPreview(homeNextAction.row) }}</p>
                 </div>
                 <span
-                  class="learner-home__status"
-                  :class="homeNextAction.kind === 'feedback' ? 'is-warning' : `is-${assignmentTone(homeNextAction.row)}`"
+                  class="teacher-badge learner-home__status"
+                  :class="homeNextAction.kind === 'feedback' ? 'is-info' : `is-${assignmentTone(homeNextAction.row)}`"
                 >
                   {{ homeNextAction.kind === 'feedback' ? t('teacher.unread') : assignmentStatusLabel(homeNextAction.row) }}
                 </span>
@@ -143,7 +115,7 @@
               <button
                 v-if="homeNextAction.kind === 'assignment'"
                 type="button"
-                class="dash-btn dash-btn--primary learner-home__next-action-cta"
+                class="btn dash-btn dash-btn--primary learner-home__next-action-cta btn-primary"
                 :disabled="Boolean(assignmentSavingId)"
                 @click="taskReadyToSubmit(homeNextAction.row) ? promptSupportAssignmentCompletion(homeNextAction.row) : startSupportAssignment(homeNextAction.row)"
               >
@@ -157,7 +129,7 @@
               <button
                 v-else
                 type="button"
-                class="dash-btn dash-btn--primary learner-home__next-action-cta"
+                class="btn dash-btn dash-btn--primary learner-home__next-action-cta btn-primary"
                 @click="openHomeFeedback"
               >
                 {{ t('dashboard.home_open_feedback') }}
@@ -165,40 +137,13 @@
             </div>
           </section>
 
-          <a
+          <StudentContinueCard
             v-if="showHomeContinue && primaryContinueAction"
-            class="teacher-pane dash-continue-card learner-home__continue"
-            data-testid="dashboard-primary-continue"
+            :action="primaryContinueAction"
             :data-kind="primaryContinueAction.kind"
-            :class="{
-              'dash-continue-card--primary': !showHomeNextAction,
-              'dash-continue-card--secondary': showHomeNextAction,
-              'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
-              'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
-              'dash-continue-card--revise': primaryContinueAction.kind === 'revise',
-              'dash-continue-card--daily-mutqin': primaryContinueAction.kind === 'fresh' || primaryContinueAction.kind === 'journey',
-            }"
-            :href="primaryContinueAction.href"
-            :aria-label="primaryContinueAction.ariaLabel || undefined"
-          >
-            <span class="dash-continue-card__icon" aria-hidden="true">
-              <i :class="primaryContinueAction.icon" aria-hidden="true"></i>
-            </span>
-            <div class="dash-continue-card__main">
-              <span class="dash-continue-card__label">{{ homeContinueEyebrow }} · {{ primaryContinueAction.label }}</span>
-              <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
-              <p v-if="primaryContinueAction.hint" class="dash-continue-card__hint">
-                {{ primaryContinueAction.hint }}
-              </p>
-              <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
-                {{ primaryContinueAction.range }}
-              </p>
-            </div>
-            <span class="dash-continue-card__cta">
-              <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-              {{ primaryContinueAction.cta }}
-            </span>
-          </a>
+            data-testid="dashboard-primary-continue"
+            data-sandbox-tour="student-practice"
+          />
 
           <section
             v-if="showHomeAttentionSection"
@@ -209,13 +154,13 @@
               <div class="teacher-pane__titles">
                 <h2 id="learner-home-today" class="teacher-pane__title">{{ t('dashboard.home_attention') }}</h2>
               </div>
-              <button type="button" class="dash-text-link" @click="openDashPane({ pane: 'learning' })">{{ t('dashboard.home_all_tasks') }}</button>
+              <button type="button" class="btn btn-link dash-text-link" @click="openDashPane({ pane: 'learning' })">{{ t('dashboard.home_all_tasks') }}</button>
             </header>
             <div class="teacher-pane__body">
               <div v-if="supportLoading && !support" class="learner-home__skeleton" role="status" :aria-label="t('teacher.loading')"><span></span><span></span></div>
               <div v-else-if="supportError" class="learner-home__state is-error" role="alert">
                 <p>{{ supportError }}</p>
-                <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" :disabled="supportLoading" @click="loadLearnerSupport">{{ t('common.retry') }}</button>
+                <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" :disabled="supportLoading" @click="loadLearnerSupport">{{ t('common.retry') }}</button>
               </div>
               <template v-else>
                 <div
@@ -234,7 +179,7 @@
                       <p v-if="item.kind === 'assignment'">{{ assignmentNextActionMeta(item.row) }}</p>
                       <p v-else class="learner-home__feedback-preview">{{ homeAttentionFeedbackPreview(item.row) }}</p>
                     </div>
-                    <span class="learner-home__status" :class="item.kind === 'feedback' ? 'is-warning' : `is-${assignmentTone(item.row)}`">
+                    <span class="teacher-badge learner-home__status" :class="item.kind === 'feedback' ? 'is-info' : `is-${assignmentTone(item.row)}`">
                       {{ item.kind === 'feedback' ? t('teacher.unread') : assignmentStatusLabel(item.row) }}
                     </span>
                   </div>
@@ -248,14 +193,14 @@
                     <button
                       v-if="item.kind === 'assignment'"
                       type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
+                      class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                       :disabled="Boolean(assignmentSavingId)"
                       @click="taskReadyToSubmit(item.row) ? promptSupportAssignmentCompletion(item.row) : startSupportAssignment(item.row)"
                     >
                       <i class="bi" :class="assignmentActionIcon(item.row)" aria-hidden="true"></i>
                       {{ assignmentSavingId === item.row.id ? t('teacher.loading') : assignmentActionLabel(item.row) }}
                     </button>
-                    <button v-else type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="openHomeFeedback">
+                    <button v-else type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="openHomeFeedback">
                       {{ t('dashboard.home_open_feedback') }}
                     </button>
                   </div>
@@ -272,7 +217,7 @@
           <section v-if="homeUpcomingTasks.length" class="teacher-pane learner-home__revisions" aria-labelledby="home-upcoming-title">
             <header class="teacher-pane__head learner-home__section-head">
               <h2 id="home-upcoming-title" class="teacher-pane__title">{{ t('dashboard.home_upcoming') }}</h2>
-              <button type="button" class="dash-text-link" @click="openDashPane({ pane: 'learning' })">{{ t('dashboard.home_all_tasks') }}</button>
+              <button type="button" class="btn btn-link dash-text-link" @click="openDashPane({ pane: 'learning' })">{{ t('dashboard.home_all_tasks') }}</button>
             </header>
             <div class="teacher-pane__body">
               <button
@@ -288,58 +233,59 @@
                   <strong>{{ assignmentRangeLabel(task) }}</strong>
                   <span class="learner-home__revision-meta">
                     <span v-if="assignmentDue(task).text" class="learner-home__due" :class="`is-${assignmentDue(task).tone}`">{{ assignmentDue(task).text }}</span>
-                    <span v-else class="learner-home__revision-type">{{ assignmentUpcomingMeta(task) }}</span>
+                    <span class="learner-home__revision-type">{{ assignmentNextActionMeta(task) }}</span>
                   </span>
                 </span>
-                <span class="learner-home__status" :class="`is-${assignmentTone(task)}`">{{ assignmentStatusLabel(task) }}</span>
+                <span class="teacher-badge learner-home__status" :class="`is-${assignmentTone(task)}`">{{ assignmentStatusLabel(task) }}</span>
                 <i class="bi bi-chevron-right learner-home__revision-chevron" aria-hidden="true"></i>
               </button>
             </div>
           </section>
 
-          <section v-if="showHomeStats" class="teacher-pane learner-home__progress" aria-labelledby="home-progress-title">
-            <header class="teacher-pane__head learner-home__section-head">
+          <section v-if="showHomeStats" class="teacher-stack learner-home__progress" aria-labelledby="home-progress-title">
+            <header class="teacher-page-header">
               <div class="teacher-pane__titles">
                 <h2 id="home-progress-title" class="teacher-pane__title">{{ t('dashboard.learning_title') }}</h2>
                 <p class="teacher-meta learner-home__progress-period">{{ t('dashboard.learning_period', { days: chartDays }) }}</p>
               </div>
-              <button type="button" class="dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
+              <button type="button" class="btn btn-link dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
             </header>
-            <div class="teacher-pane__body">
-              <ul class="learner-home__progress-metrics dash-learning__metrics dash-learning__metrics--compact" :aria-label="t('dashboard.learning_title')">
-                <li v-for="metric in homeStatCards" :key="metric.key">
-                  <button type="button" class="dash-learning__metric" @click="openStudentNav('progress')">
-                    <div class="dash-learning__metric-top">
-                      <span class="dash-learning__metric-icon" aria-hidden="true"><i class="bi" :class="metric.icon"></i></span>
-                    </div>
-                    <strong class="dash-learning__metric-value">{{ metric.value }}</strong>
-                    <span class="dash-learning__metric-title">{{ metric.shortLabel }}</span>
-                    <span v-if="metric.unitHint" class="learner-home__metric-unit">{{ metric.unitHint }}</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
+              <TeacherKpiGrid
+                class="learner-home__progress-metrics"
+                :cards="homeStatCards"
+                :aria-label="t('dashboard.learning_title')"
+                selectable
+                @select="openStudentNav('progress')"
+              />
           </section>
 
-          <section class="teacher-pane learner-home__tools-pane" aria-labelledby="home-tools-title">
-            <header class="teacher-pane__head learner-home__section-head">
+          <LearnerStudentNotifications
+            :compact="!homeNotificationsExpanded"
+            :limit="3"
+            @expand="homeNotificationsExpanded = true"
+            @open="openStudentNotice"
+            @unread-change="studentNoticeUnread = $event"
+          />
+
+          <section class="teacher-stack learner-home__tools-pane" aria-labelledby="home-tools-title">
+            <header class="teacher-page-header">
               <div class="teacher-pane__titles">
                 <h2 id="home-tools-title" class="teacher-pane__title">{{ t('dashboard.home_tools') }}</h2>
               </div>
-              <button type="button" class="dash-text-link" @click="openStudentNav('practice')">{{ t('dashboard.home_all_practice') }}</button>
+              <button type="button" class="btn btn-link dash-text-link" @click="openStudentNav('practice')">{{ t('dashboard.home_all_practice') }}</button>
             </header>
-            <div class="teacher-pane__body learner-home__tools">
+            <div class="learner-home__tools">
               <template v-for="tool in homePracticeTools" :key="tool.key">
                 <a
                   v-if="!tool.locked"
-                  class="learner-home__tool"
+                  class="teacher-pane learner-home__tool"
                   :href="tool.href"
                 >
                   <i class="bi" :class="tool.icon" aria-hidden="true"></i>
                   <strong>{{ tool.label }}</strong>
                   <span>{{ tool.hint }}</span>
                 </a>
-                <div v-else class="learner-home__tool is-locked" :aria-label="tool.label">
+                <div v-else class="teacher-pane learner-home__tool is-locked" :aria-label="tool.label">
                   <i class="bi" :class="tool.icon" aria-hidden="true"></i>
                   <strong>{{ tool.label }}</strong>
                   <span>{{ tool.hint }}</span>
@@ -356,7 +302,7 @@
                 <h2 id="home-achievement-title" class="teacher-pane__title">{{ t('dashboard.home_next_achievement') }}</h2>
                 <p class="teacher-pane__hint">{{ homeAchievementPreview }}</p>
               </div>
-              <button type="button" class="dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
+              <button type="button" class="btn btn-link dash-text-link" @click="openStudentNav('progress')">{{ t('dashboard.home_view_progress') }}</button>
             </header>
           </section>
 
@@ -364,14 +310,9 @@
         </div>
 
         <div v-show="studentPane === 'learning'" id="dash-welcome-heading" class="dash-pane teacher-view-stage" tabindex="-1">
-        <StudentPageHeading
+        <TeacherPageHeader
           :title="t('dashboard.jump_learning')"
           :subtitle="t('dashboard.nav_learning_hint')"
-          :crumb-label="t('dashboard.breadcrumb_label')"
-          :home-label="t('dashboard.jump_home')"
-          :section-label="t('dashboard.jump_learning')"
-          section-id="learning"
-          @select="openStudentNav"
         />
         <LearnerTeacherSection
           ref="learnerTeacherSection"
@@ -414,7 +355,7 @@
             <div class="dash-section__head-row">
               <button
                 type="button"
-                class="dash-section__collapse"
+                class="btn btn-link w-100 text-start d-flex justify-content-between dash-section__collapse"
                 :aria-expanded="isSectionCollapsed('learning-connections') ? 'false' : 'true'"
                 aria-controls="learner-learning-connections-body"
                 @click="toggleSection('learning-connections')"
@@ -446,7 +387,7 @@
           >
             <p v-if="learnerConnectionStatus" class="learner-settings__status" :class="`is-${learnerConnectionPhaseLabel}`">{{ learnerConnectionStatus }}</p>
             <p class="teacher-meta">{{ learnerConnectionsHubSummary }}</p>
-            <button type="button" class="dash-btn dash-btn--secondary dash-btn--sm" @click="openStudentConnectionsSettings">
+            <button type="button" class="btn dash-btn dash-btn--secondary dash-btn--sm btn-outline-secondary btn-sm" @click="openStudentConnectionsSettings">
               {{ t('ui.connections_settings_manage') }}
             </button>
           </div>
@@ -455,42 +396,31 @@
         </div>
 
         <div v-show="studentPane === 'practice'" id="dash-practice" class="dash-pane teacher-view-stage" tabindex="-1">
-          <StudentPageHeading
+          <TeacherPageHeader
             :title="t('dashboard.jump_practice')"
             :subtitle="t('dashboard.nav_practice_hint')"
-            :crumb-label="t('dashboard.breadcrumb_label')"
-            :home-label="t('dashboard.jump_home')"
-            :section-label="t('dashboard.jump_practice')"
-            section-id="practice"
-            @select="openStudentNav"
           />
-          <p class="dash-section__hint learner-practice__intro">{{ t('dashboard.practice_hub_intro') }}</p>
-          <a
+          <StudentContinueCard
             v-if="showHomeContinue && primaryContinueAction"
-            class="teacher-pane dash-continue-card learner-practice__continue"
-            :href="primaryContinueAction.href"
+            :action="primaryContinueAction"
             data-testid="dashboard-primary-continue"
-          >
-            <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
-            <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
-            <span v-if="primaryContinueAction.hint" class="dash-continue-card__hint">{{ primaryContinueAction.hint }}</span>
-          </a>
-          <section class="teacher-pane" aria-labelledby="practice-modes-title">
-            <header class="teacher-pane__head">
-              <h2 id="practice-modes-title" class="teacher-pane__title">{{ t('dashboard.practice_modes_title') }}</h2>
+          />
+          <section v-for="group in studentPracticeGroups" :key="group.id" class="teacher-stack" :aria-labelledby="`practice-${group.id}-title`">
+            <header class="teacher-page-header">
+              <h2 :id="`practice-${group.id}-title`" class="teacher-pane__title">{{ group.label }}</h2>
             </header>
-            <div class="teacher-pane__body learner-home__tools">
-              <template v-for="tool in studentPracticeTools" :key="tool.key">
+            <div class="learner-home__tools">
+              <template v-for="tool in group.tools" :key="tool.key">
                 <a
                   v-if="!tool.locked"
-                  class="learner-home__tool"
+                  class="teacher-pane learner-home__tool"
                   :href="tool.href"
                 >
                   <i class="bi" :class="tool.icon" aria-hidden="true"></i>
                   <strong>{{ tool.label }}</strong>
                   <span>{{ tool.hint }}</span>
                 </a>
-                <div v-else class="learner-home__tool is-locked" :aria-label="tool.label">
+                <div v-else class="teacher-pane learner-home__tool is-locked" :aria-label="tool.label">
                   <i class="bi" :class="tool.icon" aria-hidden="true"></i>
                   <strong>{{ tool.label }}</strong>
                   <span>{{ tool.hint }}</span>
@@ -502,38 +432,41 @@
           </section>
         </div>
 
-        <div v-show="studentPane === 'progress'" class="dash-pane user-dashboard__content teacher-view-stage">
-        <StudentPageHeading
+        <div v-show="studentPane === 'progress'" class="dash-pane teacher-view-stage">
+        <TeacherPageHeader
           :title="t('dashboard.jump_progress')"
           :subtitle="t('dashboard.nav_progress_hint')"
-          :crumb-label="t('dashboard.breadcrumb_label')"
-          :home-label="t('dashboard.jump_home')"
-          :section-label="t('dashboard.jump_progress')"
-          section-id="progress"
-          @select="openStudentNav"
         />
         <header class="student-progress student-progress__chrome" data-testid="student-progress-hub">
-          <nav class="student-progress__tabs dash-range-toggle" :aria-label="t('dashboard.progress_sections_label')">
-            <a
+          <nav class="teacher-tabs student-progress__tabs" role="tablist" :aria-label="t('dashboard.progress_sections_label')">
+            <button
               v-for="section in progressSections"
               :key="section.id"
-              class="student-progress__tab"
-              :href="`#${section.id}`"
-            >{{ section.label }}</a>
+              type="button"
+              role="tab"
+              class="teacher-tabs__tab"
+              :class="{ 'is-active': progressActiveSection === section.id }"
+              :id="`tab-${section.id}`"
+              :aria-controls="section.id"
+              :aria-selected="progressActiveSection === section.id"
+              :tabindex="progressActiveSection === section.id ? 0 : -1"
+              @click="selectProgressSection(section.id)"
+              @keydown="onProgressTabKeydown($event, section.id)"
+            >{{ section.label }}</button>
           </nav>
           <div class="student-progress__toolbar">
             <p class="student-progress__filter-hint">{{ t('dashboard.progress_window_filter_hint') }}</p>
             <div class="dash-range-toggle student-progress__window" role="group" :aria-label="t('dashboard.progress_window_label')">
               <button
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
+                class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                 :class="{ 'is-active': progressWindow === 'week' }"
                 :aria-pressed="progressWindow === 'week' ? 'true' : 'false'"
                 @click="setProgressWindow('week')"
               >{{ t('dashboard.progress_week') }}</button>
               <button
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
+                class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                 :class="{ 'is-active': progressWindow === 'month' }"
                 :aria-pressed="progressWindow === 'month' ? 'true' : 'false'"
                 @click="setProgressWindow('month')"
@@ -542,6 +475,7 @@
           </div>
         </header>
         <section
+          v-show="progressActiveSection === 'dash-progress'"
           id="dash-progress"
           tabindex="-1"
           class="dash-section dash-section--flat dash-learning"
@@ -578,24 +512,16 @@
                 <p v-else-if="card.hint" class="parent-stat__hint">{{ card.hint }}</p>
               </button>
             </div>
-            <nav v-if="progressSectionLinks.length" class="student-progress__quick-links" :aria-label="t('dashboard.progress_sections_label')">
-              <a
-                v-for="link in progressSectionLinks"
-                :key="link.id"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :href="link.href"
-              >{{ link.label }}</a>
-            </nav>
             <p v-if="progressOverviewNextStep" class="student-progress__next">
               <a
                 v-if="progressOverviewNextStep.href"
-                class="dash-btn dash-btn--primary dash-btn--sm"
+                class="btn dash-btn dash-btn--primary dash-btn--sm btn-primary btn-sm"
                 :href="progressOverviewNextStep.href"
               >{{ progressOverviewNextStep.label }}</a>
               <button
                 v-else-if="progressOverviewNextStep.pane"
                 type="button"
-                class="dash-btn dash-btn--primary dash-btn--sm"
+                class="btn dash-btn dash-btn--primary dash-btn--sm btn-primary btn-sm"
                 @click="openStudentNav(progressOverviewNextStep.pane)"
               >{{ progressOverviewNextStep.label }}</button>
             </p>
@@ -643,7 +569,7 @@
               <p v-if="!progressSnapshot && !progressSnapshotError" class="dash-section__hint" role="status">{{ t('dashboard.progress_loading') }}</p>
               <p v-else-if="progressSnapshotError" class="dash-section__hint" role="alert">
                 {{ t('dashboard.progress_error') }}
-                <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="loadProgressSnapshot(progressWindow, { force: true })">{{ t('dashboard.retry') }}</button>
+                <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="loadProgressSnapshot(progressWindow, { force: true })">{{ t('dashboard.retry') }}</button>
               </p>
               <p v-else-if="!progressAssignmentDue" class="dash-section__hint">{{ t('dashboard.progress_assignments_empty') }}</p>
               <template v-else>
@@ -659,7 +585,7 @@
           </div>
         </section>
 
-        <section id="progress-memorisation" class="dash-section dash-section--flat teacher-hifz" aria-labelledby="progress-memorisation-heading">
+        <section v-show="progressActiveSection === 'progress-memorisation'" id="progress-memorisation" class="dash-section dash-section--flat teacher-hifz" aria-labelledby="progress-memorisation-heading">
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__title">
               <span class="dash-section__title-copy">
@@ -715,10 +641,10 @@
                 class="dash-text-link student-progress__ranges"
                 @click="progressRangesOpen = true"
               >{{ t('dashboard.progress_ranges_recent') }}</button>
-              <DashModalRoot
+              <DashModalRoot workspace
                 :open="progressRangesOpen"
                 labelled-by="student-ranges-title"
-                root-class="parent-modal-root"
+                root-class="parent-modal-root teacher-dialog"
                 panel-class="parent-modal"
                 @close="progressRangesOpen = false"
               >
@@ -747,7 +673,7 @@
                     <li v-for="item in progressWeakPassagesDisplay" :key="item.id">
                       <strong>{{ item.label }}</strong>
                       <span v-if="item.count">{{ t('dashboard.progress_improve_times', { n: item.count }) }}</span>
-                      <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(item)">{{ t('dashboard.revisit_review') }}</a>
+                      <a class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" :href="reviewNowHref(item)">{{ t('dashboard.revisit_review') }}</a>
                     </li>
                   </ul>
                 </div>
@@ -759,7 +685,7 @@
                       <strong>{{ item.label }}</strong>
                       <span>{{ t('dashboard.progress_improve_ai_times', { n: item.difference_attempts }) }}</span>
                       <a
-                        class="dash-btn dash-btn--ghost dash-btn--sm"
+                        class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                         data-testid="ai-revision-practice"
                         :href="feedbackPracticeHref(item)"
                       >{{ t('dashboard.progress_improve_practice') }}</a>
@@ -781,7 +707,7 @@
           </div>
         </section>
 
-        <section id="progress-recitation" class="dash-section dash-section--flat" aria-labelledby="progress-recitation-heading">
+        <section v-show="progressActiveSection === 'progress-recitation'" id="progress-recitation" class="dash-section dash-section--flat" aria-labelledby="progress-recitation-heading">
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__title">
               <span class="dash-section__title-copy">
@@ -910,7 +836,7 @@
                       </span>
                     </div>
                     <a
-                      class="dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta dash-revisit__cta-inline"
+                      class="btn dash-btn dash-btn--primary dash-btn--sm dash-murajaah-row__cta dash-revisit__cta-inline btn-primary btn-sm"
                       :href="reviewNowHref(item)"
                       @click="stashReviewContext(item)"
                     >
@@ -987,7 +913,7 @@
             </div>
             <div v-else-if="aiReciteError && (!aiReciteView || aiReciteView.empty)" class="dash-ai-results__status">
               <p>{{ t('dashboard.ai_recite.stats_error_title') }}</p>
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="loadAiReciteResults">
+              <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="loadAiReciteResults">
                 {{ t('dashboard.retry') }}
               </button>
             </div>
@@ -996,7 +922,7 @@
                 <span class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</span>
                 <span class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</span>
               </TeacherEmpty>
-              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="testRecitationHref">
+              <a class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" :href="testRecitationHref">
                 <i class="bi bi-mic" aria-hidden="true"></i>
                 {{ t('dashboard.ai_recite.test_cta') || t('dashboard.open_practice') }}
               </a>
@@ -1065,7 +991,7 @@
           </div>
         </section>
 
-        <section v-if="showLearnerTeacherSection" id="progress-feedback" class="dash-section dash-section--flat" aria-labelledby="progress-feedback-heading">
+        <section v-show="progressActiveSection === 'progress-feedback'" v-if="showLearnerTeacherSection" id="progress-feedback" class="dash-section dash-section--flat" aria-labelledby="progress-feedback-heading">
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__title">
               <span class="dash-section__title-copy">
@@ -1093,7 +1019,7 @@
                     <strong>{{ item.label || item.teacher_name }}</strong>
                     <span v-if="item.tajweed_score != null">{{ t('dashboard.progress_teacher_score', { n: item.tajweed_score }) }}</span>
                     <span v-if="item.note">{{ item.note }}</span>
-                    <button v-if="item.recipient_id" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="openProgressAssignment(item.recipient_id)">{{ t('dashboard.progress_feedback_open') }}</button>
+                    <button v-if="item.recipient_id" type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="openProgressAssignment(item.recipient_id)">{{ t('dashboard.progress_feedback_open') }}</button>
                   </li>
                 </ul>
               </section>
@@ -1111,7 +1037,7 @@
                     <span v-if="item.label">{{ item.label }}</span>
                     <span>{{ item.kind === 'reviewed_submission' ? t('dashboard.progress_feedback_reviewed') : (item.body || '') }}</span>
                     <time v-if="item.at" :datetime="item.at">{{ formatHistoryClock(item.at) }}</time>
-                    <button v-if="item.recipient_id && showLearnerTeacherSection" type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="openProgressAssignment(item.recipient_id)">{{ t('dashboard.progress_feedback_open') }}</button>
+                    <button v-if="item.recipient_id && showLearnerTeacherSection" type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="openProgressAssignment(item.recipient_id)">{{ t('dashboard.progress_feedback_open') }}</button>
                   </li>
                 </ul>
               </section>
@@ -1120,6 +1046,7 @@
         </section>
 
         <DashboardAchievementsWidget
+          v-show="progressActiveSection === 'achievements'"
           v-if="achievementsWidget"
           :widget="achievementsWidget"
           :collapsed="isSectionCollapsed('achievements')"
@@ -1130,7 +1057,7 @@
           :next-milestone-label="t('dashboard.achievements.section_next')"
           :earned-section-label="t('dashboard.achievements.section_earned')"
           :in-progress-section-label="t('dashboard.achievements.section_in_progress')"
-          :summary-template="t('dashboard.achievements.summary_strip')"
+          :summary-template="t('dashboard.achievements.summary_strip', { earned: '{earned}', total: '{total}' })"
           :expand-desc-label="t('dashboard.achievements.expand_desc')"
           :collapse-desc-label="t('dashboard.achievements.collapse_desc')"
           :empty-title="t('dashboard.achievements.empty_title')"
@@ -1152,14 +1079,9 @@
         </div>
 
         <div v-show="studentPane === 'activity'" class="dash-pane teacher-view-stage">
-        <StudentPageHeading
+        <TeacherPageHeader
           :title="t('dashboard.jump_activity')"
           :subtitle="t('dashboard.nav_activity_hint')"
-          :crumb-label="t('dashboard.breadcrumb_label')"
-          :home-label="t('dashboard.jump_home')"
-          :section-label="t('dashboard.jump_activity')"
-          section-id="activity"
-          @select="openStudentNav"
         />
 
 
@@ -1177,7 +1099,7 @@
             <div class="dash-section__head-row">
               <button
                 type="button"
-                class="dash-section__collapse"
+                class="btn btn-link w-100 text-start d-flex justify-content-between dash-section__collapse"
                 :aria-expanded="isSectionCollapsed('history') ? 'false' : 'true'"
                 aria-controls="dash-history-body"
                 @click="toggleSection('history')"
@@ -1201,7 +1123,7 @@
                 :key="filter.key"
                 type="button"
                 role="tab"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
+                class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                 :class="{ 'is-active': activityType === filter.key }"
                 :aria-selected="activityType === filter.key ? 'true' : 'false'"
                 :aria-current="activityType === filter.key ? 'page' : undefined"
@@ -1222,7 +1144,7 @@
             <button
               v-if="activityPageFiltersActive"
               type="button"
-              class="dash-btn dash-btn--tertiary dash-btn--sm"
+              class="btn dash-btn dash-btn--tertiary dash-btn--sm btn-link btn-sm"
               @click="clearActivityFilters"
             >{{ t('parent.filter_reset') }}</button>
             <StudentActivityFilters
@@ -1240,7 +1162,7 @@
           </div>
           <p v-if="activityKind === 'recitation'" class="student-activity__kind">
             {{ t('dashboard.activity_kind_recitation') }}
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="clearActivityKind">{{ t('dashboard.activity_clear_filter') }}</button>
+            <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="clearActivityKind">{{ t('dashboard.activity_clear_filter') }}</button>
           </p>
           <p
             v-if="!historyLoading && !historyError && historyVisible.length"
@@ -1254,14 +1176,14 @@
           </div>
           <p v-else-if="historyError" class="dash-history__status is-error" role="alert">
             {{ t('dashboard.drawer_load_error') }}
-            <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="loadLearningHistory">{{ t('dashboard.retry') }}</button>
+            <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="loadLearningHistory">{{ t('dashboard.retry') }}</button>
           </p>
           <div v-else-if="!historyGroups.length" class="dash-history__status student-activity__empty">
             <TeacherEmpty inline icon="bi bi-clock-history" :message="historyEmptyMessage" />
             <button
               v-if="activityPageFiltersActive"
               type="button"
-              class="dash-btn dash-btn--ghost dash-btn--sm"
+              class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
               @click="clearActivityFilters"
             >{{ t('parent.filter_reset') }}</button>
           </div>
@@ -1331,14 +1253,14 @@
                   </div>
                   <a
                     v-if="item.can_resume === true && item.resume_href"
-                    class="dash-btn dash-btn--ghost dash-btn--sm"
+                    class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                     :href="item.resume_href"
                     @click.stop
                   >{{ t('dashboard.activity_resume') }}</a>
                   <button
                     v-if="historyAssignmentTarget(item)"
                     type="button"
-                    class="dash-btn dash-btn--ghost dash-btn--sm"
+                    class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                     @click.stop="openActivityAssignment(item)"
                   >{{ t('dashboard.activity_open_task') }}</button>
                   </div>
@@ -1352,14 +1274,14 @@
               <button
                 v-if="historyHasMore && !historyCanCollapse"
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm dash-history__more w-100"
+                class="btn dash-btn dash-btn--ghost dash-btn--sm dash-history__more w-100 btn-outline-secondary btn-sm"
                 :disabled="historyLoadingMore"
                 @click="expandHistory"
               >{{ historyLoadingMore ? t('dashboard.loading') : t('dashboard.history_more') }}</button>
               <button
                 v-else-if="historyCanCollapse"
                 type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm dash-history__less w-100"
+                class="btn dash-btn dash-btn--ghost dash-btn--sm dash-history__less w-100 btn-outline-secondary btn-sm"
                 @click="collapseHistory"
               >{{ t('dashboard.history_less') }}</button>
             </div>
@@ -1393,19 +1315,14 @@
         </div>
 
         <div v-show="studentPane === 'messages'" id="dash-messages" class="dash-pane teacher-view-stage" tabindex="-1">
-          <StudentPageHeading
+          <TeacherPageHeader
             :title="t('dashboard.jump_messages')"
             :subtitle="t('dashboard.nav_messages_hint')"
-            :crumb-label="t('dashboard.breadcrumb_label')"
-            :home-label="t('dashboard.jump_home')"
-            :section-label="t('dashboard.jump_messages')"
-            section-id="messages"
-            @select="openStudentNav"
           />
           <p v-if="messagingRestricted" class="teacher-meta">{{ t('dashboard.messaging_age_restricted') }}</p>
           <p v-else-if="auth.learner_teacher_section_enabled" class="teacher-meta learner-messages__connections-hint">
             {{ t('ui.connections_settings_teachers_hint') }}
-            <button type="button" class="dash-text-link" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
+            <button type="button" class="btn btn-link dash-text-link" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
           </p>
           <LearnerStudentMessages
             v-if="messagingEnabled"
@@ -1423,6 +1340,7 @@
 
         <div v-show="studentPane === 'settings'" id="dash-settings" class="dash-pane teacher-view-stage teacher-account-page" tabindex="-1">
           <LearnerSettingsSection
+            ref="studentSettings"
             :name="auth.name || ''"
             :email="auth.email || ''"
             :initial="settingsInitial"
@@ -1447,8 +1365,6 @@
           :items="studentNavItems"
           :badges="navBadges"
           :active-view="studentPane"
-          nav-class="dash-jump"
-          link-class="dash-jump__link"
           nav-label-key="dashboard.jump_label"
           settings-label-key="dashboard.jump_settings"
           @select="openStudentNav"
@@ -1458,22 +1374,18 @@
     </div>
 
     <Teleport to="body">
+      <div v-if="drawerOpen" class="modal-backdrop fade show teacher-dialog-backdrop" @click="closeDrawer"></div>
       <div
         v-if="drawerOpen"
         ref="drawerRoot"
-        class="dash-drawer-root"
+        class="dash-drawer-root user-dashboard teacher-dialog modal fade show d-block"
+        @mousedown.self="closeDrawer"
         @keydown="onDrawerKeydown"
       >
-        <button
-          type="button"
-          class="dash-drawer__backdrop"
-          tabindex="-1"
-          :aria-label="t('dashboard.drawer_close')"
-          @click="closeDrawer"
-        ></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
           <aside
             ref="drawer"
-            class="dash-drawer"
+            class="dash-drawer modal-content"
             :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
             tabindex="-1"
             role="dialog"
@@ -1481,7 +1393,7 @@
             :aria-labelledby="drawerTitleId"
           >
             <div class="dash-drawer__handle" aria-hidden="true"></div>
-            <header class="dash-drawer__head">
+            <header class="dash-drawer__head modal-header">
             <div class="dash-drawer__head-main">
               <span v-if="drawerIcon" class="dash-drawer__head-icon" aria-hidden="true">
                 <i :class="drawerIcon"></i>
@@ -1495,7 +1407,7 @@
             <button
               ref="drawerClose"
               type="button"
-              class="dash-icon-btn dash-drawer__close"
+              class="btn btn-outline-secondary dash-drawer__close"
               :aria-label="t('dashboard.drawer_close')"
               @click="closeDrawer"
             >
@@ -1503,7 +1415,7 @@
             </button>
           </header>
 
-          <div class="dash-drawer__body">
+          <div class="dash-drawer__body modal-body">
             <div class="dash-drawer__content">
               <div
                 v-if="drawerMode === 'activity' && !drawerLoading && !drawerError"
@@ -1534,7 +1446,7 @@
                 <i class="bi bi-wifi-off"></i>
               </span>
               <p>{{ t('dashboard.drawer_load_error') }}</p>
-              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="retryDrawer">
+              <button type="button" class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm" @click="retryDrawer">
                 {{ t('dashboard.retry') }}
               </button>
             </div>
@@ -1569,7 +1481,7 @@
                   <div v-if="canViewAnalysis(item)" class="dash-drawer__analysis-actions">
                     <button
                       type="button"
-                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                      class="btn dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta btn-primary btn-sm"
                       :disabled="isAnalysisLoading(item)"
                       @click="openAnalysisForItem(item)"
                     >
@@ -1604,7 +1516,7 @@
                   <div v-if="canViewAnalysis(item, 'session')" class="dash-drawer__analysis-actions">
                     <button
                       type="button"
-                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                      class="btn dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta btn-primary btn-sm"
                       :disabled="isAnalysisLoading(item, 'session')"
                       @click="openAnalysisForItem(item, 'session')"
                     >
@@ -1694,7 +1606,7 @@
                       <div class="dash-drawer__ai-check-actions">
                         <a
                           v-if="aiCheckRevisionHref(item)"
-                          class="dash-btn dash-btn--ghost dash-btn--sm"
+                          class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
                           :href="aiCheckRevisionHref(item)"
                         >
                           <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
@@ -1720,7 +1632,7 @@
                 :next-milestone-label="t('dashboard.achievements.section_next')"
                 :earned-section-label="t('dashboard.achievements.section_earned')"
                 :in-progress-section-label="t('dashboard.achievements.section_in_progress')"
-                :summary-template="t('dashboard.achievements.summary_strip')"
+                :summary-template="t('dashboard.achievements.summary_strip', { earned: '{earned}', total: '{total}' })"
                 :expand-desc-label="t('dashboard.achievements.expand_desc')"
                 :collapse-desc-label="t('dashboard.achievements.collapse_desc')"
                 :name-for="achievementName"
@@ -1761,7 +1673,7 @@
                     <p class="dash-drawer__row-meta dash-drawer__murajaah-note">{{ murajaahItemHint(item) }}</p>
                   </div>
                   <div class="dash-drawer__murajaah-actions">
-                    <a class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__murajaah-cta" :href="reviewNowHref(item)">
+                    <a class="btn dash-btn dash-btn--primary dash-btn--sm dash-drawer__murajaah-cta btn-primary btn-sm" :href="reviewNowHref(item)">
                       {{ t('dashboard.review_now') }}
                     </a>
                   </div>
@@ -1791,47 +1703,32 @@
             </div>
           </div>
         </aside>
+        </div>
       </div>
     </Teleport>
 
-    <DashModalRoot
+    <TeacherDialog
       :open="Boolean(reflectionPrompt)"
-      root-class="dash-student-dialog-root"
-      panel-class="dash-student-dialog dash-student-dialog--has-foot learner-self-assessment"
-      labelled-by="learner-self-assessment-title"
-      :close-on-backdrop="!reflectionSaving"
-      :close-on-escape="!reflectionSaving"
+      :title="t('dashboard.assignment_self_assessment_title')"
+      :close-label="t('common.close')"
+      :busy="reflectionSaving"
+      class="user-dashboard learner-self-assessment"
       @close="closeSelfAssessment"
     >
-      <template v-if="reflectionPrompt">
-        <header class="dash-drawer__head">
-          <div class="dash-drawer__head-main">
-            <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></span>
-            <div class="dash-drawer__head-copy">
-              <h2 id="learner-self-assessment-title" class="dash-drawer__title">{{ t('dashboard.assignment_self_assessment_title') }}</h2>
-              <p class="dash-drawer__subtitle">{{ reflectionPrompt.title }}</p>
-            </div>
-          </div>
-          <button type="button" class="dash-icon-btn dash-drawer__close" :disabled="reflectionSaving" :aria-label="t('common.close')" @click="closeSelfAssessment">
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </header>
+      <template #pills><span class="teacher-meta">{{ reflectionPrompt?.title }}</span></template>
         <div class="dash-student-dialog__body learner-self-assessment__body">
           <p class="learner-self-assessment__intro">{{ t('dashboard.assignment_self_assessment_intro') }}</p>
           <div class="learner-self-assessment__choices" role="radiogroup" :aria-label="t('dashboard.assignment_self_assessment_title')">
-            <button
+            <label
               v-for="option in reflectionFeelingOptions"
               :key="option"
-              type="button"
               class="learner-self-assessment__choice"
               :class="{ 'is-selected': reflectionFeeling === option }"
-              role="radio"
-              :aria-checked="reflectionFeeling === option ? 'true' : 'false'"
-              @click="reflectionFeeling = option"
             >
+              <input v-model="reflectionFeeling" class="visually-hidden" type="radio" name="student-self-assessment" :value="option" />
               <i :class="reflectionFeelingIcon(option)" aria-hidden="true"></i>
               {{ t(`dashboard.assignment_self_assessment_${option}`) }}
-            </button>
+            </label>
           </div>
           <label class="learner-self-assessment__comment">
             <span>{{ t('dashboard.assignment_self_assessment_comment') }}</span>
@@ -1840,10 +1737,10 @@
           </label>
           <p v-if="supportError" class="learner-teacher__alert alert alert-danger" role="alert">{{ supportError }}</p>
         </div>
-        <footer class="dash-modal__foot learner-self-assessment__actions">
+        <template #footer>
           <button
             type="button"
-            class="dash-btn dash-btn--primary"
+            class="btn dash-btn dash-btn--primary btn-primary"
             :disabled="!reflectionFeeling || reflectionSaving"
             @click="reflectionPrompt.mode === 'before' ? submitSupportAssignment(true) : saveReflection()"
           >
@@ -1852,14 +1749,13 @@
           <button
             v-if="reflectionPrompt.mode === 'before'"
             type="button"
-            class="dash-btn dash-btn--ghost"
+            class="btn dash-btn dash-btn--ghost btn-outline-secondary"
             :disabled="reflectionSaving"
             @click="submitSupportAssignment(false)"
           >{{ t('dashboard.assignment_self_assessment_submit_without') }}</button>
-          <button v-else type="button" class="dash-btn dash-btn--ghost" :disabled="reflectionSaving" @click="closeSelfAssessment">{{ t('dashboard.home_reflection_skip') }}</button>
-        </footer>
-      </template>
-    </DashModalRoot>
+          <button v-else type="button" class="btn dash-btn dash-btn--ghost btn-outline-secondary" :disabled="reflectionSaving" @click="closeSelfAssessment">{{ t('dashboard.home_reflection_skip') }}</button>
+        </template>
+    </TeacherDialog>
 
     <SessionAnalysisModal
       :open="analysisModalOpen && analysisSourceKind !== 'attempt'"
@@ -1990,11 +1886,14 @@ import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import ConnectPrompt from '../components/ConnectPrompt.vue'
 import TeacherNav from '../components/teacher/TeacherNav.vue'
+import StudentContinueCard from '../components/dashboard/StudentContinueCard.vue'
+import TeacherKpiGrid from '../components/teacher/TeacherKpiGrid.vue'
 import TeacherEmpty from '../components/teacher/TeacherEmpty.vue'
 import LearnerSettingsSection from '../components/teacher/LearnerSettingsSection.vue'
 import LearnerStudentNotifications from '../components/teacher/LearnerStudentNotifications.vue'
 import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import DashModalRoot from '../components/dashboard/DashModalRoot.vue'
+import TeacherDialog from '../components/teacher/TeacherDialog.vue'
 import { applyAssignmentThreadUpdate } from '../scripts/teacher/learnerTaskThread.js'
 import { latestLearnerHomeFeedback } from '../scripts/teacher/learnerHome.js'
 import {
@@ -2036,7 +1935,7 @@ import {
   stashPreviousAiCheck,
 } from '../scripts/dashboard/progressView'
 import DashAiReciteAttemptCard from '../components/dashboard/DashAiReciteAttemptCard.vue'
-import StudentPageHeading from '../components/dashboard/StudentPageHeading.vue'
+import TeacherPageHeader from '../components/teacher/TeacherPageHeader.vue'
 import StudentActivityFilters from '../components/dashboard/StudentActivityFilters.vue'
 import {
   activityActiveFilterCount,
@@ -2174,14 +2073,17 @@ export default {
     NetworkFallback,
     ConnectPrompt,
     TeacherNav,
+    TeacherKpiGrid,
+    StudentContinueCard,
     TeacherEmpty,
     LearnerSettingsSection,
     LearnerTeacherSection,
     LearnerStudentNotifications,
     LearnerStudentMessages,
-    StudentPageHeading,
+    TeacherPageHeader,
     StudentActivityFilters,
     DashModalRoot,
+    TeacherDialog,
     LearnerMyLearningPlan,
     DashAnimatedNumber,
     DashAiReciteAttemptCard,
@@ -2311,6 +2213,7 @@ export default {
       expandedDetailCache: {},
       collapsedSections: { 'learning-connections': true },
       collapsedCards: {},
+      progressActiveSection: 'dash-progress',
       studentPane: typeof window === 'undefined'
         ? 'home'
         : studentDashboardPaneFromLocation(window.location, 'home'),
@@ -2569,10 +2472,11 @@ export default {
     },
     homeStatCards() {
       return this.learningCards
-        .filter((card) => Number(card.value) > 0)
-        .slice(0, 3)
+        .slice(0, 4)
         .map((card) => ({
           ...card,
+          icon: `bi ${card.icon}`,
+          label: card.hint ? `${card.label} · ${card.hint}` : card.label,
           shortLabel: card.label,
           unitHint: card.hint,
         }))
@@ -2588,6 +2492,13 @@ export default {
         returnTab: 'home',
         toolIds: STUDENT_HOME_PRACTICE_TOOL_IDS,
       })
+    },
+    studentPracticeGroups() {
+      return [
+        { id: 'core', label: this.t('dashboard.practice_group_core'), ids: ['mushaf', 'memorise', 'revise', 'recite'] },
+        { id: 'techniques', label: this.t('dashboard.practice_group_techniques'), ids: ['hide', 'listen', 'one'] },
+        { id: 'utilities', label: this.t('dashboard.practice_group_utilities'), ids: ['find', 'saved'] },
+      ].map(group => ({ ...group, tools: group.ids.map(id => this.studentPracticeTools.find(tool => tool.key === id)).filter(Boolean) }))
     },
     studentPracticeTools() {
       return buildStudentPracticeTools({
@@ -2924,10 +2835,10 @@ export default {
         ? `${recitedHint} ${this.t('dashboard.learning_capped')}`
         : recitedHint
       return [
-        { key: 'memorised', value: Number(metrics.memorised?.value || 0), label: this.t('dashboard.learning_memorised'), hint: this.t('dashboard.learning_memorised_hint'), action: 'hifz', icon: 'bi-bookmark-check' },
-        { key: 'revised', value: Number(metrics.revised?.value || 0), label: this.t('dashboard.learning_revised'), hint: revisedHint, action: 'revision', icon: 'bi-arrow-repeat' },
-        { key: 'recited', value: Number(metrics.recited?.value || 0), label: this.t('dashboard.learning_recited'), hint: recitedNote, action: 'recitation', icon: 'bi-mic' },
-        { key: 'ai_checks', value: Math.max(Number(metrics.ai_checks?.value || 0), Number(this.aiReciteStats?.total_attempts || 0)), label: this.t('dashboard.learning_ai_checks'), hint: this.t('dashboard.learning_ai_checks_hint'), action: 'ai', icon: 'bi-stars' },
+        { key: 'memorised', value: metrics.memorised?.value ?? '—', label: this.t('dashboard.learning_memorised'), hint: this.t('dashboard.learning_memorised_hint'), action: 'hifz', icon: 'bi-bookmark-check' },
+        { key: 'revised', value: metrics.revised?.value ?? '—', label: this.t('dashboard.learning_revised'), hint: revisedHint, action: 'revision', icon: 'bi-arrow-repeat' },
+        { key: 'recited', value: metrics.recited?.value ?? '—', label: this.t('dashboard.learning_recited'), hint: recitedNote, action: 'recitation', icon: 'bi-mic' },
+        { key: 'ai_checks', value: metrics.ai_checks?.value ?? '—', label: this.t('dashboard.learning_ai_checks'), hint: this.t('dashboard.learning_ai_checks_hint'), action: 'ai', icon: 'bi-stars' },
       ]
     },
     basicAnalyticsCards() {
@@ -3939,6 +3850,29 @@ export default {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
     },
+    syncProgressSectionFromLocation() {
+      const url = new URL(window.location.href)
+      const requested = url.searchParams.get('progress_section') || url.hash.slice(1)
+      this.progressActiveSection = this.progressSections.some(section => section.id === requested) ? requested : 'dash-progress'
+    },
+    selectProgressSection(id) {
+      if (!this.progressSections.some(section => section.id === id)) return
+      this.progressActiveSection = id
+      const url = new URL(window.location.href)
+      url.searchParams.set('progress_section', id)
+      url.hash = ''
+      window.history.pushState(window.history.state, '', `${url.pathname}${url.search}`)
+    },
+    onProgressTabKeydown(event, id) {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+      event.preventDefault()
+      const ids = this.progressSections.map(section => section.id)
+      const direction = document.documentElement.dir === 'rtl' ? -1 : 1
+      const delta = event.key === 'ArrowRight' ? direction : -direction
+      const index = event.key === 'Home' ? 0 : event.key === 'End' ? ids.length - 1 : (ids.indexOf(id) + delta + ids.length) % ids.length
+      this.selectProgressSection(ids[index])
+      this.$nextTick(() => document.getElementById(`tab-${ids[index]}`)?.focus())
+    },
     initialiseDashboardNavigation() {
       if (typeof window === 'undefined' || !window.history) return
       let pane = studentDashboardPaneFromLocation(window.location, this.studentPane)
@@ -3948,6 +3882,7 @@ export default {
         pane = 'home'
       }
       this.studentPane = pane
+      this.syncProgressSectionFromLocation()
       if (pane === 'progress') this.loadProgressSnapshot(this.chartDays === 7 ? 'week' : 'month')
       const storedScroll = Number(window.history.state?.studentDashboardScrollY)
       const scrollY = Number.isFinite(storedScroll) ? storedScroll : Number(window.scrollY || 0)
@@ -4063,6 +3998,7 @@ export default {
       return true
     },
     onDashboardHistoryNavigation(event) {
+      this.syncProgressSectionFromLocation()
       if (typeof window === 'undefined') return
       this.rememberDashboardPaneScroll(this.studentPane)
       const urlWindow = progressWindowFromSearch(window.location.search)
@@ -4149,10 +4085,11 @@ export default {
       return this.t(taskStateLabelKey(resolveDisplayTaskState(task)))
     },
     assignmentTone(task) {
-      if (task?.review_state === 'needs_correction') return 'warning'
-      if (resolveDisplayTaskState(task) === TASK_STATE.OVERDUE) return 'danger'
-      if (this.assignmentDue(task).daysRemaining === 0) return 'warning'
-      return 'neutral'
+      const state = resolveDisplayTaskState(task)
+      if (state === TASK_STATE.DONE) return 'completed'
+      if (state === TASK_STATE.OVERDUE) return 'danger'
+      if (state === TASK_STATE.CANCELLED) return 'neutral'
+      return 'warning'
     },
     assignmentDue(task) {
       const dueAt = task?.assignment?.due_at
@@ -5127,14 +5064,14 @@ export default {
         })
         if (requestId !== this.historyRequest) return
         const items = Array.isArray(page?.items) ? page.items : []
-        this.historyItems = append ? [...this.historyItems, ...items] : items
+        this.historyItems = [...new Map([...(append ? this.historyItems : []), ...items].map(item => [item.id, item])).values()]
         this.historyPageHasMore = page?.has_more === true
         this.historyNextOffset = page?.next_offset ?? null
         if (append) this.historyExpanded = true
         if (this.studentPane === 'activity') this.syncActivityFiltersInHistory()
       } catch (error) {
         console.error('Learning history fetch failed', error)
-        if (!append && requestId === this.historyRequest) this.historyError = true
+        if (requestId === this.historyRequest) this.historyError = true
       } finally {
         if (requestId === this.historyRequest) {
           this.historyLoading = false
@@ -5861,6 +5798,7 @@ export default {
     },
     openStudentConnectionsSettings() {
       this.openStudentNav('settings')
+      this.$refs.studentSettings?.selectSection('teachers')
       this.$nextTick(() => {
         const target = document.getElementById('learner-settings-connections')
         target?.scrollIntoView({ behavior: 'smooth', block: 'start' })

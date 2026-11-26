@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+
+const audience = readFileSync(new URL('../../resources/js/views/PreviewAudiencePage.vue', import.meta.url), 'utf8')
+const routes = readFileSync(new URL('../../routes/web/app.php', import.meta.url), 'utf8')
+const appJs = readFileSync(new URL('../../resources/js/app.js', import.meta.url), 'utf8')
+const en = JSON.parse(readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8'))
+
+assert.match(audience, /PreviewAudiencePage/)
+assert.match(audience, /previewAssetUrl/)
+assert.match(routes, /preview\.teachers/)
+assert.match(routes, /preview\.students/)
+assert.match(routes, /preview\.parents/)
+assert.match(appJs, /preview-audience-page/)
+assert.ok(en.previewTeachers?.hero?.title)
+assert.ok(en.previewStudents?.hero?.title)
+assert.ok(en.previewParents?.hero?.title)
+assert.ok(en.previewLearning?.hero?.title)
+assert.ok(en.previewInstitutions?.hero?.title)
+assert.match(routes, /preview\.learning/)
+assert.match(routes, /preview\.institutions/)
+assert.match(audience, /learning.*institutions/s)
+assert.match(audience, /showPremiumCallout/)
+assert.ok(en.previewLearning?.premium?.note)
+assert.ok(en.previewInstitutions?.spotlights?.primary?.asset)

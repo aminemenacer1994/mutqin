@@ -33,6 +33,7 @@ class DashboardController extends Controller
                 'practice_url' => route('dashboard'),
                 'memorisation_url' => route('memorisation'),
                 'profile_url' => route('profile.show'),
+                'logout_url' => route('logout'),
             ],
         ]);
     }

@@ -13,6 +13,7 @@ assert.match(section, /activeFilter === 'completed'[\s\S]*ALL_TAB_COMPLETED_PREV
 assert.doesNotMatch(dashboard, /learner-learning-connections-body[\s\S]*LearnerRevisionTargets/)
 assert.match(dashboard, /connections_settings_manage/)
 assert.match(workspace, /learner-teacher__assignments-toolbar__row/)
-assert.match(workspace, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/)
+assert.match(section, /class="teacher-tabs learner-teacher__filters/)
+assert.doesNotMatch(workspace, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/, 'Shared tabs must not be forced into narrow grid columns')
 
 console.log('phase5-student-my-learning.test.mjs: ok')

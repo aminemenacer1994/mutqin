@@ -11,21 +11,18 @@
     </header>
 
     <div class="teacher-plan-hub__filters">
-      <label>
+      <label class="teacher-plan-hub__filter">
         <span class="visually-hidden">{{ t('teacher.student') }}</span>
         <select ref="picker" v-model="studentId" class="form-select">
           <option value="">{{ t('teacher.all_students') }}</option>
           <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
         </select>
       </label>
-      <div class="teacher-plan-hub__status" role="group" :aria-label="t('teacher.plan_sort')">
-        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': status === filter.id }" @click="status = filter.id">{{ filter.label }}</button>
-      </div>
-      <label>
+      <label class="teacher-plan-hub__filter teacher-plan-hub__filter--search">
         <span class="visually-hidden">{{ t('teacher.plan_search') }}</span>
         <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.plan_search_placeholder')">
       </label>
-      <label>
+      <label class="teacher-plan-hub__filter">
         <span class="visually-hidden">{{ t('teacher.plan_sort') }}</span>
         <select v-model="sort" class="form-select">
           <option value="recent">{{ t('teacher.plan_sort_recent') }}</option>
@@ -33,6 +30,9 @@
           <option value="progress">{{ t('teacher.plan_sort_progress') }}</option>
         </select>
       </label>
+      <div class="teacher-plan-hub__status" role="group" :aria-label="t('teacher.col_status')">
+        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': status === filter.id }" @click="status = filter.id">{{ filter.label }}</button>
+      </div>
     </div>
 
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-link btn-sm" @click="load">{{ t('teacher.retry') }}</button></p>

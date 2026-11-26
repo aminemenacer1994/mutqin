@@ -13,6 +13,7 @@ export const STUDENT_PROGRESS_SECTION_IDS = Object.freeze([
 ])
 
 export function progressMetricDisplay(value, { treatZeroAsEmpty = false } = {}) {
+  if (value == null || value === '') return '—'
   const n = Number(value)
   if (!Number.isFinite(n)) return '—'
   if (treatZeroAsEmpty && n === 0) return '—'
@@ -21,13 +22,13 @@ export function progressMetricDisplay(value, { treatZeroAsEmpty = false } = {}) 
 
 export function progressLifetimeMetricValue(metric) {
   if (!metric || typeof metric !== 'object') return null
-  if (metric.period_days == null) return Number(metric.value ?? 0)
+  if (metric.period_days == null) return metric.value == null ? null : Number(metric.value)
   return null
 }
 
 export function progressPeriodMetricValue(metric) {
   if (!metric || typeof metric !== 'object') return null
-  if (metric.period_days != null) return Number(metric.value ?? 0)
+  if (metric.period_days != null) return metric.value == null ? null : Number(metric.value)
   if (metric.period_value != null) return Number(metric.period_value)
   return null
 }
@@ -66,7 +67,7 @@ export function buildProgressOverviewGroups(t, metrics, { periodDays = 30 } = {}
     {
       key: 'revised',
       label: t('dashboard.learning_revised'),
-      value: progressMetricDisplay(progressPeriodMetricValue(revised), { treatZeroAsEmpty: true }),
+      value: progressMetricDisplay(progressPeriodMetricValue(revised)),
       hint: revisedHint,
       icon: 'bi-arrow-repeat',
       action: 'revision',
@@ -74,7 +75,7 @@ export function buildProgressOverviewGroups(t, metrics, { periodDays = 30 } = {}
     {
       key: 'recited',
       label: t('dashboard.learning_recited'),
-      value: progressMetricDisplay(progressPeriodMetricValue(recited), { treatZeroAsEmpty: true }),
+      value: progressMetricDisplay(progressPeriodMetricValue(recited)),
       hint: recitedHint,
       icon: 'bi-mic',
       action: 'recitation',
@@ -84,7 +85,6 @@ export function buildProgressOverviewGroups(t, metrics, { periodDays = 30 } = {}
       label: t('dashboard.progress_ai_checks_period'),
       value: progressMetricDisplay(
         aiChecks.period_value != null ? Number(aiChecks.period_value) : progressPeriodMetricValue(aiChecks),
-        { treatZeroAsEmpty: true },
       ),
       hint: t('dashboard.progress_ai_checks_period_hint'),
       icon: 'bi-stars',

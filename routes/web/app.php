@@ -17,6 +17,9 @@ use App\Http\Controllers\IndopakFontController;
 use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
+use App\Http\Controllers\LandingPreviewAssetController;
+use App\Http\Controllers\LandingPreviewDemoController;
+use App\Http\Controllers\LandingPreviewReferenceController;
 use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\Onboarding\ConnectionOnboardingController;
 use App\Http\Controllers\Parent\DashboardController as ParentDashboardPageController;
@@ -111,6 +114,50 @@ Route::get('/internal/error-test', ErrorTestController::class)
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
+Route::middleware(['auth', 'verified', 'landing.preview'])
+    ->prefix('preview')
+    ->name('preview.')
+    ->group(function (): void {
+        Route::view('/', 'preview.home')->name('home');
+        Route::view('/pricing', 'preview.pricing')->name('pricing');
+        Route::view('/teachers', 'preview.teachers')->name('teachers');
+        Route::view('/students', 'preview.students')->name('students');
+        Route::view('/parents', 'preview.parents')->name('parents');
+        Route::view('/learning', 'preview.learning')->name('learning');
+        Route::view('/institutions', 'preview.institutions')->name('institutions');
+        Route::view('/resources', 'preview.resources')->name('resources');
+        Route::get('/resources/files/{file}', LandingPreviewReferenceController::class)
+            ->where('file', 'business-model|business-plan')
+            ->name('resources.files');
+        Route::view('/demo', 'preview.demo')->name('demo');
+        Route::view('/demo/memorisation', 'preview.demo-memorisation')->name('demo.memorisation');
+        Route::get('/demo/status', [LandingPreviewDemoController::class, 'status'])
+            ->name('demo.status');
+        Route::get('/demo/capabilities', [LandingPreviewDemoController::class, 'capabilities'])
+            ->name('demo.capabilities');
+        Route::post('/demo/enter', [LandingPreviewDemoController::class, 'enter'])
+            ->middleware('throttle:preview-sandbox-enter')
+            ->name('demo.enter');
+        Route::post('/demo/reset', [LandingPreviewDemoController::class, 'reset'])
+            ->name('demo.reset');
+        Route::post('/demo/entitlement', [LandingPreviewDemoController::class, 'setEntitlement'])
+            ->name('demo.entitlement');
+        Route::post('/demo/switch', [LandingPreviewDemoController::class, 'switch'])
+            ->middleware('throttle:preview-sandbox-enter')
+            ->name('demo.switch');
+        Route::post('/demo/guided', [LandingPreviewDemoController::class, 'toggleGuided'])
+            ->name('demo.guided');
+        Route::post('/demo/walkthrough/restart', [LandingPreviewDemoController::class, 'restartWalkthrough'])
+            ->name('demo.walkthrough.restart');
+        Route::get('/assets/{asset}', LandingPreviewAssetController::class)
+            ->where('asset', '[A-Za-z0-9\-]+\.png')
+            ->name('assets');
+    });
+
+Route::post('/preview/demo/exit', [LandingPreviewDemoController::class, 'exit'])
+    ->middleware(['auth', 'landing.preview'])
+    ->name('preview.demo.exit');
 
 Route::get('/onboarding', function () {
     return redirect()->route('memorisation');

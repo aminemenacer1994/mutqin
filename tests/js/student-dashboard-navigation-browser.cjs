@@ -9,13 +9,13 @@ async function clickTabWithoutAutoScroll(page, label, scrollY = null) {
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
   }
   await page.evaluate((label) => {
-    const button = [...document.querySelectorAll('.dash-jump__link')]
+    const button = [...document.querySelectorAll('.teacher-nav__link')]
       .find(node => node.textContent.trim().toLowerCase() === label.toLowerCase())
     if (!button) throw new Error(`Missing dashboard tab: ${label}`)
     button.click()
   }, label)
   await page.waitForFunction(expected => {
-    const active = document.querySelector('.dash-jump__link.is-active')
+    const active = document.querySelector('.teacher-nav__link.is-active')
     return active?.textContent.trim().toLowerCase() === expected.toLowerCase()
   }, label)
   await page.waitForTimeout(100)
@@ -40,17 +40,17 @@ async function main() {
       { id: 'teacher-1', type: 'teacher_feedback', authority: 'teacher', practice_kind: 'unspecified', surah_number: 1, surah_name: 'Al-Fatihah', ayah_start: 1, ayah_end: 7, outcome_params: { body: 'Practise the first word slowly.' }, occurred_at: '2026-11-20T10:00:00Z' },
     ] } }))
     await page.goto(`${base}/progress?source=navigation-test`)
-    await page.locator('.dash-jump').waitFor()
+    await page.locator('.teacher-nav-shell--desktop').waitFor()
 
-    const visibleTabs = (await page.locator('.teacher-nav-shell--desktop .dash-jump__link').allInnerTexts())
+    const visibleTabs = (await page.locator('.teacher-nav-shell--desktop .teacher-nav__link').allInnerTexts())
       .map(text => text.replace(/\s+/g, ' ').trim().toLowerCase())
-    for (const label of ['home', 'my learning', 'progress', 'activity', 'settings']) {
+    for (const label of ['home', 'my learning', 'practice', 'progress', 'activity', 'messages', 'settings']) {
       assert.ok(visibleTabs.some(text => text === label || text.startsWith(`${label} `)), `Missing student tab ${label}`)
     }
-    assert.ok(!visibleTabs.some(text => text === 'practice' || text.startsWith('practice ')), 'Practice tab removed from student navigation')
-    assert.ok(visibleTabs.length === 5 || visibleTabs.length === 6, `Unexpected student tabs: ${visibleTabs.join(', ')}`)
+    assert.ok(visibleTabs.some(text => text === 'practice'), 'Practice remains in student navigation')
+    assert.ok(visibleTabs.length === 7, `Unexpected student tabs: ${visibleTabs.join(', ')}`)
     const desktopWorkspace = await page.evaluate(() => {
-      const nav = document.querySelector('.dash-jump').getBoundingClientRect()
+      const nav = document.querySelector('.teacher-nav-shell--desktop').getBoundingClientRect()
       const pane = document.querySelector('.dash-home-pane').getBoundingClientRect()
       return { navRight: nav.right, paneLeft: pane.left, font: getComputedStyle(document.querySelector('.learner-workspace')).fontFamily }
     })
@@ -79,11 +79,11 @@ async function main() {
       const url = new URL(page.url())
       assert.equal(url.searchParams.get('tab'), slugs[index], `${labels[index]} has a stable URL state`)
       assert.equal(url.searchParams.get('source'), 'navigation-test', `${labels[index]} preserves existing parameters`)
-      assert.equal(await page.locator('.dash-jump__link.is-active:visible').getAttribute('aria-current'), 'page')
+      assert.equal(await page.locator('.teacher-nav__link.is-active:visible').getAttribute('aria-current'), 'page')
     }
     const history = page.locator('#dash-activity')
-    await history.getByText('AI wording check', { exact: true }).waitFor()
-    assert.ok(await history.getByText('97% words matched', { exact: true }).isVisible(), 'AI history describes wording only')
+    await history.getByText('Reading check', { exact: true }).waitFor()
+    assert.ok(await history.getByText('97% Wording match', { exact: true }).isVisible(), 'AI history describes wording only')
     assert.ok(await history.getByText('Memorisation practice', { exact: true }).isVisible(), 'Practice is not presented as validated memorisation')
     assert.ok(await history.getByText('Teacher feedback', { exact: true }).isVisible())
     assert.ok(await history.getByText('Practise the first word slowly.', { exact: true }).isVisible())
@@ -99,15 +99,15 @@ async function main() {
     await clickTabWithoutAutoScroll(page, 'Progress')
     await page.evaluate(() => window.history.back())
     await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'learning')
-    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /my learning/)
+    assert.match((await page.locator('.teacher-nav__link.is-active:visible').innerText()).toLowerCase(), /my learning/)
     await page.evaluate(() => window.history.forward())
     await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'progress')
-    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /progress/)
+    assert.match((await page.locator('.teacher-nav__link.is-active:visible').innerText()).toLowerCase(), /progress/)
 
     await page.reload()
-    await page.locator('.dash-jump').waitFor()
+    await page.locator('.teacher-nav-shell--desktop').waitFor()
     assert.equal(new URL(page.url()).searchParams.get('tab'), 'progress', 'Reload preserves the selected tab')
-    assert.match((await page.locator('.dash-jump__link.is-active:visible').innerText()).toLowerCase(), /progress/)
+    assert.match((await page.locator('.teacher-nav__link.is-active:visible').innerText()).toLowerCase(), /progress/)
 
     const review = page.getByRole('link', { name: /review ayah/i }).first()
     if (await review.count()) {
@@ -118,8 +118,8 @@ async function main() {
     }
 
     await clickTabWithoutAutoScroll(page, 'Home')
-    await page.locator('.learner-home__skeleton').waitFor({ state: 'hidden' })
-    const continueAction = page.locator('[data-testid="dashboard-primary-continue"]')
+    await page.waitForFunction(() => [...document.querySelectorAll('.dash-home-pane .learner-home__skeleton')].every(e => !e.getClientRects().length))
+    const continueAction = page.locator('.dash-home-pane [data-testid="dashboard-primary-continue"]')
     if (await continueAction.count()) {
       const href = new URL(await continueAction.getAttribute('href'), base)
       assert.ok(href.pathname.length > 1, 'Continue exposes a concrete destination')
@@ -135,7 +135,7 @@ async function main() {
       await dialog.waitFor()
       const conversationHeadingSize = await dialog.locator('h2').first().evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize))
       assert.ok(conversationHeadingSize <= 22, 'Conversation heading uses a standard size')
-      assert.equal(await page.locator('.dash-jump__link.is-active:visible').innerText(), 'My learning')
+      assert.equal(await page.locator('.teacher-nav__link.is-active:visible').innerText(), 'My learning')
       const back = dialog.getByRole('button', { name: /^back$/i })
       assert.equal(await back.count(), 1, 'Feedback conversation exposes a contextual Back action')
       await back.click()
@@ -201,6 +201,33 @@ async function main() {
         await page.keyboard.press('Escape')
       }
     }
+    const detailsTrigger = page.locator('.learner-teacher__task-row__actions').getByRole('button', {name:'Details',exact:true}).first()
+    assert.ok(await detailsTrigger.count(), 'The seeded student has assignment details to inspect')
+    let assignmentModalCases = 0
+    for (const width of [390,1440]) {
+      await page.setViewportSize({width,height:900})
+      for (const theme of ['light','dark']) {
+        await page.evaluate(t=>{document.documentElement.dataset.theme=t},theme)
+        await detailsTrigger.click()
+        const modal = page.getByTestId('learner-assignment-detail-modal')
+        await modal.waitFor()
+        const panel = modal.locator('.dash-modal')
+        await page.waitForTimeout(400)
+        const rect = await panel.boundingBox()
+        console.log('Assignment modal layout',width,theme,rect,await panel.evaluate(e=>({opacity:getComputedStyle(e).opacity,zIndex:getComputedStyle(e).zIndex,position:getComputedStyle(e).position,transform:getComputedStyle(e).transform})))
+        assert.ok(rect.y >= 0 && rect.y+rect.height <= 901,'Assignment dialog fits vertically')
+        assert.ok(rect.x >= 0 && rect.x + rect.width <= width + 1, 'Assignment dialog fits the viewport')
+        assert.ok(await panel.evaluate(e=>e.scrollWidth-e.clientWidth<=1), 'Assignment dialog has no horizontal overflow')
+        await modal.getByRole('button',{name:'Close',exact:true}).focus()
+        await page.keyboard.press('Shift+Tab')
+        assert.ok(await panel.evaluate(e=>e.contains(document.activeElement)), 'Focus is trapped inside the dialog')
+        await page.screenshot({path:`tests/js/screenshots/group01-student-foundation/after/student-assignment-modal-${width}-${theme}.png`,animations:'disabled'})
+        await page.keyboard.press('Escape')
+        await modal.waitFor({state:'hidden'})
+        assert.ok(await detailsTrigger.evaluate(e=>e===document.activeElement), 'Escape restores focus to the Details trigger')
+        assignmentModalCases++
+      }
+    }
     const assignmentAction = page.locator('.learner-teacher__icon-hit--primary').first()
     if (await assignmentAction.count()) {
       const hrefValue = await assignmentAction.getAttribute('href')
@@ -222,6 +249,7 @@ async function main() {
       reloadPreserved: true,
       feedbackOpened,
       feedbackModalCases,
+      assignmentModalCases,
       runtimeErrors: runtimeErrors.length,
     }, null, 2))
   } finally {

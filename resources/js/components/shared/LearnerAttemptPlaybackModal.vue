@@ -1,5 +1,5 @@
 <template>
-  <DashModalRoot
+  <DashModalRoot workspace
     :open="open && Boolean(row)"
     :labelled-by="titleId"
     :root-class="playbackRootClass"
@@ -181,7 +181,7 @@ export default {
   },
   computed: {
     playbackRootClass() {
-      return ['dash-student-dialog-root', 'learner-playback-shell', { 'is-mobile-sheet': this.isMobile }]
+      return ['teacher-dialog', 'dash-student-dialog-root', 'learner-playback-shell', { 'is-mobile-sheet': this.isMobile }]
     },
     playback() {
       return resolvePlaybackAttempt(this.row)

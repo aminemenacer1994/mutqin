@@ -41,6 +41,7 @@ class SeoPagesTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Allow: /', $body);
+        $this->assertStringContainsString('Disallow: /preview', $body);
         $this->assertStringContainsString('Disallow: /dashboard', $body);
         $this->assertStringContainsString('Disallow: /admin', $body);
         $this->assertStringContainsString('Disallow: /memorisation', $body);

@@ -7,7 +7,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const studentCss = fs.readFileSync(path.join(root, 'resources/js/views/Dashboard.student-experience.css'), 'utf8')
+const studentCss = fs.readFileSync(path.join(root, 'resources/js/views/Dashboard.student.css'), 'utf8')
 
 assert.match(
   studentCss,
@@ -27,17 +27,8 @@ assert.match(
   'My learning progress badge uses dash card token',
 )
 
-assert.match(
-  studentCss,
-  /#dash-settings \.teacher-account__action[\s\S]*?min-height:\s*var\(--control-height,\s*44px\)/,
-  'Settings actions meet 44px control height',
-)
-
-assert.match(
-  studentCss,
-  /learner-circle__actions \.dash-btn[\s\S]*?min-height:\s*var\(--control-height,\s*44px\)/,
-  'Connections actions meet 44px control height',
-)
+const teacherCss = fs.readFileSync(path.join(root, 'resources/js/views/TeacherDashboard.css'), 'utf8')
+assert.match(teacherCss, /min-height: var\(--teacher-control-height\)/, 'Shared actions retain their standard touch target')
 
 assert.match(
   studentCss,

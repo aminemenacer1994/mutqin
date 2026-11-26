@@ -12,6 +12,10 @@ Artisan::command('inspire', function () {
 // Scheduler + queue-worker freshness heartbeats (see docs/monitoring.md).
 Schedule::command('mutqin:health-heartbeat')->everyMinute();
 
+Schedule::command('mutqin:preview-sandbox-cleanup')
+    ->hourly()
+    ->withoutOverlapping(5);
+
 Schedule::command('mutqin:sync-revision-reminders')
     ->hourly()
     ->withoutOverlapping(10);

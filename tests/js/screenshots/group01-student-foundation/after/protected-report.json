@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "path": "/",
+      "width": 1440
+    },
+    {
+      "path": "/",
+      "width": 390
+    },
+    {
+      "path": "/login",
+      "width": 1440
+    },
+    {
+      "path": "/login",
+      "width": 390
+    },
+    {
+      "path": "/memorisation",
+      "width": 1440
+    },
+    {
+      "path": "/memorisation",
+      "width": 834
+    },
+    {
+      "path": "/memorisation",
+      "width": 390
+    }
+  ],
+  "errors": [],
+  "environmentWarnings": [
+    "The source list for the Content Security Policy directive 'form-action' contains an invalid source: 'http://[::1]:8000'. It will be ignored.",
+    "The source list for the Content Security Policy directive 'form-action' contains an invalid source: 'http://[::1]:8001'. It will be ignored.",
+    "The source list for the Content Security Policy directive 'form-action' contains an invalid source: 'http://[::1]:3000'. It will be ignored.",
+    "The source list for the Content Security Policy directive 'form-action' contains an invalid source: 'http://[::1]:5173'. It will be ignored.",
+    "[PostHog.js] Events are being dropped because the user agent looks like a bot (first dropped event: \"$opt_in\"). Set `opt_out_useragent_filter: true` to capture them, e.g. in end-to-end tests. Note that logs from `captureLog` are not subject to this filter.",
+    "[PostHog.js] Events are being dropped because the user agent looks like a bot (first dropped event: \"$pageview\"). Set `opt_out_useragent_filter: true` to capture them, e.g. in end-to-end tests. Note that logs from `captureLog` are not subject to this filter.",
+    "[PostHog.js] Events are being dropped because the user agent looks like a bot (first dropped event: \"$identify\"). Set `opt_out_useragent_filter: true` to capture them, e.g. in end-to-end tests. Note that logs from `captureLog` are not subject to this filter."
+  ]
+}

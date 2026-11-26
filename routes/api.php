@@ -196,6 +196,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::middleware(['learner.teacher.section', 'learner.learning.network'])->group(function () {
             Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
+            Route::get('/me/assignments', [LearnerSupportController::class, 'assignments'])->name('api.me.assignments.index');
+            Route::get('/me/assignments/{recipient}', [LearnerSupportController::class, 'assignment'])->whereNumber('recipient')->name('api.me.assignments.show');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
             Route::post('/me/assignments/{recipient}/complete', [LearnerSupportController::class, 'completeAssignment'])->name('api.me.assignments.complete');
             Route::post('/me/self-assessments', [LearnerSupportController::class, 'storeSelfAssessment'])->name('api.me.self-assessments.store');
@@ -258,6 +260,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/attendance', [TeacherDashboardController::class, 'attendance'])->name('api.teacher.attendance');
                 Route::post('/attendance/groups/{group}/lessons', [TeacherDashboardController::class, 'scheduleLesson'])->name('api.teacher.attendance.lessons.store');
                 Route::put('/attendance/groups/{group}/students/{student}', [TeacherDashboardController::class, 'setAttendance'])->name('api.teacher.attendance.set');
+                Route::post('/attendance/groups/{group}/bulk', [TeacherDashboardController::class, 'bulkAttendance'])->name('api.teacher.attendance.bulk');
                 Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
                 Route::get('/students/{student}/guardians', [TeacherGuardianController::class, 'index'])->name('api.teacher.students.guardians');
                 Route::post('/students/{student}/guardians/invitations', [TeacherGuardianController::class, 'store'])->middleware('throttle:10,1,api-teacher-guardian-invites')->name('api.teacher.students.guardians.invitations.store');

@@ -163,6 +163,7 @@ class TeacherDashboardService
                     'overdue_tasks' => (int) ($assignments['overdue'] ?? 0),
                     'unread_messages' => $unreadSnapshot['count'],
                     'unread_student_id' => $unreadSnapshot['student_id'],
+                    'attendance_unmarked_today' => $this->attendance->unmarkedTodayCount($teacher),
                 ],
             ];
         });
@@ -528,7 +529,9 @@ class TeacherDashboardService
             ->where('student_id', $user->id)
             ->whereHas('assignment')
             ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.learningGroup:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
-            ->latest('id')
+            ->orderByRaw("CASE WHEN status IN ('pending', 'overdue', 'in_progress') THEN 0 ELSE 1 END")
+            ->orderBy(\App\Models\TeacherAssignment::select('due_at')->whereColumn('teacher_assignments.id', 'teacher_assignment_recipients.teacher_assignment_id'))
+            ->orderBy('id')
             ->limit(50)
             ->get();
 
@@ -544,22 +547,27 @@ class TeacherDashboardService
                 ->where('student_id', $user->id)
                 ->whereHas('assignment')
                 ->with(['assignment.teacher:id,name,account_role,organisation_id,deleted_at', 'assignment.organisation:id,name', 'assignment.learningGroup:id,name', 'assignment.notes.teacher:id,name', 'latestSelfAssessment'])
-                ->latest('id')
+                ->orderByRaw("CASE WHEN status IN ('pending', 'overdue', 'in_progress') THEN 0 ELSE 1 END")
+                ->orderBy(\App\Models\TeacherAssignment::select('due_at')->whereColumn('teacher_assignments.id', 'teacher_assignment_recipients.teacher_assignment_id'))
+                ->orderBy('id')
                 ->limit(50)
                 ->get();
         }
 
         $completedSessions = UserSession::query()
             ->where('user_id', $user->id)
+            ->whereIn('teacher_assignment_recipient_id', $assignments->modelKeys())
             ->where('is_onboarding_example', false)
             ->where('status', UserSessionStatus::Completed->value)
             ->get();
         $scoredAttempts = AiReciteAttempt::query()
             ->validScored()
             ->where('user_id', $user->id)
+            ->whereIn('teacher_assignment_recipient_id', $assignments->modelKeys())
             ->get();
         $unfinishedSessions = UserSession::query()
             ->where('user_id', $user->id)
+            ->whereIn('teacher_assignment_recipient_id', $assignments->modelKeys())
             ->where('is_onboarding_example', false)
             ->whereIn('status', UserSessionStatus::unfinishedDatabaseValues())
             ->orderByDesc('last_activity_at')
@@ -1075,24 +1083,12 @@ class TeacherDashboardService
     private function learnerOverview(User $user, $assignments): array
     {
         $today = today();
-        $dueToday = $assignments->filter(function (TeacherAssignmentRecipient $recipient) use ($today) {
-            $due = $recipient->assignment?->due_at;
-            $status = $recipient->status instanceof AssignmentStatus
-                ? $recipient->status->value
-                : (string) $recipient->status;
-
-            return $due !== null
-                && $due->isSameDay($today)
-                && ! in_array($status, [
-                    AssignmentStatus::Completed->value,
-                    AssignmentStatus::Cancelled->value,
-                ], true);
-        })->count();
-
-        $submitted = $assignments->filter(fn (TeacherAssignmentRecipient $recipient) => (
-            ($recipient->status instanceof AssignmentStatus ? $recipient->status->value : (string) $recipient->status)
-                === AssignmentStatus::AwaitingConfirmation->value
-        ))->count();
+        $recipientQuery = TeacherAssignmentRecipient::query()->where('student_id', $user->id)->whereHas('assignment');
+        $dueToday = (clone $recipientQuery)
+            ->whereIn('status', [AssignmentStatus::Pending->value, AssignmentStatus::InProgress->value, AssignmentStatus::Overdue->value])
+            ->whereHas('assignment', fn ($query) => $query->whereBetween('due_at', [$today->copy()->startOfDay(), $today->copy()->endOfDay()]))
+            ->count();
+        $submitted = (clone $recipientQuery)->where('status', AssignmentStatus::AwaitingConfirmation->value)->count();
 
         $revisionQuery = MemorisationPracticePlan::query()
             ->where('user_id', $user->id)
@@ -1122,23 +1118,12 @@ class TeacherDashboardService
         $weekStart = now()->startOfWeek();
         $weekEnd = now()->endOfWeek();
 
-        $statusValue = static function (TeacherAssignmentRecipient $recipient): string {
-            return $recipient->status instanceof AssignmentStatus
-                ? $recipient->status->value
-                : (string) $recipient->status;
-        };
-
-        $dueThisWeek = $assignments->filter(function (TeacherAssignmentRecipient $recipient) use ($weekStart, $weekEnd) {
-            $due = $recipient->assignment?->due_at;
-
-            return $due !== null && $due->between($weekStart, $weekEnd);
-        });
-
-        $weeklyGoal = $dueThisWeek->count();
-
-        $weeklyCompleted = $dueThisWeek->filter(
-            fn (TeacherAssignmentRecipient $recipient) => $statusValue($recipient) === AssignmentStatus::Completed->value,
-        )->count();
+        $dueThisWeek = TeacherAssignmentRecipient::query()
+            ->where('student_id', $user->id)
+            ->where('status', '!=', AssignmentStatus::Cancelled->value)
+            ->whereHas('assignment', fn ($query) => $query->whereBetween('due_at', [$weekStart, $weekEnd]));
+        $weeklyGoal = (clone $dueThisWeek)->count();
+        $weeklyCompleted = (clone $dueThisWeek)->where('status', AssignmentStatus::Completed->value)->count();
 
         $activeDaysThisWeek = UserSession::query()
             ->where('user_id', $user->id)

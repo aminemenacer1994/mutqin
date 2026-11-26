@@ -2035,6 +2035,25 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(1, $afterClear['absent']);
     }
 
+    public function test_teacher_can_bulk_mark_attendance_in_one_request(): void
+    {
+        [$teacher, $student, $hidden, $group] = $this->classroom();
+        $date = today()->toDateString();
+
+        $bulk = $this->actingAs($teacher)->postJson(route('api.teacher.attendance.bulk', $group), [
+            'date' => $date,
+            'status' => 'present',
+            'student_ids' => [$student->id],
+        ])->assertOk()->json();
+
+        $this->assertSame('present', $bulk['status']);
+        $this->assertCount(1, $bulk['saved']);
+        $this->assertSame($student->id, $bulk['saved'][0]['student_id']);
+
+        $overview = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json('snapshot');
+        $this->assertSame(0, $overview['attendance_unmarked_today']);
+    }
+
     public function test_teacher_can_schedule_a_lesson_without_marking_students_absent(): void
     {
         [$teacher, $student, $hidden, $group] = $this->classroom();

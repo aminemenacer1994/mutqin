@@ -27,8 +27,13 @@
           <TeacherNav
             variant="desktop"
             :items="TEACHER_NAV"
+            :admin-items="TEACHER_ADMIN_NAV"
             :counts="deskCounts"
+            :badges="navBadges"
             :active-view="view"
+            :show-account="false"
+            :logout-url="auth.logout_url || ''"
+            :csrf-token="auth.csrf_token || ''"
             style="--dash-delay: 40ms"
             @select="openView"
           />
@@ -66,6 +71,8 @@
               @open-assignments="openAssignments"
               @open-plans="openView('plans')"
               @open-reviews="openView('reviews')"
+              @open-attendance="openView('attendance')"
+              @open-messages="openView('messages')"
               @create-assignment="startAssignment"
             />
 
@@ -88,6 +95,15 @@
             />
 
             <TeacherPlansView v-else-if="view === 'plans'" />
+
+            <TeacherAttendanceSection v-else-if="view === 'attendance'" />
+
+            <TeacherMessagesSection
+              v-else-if="view === 'messages'"
+              :students="assignmentRoster.length ? assignmentRoster : students"
+              :loading="studentsLoading"
+              :format-when="formatWhen"
+            />
 
             <TeacherStudentProfileSection
               v-else-if="view === 'student'"
@@ -143,11 +159,10 @@
               :overview="overview"
               :format-when="formatWhen"
               @open-student="openStudent"
-              @open-assignments="openAssignments"
             />
 
             <TeacherSettingsSection
-              v-else
+              v-else-if="view === 'settings'"
               :teacher="overview?.teacher"
               :teacher-name="overview?.teacher?.name || firstName"
               :student-initial="studentInitial"
@@ -161,7 +176,18 @@
           </div>
         </div>
 
-        <TeacherNav variant="mobile" :items="TEACHER_NAV" :counts="deskCounts" :active-view="view" @select="openView" />
+        <TeacherNav
+          variant="mobile"
+          :items="TEACHER_NAV"
+          :admin-items="TEACHER_ADMIN_NAV"
+          :counts="deskCounts"
+          :badges="navBadges"
+          :active-view="view"
+          :show-account="false"
+          :logout-url="auth.logout_url || ''"
+          :csrf-token="auth.csrf_token || ''"
+          @select="openView"
+        />
 
         <TeacherTaskSheet
           :open="assignmentFormOpen"
@@ -171,6 +197,7 @@
           :error="formError"
           :students="assignmentRoster.length ? assignmentRoster : students"
           :surahs="surahs"
+          :memorisation-url="auth.memorisation_url || '/memorisation'"
           @close="assignmentFormOpen = false"
           @submit="saveAssignment"
           @update:form="assignment = $event"
@@ -183,6 +210,8 @@
 <script>
 import { computed, provide } from 'vue'
 import NetworkFallback from '../components/NetworkFallback.vue'
+import TeacherAttendanceSection from '../components/teacher/TeacherAttendanceSection.vue'
+import TeacherMessagesSection from '../components/teacher/TeacherMessagesSection.vue'
 import TeacherAssignmentsSection from '../components/teacher/TeacherAssignmentsSection.vue'
 import TeacherPlansView from '../components/teacher/TeacherPlansView.vue'
 import TeacherHero from '../components/teacher/TeacherHero.vue'
@@ -200,6 +229,8 @@ export default {
   name: 'TeacherDashboard',
   components: {
     NetworkFallback,
+    TeacherAttendanceSection,
+    TeacherMessagesSection,
     TeacherAssignmentsSection,
     TeacherPlansView,
     TeacherHero,
@@ -217,6 +248,9 @@ export default {
   setup(props) {
     const dashboard = useTeacherDashboard(props.auth)
     const deskCounts = computed(() => teacherDeskCounts(dashboard.overview.value))
+    const navBadges = computed(() => ({
+      messages: Number(deskCounts.value.unread || 0),
+    }))
     provide('teacherSurahs', dashboard.surahs)
     provide('openTeacherStudent', dashboard.openStudent)
     function updateFilters(next) {
@@ -244,6 +278,7 @@ export default {
     return {
       ...dashboard,
       deskCounts,
+      navBadges,
       updateFilters,
       onProfileSection,
       openAssignments,

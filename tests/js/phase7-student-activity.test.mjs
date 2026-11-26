@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const dashboard = readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
-const studentExperience = readFileSync(new URL('../../resources/js/views/Dashboard.student-experience.css', import.meta.url), 'utf8')
+const studentExperience = readFileSync(new URL('../../resources/js/views/Dashboard.student.css', import.meta.url), 'utf8')
 const filters = readFileSync(new URL('../../resources/js/components/dashboard/StudentActivityFilters.vue', import.meta.url), 'utf8')
 
 assert.match(dashboard, /student-activity__toolbar/, 'Activity uses the shared toolbar layout')

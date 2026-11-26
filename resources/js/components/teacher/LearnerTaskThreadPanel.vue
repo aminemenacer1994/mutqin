@@ -1,8 +1,8 @@
 <template>
-  <DashModalRoot
+  <DashModalRoot workspace
     :open="open && Boolean(task)"
     :labelled-by="titleId"
-    root-class="dash-student-dialog-root learner-task-thread-modal"
+    root-class="teacher-dialog dash-student-dialog-root learner-task-thread-modal"
     panel-class="dash-student-dialog dash-student-dialog--thread learner-task-thread-modal__panel dash-modal"
     :dir="textDirection"
     :close-on-backdrop="!sending"
@@ -17,7 +17,7 @@
       <button
         ref="closeBtn"
         type="button"
-        class="dash-modal__close dash-btn dash-btn--tertiary dash-btn--sm"
+        class="dash-modal__close dash-btn dash-btn--tertiary dash-btn--sm btn btn-outline-secondary btn-sm"
         :aria-label="t('common.back')"
         :title="t('common.back')"
         :disabled="sending"
@@ -30,8 +30,8 @@
 
     <div v-if="confirmVoiceDiscard" class="learner-task-thread-modal__discard" role="alert">
       <p>{{ t('teacher.unsent_recording') }}</p>
-      <button ref="keepRecording" type="button" class="dash-btn" @click="keepEditing">{{ t('teacher.keep_editing') }}</button>
-      <button type="button" class="dash-btn" @click="discardAndClose">{{ t('teacher.discard_changes') }}</button>
+      <button ref="keepRecording" type="button" class="dash-btn btn btn-outline-secondary" @click="keepEditing">{{ t('teacher.keep_editing') }}</button>
+      <button type="button" class="dash-btn btn btn-outline-secondary" @click="discardAndClose">{{ t('teacher.discard_changes') }}</button>
     </div>
 
     <div class="dash-modal__body learner-task-thread-modal__body">
@@ -42,7 +42,7 @@
           </span>
           <p>{{ correctionRequest.note }}</p>
         </div>
-        <a v-if="correctionRequest.href" class="dash-btn dash-btn--primary" :href="correctionRequest.href">
+        <a v-if="correctionRequest.href" class="dash-btn dash-btn--primary btn btn-primary" :href="correctionRequest.href">
           {{ t('teacher.practise_correction') }}
         </a>
       </section>

@@ -274,6 +274,7 @@ export default {
   },
   mounted() {
     this.restoreDraft()
+    this.refreshThread()
     this.pollTimer = window.setInterval(() => this.refreshThread(), 10000)
     this.$nextTick(() => this.scrollThread())
     this.reportUnsent()

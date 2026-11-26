@@ -36,6 +36,7 @@ use App\Services\Teacher\TeacherDirectMessageService;
 use App\Services\Teacher\TeacherPrivateNoteService;
 use App\Services\Teacher\TeacherRecitationPlaybackService;
 use App\Services\Teacher\TeacherReportService;
+use App\Support\AssignmentProgressiveHidingSettings;
 use App\Support\TeacherFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -112,6 +113,31 @@ class TeacherDashboardController extends Controller
             'date' => $data['date'],
             'status' => $data['status'],
             'notes' => $record?->notes,
+            'source' => 'teacher_recorded',
+        ]);
+    }
+
+    public function bulkAttendance(Request $request, LearningGroup $group, TeacherAttendanceService $attendance): JsonResponse
+    {
+        $data = $request->validate([
+            'date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'status' => ['required', Rule::in(TeacherAttendanceService::STATUSES)],
+            'student_ids' => ['required', 'array', 'min:1'],
+            'student_ids.*' => ['integer'],
+        ]);
+
+        $saved = $attendance->bulkSetStatus(
+            $this->teacher($request),
+            $group,
+            $data['date'],
+            $data['status'],
+            $data['student_ids'],
+        );
+
+        return $this->json([
+            'date' => $data['date'],
+            'status' => $data['status'],
+            'saved' => $saved,
             'source' => 'teacher_recorded',
         ]);
     }
@@ -399,6 +425,14 @@ class TeacherDashboardController extends Controller
             'session_settings.technique' => ['nullable', 'string', 'in:talqin,focus,blur'],
             'session_settings.repetitions_per_ayah' => ['nullable', 'array', 'max:50'],
             'session_settings.repetitions_per_ayah.*' => ['integer', 'min:1', 'max:8'],
+            'session_settings.progressive_hiding' => ['nullable', 'array'],
+            'session_settings.progressive_hiding.enabled' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.blur_intensity' => ['nullable', 'integer', 'between:4,18'],
+            'session_settings.progressive_hiding.hints_allowed' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.stage_repetitions' => ['nullable', 'integer', 'between:1,8'],
+            'session_settings.progressive_hiding.starting_visibility_percent' => ['nullable', 'integer', Rule::in(AssignmentProgressiveHidingSettings::VISIBILITY_PERCENTS)],
+            'session_settings.progressive_hiding.final_hidden_recitation' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.final_ai_assessment' => ['nullable', 'boolean'],
             'student_id' => ['nullable', 'integer', 'required_without:learning_group_id'],
             'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
         ]);
@@ -433,6 +467,14 @@ class TeacherDashboardController extends Controller
             'session_settings.technique' => ['nullable', 'string', 'in:talqin,focus,blur'],
             'session_settings.repetitions_per_ayah' => ['nullable', 'array', 'max:50'],
             'session_settings.repetitions_per_ayah.*' => ['integer', 'min:1', 'max:8'],
+            'session_settings.progressive_hiding' => ['nullable', 'array'],
+            'session_settings.progressive_hiding.enabled' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.blur_intensity' => ['nullable', 'integer', 'between:4,18'],
+            'session_settings.progressive_hiding.hints_allowed' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.stage_repetitions' => ['nullable', 'integer', 'between:1,8'],
+            'session_settings.progressive_hiding.starting_visibility_percent' => ['nullable', 'integer', Rule::in(AssignmentProgressiveHidingSettings::VISIBILITY_PERCENTS)],
+            'session_settings.progressive_hiding.final_hidden_recitation' => ['nullable', 'boolean'],
+            'session_settings.progressive_hiding.final_ai_assessment' => ['nullable', 'boolean'],
         ]);
 
         return $this->json(['assignment' => $assignments->presentAssignment($assignments->update($teacher, $assignment, $data))]);

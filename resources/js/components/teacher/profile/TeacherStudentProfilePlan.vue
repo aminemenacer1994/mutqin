@@ -74,50 +74,124 @@
 
     <div v-else class="teacher-plan-board">
       <h3 v-if="studentId" class="teacher-plan-workspace__heading">{{ t('teacher.plan_following') }}</h3>
-      <article v-for="plan in visiblePlans" :key="plan.id" class="teacher-plan-card">
-        <header class="teacher-plan-card__top">
-          <div class="teacher-plan-card__copy">
-            <p class="teacher-plan-card__student">{{ plan.student?.name || studentLabel }}</p>
-            <h3>{{ plan.title }}</h3>
-            <p class="teacher-plan-card__meta">
-              <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
-              <span>{{ formatDate(plan.starts_on) }}<template v-if="plan.ends_on"> – {{ formatDate(plan.ends_on) }}</template></span>
+      <div class="teacher-table-shell teacher-plan-table-shell is-compact">
+        <div class="teacher-plan-cards" role="list" :aria-label="t('teacher.nav_plans')">
+          <article v-for="plan in visiblePlans" :key="`mobile-${plan.id}`" class="teacher-plan-card" role="listitem">
+            <header class="teacher-plan-card__top">
+              <div class="teacher-plan-card__copy">
+                <p v-if="!studentId" class="teacher-plan-card__student">{{ plan.student?.name || studentLabel }}</p>
+                <h3>{{ plan.title }}</h3>
+                <p class="teacher-plan-card__meta">
+                  <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
+                  <span>{{ planPeriod(plan) }}</span>
+                </p>
+              </div>
+            </header>
+            <dl class="teacher-plan-card__stats teacher-plan-card__stats--compact">
+              <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ plan.progress?.completed || 0 }}<small>/ {{ plan.progress?.total || 0 }}</small></dd></div>
+              <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ plan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
+              <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ plan.progress?.upcoming_lessons || 0 }}</dd></div>
+              <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ plan.progress?.revision_due || 0 }}</dd></div>
+            </dl>
+            <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
+              <span :style="planMeterStyle(plan)"></span>
+            </div>
+            <p v-if="nextOf(plan)" class="teacher-plan-card__next">
+              <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
+              <span class="teacher-plan-card__next-label">{{ t('teacher.plan_next_milestone') }}</span>
+              {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
             </p>
-          </div>
-          <footer>
-            <button type="button" class="btn btn-primary btn-sm" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
-            <div class="teacher-plan-menu">
-            <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
-              <i class="bi bi-three-dots" aria-hidden="true"></i>
-            </button>
-            <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
-              <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
-              <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
-              <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
-              <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
-              <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
-              <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
-              <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
-              <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
-            </div>
-            </div>
-          </footer>
-        </header>
-        <dl class="teacher-plan-card__stats">
-          <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ plan.progress?.completed || 0 }}<small>/ {{ plan.progress?.total || 0 }}</small></dd></div>
-          <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ plan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
-          <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ plan.progress?.upcoming_lessons || 0 }}</dd></div>
-          <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ plan.progress?.revision_due || 0 }}</dd></div>
-        </dl>
-        <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
-          <span :style="planMeterStyle(plan)"></span>
+            <footer class="teacher-plan-card__mobile-actions">
+              <button type="button" class="btn btn-primary btn-sm" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
+              <div class="teacher-plan-menu">
+                <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
+                  <i class="bi bi-three-dots" aria-hidden="true"></i>
+                </button>
+                <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
+                  <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
+                  <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
+                  <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
+                  <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
+                  <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
+                  <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
+                  <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
+                  <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
+                </div>
+              </div>
+            </footer>
+          </article>
         </div>
-        <p v-if="nextOf(plan)" class="teacher-plan-card__next">
-          <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
-          <span class="teacher-plan-card__next-label">{{ t('teacher.plan_next_milestone') }}</span>
-          {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
-        </p>
-      </article>
+        <div class="table-responsive teacher-table-wrap" role="region" :aria-label="t('teacher.plan_table_region')">
+          <table class="table align-middle mb-0 teacher-table teacher-table--plans" :aria-label="t('teacher.nav_plans')">
+            <thead>
+              <tr>
+                <th v-if="!studentId" scope="col">{{ t('teacher.plan_student') }}</th>
+                <th scope="col">{{ t('teacher.plan_col_plan') }}</th>
+                <th scope="col">{{ t('teacher.col_status') }}</th>
+                <th scope="col">{{ t('teacher.plan_col_period') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.learner_plan_progress') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.learner_plan_validated') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.learner_plan_upcoming') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.learner_plan_revision_due') }}</th>
+                <th scope="col">{{ t('teacher.plan_col_next') }}</th>
+                <th scope="col" class="text-end">{{ t('teacher.student_actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="plan in visiblePlans" :key="plan.id" class="teacher-table__row" :class="{ 'is-menu-open': menuId === plan.id }">
+                <td v-if="!studentId" class="teacher-table__cell teacher-table__cell--name">
+                  <span class="teacher-table__avatar" aria-hidden="true">{{ initial(plan.student?.name || studentLabel) }}</span>
+                  <span class="teacher-table__identity">
+                    <span class="teacher-table__name">{{ plan.student?.name || studentLabel }}</span>
+                  </span>
+                </td>
+                <td class="teacher-table__cell teacher-plan-table__plan">
+                  <span class="teacher-plan-table__title">{{ plan.title }}</span>
+                  <div class="teacher-plan-card__bar teacher-plan-card__bar--inline" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
+                    <span :style="planMeterStyle(plan)"></span>
+                  </div>
+                </td>
+                <td class="teacher-table__cell">
+                  <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
+                </td>
+                <td class="teacher-table__cell teacher-table__cell--meta">{{ planPeriod(plan) }}</td>
+                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.completed || 0 }}<span class="teacher-plan-table__total">/ {{ plan.progress?.total || 0 }}</span></td>
+                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.validated_memorised_ayahs || 0 }}</td>
+                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.upcoming_lessons || 0 }}</td>
+                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.revision_due || 0 }}</td>
+                <td class="teacher-table__cell teacher-plan-table__next">
+                  <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
+                  <template v-if="nextOf(plan)">
+                    <span class="teacher-plan-table__milestone">{{ nextOf(plan).label }}</span>
+                    <span v-if="nextOf(plan).due_on" class="teacher-table__quiet">{{ formatDate(nextOf(plan).due_on) }}</span>
+                  </template>
+                  <span v-else class="teacher-table__quiet">{{ t('teacher.none') }}</span>
+                </td>
+                <td class="teacher-table__cell teacher-table__cell--actions text-end">
+                  <div class="teacher-table__actions">
+                    <button type="button" class="teacher-table__action" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
+                    <div class="teacher-plan-menu">
+                      <button type="button" class="teacher-plan-menu__toggle teacher-table__action" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
+                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                      </button>
+                      <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
+                        <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
+                        <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
+                        <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
+                        <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
+                        <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
+                        <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
+                        <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
+                        <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <TeacherDialog
@@ -161,7 +235,7 @@
           <p class="teacher-plan-detail__who">{{ detailPlan.student?.name || studentLabel }}</p>
           <p class="teacher-plan-card__meta">
             <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
-            <span>{{ planSpan(detailPlan) }}</span>
+            <span>{{ planPeriod(detailPlan) }}</span>
           </p>
           <dl class="teacher-plan-card__stats">
             <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ detailPlan.progress?.completed || 0 }}<small>/ {{ detailPlan.progress?.total || 0 }}</small></dd></div>
@@ -176,47 +250,67 @@
         <p v-if="detailPlan.student_goal" class="teacher-plan-detail__goal"><span>{{ t('teacher.plan_goal_label') }}</span>{{ detailPlan.student_goal }}</p>
         <p v-if="detailPlan.notes" class="teacher-plan-detail__notes">{{ detailPlan.notes }}</p>
         <h3 v-if="detailPlan.items.length" class="teacher-plan-detail__activities">{{ t('teacher.plan_activities') }}</h3>
-        <ol class="teacher-plan-detail__list">
-          <li v-for="item in detailPlan.items" :key="item.id">
-            <div class="teacher-plan-detail__item">
-              <strong>{{ item.label }}</strong>
-              <p class="teacher-plan-card__meta">
-                <span>{{ activityLabel(item) }}</span>
-                <span class="teacher-plan-card__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
-                <span v-if="item.due_on" :class="item.display_status === 'overdue' ? 'is-overdue' : ''">{{ formatDate(item.due_on) }}</span>
-                <span v-if="item.is_milestone">{{ t('teacher.plan_milestone') }}</span>
-              </p>
-              <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
-              <p class="teacher-plan-detail__notes">{{ completionCriteriaLabel(item) }}</p>
-            </div>
-            <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
-              <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
-            </div>
-            <div v-else-if="item.display_status === 'submitted'" class="teacher-plan-detail__actions">
-              <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="completeActivity(item)">{{ t('teacher.plan_mark_activity') }}</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="requestAttempt(item)">{{ t('teacher.plan_request_attempt') }}</button>
-            </div>
-            <details v-if="item.origin !== 'suggested' || item.item_status === 'released'" class="teacher-plan-detail__change">
-              <summary>{{ t('teacher.plan_change') }}</summary>
-              <div class="teacher-plan-detail__actions">
-                <label class="teacher-plan-detail__date">
-                  <span class="visually-hidden">{{ t('teacher.plan_reschedule') }}</span>
-                  <input v-model="rescheduleDrafts[item.id]" class="form-control" type="date">
-                </label>
-                <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !rescheduleDrafts[item.id]" @click="rescheduleItem(item)">{{ t('teacher.plan_reschedule') }}</button>
-                <a v-if="item.recipient_id" class="teacher-plan-detail__link" :href="reviewHref">{{ t('teacher.plan_review_recitation') }}</a>
-              </div>
-              <label v-if="item.recipient_id" class="teacher-plan-detail__feedback">
-                <span>{{ t('teacher.plan_feedback') }}</span>
-                <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
-              </label>
-              <div v-if="item.recipient_id" class="teacher-plan-detail__actions">
-                <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
-              </div>
-            </details>
-          </li>
-        </ol>
+        <div v-if="detailPlan.items.length" class="teacher-table-shell teacher-plan-items-table is-compact">
+          <table class="table align-middle mb-0 teacher-table teacher-table--plan-items" :aria-label="t('teacher.plan_activities')">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('teacher.plan_col_passage') }}</th>
+                <th scope="col">{{ t('teacher.plan_kind') }}</th>
+                <th scope="col">{{ t('teacher.col_status') }}</th>
+                <th scope="col">{{ t('teacher.due') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="item in detailPlan.items" :key="item.id">
+                <tr class="teacher-plan-items__row">
+                  <td class="teacher-plan-items__passage">
+                    <strong>{{ item.label }}</strong>
+                    <span v-if="item.is_milestone" class="teacher-plan-card__badge is-assigned">{{ t('teacher.plan_milestone') }}</span>
+                  </td>
+                  <td>{{ activityLabel(item) }}</td>
+                  <td>
+                    <span class="teacher-plan-card__badge" :class="`is-${item.display_status}`">{{ displayStatusLabel(item.display_status) }}</span>
+                  </td>
+                  <td class="teacher-table__cell--meta" :class="{ 'is-overdue': item.display_status === 'overdue' }">
+                    {{ item.due_on ? formatDate(item.due_on) : t('teacher.plan_no_due') }}
+                  </td>
+                </tr>
+                <tr class="teacher-plan-items__followup">
+                  <td colspan="4">
+                    <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
+                    <p class="teacher-plan-detail__notes">{{ completionCriteriaLabel(item) }}</p>
+                    <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
+                      <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="skipItem(item)">{{ t('teacher.plan_skip') }}</button>
+                    </div>
+                    <div v-else-if="item.display_status === 'submitted'" class="teacher-plan-detail__actions">
+                      <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="completeActivity(item)">{{ t('teacher.plan_mark_activity') }}</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="requestAttempt(item)">{{ t('teacher.plan_request_attempt') }}</button>
+                    </div>
+                    <details v-if="item.origin !== 'suggested' || item.item_status === 'released'" class="teacher-plan-detail__change">
+                      <summary>{{ t('teacher.plan_change') }}</summary>
+                      <div class="teacher-plan-detail__actions">
+                        <label class="teacher-plan-detail__date">
+                          <span class="visually-hidden">{{ t('teacher.plan_reschedule') }}</span>
+                          <input v-model="rescheduleDrafts[item.id]" class="form-control" type="date">
+                        </label>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !rescheduleDrafts[item.id]" @click="rescheduleItem(item)">{{ t('teacher.plan_reschedule') }}</button>
+                        <a v-if="item.recipient_id" class="teacher-plan-detail__link" :href="reviewHref">{{ t('teacher.plan_review_recitation') }}</a>
+                      </div>
+                      <label v-if="item.recipient_id" class="teacher-plan-detail__feedback">
+                        <span>{{ t('teacher.plan_feedback') }}</span>
+                        <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
+                      </label>
+                      <div v-if="item.recipient_id" class="teacher-plan-detail__actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
+                      </div>
+                    </details>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </article>
     </TeacherDialog>
 
@@ -310,47 +404,53 @@
           </header>
           <p v-if="item.open && item.locked" class="teacher-plan-modal__locked">{{ t('teacher.plan_locked_activity') }}</p>
           <div v-show="item.open" class="teacher-plan-modal__activity-grid">
-            <label>
-              <span>{{ t('teacher.plan_kind') }}</span>
-              <select v-model="item.activity" class="form-select form-select-sm" :disabled="item.locked" @change="applyActivity(item)">
-                <option v-for="type in activityChoices(item)" :key="type.id" :value="type.id">{{ t(type.label) }}</option>
-              </select>
-            </label>
-            <label v-if="item.activity === 'hifz'">
-              <span>{{ t('teacher.hifz_stage') }}</span>
-              <select v-model="item.hifz_category" class="form-select form-select-sm" :disabled="item.locked">
-                <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
-                <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
-                <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
-              </select>
-              <p class="text-body-secondary small mb-0">{{ t('teacher.hifz_stage_help') }}</p>
-            </label>
-            <label>
-              <span>{{ t('teacher.surah') }}</span>
-              <TeacherSurahSelect :model-value="item.surah_number" :surahs="teacherSurahs" :disabled="busy || item.locked" @update:model-value="changeSurah(item, $event)" />
-            </label>
-            <label>
-              <span>{{ t('teacher.from') }}</span>
-              <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :disabled="item.locked" :aria-invalid="itemError(item) ? 'true' : undefined">
-            </label>
-            <label>
-              <span>{{ t('teacher.to') }}</span>
-              <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :disabled="item.locked" :aria-invalid="itemError(item) ? 'true' : undefined">
-            </label>
-            <label>
-              <span>{{ requirementLabel(item) }}</span>
-              <input v-model="item.repetition_target" class="form-control form-control-sm" type="number" min="1" max="50" inputmode="numeric" :disabled="item.locked" :aria-describedby="`plan-target-help-${item.key}`">
-              <p :id="`plan-target-help-${item.key}`" class="text-body-secondary small mb-0">{{ requirementHelp(item) }}</p>
-            </label>
-            <label>
-              <span>{{ t('teacher.due') }}</span>
-              <input v-model="item.due_on" class="form-control form-control-sm" type="date">
-            </label>
-            <label class="teacher-plan-modal__instructions">
+            <div class="teacher-plan-modal__activity-row teacher-plan-modal__activity-row--meta">
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--activity">
+                <span>{{ t('teacher.plan_kind') }}</span>
+                <select v-model="item.activity" class="form-select form-select-sm" :disabled="item.locked" @change="applyActivity(item)">
+                  <option v-for="type in activityChoices(item)" :key="type.id" :value="type.id">{{ t(type.label) }}</option>
+                </select>
+              </label>
+              <label v-if="item.activity === 'hifz'" class="teacher-plan-modal__field teacher-plan-modal__field--hifz-stage">
+                <span>{{ t('teacher.hifz_stage') }}</span>
+                <select v-model="item.hifz_category" class="form-select form-select-sm" :disabled="item.locked">
+                  <option value="sabaq">{{ t('teacher.hifz_sabaq') }}</option>
+                  <option value="sabqi">{{ t('teacher.hifz_sabqi') }}</option>
+                  <option value="manzil">{{ t('teacher.hifz_manzil') }}</option>
+                </select>
+              </label>
+            </div>
+            <p v-if="item.activity === 'hifz'" class="teacher-plan-modal__field-hint">{{ t('teacher.hifz_stage_help') }}</p>
+            <div class="teacher-plan-modal__activity-row teacher-plan-modal__activity-row--passage">
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--surah">
+                <span>{{ t('teacher.surah') }}</span>
+                <TeacherSurahSelect :model-value="item.surah_number" :surahs="teacherSurahs" :disabled="busy || item.locked" @update:model-value="changeSurah(item, $event)" />
+              </label>
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--ayah">
+                <span>{{ t('teacher.from') }}</span>
+                <input v-model.number="item.ayah_start" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :disabled="item.locked" :aria-invalid="itemError(item) ? 'true' : undefined">
+              </label>
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--ayah">
+                <span>{{ t('teacher.to') }}</span>
+                <input v-model.number="item.ayah_end" class="form-control form-control-sm" type="number" min="1" :max="ayahCount(item) || undefined" :disabled="item.locked" :aria-invalid="itemError(item) ? 'true' : undefined">
+              </label>
+            </div>
+            <div class="teacher-plan-modal__activity-row teacher-plan-modal__activity-row--schedule">
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--target">
+                <span>{{ requirementLabel(item) }}</span>
+                <input v-model="item.repetition_target" class="form-control form-control-sm" type="number" min="1" max="50" inputmode="numeric" :disabled="item.locked" :aria-describedby="`plan-target-help-${item.key}`">
+              </label>
+              <label class="teacher-plan-modal__field teacher-plan-modal__field--due">
+                <span>{{ t('teacher.due') }}</span>
+                <input v-model="item.due_on" class="form-control form-control-sm" type="date">
+              </label>
+            </div>
+            <p :id="`plan-target-help-${item.key}`" class="teacher-plan-modal__field-hint">{{ requirementHelp(item) }}</p>
+            <label class="teacher-plan-modal__field teacher-plan-modal__field--wide teacher-plan-modal__instructions">
               <span>{{ t('teacher.plan_instructions_placeholder') }}</span>
               <input v-model="item.instructions" class="form-control form-control-sm" type="text" maxlength="2000" :disabled="item.locked">
             </label>
-            <label>
+            <label class="teacher-plan-modal__field teacher-plan-modal__field--milestone">
               <input v-model="item.is_milestone" type="checkbox">
               {{ t('teacher.plan_milestone') }}
             </label>
@@ -378,20 +478,58 @@
 
       <section v-show="step === 3" class="teacher-plan-section teacher-plan-review" :aria-label="t('teacher.plan_step_review')">
         <p class="teacher-plan-review__note">{{ activationCopy }}</p>
-        <p v-if="canActivate"><span>{{ t('teacher.plan_assignments_label') }}</span><strong>{{ t('teacher.plan_assignments_on_activate', { n: assignmentCount }) }}</strong></p>
-        <p><span>{{ t('teacher.plan_title') }}</span><strong>{{ form.title.trim() }}</strong></p>
-        <p v-if="selectedStudentName"><span>{{ t('teacher.plan_student') }}</span><strong>{{ selectedStudentName }}</strong></p>
-        <p><span>{{ t('teacher.plan_cadence') }}</span><strong>{{ reviewSpan }}</strong></p>
-        <p v-if="form.student_goal.trim()"><span>{{ t('teacher.plan_student_goal') }}</span><strong>{{ form.student_goal.trim() }}</strong></p>
-        <p v-if="form.notes.trim()"><span>{{ t('teacher.plan_notes') }}</span><strong>{{ form.notes.trim() }}</strong></p>
-        <h3>{{ t('teacher.plan_activities') }}</h3>
+        <div class="teacher-table-shell teacher-plan-review__summary is-compact">
+          <table class="table align-middle mb-0 teacher-table teacher-table--plan-review">
+            <tbody>
+              <tr v-if="canActivate">
+                <th scope="row">{{ t('teacher.plan_assignments_label') }}</th>
+                <td>{{ t('teacher.plan_assignments_on_activate', { n: assignmentCount }) }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ t('teacher.plan_title') }}</th>
+                <td>{{ form.title.trim() }}</td>
+              </tr>
+              <tr v-if="selectedStudentName">
+                <th scope="row">{{ t('teacher.plan_student') }}</th>
+                <td>{{ selectedStudentName }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ t('teacher.plan_cadence') }}</th>
+                <td>{{ reviewSpan }}</td>
+              </tr>
+              <tr v-if="form.student_goal.trim()">
+                <th scope="row">{{ t('teacher.plan_student_goal') }}</th>
+                <td>{{ form.student_goal.trim() }}</td>
+              </tr>
+              <tr v-if="form.notes.trim()">
+                <th scope="row">{{ t('teacher.plan_notes') }}</th>
+                <td>{{ form.notes.trim() }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="teacher-plan-review__activities-heading">{{ t('teacher.plan_activities') }}</h3>
         <p v-if="!form.items.length" class="teacher-empty-line">{{ t('teacher.plan_review_empty') }}</p>
-        <ul v-else>
-          <li v-for="item in form.items" :key="`review-${item.key}`">
-            <strong>{{ passageLabel(item) }}</strong><br>
-            {{ activityLabel(item) }} · {{ scheduleLabel(item) }} · {{ itemStatusLabel(item) }}
-          </li>
-        </ul>
+        <div v-else class="teacher-table-shell teacher-plan-review__activities is-compact">
+          <table class="table align-middle mb-0 teacher-table teacher-table--plan-review-items">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('teacher.plan_col_passage') }}</th>
+                <th scope="col">{{ t('teacher.plan_kind') }}</th>
+                <th scope="col">{{ t('teacher.plan_col_schedule') }}</th>
+                <th scope="col">{{ t('teacher.col_status') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in form.items" :key="`review-${item.key}`">
+                <td><strong>{{ passageLabel(item) }}</strong></td>
+                <td>{{ activityLabel(item) }}</td>
+                <td class="teacher-table__cell--meta">{{ scheduleLabel(item) }}</td>
+                <td><span class="teacher-plan-card__badge" :class="`is-${itemStatusKey(item)}`">{{ itemStatusLabel(item) }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <template #footer>
@@ -1359,6 +1497,15 @@ export default {
       return this.t('teacher.plan_completion_criteria', { n: target })
     },
     isOverdue(plan) { return Number(plan.progress?.overdue || 0) > 0 || this.nextOf(plan)?.display_status === 'overdue' },
+    initial(name) {
+      const value = String(name || '').trim()
+      return value ? value.charAt(0).toUpperCase() : '?'
+    },
+    planPeriod(plan) {
+      const cadence = this.cadenceLabel(plan?.cadence)
+      const span = this.planSpan(plan)
+      return span ? `${cadence} · ${span}` : cadence
+    },
     formatDate(value) {
       const [year, month, day] = String(value || '').slice(0, 10).split('-').map(Number)
       if (!year || !month || !day) return ''

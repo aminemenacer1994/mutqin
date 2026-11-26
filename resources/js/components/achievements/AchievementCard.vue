@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import { achievementTone, formatUnlockDate } from './achievementMeta.js'
+import { formatUnlockDate } from './achievementMeta.js'
 import AchievementBadgeArt from './AchievementBadgeArt.vue'
 
 export default {
@@ -96,7 +96,7 @@ export default {
   },
   computed: {
     tone() {
-      return achievementTone(this.item?.id)
+      return this.item?.state === 'unlocked' ? 'success' : 'brand'
     },
     isPathLocked() {
       return this.item?.detail === 'path_locked' || this.item?.path_open === false

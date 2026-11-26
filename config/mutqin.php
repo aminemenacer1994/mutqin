@@ -106,6 +106,38 @@ return [
     ))),
 
     /*
+     | Master switch for /preview marketing + demo sandbox. When false, /preview is 404
+     | and teacher/parent/student accounts behave like normal logins (no sandbox gate).
+     */
+    'landing_preview_enabled' => filter_var(
+        env('MUTQIN_LANDING_PREVIEW_ENABLED', true),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    /*
+     | Verified accounts allowed to open /preview marketing drafts (Mutqin 2.0).
+     | Default: menacer72@gmail.com. Not linked from the public site.
+     */
+    'landing_preview_emails' => array_values(array_filter(array_map(
+        static fn (string $email): string => strtolower(trim($email)),
+        explode(',', (string) env('MUTQIN_LANDING_PREVIEW_EMAILS', 'menacer72@gmail.com'))
+    ))),
+
+    /*
+     | Group J1 — /preview/demo sandbox sessions (server-side isolation).
+     | public_access_enabled stays false until marketing approves open demos.
+     */
+    'preview_sandbox' => [
+        'enabled' => filter_var(env('MUTQIN_PREVIEW_SANDBOX_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'public_access_enabled' => filter_var(env('MUTQIN_PREVIEW_SANDBOX_PUBLIC', false), FILTER_VALIDATE_BOOL),
+        'session_ttl_minutes' => (int) env('MUTQIN_PREVIEW_SANDBOX_TTL_MINUTES', 120),
+        'max_active_sessions_per_owner' => (int) env('MUTQIN_PREVIEW_SANDBOX_MAX_SESSIONS', 3),
+        'enter_per_minute' => (int) env('MUTQIN_PREVIEW_SANDBOX_ENTER_PER_MINUTE', 12),
+        'ai_assessments_per_session' => (int) env('MUTQIN_PREVIEW_SANDBOX_AI_QUOTA', 25),
+        'suppress_outbound_mail' => filter_var(env('MUTQIN_PREVIEW_SANDBOX_SUPPRESS_MAIL', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    /*
      | When true, navigation owners see both Admin and Progress in the main nav.
      | Default is local-only; production keeps Admin instead of Progress for owners.
      */

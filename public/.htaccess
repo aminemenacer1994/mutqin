@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Marketing /preview routes — must reach Laravel even if a static tree exists under public/preview/.
+    RewriteRule ^preview/?$ index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

@@ -111,9 +111,9 @@
       </div>
     </article>
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="item.card_kind === 'attempt' && expanded"
-      root-class="dash-progress-modal"
+      root-class="teacher-dialog dash-progress-modal"
       panel-class="dash-progress-modal__panel"
       :labelled-by="detailId"
       @close="$emit('toggle')"

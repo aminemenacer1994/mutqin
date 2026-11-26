@@ -22,6 +22,8 @@ export function learningStatusBucket(row) {
   const base = resolveBaseTaskState(row)
   if (base === TASK_STATE.DONE) return 'completed'
   if (base === TASK_STATE.WAITING_REVIEW) return 'review'
+  if (base === TASK_STATE.NEEDS_CORRECTION) return 'revision'
+  if (base === TASK_STATE.CANCELLED) return 'closed'
   if (base === TASK_STATE.IN_PROGRESS) return 'progress'
   return 'todo'
 }
@@ -34,11 +36,11 @@ export function isLearningHistory(row) {
 function hidesClosedTeacherAccess(row) {
   if (row?.teacher_access !== false) return false
   const bucket = learningStatusBucket(row)
-  return bucket === 'todo' || bucket === 'progress'
+  return bucket === 'todo' || bucket === 'progress' || bucket === 'revision'
 }
 
 export function countLearningBuckets(rows) {
-  const counts = { overview: 0, todo: 0, progress: 0, review: 0, completed: 0, history: 0 }
+  const counts = { overview: 0, todo: 0, progress: 0, review: 0, revision: 0, closed: 0, completed: 0, history: 0 }
   for (const row of rows || []) {
     if (!row?.id || hidesClosedTeacherAccess(row)) continue
     counts.overview += 1
@@ -109,7 +111,7 @@ export function filterLearningAssignments(rows, { status = 'todo', category = 'a
   if (status === 'overview') {
     const actionable = typed.filter((row) => {
       const bucket = learningStatusBucket(row)
-      return bucket === 'todo' || bucket === 'progress'
+      return bucket === 'todo' || bucket === 'progress' || bucket === 'revision'
     })
     const urgent = actionable.filter((row) => isUrgent(row, now))
     return sortLearningAssignments(urgent.length ? urgent : actionable, now).slice(0, 3)
@@ -154,7 +156,7 @@ function historyKey(row) {
 
 export const LEARNER_MY_LEARNING_FILTER_KEY = 'mutqin-learner-my-learning-filters'
 
-const PRIMARY_FILTER_IDS = new Set(['todo', 'progress', 'review', 'completed'])
+const PRIMARY_FILTER_IDS = new Set(['todo', 'progress', 'review', 'revision', 'completed'])
 const DUE_FILTER_IDS = new Set(['all', 'today', 'upcoming', 'overdue'])
 const CATEGORY_FILTER_IDS = new Set(['all', 'nazra', 'hifz', 'tajweed', 'revision'])
 
@@ -170,6 +172,9 @@ export function readLearnerMyLearningFilters(storage = typeof sessionStorage !==
     if (PRIMARY_FILTER_IDS.has(data.status)) out.status = data.status
     if (DUE_FILTER_IDS.has(data.due)) out.due = data.due
     if (CATEGORY_FILTER_IDS.has(data.category)) out.category = data.category
+    if (typeof data.search === 'string') out.search = data.search.slice(0, 120)
+    if (Number(data.teacher) > 0) out.teacher = Number(data.teacher)
+    if (['priority', 'due', 'recent'].includes(data.sort)) out.sort = data.sort
     return Object.keys(out).length ? out : null
   } catch {
     return null
@@ -177,12 +182,13 @@ export function readLearnerMyLearningFilters(storage = typeof sessionStorage !==
 }
 
 export function writeLearnerMyLearningFilters(
-  { status = 'todo', due = 'all', category = 'all' } = {},
+  { status = 'todo', due = 'all', category = 'all', search = '', teacher = '', sort = 'priority' } = {},
   storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null,
 ) {
   if (!storage) return
   try {
     storage.setItem(LEARNER_MY_LEARNING_FILTER_KEY, JSON.stringify({
+      search: String(search).slice(0, 120), teacher, sort,
       status: PRIMARY_FILTER_IDS.has(status) ? status : 'todo',
       due: DUE_FILTER_IDS.has(due) ? due : 'all',
       category: CATEGORY_FILTER_IDS.has(category) ? category : 'all',

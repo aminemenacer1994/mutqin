@@ -80,6 +80,11 @@
           @clear-focus="$emit('clear-focus')"
           @refresh="$emit('refresh')"
         />
+        <TeacherStudentProfileAttendance
+          v-else-if="section === 'attendance'"
+          :profile="tabProfile"
+          :format-when="formatWhen"
+        />
         <TeacherStudentProfileGuardians
           v-else-if="section === 'guardians' && profile.student"
           :student-id="Number(profile.student.id)"
@@ -167,6 +172,7 @@ import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePracti
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
 import TeacherStudentGuardianThreads from './profile/TeacherStudentGuardianThreads.vue'
+import TeacherStudentProfileAttendance from './profile/TeacherStudentProfileAttendance.vue'
 import TeacherStudentProfileGuardians from './profile/TeacherStudentProfileGuardians.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
@@ -179,6 +185,7 @@ export default {
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
     TeacherStudentGuardianThreads,
+    TeacherStudentProfileAttendance,
     TeacherStudentProfileGuardians,
     TeacherWordingMatch,
   },

@@ -1,6 +1,11 @@
 import { ALQURAN_RECITER_OPTIONS } from '../memorisationRuntime.js'
 import { SPEED_OPTIONS } from '../settings/workspacePreferences.js'
 import { globalAyahNumber } from '../quran/globalAyahNumber.js'
+import {
+  mergeProgressiveHidingIntoSessionSettings,
+  progressiveHidingFromSessionSettings,
+  sanitizeTeacherProgressiveHidingSettings,
+} from './assignmentProgressiveHidingSettings.js'
 
 /** Reciters teachers see first for memorisation homework (Murattal / measured). */
 export const TEACHER_MEMORISATION_RECITER_ORDER = [
@@ -53,6 +58,7 @@ export function defaultAssignmentSessionSettings() {
     technique: 'talqin',
     repetitions_per_ayah_enabled: false,
     repetitions_per_ayah: {},
+    progressive_hiding: progressiveHidingFromSessionSettings(null),
   }
 }
 
@@ -91,7 +97,12 @@ export function sanitizeTeacherAssignmentSessionSettings(raw) {
     })
     if (Object.keys(perAyah).length) clean.repetitions_per_ayah = perAyah
   }
-  return Object.keys(clean).length ? clean : null
+  const progressive = sanitizeTeacherProgressiveHidingSettings(raw.progressive_hiding)
+  if (progressive) clean.progressive_hiding = progressive
+  const merged = mergeProgressiveHidingIntoSessionSettings(clean)
+  if (!merged.ok) return Object.keys(clean).length ? clean : null
+  const sessionSettings = merged.session_settings
+  return Object.keys(sessionSettings).length ? sessionSettings : null
 }
 
 export function sessionSettingsFromAssignment(assignment) {
@@ -104,6 +115,7 @@ export function sessionSettingsFromAssignment(assignment) {
     technique: settings.technique || 'talqin',
     repetitions_per_ayah_enabled: Boolean(settings.repetitions_per_ayah && Object.keys(settings.repetitions_per_ayah).length),
     repetitions_per_ayah: { ...(settings.repetitions_per_ayah || {}) },
+    progressive_hiding: progressiveHidingFromSessionSettings(settings),
   }
 }
 

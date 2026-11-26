@@ -33,6 +33,55 @@ class StudentLessonManagementWorkflowTest extends TestCase
         $this->enableParentFeatures();
     }
 
+    public function test_student_assignment_pages_cover_old_work_and_keep_revision_separate(): void
+    {
+        [$teacher, , , $student, $group] = $this->classroom();
+        for ($i = 0; $i < 53; $i++) {
+            $this->assignment($teacher, $student, $group, 'nazra', 'sabqi');
+        }
+        $revision = $this->assignment($teacher, $student, $group, 'hifz', 'sabaq')->recipients()->firstOrFail();
+        $revision->forceFill([
+            'status' => 'in_progress', 'student_completed_at' => now(),
+            'completion_evidence' => ['correction_requested_at' => now()->toIso8601String()],
+        ])->save();
+        $otherStudent = User::factory()->create(['account_role' => AccountRole::Student->value]);
+        $this->assignment($teacher, $otherStudent, $group, 'nazra', 'sabqi');
+        $ids = [];
+        for ($page = 1; $page <= 6; $page++) {
+            $payload = $this->actingAs($student)->getJson(route('api.me.assignments.index', [
+                'status' => 'todo', 'page' => $page, 'limit' => 10,
+            ]))->assertOk()->assertJsonPath('counts.todo', 53)->assertJsonPath('counts.revision', 1)->json();
+            $ids = array_merge($ids, array_column($payload['assignments'], 'id'));
+            $this->assertSame($page < 6 ? $page + 1 : null, $payload['next_page']);
+        }
+        $this->assertCount(53, array_unique($ids));
+        $this->assertSame($ids, array_values(array_unique($ids)));
+        $this->actingAs($student)->getJson(route('api.me.assignments.index', ['status' => 'revision']))
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('assignments.0.id', $revision->id);
+        $this->actingAs($student)->getJson(route('api.me.assignments.index', ['search' => 'no matching surah']))
+            ->assertOk()->assertJsonPath('total', 0)->assertJsonPath('counts.todo', 0);
+        $this->actingAs($teacher)->getJson(route('api.me.assignments.index', ['user_id' => $student->id]))
+            ->assertNotFound();
+    }
+
+    public function test_student_messages_open_latest_page_and_load_older_without_other_students(): void
+    {
+        [$teacher, , , $student] = $this->classroom();
+        $notes = \App\Models\TeacherNote::factory()->count(65)->create([
+            'teacher_id' => $teacher->id, 'student_id' => $student->id,
+            'organisation_id' => $teacher->organisation_id, 'teacher_assignment_id' => null,
+            'parent_user_id' => null, 'kind' => \App\Enums\TeacherNoteKind::TeacherMessage->value,
+        ]);
+        $first = $this->actingAs($student)->getJson(route('api.me.teachers.messages.index', $teacher))->assertOk()->json();
+        $this->assertCount(30, $first['messages']);
+        $this->assertSame($notes->last()->id, $first['messages'][29]['id']);
+        $older = $this->getJson(route('api.me.teachers.messages.index', ['teacher' => $teacher, 'before' => $first['next_before']]))->assertOk()->json();
+        $this->assertCount(30, $older['messages']);
+        $this->assertEmpty(array_intersect(array_column($first['messages'], 'id'), array_column($older['messages'], 'id')));
+        $stranger = \App\Models\TeacherNote::factory()->create();
+        $this->getJson(route('api.me.teachers.messages.index', ['teacher' => $teacher, 'before' => $stranger->id]))->assertNotFound();
+    }
+
     public function test_cancelled_task_preserves_submission_history_and_blocks_student_actions(): void
     {
         [$teacher, , , $student, $group] = $this->classroom();

@@ -90,12 +90,8 @@
             </div>
           </header>
           <div class="learner-teacher__assignments-toolbar" data-testid="learner-assignments-toolbar">
-            <header class="learner-teacher__assignments-heading">
-              <h3 class="learner-teacher__assignments-title">{{ t('dashboard.learning_lessons_title') }}</h3>
-              <p class="learner-teacher__assignments-hint">{{ ldt('teacher.learner_assignments_due_filter_label') }}</p>
-            </header>
             <div
-              class="learner-teacher__filters learner-teacher__filters--segmented"
+              class="teacher-tabs learner-teacher__filters learner-teacher__filters--segmented"
               role="tablist"
               :aria-label="t('teacher.learner_assignments_filter_label')"
             >
@@ -103,7 +99,7 @@
                 v-for="filter in primaryFilters"
                 :key="filter.id"
                 type="button"
-                class="learner-teacher__filter"
+                class="teacher-tabs__tab nav-link learner-teacher__filter"
                 :class="{ 'is-active': activeFilter === filter.id }"
                 role="tab"
                 :id="`learner-filter-${filter.id}`"
@@ -114,53 +110,46 @@
                 @keydown="onTaskFilterKeydown($event, filter.id)"
               >
                 {{ filter.label }}
-                <span class="learner-teacher__filter-count">{{ filter.count }}</span>
+                <span class="teacher-tabs__count learner-teacher__filter-count">{{ filter.count }}</span>
               </button>
             </div>
-            <div class="learner-teacher__assignments-toolbar__row">
-              <div
-                class="learner-teacher__filters learner-teacher__filters--secondary"
-                role="group"
-                :aria-label="ldt('teacher.learner_assignments_due_filter_label')"
-              >
-                <button
-                  v-for="filter in secondaryDueFilters"
-                  :key="filter.id"
-                  type="button"
-                  class="learner-teacher__filter learner-teacher__filter--due"
-                  :class="{ 'is-active': activeDueFilter === filter.id }"
-                  :aria-pressed="activeDueFilter === filter.id ? 'true' : 'false'"
-                  @click="setDueFilter(filter.id)"
-                >
-                  {{ filter.label }}
-                  <span class="learner-teacher__filter-count">{{ filter.count }}</span>
-                </button>
-              </div>
-              <div class="learner-teacher__assignments-toolbar__tools">
-                <button
-                  v-if="showCategoryFilters"
-                  type="button"
-                  class="learner-teacher__type-btn"
-                  :class="{ 'is-set': activeCategory !== 'all' }"
-                  @click="categoryOpen = true"
-                >
-                  <i class="bi bi-funnel" aria-hidden="true"></i>
-                  <span class="learner-teacher__type-btn-label">{{ categoryButtonLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="dash-icon-btn learner-teacher__feedback-tab-btn"
-                  :aria-label="feedbackTabAriaLabel"
-                  @click="openFeedbackDrawer"
-                >
-                  <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
-                  <span class="learner-teacher__feedback-tab-label visually-hidden">{{ t('teacher.learner_feedback_open') }}</span>
-                  <span
-                    v-if="feedbackUnreadCount"
-                    class="learner-teacher__feedback-tab-badge"
-                  >{{ feedbackUnreadCount }}</span>
-                </button>
-              </div>
+            <div class="learner-teacher__assignments-toolbar__row student-assignment-filters">
+              <label class="student-assignment-search">
+                <span class="visually-hidden">{{ t('dashboard.student_assignment_search') }}</span>
+                <input v-model="assignmentSearch" type="search" class="form-control" maxlength="120" :placeholder="t('dashboard.student_assignment_search')" @input="scheduleAssignmentSearch" />
+              </label>
+              <label>
+                <span class="visually-hidden">{{ t('dashboard.student_assignment_teacher') }}</span>
+                <select v-model="assignmentTeacher" class="form-select" @change="changeAssignmentFilters">
+                  <option value="">{{ t('dashboard.student_assignment_teacher') }}</option>
+                  <option v-for="teacher in assignmentTeachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }}</option>
+                </select>
+              </label>
+              <label>
+                <span class="visually-hidden">{{ t('dashboard.student_filter_type') }}</span>
+                <select :value="activeCategory" class="form-select" @change="setCategory($event.target.value)">
+                  <option v-for="category in categoryFilters" :key="category.id" :value="category.id">{{ category.label }}</option>
+                </select>
+              </label>
+              <label v-if="!['completed', 'review'].includes(activeFilter)">
+                <span class="visually-hidden">{{ t('dashboard.student_assignment_deadline') }}</span>
+                <select :value="activeDueFilter" class="form-select" @change="setDueFilter($event.target.value)">
+                  <option v-for="filter in secondaryDueFilters" :key="filter.id" :value="filter.id">{{ filter.label }}</option>
+                </select>
+              </label>
+              <label>
+                <span class="visually-hidden">{{ t('dashboard.student_assignment_sort') }}</span>
+                <select v-model="assignmentSort" class="form-select" @change="changeAssignmentFilters">
+                  <option value="priority">{{ t('dashboard.student_assignment_priority') }}</option>
+                  <option value="due">{{ t('dashboard.student_assignment_deadline') }}</option>
+                  <option value="recent">{{ t('dashboard.student_assignment_recent') }}</option>
+                </select>
+              </label>
+              <button v-if="hasAssignmentFilters" type="button" class="btn btn-outline-secondary" @click="resetAssignmentFilters">{{ t('dashboard.student_assignment_reset') }}</button>
+              <button type="button" class="btn btn-outline-secondary" :aria-label="feedbackTabAriaLabel" @click="openFeedbackDrawer">
+                <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
+                {{ t('teacher.learner_feedback_open') }} <span v-if="feedbackUnreadCount">{{ feedbackUnreadCount }}</span>
+              </button>
             </div>
           </div>
 
@@ -168,12 +157,14 @@
             <div v-if="showPlanSlot" class="learner-teacher__plan-slot">
               <slot name="learning-plan"></slot>
             </div>
-            <div v-if="!assignments.length" class="learner-teacher__empty">
+            <p v-if="assignmentListLoading" class="teacher-meta" role="status">{{ t('common.loading') }}</p>
+            <div v-if="assignmentListError" class="alert alert-danger" role="alert">{{ assignmentListError }} <button type="button" class="btn btn-outline-danger btn-sm" @click="loadAssignmentPage(assignmentFailedPage)">{{ t('common.retry') }}</button></div>
+            <div v-if="!assignmentListLoading && !assignmentListError && !listItems.length && !hasAssignmentFilters && !assignmentCounts?.[activeFilter]" class="learner-teacher__empty">
               <strong>{{ t('teacher.learner_assignments_empty_title') }}</strong>
               <span>{{ t('teacher.learner_assignments_empty') }}</span>
             </div>
             <p
-              v-else-if="listEmptyMessage"
+              v-else-if="!assignmentListLoading && !assignmentListError && listEmptyMessage"
               class="learner-teacher__uptodate"
             >
               <i v-if="activeFilter === 'todo'" class="bi bi-check-circle-fill" aria-hidden="true"></i>
@@ -221,7 +212,7 @@
                     <component
                       :is="primaryAction(item)?.href ? 'a' : 'button'"
                       v-if="primaryAction(item)"
-                      class="dash-btn dash-btn--primary dash-btn--sm"
+                      class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm"
                       :class="{ 'is-disabled': savingId === item.id && !primaryAction(item)?.href }"
                       :href="primaryAction(item)?.href || undefined"
                       :disabled="!primaryAction(item)?.href && savingId === item.id"
@@ -231,7 +222,7 @@
                     </component>
                     <a
                       v-if="listenActionHref(item)"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
+                      class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm"
                       :href="listenActionHref(item)"
                     >
                       {{ t('teacher.assignment_listen_repeat') }}
@@ -239,7 +230,7 @@
                     <button
                       v-if="showSecondaryDetailsAction(item)"
                       type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
+                      class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm"
                       @click="openAssignmentDetail(item)"
                     >
                       {{ t('teacher.learner_assignments_details') }}
@@ -249,13 +240,8 @@
               </li>
             </ul>
             <div v-if="showViewAll" class="learner-teacher__footer">
-              <button type="button" class="dash-text-link" @click="visibleLimit += listLimit">
+              <button type="button" class="dash-text-link" :disabled="assignmentListLoading" @click="loadAssignmentPage(assignmentNextPage)">
                 {{ ldtp('teacher.learner_assignments_view_more', Math.min(listLimit, remainingCount), { n: Math.min(listLimit, remainingCount) }) }}
-              </button>
-            </div>
-            <div v-if="showShowOlderCompleted" class="learner-teacher__footer">
-              <button type="button" class="dash-text-link" @click="showOlderCompleted = true">
-                {{ t('teacher.learner_assignments_show_older') }}
               </button>
             </div>
             </div>
@@ -299,10 +285,10 @@
       </template>
     </div>
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="categoryOpen"
       labelled-by="learner-type-title"
-      root-class="parent-modal-root"
+      root-class="teacher-dialog parent-modal-root"
       panel-class="parent-modal"
       @close="categoryOpen = false"
     >
@@ -332,29 +318,17 @@
       </div>
     </DashModalRoot>
 
-    <DashModalRoot
+    <TeacherDialog
       :open="Boolean(detailItem)"
-      :labelled-by="detailModalTitleId"
-      root-class="parent-modal-root learner-assignment-modal"
-      panel-class="parent-modal learner-assignment-modal__panel"
-      test-id="learner-assignment-detail-modal"
+      :title="detailItem ? rangeLabel(detailItem) : ''"
+      :close-label="t('common.close')"
+      class="user-dashboard learner-assignment-modal"
+      data-testid="learner-assignment-detail-modal"
       @close="closeAssignmentDetail"
     >
+      <template #pills><span class="teacher-meta">{{ detailModalSubtitle }}</span></template>
       <template v-if="detailItem">
-        <header class="parent-modal__head">
-          <div>
-            <h2 :id="detailModalTitleId" class="dash-drawer__title">{{ rangeLabel(detailItem) }}</h2>
-            <p>{{ detailModalSubtitle }}</p>
-          </div>
-          <button
-            type="button"
-            class="parent-modal__close"
-            :aria-label="t('common.close')"
-            @click="closeAssignmentDetail"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </header>
+
         <div class="parent-modal__body learner-assignment-modal__body">
           <section v-if="assignmentStatusRationale(detailItem)" class="learner-assignment-modal__section learner-assignment-modal__section--status">
             <h3>{{ t('teacher.assignment_status_label') }}</h3>
@@ -408,7 +382,7 @@
                     <strong>{{ t('teacher.learner_attempt_row', { n: attempt.n }) }}</strong>
                     <span v-if="attemptDate(attempt)" class="learner-teacher__attempt-history-date">{{ attemptDate(attempt) }}</span>
                     <span
-                      v-if="Number.isFinite(Number(attempt.score))"
+                      v-if="attempt.score != null && Number.isFinite(Number(attempt.score))"
                       class="learner-teacher__attempt-history-score"
                     >{{ attempt.score }}%</span>
                   </div>
@@ -442,13 +416,15 @@
             />
           </section>
         </div>
-        <footer v-if="detailItem" class="parent-modal__foot learner-assignment-modal__foot">
-          <button type="button" class="dash-btn dash-btn--ghost" @click="openDetailsWithReply(detailItem)">
+
+      </template>
+        <template v-if="detailItem" #footer>
+          <button type="button" class="dash-btn dash-btn--ghost btn btn-outline-secondary" @click="openDetailsWithReply(detailItem)">
             {{ t('teacher.task_conversation') }}
           </button>
           <a
             v-if="listenActionHref(detailItem)"
-            class="dash-btn dash-btn--secondary"
+            class="dash-btn dash-btn--secondary btn btn-outline-secondary"
             :href="listenActionHref(detailItem)"
           >
             {{ t('teacher.assignment_listen_repeat') }}
@@ -456,22 +432,21 @@
           <component
             :is="primaryAction(detailItem)?.href ? 'a' : 'button'"
             v-if="primaryAction(detailItem)"
-            class="dash-btn dash-btn--primary"
+            class="dash-btn dash-btn--primary btn btn-primary"
             :href="primaryAction(detailItem)?.href || undefined"
             :disabled="!primaryAction(detailItem)?.href && savingId === detailItem.id"
             @click="!primaryAction(detailItem)?.href && onPrimaryAction(detailItem)"
           >
             {{ primaryAction(detailItem).label }}
           </component>
-        </footer>
-      </template>
-    </DashModalRoot>
+        </template>
+    </TeacherDialog>
 
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="feedbackDrawerOpen"
       :labelled-by="feedbackDrawerTitleId"
-      root-class="dash-student-dialog-root"
+      root-class="teacher-dialog dash-student-dialog-root"
       panel-class="dash-student-dialog dash-student-dialog--sheet dash-student-dialog--feedback-list"
       test-id="learner-feedback-modal"
       @close="closeFeedbackDrawer"
@@ -522,9 +497,9 @@
     />
     </Teleport>
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="Boolean(selectedDirectThread)"
-      root-class="dash-student-dialog-root"
+      root-class="teacher-dialog dash-student-dialog-root"
       panel-class="dash-student-dialog dash-student-dialog--thread"
       :labelled-by="selectedDirectThread ? `direct-thread-title-${selectedDirectThread.teacher_id}` : ''"
       :close-on-backdrop="!directSending"
@@ -540,15 +515,15 @@
             <p class="dash-drawer__subtitle">{{ t('teacher.messages') }}</p>
           </div>
         </div>
-        <button ref="directThreadClose" type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close" :aria-label="t('common.back')" :title="t('common.back')" :disabled="directSending" @click="closeDirectThread">
+        <button ref="directThreadClose" type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close btn btn-outline-secondary btn-sm" :aria-label="t('common.back')" :title="t('common.back')" :disabled="directSending" @click="closeDirectThread">
           <i class="bi bi-arrow-left" aria-hidden="true"></i>
           <span>{{ t('common.back') }}</span>
         </button>
       </header>
       <div v-if="confirmDirectDiscard" class="learner-task-thread-modal__discard" role="alert">
         <p>{{ t('teacher.unsaved_changes') }}</p>
-        <button ref="directKeepEditing" type="button" class="dash-btn" @click="keepDirectEditing">{{ t('teacher.keep_editing') }}</button>
-        <button type="button" class="dash-btn" @click="discardDirectThread">{{ t('teacher.discard_changes') }}</button>
+        <button ref="directKeepEditing" type="button" class="dash-btn btn btn-outline-secondary" @click="keepDirectEditing">{{ t('teacher.keep_editing') }}</button>
+        <button type="button" class="dash-btn btn btn-outline-secondary" @click="discardDirectThread">{{ t('teacher.discard_changes') }}</button>
       </div>
       <div class="dash-student-dialog__body">
           <section v-if="selectedDirectFeedback" class="learner-direct-feedback" :aria-label="t('dashboard.home_recent_feedback')">
@@ -577,9 +552,9 @@
       </template>
     </DashModalRoot>
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="Boolean(selectedSubmission)"
-      root-class="dash-student-dialog-root"
+      root-class="teacher-dialog dash-student-dialog-root"
       panel-class="dash-student-dialog dash-student-dialog--sheet dash-student-dialog--has-foot"
       labelled-by="learner-submission-title"
       test-id="learner-submission-modal"
@@ -594,7 +569,7 @@
               <p class="dash-drawer__subtitle">{{ submissionStateLabel(selectedSubmission) }}</p>
             </div>
           </div>
-          <button type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close" :aria-label="t('common.back')" @click="closeSubmission">
+          <button type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close btn btn-outline-secondary btn-sm" :aria-label="t('common.back')" @click="closeSubmission">
             <i class="bi bi-arrow-left" aria-hidden="true"></i>
             <span>{{ t('common.back') }}</span>
           </button>
@@ -638,34 +613,34 @@
         <footer class="dash-modal__foot learner-teacher__submission-actions">
           <a
             v-if="submissionPracticeHref(selectedSubmission)"
-            class="dash-btn dash-btn--primary dash-btn--sm"
+            class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm"
             :href="submissionPracticeHref(selectedSubmission)"
           >{{ t('teacher.practice_again') }}</a>
           <button
             v-else
             type="button"
-            class="dash-btn dash-btn--primary dash-btn--sm"
+            class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm"
             @click="openAssignmentById(selectedSubmission.recipient_id)"
           >{{ t('teacher.task_conversation') }}</button>
           <button
             v-if="submissionPracticeHref(selectedSubmission)"
             type="button"
-            class="dash-btn dash-btn--ghost dash-btn--sm"
+            class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm"
             @click="openAssignmentById(selectedSubmission.recipient_id)"
           >
             {{ t('teacher.task_conversation') }}
           </button>
-          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="$emit('self-assess', selectedSubmission)">
+          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('self-assess', selectedSubmission)">
             {{ selectedSubmission.self_assessment ? t('dashboard.assignment_self_assessment_update') : t('dashboard.assignment_self_assessment_add') }}
           </button>
         </footer>
       </template>
     </DashModalRoot>
 
-    <DashModalRoot
+    <DashModalRoot workspace
       :open="Boolean(mistakeDrawerRow)"
       :labelled-by="mistakeDrawerTitleId"
-      root-class="dash-student-dialog-root"
+      root-class="teacher-dialog dash-student-dialog-root"
       panel-class="dash-student-dialog dash-student-dialog--sheet dash-student-dialog--results"
       @close="closeMistakeDrawer"
     >
@@ -724,6 +699,7 @@ import './LearnerFeedbackModal.css'
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { setModalScrollLock } from '../../utils/modalScrollLock.js'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
+import TeacherDialog from './TeacherDialog.vue'
 import { assignmentCountLabel, assignmentCountsScoredChecks, assignmentProgressLabel, learnerRecitationReviewRow } from '../../scripts/teacher/formatters'
 import {
   TASK_STATE,
@@ -790,6 +766,7 @@ export default {
   name: 'LearnerTeacherSection',
   components: {
     DashModalRoot,
+    TeacherDialog,
     TeacherTaskConversation,
     TeacherAudioFeedbackPlayer,
     LearnerTeacherLearning,
@@ -830,8 +807,22 @@ export default {
       directPollTimer: null,
       directPollVersions: {},
       directDisposed: false,
-      listLimit: 4,
-      visibleLimit: 4,
+      listLimit: 10,
+      visibleLimit: 10,
+      assignmentSearch: '',
+      assignmentTeacher: '',
+      assignmentSort: 'priority',
+      assignmentTeachers: [],
+      assignmentCounts: null,
+      assignmentRows: [],
+      assignmentDetailRows: [],
+      assignmentNextPage: null,
+      assignmentTotal: 0,
+      assignmentListLoading: false,
+      assignmentListError: '',
+      assignmentFailedPage: 1,
+      assignmentRequestId: 0,
+      assignmentSearchTimer: null,
       selectedItem: null,
       threadTask: null,
       selectedDirectThread: null,
@@ -899,6 +890,11 @@ export default {
       return !this.loading && this.weeklyProgressTotal > 0
     },
     weeklyProgressSnapshot() {
+      if (this.support?.overview) {
+        const total = Number(this.overview.weekly_goal || 0)
+        const done = Number(this.overview.weekly_completed || 0)
+        return { total, done, percent: total ? Math.round(done / total * 100) : 0 }
+      }
       return learnerWeeklyProgressFromAssignments(
         this.assignments,
         (row) => this.isTeacherApproved(row),
@@ -1026,7 +1022,7 @@ export default {
       }))
     },
     assignments() {
-      return Array.isArray(this.support?.assignments) ? this.support.assignments : []
+      return [...new Map([...this.assignmentDetailRows, ...(this.support?.assignments || []), ...this.assignmentRows].map(row => [row.id, row])).values()]
     },
     hifzSummary() {
       return this.support?.hifz_summary || null
@@ -1049,7 +1045,7 @@ export default {
       return this.bucketCounts.completed
     },
     bucketCounts() {
-      const counts = countLearningBuckets(this.assignments)
+      const counts = { ...(this.assignmentCounts || countLearningBuckets(this.assignments)) }
       counts.plan = this.support?.learning_plan ? 1 : 0
       return counts
     },
@@ -1084,7 +1080,7 @@ export default {
         { id: 'hifz', label: label.hifz, count: counts.hifz },
         { id: 'tajweed', label: label.tajweed, count: counts.tajweed },
         { id: 'revision', label: label.revision, count: counts.revision },
-      ].filter((item) => item.id === 'all' || item.id === this.activeCategory || item.count > 0)
+      ]
     },
     primaryFilters() {
       const counts = this.bucketCounts
@@ -1092,6 +1088,7 @@ export default {
         { id: 'todo', label: this.ldt('teacher.learner_assignments_filter_todo'), count: counts.todo },
         { id: 'progress', label: this.ldt('teacher.learner_assignments_filter_progress'), count: counts.progress },
         { id: 'review', label: this.ldt('teacher.learner_assignments_filter_review'), count: counts.review },
+        { id: 'revision', label: this.t('dashboard.student_assignment_revision'), count: counts.revision || 0 },
         { id: 'completed', label: this.ldt('teacher.learner_assignments_filter_completed'), count: counts.completed },
       ]
     },
@@ -1101,7 +1098,7 @@ export default {
         category: this.activeCategory,
       })
       return [
-        { id: 'all', label: this.t('teacher.task_filter_all'), count: counts.all },
+        { id: 'all', label: this.t('dashboard.student_assignment_deadlines'), count: counts.all },
         { id: 'today', label: this.t('teacher.due_today'), count: counts.today },
         { id: 'upcoming', label: this.ldt('teacher.learner_assignments_due_upcoming'), count: counts.upcoming },
         { id: 'overdue', label: this.t('teacher.task_filter_overdue'), count: counts.overdue },
@@ -1139,22 +1136,24 @@ export default {
       return base.filter((row) => matchesDueWindow(row, this.activeDueFilter))
     },
     listItems() {
-      return this.dueFilteredItems.slice(0, this.visibleLimit)
+      return this.assignmentRows
     },
     openListCount() {
-      return this.dueFilteredItemsFull.length
+      return this.assignmentTotal
     },
     remainingCount() {
-      return Math.max(0, this.openListCount - this.visibleLimit)
+      return Math.max(0, this.assignmentTotal - this.assignmentRows.length)
     },
     showViewAll() {
-      return this.remainingCount > 0
+      return Boolean(this.assignmentNextPage)
+    },
+    hasAssignmentFilters() {
+      return Boolean(this.assignmentSearch || this.assignmentTeacher || this.activeCategory !== 'all' || this.activeDueFilter !== 'all' || this.assignmentSort !== 'priority')
     },
   },
   watch: {
     assignments: {
       handler() {
-        this.visibleLimit = this.listLimit
         this.syncDefaultFilter()
       },
       immediate: true,
@@ -1166,8 +1165,8 @@ export default {
       this.syncModalOpen()
     },
     support: {
-      deep: true,
       handler() {
+        this.loadAssignmentPage()
         if (this.detailItemId && !this.assignments.some((item) => Number(item.id) === Number(this.detailItemId))) {
           this.detailItemId = null
         }
@@ -1182,6 +1181,8 @@ export default {
   },
   beforeUnmount() {
     this.directDisposed = true
+    this.assignmentRequestId += 1
+    window.clearTimeout(this.assignmentSearchTimer)
     setModalScrollLock(this, false)
     window.clearInterval(this.directPollTimer)
     if (this.mobileMedia?.removeEventListener) {
@@ -1191,6 +1192,7 @@ export default {
   mounted() {
     this.directPollTimer = window.setInterval(() => this.refreshDirectThreads(), 10000)
     this.syncDefaultFilter()
+    this.loadAssignmentPage()
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.mobileMedia = window.matchMedia('(max-width: 767.98px)')
       this.syncMobileLayout()
@@ -1198,6 +1200,49 @@ export default {
     }
   },
   methods: {
+    scheduleAssignmentSearch() {
+      window.clearTimeout(this.assignmentSearchTimer)
+      // Invalidate an in-flight response immediately, before the debounce ends.
+      this.assignmentRequestId += 1
+      this.assignmentSearchTimer = window.setTimeout(() => this.changeAssignmentFilters(), 250)
+    },
+    changeAssignmentFilters() {
+      this.persistLearningFilters()
+      this.loadAssignmentPage()
+    },
+    resetAssignmentFilters() {
+      this.assignmentSearch = ''
+      this.assignmentTeacher = ''
+      this.assignmentSort = 'priority'
+      this.activeCategory = 'all'
+      this.activeDueFilter = 'all'
+      this.changeAssignmentFilters()
+    },
+    async loadAssignmentPage(page = 1) {
+      if (!page || this.directDisposed) return
+      const requestId = ++this.assignmentRequestId
+      this.assignmentListLoading = true
+      this.assignmentListError = ''
+      this.assignmentFailedPage = page
+      if (page === 1) { this.assignmentRows = []; this.assignmentNextPage = null }
+      try {
+        const result = await learningApi.getLearnerAssignments({
+          status: this.activeFilter, category: this.activeCategory, due: this.activeDueFilter,
+          search: this.assignmentSearch, teacher_id: this.assignmentTeacher || undefined,
+          sort: this.assignmentSort, page, limit: this.listLimit,
+        })
+        if (this.directDisposed || requestId !== this.assignmentRequestId) return
+        this.assignmentRows = [...new Map([...(page === 1 ? [] : this.assignmentRows), ...(result.assignments || [])].map(row => [row.id, row])).values()]
+        this.assignmentCounts = result.counts
+        this.assignmentTeachers = result.teachers || []
+        this.assignmentTotal = result.total || 0
+        this.assignmentNextPage = result.next_page
+      } catch (error) {
+        if (requestId === this.assignmentRequestId) this.assignmentListError = error?.response?.data?.message || this.t('teacher.action_failed')
+      } finally {
+        if (requestId === this.assignmentRequestId) this.assignmentListLoading = false
+      }
+    },
     ldt(key, params = {}) {
       return learnerDashboardT(this.learnerLocale, this.$i18n, key, params)
     },
@@ -1209,17 +1254,22 @@ export default {
         status: this.activeFilter,
         due: this.activeDueFilter,
         category: this.activeCategory,
+        search: this.assignmentSearch, teacher: this.assignmentTeacher, sort: this.assignmentSort,
       })
     },
     syncDefaultFilter() {
       if (this.defaultFilterSynced || this.loading) return
-      if (!this.assignments.length) return
       this.defaultFilterSynced = true
       const saved = readLearnerMyLearningFilters()
       if (saved?.status) this.activeFilter = saved.status
       if (saved?.due) this.activeDueFilter = saved.due
       if (saved?.category) this.activeCategory = saved.category
-      if (saved) return
+      if (saved) {
+        this.assignmentSearch = saved.search || ''
+        this.assignmentTeacher = saved.teacher || ''
+        this.assignmentSort = saved.sort || 'priority'
+        return
+      }
       this.activeFilter = this.pendingCount > 0 ? 'todo' : (this.bucketCounts.progress > 0 ? 'progress' : 'todo')
     },
     syncModalOpen() {
@@ -1293,6 +1343,9 @@ export default {
       return this.unreadTeacherMessages(row)
     },
     openTaskThread(row) {
+      this.detailItemId = null
+      this.selectedSubmission = null
+      this.feedbackDrawerOpen = false
       this.threadTask = row
     },
     closeTaskThread() {
@@ -1327,24 +1380,25 @@ export default {
       if (id === 'done') {
         this.activeFilter = 'completed'
       } else {
-        const known = ['todo', 'progress', 'review', 'completed']
+        const known = ['todo', 'progress', 'review', 'revision', 'completed']
         this.activeFilter = known.includes(id) ? id : 'todo'
       }
       this.visibleLimit = this.listLimit
       this.showOlderCompleted = false
-      this.persistLearningFilters()
+      if (['completed', 'review'].includes(this.activeFilter)) this.activeDueFilter = 'all'
+      this.changeAssignmentFilters()
     },
     setDueFilter(id) {
       const known = ['all', 'today', 'upcoming', 'overdue']
       this.activeDueFilter = known.includes(id) ? id : 'all'
       this.visibleLimit = this.listLimit
-      this.persistLearningFilters()
+      this.changeAssignmentFilters()
     },
     setCategory(id) {
       const known = ['all', 'nazra', 'hifz', 'tajweed', 'revision']
       this.activeCategory = known.includes(id) ? id : 'all'
       this.visibleLimit = this.listLimit
-      this.persistLearningFilters()
+      this.changeAssignmentFilters()
     },
     chooseCategory(id) {
       this.setCategory(id)
@@ -1399,12 +1453,20 @@ export default {
       this.openTaskThread(row)
       this.$nextTick(() => this.$refs.taskThreadPanel?.$refs?.conversation?.focusComposer?.())
     },
-    openAssignmentById(recipientId) {
+    async openAssignmentById(recipientId) {
       const id = Number(recipientId)
-      const row = this.assignments.find((item) => Number(item.id) === id || Number(item.assignment?.id) === id)
-      if (row) {
+      if (!Number.isInteger(id) || id < 1) return
+      let row = this.assignments.find(item => Number(item.id) === id)
+      try {
+        if (!row) {
+          row = await learningApi.getLearnerAssignment(id)
+          if (this.directDisposed) return
+          this.assignmentDetailRows = [...this.assignmentDetailRows.filter(item => item.id !== row.id), row]
+        }
         this.closeSubmission()
-        this.openDetails(row)
+        this.openAssignmentDetail(row)
+      } catch (error) {
+        this.assignmentListError = error?.response?.data?.message || this.t('teacher.action_failed')
       }
     },
     openFeedback(item) {
@@ -1644,6 +1706,8 @@ export default {
       return formatLearnerDisplayDate(value, this.t.bind(this), locale)
     },
     openAttemptPlayback(row) {
+      this.detailItemId = null
+      this.selectedSubmission = null
       this.playbackRow = row
     },
     openRecitationReview(row) {

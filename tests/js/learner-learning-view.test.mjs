@@ -28,7 +28,7 @@ assert.equal(learningStatusBucket(rows[0]), 'todo')
 assert.equal(learningStatusBucket(rows[2]), 'progress')
 assert.equal(learningStatusBucket(rows[3]), 'review')
 assert.equal(learningStatusBucket(rows[4]), 'completed')
-assert.equal(learningStatusBucket(rows[5]), 'todo', 'a correction stays actionable and is not awaiting review')
+assert.equal(learningStatusBucket(rows[5]), 'revision', 'a correction stays actionable and is not awaiting review')
 assert.equal(learningCategory(rows[0].assignment), 'nazra')
 assert.equal(learningCategory(rows[1].assignment), 'hifz')
 assert.equal(learningCategory(rows[2].assignment), 'tajweed')
@@ -36,7 +36,8 @@ assert.equal(learningCategory(rows[3].assignment), 'revision')
 
 const counts = countLearningBuckets(rows)
 assert.equal(counts.overview, 6)
-assert.equal(counts.todo, 3)
+assert.equal(counts.todo, 2)
+assert.equal(counts.revision, 1)
 assert.equal(counts.progress, 1)
 assert.equal(counts.review, 1)
 assert.equal(counts.completed, 1)
@@ -49,10 +50,10 @@ assert.deepEqual(
 )
 
 const todo = filterLearningAssignments(rows, { status: 'todo', now })
-assert.deepEqual(todo.map((row) => row.id), [2, 6, 1], 'overdue work stays ahead of later to-do items')
+assert.deepEqual(todo.map((row) => row.id), [2, 1], 'overdue work stays ahead of later to-do items')
 assert.equal(filterLearningAssignments(rows, { status: 'review' }).some((row) => row.id === 4), true)
 assert.equal(filterLearningAssignments(rows, { status: 'review' }).some((row) => row.id === 6), false)
-assert.deepEqual(filterLearningAssignments(rows, { status: 'todo', category: 'hifz', now }).map((row) => row.id), [2, 6])
+assert.deepEqual(filterLearningAssignments(rows, { status: 'todo', category: 'hifz', now }).map((row) => row.id), [2])
 assert.equal(filterLearningAssignments(rows, { status: 'completed' })[0].id, 5)
 assert.deepEqual(filterLearningAssignments(rows, { status: 'history' }).map((row) => row.id), [4, 5])
 const authorised = [{ id: 8, status: 'pending', assignment: { activity: 'nazra' } }]
@@ -63,8 +64,8 @@ assert.equal(filterLearningAssignments([{ id: 4, status: 'awaiting_confirmation'
 
 const categories = learningCategoryCounts(rows, 'todo')
 assert.equal(categories.nazra, 1)
-assert.equal(categories.hifz, 2)
-assert.equal(categories.all, 3)
+assert.equal(categories.hifz, 1)
+assert.equal(categories.all, 2)
 
 assert.equal(dueWindowForRow(rows[1], now), 'overdue')
 assert.equal(dueWindowForRow(rows[0], now), 'upcoming')
@@ -90,9 +91,9 @@ const memory = {
   store: {},
 }
 writeLearnerMyLearningFilters({ status: 'review', due: 'today', category: 'hifz' }, memory)
-assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'review', due: 'today', category: 'hifz' })
+assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'review', due: 'today', category: 'hifz', search: '', sort: 'priority' })
 writeLearnerMyLearningFilters({ status: 'invalid', due: 'nope' }, memory)
-assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'todo', due: 'all', category: 'all' })
+assert.deepEqual(readLearnerMyLearningFilters(memory), { status: 'todo', due: 'all', category: 'all', search: '', sort: 'priority' })
 
 const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
 assert.match(dashboard, /setFilter\('done'\)/)

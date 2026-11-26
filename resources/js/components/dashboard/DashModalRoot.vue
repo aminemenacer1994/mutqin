@@ -1,10 +1,15 @@
 <template>
   <Teleport to="body">
     <div
+      v-if="open && workspace"
+      class="modal-backdrop fade show teacher-dialog-backdrop"
+      @click="onBackdropClick"
+    ></div>
+    <div
       v-if="open"
       ref="rootEl"
       class="dash-modal-root user-dashboard"
-      :class="rootClass"
+      :class="[rootClass, { 'modal fade show d-block teacher-dialog': workspace }]"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="labelledBy || undefined"
@@ -12,13 +17,20 @@
       :data-testid="testId || undefined"
       tabindex="-1"
       @keydown="onKeydown"
+      @mousedown.self="workspace && onBackdropClick()"
     >
       <div
+        v-if="!workspace"
         class="dash-modal__backdrop"
         aria-hidden="true"
         @click="onBackdropClick"
       ></div>
-      <div ref="panelEl" class="dash-modal" :class="panelClass">
+      <div v-if="workspace" class="modal-dialog modal-dialog-centered modal-lg">
+        <div ref="panelEl" class="dash-modal modal-content" :class="panelClass">
+          <slot />
+        </div>
+      </div>
+      <div v-else ref="panelEl" class="dash-modal" :class="panelClass">
         <slot />
       </div>
     </div>
@@ -38,6 +50,7 @@ export default {
   name: 'DashModalRoot',
   props: {
     open: { type: Boolean, default: false },
+    workspace: { type: Boolean, default: false },
     labelledBy: { type: String, default: '' },
     ariaLabel: { type: String, default: '' },
     rootClass: { type: [String, Object, Array], default: '' },

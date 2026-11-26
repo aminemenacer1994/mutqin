@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const dashboard = readFileSync(new URL('../../resources/js/views/Dashboard.vue', import.meta.url), 'utf8')
-const studentCss = readFileSync(new URL('../../resources/js/views/Dashboard.student-experience.css', import.meta.url), 'utf8')
+const studentCss = readFileSync(new URL('../../resources/js/views/Dashboard.student.css', import.meta.url), 'utf8')
 const view = readFileSync(new URL('../../resources/js/scripts/dashboard/studentProgressView.js', import.meta.url), 'utf8')
 
 assert.match(dashboard, /student-progress__stats/, 'overview uses compact stat grid')

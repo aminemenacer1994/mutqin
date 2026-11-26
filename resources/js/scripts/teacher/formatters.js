@@ -295,6 +295,7 @@ export function teacherDeskCounts(overview = {}) {
     overdue: Number(snapshot.overdue_tasks ?? kpis.overdue_assignments ?? assignments.overdue ?? 0),
     plans: Number(kpis.open_recommendations || 0),
     unread: Number(snapshot.unread_messages || 0),
+    attendanceUnmarked: Number(snapshot.attendance_unmarked_today || 0),
   }
 }
 

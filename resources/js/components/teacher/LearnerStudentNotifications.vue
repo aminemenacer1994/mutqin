@@ -7,7 +7,7 @@
   >
     <header class="teacher-pane__head learner-home__section-head">
       <div class="teacher-pane__titles">
-        <h2 class="teacher-pane__title">{{ t('dashboard.notifications_inbox_title') }}</h2>
+        <h2 class="teacher-pane__title">{{ t('dashboard.notifications_inbox_title') }} <span v-if="unreadCount" class="teacher-badge is-info">{{ unreadCount }} {{ t('dashboard.notifications_unread') }}</span></h2>
         <p v-if="!compact" class="teacher-meta">{{ t('dashboard.notifications_inbox_hint') }}</p>
       </div>
       <button
@@ -55,6 +55,7 @@
     >
       {{ t('dashboard.notifications_view_all') }}
     </button>
+    <button v-if="!compact && nextCursor" type="button" class="btn btn-outline-secondary btn-sm" :disabled="loading" @click="refreshNotifications(true)">{{ t('teacher.load_more') }}</button>
   </div>
   </section>
 </template>
@@ -100,16 +101,20 @@ export default {
       return this.rows.length > this.visibleRows.length || Boolean(this.nextCursor)
     },
   },
+  watch: {
+    compact(value) { if (!value) this.refreshNotifications() },
+  },
   mounted() {
     this.refreshNotifications()
   },
   methods: {
-    async refreshNotifications() {
+    async refreshNotifications(append = false) {
+      if (this.loading) return
       this.loading = true
       this.error = false
       try {
-        const data = await learningApi.getStudentNotifications({ limit: this.compact ? Math.max(8, this.limit) : 40 })
-        this.rows = Array.isArray(data?.notifications) ? data.notifications : []
+        const data = await learningApi.getStudentNotifications({ limit: this.compact ? this.limit : 10, cursor: append ? this.nextCursor : undefined })
+        this.rows = [...new Map([...(append ? this.rows : []), ...(data?.notifications || [])].map(row => [row.id, row])).values()]
         this.unreadCount = Number(data?.unread_count || 0)
         this.nextCursor = data?.next_cursor || null
         this.$emit('unread-change', this.unreadCount)
@@ -120,6 +125,7 @@ export default {
       }
     },
     async markAllRead() {
+      if (this.markingAll) return
       this.markingAll = true
       try {
         await learningApi.markAllStudentNotificationsRead()

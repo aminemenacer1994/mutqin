@@ -24,14 +24,14 @@ class TeacherDirectMessageService
     ) {}
 
     /** @return list<array<string, mixed>> */
-    public function thread(User $teacher, User $student, ?User $viewer = null, bool $markRead = true): array
+    public function thread(User $teacher, User $student, ?User $viewer = null, bool $markRead = true, ?int $before = null, ?int $limit = null): array
     {
         abort_unless($this->access->allows($teacher, $student), 404);
 
         $viewer ??= $teacher;
         abort_unless(in_array((int) $viewer->id, [(int) $teacher->id, (int) $student->id], true), 404);
 
-        $notes = TeacherNote::query()
+        $query = TeacherNote::query()
             ->where('teacher_id', $teacher->id)
             ->where('student_id', $student->id)
             ->whereNull('parent_user_id')
@@ -47,10 +47,18 @@ class TeacherDirectMessageService
                     });
             })
             ->with(['teacher:id,name', 'student:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->limit(100)
-            ->get();
+            ;
+        if ($before !== null) {
+            $cursor = (clone $query)->whereKey($before)->first();
+            abort_unless($cursor, 404);
+            $query->where(function ($older) use ($cursor) {
+                $older->where('created_at', '<', $cursor->created_at)
+                    ->orWhere(fn ($same) => $same->where('created_at', $cursor->created_at)->where('id', '<', $cursor->id));
+            });
+        }
+        $notes = $limit === null
+            ? $query->orderBy('created_at')->orderBy('id')->limit(100)->get()
+            : $query->orderByDesc('created_at')->orderByDesc('id')->limit($limit)->get()->reverse()->values();
 
         if ($markRead) {
             $unreadIds = $notes

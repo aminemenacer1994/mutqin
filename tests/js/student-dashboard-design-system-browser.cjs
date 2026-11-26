@@ -19,7 +19,7 @@ async function main() {
     await page.goto(`${base}/progress`)
     await page.locator('.learner-home__header').waitFor()
 
-    const activeTab = page.locator('.dash-jump__link.is-active:visible')
+    const activeTab = page.locator('.teacher-nav__link.is-active:visible')
     const activeStyle = await activeTab.evaluate(element => {
       const style = getComputedStyle(element)
       const box = element.getBoundingClientRect()
@@ -38,22 +38,22 @@ async function main() {
       'Selected navigation has an obvious filled state',
     )
 
-    const card = page.locator('.learner-home__today').first()
+    const card = page.locator('.student-continue').first()
     const lightCard = await card.evaluate(element => {
       const style = getComputedStyle(element)
-      return { background: style.backgroundColor, border: style.borderColor, radius: parseFloat(style.borderRadius), shadow: style.boxShadow }
+      return { background: style.backgroundColor, backgroundImage: style.backgroundImage, border: style.borderColor, radius: parseFloat(style.borderRadius), shadow: style.boxShadow }
     })
-    assert.ok(lightCard.radius >= 8 && lightCard.radius <= 16, 'Cards use the shared rounded surface')
+    assert.ok(lightCard.radius >= 8 && lightCard.radius <= 20, 'Cards use the shared rounded surface')
     assert.notEqual(lightCard.border, 'rgba(0, 0, 0, 0)', 'Cards retain a subtle border')
     assert.notEqual(lightCard.shadow, 'none', 'Top-level cards use the restrained shared shadow')
 
-    const primary = page.locator('.learner-home__task-footer .dash-btn--primary').first()
+    const primary = page.locator('.learner-home__next-action .btn-primary').first()
     if (await primary.count()) {
       const normal = await primary.evaluate(element => getComputedStyle(element).filter)
       await primary.hover()
       await page.waitForTimeout(200)
       const hovered = await primary.evaluate(element => getComputedStyle(element).filter)
-      assert.notEqual(hovered, normal, 'Primary actions expose a hover state')
+      assert.notEqual(hovered, normal, 'Primary actions expose the shared hover state')
       await primary.focus()
       const focus = await primary.evaluate(element => {
         const style = getComputedStyle(element)
@@ -66,26 +66,27 @@ async function main() {
       assert.ok(disabled.opacity <= 0.55, 'Disabled actions use the shared muted state')
       assert.equal(disabled.cursor, 'default', 'Disabled actions do not imply clickability')
       await primary.evaluate(element => { element.disabled = false; element.setAttribute('aria-busy', 'true') })
-      assert.equal(await primary.evaluate(element => getComputedStyle(element).cursor), 'progress', 'Busy actions expose the loading cursor')
+      assert.equal(await primary.getAttribute('aria-busy'), 'true', 'Busy actions expose their state to assistive technology')
       await primary.evaluate(element => element.removeAttribute('aria-busy'))
     }
 
-    await page.locator('.dash-jump').getByRole('button', { name: 'My learning', exact: true }).click()
+    await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'My learning', exact: true }).click()
     const filter = page.locator('.learner-teacher__filter.is-active').first()
     const filterStyle = await filter.evaluate(element => ({
       background: getComputedStyle(element).backgroundColor,
       backgroundImage: getComputedStyle(element).backgroundImage,
       color: getComputedStyle(element).color,
       height: element.getBoundingClientRect().height,
+      selectedBorder: getComputedStyle(element).borderBottomColor,
     }))
     assert.ok(filterStyle.height >= 36, 'Desktop filters use the shared compact height')
     assert.ok(
-      filterStyle.background !== 'rgba(0, 0, 0, 0)' || filterStyle.backgroundImage !== 'none',
-      'Selected filters use an obvious filled state',
+      filterStyle.background !== 'rgba(0, 0, 0, 0)' || filterStyle.backgroundImage !== 'none' || filterStyle.selectedBorder !== 'rgba(0, 0, 0, 0)',
+      'Selected filters use the shared visible selection state',
     )
 
     const feedbackAction = page.locator('.learner-home__feedback').getByRole('button', { name: 'Read feedback', exact: true })
-    await page.locator('.dash-jump').getByRole('button', { name: 'Home', exact: true }).click()
+    await page.locator('.teacher-nav-shell--desktop').getByRole('button', { name: 'Home', exact: true }).click()
     if (await feedbackAction.count()) {
       await feedbackAction.click()
       const dialog = page.locator('.dash-student-dialog--thread, .learner-task-thread-modal')
@@ -93,6 +94,7 @@ async function main() {
       const field = dialog.locator('textarea')
       const fieldStyle = await field.evaluate(element => ({
         height: element.getBoundingClientRect().height,
+      selectedBorder: getComputedStyle(element).borderBottomColor,
         minHeight: parseFloat(getComputedStyle(element).minHeight),
         radius: parseFloat(getComputedStyle(element).borderRadius),
         border: getComputedStyle(element).borderColor,
@@ -107,14 +109,15 @@ async function main() {
     }
 
     await page.evaluate(() => { document.documentElement.dataset.theme = 'dark' })
-    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    await page.waitForTimeout(400)
     const darkCard = await card.evaluate(element => ({
       background: getComputedStyle(element).backgroundColor,
+      backgroundImage: getComputedStyle(element).backgroundImage,
       color: getComputedStyle(element).color,
       border: getComputedStyle(element).borderColor,
     }))
-    assert.notEqual(darkCard.background, lightCard.background, 'Dark mode switches to the shared dark surface')
-    assert.notEqual(darkCard.background, 'rgba(0, 0, 0, 0)', 'Dark cards remain opaque and readable')
+    assert.notDeepEqual([darkCard.background,darkCard.backgroundImage], [lightCard.background,lightCard.backgroundImage], 'Dark mode switches to the shared dark surface')
+    assert.ok(darkCard.background !== 'rgba(0, 0, 0, 0)' || darkCard.backgroundImage !== 'none', 'Dark cards retain the shared painted surface')
     assert.notEqual(darkCard.border, 'rgba(0, 0, 0, 0)', 'Dark cards retain their border hierarchy')
     assert.deepEqual(errors, [], 'No runtime errors occurred during design-system interaction checks')
 

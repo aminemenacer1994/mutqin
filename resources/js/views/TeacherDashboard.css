@@ -165,6 +165,167 @@ html[data-theme="dark"] :is(.teacher-dashboard, .teacher-dialog) .form-select {
   outline-offset: 2px;
 }
 .teacher-nav-shell--desktop .teacher-nav__account { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--teacher-line); border-radius: 0; }
+[data-platform-shell="teacher"] .teacher-nav-shell--desktop .teacher-nav--with-admin {
+  min-height: min(22rem, calc(100dvh - 8.5rem));
+  display: flex;
+  flex-direction: column;
+}
+[data-platform-shell="teacher"] .teacher-nav--with-admin {
+  --teacher-nav-transition-ms: 180ms;
+  max-height: calc(100dvh - 7.5rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-platform-shell="teacher"] .teacher-nav--with-admin { --teacher-nav-transition-ms: 0ms; }
+}
+[data-platform-shell="teacher"] .teacher-nav__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--teacher-line);
+}
+[data-platform-shell="teacher"] .teacher-nav__admin { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+[data-platform-shell="teacher"] .teacher-nav__admin-children {
+  display: grid;
+  gap: 2px;
+  overflow: hidden;
+  transition: max-height var(--teacher-nav-transition-ms, 180ms) ease, opacity var(--teacher-nav-transition-ms, 180ms) ease;
+  max-height: 12rem;
+  opacity: 1;
+}
+[data-platform-shell="teacher"] .teacher-nav__admin-child {
+  padding-inline-start: 28px !important;
+  min-height: 40px !important;
+  font-size: 13px !important;
+}
+[data-platform-shell="teacher"] .teacher-nav__admin-child .bi { font-size: 17px !important; }
+[data-platform-shell="teacher"] .teacher-nav__chevron {
+  margin-inline-start: auto;
+  font-size: 14px;
+  transition: transform var(--teacher-nav-transition-ms, 180ms) ease;
+}
+[data-platform-shell="teacher"] .teacher-nav__chevron.is-collapsed { transform: rotate(-90deg); }
+[data-platform-shell="teacher"] .teacher-nav__divider {
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--teacher-line);
+  opacity: 1;
+}
+[data-platform-shell="teacher"] .teacher-nav__logout-form { margin: 0; }
+[data-platform-shell="teacher"] .teacher-nav__logout { width: 100%; }
+[data-platform-shell="teacher"] .teacher-messages-roster { margin: 0; padding: 0; list-style: none; }
+.teacher-messages-desk__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.teacher-messages-desk__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--teacher-line);
+  border-radius: 999px;
+  background: var(--teacher-surface);
+  color: var(--teacher-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.teacher-messages-desk__tab.is-active {
+  border-color: transparent;
+  background: var(--teacher-accent-soft);
+  color: var(--teacher-accent-ink);
+}
+.teacher-messages-desk__workspace {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 16px;
+  min-height: min(68dvh, 640px);
+  align-items: stretch;
+}
+.teacher-messages-desk__inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid var(--teacher-line);
+  border-radius: 14px;
+  background: var(--teacher-surface);
+  overflow: auto;
+}
+.teacher-messages-desk__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--teacher-line);
+  border-radius: 999px;
+  background: var(--teacher-surface-soft);
+  color: var(--teacher-text-soft);
+}
+.teacher-dashboard .teacher-messages-desk__search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  background-color: transparent;
+  color: var(--teacher-text);
+  font: inherit;
+  box-shadow: none;
+  outline: none;
+}
+.teacher-dashboard .teacher-messages-desk__search input:focus,
+.teacher-dashboard .teacher-messages-desk__search input:focus-visible {
+  border: 0;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+.teacher-messages-desk__search .bi { flex: 0 0 auto; font-size: 15px; }
+.teacher-messages-desk__list .teacher-activity-list__copy strong { overflow-wrap: normal; word-break: normal; }
+.teacher-messages-desk__list .teacher-activity-list__copy small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+.teacher-messages-desk__thread .teacher-empty--inline {
+  padding: 28px 20px;
+  width: 100%;
+  justify-content: center;
+}
+.teacher-messages-desk__list { margin: 0; padding: 0; list-style: none; }
+.teacher-messages-desk__thread {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--teacher-line);
+  border-radius: 14px;
+  background: var(--teacher-surface);
+  overflow: hidden;
+}
+.teacher-messages-desk__thread .teacher-messages-pane--student { border: 0; border-radius: 0; }
+.teacher-messages-desk__thread .teacher-section-pane { border: 0; box-shadow: none; padding: 0; }
+@media (max-width: 900px) {
+  .teacher-messages-desk__workspace { grid-template-columns: 1fr; min-height: 0; }
+  .teacher-messages-desk__workspace:not(.is-detail-open) .teacher-messages-desk__thread { display: none; }
+  .teacher-messages-desk__workspace.is-detail-open .teacher-messages-desk__inbox { display: none; }
+}
 .teacher-dashboard .teacher-nav__link.is-active,
 .teacher-dashboard .teacher-nav .nav-link.is-active { color: #fff; background: var(--accent-strong); font-weight: 650; }
 html[data-theme="dark"] .teacher-dashboard .teacher-nav__link.is-active,
@@ -721,12 +882,39 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .teacher-assignment-listening__prefs { border: 1px solid var(--teacher-line); border-radius: 12px; padding: 10px 12px; background: var(--teacher-surface-soft); }
 .teacher-assignment-listening__prefs-summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--teacher-text); list-style: none; }
 .teacher-assignment-listening__prefs-summary::-webkit-details-marker { display: none; }
-.teacher-form-grid--listening { margin-top: 12px; gap: 12px; }
+.teacher-assignment-hiding { width: 100%; min-width: 0; border: 1px solid var(--teacher-line); border-radius: 12px; padding: 10px 12px; background: var(--teacher-surface-soft); }
+.teacher-assignment-hiding__summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 600; color: var(--teacher-text); list-style: none; }
+.teacher-assignment-hiding__summary::-webkit-details-marker { display: none; }
+.teacher-assignment-hiding__title { min-width: 0; flex: 1 1 auto; overflow-wrap: normal; line-height: 1.35; }
+.teacher-assignment-hiding__body { margin-top: 12px; min-width: 0; }
+.teacher-assignment-hiding__grid { margin-top: 0; }
+.teacher-assignment-hiding__options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.teacher-assignment-hiding__options .form-check { margin-bottom: 0; }
+.teacher-assignment-hiding__preview { margin-top: 12px; }
+.teacher-assignment-hiding .form-check-label,
+.teacher-assignment-listening__prefs .form-check-label { overflow-wrap: normal; word-break: normal; line-height: 1.4; }
+.teacher-assignment-hiding__preview .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: start;
+  line-height: 1.35;
+}
+.teacher-assignment-hiding__preview .btn .bi { flex: 0 0 auto; }
+.teacher-student-tasks__memorisation-summary { padding: 12px 14px; border: 1px solid var(--teacher-line); border-radius: 12px; background: var(--teacher-surface-soft); margin-bottom: 12px; }
+.teacher-student-tasks__memorisation-summary h4 { font-size: 14px; margin: 0 0 6px; }
+.teacher-form-grid--listening {
+  margin-top: 12px;
+  gap: 12px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
 .teacher-form-field--third { grid-column: span 4; }
 .teacher-form-field--full { grid-column: 1 / -1; }
 .teacher-plan-modal__body { display: grid; gap: 16px; }
 .teacher-plan-modal__fields { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
-.teacher-plan-modal__field, .teacher-plan-modal__activity-grid > label { display: grid; min-width: 0; gap: 8px; margin: 0; font-size: 13px; font-weight: 400; }
+.teacher-plan-modal__field { display: grid; min-width: 0; gap: 8px; margin: 0; font-size: 13px; font-weight: 400; }
 .teacher-plan-modal__field--wide { grid-column: 1 / -1; }
 .teacher-plan-modal__activities-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 4px 0 14px; }
 .teacher-plan-modal__activities-head strong { font-size: 15px; font-weight: 600; }
@@ -735,12 +923,17 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .teacher-plan-modal__activity > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin: 0; color: var(--teacher-text); font-size: 14px; }
 .teacher-plan-modal__remove { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; color: var(--teacher-danger); border: 0; border-radius: 8px; background: transparent; }
 .teacher-plan-modal__remove:hover { background: var(--teacher-danger-soft); }
-.teacher-plan-modal__activity-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px 12px; }
-.teacher-plan-modal__activity-grid > label { grid-column: span 2; }
-.teacher-plan-modal__activity-grid > label:is(:first-child, :nth-child(2)) { grid-column: span 3; }
-.teacher-plan-modal__activity-grid > .teacher-plan-modal__instructions,
-.teacher-plan-modal__activity-grid > label:last-child { grid-column: 1 / -1; }
-.teacher-plan-modal__activity-grid > label:last-child { display: flex; align-items: center; gap: 8px; min-height: 24px; font-weight: 500; }
+.teacher-plan-modal__activity-grid { display: grid; gap: 12px; }
+.teacher-plan-modal__activity-row { display: grid; gap: 12px; align-items: start; min-width: 0; }
+.teacher-plan-modal__activity-row--meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.teacher-plan-modal__activity-row--meta .teacher-plan-modal__field--activity:only-child { grid-column: 1 / -1; }
+.teacher-plan-modal__activity-row--passage { grid-template-columns: minmax(0, 1.75fr) minmax(4.25rem, 1fr) minmax(4.25rem, 1fr); }
+.teacher-plan-modal__activity-row--schedule { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+.teacher-plan-modal__activity-grid .teacher-plan-modal__field { display: grid; gap: 6px; min-width: 0; margin: 0; font-size: 13px; font-weight: 400; }
+.teacher-plan-modal__activity-grid .teacher-plan-modal__field > span { font-size: 12px; font-weight: 600; color: var(--teacher-text); line-height: 1.25; }
+.teacher-plan-modal__activity-grid .teacher-plan-modal__field--milestone { display: flex; align-items: center; gap: 8px; min-height: 24px; font-weight: 500; }
+.teacher-plan-modal__activity-grid .teacher-plan-modal__field--wide { grid-column: 1 / -1; }
+.teacher-plan-modal__field-hint { margin: 0; color: var(--teacher-text-soft); font-size: 12px; line-height: 1.4; }
 .teacher-plan-modal__instructions { display: grid; margin: 0; }
 .teacher-plan-modal__suggestions { display: grid; gap: 12px; }
 .teacher-plan-suggestions > summary { width: fit-content; margin: 4px 0 0; color: var(--teacher-accent-ink); font-size: 13px; font-weight: 650; cursor: pointer; list-style: none; }
@@ -1065,6 +1258,32 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 }
 @media (max-width: 991.98px) {
   .teacher-dashboard__layout { display: block; }
+  [data-platform-shell="teacher"] .teacher-nav--with-admin { max-height: none; overflow: visible; }
+  [data-platform-shell="teacher"] .teacher-nav--with-admin .teacher-nav__footer,
+  [data-platform-shell="teacher"] .teacher-nav--with-admin .teacher-nav__admin,
+  [data-platform-shell="teacher"] .teacher-nav--with-admin .teacher-nav__logout-form { display: contents; }
+  [data-platform-shell="teacher"] .teacher-nav--with-admin .teacher-nav__divider { display: none; }
+  [data-platform-shell="teacher"] .teacher-nav__admin-toggle.is-active,
+  [data-platform-shell="teacher"] .teacher-nav-shell--mobile .teacher-nav__admin-toggle[aria-expanded="true"] {
+    color: #fff;
+    background: var(--accent-strong);
+    font-weight: 650;
+  }
+  [data-platform-shell="teacher"] .teacher-nav__admin-sheet {
+    position: fixed;
+    inset-inline: 10px;
+    bottom: calc(var(--teacher-mobile-nav-offset, 4.4rem) + 6px);
+    z-index: 1036;
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--teacher-line);
+    border-radius: 12px;
+    background: var(--teacher-surface);
+    box-shadow: var(--teacher-shadow);
+    max-height: min(40dvh, 280px);
+    overflow-y: auto;
+  }
   .teacher-nav-shell--desktop { display: none; }
   .teacher-nav-shell--mobile { display: block; position: fixed; inset-inline: 0; bottom: 0; z-index: 1035; padding: 4px 6px max(6px, env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--teacher-surface) 92%, transparent); border-top: 1px solid var(--teacher-line); backdrop-filter: blur(16px); }
   .teacher-dashboard .teacher-nav-shell--mobile .teacher-nav { display: grid; grid-template-columns: repeat(var(--teacher-nav-count, 5), minmax(0, 1fr)); padding: 0 !important; gap: 2px; border: 0 !important; border-radius: 0 !important; box-shadow: none; background: transparent !important; }
@@ -1114,6 +1333,9 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
   .teacher-student-toolbar > .teacher-density-toggle { display: none; }
   .teacher-table-shell { border: 0; background: transparent; overflow: visible; }
   .teacher-table-wrap { display: none; }
+  .teacher-plan-table-shell .teacher-table-wrap { display: none; }
+  .teacher-plan-table-shell .teacher-plan-cards { display: grid; gap: 12px; }
+  .teacher-plan-hub__filters { grid-template-columns: minmax(0, 1fr); }
   .teacher-student-cards { display: grid; gap: 12px; }
   .teacher-student-card { padding: 16px; min-width: 0; border: 1px solid var(--teacher-line); border-radius: 10px; background: var(--teacher-surface); }
   .teacher-student-card__main { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; border: 0; color: var(--teacher-text); background: transparent; text-align: start; }
@@ -1195,8 +1417,9 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
   .teacher-dialog .modal-footer .btn { width: 100%; min-width: 0; font-size: 12px; padding-inline: 10px; }
   .teacher-plan-modal__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .teacher-plan-modal__field:first-child { grid-column: 1 / -1; }
-  .teacher-plan-modal__activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .teacher-plan-modal__activity-grid > label { grid-column: auto; }
+  .teacher-plan-modal__activity-row--meta,
+  .teacher-plan-modal__activity-row--schedule { grid-template-columns: minmax(0, 1fr); }
+  .teacher-plan-modal__activity-row--passage { grid-template-columns: minmax(0, 1fr); }
   .teacher-form-grid--task { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .teacher-form-field--half, .teacher-form-field--third, .teacher-form-grid--task .teacher-form-field--reps, .teacher-form-pair { grid-column: 1 / -1; }
   .teacher-form-field--quarter { grid-column: span 1; }
@@ -1296,18 +1519,15 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 }
 .teacher-dialog.modal, .teacher-dialog .modal-content { opacity: 1 !important; animation: none; transition: none; }
 @media (max-width: 767.98px) {
-  .teacher-plan-modal__activity-grid > label:is(:first-child, :nth-child(2), :nth-child(5)) { grid-column: 1 / -1; }
   .teacher-dialog .teacher-dialog__header.is-inline { grid-template-columns: minmax(0, 1fr) 44px; }
 }
 
 .teacher-plan-hub__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
 .teacher-plan-hub__header h1 { margin: 0 0 4px; font-size: 1.5rem; }
 .teacher-plan-hub__header p { margin: 0; color: var(--teacher-muted, #6d645b); max-width: 40rem; }
-.teacher-plan-hub__filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
-.teacher-plan-hub__filters > label:first-child { flex: 1 1 14rem; max-width: 18rem; }
-.teacher-plan-hub__filters > label:nth-of-type(2) { flex: 1 1 14rem; }
-.teacher-plan-hub__filters > label:nth-of-type(3) { flex: 0 1 9rem; }
-.teacher-plan-hub__status { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 100%; order: 5; }
+.teacher-plan-hub__filters { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 10rem); gap: 10px 12px; align-items: center; margin-bottom: 16px; }
+.teacher-plan-hub__filters > label { min-width: 0; margin: 0; }
+.teacher-plan-hub__status { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 1 / -1; }
 .teacher-plan-hub__status button { border: 1px solid var(--teacher-line); background: transparent; color: inherit; border-radius: 999px; min-height: 32px; padding: 0 10px; font-size: 13px; }
 .teacher-plan-hub__status button.is-active { background: var(--accent, #8b5e3c); color: #fffaf3; border-color: transparent; }
 .teacher-plan-hub__status button:focus-visible, .teacher-plan-menu__toggle:focus-visible, .teacher-plan-steps button:focus-visible { outline: 2px solid var(--accent, #8b5e3c); outline-offset: 2px; }
@@ -1337,13 +1557,42 @@ html[data-theme="dark"] .teacher-dashboard .teacher-nav .nav-link.is-active { co
 .teacher-plan-templates article:last-child { border-bottom: 0; }
 .teacher-plan-templates article > span { color: var(--teacher-text-soft); font-size: 13px; }
 .teacher-plan-workspace.is-for-student .teacher-plan-card__student { display: none; }
-.teacher-plan-board { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; overflow: visible; }
+.teacher-plan-board { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; overflow: visible; min-width: 0; }
+.teacher-plan-table-shell { min-width: 0; }
+.teacher-plan-table-shell .teacher-plan-cards { display: none; }
+.teacher-plan-table-shell .teacher-table-wrap { display: block; min-width: 0; }
+.teacher-table--plans thead th { white-space: nowrap; }
+.teacher-table--plans .teacher-table__row.is-menu-open { position: relative; z-index: 4; }
+.teacher-plan-table__title { display: block; font-weight: 650; font-size: 14px; line-height: 1.35; }
+.teacher-plan-table__plan { min-width: 10rem; max-width: 16rem; }
+.teacher-plan-card__bar--inline { margin-top: 6px; max-width: 12rem; }
+.teacher-plan-table__total { margin-inline-start: 2px; color: var(--teacher-text-soft); font-weight: 600; font-size: 12px; }
+.teacher-plan-table__next { display: grid; gap: 4px; min-width: 9rem; max-width: 14rem; }
+.teacher-plan-table__milestone { font-size: 13px; font-weight: 550; line-height: 1.35; }
+.teacher-table--plans .teacher-table__cell--num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.teacher-table--plans .teacher-table__actions { gap: 6px; }
+.teacher-plan-card__mobile-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.teacher-plan-card__stats--compact > div { padding: 8px 10px; }
 .teacher-plan-board .teacher-plan-card,
 .teacher-plan-board .teacher-plan-card__top,
 .teacher-plan-board .teacher-plan-card footer,
-.teacher-plan-board .teacher-plan-menu { overflow: visible; }
-.teacher-plan-board .teacher-plan-card:has(.teacher-plan-menu__list) { position: relative; z-index: 4; }
-.teacher-plan-board .teacher-plan-menu__list { top: auto; bottom: calc(100% + 4px); }
+.teacher-plan-board .teacher-plan-menu,
+.teacher-plan-table-shell .teacher-plan-menu { overflow: visible; }
+.teacher-plan-board .teacher-plan-card:has(.teacher-plan-menu__list),
+.teacher-plan-table-shell .teacher-plan-cards .teacher-plan-card:has(.teacher-plan-menu__list) { position: relative; z-index: 4; }
+.teacher-plan-board .teacher-plan-menu__list,
+.teacher-plan-table-shell .teacher-plan-menu__list { top: calc(100% + 4px); bottom: auto; }
+.teacher-plan-items-table { margin-top: 4px; }
+.teacher-plan-items__passage { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.teacher-plan-dialog .teacher-plan-items__followup td { padding-top: 0; padding-bottom: 14px; border-bottom: 1px solid var(--teacher-line); background: color-mix(in srgb, var(--teacher-surface-soft) 80%, transparent); vertical-align: top; }
+.teacher-plan-dialog .teacher-plan-items__followup:last-child td { border-bottom: 0; }
+.teacher-plan-dialog .teacher-plan-items__followup .teacher-plan-detail__notes { margin: 0 0 6px; font-size: 12px; }
+.teacher-plan-dialog .teacher-plan-items-table .is-overdue { color: var(--teacher-danger); font-weight: 650; }
+.teacher-plan-review__summary { margin-top: 4px; }
+.teacher-plan-review__summary .teacher-table tbody th { width: 38%; font-weight: 600; color: var(--teacher-text-soft); font-size: 13px; background: transparent; border: 0; white-space: nowrap; }
+.teacher-plan-review__summary .teacher-table tbody td { font-weight: 600; text-align: end; border: 0; border-bottom: 1px solid var(--teacher-line); }
+.teacher-plan-review__summary .teacher-table tbody tr:last-child td { border-bottom: 0; }
+.teacher-plan-review__activities-heading { margin: 16px 0 8px; font-size: 12px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teacher-text-soft); }
 .teacher-plan-card, .teacher-plan-detail { border: 1px solid color-mix(in srgb, var(--teacher-accent) 22%, var(--teacher-line)); border-radius: 14px; background: var(--teacher-surface); padding: 18px; }
 .teacher-plan-card { display: grid; gap: 14px; box-shadow: 0 8px 24px color-mix(in srgb, var(--teacher-text) 4%, transparent); }
 .teacher-plan-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; min-width: 0; }
@@ -1522,8 +1771,9 @@ button.teacher-overview-facts__card:hover, button.teacher-overview-facts__card:f
 .teacher-plan-dialog .teacher-plan-steps { flex-wrap: wrap; margin-bottom: 16px; }
 .teacher-plan-dialog .teacher-plan-activity__summary { display: grid; gap: 2px; min-width: 0; flex: 1 1 12rem; }
 .teacher-plan-dialog .teacher-plan-activity__summary p { margin: 0; }
-.teacher-plan-dialog .teacher-plan-activity__tools { display: flex; align-items: center; gap: 4px; }
-.teacher-plan-dialog .teacher-plan-modal__activity > header { flex-wrap: wrap; }
+.teacher-plan-dialog .teacher-plan-activity__tools { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.teacher-plan-dialog .teacher-plan-modal__activity > header { flex-wrap: wrap; align-items: flex-start; gap: 10px 12px; }
+.teacher-plan-dialog .teacher-plan-modal__remove { flex: 0 0 auto; border: 1px solid var(--teacher-line); background: var(--teacher-surface); }
 .teacher-plan-dialog .teacher-plan-modal__locked { margin: 0; color: var(--teacher-text-soft); font-size: 13px; line-height: 1.4; }
 .teacher-plan-dialog .teacher-plan-review__note { display: block; margin: 0; padding: 0; background: transparent; color: var(--teacher-text-soft); font-size: 14px; font-weight: 400; line-height: 1.45; text-align: start; }
 .teacher-plan-dialog .teacher-plan-review p strong { min-width: 0; overflow-wrap: anywhere; }
@@ -1533,8 +1783,11 @@ button.teacher-overview-facts__card:hover, button.teacher-overview-facts__card:f
 .teacher-plan-dialog .teacher-plan-modal__field textarea,
 .teacher-plan-dialog .teacher-plan-modal__field input,
 .teacher-plan-dialog .teacher-plan-modal__field select { min-height: 36px; }
-.teacher-plan-dialog .teacher-plan-modal__activity { gap: 8px; padding: 12px; }
+.teacher-plan-dialog .teacher-plan-modal__activity { gap: 10px; padding: 14px; }
 .teacher-plan-dialog .teacher-plan-modal__activities-head { margin: 0 0 8px; }
+.teacher-plan-dialog .teacher-plan-modal__activity-grid { gap: 10px; }
+.teacher-plan-dialog .teacher-plan-modal__activity-grid :is(.form-control, .form-select, .teacher-surah-select input) { min-height: 38px; width: 100%; }
+.teacher-plan-dialog .teacher-plan-modal__activity-grid .teacher-surah-select { width: 100%; }
 @media (max-width: 767.98px) {
   .teacher-plan-hub__header, .teacher-plan-suggestions article, .teacher-plan-detail__head { flex-direction: column; }
   .teacher-plan-hub__header .btn, .teacher-plan-dialog .modal-footer .btn { width: 100%; }
@@ -1551,8 +1804,6 @@ button.teacher-overview-facts__card:hover, button.teacher-overview-facts__card:f
   .teacher-plan-dialog .modal-content { max-height: calc(100dvh - 16px); }
   .teacher-dialog.teacher-plan-dialog .modal-footer { display: flex; flex-direction: column; align-items: stretch; }
   .teacher-dialog.teacher-plan-dialog .modal-footer .btn { width: 100%; }
-  .teacher-plan-dialog .teacher-plan-modal__activity-grid { grid-template-columns: minmax(0, 1fr); }
-  .teacher-plan-dialog .teacher-plan-modal__activity-grid > label { grid-column: 1 / -1; }
 }
 
 .teacher-dashboard .teacher-tabs__count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--teacher-accent-soft); color: var(--teacher-accent-ink); font-size: 11px; font-weight: 650; }

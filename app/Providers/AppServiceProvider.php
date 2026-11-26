@@ -26,10 +26,12 @@ use App\Services\Parent\ParentLearningReportCollector;
 use App\Services\Parent\RecordParentLearningReportCollector;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
+use App\Support\PreviewSandbox;
 use App\Support\PublicAppUrl;
 use App\Support\Registration\OrganisationRegistrationCatalog;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -117,6 +119,21 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(20)->by($userId ? 'user:'.$userId : 'ip:'.$request->ip());
         });
+
+        RateLimiter::for('preview-sandbox-enter', function (Request $request) {
+            $perMinute = max(1, (int) config('mutqin.preview_sandbox.enter_per_minute', 12));
+
+            return Limit::perMinute($perMinute)->by(PreviewSandbox::rateLimitKey($request));
+        });
+
+        if ((bool) config('mutqin.preview_sandbox.suppress_outbound_mail', true)) {
+            Event::listen(MessageSending::class, function (MessageSending $event) {
+                $request = request();
+                if ($request !== null && PreviewSandbox::suppressesSideEffects($request)) {
+                    return false;
+                }
+            });
+        }
 
         // Ensure learner-audio temp dir exists with a .gitignore so backups/logs never
         // accidentally treat scratch recordings as durable assets.

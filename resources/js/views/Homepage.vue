@@ -1,27 +1,66 @@
 <template>
-  <div class="homepage" :data-theme="currentTheme" :data-inapp="inAppBrowser ? '1' : null">
+  <div
+    ref="pageRoot"
+    class="homepage"
+    :class="{ 'homepage--preview': landingPreview }"
+    :data-theme="currentTheme"
+    :data-inapp="inAppBrowser ? '1' : null"
+  >
+  <p v-if="landingPreview" class="homepage-preview-banner" role="status">
+    <i class="bi bi-eye" aria-hidden="true"></i>
+    <span>
+      <strong>{{ homepageT('bannerLabel') }}</strong>
+      {{ homepageT('bannerDetail') }}
+    </span>
+  </p>
     <section class="hero" aria-labelledby="homepage-hero-title">
       <div class="hero__glow" aria-hidden="true"></div>
       <div class="hero__inner">
         <div class="hero__grid">
           <div class="hero__copy">
-            <h1 id="homepage-hero-title" class="hero__title">
-              {{ t('homepage.hero.title') }}
+            <h1
+              id="homepage-hero-title"
+              class="hero__title"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '0ms' } : undefined"
+            >
+              {{ homepageT('hero.title') }}
             </h1>
-            <ul class="hero__pillars" :aria-label="t('homepage.hero.pillarsLabel')">
-              <li v-for="pillar in heroPillars" :key="pillar.id">
+            <ul
+              class="hero__pillars"
+              :aria-label="t('homepage.hero.pillarsLabel')"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '60ms' } : undefined"
+            >
+              <li v-for="pillar in displayHeroPillars" :key="pillar.id">
                 <i class="bi" :class="pillar.icon" aria-hidden="true"></i>
                 <span>{{ pillar.label }}</span>
               </li>
             </ul>
-            <p class="hero__desc hero__desc--desktop">{{ t('homepage.hero.desc') }}</p>
-            <p class="hero__desc hero__desc--mobile">{{ t('homepage.hero.mobileDesc') }}</p>
-            <p class="hero__audience">
+            <p
+              class="hero__desc hero__desc--desktop"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '120ms' } : undefined"
+            >{{ homepageT('hero.desc') }}</p>
+            <p
+              class="hero__desc hero__desc--mobile"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '120ms' } : undefined"
+            >{{ homepageT('hero.mobileDesc') }}</p>
+            <p
+              class="hero__audience"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '180ms' } : undefined"
+            >
               <i class="bi bi-people" aria-hidden="true"></i>
-              <span>{{ t('homepage.hero.audience') }}</span>
+              <span>{{ homepageT('hero.audience') }}</span>
             </p>
 
-            <div class="hero__actions">
+            <div
+              class="hero__actions"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '240ms' } : undefined"
+            >
               <a
                 v-if="showStartMemorisationCta"
                 :href="primaryCta.href"
@@ -42,11 +81,11 @@
               </a>
               <a
                 v-if="showStartMemorisationCta"
-                href="/features"
+                :href="landingPreview ? '/preview/pricing' : '/features'"
                 class="btn btn--secondary"
               >
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                {{ t('homepage.hero.seeFirstSession') }}
+                {{ homepageT('hero.seeFirstSession') }}
               </a>
             </div>
 
@@ -54,6 +93,8 @@
               class="hero__availability"
               :class="{ 'hero__availability--early': !showStartMemorisationCta }"
               role="status"
+              :data-hero-enter="landingPreview ? '' : null"
+              :style="landingPreview ? { '--hero-delay': '300ms' } : undefined"
             >
               <i
                 class="bi"
@@ -61,15 +102,25 @@
                 aria-hidden="true"
               ></i>
               <div>
-                <strong>{{ t(showStartMemorisationCta ? 'homepage.access.available.label' : 'homepage.access.early.label') }}</strong>
-                <span class="hero__availability-detail">{{ t(showStartMemorisationCta ? 'homepage.access.available.detail' : 'homepage.access.early.detail') }}</span>
-                <span v-if="showStartMemorisationCta" class="hero__availability-compact">{{ t('homepage.access.available.mobileDetail') }}</span>
+                <strong>{{ homepageT(showStartMemorisationCta ? 'access.available.label' : 'access.early.label') }}</strong>
+                <span class="hero__availability-detail">{{ homepageT(showStartMemorisationCta ? 'access.available.detail' : 'access.early.detail') }}</span>
+                <span v-if="showStartMemorisationCta" class="hero__availability-compact">{{ homepageT('access.available.mobileDetail') }}</span>
               </div>
             </div>
           </div>
 
-          <div class="hero__visual">
-            <div class="hero__fan">
+          <div
+            class="hero__visual"
+            :class="{ 'hero__visual--preview': landingPreview }"
+            :data-hero-enter="landingPreview ? '' : null"
+            :style="landingPreview ? { '--hero-delay': '200ms' } : undefined"
+          >
+            <preview-hero-showcase
+              v-if="landingPreview"
+              :roles="heroShowcaseRoles"
+              :tabs-label="homepageT('heroShowcase.tabsLabel')"
+            />
+            <div v-else class="hero__fan">
               <figure
                 v-for="shot in heroShots"
                 :key="shot.id"
@@ -99,6 +150,111 @@
       </div>
     </section>
 
+    <section
+      v-if="landingPreview"
+      id="ecosystem"
+      class="preview-ecosystem"
+      aria-labelledby="preview-ecosystem-title"
+    >
+      <div class="wrap">
+        <header class="section-head" data-reveal>
+          <p class="section-kicker">{{ homepageT('ecosystem.kicker') }}</p>
+          <h2 id="preview-ecosystem-title" class="section-title">{{ homepageT('ecosystem.title') }}</h2>
+          <p class="section-sub">{{ homepageT('ecosystem.subtitle') }}</p>
+        </header>
+        <ol class="preview-ecosystem__list">
+          <li
+            v-for="(role, idx) in ecosystemRoles"
+            :key="role.id"
+            class="preview-ecosystem__item"
+            data-reveal
+            :style="{ '--delay': `${idx * 50}ms` }"
+          >
+            <span class="preview-ecosystem__index" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
+            <div>
+              <h3>
+                <a v-if="role.href" :href="role.href" class="preview-ecosystem__link">{{ role.title }}</a>
+                <span v-else>{{ role.title }}</span>
+              </h3>
+              <p>{{ role.body }}</p>
+            </div>
+          </li>
+        </ol>
+        <p class="preview-ecosystem__note">{{ homepageT('ecosystem.accountNote') }}</p>
+      </div>
+    </section>
+
+    <preview-workflow-demo
+      v-if="landingPreview && workflowSteps.length"
+      :kicker="homepageT('workflow.kicker')"
+      :title="homepageT('workflow.title')"
+      :subtitle="homepageT('workflow.subtitle')"
+      :steps="workflowSteps"
+      :play-label="homepageT('workflow.controls.play')"
+      :pause-label="homepageT('workflow.controls.pause')"
+      :prev-label="homepageT('workflow.controls.prev')"
+      :next-label="homepageT('workflow.controls.next')"
+      :replay-label="homepageT('workflow.controls.replay')"
+      :progress-label="homepageT('workflow.controls.progress')"
+    />
+
+    <section
+      v-if="landingPreview"
+      id="classroom"
+      class="preview-classroom"
+      aria-labelledby="preview-classroom-title"
+    >
+      <div class="wrap">
+        <header class="section-head" data-reveal>
+          <p class="section-kicker">{{ homepageT('classroom.kicker') }}</p>
+          <h2 id="preview-classroom-title" class="section-title">{{ homepageT('classroom.title') }}</h2>
+          <p class="section-sub">{{ homepageT('classroom.subtitle') }}</p>
+        </header>
+        <div class="preview-classroom__grid">
+          <article
+            v-for="(spot, idx) in classroomSpotlights"
+            :key="spot.id"
+            class="preview-classroom__card"
+            data-reveal
+            :style="{ '--delay': `${idx * 70}ms` }"
+          >
+            <figure class="preview-browser">
+              <img
+                class="preview-browser__shot"
+                :src="previewAssetUrl(spot.asset)"
+                :alt="spot.alt"
+                width="1440"
+                height="900"
+                loading="lazy"
+                decoding="async"
+              >
+            </figure>
+            <div class="preview-classroom__copy">
+              <h3>{{ spot.title }}</h3>
+              <p>{{ spot.body }}</p>
+            </div>
+          </article>
+        </div>
+        <p class="preview-classroom__caption">{{ homepageT('classroom.authenticCaption') }}</p>
+      </div>
+    </section>
+
+  <section
+    v-if="landingPreview"
+    class="preview-demo-entry wrap"
+    aria-labelledby="preview-demo-entry-title"
+  >
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">{{ homepageT('demo.kicker') }}</p>
+      <h2 id="preview-demo-entry-title" class="section-title">{{ homepageT('demo.title') }}</h2>
+      <p class="section-sub">{{ homepageT('demo.subtitle') }}</p>
+    </header>
+    <p class="preview-demo-entry__actions" data-reveal>
+      <a class="btn btn--primary" href="/preview/demo">{{ homepageT('demo.cta') }}</a>
+      <a class="btn btn--secondary preview-demo-entry__secondary" href="/preview/resources">{{ homepageT('resources.cta') }}</a>
+    </p>
+  </section>
+
     <tutorial-carousel />
 
     <section class="practice-types" aria-labelledby="practice-types-title">
@@ -106,7 +262,7 @@
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
           <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
+          <p class="section-sub">{{ homepageT('practiceTypes.subtitle') }}</p>
         </header>
 
         <div class="practice-types__grid">
@@ -318,7 +474,7 @@
               <i class="bi bi-moon-stars" aria-hidden="true"></i>
               <h3>Mutqin</h3>
             </div>
-            <p>{{ t('homepage.focused_quran_memorisation_tools_for_recitation_ch') }}</p>
+            <p>{{ homepageT('focused_quran_memorisation_tools_for_recitation_ch') }}</p>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
@@ -340,7 +496,7 @@
           </div>
         </div>
         <div class="footer__bottom">
-          <p class="footer__tagline">{{ t('homepage.footer.tagline') }}</p>
+          <p class="footer__tagline">{{ homepageT('footer.tagline') }}</p>
           <span class="footer__copy">{{ t('homepage.all_rights_reserved') }}</span>
           <nav class="footer__social" :aria-label="t('homepage.footer.connect')">
             <a
@@ -366,6 +522,13 @@ import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TutorialCarousel from '../components/TutorialCarousel.vue';
 import TestimonialsCarousel from '../components/TestimonialsCarousel.vue';
+import PreviewHeroShowcase from '../components/preview/PreviewHeroShowcase.vue';
+import PreviewWorkflowDemo from '../components/preview/PreviewWorkflowDemo.vue';
+import {
+  bindRevealObserver,
+  mountHeroEntrance,
+  mountPreviewPageEnter,
+} from '../composables/usePreviewMotion.js';
 import { TESTIMONIALS_SECTION_ENABLED } from '../config/testimonials.js';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
@@ -374,9 +537,37 @@ import { isInAppBrowser, publicRegisterHref } from '../scripts/analytics/registe
 
 export default {
   name: 'Homepage',
-  components: { TutorialCarousel, TestimonialsCarousel },
-  setup() {
-    const { t, locale } = useI18n();
+  components: {
+    TutorialCarousel,
+    TestimonialsCarousel,
+    PreviewHeroShowcase,
+    PreviewWorkflowDemo,
+  },
+  props: {
+    landingPreview: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup(props) {
+    const { t, te, locale } = useI18n();
+    const landingPreview = computed(() => {
+      if (props.landingPreview) {
+        return true;
+      }
+
+      return typeof window !== 'undefined' && window.mutqinLandingPreview === true;
+    });
+    const homepageT = (key) => {
+      if (landingPreview.value) {
+        const previewKey = `homepage.preview.${key}`;
+        if (te(previewKey)) {
+          return t(previewKey);
+        }
+      }
+
+      return t(`homepage.${key}`);
+    };
     const showTestimonialsSection = TESTIMONIALS_SECTION_ENABLED;
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
     const showArticles = typeof window !== 'undefined' && window.mutqinShowArticles === true;
@@ -389,12 +580,12 @@ export default {
         ? {
           destination: 'memorisation',
           href: '/memorisation?journey=daily',
-          label: t('homepage.hero.startFirstSession'),
+          label: homepageT('hero.startFirstSession'),
         }
         : {
           destination: 'registration',
           href: publicRegisterHref({ intent: 'first' }),
-          label: t('homepage.hero.startFree'),
+          label: homepageT('hero.startFree'),
         };
     });
     const currentTheme = ref(getSavedTheme());
@@ -483,7 +674,9 @@ export default {
       }
     };
 
-    let revealObserver = null;
+    let disconnectReveals = () => {};
+    let cleanupPageEnter = () => {};
+    let cleanupHero = () => {};
 
     const syncFeaturesMobile = () => {
       isFeaturesMobile.value = featuresMobileMq?.matches ?? false;
@@ -613,12 +806,150 @@ export default {
       ];
     });
 
+    const previewAssetUrl = (basename) => `/preview/assets/${basename}.png`;
+    const pageRoot = ref(null);
+
+    const heroShowcaseRoles = computed(() => {
+      void locale.value;
+      if (!landingPreview.value) {
+        return [];
+      }
+
+      return [
+        {
+          id: 'teacher',
+          label: homepageT('heroShowcase.roles.teacher.label'),
+          caption: homepageT('heroShowcase.roles.teacher.caption'),
+          src: previewAssetUrl('overview-priorities'),
+          alt: homepageT('heroShowcase.roles.teacher.alt'),
+        },
+        {
+          id: 'student',
+          label: homepageT('heroShowcase.roles.student.label'),
+          caption: homepageT('heroShowcase.roles.student.caption'),
+          src: previewAssetUrl('assignment-detail'),
+          alt: homepageT('heroShowcase.roles.student.alt'),
+        },
+        {
+          id: 'parent',
+          label: homepageT('heroShowcase.roles.parent.label'),
+          caption: homepageT('heroShowcase.roles.parent.caption'),
+          src: previewAssetUrl('parents'),
+          alt: homepageT('heroShowcase.roles.parent.alt'),
+        },
+        {
+          id: 'personal',
+          label: homepageT('heroShowcase.roles.personal.label'),
+          caption: homepageT('heroShowcase.roles.personal.caption'),
+          src: '/images/landing/2026-11-hero-mushaf.jpg',
+          alt: homepageT('heroShowcase.roles.personal.alt'),
+        },
+      ];
+    });
+
+    const workflowStepImage = (id) => {
+      const assets = {
+        assign: previewAssetUrl('assignment-create'),
+        receive: previewAssetUrl('assignments'),
+        practise: '/images/landing/2026-11-session-practice.jpg',
+        aiCheck: previewAssetUrl('review-detail'),
+        feedback: previewAssetUrl('messages'),
+        progress: previewAssetUrl('parents'),
+      };
+
+      return assets[id] || previewAssetUrl('overview');
+    };
+
+    const workflowSteps = computed(() => {
+      void locale.value;
+      if (!landingPreview.value) {
+        return [];
+      }
+
+      const ids = ['assign', 'receive', 'practise', 'aiCheck', 'feedback', 'progress'];
+      return ids.map((id) => ({
+        id,
+        title: homepageT(`workflow.steps.${id}.title`),
+        body: homepageT(`workflow.steps.${id}.body`),
+        platform: homepageT(`workflow.steps.${id}.platform`),
+        src: workflowStepImage(id),
+        alt: homepageT(`workflow.steps.${id}.alt`),
+      }));
+    });
+
     const heroPillars = computed(() => {
       void locale.value;
       return [
         { id: 'memorise', icon: 'bi-journal-plus', label: t('homepage.practiceTypes.items.memorise.title') },
         { id: 'revise', icon: 'bi-arrow-repeat', label: t('homepage.practiceTypes.items.revise.title') },
         { id: 'ai-recite', icon: 'bi-mic-fill', label: t('homepage.practiceTypes.items.aiRecite.title') },
+      ];
+    });
+
+    const displayHeroPillars = computed(() => {
+      void locale.value;
+      if (!landingPreview.value) {
+        return heroPillars.value;
+      }
+
+      return [
+        { id: 'class', icon: 'bi-people', label: homepageT('hero.pillars.class') },
+        { id: 'memorise', icon: 'bi-journal-plus', label: homepageT('hero.pillars.memorise') },
+        { id: 'parents', icon: 'bi-shield-check', label: homepageT('hero.pillars.parents') },
+        { id: 'personal', icon: 'bi-mic-fill', label: homepageT('hero.pillars.personal') },
+      ];
+    });
+
+    const ecosystemRoles = computed(() => {
+      void locale.value;
+      if (!landingPreview.value) {
+        return [];
+      }
+
+      return [
+        { id: 'teacher', title: homepageT('ecosystem.roles.teacher.title'), body: homepageT('ecosystem.roles.teacher.body'), href: '/preview/teachers' },
+        { id: 'student', title: homepageT('ecosystem.roles.student.title'), body: homepageT('ecosystem.roles.student.body'), href: '/preview/students' },
+        { id: 'parent', title: homepageT('ecosystem.roles.parent.title'), body: homepageT('ecosystem.roles.parent.body'), href: '/preview/parents' },
+        { id: 'personal', title: homepageT('ecosystem.roles.personal.title'), body: homepageT('ecosystem.roles.personal.body'), href: '/preview/learning' },
+        { id: 'institution', title: homepageT('ecosystem.roles.institution.title'), body: homepageT('ecosystem.roles.institution.body'), href: '/preview/institutions' },
+      ];
+    });
+
+    const classroomSpotlights = computed(() => {
+      void locale.value;
+      if (!landingPreview.value) {
+        return [];
+      }
+
+      return [
+        {
+          id: 'overview',
+          asset: 'overview-priorities',
+          title: homepageT('classroom.spotlights.overview.title'),
+          body: homepageT('classroom.spotlights.overview.body'),
+          alt: homepageT('classroom.spotlights.overview.alt'),
+        },
+        {
+          id: 'assignments',
+          asset: 'assignment-create',
+          title: homepageT('classroom.spotlights.assignments.title'),
+          body: homepageT('classroom.spotlights.assignments.body'),
+          alt: homepageT('classroom.spotlights.assignments.alt'),
+        },
+        {
+          id: 'review',
+          asset: 'review-detail',
+          title: homepageT('classroom.spotlights.review.title'),
+          body: homepageT('classroom.spotlights.review.body'),
+          alt: homepageT('classroom.spotlights.review.alt'),
+        },
+        {
+          id: 'parents',
+          asset: 'parents',
+          title: homepageT('classroom.spotlights.parents.title'),
+          body: homepageT('classroom.spotlights.parents.body'),
+          alt: homepageT('classroom.spotlights.parents.alt'),
+        },
       ];
     });
 
@@ -704,11 +1035,11 @@ export default {
     const faqItems = computed(() => {
       void locale.value;
       return [
-        { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
-        { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
-        { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
-        { id: 'freeAccess', question: t('homepage.faq.items.freeAccess.question'), answer: t('homepage.faq.items.freeAccess.answer') },
-        { id: 'whoFor', question: t('homepage.faq.items.whoFor.question'), answer: t('homepage.faq.items.whoFor.answer') },
+        { id: 'whatIsMutqin', question: homepageT('faq.items.whatIsMutqin.question'), answer: homepageT('faq.items.whatIsMutqin.answer') },
+        { id: 'howMemorisation', question: homepageT('faq.items.howMemorisation.question'), answer: homepageT('faq.items.howMemorisation.answer') },
+        { id: 'howRevision', question: homepageT('faq.items.howRevision.question'), answer: homepageT('faq.items.howRevision.answer') },
+        { id: 'freeAccess', question: homepageT('faq.items.freeAccess.question'), answer: homepageT('faq.items.freeAccess.answer') },
+        { id: 'whoFor', question: homepageT('faq.items.whoFor.question'), answer: homepageT('faq.items.whoFor.answer') },
       ];
     });
 
@@ -723,28 +1054,24 @@ export default {
     };
 
     onMounted(() => {
-      trackSeoLandingView({ kind: 'home', pageId: 'home', path: '/' });
+      trackSeoLandingView({
+        kind: landingPreview.value ? 'preview_home' : 'home',
+        pageId: landingPreview.value ? 'preview_home' : 'home',
+        path: landingPreview.value ? '/preview' : '/',
+      });
       applyTheme();
       window.addEventListener('mutqin:theme-change', onThemeChange);
 
-      const nodes = document.querySelectorAll('[data-reveal]');
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion || !('IntersectionObserver' in window)) {
-        nodes.forEach((el) => el.classList.add('is-in'));
-      } else {
-        revealObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-in');
-            revealObserver.unobserve(entry.target);
-          });
-        }, { threshold: 0.14, rootMargin: '0px 0px -6% 0px' });
-
-        nodes.forEach((el, i) => {
-          el.style.setProperty('--stagger', `${Math.min(i * 40, 240)}ms`);
-          revealObserver.observe(el);
-        });
+      const root = pageRoot.value || document;
+      if (landingPreview.value) {
+        cleanupPageEnter = mountPreviewPageEnter(pageRoot.value);
+        cleanupHero = mountHeroEntrance(pageRoot.value?.querySelector('.hero'));
       }
+
+      disconnectReveals = bindRevealObserver({
+        root,
+        selector: '[data-reveal]',
+      });
 
       featuresMobileMq = window.matchMedia(FEATURES_MOBILE_MQ);
       syncFeaturesMobile();
@@ -755,7 +1082,9 @@ export default {
 
     onUnmounted(() => {
       window.removeEventListener('mutqin:theme-change', onThemeChange);
-      revealObserver?.disconnect();
+      disconnectReveals();
+      cleanupPageEnter();
+      cleanupHero();
       featuresMobileMq?.removeEventListener('change', onFeaturesMobileChange);
       disposeFeaturesCarousel();
       clearDemoTimer();
@@ -763,6 +1092,8 @@ export default {
 
     return {
       t,
+      landingPreview,
+      homepageT,
       showTestimonialsSection,
       showStartMemorisationCta,
       showArticles,
@@ -771,6 +1102,13 @@ export default {
       inAppBrowser,
       currentTheme,
       heroPillars,
+      displayHeroPillars,
+      previewAssetUrl,
+      pageRoot,
+      heroShowcaseRoles,
+      workflowSteps,
+      ecosystemRoles,
+      classroomSpotlights,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
       isFeaturesMobile,
@@ -802,3 +1140,4 @@ export default {
 </script>
 
 <style src="./Homepage.css"></style>
+<style src="../styles/preview-motion.css"></style>

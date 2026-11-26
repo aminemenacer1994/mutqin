@@ -34,6 +34,36 @@ class LearnerSupportController extends Controller
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
+    public function assignment(Request $request, int $recipient, \App\Services\Learning\StudentAssignmentListService $list): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $student = $request->user();
+        abort_unless($student instanceof User, 401);
+
+        return response()->json(['assignment' => $list->detail($student, $recipient)])
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function assignments(Request $request, \App\Services\Learning\StudentAssignmentListService $list): JsonResponse
+    {
+        TeacherFeatures::abortUnlessEnabled();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+        $filters = $request->validate([
+            'status' => ['sometimes', Rule::in(['todo', 'progress', 'review', 'revision', 'completed'])],
+            'category' => ['sometimes', Rule::in(['all', 'nazra', 'hifz', 'tajweed', 'revision'])],
+            'due' => ['sometimes', Rule::in(['all', 'today', 'upcoming', 'overdue'])],
+            'sort' => ['sometimes', Rule::in(['priority', 'due', 'recent'])],
+            'teacher_id' => ['nullable', 'integer', 'min:1'],
+            'search' => ['nullable', 'string', 'max:120'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:25'],
+        ]);
+
+        return response()->json($list->page($user, $filters))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
     public function requestGroup(Request $request, LearningGroup $group, GroupMembershipService $memberships, TeacherDashboardService $dashboard): JsonResponse
     {
         TeacherFeatures::abortUnlessEnabled();
@@ -226,7 +256,10 @@ class LearnerSupportController extends Controller
         $student = $request->user();
         abort_unless($student instanceof User, 401);
 
-        return response()->json(['messages' => $messages->thread($teacher, $student, $student)])
+        $data = $request->validate(['before' => ['nullable', 'integer', 'min:1']]);
+        $rows = $messages->thread($teacher, $student, $student, true, isset($data['before']) ? (int) $data['before'] : null, 30);
+
+        return response()->json(['messages' => $rows, 'next_before' => count($rows) === 30 ? $rows[0]['id'] : null])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
