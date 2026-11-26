@@ -352,4 +352,42 @@ return [
     'brand_icons' => [
         'version' => (string) env('MUTQIN_BRAND_ICONS_VERSION', '20261124b'),
     ],
+
+    /*
+     | Universal student / class roster import (Mutqin 2.0).
+     | Uploads stay on a private disk until reviewed; extraction never writes live records.
+     */
+    'student_import' => [
+        'disk' => (string) env('MUTQIN_STUDENT_IMPORT_DISK', 'student_imports'),
+        /*
+         | When false (default), roster files are parsed during the upload request so teachers
+         | can review without a queue worker. Set true in production if a worker cluster handles
+         | ProcessStudentImportBatchJob instead.
+         */
+        'queue_processing' => filter_var(env('MUTQIN_STUDENT_IMPORT_QUEUE_PROCESSING', false), FILTER_VALIDATE_BOOL),
+        'retention_hours' => max(1, (int) env('MUTQIN_STUDENT_IMPORT_RETENTION_HOURS', 72)),
+        'max_file_bytes' => max(1024, (int) env('MUTQIN_STUDENT_IMPORT_MAX_FILE_BYTES', 10 * 1024 * 1024)),
+        'max_files_per_batch' => max(1, (int) env('MUTQIN_STUDENT_IMPORT_MAX_FILES', 10)),
+        'max_pasted_text_bytes' => max(1024, (int) env('MUTQIN_STUDENT_IMPORT_MAX_PASTE_BYTES', 512 * 1024)),
+        'max_spreadsheet_rows' => max(10, (int) env('MUTQIN_STUDENT_IMPORT_MAX_SHEET_ROWS', 10000)),
+        'max_spreadsheet_columns' => max(4, (int) env('MUTQIN_STUDENT_IMPORT_MAX_SHEET_COLS', 64)),
+        'clamav_socket' => (string) env('MUTQIN_STUDENT_IMPORT_CLAMAV_SOCKET', ''),
+        'allowed_extensions' => ['csv', 'xlsx', 'xls', 'ods', 'docx', 'doc', 'md', 'markdown', 'txt', 'pdf', 'json'],
+        'mime_map' => [
+            'csv' => ['text/csv', 'text/plain', 'application/csv'],
+            'txt' => ['text/plain'],
+            'md' => ['text/plain', 'text/markdown'],
+            'markdown' => ['text/plain', 'text/markdown'],
+            'json' => ['application/json', 'text/plain'],
+            'pdf' => ['application/pdf'],
+            'xlsx' => [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/zip',
+            ],
+            'xls' => ['application/vnd.ms-excel'],
+            'ods' => ['application/vnd.oasis.opendocument.spreadsheet'],
+            'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
+            'doc' => ['application/msword', 'application/octet-stream', 'text/plain'],
+        ],
+    ],
 ];

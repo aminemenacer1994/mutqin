@@ -164,6 +164,11 @@ export function useTeacherDashboard(authRef) {
   }
 
   async function loadAttentionPreview() {
+    const needsAttention = Number(overview.value?.kpis?.needs_attention || 0) > 0
+    if (!needsAttention) {
+      attentionPreview.value = []
+      return
+    }
     try {
       const payload = await learningApi.getTeacherStudents({ attention: '1', page: 1, per_page: 100 })
       attentionPreview.value = payload.data || []
@@ -238,7 +243,6 @@ export function useTeacherDashboard(authRef) {
     if (nextView === 'messages') {
       loadStudents(1)
       loadAssignmentRoster()
-      loadOverview()
     }
     if (nextView === 'plans') {
       loadStudents(1)
@@ -860,5 +864,7 @@ export function useTeacherDashboard(authRef) {
     assignmentLabel: (counts) => assignmentLabel(counts, t),
     sessionLabel: (session) => sessionLabel(session, t),
     issueLabel: (issues) => issueLabel(issues, t),
+    loadTeacherGroups,
+    loadAssignmentRoster,
   }
 }

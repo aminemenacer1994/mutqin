@@ -1,37 +1,55 @@
 <template>
   <section class="teacher-stack teacher-messages-desk">
-    <header class="teacher-page-header">
+    <header class="teacher-page-header teacher-page-header--actions">
       <div>
         <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
         <h1 class="teacher-page-header__title">{{ t('teacher.messages') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('teacher.direct_messages_hint') }}</p>
+      </div>
+      <div class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
+        <span class="teacher-page-count">{{ students.length }} {{ t('teacher.kpi_students') }}</span>
       </div>
     </header>
 
-    <div class="teacher-messages-desk__tabs" role="tablist" :aria-label="t('teacher.messages')">
-        <button
-          type="button"
-          role="tab"
-          class="teacher-messages-desk__tab"
-          :class="{ 'is-active': activeTab === 'students' }"
-          :aria-selected="activeTab === 'students' ? 'true' : 'false'"
-          @click="activeTab = 'students'"
+    <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-messages-toolbar d-flex flex-wrap align-items-center gap-2">
+      <label v-if="activeTab === 'students'" class="input-group teacher-search teacher-search--compact flex-grow-1">
+        <span class="visually-hidden">{{ t('teacher.student_search_placeholder') }}</span>
+        <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input
+          v-model="studentQuery"
+          class="form-control"
+          type="search"
+          :placeholder="t('teacher.student_search_placeholder')"
+          autocomplete="off"
         >
-          {{ t('teacher.messages_tab_students') }}
-          <span v-if="studentUnreadTotal" class="teacher-nav__badge">{{ studentUnreadTotal }}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="teacher-messages-desk__tab"
-          :class="{ 'is-active': activeTab === 'parents' }"
-          :aria-selected="activeTab === 'parents' ? 'true' : 'false'"
-          @click="openParentsTab"
-        >
-          {{ t('teacher.messages_tab_parents') }}
-          <span v-if="parentUnreadTotal" class="teacher-nav__badge">{{ parentUnreadTotal }}</span>
-        </button>
+      </label>
+      <div class="teacher-task-filter-shell" :class="{ 'teacher-messages-toolbar__tabs--solo': activeTab === 'parents' }">
+        <div class="btn-group btn-group-sm teacher-task-filters flex-wrap" role="tablist" :aria-label="t('teacher.messages')">
+          <button
+            type="button"
+            role="tab"
+            class="btn btn-outline-secondary btn-sm"
+            :class="{ 'is-active': activeTab === 'students' }"
+            :aria-selected="activeTab === 'students' ? 'true' : 'false'"
+            @click="activeTab = 'students'"
+          >
+            {{ t('teacher.messages_tab_students') }}
+            <span v-if="studentUnreadTotal" class="teacher-task-filter__count">{{ studentUnreadTotal }}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="btn btn-outline-secondary btn-sm"
+            :class="{ 'is-active': activeTab === 'parents' }"
+            :aria-selected="activeTab === 'parents' ? 'true' : 'false'"
+            @click="openParentsTab"
+          >
+            {{ t('teacher.messages_tab_parents') }}
+            <span v-if="parentUnreadTotal" class="teacher-task-filter__count">{{ parentUnreadTotal }}</span>
+          </button>
+        </div>
+      </div>
     </div>
+    <p class="teacher-messages-desk__hint">{{ messagesDeskHint }}</p>
 
     <TeacherSectionPane v-if="loading && !students.length" flat>
       <div class="teacher-skeletons" role="status">
@@ -57,11 +75,6 @@
           :message="t('teacher.direct_messages_empty')"
         />
         <template v-else-if="activeTab === 'students'">
-          <label class="teacher-messages-desk__search">
-            <span class="visually-hidden">{{ t('teacher.student_search_placeholder') }}</span>
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <input v-model="studentQuery" type="search" :placeholder="t('teacher.student_search_placeholder')" autocomplete="off">
-          </label>
           <ul class="teacher-activity-list teacher-messages-desk__list">
             <li v-for="student in visibleStudents" :key="student.id">
               <button
@@ -195,6 +208,11 @@ export default {
       return this.activeTab === 'students'
         ? this.t('teacher.messages_private_title')
         : this.t('teacher.messages_parent_title')
+    },
+    messagesDeskHint() {
+      return this.activeTab === 'students'
+        ? this.t('teacher.direct_messages_hint_students')
+        : this.t('teacher.direct_messages_hint_parents')
     },
     visibleStudents() {
       const q = String(this.studentQuery || '').trim().toLowerCase()

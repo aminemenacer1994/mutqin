@@ -16,6 +16,10 @@ Schedule::command('mutqin:preview-sandbox-cleanup')
     ->hourly()
     ->withoutOverlapping(5);
 
+Schedule::command('mutqin:student-import-cleanup')
+    ->hourly()
+    ->withoutOverlapping(10);
+
 Schedule::command('mutqin:sync-revision-reminders')
     ->hourly()
     ->withoutOverlapping(10);

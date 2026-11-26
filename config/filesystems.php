@@ -89,6 +89,17 @@ return [
          * Object Storage / S3 bucket from user_files so deleting app files cannot
          * wipe recovery archives. Local driver keeps archives under private/.
          */
+        /*
+         | Ephemeral teacher roster imports (parsed in queue, deleted after retention).
+         */
+        'student_imports' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/student-imports'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'backups' => [
             'driver' => env('BACKUP_DISK_DRIVER', 'local'),
             'root' => storage_path('app/private/backups'),

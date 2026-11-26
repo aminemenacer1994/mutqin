@@ -1243,48 +1243,62 @@ class TeacherDashboardService
             }
         }
 
-        $dayRows = UserSession::query()
+        $sessionActivityDays = UserSession::query()
             ->whereIn('user_id', $ids)
             ->where('is_onboarding_example', false)
             ->whereNotNull('last_activity_at')
-            ->get(['user_id', 'last_activity_at']);
-        $aiDays = AiReciteAttempt::query()->whereIn('user_id', $ids)->get(['user_id', 'created_at']);
-        $days = [];
-        foreach ($dayRows as $row) {
-            $days[(int) $row->user_id][$row->last_activity_at->toDateString()] = true;
-        }
-        foreach ($aiDays as $row) {
-            if ($row->created_at) {
-                $id = (int) $row->user_id;
-                $days[$id][$row->created_at->toDateString()] = true;
-                // A recorded check still counts as activity when scoring failed.
-                // Keep Last seen and active-window filters on the same source.
-                $at = $row->created_at->toIso8601String();
-                if (isset($metrics[$id]) && ($metrics[$id]['last_activity_at'] === null || $at > $metrics[$id]['last_activity_at'])) {
-                    $metrics[$id]['last_activity_at'] = $at;
-                }
-            }
-        }
-        foreach ($days as $id => $set) {
+            ->selectRaw('user_id, DATE(last_activity_at) as activity_day');
+
+        $aiActivityDays = AiReciteAttempt::query()
+            ->whereIn('user_id', $ids)
+            ->whereNotNull('created_at')
+            ->selectRaw('user_id, DATE(created_at) as activity_day');
+
+        $activeDayCounts = DB::query()
+            ->fromSub($sessionActivityDays->union($aiActivityDays), 'activity_days')
+            ->selectRaw('user_id, COUNT(DISTINCT activity_day) as active_days')
+            ->groupBy('user_id')
+            ->pluck('active_days', 'user_id');
+
+        foreach ($activeDayCounts as $userId => $count) {
+            $id = (int) $userId;
             if (isset($metrics[$id])) {
-                $metrics[$id]['active_days'] = count($set);
+                $metrics[$id]['active_days'] = (int) $count;
             }
         }
 
-        $progress = MemorisationProgress::query()
+        foreach (AiReciteAttempt::query()
             ->whereIn('user_id', $ids)
-            ->get(['user_id', 'status']);
-        foreach ($progress as $row) {
+            ->whereNotNull('created_at')
+            ->selectRaw('user_id, MAX(created_at) as latest_at')
+            ->groupBy('user_id')
+            ->get() as $row) {
+            $id = (int) $row->user_id;
+            if (! isset($metrics[$id]) || $row->latest_at === null) {
+                continue;
+            }
+            // A recorded check still counts as activity when scoring failed.
+            // Keep Last seen and active-window filters on the same source.
+            $at = Carbon::parse($row->latest_at)->toIso8601String();
+            if ($metrics[$id]['last_activity_at'] === null || $at > $metrics[$id]['last_activity_at']) {
+                $metrics[$id]['last_activity_at'] = $at;
+            }
+        }
+
+        foreach (MemorisationProgress::query()
+            ->whereIn('user_id', $ids)
+            ->selectRaw("user_id, COUNT(*) as ayahs_practised, SUM(CASE WHEN status IN ('memorised', 'mastered') THEN 1 ELSE 0 END) as memorised_ayahs")
+            ->groupBy('user_id')
+            ->get() as $row) {
             $id = (int) $row->user_id;
             if (! isset($metrics[$id])) {
                 continue;
             }
-            $metrics[$id]['ayahs_practised']++;
-            if (in_array($row->status, ['memorised', 'mastered'], true)) {
-                $metrics[$id]['memorised_ayahs']++;
-            } else {
-                $metrics[$id]['learning_ayahs']++;
-            }
+            $memorised = (int) $row->memorised_ayahs;
+            $practised = (int) $row->ayahs_practised;
+            $metrics[$id]['ayahs_practised'] = $practised;
+            $metrics[$id]['memorised_ayahs'] = $memorised;
+            $metrics[$id]['learning_ayahs'] = max(0, $practised - $memorised);
         }
 
         $ai = AiReciteAttempt::query()->validScored()->whereIn('user_id', $ids)->get([

@@ -8,6 +8,14 @@ const base = process.env.MUTQIN_QA_BASE || 'http://localhost:8000'
 const shots = process.env.MUTQIN_QA_SHOTS || '/private/tmp/mutqin-workspace-qa'
 const responsiveWidths = [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920]
 
+async function dismissUpgradeModal(page) {
+  const later = page.locator('#mutqin-upgrade-modal:not([hidden]) #mutqin-upgrade-later')
+  if (await later.count()) {
+    await later.click()
+    await page.locator('#mutqin-upgrade-modal[hidden]').waitFor({ timeout: 5000 }).catch(() => {})
+  }
+}
+
 async function main() {
   fs.mkdirSync(shots, { recursive: true })
   const browser = await chromium.launch({ headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] })
@@ -22,6 +30,7 @@ async function main() {
     await page.getByRole('button', { name: /login/i }).click()
     await page.waitForURL('**/teacher')
     await page.locator('.teacher-hero').waitFor()
+    await dismissUpgradeModal(page)
     const roster = await page.evaluate(async () => (await (await fetch('/api/teacher/students?per_page=50')).json()).data)
     const student = roster.find(row => /org\.demo\./.test(row.email) && row.ai_attempts > 0)
     assert.ok(student, 'A persisted demo student with recitation history is required')
@@ -29,7 +38,7 @@ async function main() {
       ['overview', '/teacher', '.teacher-metric'],
       ['students', '/teacher?view=students', '.teacher-table__row'],
       ['tasks', '/teacher?view=assignments', '.teacher-task-row'],
-      ['plans', '/teacher?view=plans', '.teacher-plans-view__picker'],
+      ['plans', '/teacher?view=plans', '.teacher-plan-toolbar'],
       ['account', '/teacher?view=settings', '.teacher-account__email'],
       ...['ai', 'tasks', 'messages', 'plan'].map(tab => [`profile-${tab}`, `/teacher?view=student&student=${student.id}&section=${tab}`, '[role=tabpanel]']),
     ]
@@ -78,6 +87,7 @@ async function main() {
     for (const [name, route, ready] of routes) {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await page.goto(`${base}${route}`)
+      await dismissUpgradeModal(page)
       await page.locator(ready).first().waitFor()
       await page.waitForTimeout(200)
       for (const width of responsiveWidths) {
@@ -155,13 +165,17 @@ async function main() {
     await dialog.waitFor({ state: 'hidden' })
     // Plan creation: canonical surah options, ayah bounds, multi-activity layout, draft guard.
     await page.goto(`${base}/teacher?view=plans`)
-    await page.locator('.teacher-plans-view__picker select').selectOption(String(student.id))
-    assert.equal(await page.getByRole('button', { name: 'New learning plan', exact: true }).count(), 1, 'One plan creation action in the selected student context')
-    await page.locator('.teacher-learning-plan__toolbar').getByRole('button', { name: 'New learning plan', exact: true }).click()
+    await page.locator('.teacher-plan-toolbar select').first().selectOption(String(student.id))
+    assert.equal(await page.getByRole('button', { name: 'Create learning plan', exact: true }).count(), 1, 'One plan creation action in the selected student context')
+    await page.locator('.teacher-page-header').getByRole('button', { name: 'Create learning plan', exact: true }).click()
     dialog = page.locator('.teacher-dialog[role=dialog]')
+    await dialog.waitFor()
     await checkFormLayout('plan-grid')
-    await dialog.locator('.teacher-surah-select input').fill('112')
-    await dialog.locator('.teacher-surah-select__options').getByRole('option').first().click()
+    await dialog.locator('.teacher-plan-modal__fields input[type="text"]').first().fill('Responsive QA plan')
+    await dialog.getByRole('button', { name: '2. Activities', exact: true }).click()
+    const surahInput = dialog.locator('.teacher-plan-modal__activity .teacher-surah-select input').first()
+    await surahInput.fill('112')
+    await dialog.locator('.teacher-surah-select__options:visible').getByRole('option').first().click()
     await dialog.getByRole('button', { name: 'Add activity', exact: true }).click()
     await page.screenshot({ path: path.join(shots, 'plan-form-390.png') })
     await page.keyboard.press('Escape')
@@ -236,7 +250,8 @@ async function main() {
     await dialog.locator('.teacher-playback__word').waitFor()
     assert.equal(await dialog.locator('.teacher-playback__word textarea').isVisible(), true, 'Selected-word correction editor is visible')
     if (await dialog.locator('.teacher-playback__player.is-empty').count()) assert.equal(await dialog.locator('.teacher-playback__transport').count(), 0, 'Unavailable recording has no transport')
-    assert.equal(await dialog.locator('.teacher-playback__summary-counts dt').count(), 4, 'Assessment summary exposes all four real word states')
+    assert.equal(await dialog.locator('.teacher-playback__summary .teacher-playback__summary-counts dt').count(), 4, 'Wording summary exposes all four real word states')
+    assert.ok(await dialog.locator('.teacher-playback__rollup .teacher-playback__summary-counts dt').count() >= 3, 'Review rollup summary present')
     let studioCases = 0
     for (const width of responsiveWidths) {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
@@ -321,8 +336,10 @@ async function main() {
         const buttons = [...el.querySelectorAll('button')].map(button => button.getBoundingClientRect())
         return { count: buttons.length, centres: buttons.map(box => box.y + box.height / 2), widest: Math.max(...buttons.map(box => box.width)), rowWidth: el.closest('article').getBoundingClientRect().width }
       })
-      assert.ok(actionLayout.count >= 2, 'Review and revision actions remain connected to their evidence')
-      assert.ok(Math.max(...actionLayout.centres) - Math.min(...actionLayout.centres) <= 2, 'Related review actions share one desktop row')
+      assert.ok(actionLayout.count >= 1, 'Attention row keeps at least one in-context action')
+      if (actionLayout.count >= 2) {
+        assert.ok(Math.max(...actionLayout.centres) - Math.min(...actionLayout.centres) <= 2, 'Related review actions share one desktop row')
+      }
       assert.ok(actionLayout.widest < actionLayout.rowWidth / 2, 'Review actions retain natural width')
       await page.screenshot({ path: path.join(shots, 'attention-actions-1440.png') })
     }

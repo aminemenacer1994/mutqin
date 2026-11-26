@@ -46,7 +46,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in filteredHistory" :key="`${row.date}-${row.status}-${row.group}`" :class="`is-${row.status}`">
+            <tr v-for="row in pagedHistory" :key="`${row.date}-${row.status}-${row.group}`" :class="`is-${row.status}`">
               <th scope="row"><span class="teacher-status-pill" :class="`is-${row.status}`">{{ statusLabel(row.status) }}</span></th>
               <td>{{ formatWhen(`${row.date}T12:00:00`) }}</td>
               <td>{{ row.group || '—' }}</td>
@@ -55,15 +55,27 @@
           </tbody>
         </table>
       </div>
+      <TeacherPagination
+        :current-page="historyPage"
+        :page-count="historyPageCount"
+        :total="filteredHistory.length"
+        summary-mode="rows"
+        @page="historyPage = $event"
+      />
     </section>
   </div>
 </template>
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import TeacherPagination from '../TeacherPagination.vue'
+import { tablePageCount, tablePageSlice } from '../../../scripts/teacher/tablePagination.js'
+
+const PROFILE_TABLE_PAGE_SIZE = 10
 
 export default {
   name: 'TeacherStudentProfileAttendance',
+  components: { TeacherPagination },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
@@ -72,6 +84,7 @@ export default {
   data() {
     return {
       statusFilter: '',
+      historyPage: 1,
     }
   },
   computed: {
@@ -85,6 +98,12 @@ export default {
       if (!this.statusFilter) return this.history
       return this.history.filter((row) => row.status === this.statusFilter)
     },
+    historyPageCount() {
+      return tablePageCount(this.filteredHistory.length, PROFILE_TABLE_PAGE_SIZE)
+    },
+    pagedHistory() {
+      return tablePageSlice(this.filteredHistory, this.historyPage, PROFILE_TABLE_PAGE_SIZE)
+    },
     countChips() {
       const counts = this.summary.counts || {}
       return [
@@ -94,6 +113,10 @@ export default {
         { id: 'excused', label: this.t('teacher.attendance_excused'), value: counts.excused || 0 },
       ]
     },
+  },
+  watch: {
+    statusFilter() { this.historyPage = 1 },
+    history() { this.historyPage = 1 },
   },
   methods: {
     statusLabel(status) {

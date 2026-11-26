@@ -1,37 +1,65 @@
 <template>
   <section class="teacher-stack teacher-plan-hub" data-feature="learning-plans">
-    <header class="teacher-plan-hub__header">
+    <header class="teacher-page-header teacher-page-header--actions">
       <div>
-        <h1>{{ t('teacher.nav_plans') }}</h1>
-        <p>{{ t('teacher.plan_page_desc') }}</p>
+        <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('teacher.nav_plans') }}</h1>
       </div>
-      <button type="button" class="btn btn-primary" :disabled="loading || !students.length" @click="startPlan">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.plan_create') }}
-      </button>
+      <div class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="loading" @click="$emit('import-students')">
+          <i class="bi bi-upload" aria-hidden="true"></i>
+          {{ t('teacher.import_title') }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" :disabled="loading || !students.length" @click="startPlan">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          {{ t('teacher.plan_create') }}
+        </button>
+      </div>
     </header>
 
-    <div class="teacher-plan-hub__filters">
-      <label class="teacher-plan-hub__filter">
-        <span class="visually-hidden">{{ t('teacher.student') }}</span>
-        <select ref="picker" v-model="studentId" class="form-select">
-          <option value="">{{ t('teacher.all_students') }}</option>
-          <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
-        </select>
-      </label>
-      <label class="teacher-plan-hub__filter teacher-plan-hub__filter--search">
+    <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-plan-toolbar d-flex flex-wrap align-items-center gap-2">
+      <label class="input-group teacher-search teacher-search--compact flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.plan_search') }}</span>
-        <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.plan_search_placeholder')">
+        <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input
+          v-model="query"
+          class="form-control"
+          type="search"
+          :placeholder="t('teacher.plan_search_placeholder')"
+          autocomplete="off"
+        >
       </label>
-      <label class="teacher-plan-hub__filter">
-        <span class="visually-hidden">{{ t('teacher.plan_sort') }}</span>
-        <select v-model="sort" class="form-select">
-          <option value="recent">{{ t('teacher.plan_sort_recent') }}</option>
-          <option value="due">{{ t('teacher.plan_sort_due') }}</option>
-          <option value="progress">{{ t('teacher.plan_sort_progress') }}</option>
-        </select>
-      </label>
-      <div class="teacher-plan-hub__status" role="group" :aria-label="t('teacher.col_status')">
-        <button v-for="filter in statusFilters" :key="filter.id" type="button" :class="{ 'is-active': status === filter.id }" @click="status = filter.id">{{ filter.label }}</button>
+      <div class="teacher-student-toolbar__fields d-flex flex-wrap gap-2">
+        <label class="teacher-field teacher-field--inline teacher-student-toolbar__field">
+          <span class="visually-hidden">{{ t('teacher.student') }}</span>
+          <select ref="picker" v-model="studentId" class="form-select form-select-sm">
+            <option value="">{{ t('teacher.all_students') }}</option>
+            <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
+          </select>
+        </label>
+        <label class="teacher-field teacher-field--inline teacher-student-toolbar__field">
+          <span class="visually-hidden">{{ t('teacher.plan_sort') }}</span>
+          <select v-model="sort" class="form-select form-select-sm">
+            <option value="recent">{{ t('teacher.plan_sort_recent') }}</option>
+            <option value="due">{{ t('teacher.plan_sort_due') }}</option>
+            <option value="progress">{{ t('teacher.plan_sort_progress') }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="teacher-task-filter-shell">
+        <div class="btn-group btn-group-sm teacher-task-filters flex-wrap" role="group" :aria-label="t('teacher.col_status')">
+          <button
+            v-for="filter in statusFilters"
+            :key="filter.id"
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            :class="{ 'is-active': status === filter.id }"
+            :aria-pressed="status === filter.id ? 'true' : 'false'"
+            @click="status = filter.id"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -66,6 +94,7 @@ export default {
   inject: {
     openTeacherStudent: { default: null },
   },
+  emits: ['import-students'],
   data() {
     return {
       loading: true,

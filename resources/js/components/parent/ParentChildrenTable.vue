@@ -12,7 +12,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="(child, index) in rows"
+          v-for="(child, index) in pagedRows"
           :key="child.id"
           class="parent-children-table__row"
           :style="{ '--parent-i': index }"
@@ -69,6 +69,15 @@
         </tr>
       </tbody>
     </table>
+    <TeacherPagination
+      v-if="!loading && rows.length"
+      :current-page="page"
+      :page-count="pageCount"
+      :total="rows.length"
+      :loading="loading"
+      summary-mode="rows"
+      @page="page = $event"
+    />
 
     <table v-else-if="loading" class="parent-children-table parent-children-table--skeleton" aria-busy="true">
       <thead>
@@ -93,9 +102,14 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { initial, learningLabel } from '../../scripts/parent/dashboard'
 import { childHomeworkPill, homeworkForChild, isDueThisWeek } from '../../scripts/parent/homeDashboard'
+import TeacherPagination from '../teacher/TeacherPagination.vue'
+import { tablePageCount, tablePageSlice } from '../../scripts/teacher/tablePagination.js'
+
+const PARENT_CHILDREN_PAGE_SIZE = 10
 
 export default {
   name: 'ParentChildrenTable',
+  components: { TeacherPagination },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
@@ -103,6 +117,20 @@ export default {
     loading: { type: Boolean, default: false },
   },
   emits: ['open-learning', 'open-progress', 'open-messages', 'open-profile'],
+  data() {
+    return { page: 1 }
+  },
+  computed: {
+    pageCount() {
+      return tablePageCount(this.rows.length, PARENT_CHILDREN_PAGE_SIZE)
+    },
+    pagedRows() {
+      return tablePageSlice(this.rows, this.page, PARENT_CHILDREN_PAGE_SIZE)
+    },
+  },
+  watch: {
+    rows() { this.page = 1 },
+  },
   methods: {
     initial,
     teacherName(child) {

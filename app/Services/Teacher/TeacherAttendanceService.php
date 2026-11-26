@@ -11,9 +11,9 @@ use App\Models\TeacherLesson;
 use App\Models\User;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Support\TeacherOverviewCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TeacherAttendanceService
@@ -200,9 +200,7 @@ class TeacherAttendanceService
 
         if ($status === 'clear') {
             $existing->delete();
-            foreach ([7, 30, 90] as $days) {
-                Cache::forget(sprintf('teacher.overview.%d.%d', $teacher->id, $days));
-            }
+            TeacherOverviewCache::forget((int) $teacher->id);
 
             return null;
         }
@@ -215,9 +213,7 @@ class TeacherAttendanceService
         }
         $record->forceFill($payload)->save();
 
-        foreach ([7, 30, 90] as $days) {
-            Cache::forget(sprintf('teacher.overview.%d.%d', $teacher->id, $days));
-        }
+        TeacherOverviewCache::forget((int) $teacher->id);
 
         $fresh = $record->fresh();
         if ($fresh instanceof TeacherAttendanceRecord) {

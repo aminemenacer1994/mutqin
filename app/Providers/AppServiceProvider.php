@@ -9,12 +9,14 @@ use App\Models\LearningGroup;
 use App\Models\Organisation;
 use App\Models\ParentStudentLink;
 use App\Models\TeacherNote;
+use App\Models\StudentImportBatch;
 use App\Models\TeacherPrivateNote;
 use App\Models\User;
 use App\Policies\GroupMembershipPolicy;
 use App\Policies\LearningGroupPolicy;
 use App\Policies\OrganisationPolicy;
 use App\Policies\ParentStudentLinkPolicy;
+use App\Policies\StudentImportBatchPolicy;
 use App\Policies\TeacherPrivateNotePolicy;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Memorisation\LearningHistoryRetentionService;
@@ -98,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);
         Gate::policy(ParentStudentLink::class, ParentStudentLinkPolicy::class);
         Gate::policy(TeacherPrivateNote::class, TeacherPrivateNotePolicy::class);
+        Gate::policy(StudentImportBatch::class, StudentImportBatchPolicy::class);
         Gate::define('view-student-analytics', function (User $actor, User $student): bool {
             return app(StudentAccessAuthorizer::class)->allows($actor, $student);
         });

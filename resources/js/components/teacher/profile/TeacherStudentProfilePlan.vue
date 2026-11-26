@@ -74,71 +74,67 @@
 
     <div v-else class="teacher-plan-board">
       <h3 v-if="studentId" class="teacher-plan-workspace__heading">{{ t('teacher.plan_following') }}</h3>
-      <div class="teacher-table-shell teacher-plan-table-shell is-compact">
+      <div class="teacher-table-shell teacher-plan-table-shell is-compact" :class="{ 'has-student-col': !studentId }">
         <div class="teacher-plan-cards" role="list" :aria-label="t('teacher.nav_plans')">
-          <article v-for="plan in visiblePlans" :key="`mobile-${plan.id}`" class="teacher-plan-card" role="listitem">
+          <article v-for="plan in pagedVisiblePlans" :key="`mobile-${plan.id}`" class="teacher-plan-card" role="listitem">
             <header class="teacher-plan-card__top">
               <div class="teacher-plan-card__copy">
                 <p v-if="!studentId" class="teacher-plan-card__student">{{ plan.student?.name || studentLabel }}</p>
                 <h3>{{ plan.title }}</h3>
                 <p class="teacher-plan-card__meta">
                   <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
-                  <span>{{ planPeriod(plan) }}</span>
+                  <span>{{ planPeriodCompact(plan) }}</span>
                 </p>
               </div>
             </header>
-            <dl class="teacher-plan-card__stats teacher-plan-card__stats--compact">
+            <dl class="teacher-plan-card__stats teacher-plan-card__stats--compact teacher-plan-card__stats--lean">
               <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ plan.progress?.completed || 0 }}<small>/ {{ plan.progress?.total || 0 }}</small></dd></div>
-              <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ plan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
-              <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ plan.progress?.upcoming_lessons || 0 }}</dd></div>
               <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ plan.progress?.revision_due || 0 }}</dd></div>
             </dl>
             <div class="teacher-plan-card__bar" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
               <span :style="planMeterStyle(plan)"></span>
             </div>
-            <p v-if="nextOf(plan)" class="teacher-plan-card__next">
-              <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
-              <span class="teacher-plan-card__next-label">{{ t('teacher.plan_next_milestone') }}</span>
-              {{ nextOf(plan).label }}<template v-if="nextOf(plan).due_on"> · {{ formatDate(nextOf(plan).due_on) }}</template>
-            </p>
             <footer class="teacher-plan-card__mobile-actions">
-              <button type="button" class="btn btn-primary btn-sm" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
               <div class="teacher-plan-menu">
-                <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
+                <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="togglePlanMenu(plan, $event)">
                   <i class="bi bi-three-dots" aria-hidden="true"></i>
                 </button>
-                <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
-                  <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
-                  <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
-                  <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
-                  <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
-                  <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
-                  <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
-                  <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
-                  <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
-                </div>
               </div>
             </footer>
           </article>
         </div>
-        <div class="table-responsive teacher-table-wrap" role="region" :aria-label="t('teacher.plan_table_region')">
+        <div class="teacher-table-wrap teacher-plan-table-wrap" role="region" :aria-label="t('teacher.plan_table_region')">
           <table class="table align-middle mb-0 teacher-table teacher-table--plans" :aria-label="t('teacher.nav_plans')">
+            <colgroup v-if="!studentId">
+              <col class="teacher-plan-col teacher-plan-col--student">
+              <col class="teacher-plan-col teacher-plan-col--plan">
+              <col class="teacher-plan-col teacher-plan-col--status">
+              <col class="teacher-plan-col teacher-plan-col--period">
+              <col class="teacher-plan-col teacher-plan-col--progress">
+              <col class="teacher-plan-col teacher-plan-col--revision">
+              <col class="teacher-plan-col teacher-plan-col--actions">
+            </colgroup>
+            <colgroup v-else>
+              <col class="teacher-plan-col teacher-plan-col--plan">
+              <col class="teacher-plan-col teacher-plan-col--status">
+              <col class="teacher-plan-col teacher-plan-col--period">
+              <col class="teacher-plan-col teacher-plan-col--progress">
+              <col class="teacher-plan-col teacher-plan-col--revision">
+              <col class="teacher-plan-col teacher-plan-col--actions">
+            </colgroup>
             <thead>
               <tr>
                 <th v-if="!studentId" scope="col">{{ t('teacher.plan_student') }}</th>
                 <th scope="col">{{ t('teacher.plan_col_plan') }}</th>
-                <th scope="col">{{ t('teacher.col_status') }}</th>
-                <th scope="col">{{ t('teacher.plan_col_period') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.col_status') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.plan_col_period') }}</th>
                 <th scope="col" class="text-center">{{ t('teacher.learner_plan_progress') }}</th>
-                <th scope="col" class="text-center">{{ t('teacher.learner_plan_validated') }}</th>
-                <th scope="col" class="text-center">{{ t('teacher.learner_plan_upcoming') }}</th>
                 <th scope="col" class="text-center">{{ t('teacher.learner_plan_revision_due') }}</th>
-                <th scope="col">{{ t('teacher.plan_col_next') }}</th>
-                <th scope="col" class="text-end">{{ t('teacher.student_actions') }}</th>
+                <th scope="col" class="text-center">{{ t('teacher.student_actions') }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="plan in visiblePlans" :key="plan.id" class="teacher-table__row" :class="{ 'is-menu-open': menuId === plan.id }">
+              <tr v-for="plan in pagedVisiblePlans" :key="plan.id" class="teacher-table__row" :class="{ 'is-menu-open': menuId === plan.id }">
                 <td v-if="!studentId" class="teacher-table__cell teacher-table__cell--name">
                   <span class="teacher-table__avatar" aria-hidden="true">{{ initial(plan.student?.name || studentLabel) }}</span>
                   <span class="teacher-table__identity">
@@ -147,50 +143,37 @@
                 </td>
                 <td class="teacher-table__cell teacher-plan-table__plan">
                   <span class="teacher-plan-table__title">{{ plan.title }}</span>
-                  <div class="teacher-plan-card__bar teacher-plan-card__bar--inline" role="progressbar" :aria-label="plan.title" :aria-valuenow="planPercent(plan)" aria-valuemin="0" aria-valuemax="100">
-                    <span :style="planMeterStyle(plan)"></span>
-                  </div>
                 </td>
-                <td class="teacher-table__cell">
+                <td class="teacher-table__cell text-center">
                   <span class="teacher-plan-card__badge" :class="`is-${badge(plan).key}`">{{ badge(plan).label }}</span>
                 </td>
-                <td class="teacher-table__cell teacher-table__cell--meta">{{ planPeriod(plan) }}</td>
-                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.completed || 0 }}<span class="teacher-plan-table__total">/ {{ plan.progress?.total || 0 }}</span></td>
-                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.validated_memorised_ayahs || 0 }}</td>
-                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.upcoming_lessons || 0 }}</td>
-                <td class="teacher-table__cell teacher-table__cell--num text-center">{{ plan.progress?.revision_due || 0 }}</td>
-                <td class="teacher-table__cell teacher-plan-table__next">
-                  <span v-if="isOverdue(plan)" class="teacher-plan-card__badge is-overdue">{{ t('teacher.overdue') }}</span>
-                  <template v-if="nextOf(plan)">
-                    <span class="teacher-plan-table__milestone">{{ nextOf(plan).label }}</span>
-                    <span v-if="nextOf(plan).due_on" class="teacher-table__quiet">{{ formatDate(nextOf(plan).due_on) }}</span>
-                  </template>
-                  <span v-else class="teacher-table__quiet">{{ t('teacher.none') }}</span>
+                <td class="teacher-table__cell teacher-table__cell--meta teacher-plan-table__period text-center" :title="planPeriod(plan)">
+                  <span class="teacher-plan-table__cadence">{{ cadenceShort(plan?.cadence) }}</span>
+                  {{ planPeriodCompact(plan) }}
                 </td>
-                <td class="teacher-table__cell teacher-table__cell--actions text-end">
-                  <div class="teacher-table__actions">
-                    <button type="button" class="teacher-table__action" @click="openDetail(plan)">{{ t('teacher.plan_view') }}</button>
-                    <div class="teacher-plan-menu">
-                      <button type="button" class="teacher-plan-menu__toggle teacher-table__action" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="menuId = menuId === plan.id ? null : plan.id">
-                        <i class="bi bi-three-dots" aria-hidden="true"></i>
-                      </button>
-                      <div v-if="menuId === plan.id" class="teacher-plan-menu__list" role="menu">
-                        <button type="button" role="menuitem" @click="openComposer(plan)">{{ t('teacher.plan_edit') }}</button>
-                        <button v-if="plan.status === 'draft'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_activate') }}</button>
-                        <button v-if="plan.status === 'active'" type="button" role="menuitem" @click="setStatus(plan, 'paused')">{{ t('teacher.plan_pause') }}</button>
-                        <button v-if="plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'active')">{{ t('teacher.plan_resume') }}</button>
-                        <button v-if="plan.status === 'active' || plan.status === 'paused'" type="button" role="menuitem" @click="setStatus(plan, 'completed')">{{ t('teacher.plan_close') }}</button>
-                        <button type="button" role="menuitem" @click="duplicatePlan(plan)">{{ t('teacher.plan_duplicate') }}</button>
-                        <button type="button" role="menuitem" @click="saveAsTemplate(plan)">{{ t('teacher.plan_save_template') }}</button>
-                        <button type="button" role="menuitem" @click="removePlan(plan)">{{ t('teacher.plan_delete') }}</button>
-                      </div>
-                    </div>
+                <td class="teacher-table__cell teacher-table__cell--num text-center">
+                  <span class="teacher-plan-table__progress">{{ plan.progress?.completed || 0 }}<span class="teacher-plan-table__total">/ {{ plan.progress?.total || 0 }}</span></span>
+                </td>
+                <td class="teacher-table__cell teacher-table__cell--num text-center" :class="{ 'is-overdue': Number(plan.progress?.revision_due || 0) > 0 }">{{ plan.progress?.revision_due || 0 }}</td>
+                <td class="teacher-table__cell teacher-table__cell--actions text-center">
+                  <div class="teacher-plan-menu teacher-plan-menu--table">
+                    <button type="button" class="teacher-plan-menu__toggle" :aria-expanded="menuId === plan.id ? 'true' : 'false'" :aria-label="t('teacher.plan_menu')" @click.stop="togglePlanMenu(plan, $event)">
+                      <i class="bi bi-three-dots" aria-hidden="true"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          :current-page="plansPage"
+          :page-count="plansPageCount"
+          :total="visiblePlans.length"
+          :loading="loading"
+          summary-mode="rows"
+          @page="plansPage = $event"
+        />
       </div>
     </div>
 
@@ -237,10 +220,8 @@
             <span class="teacher-plan-card__badge" :class="`is-${badge(detailPlan).key}`">{{ badge(detailPlan).label }}</span>
             <span>{{ planPeriod(detailPlan) }}</span>
           </p>
-          <dl class="teacher-plan-card__stats">
+          <dl class="teacher-plan-card__stats teacher-plan-card__stats--lean">
             <div><dt>{{ t('teacher.learner_plan_progress') }}</dt><dd>{{ detailPlan.progress?.completed || 0 }}<small>/ {{ detailPlan.progress?.total || 0 }}</small></dd></div>
-            <div><dt>{{ t('teacher.learner_plan_validated') }}</dt><dd>{{ detailPlan.progress?.validated_memorised_ayahs || 0 }}</dd></div>
-            <div><dt>{{ t('teacher.learner_plan_upcoming') }}</dt><dd>{{ detailPlan.progress?.upcoming_lessons || 0 }}</dd></div>
             <div><dt>{{ t('teacher.learner_plan_revision_due') }}</dt><dd>{{ detailPlan.progress?.revision_due || 0 }}</dd></div>
           </dl>
           <div class="teacher-plan-card__bar" role="progressbar" :aria-label="detailPlan.title" :aria-valuenow="planPercent(detailPlan)" aria-valuemin="0" aria-valuemax="100">
@@ -261,7 +242,7 @@
               </tr>
             </thead>
             <tbody>
-              <template v-for="item in detailPlan.items" :key="item.id">
+              <template v-for="item in pagedDetailItems" :key="item.id">
                 <tr class="teacher-plan-items__row">
                   <td class="teacher-plan-items__passage">
                     <strong>{{ item.label }}</strong>
@@ -311,6 +292,15 @@
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          v-if="detailPlan?.items?.length"
+          :current-page="detailItemsPage"
+          :page-count="detailItemsPageCount"
+          :total="detailPlan.items.length"
+          :loading="busy"
+          summary-mode="rows"
+          @page="detailItemsPage = $event"
+        />
       </article>
     </TeacherDialog>
 
@@ -521,7 +511,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in form.items" :key="`review-${item.key}`">
+              <tr v-for="item in pagedComposerReviewItems" :key="`review-${item.key}`">
                 <td><strong>{{ passageLabel(item) }}</strong></td>
                 <td>{{ activityLabel(item) }}</td>
                 <td class="teacher-table__cell--meta">{{ scheduleLabel(item) }}</td>
@@ -530,6 +520,15 @@
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          v-if="form.items.length"
+          :current-page="composerReviewPage"
+          :page-count="composerReviewPageCount"
+          :total="form.items.length"
+          :loading="busy"
+          summary-mode="rows"
+          @page="composerReviewPage = $event"
+        />
       </section>
 
       <template #footer>
@@ -550,6 +549,45 @@
       @close="reviewAttemptId = null"
       @reviewed="onRecommendationReviewed"
     />
+
+    <TeacherDialog
+      :open="Boolean(deletePlan)"
+      size="sm"
+      :busy="busy"
+      :title="t('teacher.plan_delete')"
+      :close-label="t('teacher.close')"
+      @close="deletePlan = null"
+    >
+      <p v-if="deletePlan" class="teacher-plan-delete__lead mb-0">{{ t('teacher.plan_delete_confirm') }}</p>
+      <p v-if="deletePlan" class="teacher-plan-delete__plan mb-0">{{ deletePlan.title }}</p>
+      <template #footer>
+        <button type="button" class="btn btn-outline-secondary" :disabled="busy" @click="deletePlan = null">{{ t('teacher.cancel') }}</button>
+        <button type="button" class="btn btn-danger" :disabled="busy" @click="confirmRemovePlan">{{ t('teacher.plan_delete') }}</button>
+      </template>
+    </TeacherDialog>
+
+    <Teleport to="body">
+      <div
+        v-if="menuPlan"
+        ref="planMenuList"
+        class="teacher-plan-menu__list teacher-plan-menu__list--portal teacher-plan-menu__list--actions"
+        role="menu"
+        :style="planMenuStyle"
+      >
+        <button type="button" role="menuitem" class="teacher-plan-menu__action" @click="openDetail(menuPlan)">
+          <i class="bi bi-eye" aria-hidden="true"></i>
+          <span>{{ t('teacher.plan_view') }}</span>
+        </button>
+        <button type="button" role="menuitem" class="teacher-plan-menu__action" @click="openComposer(menuPlan)">
+          <i class="bi bi-pencil" aria-hidden="true"></i>
+          <span>{{ t('teacher.plan_edit') }}</span>
+        </button>
+        <button type="button" role="menuitem" class="teacher-plan-menu__action is-danger" @click="removePlan(menuPlan)">
+          <i class="bi bi-trash3" aria-hidden="true"></i>
+          <span>{{ t('teacher.plan_delete') }}</span>
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -564,6 +602,11 @@ import TeacherRecitationPlaybackReview from '../TeacherRecitationPlaybackReview.
 import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherHifzProgress from './TeacherHifzProgress.vue'
+import TeacherPagination from '../TeacherPagination.vue'
+import { tablePageCount, tablePageSlice } from '../../../scripts/teacher/tablePagination.js'
+
+const PLAN_TABLE_PAGE_SIZE = 12
+const PLAN_ITEMS_TABLE_PAGE_SIZE = 10
 
 const ACTIVITY_TYPES = [
   { id: 'nazra', kind: 'practice', hifz_category: 'sabqi', label: 'teacher.activity_nazra' },
@@ -648,7 +691,7 @@ function uniquePlans(list) {
 
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherHifzProgress, TeacherRecitationPlaybackReview, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherEmpty, TeacherHifzProgress, TeacherPagination, TeacherRecitationPlaybackReview, TeacherSurahSelect },
   inject: { teacherSurahs: { default: () => [] } },
   emits: ['updated', 'leave', 'created', 'open-task', 'assign-next'],
   mixins: [i18nMixin],
@@ -684,6 +727,9 @@ export default {
       step: 1,
       detailId: null,
       menuId: null,
+      planMenuStyle: null,
+      planMenuToggleEl: null,
+      deletePlan: null,
       feedbackDrafts: {},
       rescheduleDrafts: {},
       recommendations: [],
@@ -694,6 +740,9 @@ export default {
       removedItemIds: [],
       initialForm: '',
       requestId: 0,
+      plansPage: 1,
+      detailItemsPage: 1,
+      composerReviewPage: 1,
     }
   },
   computed: {
@@ -759,6 +808,25 @@ export default {
       if (this.sort === 'progress') return rows.slice().sort((a, b) => this.planPercent(a) - this.planPercent(b))
       return rows.slice().sort((a, b) => Number(b.id) - Number(a.id))
     },
+    plansPageCount() {
+      return tablePageCount(this.visiblePlans.length, PLAN_TABLE_PAGE_SIZE)
+    },
+    pagedVisiblePlans() {
+      return tablePageSlice(this.visiblePlans, this.plansPage, PLAN_TABLE_PAGE_SIZE)
+    },
+    detailItemsPageCount() {
+      return tablePageCount(this.detailPlan?.items?.length || 0, PLAN_ITEMS_TABLE_PAGE_SIZE)
+    },
+    pagedDetailItems() {
+      const items = this.detailPlan?.items || []
+      return tablePageSlice(items, this.detailItemsPage, PLAN_ITEMS_TABLE_PAGE_SIZE)
+    },
+    composerReviewPageCount() {
+      return tablePageCount(this.form.items.length, PLAN_ITEMS_TABLE_PAGE_SIZE)
+    },
+    pagedComposerReviewItems() {
+      return tablePageSlice(this.form.items, this.composerReviewPage, PLAN_ITEMS_TABLE_PAGE_SIZE)
+    },
     groupedSuggestions() {
       const map = new Map()
       this.suggestions.forEach((suggestion) => {
@@ -775,23 +843,84 @@ export default {
       })
       return [...map.values()].sort((a, b) => Number(b.evidence_count || 0) - Number(a.evidence_count || 0))
     },
+    menuPlan() {
+      if (!this.menuId) return null
+      return this.visiblePlans.find((plan) => Number(plan.id) === Number(this.menuId)) || null
+    },
   },
   watch: {
     studentId: { immediate: true, handler() { this.reload() } },
     focusPlanId: { immediate: true, handler(id) { if (id) this.detailId = Number(id) } },
-    statusFilter() { this.keepVisibleDetail() },
-    query() { this.keepVisibleDetail() },
+    statusFilter() {
+      this.plansPage = 1
+      this.keepVisibleDetail()
+    },
+    query() {
+      this.plansPage = 1
+      this.keepVisibleDetail()
+    },
+    detailId() { this.detailItemsPage = 1 },
+    'form.items.length'() { this.composerReviewPage = 1 },
+    step(value) {
+      if (value === 3) this.composerReviewPage = 1
+    },
     success(message) {
       window.clearTimeout(this.successTimer)
       if (!message) return
       this.successTimer = window.setTimeout(() => { this.success = '' }, 4000)
     },
   },
-  mounted() { if (this.createOnMount) this.openComposer() },
+  mounted() {
+    if (this.createOnMount) this.openComposer()
+    this._planMenuDocClick = (event) => {
+      if (!this.menuId) return
+      if (event.target?.closest?.('.teacher-plan-menu__list--portal') || event.target?.closest?.('.teacher-plan-menu__toggle')) return
+      this.closePlanMenu()
+    }
+    this._planMenuDismiss = () => { if (this.menuId) this.closePlanMenu() }
+    document.addEventListener('click', this._planMenuDocClick, true)
+    window.addEventListener('scroll', this._planMenuDismiss, true)
+    window.addEventListener('resize', this._planMenuDismiss)
+  },
   beforeUnmount() {
     window.clearTimeout(this.successTimer)
+    if (this._planMenuDocClick) document.removeEventListener('click', this._planMenuDocClick, true)
+    if (this._planMenuDismiss) {
+      window.removeEventListener('scroll', this._planMenuDismiss, true)
+      window.removeEventListener('resize', this._planMenuDismiss)
+    }
   },
   methods: {
+    togglePlanMenu(plan, event) {
+      const toggle = event?.currentTarget
+      if (!toggle) return
+      if (Number(this.menuId) === Number(plan.id)) {
+        this.closePlanMenu()
+        return
+      }
+      this.menuId = plan.id
+      this.planMenuToggleEl = toggle
+      this.$nextTick(() => this.positionPlanMenu())
+    },
+    positionPlanMenu() {
+      const toggle = this.planMenuToggleEl
+      const menu = this.$refs.planMenuList
+      if (!toggle || !menu) return
+      const rect = toggle.getBoundingClientRect()
+      const menuW = menu.offsetWidth || 176
+      const menuH = menu.offsetHeight || 120
+      const gutter = 8
+      let left = rect.right - menuW
+      left = Math.min(Math.max(left, gutter), window.innerWidth - menuW - gutter)
+      let top = rect.bottom + 4
+      if (top + menuH > window.innerHeight - gutter) top = Math.max(gutter, rect.top - menuH - 4)
+      this.planMenuStyle = { top: `${top}px`, left: `${left}px` }
+    },
+    closePlanMenu() {
+      this.menuId = null
+      this.planMenuStyle = null
+      this.planMenuToggleEl = null
+    },
     assignNext(next) {
       this.$emit('assign-next', {
         id: Number(this.studentId),
@@ -903,10 +1032,10 @@ export default {
         if (requestId === this.requestId) this.loading = false
       }
     },
-    openDetail(plan) { this.menuId = null; this.detailId = plan.id },
+    openDetail(plan) { this.closePlanMenu(); this.detailId = plan.id },
     openComposer(plan = null) {
       if (this.busy) return
-      this.menuId = null
+      this.closePlanMenu()
       this.editingPlan = plan
       this.success = ''
       this.error = ''
@@ -1291,7 +1420,6 @@ export default {
       }
     },
     async setStatus(plan, status) {
-      this.menuId = null
       this.busy = true
       this.error = ''
       try {
@@ -1307,13 +1435,17 @@ export default {
         this.busy = false
       }
     },
-    async removePlan(plan) {
-      this.menuId = null
-      if (!window.confirm(this.t('teacher.plan_delete_confirm'))) return
+    removePlan(plan) {
+      this.closePlanMenu()
+      this.deletePlan = plan
+    },
+    async confirmRemovePlan() {
+      if (!this.deletePlan || this.busy) return
+      const plan = this.deletePlan
       await this.setStatus(plan, 'archived')
+      if (!this.error) this.deletePlan = null
     },
     async duplicatePlan(plan) {
-      this.menuId = null
       this.busy = true
       this.error = ''
       try {
@@ -1440,7 +1572,6 @@ export default {
       }
     },
     async saveAsTemplate(plan) {
-      this.menuId = null
       this.busy = true
       this.error = ''
       try {
@@ -1503,27 +1634,48 @@ export default {
     },
     planPeriod(plan) {
       const cadence = this.cadenceLabel(plan?.cadence)
-      const span = this.planSpan(plan)
+      const span = this.planSpan(plan, { year: true })
       return span ? `${cadence} · ${span}` : cadence
+    },
+    planPeriodCompact(plan) {
+      const span = this.planSpan(plan)
+      return span || this.cadenceShort(plan?.cadence)
+    },
+    cadenceShort(value) {
+      if (value === 'monthly') return this.t('teacher.plan_monthly_short')
+      if (value === 'custom') return this.t('teacher.plan_custom_short')
+      return this.t('teacher.plan_weekly_short')
     },
     formatDate(value) {
       const [year, month, day] = String(value || '').slice(0, 10).split('-').map(Number)
       if (!year || !month || !day) return ''
       return new Date(year, month - 1, day).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
     },
-    planSpan(plan) {
+    planSpan(plan, options = {}) {
+      const includeYear = Boolean(options.year)
       const start = String(plan?.starts_on || '').slice(0, 10)
       const end = String(plan?.ends_on || '').slice(0, 10)
       if (!start) return ''
-      if (!end || end === start) return this.formatDate(start)
+      const compactDay = (date) => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+      if (!end || end === start) {
+        const [year, month, day] = start.split('-').map(Number)
+        return includeYear ? this.formatDate(start) : compactDay(new Date(year, month - 1, day))
+      }
       const [startYear, startMonth, startDay] = start.split('-').map(Number)
       const [endYear, endMonth, endDay] = end.split('-').map(Number)
       const startDate = new Date(startYear, startMonth - 1, startDay)
       const endDate = new Date(endYear, endMonth - 1, endDay)
       const monthName = (date) => date.toLocaleDateString(undefined, { month: 'short' })
-      if (startYear === endYear && startMonth === endMonth) return `${startDay}–${endDay} ${monthName(startDate)} ${startYear}`
-      if (startYear === endYear) return `${startDay} ${monthName(startDate)} – ${endDay} ${monthName(endDate)} ${startYear}`
-      return `${this.formatDate(start)} – ${this.formatDate(end)}`
+      const yearSuffix = includeYear ? ` ${startYear}` : ''
+      const crossYearSuffix = includeYear ? ` ${endYear}` : ''
+      if (startYear === endYear && startMonth === endMonth) {
+        return `${startDay}–${endDay} ${monthName(startDate)}${yearSuffix}`
+      }
+      if (startYear === endYear) {
+        return `${startDay} ${monthName(startDate)}–${endDay} ${monthName(endDate)}${yearSuffix}`
+      }
+      if (includeYear) return `${this.formatDate(start)} – ${this.formatDate(end)}`
+      return `${compactDay(startDate)} – ${compactDay(endDate)}${crossYearSuffix}`
     },
     cadenceLabel(value) {
       if (value === 'monthly') return this.t('teacher.plan_monthly')

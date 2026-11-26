@@ -207,7 +207,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="student in registerRows"
+                v-for="student in pagedRegisterRows"
                 :key="student.id"
                 class="teacher-attendance__row"
                 :class="`is-${rowStatus(student)}`"
@@ -253,6 +253,15 @@
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          :current-page="registerPage"
+          :page-count="registerPageCount"
+          :total="registerRows.length"
+          :loading="loading"
+          summary-mode="rows"
+          root-class="teacher-attendance__pagination"
+          @page="registerPage = $event"
+        />
       </div>
 
       <div v-else-if="panelMode === 'history'" class="teacher-attendance__history">
@@ -271,7 +280,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in filteredHistoryRows" :key="`${row.studentId}-${row.date}`" :class="`is-${row.status}`">
+              <tr v-for="row in pagedHistoryRows" :key="`${row.studentId}-${row.date}`" :class="`is-${row.status}`">
                 <th scope="row">{{ row.studentName }}</th>
                 <td>{{ formatDay(row.date) }}</td>
                 <td><span class="teacher-status-pill" :class="`is-${row.status}`">{{ statusLabel(row.status) }}</span></td>
@@ -280,6 +289,15 @@
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          :current-page="historyPage"
+          :page-count="historyPageCount"
+          :total="filteredHistoryRows.length"
+          :loading="loading"
+          summary-mode="rows"
+          root-class="teacher-attendance__pagination"
+          @page="historyPage = $event"
+        />
       </div>
     </template>
 
@@ -393,10 +411,14 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatTeacherWhen, studentInitial } from '../../scripts/teacher/formatters'
 import TeacherDialog from './TeacherDialog.vue'
+import TeacherPagination from './TeacherPagination.vue'
+import { tablePageCount, tablePageSlice } from '../../scripts/teacher/tablePagination.js'
+
+const ATTENDANCE_TABLE_PAGE_SIZE = 20
 
 export default {
   name: 'TeacherAttendanceSection',
-  components: { TeacherDialog },
+  components: { TeacherDialog, TeacherPagination },
   mixins: [i18nMixin],
   data() {
     return {
@@ -437,6 +459,8 @@ export default {
         { id: 'late', label: 'teacher.attendance_late', className: 'is-late' },
         { id: 'excused', label: 'teacher.attendance_excused', className: 'is-excused' },
       ],
+      registerPage: 1,
+      historyPage: 1,
     }
   },
   computed: {
@@ -578,9 +602,22 @@ export default {
         return true
       })
     },
+    registerPageCount() {
+      return tablePageCount(this.registerRows.length, ATTENDANCE_TABLE_PAGE_SIZE)
+    },
+    pagedRegisterRows() {
+      return tablePageSlice(this.registerRows, this.registerPage, ATTENDANCE_TABLE_PAGE_SIZE)
+    },
+    historyPageCount() {
+      return tablePageCount(this.filteredHistoryRows.length, ATTENDANCE_TABLE_PAGE_SIZE)
+    },
+    pagedHistoryRows() {
+      return tablePageSlice(this.filteredHistoryRows, this.historyPage, ATTENDANCE_TABLE_PAGE_SIZE)
+    },
   },
   watch: {
     focusDay() {
+      this.registerPage = 1
       this.panelError = ''
       this.rowErrors = {}
       this.noteStudent = null
@@ -596,6 +633,12 @@ export default {
         }
       },
     },
+    studentQuery() { this.registerPage = 1 },
+    registerStatusFilter() { this.registerPage = 1 },
+    historyStudentQuery() { this.historyPage = 1 },
+    historyStatus() { this.historyPage = 1 },
+    historyFrom() { this.historyPage = 1 },
+    historyTo() { this.historyPage = 1 },
   },
   mounted() {
     this.calendarMonth = this.today.slice(0, 7)

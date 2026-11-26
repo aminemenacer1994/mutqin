@@ -79,6 +79,7 @@ import {
   markOptimisticFailed,
   normalizeThreadMessages,
 } from '../../scripts/teacher/learnerTaskThread.js'
+import { startVisiblePoll } from '../../scripts/teacher/pollWhenVisible'
 import { captureReturnFocus, restoreReturnFocus } from '../../utils/modalFocus.js'
 
 function createClientMessageId() {
@@ -110,7 +111,7 @@ export default {
       sending: false,
       confirmVoiceDiscard: false,
       pendingPayloads: {},
-      pollTimer: null,
+      stopPoll: null,
       threadRequest: 0,
     }
   },
@@ -152,13 +153,14 @@ export default {
         this.confirmVoiceDiscard = false
         this.previouslyFocused = captureReturnFocus()
         this.refreshThread(true)
-        window.clearInterval(this.pollTimer)
-        this.pollTimer = window.setInterval(() => this.refreshThread(), 10000)
+        this.stopPoll?.()
+        this.stopPoll = startVisiblePoll(() => this.refreshThread(), 10000)
         this.$nextTick(() => this.$refs.closeBtn?.focus())
       } else {
         this.threadRequest += 1
         this.loadingThread = false
-        window.clearInterval(this.pollTimer)
+        this.stopPoll?.()
+        this.stopPoll = null
         restoreReturnFocus(this.previouslyFocused)
         this.previouslyFocused = null
         this.clearLocalMessages()
@@ -167,7 +169,7 @@ export default {
   },
   beforeUnmount() {
     this.threadRequest += 1
-    window.clearInterval(this.pollTimer)
+    this.stopPoll?.()
     this.clearLocalMessages()
   },
   methods: {

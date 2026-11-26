@@ -1285,29 +1285,16 @@
                 @click="collapseHistory"
               >{{ t('dashboard.history_less') }}</button>
             </div>
-            <nav
-              v-if="historyPage > 1"
-              class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2 dash-history__pagination"
-              :aria-label="t('teacher.pagination_label')"
-            >
-              <span class="teacher-pagination__summary">{{ t('teacher.pagination_page') }} {{ historyPage }}</span>
-              <div class="btn-group teacher-pagination__controls">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary teacher-pagination__button teacher-pagination__button--icon"
-                  :disabled="historyLoading || historyPage <= 1"
-                  :aria-label="t('teacher.previous')"
-                  @click="goHistoryPage(historyPage - 1)"
-                ><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary teacher-pagination__button teacher-pagination__button--icon"
-                  :disabled="historyLoading || !historyHasMore"
-                  :aria-label="t('teacher.next')"
-                  @click="goHistoryPage(historyPage + 1)"
-                ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-              </div>
-            </nav>
+            <TeacherPagination
+              :current-page="historyPage"
+              :page-count="historyPage + (historyHasMore ? 1 : 0)"
+              :loading="historyLoading"
+              :has-next="historyHasMore"
+              :show-numbers="false"
+              summary-mode="page"
+              root-class="dash-history__pagination"
+              @page="goHistoryPage($event)"
+            />
           </div>
           </div>
         </section>
@@ -1936,6 +1923,7 @@ import {
 } from '../scripts/dashboard/progressView'
 import DashAiReciteAttemptCard from '../components/dashboard/DashAiReciteAttemptCard.vue'
 import TeacherPageHeader from '../components/teacher/TeacherPageHeader.vue'
+import TeacherPagination from '../components/teacher/TeacherPagination.vue'
 import StudentActivityFilters from '../components/dashboard/StudentActivityFilters.vue'
 import {
   activityActiveFilterCount,
@@ -2081,6 +2069,7 @@ export default {
     LearnerStudentNotifications,
     LearnerStudentMessages,
     TeacherPageHeader,
+    TeacherPagination,
     StudentActivityFilters,
     DashModalRoot,
     TeacherDialog,

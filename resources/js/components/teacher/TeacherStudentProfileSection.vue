@@ -108,10 +108,35 @@
             @unsent-change="unsent.tasks = $event"
           />
           <div v-else-if="section === 'messages'" key="student-messages" class="teacher-stack teacher-messages-inbox">
+            <div class="teacher-messages-desk__tabs teacher-profile-messages__tabs" role="tablist" :aria-label="t('teacher.messages')">
+              <button
+                type="button"
+                role="tab"
+                class="teacher-messages-desk__tab"
+                :class="{ 'is-active': messageSubTab === 'student' }"
+                :aria-selected="messageSubTab === 'student' ? 'true' : 'false'"
+                @click="messageSubTab = 'student'"
+              >
+                {{ t('teacher.messages_tab_students') }}
+                <span v-if="messageUnread" class="teacher-nav__badge">{{ messageUnread }}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                class="teacher-messages-desk__tab"
+                :class="{ 'is-active': messageSubTab === 'parent' }"
+                :aria-selected="messageSubTab === 'parent' ? 'true' : 'false'"
+                @click="messageSubTab = 'parent'"
+              >
+                {{ t('teacher.messages_tab_parents') }}
+              </button>
+            </div>
             <TeacherStudentProfileMessages
+              v-show="messageSubTab === 'student'"
               :profile="tabProfile"
               :format-when="formatWhen"
               :task-context="messageContext"
+              embedded-in-tabs
               @open-task="openTask"
               @open-tasks="selectTab('tasks')"
               @open-recitations="selectTab('ai')"
@@ -122,9 +147,10 @@
               @sent="$emit('refresh')"
             />
             <TeacherStudentGuardianThreads
-              v-if="tabProfile && tabProfile.student && tabProfile.student.id"
+              v-if="messageSubTab === 'parent' && tabProfile && tabProfile.student && tabProfile.student.id"
               :student-id="Number(tabProfile.student.id)"
               :student-name="tabProfile.student.name || ''"
+              embedded-in-tabs
             />
           </div>
         </KeepAlive>
@@ -220,6 +246,7 @@ export default {
       messageReturn: false,
       unsent: { tasks: false, messages: false },
       messageUnread: null,
+      messageSubTab: 'student',
     }
   },
   computed: {
@@ -304,11 +331,15 @@ export default {
     },
   },
   watch: {
-    section() {
+    section(next) {
+      if (next === 'messages') this.messageSubTab = 'student'
       this.$nextTick(this.revealActiveTab)
     },
     profile(next, previous) {
-      if (next?.student?.id !== previous?.student?.id) this.messageUnread = null
+      if (next?.student?.id !== previous?.student?.id) {
+        this.messageUnread = null
+        this.messageSubTab = 'student'
+      }
       this.$nextTick(this.revealActiveTab)
     },
   },

@@ -14,8 +14,11 @@
         "laravel/tinker": "^2.10.1",
         "laravel/ui": "^4.6",
         "league/flysystem-aws-s3-v3": "^3.35",
+        "phpoffice/phpspreadsheet": "^4.0",
+        "phpoffice/phpword": "^1.4",
         "resend/resend-php": "^1.12",
         "sentry/sentry-laravel": "^4.27",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-backup": "^10.3"
     },
     "require-dev": {

@@ -1311,6 +1311,40 @@ export const learningApi = {
     const { data } = await http.post(`/teacher/students/${studentId}/recitation-difficulties/${spotId}/review`, payload)
     return data
   },
+  async getTeacherStudentImportFormats() {
+    const { data } = await http.get('/teacher/imports/formats')
+    return data
+  },
+  async createTeacherStudentImport(groupId, { files = [], pastedText = '' } = {}) {
+    const form = new FormData()
+    files.forEach((file) => form.append('files[]', file))
+    if (String(pastedText || '').trim()) form.append('pasted_text', String(pastedText).trim())
+    const { data } = await http.post(`/teacher/groups/${groupId}/imports`, form, {
+      timeout: 120000,
+    })
+    return data
+  },
+  async processTeacherStudentImport(batchId) {
+    const { data } = await http.post(`/teacher/imports/${batchId}/process`)
+    return data
+  },
+  async getTeacherStudentImport(batchId) {
+    const { data } = await http.get(`/teacher/imports/${batchId}`, { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async updateTeacherStudentImportRow(batchId, rowId, payload) {
+    const { data } = await http.patch(`/teacher/imports/${batchId}/rows/${rowId}`, payload)
+    return data
+  },
+  async skipTeacherStudentImportRow(batchId, rowId) {
+    const { data } = await http.post(`/teacher/imports/${batchId}/rows/${rowId}/skip`)
+    return data
+  },
+  async commitTeacherStudentImport(batchId, options = {}) {
+    const runAsync = Boolean(options && options.runAsync)
+    const { data } = await http.post(`/teacher/imports/${batchId}/commit`, { async: runAsync })
+    return data
+  },
 }
 
 function sanitizeRecommendationSettings(settings) {

@@ -1,9 +1,9 @@
 <template>
   <TeacherSectionPane
     class="teacher-messages-pane teacher-messages-pane--parent"
-    :title="t('teacher.messages_parent_title')"
-    :hint="t('teacher.messages_parent_hint')"
-    icon="bi bi-people"
+    :title="embeddedInTabs ? '' : t('teacher.messages_parent_title')"
+    :hint="embeddedInTabs ? '' : t('teacher.messages_parent_hint')"
+    :icon="embeddedInTabs ? '' : 'bi bi-people'"
     flat
   >
     <p v-if="loadError" class="alert alert-danger" role="alert">{{ t('teacher.guardian_messages_failed') }}</p>
@@ -55,6 +55,7 @@ export default {
   props: {
     studentId: { type: Number, required: true },
     studentName: { type: String, default: '' },
+    embeddedInTabs: { type: Boolean, default: false },
   },
   data() {
     return {

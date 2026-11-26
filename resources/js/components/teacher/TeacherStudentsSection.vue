@@ -1,8 +1,14 @@
 <template>
   <section class="teacher-stack">
-    <header class="teacher-page-header">
+    <header class="teacher-page-header teacher-page-header--actions">
       <div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_students') }}</h1></div>
-      <span class="teacher-page-count">{{ meta.total || students.length }} {{ t('teacher.kpi_students') }}</span>
+      <div class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
+        <span class="teacher-page-count">{{ meta.total || students.length }} {{ t('teacher.kpi_students') }}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('import-students')">
+          <i class="bi bi-upload" aria-hidden="true"></i>
+          {{ t('teacher.import_title') }}
+        </button>
+      </div>
     </header>
     <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-student-toolbar d-flex flex-wrap align-items-center gap-2">
       <label class="input-group teacher-search teacher-search--compact flex-grow-1">
@@ -71,7 +77,17 @@
       <span class="dash-spinner" aria-hidden="true"></span>
       {{ t('teacher.loading') }}
     </p>
-    <TeacherEmpty v-else-if="!students.length" icon="bi bi-people" :message="t(hasFilters ? 'teacher.students_filter_empty' : 'teacher.students_empty')" />
+    <div v-else-if="!students.length" class="teacher-students-empty">
+      <TeacherEmpty icon="bi bi-people" :message="t(hasFilters ? 'teacher.students_filter_empty' : 'teacher.students_empty')" />
+      <button
+        v-if="!hasFilters"
+        type="button"
+        class="btn btn-primary btn-sm"
+        @click="$emit('import-students')"
+      >
+        {{ t('teacher.import_empty_action') }}
+      </button>
+    </div>
     <template v-else>
     <div v-if="selectedIds.length" class="teacher-priorities">
       <p>{{ t('teacher.task_bulk_selected', { n: selectedIds.length }) }}</p>
@@ -89,27 +105,27 @@
       @toggle="toggleStudent"
     />
     </template>
-    <nav v-if="pageCount > 1" class="teacher-pagination d-flex flex-wrap align-items-center justify-content-between gap-2" :aria-label="t('teacher.pagination_label')">
-      <span class="teacher-pagination__summary">
-        {{ t('teacher.pagination_summary', { page: currentPage, pages: pageCount, total: meta.total || 0 }) }}
-      </span>
-      <div class="btn-group teacher-pagination__controls">
-        <button type="button" class="btn btn-outline-secondary teacher-pagination__button teacher-pagination__button--icon" :disabled="loading || currentPage === 1" :aria-label="t('teacher.previous')" @click="$emit('page', currentPage - 1)"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
-        <button v-for="page in pages" :key="page" type="button" class="btn btn-outline-secondary teacher-pagination__button" :class="{ 'is-active': page === currentPage }" :aria-current="page === currentPage ? 'page' : undefined" :disabled="loading" @click="$emit('page', page)">{{ page }}</button>
-        <button type="button" class="btn btn-outline-secondary teacher-pagination__button teacher-pagination__button--icon" :disabled="loading || currentPage === pageCount" :aria-label="t('teacher.next')" @click="$emit('page', currentPage + 1)"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-      </div>
-    </nav>
+    <TeacherPagination
+      :current-page="currentPage"
+      :page-count="pageCount"
+      :total="meta.total || 0"
+      :loading="loading"
+      summary-mode="students"
+      :aria-label="t('teacher.pagination_label')"
+      @page="$emit('page', $event)"
+    />
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
+import TeacherPagination from './TeacherPagination.vue'
 import TeacherStudentTable from './TeacherStudentTable.vue'
 
 export default {
   name: 'TeacherStudentsSection',
-  components: { TeacherEmpty, TeacherStudentTable },
+  components: { TeacherEmpty, TeacherPagination, TeacherStudentTable },
   mixins: [i18nMixin],
   props: {
     filters: { type: Object, required: true },
@@ -120,7 +136,7 @@ export default {
     loadingMore: { type: Boolean, default: false },
     formatWhen: { type: Function, required: true },
   },
-  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision', 'assign-selected'],
+  emits: ['update:filters', 'search', 'queue-search', 'page', 'open-student', 'assign-revision', 'assign-selected', 'import-students'],
   data() {
     return { compactView: true, selectedIds: [] }
   },
@@ -139,11 +155,6 @@ export default {
     },
     pageCount() {
       return Math.max(1, Number(this.meta.last_page || 1))
-    },
-    pages() {
-      const count = this.pageCount
-      const start = Math.max(1, Math.min(this.currentPage - 2, count - 4))
-      return Array.from({ length: Math.min(5, count) }, (_, index) => start + index)
     },
   },
   methods: {

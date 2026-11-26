@@ -34,7 +34,7 @@ final class PreviewSandboxCapabilities
                 self::row('revision', 'Targeted revision recommendations', $teacherOn ? self::STATUS_LIVE : self::STATUS_PARTIAL, null),
                 self::row('attendance', 'Attendance records', $teacherOn ? self::STATUS_LIVE : self::STATUS_PARTIAL, null),
                 self::row('reporting', 'Learner progress and parent reports', self::STATUS_PARTIAL, 'Scope follows guardian permissions and report windows'),
-                self::row('imports', 'Bulk student import', self::STATUS_SIMULATED, 'Preview uses seeded rosters; CSV import is not part of the demo path'),
+                self::row('imports', 'Bulk student import', self::STATUS_LIVE, 'Teachers upload roster files; extraction stays in staging until commit'),
                 self::row('parent_invites', 'Parent and guardian invitations', $teacherOn ? self::STATUS_LIVE : self::STATUS_PARTIAL, 'Outbound mail is suppressed in sandbox sessions'),
             ],
             'student' => [

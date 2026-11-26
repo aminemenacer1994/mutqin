@@ -1,11 +1,27 @@
 <template>
   <section class="teacher-stack teacher-assignments" :class="{ 'is-compact': compactView }">
-    <header class="teacher-page-header"><div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_assignments') }}</h1></div></header>
+    <header class="teacher-page-header teacher-page-header--actions">
+      <div>
+        <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
+        <h1 class="teacher-page-header__title">{{ t('teacher.nav_assignments') }}</h1>
+      </div>
+      <div class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
+        <span class="teacher-page-count">{{ assignmentCount }} {{ t('teacher.nav_assignments') }}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @click="$emit('import-students')">
+          <i class="bi bi-upload" aria-hidden="true"></i>
+          {{ t('teacher.import_title') }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" @click="$emit('new')">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          {{ t('teacher.add_task') }}
+        </button>
+      </div>
+    </header>
     <p v-if="success" class="alert alert-success mb-0" role="status">{{ success }}</p>
     <p v-if="error && !formOpen" class="alert alert-danger mb-0" role="alert">{{ error }}</p>
 
-    <div class="teacher-toolbar teacher-toolbar--tasks d-flex flex-wrap align-items-center gap-2">
-      <label class="input-group teacher-search teacher-search--tasks flex-grow-1">
+    <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-toolbar--tasks d-flex flex-wrap align-items-center gap-2">
+      <label class="input-group teacher-search teacher-search--compact teacher-search--tasks flex-grow-1">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
         <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
         <input v-model="query" class="form-control" type="search" :placeholder="t('teacher.task_search_placeholder')" autocomplete="off">
@@ -45,10 +61,6 @@
       >
         <i :class="compactView ? 'bi bi-arrows-angle-expand' : 'bi bi-list'" aria-hidden="true"></i>
         <span class="visually-hidden">{{ compactView ? t('teacher.switch_comfortable_view') : t('teacher.switch_compact_view') }}</span>
-      </button>
-      <button type="button" class="btn btn-primary btn-sm teacher-task-add" @click="$emit('new')">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-        {{ t('teacher.add_task') }}
       </button>
     </div>
 
@@ -247,7 +259,7 @@ export default {
     surahs: { type: Array, default: () => [] },
     onSendMessage: { type: Function, required: true },
   },
-  emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student', 'refresh'],
+  emits: ['update:form', 'update:formOpen', 'new', 'edit', 'save', 'remove', 'open-student', 'refresh', 'import-students'],
   data() {
     return {
       shown: STEP,
@@ -280,6 +292,9 @@ export default {
     document.removeEventListener('click', this.closeTaskMenu)
   },
   computed: {
+    assignmentCount() {
+      return this.flatItems.length
+    },
     hasActiveTaskFilters() { return Boolean(this.query || this.statusFilter !== 'all') },
     taskFilters() {
       const counts = this.flatItems.reduce((result, item) => {

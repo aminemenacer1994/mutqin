@@ -92,9 +92,10 @@
               @open-student="openStudent"
               @assign-selected="beginAssignStudents"
               @assign-revision="openAssignRevision"
+              @import-students="openStudentImport"
             />
 
-            <TeacherPlansView v-else-if="view === 'plans'" />
+            <TeacherPlansView v-else-if="view === 'plans'" @import-students="openStudentImport" />
 
             <TeacherAttendanceSection v-else-if="view === 'attendance'" />
 
@@ -152,6 +153,7 @@
               @remove="removeAssignment"
               @refresh="refreshAssignments"
               @open-student="openStudent"
+              @import-students="openStudentImport"
             />
 
             <TeacherReviewsSection
@@ -189,6 +191,16 @@
           @select="openView"
         />
 
+        <TeacherStudentImportWizard
+          :open="studentImportOpen"
+          :groups="teacherGroups"
+          :default-group-id="defaultImportGroupId"
+          :resume-batch-id="studentImportResumeId"
+          @close="closeStudentImport"
+          @finished="onStudentImportFinished"
+          @view-students="openView('students')"
+        />
+
         <TeacherTaskSheet
           :open="assignmentFormOpen"
           :editing="Boolean(editingAssignmentId)"
@@ -208,7 +220,7 @@
 </template>
 
 <script>
-import { computed, provide } from 'vue'
+import { computed, onMounted, provide, ref } from 'vue'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import TeacherAttendanceSection from '../components/teacher/TeacherAttendanceSection.vue'
 import TeacherMessagesSection from '../components/teacher/TeacherMessagesSection.vue'
@@ -220,6 +232,7 @@ import TeacherOverviewSection from '../components/teacher/TeacherOverviewSection
 import TeacherReviewsSection from '../components/teacher/TeacherReviewsSection.vue'
 import TeacherSettingsSection from '../components/teacher/TeacherSettingsSection.vue'
 import TeacherStudentProfileSection from '../components/teacher/TeacherStudentProfileSection.vue'
+import TeacherStudentImportWizard from '../components/teacher/TeacherStudentImportWizard.vue'
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
 import TeacherTaskSheet from '../components/teacher/TeacherTaskSheet.vue'
 import { useTeacherDashboard } from '../scripts/composables/useTeacherDashboard'
@@ -239,6 +252,7 @@ export default {
     TeacherReviewsSection,
     TeacherSettingsSection,
     TeacherStudentProfileSection,
+    TeacherStudentImportWizard,
     TeacherStudentsSection,
     TeacherTaskSheet,
   },
@@ -251,6 +265,35 @@ export default {
     const navBadges = computed(() => ({
       messages: Number(deskCounts.value.unread || 0),
     }))
+    const studentImportOpen = ref(false)
+    const studentImportResumeId = ref(null)
+    const defaultImportGroupId = computed(() => {
+      const groups = dashboard.teacherGroups.value || []
+      return groups[0]?.id || null
+    })
+    function openStudentImport() {
+      studentImportOpen.value = true
+      if (!dashboard.teacherGroups.value?.length) dashboard.loadTeacherGroups()
+    }
+    function closeStudentImport() {
+      studentImportOpen.value = false
+      studentImportResumeId.value = null
+    }
+    async function onStudentImportFinished() {
+      await dashboard.loadStudents(1)
+      await dashboard.loadAssignmentRoster()
+      await dashboard.loadOverview()
+      if (dashboard.view.value === 'assignments') {
+        await dashboard.loadAssignments()
+      }
+    }
+    onMounted(() => {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('import') === '1') {
+        openStudentImport()
+        dashboard.openView('students')
+      }
+    })
     provide('teacherSurahs', dashboard.surahs)
     provide('openTeacherStudent', dashboard.openStudent)
     function updateFilters(next) {
@@ -284,6 +327,12 @@ export default {
       openAssignments,
       refreshAssignments,
       startAssignment,
+      studentImportOpen,
+      studentImportResumeId,
+      defaultImportGroupId,
+      openStudentImport,
+      closeStudentImport,
+      onStudentImportFinished,
     }
   },
 }

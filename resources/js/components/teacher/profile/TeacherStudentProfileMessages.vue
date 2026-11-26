@@ -3,9 +3,9 @@
     class="teacher-messages-pane teacher-messages-pane--student"
     tone="neutral"
     flat
-    :title="t('teacher.messages_private_title')"
-    :hint="t('teacher.messages_private_hint')"
-    icon="bi bi-chat-dots"
+    :title="embeddedInTabs ? '' : t('teacher.messages_private_title')"
+    :hint="embeddedInTabs ? '' : t('teacher.messages_private_hint')"
+    :icon="embeddedInTabs ? '' : 'bi bi-chat-dots'"
   >
     <div class="teacher-messages-layout teacher-messages-layout--profile">
     <section class="teacher-direct-thread teacher-direct-thread--chat teacher-direct-thread--full" :aria-label="t('teacher.messages_private_title')">
@@ -132,6 +132,7 @@ import TeacherSectionPane from '../TeacherSectionPane.vue'
 import TeacherVoiceNoteControls from '../TeacherVoiceNoteControls.vue'
 import autoGrow from '../../../directives/autoGrow.js'
 import { formatLearnerDisplayDate } from '../../../utils/learnerDisplayDate.js'
+import { startVisiblePoll } from '../../../scripts/teacher/pollWhenVisible'
 import { taskIsOverdue } from '../../../scripts/teacher/taskState'
 
 const PAGE_SIZE = 40
@@ -145,6 +146,7 @@ export default {
     profile: { type: Object, required: true },
     formatWhen: { type: Function, required: true },
     taskContext: { type: Object, default: null },
+    embeddedInTabs: { type: Boolean, default: false },
   },
   emits: ['open-task', 'open-tasks', 'open-recitations', 'clear-context', 'unsent-change', 'unread-change', 'marked-read', 'sent'],
   data() {
@@ -158,7 +160,7 @@ export default {
       sent: [],
       synced: [],
       removed: [],
-      pollTimer: null,
+      stopPoll: null,
       threadRequest: 0,
       disposed: false,
       stickToBottom: true,
@@ -275,7 +277,7 @@ export default {
   mounted() {
     this.restoreDraft()
     this.refreshThread()
-    this.pollTimer = window.setInterval(() => this.refreshThread(), 10000)
+    this.stopPoll = startVisiblePoll(() => this.refreshThread(), 10000)
     this.$nextTick(() => this.scrollThread())
     this.reportUnsent()
   },
@@ -299,7 +301,7 @@ export default {
   beforeUnmount() {
     this.disposed = true
     this.threadRequest += 1
-    window.clearInterval(this.pollTimer)
+    this.stopPoll?.()
     window.clearTimeout(this.noticeTimer)
   },
   methods: {

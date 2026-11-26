@@ -18,7 +18,7 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="student in orderedStudents" :key="student.id">
+          <template v-for="student in pagedStudents" :key="student.id">
             <tr>
               <th scope="row" class="fw-normal">
                 <span class="fw-semibold d-block">{{ student.name }}</span>
@@ -53,17 +53,29 @@
         </tbody>
       </table>
     </div>
+    <TeacherPagination
+      :current-page="studentsPage"
+      :page-count="studentsPageCount"
+      :total="orderedStudents.length"
+      :loading="loading"
+      summary-mode="rows"
+      @page="studentsPage = $event"
+    />
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
+import { tablePageCount, tablePageSlice } from '../../scripts/teacher/tablePagination.js'
+import TeacherPagination from './TeacherPagination.vue'
 import TeacherRecitationDifficultiesPanel from './profile/TeacherRecitationDifficultiesPanel.vue'
+
+const DIFFICULTIES_TABLE_PAGE_SIZE = 15
 
 export default {
   name: 'TeacherDifficultiesView',
-  components: { TeacherRecitationDifficultiesPanel },
+  components: { TeacherPagination, TeacherRecitationDifficultiesPanel },
   mixins: [i18nMixin],
   emits: ['assign-revision'],
   data() {
@@ -73,6 +85,7 @@ export default {
       queue: [],
       students: [],
       openId: '',
+      studentsPage: 1,
     }
   },
   computed: {
@@ -85,6 +98,12 @@ export default {
         if (diff !== 0) return diff
         return String(a.name || '').localeCompare(String(b.name || ''))
       })
+    },
+    studentsPageCount() {
+      return tablePageCount(this.orderedStudents.length, DIFFICULTIES_TABLE_PAGE_SIZE)
+    },
+    pagedStudents() {
+      return tablePageSlice(this.orderedStudents, this.studentsPage, DIFFICULTIES_TABLE_PAGE_SIZE)
     },
   },
   async mounted() {

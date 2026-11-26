@@ -164,6 +164,7 @@ import {
   threadLastAt,
   threadPreview,
 } from '../../scripts/teacher/learnerStudentMessages.js'
+import { startVisiblePoll } from '../../scripts/teacher/pollWhenVisible'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 
@@ -194,7 +195,7 @@ export default {
       sentOptimistic: {},
       pollVersions: {},
       threadNextBefore: null,
-      pollTimer: null,
+      stopPoll: null,
       disposed: false,
       isMobileViewport: false,
       media: null,
@@ -414,15 +415,13 @@ export default {
     },
     startPolling() {
       this.stopPolling()
-      this.pollTimer = setInterval(() => {
+      this.stopPoll = startVisiblePoll(() => {
         if (this.active && !this.directSending && !this.threadLoading) this.loadActiveThread()
       }, POLL_MS)
     },
     stopPolling() {
-      if (this.pollTimer) {
-        clearInterval(this.pollTimer)
-        this.pollTimer = null
-      }
+      this.stopPoll?.()
+      this.stopPoll = null
     },
   },
 }

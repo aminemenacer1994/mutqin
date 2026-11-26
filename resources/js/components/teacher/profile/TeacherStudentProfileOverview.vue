@@ -196,7 +196,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in attendanceHistory" :key="`${row.date}-${row.status}-${row.group}`" :class="`is-${row.status}`">
+              <tr v-for="row in pagedAttendanceHistory" :key="`${row.date}-${row.status}-${row.group}`" :class="`is-${row.status}`">
                 <th scope="row"><span class="teacher-status-pill" :class="`is-${row.status}`">{{ statusLabel(row.status) }}</span></th>
                 <td>{{ formatWhen(`${row.date}T12:00:00`) }}</td>
                 <td>{{ row.group || '—' }}</td>
@@ -205,6 +205,13 @@
             </tbody>
           </table>
         </div>
+        <TeacherPagination
+          :current-page="attendancePage"
+          :page-count="attendancePageCount"
+          :total="attendanceHistory.length"
+          summary-mode="rows"
+          @page="attendancePage = $event"
+        />
       </section>
     </div>
   </TeacherSectionPane>
@@ -212,12 +219,16 @@
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import TeacherPagination from '../TeacherPagination.vue'
 import TeacherSectionPane from '../TeacherSectionPane.vue'
 import TeacherStudentProfileNotes from './TeacherStudentProfileNotes.vue'
+import { tablePageCount, tablePageSlice } from '../../../scripts/teacher/tablePagination.js'
+
+const PROFILE_TABLE_PAGE_SIZE = 10
 
 export default {
   name: 'TeacherStudentProfileOverview',
-  components: { TeacherSectionPane, TeacherStudentProfileNotes },
+  components: { TeacherPagination, TeacherSectionPane, TeacherStudentProfileNotes },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
@@ -227,6 +238,9 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   emits: ['assign-revision', 'change-section'],
+  data() {
+    return { attendancePage: 1 }
+  },
   computed: {
     recommendation() {
       return this.profile.payload?.metrics?.recommendation || { type: 'insufficient_data', reason: this.t('teacher.recommendation_insufficient') }
@@ -250,7 +264,13 @@ export default {
       return this.recommendation.reason || this.t('teacher.recommendation_insufficient')
     },
     attendanceHistory() {
-      return Array.isArray(this.profile.payload?.attendance) ? this.profile.payload.attendance.slice(0, 8) : []
+      return Array.isArray(this.profile.payload?.attendance) ? this.profile.payload.attendance : []
+    },
+    attendancePageCount() {
+      return tablePageCount(this.attendanceHistory.length, PROFILE_TABLE_PAGE_SIZE)
+    },
+    pagedAttendanceHistory() {
+      return tablePageSlice(this.attendanceHistory, this.attendancePage, PROFILE_TABLE_PAGE_SIZE)
     },
     teaching() {
       return this.profile.payload?.teaching || {}
@@ -323,6 +343,9 @@ export default {
       }
       return null
     },
+  },
+  watch: {
+    'profile.payload.attendance'() { this.attendancePage = 1 },
   },
   methods: {
     historyMeta(row) {

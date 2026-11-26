@@ -120,6 +120,17 @@
           </div>
         </template>
 
+        <template v-else-if="currentStep === 'import'">
+          <div class="auth-field">
+            <p class="form-label">{{ t('teacher.import_onboarding_title') }}</p>
+            <p class="teacher-meta">{{ t('teacher.import_onboarding_help') }}</p>
+            <a class="btn auth-submit" href="/teacher?import=1&view=students">{{ t('teacher.import_onboarding_open') }}</a>
+            <button type="button" class="btn btn-outline-secondary btn-sm mt-2" :disabled="busy" @click="skip('import')">
+              {{ t('teacher.import_onboarding_skip') }}
+            </button>
+          </div>
+        </template>
+
         <template v-else-if="currentStep === 'invite'">
           <div class="auth-field">
             <p class="form-label">{{ t('ui.connections_invite_title') }}</p>
@@ -292,7 +303,7 @@ export default {
     steps() {
       const list = []
       if (this.features.teacher && this.isTeacher) {
-        list.push('institution', 'class', 'invite')
+        list.push('institution', 'class', 'import', 'invite')
       } else if (this.features.teacher && (this.isStudent || !this.accountRole)) {
         list.push('class')
         if (this.pendingConsent.length) list.push('consent')
@@ -313,6 +324,7 @@ export default {
       if (this.currentStep === 'class') {
         return this.isTeacher ? this.t('ui.connections_class_title') : this.t('ui.connections_join_code')
       }
+      if (this.currentStep === 'import') return this.t('teacher.import_onboarding_title')
       if (this.currentStep === 'invite') return this.t('ui.connections_invite_title')
       if (this.currentStep === 'consent') return this.t('ui.connections_consent_title')
       if (this.currentStep === 'parent') return this.t('ui.connections_parent_title')

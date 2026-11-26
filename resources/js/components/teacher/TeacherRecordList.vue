@@ -52,7 +52,7 @@
       </tr>
     </thead>
     <tbody>
-      <template v-for="(row, index) in visibleRows" :key="row.key ?? index">
+      <template v-for="(row, index) in tableRows" :key="row.key ?? index">
         <tr class="teacher-profile-table__row" :class="{ 'has-issues': row.attention, 'is-selected': isSelected(row) }" @click="onRowClick($event, row)">
           <th scope="row" class="teacher-profile-table__item">
             <a v-if="row.href" class="teacher-profile-table__title" :class="{ 'teacher-quran': row.quran }" :href="row.href">
@@ -121,7 +121,15 @@
     </tbody>
   </table>
   </div>
-  <TeacherMore :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
+  <TeacherPagination
+    v-if="layout === 'table'"
+    :current-page="listPage"
+    :page-count="listPageCount"
+    :total="rows.length"
+    summary-mode="rows"
+    @page="listPage = $event"
+  />
+  <TeacherMore v-else :remaining="rows.length - shown" :shown="shown" :initial="5" @more="shown += 5" @less="shown = 5" />
   <TeacherAudioDrawer :open="Boolean(activeEvidence)" :row="activeEvidence" :mode="evidenceMode" :text-evidence-in-drawer="!mushafReviewModal" @close="activeEvidence = null" />
   <TeacherRecitationPlaybackReview
     :open="Boolean(playbackRow)"
@@ -151,6 +159,10 @@ import { loadTeacherMadaniWords } from '../../scripts/teacher/madaniDisplayWords
 import QuranAyahDisplay from './QuranAyahDisplay.vue'
 import TeacherAudioDrawer from './TeacherAudioDrawer.vue'
 import TeacherMore from './TeacherMore.vue'
+import TeacherPagination from './TeacherPagination.vue'
+import { tablePageCount, tablePageSlice } from '../../scripts/teacher/tablePagination.js'
+
+const RECORD_TABLE_PAGE_SIZE = 10
 import TeacherRecordEvidenceInline from './TeacherRecordEvidenceInline.vue'
 import TeacherRecordEvidenceMushafInline from './TeacherRecordEvidenceMushafInline.vue'
 import TeacherRecitationPlaybackReview from './TeacherRecitationPlaybackReview.vue'
@@ -158,7 +170,7 @@ import TeacherReciteEvidenceModal from './TeacherReciteEvidenceModal.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 export default {
   name: 'TeacherRecordList',
-  components: { QuranAyahDisplay, TeacherAudioDrawer, TeacherMore, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal, TeacherWordingMatch },
+  components: { QuranAyahDisplay, TeacherAudioDrawer, TeacherMore, TeacherPagination, TeacherRecordEvidenceInline, TeacherRecordEvidenceMushafInline, TeacherRecitationPlaybackReview, TeacherReciteEvidenceModal, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     rows: { type: Array, default: () => [] },
@@ -174,6 +186,7 @@ export default {
   data() {
     return {
       shown: 5,
+      listPage: 1,
       ayahPreviews: new Map(),
       previewGeneration: 0,
       activeEvidence: null,
@@ -187,6 +200,12 @@ export default {
     visibleRows() {
       return this.rows.slice(0, this.shown)
     },
+    listPageCount() {
+      return tablePageCount(this.rows.length, RECORD_TABLE_PAGE_SIZE)
+    },
+    tableRows() {
+      return tablePageSlice(this.rows, this.listPage, RECORD_TABLE_PAGE_SIZE)
+    },
     playbackQueue() {
       return this.rows
         .filter((row) => row?.attemptId && row?.studentId)
@@ -199,6 +218,9 @@ export default {
         status: this.headings.status || this.t('teacher.col_status'),
       }
     },
+  },
+  watch: {
+    rows() { this.listPage = 1 },
   },
   beforeUnmount() {
     this.previewGeneration += 1

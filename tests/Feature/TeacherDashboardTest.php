@@ -2054,6 +2054,28 @@ class TeacherDashboardTest extends TestCase
         $this->assertSame(0, $overview['attendance_unmarked_today']);
     }
 
+    public function test_attendance_change_invalidates_cached_teacher_overview(): void
+    {
+        [$teacher, $student, $hidden, $group] = $this->classroom();
+        cache()->flush();
+        $date = today()->toDateString();
+
+        $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk();
+        $before = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json('snapshot.attendance_unmarked_today');
+
+        $this->actingAs($teacher)->postJson(route('api.teacher.attendance.bulk', $group), [
+            'date' => $date,
+            'status' => 'present',
+            'student_ids' => [$student->id],
+        ])->assertOk();
+
+        $after = $this->actingAs($teacher)->getJson(route('api.teacher.overview'))->assertOk()->json('snapshot.attendance_unmarked_today');
+        $this->assertSame(0, $after);
+        if ($before > 0) {
+            $this->assertNotSame($before, $after);
+        }
+    }
+
     public function test_teacher_can_schedule_a_lesson_without_marking_students_absent(): void
     {
         [$teacher, $student, $hidden, $group] = $this->classroom();

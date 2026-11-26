@@ -1,10 +1,12 @@
 <template>
   <section class="teacher-stack teacher-review-page" aria-labelledby="teacher-reviews-heading">
-    <header class="teacher-page-header">
+    <header class="teacher-page-header teacher-page-header--actions">
       <div>
         <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
         <h1 id="teacher-reviews-heading" class="teacher-page-header__title">{{ t('teacher.nav_reviews') }}</h1>
-        <p class="teacher-page-header__hint">{{ t('teacher.reviews_help') }}</p>
+      </div>
+      <div v-if="overview" class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
+        <span class="teacher-page-count">{{ reviewHeaderCount }} {{ t('teacher.nav_reviews') }}</span>
       </div>
     </header>
 
@@ -14,17 +16,26 @@
     </div>
 
     <template v-else>
-      <div class="teacher-recite__segments teacher-review-page__filters" role="group" :aria-label="t('teacher.reviews_filter_label')">
-        <button
-          v-for="filter in filters"
-          :key="filter.id"
-          type="button"
-          :class="['is-' + filter.id, { 'is-active': filterId === filter.id }]"
-          :aria-pressed="filterId === filter.id ? 'true' : 'false'"
-          @click="selectFilter(filter.id)"
-        >
-          {{ filter.label }}<span>{{ filter.count }}</span>
-        </button>
+      <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion teacher-review-toolbar d-flex flex-wrap align-items-center gap-2">
+        <div class="teacher-task-filter-shell">
+          <div
+            class="btn-group btn-group-sm teacher-task-filters flex-wrap"
+            role="group"
+            :aria-label="t('teacher.reviews_filter_label')"
+          >
+            <button
+              v-for="filter in filters"
+              :key="filter.id"
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              :class="[{ 'is-active': filterId === filter.id }, `is-${filter.id}`]"
+              :aria-pressed="filterId === filter.id ? 'true' : 'false'"
+              @click="selectFilter(filter.id)"
+            >
+              {{ filter.label }}<span class="teacher-task-filter__count">{{ filter.count }}</span>
+            </button>
+          </div>
+        </div>
       </div>
       <p class="teacher-review-page__hint">{{ filterHint }}</p>
 
@@ -87,6 +98,10 @@ export default {
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)
+    },
+    reviewHeaderCount() {
+      const { recitations, recitationHistory, reviewedRecitations } = this.deskCounts
+      return recitations + recitationHistory + reviewedRecitations
     },
     filters() {
       return [
