@@ -20,6 +20,7 @@ export function threadPreview(thread) {
 }
 
 export function directThreadUnreadCount(thread) {
+  if (Number.isFinite(thread?.unread_count)) return Math.max(0, thread.unread_count)
   return threadMessages(thread).filter((message) => message.unread && message.sender === 'teacher').length
 }
 

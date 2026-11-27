@@ -214,8 +214,10 @@ export default {
   computed: {
     isDirty() { return this.initialForm !== JSON.stringify(this.form) },
     filteredStudents() {
-      const needle = this.studentQuery.trim().toLocaleLowerCase()
-      return this.students.filter((student) => student.name.toLocaleLowerCase().includes(needle)).slice(0, 10)
+      const needle = String(this.studentQuery || '').trim().toLocaleLowerCase()
+      return this.students
+        .filter((student) => String(student?.name ?? student?.email ?? '').toLocaleLowerCase().includes(needle))
+        .slice(0, 10)
     },
     bulkStudents() {
       const ids = Array.isArray(this.form.student_ids) ? this.form.student_ids : []
@@ -308,7 +310,8 @@ export default {
       if (!this.editing) this.studentOptionsOpen = true
     },
     syncStudentQuery() {
-      this.studentQuery = this.students.find((student) => String(student.id) === String(this.form.student_id))?.name || ''
+      const match = this.students.find((student) => String(student.id) === String(this.form.student_id))
+      this.studentQuery = String(match?.name ?? match?.email ?? '')
     },
     onStudentInput() {
       window.clearTimeout(this.studentBlurTimer)
@@ -326,7 +329,7 @@ export default {
       if (student) this.chooseStudent(student)
     },
     chooseStudent(student) {
-      this.studentQuery = student.name
+      this.studentQuery = String(student?.name ?? student?.email ?? '')
       this.patch('student_id', String(student.id))
       this.studentOptionsOpen = false
     },

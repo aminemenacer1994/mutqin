@@ -14843,9 +14843,45 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
 }
 
 .teacher-messages-parent__pick {
-  margin: 0 0 4px;
+  margin: 0 0 8px;
   padding-inline: 4px;
   font-size: 13px;
+  color: var(--teacher-text-soft, var(--text-soft));
+}
+
+.teacher-messages-parent__threads {
+  border: 1px solid var(--teacher-line, var(--border));
+  border-radius: 12px;
+  background: var(--teacher-surface, var(--surface-strong));
+  overflow: hidden;
+}
+
+.teacher-messages-parent__threads > li {
+  margin: 0;
+  padding: 0;
+}
+
+.teacher-messages-parent__threads > li + li {
+  border-top: 1px solid var(--teacher-line, var(--border));
+}
+
+.teacher-messages-parent__threads .teacher-activity-list__row {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+.teacher-messages-parent__threads .teacher-activity-list__row.is-active,
+.teacher-messages-parent__threads .teacher-activity-list__row[aria-current='true'] {
+  background: color-mix(in srgb, var(--accent, var(--teacher-accent)) 8%, var(--teacher-surface, var(--surface-strong)));
+}
+
+.teacher-messages-parent__preview {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-messages-layout--guardian .teacher-direct-thread--chat {

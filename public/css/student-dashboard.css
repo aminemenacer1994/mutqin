@@ -2770,7 +2770,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 }
 
 .user-dashboard .learner-teacher__plan-slot {
-  margin-bottom: 0.85rem;
+  margin-top: 0.85rem;
 }
 
 .user-dashboard .learner-teacher__card-title-copy strong,
@@ -3792,10 +3792,6 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   font-size: 0.6875rem;
 }
 
-.learner-self-assessment {
-  width: min(34rem, calc(100vw - 2rem));
-}
-
 .learner-self-assessment__body {
   display: grid;
   gap: 1rem;
@@ -3890,10 +3886,6 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 }
 
 @media (max-width: 575.98px) {
-  .learner-self-assessment {
-    width: calc(100vw - 1rem);
-  }
-
   .learner-self-assessment__choices {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -7956,8 +7948,6 @@ html[data-theme="dark"] .user-dashboard .teacher-task-conversation.is-learner .m
 .learner-assignment-modal__body {
   display: grid;
   gap: 1.25rem;
-  padding: 0.25rem 1.4rem 0.35rem;
-  overflow: auto;
 }
 
 .learner-assignment-modal__section {
@@ -9970,28 +9960,6 @@ html[data-theme="dark"] .dash-progress-modal__close:focus-visible {
   scrollbar-width: thin;
 }
 
-.learner-workspace.user-dashboard .student-progress__tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: var(--teacher-radius-control, 8px);
-  color: var(--teacher-text-soft, var(--dash-muted));
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.learner-workspace.user-dashboard .student-progress__tab:hover,
-.learner-workspace.user-dashboard .student-progress__tab:focus-visible {
-  color: var(--teacher-text, var(--dash-ink));
-  outline: 2px solid var(--teacher-accent, var(--accent));
-  outline-offset: 2px;
-}
-
 .learner-workspace.user-dashboard .student-progress__toolbar {
   display: grid;
   gap: 8px;
@@ -10027,48 +9995,6 @@ html[data-theme="dark"] .dash-progress-modal__close:focus-visible {
   color: var(--teacher-text, var(--dash-ink));
   font-size: 15px;
   line-height: 1.55;
-}
-
-.learner-workspace.user-dashboard .student-progress__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: 12px;
-}
-
-.learner-workspace.user-dashboard .student-progress__stat {
-  margin: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--teacher-line, var(--dash-border));
-  border-radius: var(--teacher-radius-card, 14px);
-  background: var(--teacher-surface-soft, var(--teacher-surface, var(--dash-surface)));
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-
-.learner-workspace.user-dashboard .student-progress__stat:hover,
-.learner-workspace.user-dashboard .student-progress__stat:focus-visible {
-  border-color: color-mix(in srgb, var(--teacher-accent, var(--accent)) 35%, var(--teacher-line));
-  outline: 2px solid var(--teacher-accent, var(--accent));
-  outline-offset: 2px;
-}
-
-.learner-workspace.user-dashboard .student-progress__stat span[aria-hidden="true"] {
-  color: var(--teacher-accent, var(--accent));
-  font-size: 18px;
-}
-
-.learner-workspace.user-dashboard .student-progress__stat strong {
-  font-size: 22px;
-  line-height: 1.1;
-  color: var(--teacher-text, var(--dash-ink));
-}
-
-.learner-workspace.user-dashboard .student-progress__stat small {
-  color: var(--teacher-text-soft, var(--dash-muted));
-  font-size: 13px;
-  line-height: 1.35;
 }
 
 .learner-workspace.user-dashboard .parent-metric__empty {
@@ -10630,7 +10556,11 @@ html[data-theme="dark"] [data-platform-shell="student"] .dash-word.is-unassessed
   gap: var(--space-2);
   align-items: center;
 }
-.user-dashboard .student-assignment-filters label { margin: 0; min-width: 0; flex: 1 1 9rem; }
+.user-dashboard .student-assignment-filters label { margin: 0; min-width: 0; }
+.user-dashboard .student-assignment-filter-container:not(.teacher-dialog) { flex: 3 1 30rem; }
+.user-dashboard .student-assignment-filter-fields { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.user-dashboard .student-assignment-filter-fields > label { flex: 1 1 8rem; }
+.user-dashboard.teacher-dialog .student-assignment-filter-fields { display: grid; gap: var(--space-3); }
 .user-dashboard .student-assignment-filters .student-assignment-search { flex: 2 1 13rem; }
 .user-dashboard .student-assignment-filters .form-select,
 .user-dashboard .student-assignment-filters .form-control { width: 100%; min-height: var(--teacher-control-height); }

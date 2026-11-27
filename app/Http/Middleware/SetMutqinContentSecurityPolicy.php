@@ -67,10 +67,14 @@ class SetMutqinContentSecurityPolicy
 
         $formAction = self::formActionDirective($request);
 
+        $frameAncestors = ($request instanceof Request && $request->boolean('mutqin_embed'))
+            ? "'self'"
+            : "'none'";
+
         return "default-src 'self'; "
             ."base-uri 'self'; "
             ."form-action {$formAction}; "
-            ."frame-ancestors 'none'; "
+            ."frame-ancestors {$frameAncestors}; "
             ."object-src 'none'; "
             ."script-src {$scriptSrc}; "
             ."style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.bunny.net; "

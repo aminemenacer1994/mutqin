@@ -16,11 +16,15 @@ class DashboardController extends Controller
         TeacherFeatures::abortUnlessEnabled();
 
         $user = $request->user();
-        if ($user !== null && ! $user->isTeacher() && ParentFeatures::enabled() && $user->isParent()) {
-            return redirect()->route('parent.dashboard');
-        }
+        abort_unless($user !== null, 403);
 
-        abort_unless($user !== null && $user->isTeacher(), 403);
+        if (! $user->isTeacher()) {
+            if (ParentFeatures::enabled() && $user->isParent()) {
+                return redirect()->route('parent.dashboard');
+            }
+
+            return redirect()->route($user->hasVerifiedEmail() ? 'memorisation' : 'verification.notice');
+        }
 
         return view('teacher.dashboard', [
             'auth' => [

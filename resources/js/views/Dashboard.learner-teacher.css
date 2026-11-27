@@ -2683,7 +2683,7 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 }
 
 .user-dashboard .learner-teacher__plan-slot {
-  margin-bottom: 0.85rem;
+  margin-top: 0.85rem;
 }
 
 .user-dashboard .learner-teacher__card-title-copy strong,
@@ -3705,10 +3705,6 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
   font-size: 0.6875rem;
 }
 
-.learner-self-assessment {
-  width: min(34rem, calc(100vw - 2rem));
-}
-
 .learner-self-assessment__body {
   display: grid;
   gap: 1rem;
@@ -3803,10 +3799,6 @@ html[data-theme="dark"] .user-dashboard .learner-teacher__row.is-completed {
 }
 
 @media (max-width: 575.98px) {
-  .learner-self-assessment {
-    width: calc(100vw - 1rem);
-  }
-
   .learner-self-assessment__choices {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -7853,8 +7845,6 @@ html[data-theme="dark"] .user-dashboard .teacher-task-conversation.is-learner .m
 .learner-assignment-modal__body {
   display: grid;
   gap: 1.25rem;
-  padding: 0.25rem 1.4rem 0.35rem;
-  overflow: auto;
 }
 
 .learner-assignment-modal__section {

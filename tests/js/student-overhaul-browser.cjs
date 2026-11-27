@@ -50,7 +50,10 @@ async function main() {
       await page.goto(`${base}${url}`)
       await page.locator('.teacher-nav-shell--desktop').waitFor()
       await page.evaluate(() => document.fonts.ready)
-      if(role==='student') await page.waitForFunction(() => !document.querySelector('main[data-platform-shell=student]')?.__vueParentComponent?.proxy?.supportLoading)
+      if(role==='student') await page.waitForFunction(() => {
+        const vm = document.querySelector('user-dashboard')?._vnode?.component?.subTree?.component?.proxy
+        return vm && !vm.supportLoading
+      })
       for (const width of [1920,1440,1280,1024,768,430,390,375,320]) {
         await page.setViewportSize({width,height:1000})
         for (const theme of ['light','dark']) {

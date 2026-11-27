@@ -440,6 +440,17 @@ test('direct message delivery stays associated with its original teacher and req
 })
 
 
+test('unopened and hidden Student conversations never poll or mark messages read', async () => {
+  let calls = 0
+  const poll = await actualMethod('resources/js/components/teacher/LearnerTeacherSection.vue', 'refreshDirectThreads', {
+    learningApi: { getLearnerTeacherMessages: async () => { calls++; return { messages: [] } } },
+    document: { hidden: true },
+  })
+  await poll.call({ selectedDirectThread: null })
+  await poll.call({ selectedDirectThread: { teacher_id: 4 } })
+  assert.equal(calls, 0)
+})
+
 test('direct conversation polling updates incoming history without erasing confirmed delivery', async () => {
   const file = 'resources/js/components/teacher/LearnerTeacherSection.vue'
   let finishGet

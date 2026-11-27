@@ -27,6 +27,7 @@
               {{ homepageT('hero.title') }}
             </h1>
             <ul
+              v-if="!landingPreview"
               class="hero__pillars"
               :aria-label="t('homepage.hero.pillarsLabel')"
               :data-hero-enter="landingPreview ? '' : null"
@@ -48,6 +49,7 @@
               :style="landingPreview ? { '--hero-delay': '120ms' } : undefined"
             >{{ homepageT('hero.mobileDesc') }}</p>
             <p
+              v-if="!landingPreview"
               class="hero__audience"
               :data-hero-enter="landingPreview ? '' : null"
               :style="landingPreview ? { '--hero-delay': '180ms' } : undefined"
@@ -81,15 +83,17 @@
               </a>
               <a
                 v-if="showStartMemorisationCta"
-                :href="landingPreview ? '/preview/pricing' : '/features'"
+                :href="heroSecondaryCta.href"
                 class="btn btn--secondary"
+                @click="onHeroSecondaryClick"
               >
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                {{ homepageT('hero.seeFirstSession') }}
+                {{ heroSecondaryCta.label }}
               </a>
             </div>
 
             <div
+              v-if="!landingPreview"
               class="hero__availability"
               :class="{ 'hero__availability--early': !showStartMemorisationCta }"
               role="status"
@@ -115,10 +119,14 @@
             :data-hero-enter="landingPreview ? '' : null"
             :style="landingPreview ? { '--hero-delay': '200ms' } : undefined"
           >
-            <preview-hero-showcase
+            <preview-product-stage
               v-if="landingPreview"
-              :roles="heroShowcaseRoles"
-              :tabs-label="homepageT('heroShowcase.tabsLabel')"
+              :roles="heroStageRoles"
+              :show-tabs="false"
+              :show-caption="false"
+              :enable-depth="true"
+              :autoplay-ms="5200"
+              eager
             />
             <div v-else class="hero__fan">
               <figure
@@ -150,40 +158,6 @@
       </div>
     </section>
 
-    <section
-      v-if="landingPreview"
-      id="ecosystem"
-      class="preview-ecosystem"
-      aria-labelledby="preview-ecosystem-title"
-    >
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ homepageT('ecosystem.kicker') }}</p>
-          <h2 id="preview-ecosystem-title" class="section-title">{{ homepageT('ecosystem.title') }}</h2>
-          <p class="section-sub">{{ homepageT('ecosystem.subtitle') }}</p>
-        </header>
-        <ol class="preview-ecosystem__list">
-          <li
-            v-for="(role, idx) in ecosystemRoles"
-            :key="role.id"
-            class="preview-ecosystem__item"
-            data-reveal
-            :style="{ '--delay': `${idx * 50}ms` }"
-          >
-            <span class="preview-ecosystem__index" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
-            <div>
-              <h3>
-                <a v-if="role.href" :href="role.href" class="preview-ecosystem__link">{{ role.title }}</a>
-                <span v-else>{{ role.title }}</span>
-              </h3>
-              <p>{{ role.body }}</p>
-            </div>
-          </li>
-        </ol>
-        <p class="preview-ecosystem__note">{{ homepageT('ecosystem.accountNote') }}</p>
-      </div>
-    </section>
-
     <preview-workflow-demo
       v-if="landingPreview && workflowSteps.length"
       :kicker="homepageT('workflow.kicker')"
@@ -200,64 +174,48 @@
 
     <section
       v-if="landingPreview"
-      id="classroom"
-      class="preview-classroom"
-      aria-labelledby="preview-classroom-title"
+      id="product-explorer"
+      class="preview-classroom preview-product-explorer"
+      aria-labelledby="preview-product-explorer-title"
     >
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ homepageT('classroom.kicker') }}</p>
-          <h2 id="preview-classroom-title" class="section-title">{{ homepageT('classroom.title') }}</h2>
+          <h2 id="preview-product-explorer-title" class="section-title">{{ homepageT('classroom.title') }}</h2>
           <p class="section-sub">{{ homepageT('classroom.subtitle') }}</p>
         </header>
-        <div class="preview-classroom__grid">
-          <article
-            v-for="(spot, idx) in classroomSpotlights"
-            :key="spot.id"
-            class="preview-classroom__card"
-            data-reveal
-            :style="{ '--delay': `${idx * 70}ms` }"
-          >
-            <figure class="preview-browser">
-              <img
-                class="preview-browser__shot"
-                :src="previewAssetUrl(spot.asset)"
-                :alt="spot.alt"
-                width="1440"
-                height="900"
-                loading="lazy"
-                decoding="async"
-              >
-            </figure>
-            <div class="preview-classroom__copy">
-              <h3>{{ spot.title }}</h3>
-              <p>{{ spot.body }}</p>
-            </div>
-          </article>
-        </div>
+        <preview-product-stage
+          :roles="productExplorerRoles"
+          :tabs-label="homepageT('classroom.explorerTabsLabel')"
+          initial-role="overview"
+          :show-caption="false"
+          enable-depth
+        />
+        <p class="preview-product-explorer__cta" data-reveal>
+          <a class="preview-text-link" href="/preview/teachers">{{ homepageT('classroom.teacherPageCta') }}</a>
+        </p>
         <p class="preview-classroom__caption">{{ homepageT('classroom.authenticCaption') }}</p>
       </div>
     </section>
 
-  <section
-    v-if="landingPreview"
-    class="preview-demo-entry wrap"
-    aria-labelledby="preview-demo-entry-title"
-  >
-    <header class="section-head" data-reveal>
-      <p class="section-kicker">{{ homepageT('demo.kicker') }}</p>
-      <h2 id="preview-demo-entry-title" class="section-title">{{ homepageT('demo.title') }}</h2>
-      <p class="section-sub">{{ homepageT('demo.subtitle') }}</p>
-    </header>
-    <p class="preview-demo-entry__actions" data-reveal>
-      <a class="btn btn--primary" href="/preview/demo">{{ homepageT('demo.cta') }}</a>
-      <a class="btn btn--secondary preview-demo-entry__secondary" href="/preview/resources">{{ homepageT('resources.cta') }}</a>
-    </p>
-  </section>
+    <preview-inline-sandbox
+      v-if="landingPreview"
+      :kicker="homepageT('demo.kicker')"
+      :title="homepageT('demo.title')"
+      :subtitle="homepageT('demo.subtitle')"
+      :seed-hint="homepageT('demo.seedHint')"
+      :auto-launch-teacher="false"
+    />
 
-    <tutorial-carousel />
+    <pricing-page
+      v-if="landingPreview"
+      embedded
+      :landing-preview="true"
+    />
 
-    <section class="practice-types" aria-labelledby="practice-types-title">
+    <tutorial-carousel v-if="!landingPreview" />
+
+    <section v-if="!landingPreview" class="practice-types" aria-labelledby="practice-types-title">
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
@@ -282,7 +240,7 @@
       </div>
     </section>
 
-    <section id="features" class="features" ref="featuresSection">
+    <section v-if="!landingPreview" id="features" class="features" ref="featuresSection">
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.features.kicker') }}</p>
@@ -381,9 +339,9 @@
     <section id="faq" class="faq">
       <div class="wrap">
         <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.faq.kicker') }}</p>
-          <h2 class="section-title">{{ t('homepage.faq.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.faq.subtitle') }}</p>
+          <p class="section-kicker">{{ homepageT('faq.kicker') }}</p>
+          <h2 class="section-title">{{ homepageT('faq.title') }}</h2>
+          <p class="section-sub">{{ homepageT('faq.subtitle') }}</p>
         </header>
         <div class="faq__shell" data-reveal>
           <div class="accordion faq__accordion" id="homepageFaq">
@@ -416,7 +374,19 @@
       </div>
     </section>
 
-    <section id="contact" class="contact">
+    <section
+      v-if="landingPreview"
+      class="preview-closing-cta wrap"
+      aria-labelledby="preview-closing-title"
+    >
+      <h2 id="preview-closing-title" class="section-title" data-reveal>{{ homepageT('closing.title') }}</h2>
+      <div class="hero__actions" data-reveal>
+        <a class="btn btn--primary" :href="primaryCta.href" data-public-register="1">{{ homepageT('closing.primary') }}</a>
+        <a class="btn btn--secondary" href="#sandbox" @click.prevent="scrollToId('sandbox')">{{ homepageT('closing.secondary') }}</a>
+      </div>
+    </section>
+
+    <section v-if="!landingPreview" id="contact" class="contact">
       <div class="wrap wrap--narrow">
         <div class="contact__card" data-reveal>
           <header class="contact__head">
@@ -478,9 +448,19 @@
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
-            <a href="/features">{{ t('homepage.footer.howItWorks') }}</a>
-            <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
-            <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            <template v-if="landingPreview">
+              <a href="/preview/teachers">{{ homepageT('ecosystem.roles.teacher.title') }}</a>
+              <a href="/preview/students">{{ homepageT('ecosystem.roles.student.title') }}</a>
+              <a href="/preview/parents">{{ homepageT('ecosystem.roles.parent.title') }}</a>
+              <a href="/preview/learning">{{ homepageT('ecosystem.roles.personal.title') }}</a>
+              <a href="/preview/pricing">{{ t('homepage.footer.pricing') }}</a>
+              <a href="/preview/demo">{{ t('homepage.footer.demo') }}</a>
+            </template>
+            <template v-else>
+              <a href="/features">{{ t('homepage.footer.howItWorks') }}</a>
+              <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
+              <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            </template>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.resources') }}</h4>
@@ -522,13 +502,16 @@ import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TutorialCarousel from '../components/TutorialCarousel.vue';
 import TestimonialsCarousel from '../components/TestimonialsCarousel.vue';
-import PreviewHeroShowcase from '../components/preview/PreviewHeroShowcase.vue';
+import PreviewProductStage from '../components/preview/PreviewProductStage.vue';
 import PreviewWorkflowDemo from '../components/preview/PreviewWorkflowDemo.vue';
+import PreviewInlineSandbox from '../components/preview/PreviewInlineSandbox.vue';
+import PricingPage from './PricingPage.vue';
 import {
   bindRevealObserver,
   mountHeroEntrance,
   mountPreviewPageEnter,
 } from '../composables/usePreviewMotion.js';
+import { previewTeacherAssetUrl } from '../config/previewTeacherShots.js';
 import { TESTIMONIALS_SECTION_ENABLED } from '../config/testimonials.js';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
@@ -540,8 +523,10 @@ export default {
   components: {
     TutorialCarousel,
     TestimonialsCarousel,
-    PreviewHeroShowcase,
+    PreviewProductStage,
     PreviewWorkflowDemo,
+    PreviewInlineSandbox,
+    PricingPage,
   },
   props: {
     landingPreview: {
@@ -576,6 +561,14 @@ export default {
     const primaryCta = computed(() => {
       const isAuthenticated = typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
 
+      if (landingPreview.value) {
+        return {
+          destination: 'registration',
+          href: publicRegisterHref({ intent: 'first' }),
+          label: homepageT('hero.startFree'),
+        };
+      }
+
       return isAuthenticated
         ? {
           destination: 'memorisation',
@@ -588,6 +581,28 @@ export default {
           label: homepageT('hero.startFree'),
         };
     });
+
+    const heroSecondaryCta = computed(() => {
+      if (landingPreview.value) {
+        return {
+          href: '#sandbox',
+          label: homepageT('hero.seeFirstSession'),
+        };
+      }
+
+      return {
+        href: '/features',
+        label: homepageT('hero.seeFirstSession'),
+      };
+    });
+
+    const onHeroSecondaryClick = (event) => {
+      const href = heroSecondaryCta.value.href;
+      if (href?.startsWith('#')) {
+        event.preventDefault();
+        scrollToId(href.slice(1));
+      }
+    };
     const currentTheme = ref(getSavedTheme());
     const FEATURES_CAROUSEL_START_INDEX = 2;
     const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
@@ -806,58 +821,42 @@ export default {
       ];
     });
 
-    const previewAssetUrl = (basename) => `/preview/assets/${basename}.png`;
+    const previewAssetUrl = previewTeacherAssetUrl;
     const pageRoot = ref(null);
 
-    const heroShowcaseRoles = computed(() => {
+    const heroStageRoles = computed(() => {
       void locale.value;
       if (!landingPreview.value) {
         return [];
       }
 
-      return [
-        {
-          id: 'teacher',
-          label: homepageT('heroShowcase.roles.teacher.label'),
-          caption: homepageT('heroShowcase.roles.teacher.caption'),
-          src: previewAssetUrl('overview-priorities'),
-          alt: homepageT('heroShowcase.roles.teacher.alt'),
-        },
-        {
-          id: 'student',
-          label: homepageT('heroShowcase.roles.student.label'),
-          caption: homepageT('heroShowcase.roles.student.caption'),
-          src: previewAssetUrl('assignment-detail'),
-          alt: homepageT('heroShowcase.roles.student.alt'),
-        },
-        {
-          id: 'parent',
-          label: homepageT('heroShowcase.roles.parent.label'),
-          caption: homepageT('heroShowcase.roles.parent.caption'),
-          src: previewAssetUrl('parents'),
-          alt: homepageT('heroShowcase.roles.parent.alt'),
-        },
-        {
-          id: 'personal',
-          label: homepageT('heroShowcase.roles.personal.label'),
-          caption: homepageT('heroShowcase.roles.personal.caption'),
-          src: '/images/landing/2026-11-hero-mushaf.jpg',
-          alt: homepageT('heroShowcase.roles.personal.alt'),
-        },
+      const heroShots = [
+        { id: 'priorities', asset: 'overview-priorities', altKey: 'heroShowcase.roles.teacher.alt' },
+        { id: 'overview', asset: 'overview', altKey: 'classroom.explorer.overview.alt' },
+        { id: 'students', asset: 'students', altKey: 'classroom.explorer.students.alt' },
+        { id: 'assign', asset: 'assignment-create', altKey: 'classroom.explorer.assignments.alt' },
+        { id: 'detail', asset: 'assignment-detail', altKey: 'workflow.steps.assign.alt' },
+        { id: 'reviews', asset: 'reviews', altKey: 'classroom.explorer.reviews.alt' },
       ];
+
+      return heroShots.map((shot) => ({
+        id: shot.id,
+        label: '',
+        caption: '',
+        src: previewAssetUrl(shot.asset),
+        alt: homepageT(shot.altKey),
+      }));
     });
 
     const workflowStepImage = (id) => {
       const assets = {
-        assign: previewAssetUrl('assignment-create'),
-        receive: previewAssetUrl('assignments'),
-        practise: '/images/landing/2026-11-session-practice.jpg',
-        aiCheck: previewAssetUrl('review-detail'),
-        feedback: previewAssetUrl('messages'),
-        progress: previewAssetUrl('parents'),
+        assign: 'assignment-create',
+        receive: 'assignments',
+        review: 'review-detail',
+        feedback: 'messages',
       };
 
-      return assets[id] || previewAssetUrl('overview');
+      return previewAssetUrl(assets[id] || 'overview-priorities');
     };
 
     const workflowSteps = computed(() => {
@@ -866,10 +865,12 @@ export default {
         return [];
       }
 
-      const ids = ['assign', 'receive', 'practise', 'aiCheck', 'feedback', 'progress'];
+      const ids = ['assign', 'receive', 'review', 'feedback'];
       return ids.map((id) => ({
         id,
         title: homepageT(`workflow.steps.${id}.title`),
+        shortLabel: homepageT(`workflow.steps.${id}.shortLabel`),
+        caption: homepageT(`workflow.steps.${id}.caption`),
         body: homepageT(`workflow.steps.${id}.body`),
         platform: homepageT(`workflow.steps.${id}.platform`),
         src: workflowStepImage(id),
@@ -915,42 +916,27 @@ export default {
       ];
     });
 
-    const classroomSpotlights = computed(() => {
+    const productExplorerRoles = computed(() => {
       void locale.value;
       if (!landingPreview.value) {
         return [];
       }
 
-      return [
-        {
-          id: 'overview',
-          asset: 'overview-priorities',
-          title: homepageT('classroom.spotlights.overview.title'),
-          body: homepageT('classroom.spotlights.overview.body'),
-          alt: homepageT('classroom.spotlights.overview.alt'),
-        },
-        {
-          id: 'assignments',
-          asset: 'assignment-create',
-          title: homepageT('classroom.spotlights.assignments.title'),
-          body: homepageT('classroom.spotlights.assignments.body'),
-          alt: homepageT('classroom.spotlights.assignments.alt'),
-        },
-        {
-          id: 'review',
-          asset: 'review-detail',
-          title: homepageT('classroom.spotlights.review.title'),
-          body: homepageT('classroom.spotlights.review.body'),
-          alt: homepageT('classroom.spotlights.review.alt'),
-        },
-        {
-          id: 'parents',
-          asset: 'parents',
-          title: homepageT('classroom.spotlights.parents.title'),
-          body: homepageT('classroom.spotlights.parents.body'),
-          alt: homepageT('classroom.spotlights.parents.alt'),
-        },
+      const items = [
+        { id: 'overview', asset: 'overview' },
+        { id: 'students', asset: 'students' },
+        { id: 'assignments', asset: 'assignments' },
+        { id: 'reviews', asset: 'reviews' },
+        { id: 'plans', asset: 'learning-plan' },
       ];
+
+      return items.map((item) => ({
+        id: item.id,
+        label: homepageT(`classroom.explorer.${item.id}.label`),
+        caption: homepageT(`classroom.explorer.${item.id}.caption`),
+        src: previewAssetUrl(item.asset),
+        alt: homepageT(`classroom.explorer.${item.id}.alt`),
+      }));
     });
 
     const practiceModes = computed(() => {
@@ -1034,6 +1020,22 @@ export default {
 
     const faqItems = computed(() => {
       void locale.value;
+      if (landingPreview.value) {
+        const previewIds = [
+          'withoutTeacher',
+          'freeAccess',
+          'aiCheck',
+          'oneAccount',
+          'parentProgress',
+          'tryDemo',
+        ];
+        return previewIds.map((id) => ({
+          id,
+          question: homepageT(`faq.items.${id}.question`),
+          answer: homepageT(`faq.items.${id}.answer`),
+        }));
+      }
+
       return [
         { id: 'whatIsMutqin', question: homepageT('faq.items.whatIsMutqin.question'), answer: homepageT('faq.items.whatIsMutqin.answer') },
         { id: 'howMemorisation', question: homepageT('faq.items.howMemorisation.question'), answer: homepageT('faq.items.howMemorisation.answer') },
@@ -1105,10 +1107,12 @@ export default {
       displayHeroPillars,
       previewAssetUrl,
       pageRoot,
-      heroShowcaseRoles,
+      heroStageRoles,
       workflowSteps,
       ecosystemRoles,
-      classroomSpotlights,
+      productExplorerRoles,
+      heroSecondaryCta,
+      onHeroSecondaryClick,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
       isFeaturesMobile,
@@ -1141,3 +1145,5 @@ export default {
 
 <style src="./Homepage.css"></style>
 <style src="../styles/preview-motion.css"></style>
+<style src="../styles/preview-editorial-tokens.css"></style>
+<style src="../styles/preview-landing-polish.css"></style>

@@ -58,7 +58,7 @@
 <script>
 import { computed, ref } from 'vue';
 
-const ROLE_ORDER = ['teacher', 'student', 'parent', 'personal'];
+const DEFAULT_ROLE_ORDER = ['teacher', 'student', 'parent', 'personal'];
 
 export default {
   name: 'PreviewHeroShowcase',
@@ -79,8 +79,16 @@ export default {
   setup(props) {
     const baseId = `preview-hero-${Math.random().toString(36).slice(2, 9)}`;
     const tabsLabelId = `${baseId}-label`;
+    const roleOrder = computed(() => (
+      props.roles.length
+        ? props.roles.map((role) => role.id)
+        : DEFAULT_ROLE_ORDER
+    ));
+
     const activeId = ref(
-      ROLE_ORDER.includes(props.initialRole) ? props.initialRole : 'teacher',
+      props.roles.some((role) => role.id === props.initialRole)
+        ? props.initialRole
+        : (props.roles[0]?.id || 'teacher'),
     );
 
     const rolesById = computed(() => {
@@ -90,7 +98,7 @@ export default {
     });
 
     const orderedRoleIds = computed(() => (
-      ROLE_ORDER.filter((id) => rolesById.value.has(id))
+      roleOrder.value.filter((id) => rolesById.value.has(id))
     ));
 
     const activeRole = computed(() => (

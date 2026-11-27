@@ -1,6 +1,6 @@
 import { dueDaysFromNow } from '../teacher/learnerUpcoming.js'
 import { daysUntilDueStartOfDay, resolveBaseTaskState, TASK_STATE } from '../teacher/taskState.js'
-import { resolveTeacherTaskType } from '../teacher/taskTypes.js'
+import { assignmentDisplayLabel, resolveTeacherTaskType } from '../teacher/taskTypes.js'
 
 const CATEGORY_BY_TYPE = Object.freeze({
   nazra: 'nazra',
@@ -15,6 +15,15 @@ const CATEGORY_BY_TYPE = Object.freeze({
 export function learningCategory(assignment) {
   const type = resolveTeacherTaskType(assignment?.kind, assignment?.hifz_category, assignment?.activity)
   return CATEGORY_BY_TYPE[type] || 'revision'
+}
+
+/** Stage labels apply to memorisation/revision, never legacy defaults on reading or Tajweed. */
+export function learnerAssignmentCategoryLabel(assignment, t) {
+  const activity = assignment?.activity
+  if (!['nazra', 'hifz', 'tajweed', 'revision'].includes(activity)) return assignmentDisplayLabel(assignment, t)
+  const label = t(`dashboard.activity_area_${activity}`)
+  const stage = { sabaq: 'new', sabqi: 'recent', manzil: 'older' }[assignment?.hifz_category]
+  return stage && ['hifz', 'revision'].includes(activity) ? `${label} · ${t(`dashboard.student_stage_${stage}`)}` : label
 }
 
 /** Workflow bucket. Overdue is a sort priority inside To do, not a separate status. */

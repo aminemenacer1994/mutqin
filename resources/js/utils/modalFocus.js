@@ -112,6 +112,7 @@ function isVisibleFocusable(el) {
   if (typeof window === 'undefined') return true
   const style = window.getComputedStyle(el)
   if (style.visibility === 'hidden' || style.display === 'none') return false
+  if (typeof el.getClientRects === 'function' && !el.getClientRects().length) return false
   return true
 }
 
@@ -165,12 +166,12 @@ export function trapFocusInContainer(event, container) {
   const last = focusable[focusable.length - 1]
   const active = typeof document !== 'undefined' ? document.activeElement : null
   if (event.shiftKey) {
-    if (active === first || !container.contains(active)) {
+    if (active === container || active === first || !container.contains(active)) {
       event.preventDefault()
       last.focus()
       return true
     }
-  } else if (active === last || !container.contains(active)) {
+  } else if (active === container || active === last || !container.contains(active)) {
     event.preventDefault()
     first.focus()
     return true

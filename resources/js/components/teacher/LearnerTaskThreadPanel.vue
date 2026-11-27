@@ -1,40 +1,22 @@
 <template>
-  <DashModalRoot workspace
+  <TeacherDialog
     :open="open && Boolean(task)"
-    :labelled-by="titleId"
-    root-class="teacher-dialog dash-student-dialog-root learner-task-thread-modal"
-    panel-class="dash-student-dialog dash-student-dialog--thread learner-task-thread-modal__panel dash-modal"
+    :title="taskTitle"
+    :close-label="t('common.close')"
+    :busy="sending"
+    :dirty="false"
+    class="user-dashboard learner-task-thread-modal"
     :dir="textDirection"
-    :close-on-backdrop="!sending"
-    :close-on-escape="!sending"
     @close="close"
   >
-    <header class="dash-modal__head learner-task-thread-modal__head">
-      <div class="dash-modal__head-copy">
-        <h2 :id="titleId">{{ taskTitle }}</h2>
-        <p class="dash-modal__subtitle">{{ teacherName }}</p>
-      </div>
-      <button
-        ref="closeBtn"
-        type="button"
-        class="dash-modal__close dash-btn dash-btn--tertiary dash-btn--sm btn btn-outline-secondary btn-sm"
-        :aria-label="t('common.back')"
-        :title="t('common.back')"
-        :disabled="sending"
-        @click="close"
-      >
-        <i class="bi bi-arrow-left" aria-hidden="true"></i>
-        <span>{{ t('common.back') }}</span>
-      </button>
-    </header>
-
+    <template #pills><span class="teacher-meta">{{ teacherName }}</span></template>
     <div v-if="confirmVoiceDiscard" class="learner-task-thread-modal__discard" role="alert">
-      <p>{{ t('teacher.unsent_recording') }}</p>
+      <p>{{ t('teacher.unsaved_changes') }}</p>
       <button ref="keepRecording" type="button" class="dash-btn btn btn-outline-secondary" @click="keepEditing">{{ t('teacher.keep_editing') }}</button>
       <button type="button" class="dash-btn btn btn-outline-secondary" @click="discardAndClose">{{ t('teacher.discard_changes') }}</button>
     </div>
 
-    <div class="dash-modal__body learner-task-thread-modal__body">
+    <div class="learner-task-thread-modal__body">
       <section v-if="correctionRequest" class="learner-task-thread-modal__correction" role="status">
         <div>
           <span class="learner-task-thread-modal__correction-kind">
@@ -65,14 +47,14 @@
         @sending-change="sending = $event"
       />
     </div>
-  </DashModalRoot>
+  </TeacherDialog>
 </template>
 
 <script>
 import './LearnerFeedbackExperience.css'
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
-import DashModalRoot from '../dashboard/DashModalRoot.vue'
+import TeacherDialog from './TeacherDialog.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import {
   createOptimisticMessage,
@@ -92,7 +74,7 @@ function createClientMessageId() {
 
 export default {
   name: 'LearnerTaskThreadPanel',
-  components: { DashModalRoot, TeacherTaskConversation },
+  components: { TeacherDialog, TeacherTaskConversation },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -250,7 +232,7 @@ export default {
     close() {
       if (this.sending) return
       if (this.confirmVoiceDiscard) { this.keepEditing(); return }
-      if (this.$refs.conversation?.hasVoiceDraft) {
+      if (this.$refs.conversation?.hasDraft) {
         this.confirmVoiceDiscard = true
         this.$nextTick(() => this.$refs.keepRecording?.focus())
         return
@@ -258,7 +240,7 @@ export default {
       this.$emit('close')
     },
     keepEditing() { this.confirmVoiceDiscard = false; this.$nextTick(() => this.focusComposer()) },
-    discardAndClose() { this.$refs.conversation?.discardRecording(); this.confirmVoiceDiscard = false; this.$emit('close') },
+    discardAndClose() { this.$refs.conversation?.clearConversationDraft?.(); this.confirmVoiceDiscard = false; this.$emit('close') },
   },
 }
 </script>

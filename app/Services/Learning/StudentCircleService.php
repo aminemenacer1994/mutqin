@@ -89,7 +89,7 @@ final class StudentCircleService
         $assignments = TeacherAssignment::query()
             ->whereIn('teacher_id', $teacherIds)
             ->whereHas('recipients', fn ($query) => $query->where('student_id', $student->id))
-            ->get(['id', 'teacher_id', 'activity', 'hifz_category', 'learning_group_id']);
+            ->select(['teacher_id', 'activity', 'hifz_category', 'learning_group_id'])->distinct()->get();
 
         $rows = [];
         foreach ($teacherMemberships as $teacherId => $memberships) {

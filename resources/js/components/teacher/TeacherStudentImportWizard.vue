@@ -349,7 +349,7 @@ export default {
   },
   computed: {
     groupChoices() {
-      return (this.groups || []).filter((group) => Number(group.id) > 0)
+      return (this.groups || []).filter((group) => Number(group.id) > 0 && group.teaches !== false)
     },
     selectedGroupName() {
       const match = this.groupChoices.find((group) => Number(group.id) === Number(this.groupId))
@@ -535,7 +535,7 @@ export default {
     },
     async onOpen() {
       this.error = ''
-      if (!this.groupId) {
+      if (!this.groupId || !this.groupChoices.some((group) => Number(group.id) === Number(this.groupId))) {
         this.groupId = Number(this.defaultGroupId)
           || Number(this.groupChoices[0]?.id)
           || null

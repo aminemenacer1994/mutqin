@@ -38,6 +38,11 @@ export const TEACHER_LEARNING_SUBVIEWS = [
   { id: 'plan', label: 'teacher.learning_plan' },
 ]
 
+export function defaultTeacherDueDate() {
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+}
+
 export function defaultAssignmentForm(surahs = []) {
   const surahNumber = '1'
   const range = defaultAyahRange(surahs, surahNumber)
@@ -52,7 +57,7 @@ export function defaultAssignmentForm(surahs = []) {
     ayah_start: range.ayah_start,
     ayah_end: range.ayah_end,
     repetition_target: 1,
-    due_at: '',
+    due_at: defaultTeacherDueDate(),
     priority: 'normal',
     feedback: '',
     session_settings: defaultAssignmentSessionSettings(),

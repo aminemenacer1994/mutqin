@@ -110,7 +110,7 @@ return [
      | and teacher/parent/student accounts behave like normal logins (no sandbox gate).
      */
     'landing_preview_enabled' => filter_var(
-        env('MUTQIN_LANDING_PREVIEW_ENABLED', true),
+        env('MUTQIN_LANDING_PREVIEW_ENABLED', false),
         FILTER_VALIDATE_BOOL
     ),
 

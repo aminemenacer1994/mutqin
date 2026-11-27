@@ -718,13 +718,13 @@
       "bannerLabel": "Mutqin 2.0 preview",
       "bannerDetail": "Private draft for review. The public homepage is unchanged.",
       "hero": {
-        "title": "Qur'an learning for your class, your family, and your own practice",
-        "desc": "Mutqin connects teachers, students and parents on one account. Assign work, hear recitation, and keep personal memorisation in the same calm workspace.",
-        "mobileDesc": "One Mutqin account for class learning and personal memorisation.",
-        "audience": "For halaqas, madrasas, families and learners practising on their own.",
-        "startFree": "Start memorising, free",
+        "title": "Teach the Qur'an. Learn at your own pace.",
+        "desc": "Assign lessons, review recitations and keep parents informed. Memorise and revise independently with AI-assisted wording feedback.",
+        "mobileDesc": "Classroom tools, parent visibility and personal memorisation on one account.",
+        "audience": "For Qur'an teachers, students, parents and independent learners.",
+        "startFree": "Get started for free",
         "startFirstSession": "Open memorisation",
-        "seeFirstSession": "Compare Individual Premium",
+        "seeFirstSession": "Try the demo",
         "pillars": {
           "class": "Teacher-led class",
           "memorise": "Memorise and revise",
@@ -758,9 +758,9 @@
         }
       },
       "workflow": {
-        "kicker": "Connected workflow",
-        "title": "How a class assignment moves through Mutqin",
-        "subtitle": "These screens are from real teacher and learner sessions. Step through manually or press play.",
+        "kicker": "Connected classroom",
+        "title": "One lesson. Everyone stays connected.",
+        "subtitle": "One assignment moves from teacher to student to family, with teacher review throughout.",
         "controls": {
           "play": "Play",
           "pause": "Pause",
@@ -773,8 +773,26 @@
           "assign": {
             "platform": "Teacher workspace",
             "title": "Teacher creates an assignment",
+            "shortLabel": "Assign",
+            "caption": "Set the passage and due date in a few fields.",
             "body": "Choose the student, passage, due date and required practice attempts.",
             "alt": "New assignment form"
+          },
+          "receive": {
+            "platform": "Teacher workspace",
+            "title": "Track open assignments",
+            "shortLabel": "Assignments",
+            "caption": "See status, due dates and who still needs to submit.",
+            "body": "Assignments list with filters and quick actions.",
+            "alt": "Assignments list for the class"
+          },
+          "review": {
+            "platform": "Teacher workspace",
+            "title": "Review the recitation",
+            "shortLabel": "Review",
+            "caption": "Open wording feedback before you complete the review.",
+            "body": "See highlighted words and leave guidance for the student.",
+            "alt": "Recitation review screen"
           },
           "receive": {
             "platform": "Student workspace",
@@ -797,12 +815,16 @@
           "feedback": {
             "platform": "Teacher workspace",
             "title": "Teacher reviews and messages",
+            "shortLabel": "Feedback",
+            "caption": "Message the student in the private thread.",
             "body": "Complete the review and leave short written feedback in the private thread.",
             "alt": "Teacher-student message thread"
           },
           "progress": {
             "platform": "Student and parent",
             "title": "Progress becomes visible",
+            "shortLabel": "Progress",
+            "caption": "Students and authorised parents see updated status.",
             "body": "Confirmed results and guardian access appear once the teacher has finished the review.",
             "alt": "Parents and guardians progress view"
           }
@@ -837,40 +859,69 @@
         }
       },
       "demo": {
-        "kicker": "Try it safely",
-        "title": "Try the demo sandbox",
-        "subtitle": "Pick Teacher, Student, Parent or Personal learning with real app screenshots.",
-        "cta": "Try Mutqin for yourself"
+        "kicker": "Sandbox",
+        "title": "Try Mutqin yourself",
+        "subtitle": "Explore a teacher's classroom, complete a student's lesson, follow progress as a parent or practise independently.",
+        "cta": "Try the demo",
+        "seedHint": "First visit? Run php artisan mutqin:seed-organisation-network locally if the workspace does not load."
+      },
+      "personalLearning": {
+        "kicker": "Personal learning",
+        "title": "Memorise and revise the Qur'an at your own pace",
+        "subtitle": "Practise with or without a teacher. Read the Mushaf, test your memory and receive AI-assisted wording feedback on the same account.",
+        "ctaPrimary": "Start learning for free",
+        "ctaSecondary": "View individual plans",
+        "ctaTools": "Try learning tools",
+        "shotAlt": "Memorisation workspace with Mushaf and practice controls"
+      },
+      "pricingTeaser": {
+        "kicker": "Pricing",
+        "title": "Start free. Choose the tools you need.",
+        "subtitle": "Learning with a teacher? Your essential classroom access is free. Premium is optional for additional personal learning tools.",
+        "cta": "See all plans",
+        "ctaDemo": "Try the demo"
+      },
+      "closing": {
+        "title": "Ready to start learning or teaching the Qur'an?",
+        "primary": "Get started for free",
+        "secondary": "Try the demo"
       },
       "resources": {
         "cta": "Reviewer resources"
       },
       "classroom": {
-        "kicker": "From the live app",
-        "title": "What teachers see today",
-        "subtitle": "Screens below are taken from the Mutqin teacher dashboard. They show real layouts, not mock-ups.",
+        "kicker": "Teacher workspace",
+        "title": "Your Qur'an classroom, organised",
+        "subtitle": "Set lessons, see who is practising and review work without losing track of your students.",
+        "explorerTabsLabel": "Choose a teacher task to preview",
+        "teacherPageCta": "See the teacher page and demo",
         "heroShotAlt": "Mutqin teacher overview with class priorities and recent submissions",
         "authenticCaption": "Captured from a local teacher session, November 2026. Names and figures reflect that environment.",
-        "spotlights": {
+        "explorer": {
           "overview": {
-            "title": "Start with today's priorities",
-            "body": "Overview surfaces recitations waiting, overdue assignments and students who need a nudge before class.",
-            "alt": "Teacher overview dashboard with priorities and recent activity"
+            "label": "Overview",
+            "caption": "Class welcome, open assignments and summaries at a glance.",
+            "alt": "Teacher overview with class summary cards"
+          },
+          "students": {
+            "label": "Students",
+            "caption": "See who needs your attention today on the roster and attendance view.",
+            "alt": "Teacher student roster with attendance"
           },
           "assignments": {
-            "title": "Assign revision or hifz in a few fields",
-            "body": "Choose the student, surah range, due date and practice attempts. Teachers can preview the recommended reciter before sending.",
-            "alt": "New assignment form with surah range and due date"
+            "label": "Assignments",
+            "caption": "Assign Sabaq, Sabqi or Manzil with surah range, due date and practice attempts.",
+            "alt": "Assignment list and creation flow"
           },
-          "review": {
-            "title": "Review recitation word by word",
-            "body": "Open a submission to see wording match, flagged words and teacher confirmation before you complete the review.",
-            "alt": "Recitation review with colour-coded Mushaf and match statistics"
+          "reviews": {
+            "label": "Recitation reviews",
+            "caption": "Open the reviews queue, then drill into wording match on the Mushaf.",
+            "alt": "Teacher reviews list with recitation history"
           },
-          "parents": {
-            "title": "Invite parents when you are ready",
-            "body": "Send a guardian email from the student profile. Parents get their own access to progress and messages after they accept.",
-            "alt": "Parents and guardians tab with invitation form"
+          "plans": {
+            "label": "Learning plans",
+            "caption": "Track target passages, schedules and follow-up revision for each student.",
+            "alt": "Learning plan with scheduled revision"
           }
         }
       },
@@ -888,16 +939,37 @@
         "tagline": "Built for calm, consistent Qur'an practice."
       },
       "faq": {
+        "kicker": "Trust and clarity",
+        "title": "Questions before you start",
+        "subtitle": "Short answers on access, AI checks and how accounts work.",
         "items": {
           "whatIsMutqin": {
-            "answer": "Mutqin is a Qur'an memorisation companion on one account. It helps you listen, practise, recite and return between lessons. Teacher-led learning stays free when your teacher uses Mutqin."
+            "question": "What is Mutqin?",
+            "answer": "Mutqin helps Qur'an teachers organise classes, students practise and submit lessons, parents follow authorised progress, and anyone memorise or revise on one account."
+          },
+          "withoutTeacher": {
+            "question": "Can I learn without a teacher?",
+            "answer": "Yes. Personal memorisation, Mushaf reading and optional AI wording feedback work without classroom membership. Teacher-led assignments appear when you join a class."
           },
           "freeAccess": {
-            "question": "What stays free on my account?",
-            "answer": "Memorisation, revision, and teacher-linked assignments stay free. Individual Premium adds more recitation checks and saved history if you choose it later."
+            "question": "Is classroom learning free?",
+            "answer": "Essential teacher-led classroom access stays free. Individual Premium is optional and unlocks additional personal learning tools on the same login."
           },
-          "whoFor": {
-            "answer": "Anyone memorising or revising the Qur'an on their own, and students connected to a teacher or parent through the same Mutqin account."
+          "aiCheck": {
+            "question": "What does AI check?",
+            "answer": "AI-assisted wording feedback highlights possible word mismatches for practice. It does not verify Tajweed or replace a qualified teacher's review."
+          },
+          "oneAccount": {
+            "question": "Can I use one account for teaching and personal learning?",
+            "answer": "Yes. You can teach, learn in a class and practise independently without losing history. Roles and invitations control what each person can see."
+          },
+          "parentProgress": {
+            "question": "How do parents see progress?",
+            "answer": "After a teacher sends an invitation and the parent accepts, they can view authorised assignment progress and feedback. Parent access does not require Premium."
+          },
+          "tryDemo": {
+            "question": "Can I try the demo?",
+            "answer": "Yes. The preview sandbox uses isolated synthetic data. Reset at any time. It does not send real invitations, charges or notifications."
           }
         }
       }
@@ -6781,14 +6853,14 @@
     "learning_revised_hint": "Ayahs you went back over",
     "learning_recited": "Recited",
     "learning_recited_hint": "Ayahs you recited out loud",
-    "learning_ai_checks": "Readings",
-    "learning_ai_checks_hint": "Times you read aloud",
+    "learning_ai_checks": "AI wording checks",
+    "learning_ai_checks_hint": "Valid scored checks, all time",
     "learning_repeats": "{n} repeated ayahs are not in this unique count",
     "learning_capped": "Counted from your latest saved sessions in this period",
     "progress_window_label": "Activity period",
     "progress_window_filter_hint": "Counts below marked for this period only. Memorisation totals are all-time.",
-    "progress_week": "This week",
-    "progress_month": "This month",
+    "progress_week": "Last 7 days",
+    "progress_month": "Last 30 days",
     "progress_period_heading": "Activity in the last {days} days",
     "progress_memorised_lifetime": "Memorised (all time)",
     "progress_memorised_lifetime_hint": "Distinct ayahs you marked memorised or mastered. Not affected by the period filter.",
@@ -8340,6 +8412,7 @@
     "ayah_n": "Ayah {n}",
     "misses_n": "",
     "action_failed": "That could not be saved.",
+    "access_forbidden": "You are not allowed to do that on this class. Pick a class you teach, or sign in with your teacher account.",
     "kicker": "Class",
     "greeting": "Assalamu alaikum, {name}",
     "hero_summary": "Review this week's activity and follow-ups.",

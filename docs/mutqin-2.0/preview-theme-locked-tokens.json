@@ -1,0 +1,23 @@
+{
+  "description": "Immutable marketing preview palette from Mutqin 2.0 editorial brief §4.1. Application dashboard tokens remain separate.",
+  "light": {
+    "pageBackground": "#faf8f3",
+    "surface": "#fffdf9",
+    "primaryText": "#253128",
+    "mutedText": "#687266",
+    "border": "#e4e1d8",
+    "green": "#294432",
+    "accent": "#805e40",
+    "softSurface": "#e9eee5"
+  },
+  "dark": {
+    "pageBackground": "#171d18",
+    "surface": "#232c24",
+    "primaryText": "#eee9dc",
+    "mutedText": "#b2bcae",
+    "border": "#3a473a",
+    "green": "#b4c9ab",
+    "accent": "#d1a36f",
+    "softSurface": "#2d392d"
+  }
+}

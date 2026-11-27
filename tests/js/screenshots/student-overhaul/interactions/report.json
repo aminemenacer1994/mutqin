@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Assignment dialog and filter layout 390/light",
+    "Assignment dialog and filter layout 390/dark",
+    "Assignment dialog and filter layout 1440/light",
+    "Assignment dialog and filter layout 1440/dark",
+    "Assignment conversation opens as one shared dialog",
+    "Five status tabs, search, failed request and retry",
+    "Progress keyboard tabs and browser history",
+    "Settings five sections",
+    "Mobile conversation and back navigation",
+    "Assessment component: native radio, draft protection, keep/discard"
+  ],
+  "exceptions": [],
+  "unexpectedHttpErrors": []
+}

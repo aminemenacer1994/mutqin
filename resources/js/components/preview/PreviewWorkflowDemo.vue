@@ -1,57 +1,38 @@
 <template>
   <section
-    class="preview-workflow"
+    class="preview-workflow preview-workflow--compact"
     :aria-labelledby="headingId"
     data-reveal
   >
-    <div class="wrap preview-workflow__layout">
-      <div class="preview-workflow__copy">
-        <header class="section-head section-head--align-start">
-          <p class="section-kicker">{{ kicker }}</p>
-          <h2 :id="headingId" class="section-title">{{ title }}</h2>
-          <p class="section-sub">{{ subtitle }}</p>
-        </header>
+    <div class="wrap preview-workflow--compact__inner">
+      <header class="section-head">
+        <p class="section-kicker">{{ kicker }}</p>
+        <h2 :id="headingId" class="section-title">{{ title }}</h2>
+        <p v-if="subtitle" class="section-sub">{{ subtitle }}</p>
+      </header>
 
-        <ol class="preview-workflow__steps" role="list">
-          <li v-for="(step, idx) in steps" :key="step.id">
-            <button
-              type="button"
-              class="preview-workflow__step"
-              :class="{ 'is-active': idx === activeIndex }"
-              :aria-current="idx === activeIndex ? 'step' : undefined"
-              @click="goToStep(idx)"
-            >
-              <span class="preview-workflow__step-index" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
-              <div class="preview-workflow__step-body">
-                <span class="preview-workflow__platform">{{ step.platform }}</span>
-                <h3>{{ step.title }}</h3>
-                <p>{{ step.body }}</p>
-              </div>
-            </button>
-          </li>
-        </ol>
-
-        <div class="preview-workflow__controls">
-          <button type="button" class="btn btn--secondary" :aria-pressed="playing ? 'true' : 'false'" @click="togglePlayback">
-            <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-            {{ playing ? pauseLabel : playLabel }}
-          </button>
-          <button type="button" class="btn btn--secondary" :disabled="activeIndex === 0" @click="prevStep">
-            {{ prevLabel }}
-          </button>
-          <button type="button" class="btn btn--secondary" :disabled="activeIndex >= steps.length - 1" @click="nextStep">
-            {{ nextLabel }}
-          </button>
-          <button type="button" class="btn btn--secondary" @click="replay">
-            {{ replayLabel }}
-          </button>
-          <span class="preview-workflow__progress" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" :aria-valuemax="100" :aria-label="progressLabel">
-            <span class="preview-workflow__progress-bar" :style="{ width: `${progress}%` }"></span>
-          </span>
-        </div>
+      <div class="preview-workflow__chips" role="tablist" :aria-label="progressLabel">
+        <button
+          v-for="(step, idx) in steps"
+          :key="step.id"
+          type="button"
+          class="preview-workflow__chip"
+          :class="{ 'is-active': idx === activeIndex }"
+          role="tab"
+          :aria-selected="idx === activeIndex ? 'true' : 'false'"
+          @click="goToStep(idx)"
+        >
+          {{ step.shortLabel || step.title }}
+        </button>
       </div>
 
-      <figure class="preview-browser preview-workflow__visual" :aria-live="playing ? 'polite' : 'off'">
+      <figure
+        class="preview-browser preview-workflow__visual"
+        :style="frameStyle"
+        :aria-live="playing ? 'polite' : 'off'"
+        @pointermove="onPointerMove"
+        @pointerleave="resetTilt"
+      >
         <Transition name="preview-shot" mode="out-in">
           <img
             :key="activeStep.id"
@@ -65,6 +46,23 @@
           >
         </Transition>
       </figure>
+
+      <ul class="preview-workflow__legend">
+        <li class="preview-workflow__legend-text">{{ activeStep.caption || activeStep.title }}</li>
+      </ul>
+
+      <div class="preview-workflow__controls preview-workflow__controls--compact">
+        <button type="button" class="btn btn--secondary" @click="togglePlayback">
+          <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+          {{ playing ? pauseLabel : playLabel }}
+        </button>
+        <button type="button" class="btn btn--secondary" :disabled="activeIndex === 0" @click="prevStep">
+          {{ prevLabel }}
+        </button>
+        <button type="button" class="btn btn--secondary" :disabled="activeIndex >= steps.length - 1" @click="nextStep">
+          {{ nextLabel }}
+        </button>
+      </div>
     </div>
   </section>
 </template>
@@ -73,14 +71,14 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { prefersReducedMotion } from '../../composables/usePreviewMotion.js';
 
-const STEP_MS = 4200;
+const STEP_MS = 3200;
 
 export default {
   name: 'PreviewWorkflowDemo',
   props: {
     kicker: { type: String, required: true },
     title: { type: String, required: true },
-    subtitle: { type: String, required: true },
+    subtitle: { type: String, default: '' },
     steps: { type: Array, required: true },
     playLabel: { type: String, default: 'Play' },
     pauseLabel: { type: String, default: 'Pause' },
@@ -93,14 +91,36 @@ export default {
     const headingId = 'preview-workflow-title';
     const activeIndex = ref(0);
     const playing = ref(false);
+    const tiltX = ref(0);
+    const tiltY = ref(0);
+    const reduced = prefersReducedMotion();
     let timer = null;
     let visibilityObserver = null;
 
     const activeStep = computed(() => props.steps[activeIndex.value] || props.steps[0]);
-    const progress = computed(() => {
-      const total = props.steps.length || 1;
-      return ((activeIndex.value + 1) / total) * 100;
+
+    const frameStyle = computed(() => {
+      if (reduced) return undefined;
+      return {
+        transform: `perspective(1100px) rotateX(${tiltX.value}deg) rotateY(${tiltY.value}deg)`,
+        transition: 'transform 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+      };
     });
+
+    const resetTilt = () => {
+      tiltX.value = 0;
+      tiltY.value = 0;
+    };
+
+    const onPointerMove = (event) => {
+      if (reduced) return;
+      const el = event.currentTarget;
+      const rect = el.getBoundingClientRect();
+      const px = (event.clientX - rect.left) / rect.width - 0.5;
+      const py = (event.clientY - rect.top) / rect.height - 0.5;
+      tiltY.value = Math.max(-3.5, Math.min(3.5, px * 7));
+      tiltX.value = Math.max(-2.5, Math.min(2.5, -py * 5));
+    };
 
     const clearTimer = () => {
       if (timer) {
@@ -148,11 +168,6 @@ export default {
     const prevStep = () => goToStep(activeIndex.value - 1);
     const nextStep = () => goToStep(activeIndex.value + 1);
 
-    const replay = () => {
-      activeIndex.value = 0;
-      start();
-    };
-
     watch(() => props.steps.length, () => {
       if (activeIndex.value >= props.steps.length) {
         activeIndex.value = 0;
@@ -180,13 +195,14 @@ export default {
       headingId,
       activeIndex,
       activeStep,
-      progress,
+      frameStyle,
       playing,
       togglePlayback,
       goToStep,
       prevStep,
       nextStep,
-      replay,
+      onPointerMove,
+      resetTilt,
     };
   },
 };

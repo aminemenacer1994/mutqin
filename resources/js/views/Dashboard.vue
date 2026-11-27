@@ -438,13 +438,13 @@
           :subtitle="t('dashboard.nav_progress_hint')"
         />
         <header class="student-progress student-progress__chrome" data-testid="student-progress-hub">
-          <nav class="teacher-tabs student-progress__tabs" role="tablist" :aria-label="t('dashboard.progress_sections_label')">
+          <nav class="nav nav-tabs teacher-tabs teacher-tabs--scroll student-progress__tabs" role="tablist" :aria-label="t('dashboard.progress_sections_label')">
             <button
               v-for="section in progressSections"
               :key="section.id"
               type="button"
               role="tab"
-              class="teacher-tabs__tab"
+              class="nav-link teacher-tabs__tab"
               :class="{ 'is-active': progressActiveSection === section.id }"
               :id="`tab-${section.id}`"
               :aria-controls="section.id"
@@ -494,24 +494,7 @@
           </div>
           <div id="dash-learning-body" class="dash-section__body dash-learning__body student-progress__overview">
             <p class="parent-lead student-progress__lead">{{ progressOverviewLead }}</p>
-            <div class="parent-stats parent-stats--compact student-progress__stats" role="list">
-              <button
-                v-for="card in progressOverviewStatCards"
-                :key="card.key"
-                type="button"
-                class="parent-stat parent-stat--compact student-progress__stat"
-                role="listitem"
-                :title="card.hint"
-                :aria-label="`${card.label}: ${card.value}. ${card.hint}`"
-                @click="onProgressOverviewMetric(card)"
-              >
-                <span aria-hidden="true"><i :class="card.icon"></i></span>
-                <strong :class="{ 'parent-metric__empty': card.empty }">{{ card.value }}</strong>
-                <small>{{ card.label }}</small>
-                <p v-if="card.scope === 'lifetime'" class="parent-stat__hint">{{ t('dashboard.progress_lifetime_scope') }}</p>
-                <p v-else-if="card.hint" class="parent-stat__hint">{{ card.hint }}</p>
-              </button>
-            </div>
+            <TeacherKpiGrid :cards="progressOverviewStatCards.map(card => ({ ...card, label: `${card.label} · ${card.hint}` }))" selectable @select="key => onProgressOverviewMetric(progressOverviewStatCards.find(card => card.key === key))" />
             <p v-if="progressOverviewNextStep" class="student-progress__next">
               <a
                 v-if="progressOverviewNextStep.href"
@@ -1695,15 +1678,18 @@
     </Teleport>
 
     <TeacherDialog
+      ref="selfAssessmentDialog"
       :open="Boolean(reflectionPrompt)"
       :title="t('dashboard.assignment_self_assessment_title')"
       :close-label="t('common.close')"
       :busy="reflectionSaving"
+      :dirty="reflectionFeeling !== reflectionInitialFeeling || reflectionHelp !== reflectionInitialHelp"
+      size="md"
       class="user-dashboard learner-self-assessment"
       @close="closeSelfAssessment"
     >
       <template #pills><span class="teacher-meta">{{ reflectionPrompt?.title }}</span></template>
-        <div class="dash-student-dialog__body learner-self-assessment__body">
+        <div class="learner-self-assessment__body">
           <p class="learner-self-assessment__intro">{{ t('dashboard.assignment_self_assessment_intro') }}</p>
           <div class="learner-self-assessment__choices" role="radiogroup" :aria-label="t('dashboard.assignment_self_assessment_title')">
             <label
@@ -1740,7 +1726,7 @@
             :disabled="reflectionSaving"
             @click="submitSupportAssignment(false)"
           >{{ t('dashboard.assignment_self_assessment_submit_without') }}</button>
-          <button v-else type="button" class="btn dash-btn dash-btn--ghost btn-outline-secondary" :disabled="reflectionSaving" @click="closeSelfAssessment">{{ t('dashboard.home_reflection_skip') }}</button>
+          <button v-else type="button" class="btn dash-btn dash-btn--ghost btn-outline-secondary" :disabled="reflectionSaving" @click="$refs.selfAssessmentDialog?.requestClose()">{{ t('dashboard.home_reflection_skip') }}</button>
         </template>
     </TeacherDialog>
 
@@ -1958,7 +1944,7 @@ import {
 } from '../scripts/dashboard/studentProgressView.js'
 import { dailyMutqinHref, memorisationGoalHref } from '../scripts/session/sessionGoal'
 import { feedbackPracticeHref as revisionHrefFromFeedback, practiceRevisionHref } from '../scripts/dashboardAiRecite/studentFeedback.js'
-import { filterLearningAssignments } from '../scripts/dashboard/learnerLearningView.js'
+import { learnerAssignmentCategoryLabel, filterLearningAssignments } from '../scripts/dashboard/learnerLearningView.js'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import {
   clearAiAssessmentRetry,
@@ -2170,6 +2156,8 @@ export default {
       reflectionPrompt: null,
       reflectionFeeling: '',
       reflectionHelp: '',
+      reflectionInitialFeeling: '',
+      reflectionInitialHelp: '',
       reflectionSaving: false,
       assignmentCompletionTimer: null,
       assignmentFailedItem: null,
@@ -2251,6 +2239,7 @@ export default {
             teacher_name: teacher.name || thread?.teacher_name,
             can_message: teacher.can_message,
             messages: thread?.messages || [],
+            unread_count: thread?.unread_count,
           }
         })
         : (this.support?.direct_threads || [])
@@ -2266,9 +2255,10 @@ export default {
     navBadges() {
       void this.feedbackReadVersion
       const raw = Array.isArray(this.support?.learning?.feedback_inbox) ? this.support.learning.feedback_inbox : []
-      const feedbackUnread = mergeFeedbackReadState(raw, readFeedbackReadMap()).filter((item) => item.unread).length
+      const threadTeachers = new Set(this.studentDirectThreads.map(thread => Number(thread.teacher_id)))
+      const feedbackUnread = mergeFeedbackReadState(raw, readFeedbackReadMap()).filter((item) => item.unread && !threadTeachers.has(Number(item.teacher_id))).length
       const dmUnread = this.studentDirectThreads.reduce(
-        (sum, thread) => sum + (thread.messages || []).filter((message) => message.unread && message.sender === 'teacher').length,
+        (sum, thread) => sum + (thread.unread_count ?? (thread.messages || []).filter((message) => message.unread && message.sender === 'teacher').length),
         0,
       )
       const total = feedbackUnread + dmUnread
@@ -2654,10 +2644,10 @@ export default {
     learningMetrics() {
       const metrics = this.data?.learning?.metrics
       const empty = {
-        memorised: { value: 0, period_days: null },
-        revised: { value: 0, period_days: this.chartDays },
-        recited: { value: 0, period_days: this.chartDays, repeats: 0 },
-        ai_checks: { value: 0, period_value: 0 },
+        memorised: { value: null, period_days: null },
+        revised: { value: null, period_days: this.chartDays },
+        recited: { value: null, period_days: this.chartDays, repeats: null },
+        ai_checks: { value: null, period_value: null },
       }
       return metrics && typeof metrics === 'object' ? { ...empty, ...metrics } : empty
     },
@@ -3936,7 +3926,7 @@ export default {
       const targetId = {
         home: 'dash-home',
         learning: 'dash-welcome-heading',
-        progress: 'dash-progress',
+        progress: this.progressActiveSection,
         activity: 'dash-activity',
         messages: 'dash-messages',
         settings: 'dash-settings',
@@ -4047,22 +4037,7 @@ export default {
       return parts.join(' · ')
     },
     assignmentTypeLabel(task) {
-      const assignment = task?.assignment || {}
-      const activity = {
-        nazra: this.t('dashboard.activity_area_nazra'),
-        hifz: this.t('dashboard.activity_area_hifz'),
-        tajweed: this.t('dashboard.activity_area_tajweed'),
-        revision: this.t('dashboard.activity_area_revision'),
-      }[assignment.activity]
-      const stage = {
-        sabaq: this.t('dashboard.student_stage_new'),
-        sabqi: this.t('dashboard.student_stage_recent'),
-        manzil: this.t('dashboard.student_stage_older'),
-      }[assignment.hifz_category]
-      if (activity && stage) return `${activity} · ${stage}`
-      if (activity) return activity
-      const label = assignmentDisplayLabel(assignment, this.t.bind(this))
-      return /hifz|nazra|sabqi|sabaq|manzil|tajweed/i.test(label) ? this.t('parent.activity_hifz') : label
+      return learnerAssignmentCategoryLabel(task?.assignment, this.t.bind(this))
     },
     assignmentProgressText(task) {
       return task?.progress ? assignmentProgressLabel(task, this.t.bind(this)) : ''
@@ -5817,7 +5792,7 @@ export default {
       const messages = payload?.messages
       if (!teacherId || !Array.isArray(messages)) return
       const directThreads = (this.support?.direct_threads || []).map((row) => (
-        Number(row.teacher_id) === teacherId ? { ...row, messages } : row
+        Number(row.teacher_id) === teacherId ? { ...row, messages, unread_count: payload.unread_count ?? row.unread_count } : row
       ))
       this.support = { ...this.support, direct_threads: directThreads }
     },
@@ -5863,6 +5838,8 @@ export default {
       this.supportError = ''
       this.reflectionFeeling = item?.self_assessment?.feeling || ''
       this.reflectionHelp = item?.self_assessment?.note || item?.self_assessment?.help_request || ''
+      this.reflectionInitialFeeling = this.reflectionFeeling
+      this.reflectionInitialHelp = this.reflectionHelp
       this.reflectionPrompt = {
         mode: 'before',
         item,
@@ -5878,6 +5855,8 @@ export default {
       this.supportError = ''
       this.reflectionFeeling = submission?.self_assessment?.feeling || ''
       this.reflectionHelp = submission?.self_assessment?.note || submission?.self_assessment?.help_request || ''
+      this.reflectionInitialFeeling = this.reflectionFeeling
+      this.reflectionInitialHelp = this.reflectionHelp
       this.reflectionPrompt = {
         mode: 'after',
         recipientId: Number(submission.recipient_id),
@@ -5892,6 +5871,8 @@ export default {
       this.reflectionPrompt = null
       this.reflectionFeeling = ''
       this.reflectionHelp = ''
+      this.reflectionInitialFeeling = ''
+      this.reflectionInitialHelp = ''
     },
     reflectionFeelingIcon(feeling) {
       return {

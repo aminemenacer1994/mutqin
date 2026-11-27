@@ -50,7 +50,7 @@ class StudentAssignmentListService
                 continue;
             }
             $search = trim($filters['search'] ?? '');
-            $text = implode(' ', [QuranMetadata::name($assignment->surah_number), $teacher?->name, $assignment->instructions, $assignment->surah_number, $assignment->ayah_start.'–'.$assignment->ayah_end]);
+            $text = implode(' ', [QuranMetadata::name($assignment->surah_number), $teacher?->name, $assignment->feedback, $assignment->surah_number, $assignment->ayah_start.'–'.$assignment->ayah_end]);
             if ($search !== '' && ! str_contains(mb_strtolower($text), mb_strtolower($search))) {
                 continue;
             }

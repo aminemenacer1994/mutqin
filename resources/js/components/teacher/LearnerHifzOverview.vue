@@ -12,11 +12,11 @@
       <strong>{{ t('dashboard.hifz_overview_title') }}</strong>
     </header>
 
-    <div v-if="isEmpty" class="teacher-pane__body">
+    <div v-if="isEmpty || (!sabaqCount && !sabqiCount && !manzilCount)" class="teacher-pane__body">
       <p class="teacher-meta">{{ t('dashboard.hifz_overview_empty') }}</p>
     </div>
     <div v-else class="teacher-hifz__summary">
-      <section class="teacher-hifz__summary-section">
+      <section v-if="sabaqCount" class="teacher-hifz__summary-section">
         <header>
           <span class="teacher-meta">{{ t('dashboard.student_stage_new') }}</span>
           <span v-if="sabaqCount" class="teacher-hifz__count">{{ sabaqCount }}</span>
@@ -24,7 +24,7 @@
         <p class="teacher-hifz__quiet">{{ t('teacher.hifz_sabaq_help') }}</p>
         <p class="teacher-hifz__lead">{{ rangeLine(coverage.new_memorisation) || t('dashboard.progress_none_yet') }}</p>
       </section>
-      <section class="teacher-hifz__summary-section">
+      <section v-if="sabqiCount" class="teacher-hifz__summary-section">
         <header>
           <span class="teacher-meta">{{ t('dashboard.student_stage_recent') }}</span>
           <span v-if="sabqiCount" class="teacher-hifz__count">{{ sabqiCount }}</span>
@@ -32,7 +32,7 @@
         <p class="teacher-hifz__quiet">{{ t('teacher.hifz_sabqi_help') }}</p>
         <p class="teacher-hifz__lead">{{ rangeLine(coverage.recent_revision) || t('dashboard.progress_none_yet') }}</p>
       </section>
-      <section class="teacher-hifz__summary-section">
+      <section v-if="manzilCount" class="teacher-hifz__summary-section">
         <header>
           <span class="teacher-meta">{{ t('dashboard.student_stage_older') }}</span>
           <span v-if="manzilCount" class="teacher-hifz__count">{{ manzilCount }}</span>

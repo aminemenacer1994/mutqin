@@ -7,7 +7,7 @@
   >
     <header class="teacher-pane__head learner-home__section-head">
       <div class="teacher-pane__titles">
-        <h2 class="teacher-pane__title">{{ t('dashboard.notifications_inbox_title') }} <span v-if="unreadCount" class="teacher-badge is-info">{{ unreadCount }} {{ t('dashboard.notifications_unread') }}</span></h2>
+        <h2 class="teacher-pane__title">{{ t('dashboard.notifications_inbox_title') }} <span v-if="unreadCount" class="teacher-badge ms-2">{{ unreadCount }} {{ t('dashboard.notifications_unread') }}</span></h2>
         <p v-if="!compact" class="teacher-meta">{{ t('dashboard.notifications_inbox_hint') }}</p>
       </div>
       <button
@@ -24,7 +24,7 @@
     <p v-if="loading" class="teacher-meta" role="status">{{ t('common.loading') }}</p>
     <p v-else-if="error" class="teacher-meta" role="alert">
       {{ t('dashboard.notifications_error') }}
-      <button type="button" class="dash-text-link" @click="refreshNotifications">{{ t('common.retry') }}</button>
+      <button type="button" class="dash-text-link" @click="refreshNotifications()">{{ t('common.retry') }}</button>
     </p>
     <p v-else-if="!visibleRows.length" class="teacher-meta">{{ t('dashboard.notifications_empty') }}</p>
     <ul v-else class="learner-notifications__list list-unstyled mb-0">

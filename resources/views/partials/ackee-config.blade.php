@@ -10,13 +10,22 @@
         try {
             var c = window.mutqinAckee;
             if (!c || !c.enabled || !c.server || !c.domainId) return;
+            if (c.connectPermitted === false) return;
             var host = String(location.hostname || '');
             if (!c.allowLocalhost && /^(localhost|127\.0\.0\.1|::1)$/i.test(host)) return;
+            var server = String(c.server || '').replace(/\/+$/, '');
+            var endpoint = server.charAt(0) === '/'
+                ? (location.origin + server + '/api')
+                : (server + '/api');
+            try {
+                var target = new URL(endpoint);
+                if (target.origin !== location.origin && target.protocol !== 'https:') return;
+            } catch (e) { return; }
             var path = location.pathname || '/';
             if (/^\/email\/verify(\/|$)/i.test(path)) path = '/email/verify';
             else if (/^\/reset-password(\/|$)/i.test(path)) path = '/reset-password';
             else if (/^\/password\/reset(\/|$)/i.test(path)) path = '/password/reset';
-            fetch(c.server + '/api', {
+            fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 credentials: 'omit',

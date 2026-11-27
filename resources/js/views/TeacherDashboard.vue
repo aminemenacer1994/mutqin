@@ -269,7 +269,8 @@ export default {
     const studentImportResumeId = ref(null)
     const defaultImportGroupId = computed(() => {
       const groups = dashboard.teacherGroups.value || []
-      return groups[0]?.id || null
+      const taught = groups.find((group) => group.teaches)
+      return taught?.id || groups[0]?.id || null
     })
     function openStudentImport() {
       studentImportOpen.value = true

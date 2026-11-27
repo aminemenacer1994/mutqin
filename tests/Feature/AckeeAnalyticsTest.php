@@ -130,4 +130,36 @@ class AckeeAnalyticsTest extends TestCase
         $this->assertSame('/ackee', Ackee::sanitiseServer('/ackee'));
         $this->assertSame('', Ackee::sanitiseServer('http://evil.example/'));
     }
+
+    public function test_cross_origin_docker_ackee_is_disabled_under_csp(): void
+    {
+        config([
+            'services.ackee.enabled' => true,
+            'services.ackee.allow_localhost' => true,
+            'services.ackee.server' => 'http://127.0.0.1:3000',
+            'services.ackee.domain_id_app' => self::APP_ID,
+            'services.ackee.event_id' => self::EVENT_ID,
+        ]);
+
+        $request = Request::create('http://127.0.0.1:8000/preview', 'GET', [], [], [], [
+            'HTTP_HOST' => '127.0.0.1:8000',
+            'SERVER_NAME' => '127.0.0.1',
+            'SERVER_PORT' => '8000',
+        ]);
+
+        $this->assertFalse(Ackee::isConnectSrcPermitted('http://127.0.0.1:3000', $request));
+        $config = Ackee::clientConfig($request);
+        $this->assertFalse($config['enabled']);
+        $this->assertFalse($config['connectPermitted']);
+    }
+
+    public function test_same_origin_ackee_proxy_is_connect_permitted(): void
+    {
+        $request = Request::create('http://127.0.0.1:8000/', 'GET', [], [], [], [
+            'HTTP_HOST' => '127.0.0.1:8000',
+        ]);
+
+        $this->assertTrue(Ackee::isConnectSrcPermitted('/ackee', $request));
+        $this->assertSame('http://127.0.0.1:8000/ackee/api', Ackee::resolveGraphqlUrl('/ackee', $request));
+    }
 }

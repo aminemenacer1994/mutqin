@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const mix = require('laravel-mix');
 const webpack = require('webpack');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 function readEnvValue(name) {
     if (process.env[name]) return process.env[name];
@@ -414,6 +415,14 @@ mix.js('resources/js/app.js', 'public/js')
        if (pruneIdx > 0) {
            const [plugin] = webpackConfig.plugins.splice(pruneIdx, 1);
            webpackConfig.plugins.unshift(plugin);
+       }
+       // Shared marketing CSS (Homepage.css, preview-motion.css) is pulled in via
+       // several async vue routes with different surrounding styles; the desired
+       // cascade is still satisfiable but mini-css-extract cannot prove it.
+       for (const plugin of webpackConfig.plugins) {
+           if (plugin instanceof MiniCssExtractPlugin) {
+               plugin.options.ignoreOrder = true;
+           }
        }
    })
    .version();

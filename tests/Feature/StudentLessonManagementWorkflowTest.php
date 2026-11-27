@@ -45,7 +45,7 @@ class StudentLessonManagementWorkflowTest extends TestCase
             'completion_evidence' => ['correction_requested_at' => now()->toIso8601String()],
         ])->save();
         $otherStudent = User::factory()->create(['account_role' => AccountRole::Student->value]);
-        $this->assignment($teacher, $otherStudent, $group, 'nazra', 'sabqi');
+        $foreign = $this->assignment($teacher, $otherStudent, $group, 'nazra', 'sabqi')->recipients()->firstOrFail();
         $ids = [];
         for ($page = 1; $page <= 6; $page++) {
             $payload = $this->actingAs($student)->getJson(route('api.me.assignments.index', [
@@ -54,6 +54,8 @@ class StudentLessonManagementWorkflowTest extends TestCase
             $ids = array_merge($ids, array_column($payload['assignments'], 'id'));
             $this->assertSame($page < 6 ? $page + 1 : null, $payload['next_page']);
         }
+        $this->actingAs($student)->getJson(route('api.me.assignments.show', $ids[52]))->assertOk()->assertJsonPath('assignment.id', $ids[52]);
+        $this->getJson(route('api.me.assignments.show', $foreign))->assertNotFound();
         $this->assertCount(53, array_unique($ids));
         $this->assertSame($ids, array_values(array_unique($ids)));
         $this->actingAs($student)->getJson(route('api.me.assignments.index', ['status' => 'revision']))
@@ -72,7 +74,11 @@ class StudentLessonManagementWorkflowTest extends TestCase
             'organisation_id' => $teacher->organisation_id, 'teacher_assignment_id' => null,
             'parent_user_id' => null, 'kind' => \App\Enums\TeacherNoteKind::TeacherMessage->value,
         ]);
-        $first = $this->actingAs($student)->getJson(route('api.me.teachers.messages.index', $teacher))->assertOk()->json();
+        $summary = collect($this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json('direct_threads'))->firstWhere('teacher_id', $teacher->id);
+        $this->assertCount(1, $summary['messages']);
+        $this->assertSame(65, $summary['unread_count']);
+        $this->assertSame($notes->last()->id, $summary['messages'][0]['id']);
+        $first = $this->getJson(route('api.me.teachers.messages.index', $teacher))->assertOk()->assertJsonPath('unread_count', 35)->json();
         $this->assertCount(30, $first['messages']);
         $this->assertSame($notes->last()->id, $first['messages'][29]['id']);
         $older = $this->getJson(route('api.me.teachers.messages.index', ['teacher' => $teacher, 'before' => $first['next_before']]))->assertOk()->json();

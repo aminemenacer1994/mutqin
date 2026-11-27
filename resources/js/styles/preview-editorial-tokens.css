@@ -1,0 +1,134 @@
+/**
+ * Marketing /preview palette lock (Mutqin 2.0 editorial brief §4.1).
+ * Scoped to .homepage--preview and .pricing-page--preview only.
+ */
+
+.homepage--preview[data-theme="light"],
+.pricing-page--preview[data-theme="light"] {
+  --bg: #faf8f3;
+  --surface: #fffdf9;
+  --surface-strong: #fffdf9;
+  --text: #253128;
+  --text-muted: #687266;
+  --border: #e4e1d8;
+  --accent: #805e40;
+  --accent-light: #e9eee5;
+  --text-on-accent: #fffdf9;
+  --hp-display: "Newsreader", "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  --hp-text: "Inter", "Nunito", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.homepage--preview[data-theme="dark"],
+.pricing-page--preview[data-theme="dark"] {
+  --bg: #171d18;
+  --surface: #232c24;
+  --surface-strong: #232c24;
+  --text: #eee9dc;
+  --text-muted: #b2bcae;
+  --border: #3a473a;
+  --accent: #d1a36f;
+  --accent-light: #2d392d;
+  --text-on-accent: #171d18;
+  --hp-display: "Newsreader", "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  --hp-text: "Inter", "Nunito", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.homepage--preview .hero__inner {
+  width: min(1240px, 100%);
+}
+
+@media (min-width: 992px) {
+  .homepage--preview .hero__grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(2rem, 3.5vw, 3.25rem);
+    align-items: center;
+  }
+}
+
+.homepage--preview .hero__title {
+  max-width: 16ch;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 560;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.homepage--preview .hero__desc {
+  max-width: 36ch;
+  font-size: clamp(1.0625rem, 1.35vw, 1.1875rem);
+  line-height: 1.62;
+}
+
+.homepage--preview .btn--primary {
+  min-height: 2.75rem;
+  border-radius: 0.5625rem;
+}
+
+.homepage--preview .btn--secondary {
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+}
+
+.homepage--preview .preview-browser {
+  border-radius: 0.875rem;
+  box-shadow:
+    0 2px 6px rgb(37 49 40 / 0.06),
+    0 18px 42px rgb(37 49 40 / 0.12);
+}
+
+.homepage--preview[data-theme="dark"] .preview-browser {
+  box-shadow: 0 16px 36px rgb(0 0 0 / 0.24);
+}
+
+.preview-product-explorer__cta {
+  margin: 1.25rem 0 0;
+  font-size: 0.95rem;
+}
+
+.preview-product-explorer__cta a {
+  color: var(--accent);
+  font-weight: 560;
+  text-underline-offset: 0.18em;
+}
+
+.preview-personal-learning,
+.preview-pricing-teaser,
+.preview-closing-cta {
+  padding-block: var(--section-y);
+}
+
+.preview-personal-learning__layout {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: center;
+}
+
+@media (min-width: 992px) {
+  .preview-personal-learning__layout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
+.preview-pricing-teaser__card {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid var(--hp-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--surface, var(--bg)) 96%, var(--accent) 4%);
+}
+
+.preview-pricing-teaser__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.preview-closing-cta {
+  border-top: 1px solid color-mix(in srgb, var(--hp-border) 70%, transparent);
+  text-align: center;
+}
+
+.preview-closing-cta .hero__actions {
+  justify-content: center;
+  margin-top: 1rem;
+}

@@ -82,3 +82,8 @@ test('threadLastActivityKind detects feedback and assignment threads', () => {
   )
   assert.equal(threadLastActivityKind({ messages: [{ body: 'Hi' }] }), '')
 })
+
+test('server unread total includes messages outside the loaded preview', () => {
+  assert.equal(directThreadUnreadCount({ unread_count: 65, messages: [{ sender: 'teacher', unread: true }] }), 65)
+  assert.equal(directThreadUnreadCount({ unread_count: 0, messages: [{ sender: 'teacher', unread: true }] }), 0)
+})

@@ -20,11 +20,14 @@ final class Ackee
         $eventId = self::sanitiseUuid((string) config('services.ackee.event_id', ''));
         $allowLocalhost = (bool) config('services.ackee.allow_localhost', false);
 
+        $connectPermitted = self::isConnectSrcPermitted($server, $request);
+
         $enabled = (bool) config('services.ackee.enabled')
             && $server !== ''
             && $domainId !== ''
             && ! $request->boolean('mutqin_embed')
-            && ($allowLocalhost || ! self::isLocalHost($request->getHost()));
+            && ($allowLocalhost || ! self::isLocalHost($request->getHost()))
+            && $connectPermitted;
 
         return [
             'enabled' => $enabled,
@@ -32,7 +35,57 @@ final class Ackee
             'domainId' => $domainId,
             'eventId' => $eventId,
             'allowLocalhost' => $allowLocalhost,
+            'connectPermitted' => $connectPermitted,
         ];
+    }
+
+    /**
+     * GraphQL endpoint Ackee would call from the browser (for CSP checks).
+     */
+    public static function resolveGraphqlUrl(string $server, Request $request): ?string
+    {
+        $server = self::sanitiseServer($server);
+        if ($server === '') {
+            return null;
+        }
+
+        if (str_starts_with($server, '/')) {
+            $base = rtrim($server, '/') ?: '';
+
+            return $request->getSchemeAndHttpHost().$base.'/api';
+        }
+
+        return rtrim($server, '/').'/api';
+    }
+
+    /**
+     * Matches resources/js/scripts/analytics/ackee.js connect-src rules:
+     * same-origin or https only (not http://another-host:port).
+     */
+    public static function isConnectSrcPermitted(string $server, Request $request): bool
+    {
+        $endpoint = self::resolveGraphqlUrl($server, $request);
+        if ($endpoint === null || $endpoint === '') {
+            return false;
+        }
+
+        $parts = parse_url($endpoint);
+        if (! is_array($parts) || empty($parts['host'])) {
+            return false;
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'http'));
+        $port = isset($parts['port']) ? (int) $parts['port'] : null;
+        $host = strtolower((string) $parts['host']);
+
+        $targetOrigin = $scheme.'://'.$host.($port !== null ? ':'.$port : '');
+        $pageOrigin = $request->getSchemeAndHttpHost();
+
+        if (strcasecmp($targetOrigin, $pageOrigin) === 0) {
+            return true;
+        }
+
+        return $scheme === 'https';
     }
 
     public static function domainIdForHost(?string $host): string

@@ -64,16 +64,36 @@
         <div v-if="tabHint" class="teacher-profile-tab-meta">
           <p class="teacher-profile-tab-meta__hint">{{ tabHint }}</p>
         </div>
-        <TeacherStudentProfilePractice
-          v-if="isLearningSection"
+        <TeacherStudentProfileAi
+          v-if="section === 'ai'"
           :profile="tabProfile"
-          :focus-payload="section === 'revision' ? tabProfile.payload : (profile.sectionPayloads?.focus ?? null)"
+          :issue-label="issueLabel"
+          :format-when="formatWhen"
+          :focus-attempt-id="taskFocus && taskFocus.attemptId ? taskFocus.attemptId : null"
+          @assign-revision="$emit('assign-revision', $event)"
+          @clear-focus="$emit('clear-focus')"
+          @reviewed="$emit('refresh')"
+        />
+        <TeacherStudentProfilePlan
+          v-else-if="section === 'plan' && profile.student"
+          :student-id="profile.student.id"
+          :student-name="profile.student.name"
+          :hifz="profile.meta?.hifz || null"
+          :profile="tabProfile"
+          :format-when="formatWhen"
+          @open-task="openTask"
+          @assign-next="$emit('assign-revision', $event)"
+          @updated="$emit('refresh')"
+        />
+        <TeacherStudentProfilePractice
+          v-else-if="section === 'revision'"
+          :profile="tabProfile"
+          :focus-payload="tabProfile.payload"
           :session-label="sessionLabel"
           :issue-label="issueLabel"
           :format-when="formatWhen"
           :memorisation-url="memorisationUrl"
-          :initial-subview="learningSubview"
-          :focus-attempt-id="section === 'ai' ? (taskFocus && taskFocus.attemptId) : null"
+          initial-subview="revision"
           @assign-revision="$emit('assign-revision', $event)"
           @mark-reviewed="openReviewConfirm"
           @open-task="openTask"
@@ -194,6 +214,8 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { resolveTaskLifecycle, TASK_LIFECYCLE, taskIsOverdue } from '../../scripts/teacher/taskState'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
+import TeacherStudentProfileAi from './profile/TeacherStudentProfileAi.vue'
+import TeacherStudentProfilePlan from './profile/TeacherStudentProfilePlan.vue'
 import TeacherStudentProfilePractice from './profile/TeacherStudentProfilePractice.vue'
 import TeacherStudentProfileTasks from './profile/TeacherStudentProfileTasks.vue'
 import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessages.vue'
@@ -207,6 +229,8 @@ export default {
   components: {
     TeacherDialog,
     TeacherEmpty,
+    TeacherStudentProfileAi,
+    TeacherStudentProfilePlan,
     TeacherStudentProfilePractice,
     TeacherStudentProfileTasks,
     TeacherStudentProfileMessages,
@@ -259,9 +283,6 @@ export default {
         ? this.profile.payload
         : (this.profile.sectionPayloads?.[this.section] || this.profile.payload)
       return { ...this.profile, payload }
-    },
-    isLearningSection() {
-      return ['ai', 'revision', 'plan'].includes(this.section)
     },
     resolvedFocusTaskId() {
       return this.taskFocus?.taskId || this.focusTaskId

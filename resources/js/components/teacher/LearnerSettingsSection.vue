@@ -7,8 +7,8 @@
       </div>
     </header>
 
-    <nav class="teacher-tabs" :aria-label="t('dashboard.jump_settings')">
-      <button v-for="tab in settingsTabs" :key="tab.id" type="button" class="teacher-tabs__tab" :class="{ 'is-active': selectedSection === tab.id }" :aria-pressed="selectedSection === tab.id" @click="selectSection(tab.id)">{{ tab.label }}</button>
+    <nav class="nav nav-tabs teacher-tabs teacher-tabs--scroll" :aria-label="t('dashboard.jump_settings')">
+      <button v-for="tab in settingsTabs" :key="tab.id" type="button" class="nav-link teacher-tabs__tab" :class="{ 'is-active': selectedSection === tab.id }" :aria-pressed="selectedSection === tab.id" @click="selectSection(tab.id)">{{ tab.label }}</button>
     </nav>
     <div class="teacher-account__grid learner-settings__grid">
       <section v-show="selectedSection === 'profile'" class="card teacher-account learner-settings__card learner-settings__card--profile" :aria-labelledby="`${uid}-profile`">

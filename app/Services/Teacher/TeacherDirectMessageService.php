@@ -31,23 +31,7 @@ class TeacherDirectMessageService
         $viewer ??= $teacher;
         abort_unless(in_array((int) $viewer->id, [(int) $teacher->id, (int) $student->id], true), 404);
 
-        $query = TeacherNote::query()
-            ->where('teacher_id', $teacher->id)
-            ->where('student_id', $student->id)
-            ->whereNull('parent_user_id')
-            ->where('kind', '!=', TeacherNoteKind::ParentMessage->value)
-            ->where(function ($query) {
-                $query->where(function ($direct) {
-                    $direct->whereNull('teacher_assignment_id')
-                        ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::StudentMessage->value]);
-                })->orWhere('kind', TeacherNoteKind::Feedback->value)
-                    ->orWhere(function ($taskReply) {
-                        $taskReply->whereNotNull('teacher_assignment_id')
-                            ->where('kind', TeacherNoteKind::Note->value);
-                    });
-            })
-            ->with(['teacher:id,name', 'student:id,name', 'assignment:id,surah_number,ayah_start,ayah_end'])
-            ;
+        $query = $this->threadQuery($teacher, $student);
         if ($before !== null) {
             $cursor = (clone $query)->whereKey($before)->first();
             abort_unless($cursor, 404);
@@ -79,6 +63,36 @@ class TeacherDirectMessageService
         return $notes->map(fn (TeacherNote $note) => $this->present($note, $viewer))->all();
     }
 
+    private function threadQuery(User $teacher, User $student): \Illuminate\Database\Eloquent\Builder
+    {
+        return TeacherNote::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->whereNull('parent_user_id')
+            ->where('kind', '!=', TeacherNoteKind::ParentMessage->value)
+            ->where(function ($query) {
+                $query->where(function ($direct) {
+                    $direct->whereNull('teacher_assignment_id')
+                        ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::StudentMessage->value]);
+                })->orWhere('kind', TeacherNoteKind::Feedback->value)
+                    ->orWhere(function ($taskReply) {
+                        $taskReply->whereNotNull('teacher_assignment_id')
+                            ->where('kind', TeacherNoteKind::Note->value);
+                    });
+            })
+            ->with(['teacher:id,name', 'student:id,name', 'assignment:id,surah_number,ayah_start,ayah_end',
+                'assignment.recipients' => fn ($query) => $query->where('student_id', $student->id),
+            ])
+            ;
+    }
+
+    public function unreadForStudent(User $teacher, User $student): int
+    {
+        abort_unless($this->access->allows($teacher, $student), 404);
+        return $this->threadQuery($teacher, $student)->whereNull('read_at')
+            ->whereIn('kind', [TeacherNoteKind::TeacherMessage->value, TeacherNoteKind::Feedback->value])->count();
+    }
+
     /** @return list<array<string, mixed>> */
     public function threadsForStudent(User $student): array
     {
@@ -105,7 +119,8 @@ class TeacherDirectMessageService
                     'messaging_reason' => $decision['reason'],
                     // Loading the learning page is not the same as opening a
                     // conversation. Keep unread state until the student chooses it.
-                    'messages' => $this->thread($teacher, $student, $student, markRead: false),
+                    'unread_count' => $this->unreadForStudent($teacher, $student),
+                    'messages' => $this->thread($teacher, $student, $student, markRead: false, limit: 1),
                 ];
             })->values()->all();
     }
@@ -209,6 +224,7 @@ class TeacherDirectMessageService
             'feedback_type' => $feedbackType,
             'task' => $assignment ? [
                 'id' => (int) $assignment->id,
+                'recipient_id' => $assignment->relationLoaded('recipients') ? $assignment->recipients->first()?->id : null,
                 'surah_number' => (int) $assignment->surah_number,
                 'surah_name' => QuranMetadata::name((int) $assignment->surah_number),
                 'ayah_start' => (int) $assignment->ayah_start,

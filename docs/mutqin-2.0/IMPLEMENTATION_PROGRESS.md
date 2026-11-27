@@ -1,5 +1,15 @@
 # Mutqin 2.0 — Implementation progress
 
+## Editorial master prompt (26 Nov 2026, evening)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Seven-section preview homepage IA | Done | `Homepage.vue` — explorer canvas, personal learning, pricing teaser, closing CTA |
+| Locked preview palette (§4.1) | Done | `preview-editorial-tokens.css` + `preview-theme-locked-tokens.json` |
+| Theme regression test (§0) | Done | `tests/js/landing-preview-theme-regression.test.mjs` |
+| Newsreader / Inter on `/preview` | Done | `preview/home.blade.php` font preload |
+| §11 visual/media evidence | Pending | See `COMPLETION_SUMMARY.md` |
+
 | Group | Scope | Status | Verified |
 |-------|--------|--------|----------|
 | A | `/preview` gate, copy overrides, robots, tests | **Complete** | PHPUnit + JS static (26 Nov 2026) |

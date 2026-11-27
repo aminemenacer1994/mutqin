@@ -378,11 +378,11 @@ export default {
         if (older || !this.activeMessages.length) this.threadNextBefore = payload?.next_before || null
         const merged = mergeThreadMessages([...this.activeMessages, ...(payload?.messages || [])], this.sentOptimistic[teacherId] || [])
         this.activeMessages = merged
-        this.inbox = patchThreadRow(this.inbox, teacherId, merged)
+        this.inbox = patchThreadRow(this.inbox, teacherId, merged).map(row => Number(row.teacher_id) === teacherId ? { ...row, unread_count: payload?.unread_count } : row)
         if (this.active?.teacher_id === teacherId) {
           this.active = { ...this.active, messages: merged }
         }
-        this.$emit('threads-updated', { teacherId, messages: merged })
+        this.$emit('threads-updated', { teacherId, messages: merged, unread_count: payload?.unread_count })
       } catch {
         if (this.disposed || request !== this.pollVersions[teacherId] || Number(this.active?.teacher_id) !== teacherId) return
         this.threadLoadError = this.t('dashboard.messages_thread_failed')

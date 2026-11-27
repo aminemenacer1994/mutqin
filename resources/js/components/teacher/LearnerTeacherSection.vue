@@ -113,11 +113,14 @@
                 <span class="teacher-tabs__count learner-teacher__filter-count">{{ filter.count }}</span>
               </button>
             </div>
-            <div class="learner-teacher__assignments-toolbar__row student-assignment-filters">
+            <div class="student-assignment-filters">
               <label class="student-assignment-search">
                 <span class="visually-hidden">{{ t('dashboard.student_assignment_search') }}</span>
                 <input v-model="assignmentSearch" type="search" class="form-control" maxlength="120" :placeholder="t('dashboard.student_assignment_search')" @input="scheduleAssignmentSearch" />
               </label>
+              <button v-if="isMobileLayout" type="button" class="btn btn-outline-secondary" :aria-expanded="assignmentFiltersOpen" @click="assignmentFiltersOpen = true"><i class="bi bi-funnel" aria-hidden="true"></i> {{ t('common.filters') }}</button>
+              <component :is="isMobileLayout ? 'TeacherDialog' : 'div'" v-bind="isMobileLayout ? { open: assignmentFiltersOpen, title: t('common.filters'), closeLabel: t('common.close'), dirty: false, size: 'md' } : {}" class="user-dashboard student-assignment-filter-container" @close="assignmentFiltersOpen = false">
+                <div class="student-assignment-filter-fields">
               <label>
                 <span class="visually-hidden">{{ t('dashboard.student_assignment_teacher') }}</span>
                 <select v-model="assignmentTeacher" class="form-select" @change="changeAssignmentFilters">
@@ -146,6 +149,9 @@
                 </select>
               </label>
               <button v-if="hasAssignmentFilters" type="button" class="btn btn-outline-secondary" @click="resetAssignmentFilters">{{ t('dashboard.student_assignment_reset') }}</button>
+                </div>
+                <template v-if="isMobileLayout" #footer><button type="button" class="btn btn-primary" @click="assignmentFiltersOpen = false">{{ t('common.close') }}</button></template>
+              </component>
               <button type="button" class="btn btn-outline-secondary" :aria-label="feedbackTabAriaLabel" @click="openFeedbackDrawer">
                 <i class="bi bi-chat-left-quote" aria-hidden="true"></i>
                 {{ t('teacher.learner_feedback_open') }} <span v-if="feedbackUnreadCount">{{ feedbackUnreadCount }}</span>
@@ -154,9 +160,6 @@
           </div>
 
             <div :id="`learner-teacher-panel-${activeFilter}`" :aria-labelledby="`learner-filter-${activeFilter}`" role="tabpanel">
-            <div v-if="showPlanSlot" class="learner-teacher__plan-slot">
-              <slot name="learning-plan"></slot>
-            </div>
             <p v-if="assignmentListLoading" class="teacher-meta" role="status">{{ t('common.loading') }}</p>
             <div v-if="assignmentListError" class="alert alert-danger" role="alert">{{ assignmentListError }} <button type="button" class="btn btn-outline-danger btn-sm" @click="loadAssignmentPage(assignmentFailedPage)">{{ t('common.retry') }}</button></div>
             <div v-if="!assignmentListLoading && !assignmentListError && !listItems.length && !hasAssignmentFilters && !assignmentCounts?.[activeFilter]" class="learner-teacher__empty">
@@ -244,6 +247,9 @@
                 {{ ldtp('teacher.learner_assignments_view_more', Math.min(listLimit, remainingCount), { n: Math.min(listLimit, remainingCount) }) }}
               </button>
             </div>
+            <div v-if="showPlanSlot" class="learner-teacher__plan-slot">
+              <slot name="learning-plan"></slot>
+            </div>
             </div>
         </section>
 
@@ -327,16 +333,21 @@
       @close="closeAssignmentDetail"
     >
       <template #pills><span class="teacher-meta">{{ detailModalSubtitle }}</span></template>
-      <template v-if="detailItem">
-
-        <div class="parent-modal__body learner-assignment-modal__body">
+      <template #default>
+        <div v-if="detailItem" class="learner-assignment-modal__body">
+          <dl class="learner-teacher__facts-compact">
+            <div v-if="teacherMeta(detailItem)"><dt>{{ t('teacher.teacher') }}</dt><dd>{{ teacherMeta(detailItem) }}</dd></div>
+            <div v-if="dueValue(detailItem)"><dt>{{ t('teacher.due') }}</dt><dd>{{ dueValue(detailItem) }}</dd></div>
+            <div v-if="progressLabel(detailItem)"><dt>{{ t('teacher.learner_submission_attempts_label') }}</dt><dd>{{ progressLabel(detailItem) }}</dd></div>
+          </dl>
           <section v-if="assignmentStatusRationale(detailItem)" class="learner-assignment-modal__section learner-assignment-modal__section--status">
             <h3>{{ t('teacher.assignment_status_label') }}</h3>
             <p>{{ assignmentStatusRationale(detailItem) }}</p>
           </section>
-          <section v-if="hasInstruction(detailItem)" class="learner-assignment-modal__section">
+          <section class="learner-assignment-modal__section">
             <h3>{{ t('teacher.assignment_instructions_label') }}</h3>
-            <p>{{ instructionText(detailItem) }}</p>
+            <p v-if="instructionText(detailItem)">{{ instructionText(detailItem) }}</p>
+            <p>{{ requirementHelp(detailItem) }}</p>
           </section>
           <section v-if="recommendedReciterLine(detailItem)" class="learner-assignment-modal__section">
             <h3>{{ t('teacher.assignment_recommended_reciter') }}</h3>
@@ -443,38 +454,8 @@
     </TeacherDialog>
 
 
-    <DashModalRoot workspace
-      :open="feedbackDrawerOpen"
-      :labelled-by="feedbackDrawerTitleId"
-      root-class="teacher-dialog dash-student-dialog-root"
-      panel-class="dash-student-dialog dash-student-dialog--sheet dash-student-dialog--feedback-list"
-      test-id="learner-feedback-modal"
-      @close="closeFeedbackDrawer"
-    >
-        <header class="dash-drawer__head">
-          <div class="dash-drawer__head-main">
-            <span class="dash-drawer__head-icon" aria-hidden="true">
-              <i class="bi bi-chat-left-quote"></i>
-            </span>
-            <div class="dash-drawer__head-copy">
-              <h2 :id="feedbackDrawerTitleId" class="dash-drawer__title">{{ t('teacher.learner_feedback_open') }}</h2>
-              <p class="dash-drawer__subtitle">{{ t('teacher.learner_feedback_drawer_subtitle') }}</p>
-              <p v-if="feedbackUnreadCount" class="dash-drawer__count">
-                {{ ldtp('teacher.learner_feedback_unread', feedbackUnreadCount) }}
-              </p>
-            </div>
-          </div>
-          <button
-            ref="feedbackDrawerClose"
-            type="button"
-            class="dash-icon-btn dash-drawer__close"
-            :aria-label="t('dashboard.drawer_close')"
-            @click="closeFeedbackDrawer"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </header>
-        <div class="dash-student-dialog__body learner-student-feedback-modal__body">
+    <TeacherDialog :open="feedbackDrawerOpen" :title="t('teacher.learner_feedback_open')" :close-label="t('common.close')" class="user-dashboard" data-testid="learner-feedback-modal" @close="closeFeedbackDrawer">
+      <p class="teacher-meta">{{ t('teacher.learner_feedback_drawer_subtitle') }}</p>
             <LearnerWordCorrections :items="wordCorrections" />
             <LearnerTeacherLearning
               variant="drawer"
@@ -482,8 +463,7 @@
               :pending="!learning"
               @open-feedback="openFeedbackFromDrawer"
             />
-        </div>
-    </DashModalRoot>
+    </TeacherDialog>
 
     <Teleport to="body">
     <LearnerTaskThreadPanel
@@ -552,29 +532,10 @@
       </template>
     </DashModalRoot>
 
-    <DashModalRoot workspace
-      :open="Boolean(selectedSubmission)"
-      root-class="teacher-dialog dash-student-dialog-root"
-      panel-class="dash-student-dialog dash-student-dialog--sheet dash-student-dialog--has-foot"
-      labelled-by="learner-submission-title"
-      test-id="learner-submission-modal"
-      @close="closeSubmission"
-    >
-      <template v-if="selectedSubmission">
-        <header class="dash-drawer__head">
-          <div class="dash-drawer__head-main">
-            <span class="dash-drawer__head-icon" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
-            <div class="dash-drawer__head-copy">
-              <h2 id="learner-submission-title" class="dash-drawer__title">{{ selectedSubmission.title }}</h2>
-              <p class="dash-drawer__subtitle">{{ submissionStateLabel(selectedSubmission) }}</p>
-            </div>
-          </div>
-          <button type="button" class="dash-btn dash-btn--tertiary dash-btn--sm dash-drawer__close btn btn-outline-secondary btn-sm" :aria-label="t('common.back')" @click="closeSubmission">
-            <i class="bi bi-arrow-left" aria-hidden="true"></i>
-            <span>{{ t('common.back') }}</span>
-          </button>
-        </header>
-        <div class="dash-student-dialog__body learner-teacher__submission-detail">
+    <TeacherDialog :open="Boolean(selectedSubmission)" :title="selectedSubmission?.title || ''" :close-label="t('common.close')" class="user-dashboard" data-testid="learner-submission-modal" @close="closeSubmission">
+      <template #pills><span v-if="selectedSubmission" class="teacher-meta">{{ submissionStateLabel(selectedSubmission) }}</span></template>
+      <template #default>
+        <div v-if="selectedSubmission" class="learner-teacher__submission-detail">
           <dl class="learner-teacher__facts-compact">
             <div><dt>{{ t('teacher.learner_submitted_on') }}</dt><dd>{{ submissionWhen(selectedSubmission.submitted_at) }}</dd></div>
             <div><dt>{{ t('teacher.teacher') }}</dt><dd>{{ selectedSubmission.teacher_name || t('teacher.unavailable') }}</dd></div>
@@ -610,7 +571,9 @@
             <small>{{ t('dashboard.assignment_self_assessment_score_note') }}</small>
           </section>
         </div>
-        <footer class="dash-modal__foot learner-teacher__submission-actions">
+      </template>
+      <template v-if="selectedSubmission" #footer>
+
           <a
             v-if="submissionPracticeHref(selectedSubmission)"
             class="dash-btn dash-btn--primary dash-btn--sm btn btn-primary btn-sm"
@@ -630,12 +593,11 @@
           >
             {{ t('teacher.task_conversation') }}
           </button>
-          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="$emit('self-assess', selectedSubmission)">
+          <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm btn btn-outline-secondary btn-sm" @click="requestSubmissionAssessment">
             {{ selectedSubmission.self_assessment ? t('dashboard.assignment_self_assessment_update') : t('dashboard.assignment_self_assessment_add') }}
           </button>
-        </footer>
       </template>
-    </DashModalRoot>
+    </TeacherDialog>
 
     <DashModalRoot workspace
       :open="Boolean(mistakeDrawerRow)"
@@ -732,8 +694,8 @@ import {
   learnerWeeklyProgressFromAssignments,
 } from '../../scripts/teacher/learnerDashboard.js'
 import { shouldShowUpcomingPanel } from '../../scripts/teacher/learnerUpcoming.js'
-import { assignmentDisplayLabel } from '../../scripts/teacher/taskTypes.js'
 import {
+  learnerAssignmentCategoryLabel,
   countDueWindows,
   countLearningBuckets,
   filterLearningAssignments,
@@ -798,6 +760,7 @@ export default {
       activeDueFilter: 'all',
       activeCategory: 'all',
       categoryOpen: false,
+      assignmentFiltersOpen: false,
       directDrafts: {},
       directSent: {},
       directSynced: {},
@@ -1301,6 +1264,7 @@ export default {
       this.confirmDirectDiscard = false
       this.selectedDirectFeedback = feedback && !(thread.messages || []).some(message => String(message.id) === String(feedback.id)) ? feedback : null
       this.selectedDirectThread = thread
+      this.refreshDirectThreads()
       this.$nextTick(() => {
         this.$refs.directConversation?.resetComposer?.()
         this.$refs.directThreadClose?.focus({ preventScroll: true })
@@ -1352,7 +1316,8 @@ export default {
       this.threadTask = null
     },
     async refreshDirectThreads() {
-      const threads = this.support?.direct_threads || []
+      if (!this.selectedDirectThread || this.directSending || (typeof document !== 'undefined' && document.hidden)) return
+      const threads = [this.selectedDirectThread]
       await Promise.all(threads.map(async (thread) => {
         const request = Number(this.directPollVersions[thread.teacher_id] || 0) + 1
         this.directPollVersions = { ...this.directPollVersions, [thread.teacher_id]: request }
@@ -1578,6 +1543,8 @@ export default {
       this.feedbackDrawerOpen = false
     },
     closeNavigationOverlays() {
+      this.assignmentFiltersOpen = false
+      this.closeAssignmentDetail()
       if (this.feedbackDrawerOpen) this.closeFeedbackDrawer()
       if (this.mistakeDrawerRow) this.closeMistakeDrawer()
       if (this.selectedSubmission) this.closeSubmission()
@@ -1714,6 +1681,7 @@ export default {
       this.recitationReviewRow = learnerRecitationReviewRow(row)
     },
     openSubmissionDetail(item) {
+      this.closeAssignmentDetail()
       this.selectedSubmission = item
     },
     openSubmissionForRow(row) {
@@ -1726,6 +1694,11 @@ export default {
     },
     closeSubmission() {
       this.selectedSubmission = null
+    },
+    requestSubmissionAssessment() {
+      const submission = this.selectedSubmission
+      this.closeSubmission()
+      this.$emit('self-assess', submission)
     },
     assignmentHref(recipientId) {
       const row = this.assignments.find((item) => Number(item.id) === Number(recipientId))
@@ -1768,24 +1741,7 @@ export default {
       return this.taskTypeLabel(row)
     },
     taskTypeLabel(row) {
-      const assignment = row?.assignment || {}
-      const activity = {
-        nazra: this.t('dashboard.activity_area_nazra'),
-        hifz: this.t('dashboard.activity_area_hifz'),
-        tajweed: this.t('dashboard.activity_area_tajweed'),
-        revision: this.t('dashboard.activity_area_revision'),
-      }[assignment.activity]
-      const stage = {
-        sabaq: this.t('dashboard.student_stage_new'),
-        sabqi: this.t('dashboard.student_stage_recent'),
-        manzil: this.t('dashboard.student_stage_older'),
-      }[assignment.hifz_category]
-      if (activity && stage) return `${activity} · ${stage}`
-      if (activity) return activity
-      const label = assignmentDisplayLabel(assignment, this.t.bind(this))
-      if (/recitation check/i.test(label)) return this.ldt('teacher.learner_type_recite')
-      if (/new memorisation|hifz|nazra|tajweed|sabqi|sabaq|manzil/i.test(label)) return this.t('parent.activity_hifz')
-      return label
+      return learnerAssignmentCategoryLabel(row?.assignment, this.t.bind(this))
     },
     teacherName(row) {
       return String(row?.teacher_name || row?.assignment?.teacher_name || '').trim()

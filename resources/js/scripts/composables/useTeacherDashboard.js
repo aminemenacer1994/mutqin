@@ -9,6 +9,7 @@ import {
   TEACHER_PROFILE_TABS,
   TEACHER_VIEWS,
   defaultAssignmentForm,
+  defaultTeacherDueDate,
   defaultStudentFilters,
 } from '../teacher/constants'
 import {
@@ -598,7 +599,7 @@ export function useTeacherDashboard(authRef) {
       ayah_start: Number(assignment.value.ayah_start),
       ayah_end: Number(assignment.value.ayah_end),
       repetition_target: assignment.value.repetition_target ? Number(assignment.value.repetition_target) : null,
-      due_at: assignment.value.due_at || null,
+      due_at: assignment.value.due_at || defaultTeacherDueDate(),
       priority: assignment.value.priority || 'normal',
       feedback: assignment.value.feedback || null,
       session_settings: sanitizeTeacherAssignmentSessionSettings(assignment.value.session_settings),

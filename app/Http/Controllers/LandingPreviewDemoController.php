@@ -98,6 +98,7 @@ class LandingPreviewDemoController extends Controller
             'persona' => 'required_without:experience|nullable|string|max:64',
             'experience' => 'required_without:persona|nullable|string|max:32',
             'guided' => 'nullable|boolean',
+            'embed' => 'nullable|boolean',
         ]);
 
         $personaId = (string) ($validated['persona'] ?? '');
@@ -147,7 +148,7 @@ class LandingPreviewDemoController extends Controller
                 LandingPreviewDemo::sessionPayload($personaId, $sandbox->id)
             );
 
-            return redirect($persona['redirect']);
+            return redirect($this->demoRedirect($persona['redirect'], $request));
         }
 
         $demoUser = LandingPreviewDemo::resolveDemoUser($personaId);
@@ -173,7 +174,7 @@ class LandingPreviewDemoController extends Controller
         $request->session()->put('mutqin_just_logged_in', true);
         $request->session()->forget('url.intended');
 
-        return redirect($persona['redirect']);
+        return redirect($this->demoRedirect($persona['redirect'], $request));
     }
 
     public function switch(Request $request): RedirectResponse
@@ -310,5 +311,16 @@ class LandingPreviewDemoController extends Controller
         }
 
         return null;
+    }
+
+    private function demoRedirect(string $path, Request $request): string
+    {
+        if (! $request->boolean('embed')) {
+            return $path;
+        }
+
+        return str_contains($path, '?')
+            ? $path.'&mutqin_embed=1'
+            : $path.'?mutqin_embed=1';
     }
 }

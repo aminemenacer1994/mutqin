@@ -259,7 +259,8 @@ class LearnerSupportController extends Controller
         $data = $request->validate(['before' => ['nullable', 'integer', 'min:1']]);
         $rows = $messages->thread($teacher, $student, $student, true, isset($data['before']) ? (int) $data['before'] : null, 30);
 
-        return response()->json(['messages' => $rows, 'next_before' => count($rows) === 30 ? $rows[0]['id'] : null])
+        return response()->json(['messages' => $rows,
+            'unread_count' => $messages->unreadForStudent($teacher, $request->user()), 'next_before' => count($rows) === 30 ? $rows[0]['id'] : null])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 

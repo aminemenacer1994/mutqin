@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
+  learnerAssignmentCategoryLabel,
   countDueWindows,
   countLearningBuckets,
   dueWindowForRow,
@@ -99,3 +100,7 @@ const dashboard = fs.readFileSync(new URL('../../resources/js/views/Dashboard.vu
 assert.match(dashboard, /setFilter\('done'\)/)
 
 console.log('learner-learning-view.test.mjs: ok')
+
+assert.equal(learnerAssignmentCategoryLabel({ activity: 'nazra', hifz_category: 'sabaq' }, key => key), 'dashboard.activity_area_nazra')
+assert.equal(learnerAssignmentCategoryLabel({ activity: 'tajweed', hifz_category: 'sabaq' }, key => key), 'dashboard.activity_area_tajweed')
+assert.equal(learnerAssignmentCategoryLabel({ activity: 'hifz', hifz_category: 'sabaq' }, key => key), 'dashboard.activity_area_hifz · dashboard.student_stage_new')

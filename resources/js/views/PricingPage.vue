@@ -2,10 +2,13 @@
   <div
     ref="pageRoot"
     class="pricing-page"
-    :class="{ 'pricing-page--preview': landingPreview }"
+    :class="{
+      'pricing-page--preview': landingPreview,
+      'pricing-page--embedded': embedded,
+    }"
     :data-theme="currentTheme"
   >
-    <section class="pricing-intro">
+    <section id="pricing" class="pricing-intro">
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.pricing.kicker') }}</p>
@@ -175,6 +178,10 @@ export default {
   name: 'PricingPage',
   props: {
     landingPreview: {
+      type: Boolean,
+      default: false,
+    },
+    embedded: {
       type: Boolean,
       default: false,
     },
@@ -475,3 +482,4 @@ export default {
 <style src="../styles/pricing-page.css"></style>
 <style src="./Homepage.css"></style>
 <style src="../styles/preview-motion.css"></style>
+<style src="../styles/preview-editorial-tokens.css"></style>

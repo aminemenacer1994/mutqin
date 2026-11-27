@@ -11,15 +11,22 @@
     <TeacherEmpty v-else-if="!threads.length" inline icon="bi bi-chat" :message="t('teacher.guardian_messages_empty')" />
     <div v-else class="teacher-messages-layout teacher-messages-layout--profile teacher-messages-layout--guardian">
       <p class="teacher-meta teacher-messages-parent__pick">{{ t('teacher.messages_parent_pick') }}</p>
-      <ul class="teacher-activity-list teacher-messages-parent__threads">
+      <ul class="teacher-activity-list teacher-messages-parent__threads" role="list">
         <li v-for="row in threads" :key="row.parent_id">
-          <button type="button" :aria-current="active && active.parent_id === row.parent_id ? 'true' : null" @click="openThread(row)">
+          <button
+            type="button"
+            class="teacher-activity-list__row"
+            :class="{ 'is-active': active && active.parent_id === row.parent_id }"
+            :aria-current="active && active.parent_id === row.parent_id ? 'true' : null"
+            @click="openThread(row)"
+          >
             <span class="teacher-activity-list__avatar" aria-hidden="true">{{ initial(row.parent_name) }}</span>
             <span class="teacher-activity-list__copy">
               <strong>{{ row.parent_name }}</strong>
-              <small>{{ t('teacher.guardian_about', { student: studentName }) }}<template v-if="row.preview"> · {{ row.preview }}</template></small>
+              <small class="teacher-messages-parent__preview">{{ t('teacher.guardian_about', { student: studentName }) }}<template v-if="row.preview"> · {{ row.preview }}</template></small>
             </span>
             <span v-if="row.unread" class="teacher-pill is-flagged">{{ row.unread }}</span>
+            <i v-else class="bi bi-chevron-right teacher-activity-list__action" aria-hidden="true"></i>
           </button>
         </li>
       </ul>
