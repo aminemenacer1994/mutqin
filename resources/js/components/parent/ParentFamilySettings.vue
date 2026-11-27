@@ -11,9 +11,19 @@
     <p v-if="notice" class="parent-settings__flash alert alert-success mb-0" role="status">{{ notice }}</p>
     <p v-if="error" class="parent-settings__flash alert alert-danger mb-0" role="alert">{{ error }}</p>
 
+    <nav class="parent-section-tabs" :aria-label="t('parent.nav_settings')">
+      <button v-for="item in settingsSections" :key="item.id" type="button"
+        :class="{ 'is-active': settingsSection === item.id }"
+        :aria-pressed="settingsSection === item.id"
+        :aria-controls="`${uid}-panel-${item.id}`"
+        @click="settingsSection = item.id">
+        <i :class="item.icon" aria-hidden="true"></i>{{ t(item.label) }}
+      </button>
+    </nav>
+
     <div class="teacher-account__grid parent-settings__grid">
       <!-- 1. Account & Profile -->
-      <section class="card teacher-account parent-settings__card" :aria-labelledby="profileHeadingId">
+      <section v-show="settingsSection === 'profile'" :id="`${uid}-panel-profile`" class="card teacher-account parent-settings__card" :aria-labelledby="profileHeadingId">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-person"></i></span>
           <div>
@@ -63,7 +73,7 @@
       </section>
 
       <!-- 2. Children & Connections -->
-      <section class="card teacher-account parent-settings__card" :aria-labelledby="childrenHeadingId">
+      <section v-show="settingsSection === 'children'" :id="`${uid}-panel-children`" class="card teacher-account parent-settings__card" :aria-labelledby="childrenHeadingId">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-people"></i></span>
           <div>
@@ -123,7 +133,7 @@
       </section>
 
       <!-- 3. Notifications -->
-      <section class="card teacher-account parent-settings__card" :aria-labelledby="noticeHeadingId">
+      <section v-show="settingsSection === 'notifications'" :id="`${uid}-panel-notifications`" class="card teacher-account parent-settings__card" :aria-labelledby="noticeHeadingId">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-bell"></i></span>
           <div>
@@ -188,7 +198,7 @@
       </section>
 
       <!-- 4. Workspace & Preferences -->
-      <section class="card teacher-account parent-settings__card" :aria-labelledby="workspaceHeadingId">
+      <section v-show="settingsSection === 'workspace'" :id="`${uid}-panel-workspace`" class="card teacher-account parent-settings__card" :aria-labelledby="workspaceHeadingId">
         <div class="teacher-account__section-head">
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-sliders"></i></span>
           <div>
@@ -288,6 +298,13 @@ export default {
     const uid = `parent-settings-${Math.random().toString(36).slice(2, 9)}`
     return {
       uid,
+      settingsSection: 'profile',
+      settingsSections: [
+        { id: 'profile', label: 'parent.settings_account_title', icon: 'bi bi-person' },
+        { id: 'children', label: 'parent.nav_children', icon: 'bi bi-people' },
+        { id: 'notifications', label: 'parent.notice_title', icon: 'bi bi-bell' },
+        { id: 'workspace', label: 'parent.settings_workspace_title', icon: 'bi bi-sliders' },
+      ],
       profileHeadingId: `${uid}-profile`,
       childrenHeadingId: `${uid}-children`,
       noticeHeadingId: `${uid}-notice`,

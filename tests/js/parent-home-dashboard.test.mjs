@@ -8,6 +8,7 @@ import {
   feedbackExcludingAttention,
   homeStatusSubtitle,
   homeworkExcludingAttention,
+  homeworkRowStatusClass,
   isDueSoon,
   upcomingHomeworkRows,
   weeklyProgressCards,
@@ -160,4 +161,12 @@ test('due soon window', () => {
   const now = new Date('2026-01-10T12:00:00Z')
   assert.equal(isDueSoon({ due_at: new Date(now.getTime() + 36 * 3600000).toISOString() }, now), true)
   assert.equal(isDueSoon({ due_at: new Date(now.getTime() + 72 * 3600000).toISOString() }, now), false)
+})
+
+test('homework badges distinguish work in progress, review, completion and overdue work', () => {
+  assert.equal(homeworkRowStatusClass({ status: 'pending' }), 'is-open')
+  assert.equal(homeworkRowStatusClass({ status: 'in_progress' }), 'is-open')
+  assert.equal(homeworkRowStatusClass({ status: 'awaiting_confirmation' }), 'is-wait')
+  assert.equal(homeworkRowStatusClass({ status: 'completed' }), 'is-ok')
+  assert.equal(homeworkRowStatusClass({ status: 'in_progress', overdue: true }), 'is-late')
 })

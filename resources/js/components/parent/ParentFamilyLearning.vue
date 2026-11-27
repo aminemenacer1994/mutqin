@@ -40,54 +40,21 @@
     </div>
     <NetworkFallback v-else-if="error" @retry="$emit('reload')" />
     <template v-else>
-      <div class="parent-homework-toolbar__meta">
+      <div v-if="filtersActive" class="parent-homework-toolbar__meta">
         <p class="parent-count">{{ listHint }}</p>
         <button v-if="filtersActive" type="button" class="parent-homework-reset" @click="resetFilters">
           {{ t('parent.filter_reset') }}
         </button>
       </div>
       <p v-if="truncated" class="parent-note">{{ t('parent.homework_truncated') }}</p>
-      <section
-        v-if="sortedRows.length"
-        id="parent-homework-breakdown"
-        class="parent-panel parent-homework-breakdown__summary"
-        :aria-labelledby="breakdownHeadingId"
-      >
-        <h2 :id="breakdownHeadingId" class="parent-report__subhead">{{ t('parent.homework_breakdown_title') }}</h2>
-        <p class="parent-lead">{{ breakdownIntro }}</p>
-        <div class="parent-stats parent-stats--compact parent-homework-breakdown__stats" role="list">
-          <article
-            v-for="card in summaryCards"
-            :key="card.key"
-            class="parent-stat parent-stat--compact parent-homework-stat"
-            :class="`is-tone-${card.tone}`"
-            role="listitem"
-          >
-            <span aria-hidden="true"><i :class="card.icon"></i></span>
-            <strong>{{ card.value }}</strong>
-            <small>{{ card.label }}</small>
-          </article>
-        </div>
-        <div v-if="statusBars.length || activityBars.length" class="parent-homework-breakdown__charts">
-          <section v-if="statusBars.length" class="parent-reports-chart-panel">
-            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_status') }}</h3>
-            <ParentSimpleBarChart :bars="statusBars" :aria-label="t('parent.homework_chart_status')" />
-          </section>
-          <section v-if="activityBars.length" class="parent-reports-chart-panel">
-            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_activity') }}</h3>
-            <ParentSimpleBarChart :bars="activityBars" :aria-label="t('parent.homework_chart_activity')" />
-          </section>
-        </div>
-      </section>
       <div v-if="!sortedRows.length" class="parent-homework-empty">
         <TeacherEmpty illustrated icon="bi bi-check2-circle" :message="emptyMessage" />
         <button v-if="filtersActive" type="button" class="dash-btn dash-btn--ghost" @click="resetFilters">
           {{ t('parent.filter_reset') }}
         </button>
       </div>
-      <div v-else class="parent-homework-breakdown">
-        <h2 class="parent-report__subhead">{{ t('parent.homework_breakdown_list') }}</h2>
-        <p v-if="breakdownLead" class="parent-stat__hint">{{ breakdownLead }}</p>
+      <div v-else id="parent-homework-breakdown" class="parent-homework-breakdown">
+        <h2 class="parent-report__subhead">{{ listHint }}</h2>
         <section
           v-for="group in groupedRows"
           :key="group.key"
@@ -135,6 +102,20 @@
         </section>
       </div>
     </template>
+    <details v-if="!loading && !error && shared && sortedRows.length" class="parent-disclosure parent-homework-analytics">
+      <summary>{{ t('parent.homework_breakdown_title') }}</summary>
+        <div v-if="statusBars.length || activityBars.length" class="parent-homework-breakdown__charts">
+          <section v-if="statusBars.length" class="parent-reports-chart-panel">
+            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_status') }}</h3>
+            <ParentSimpleBarChart :bars="statusBars" :aria-label="t('parent.homework_chart_status')" />
+          </section>
+          <section v-if="activityBars.length" class="parent-reports-chart-panel">
+            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_activity') }}</h3>
+            <ParentSimpleBarChart :bars="activityBars" :aria-label="t('parent.homework_chart_activity')" />
+          </section>
+        </div>
+    </details>
+
     <DashModalRoot
         :open="Boolean(active)"
         labelled-by="parent-task-title"
@@ -283,9 +264,6 @@ export default {
     loading(next, prev) {
       if (prev && !next) {
         this.openFocusedAssignment()
-        if (!Number(this.focusAssignmentId || 0) && this.sortedRows.length) {
-          this.$nextTick(() => this.scrollToBreakdown())
-        }
       }
     },
   },

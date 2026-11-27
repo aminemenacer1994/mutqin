@@ -15,7 +15,7 @@
       <span class="visually-hidden">{{ t('parent.loading') }}</span>
     </div>
     <template v-else>
-      <TeacherSectionPane flat>
+      <div class="parent-messages-layout">
         <div
           class="parent-messages-workspace"
           :class="{
@@ -36,7 +36,7 @@
                 >
               </label>
               <div
-                v-if="children.length"
+                v-if="children.length > 1 || unreadTotal"
                 class="parent-pills parent-messages-pills"
                 role="group"
                 :aria-label="t('parent.child_filter')"
@@ -59,7 +59,7 @@
                   {{ t('parent.messages_unread_filter', { n: unreadTotal }) }}
                 </button>
                 <button
-                  v-for="child in children"
+                  v-for="child in (children.length > 1 ? children : [])"
                   :key="child.id"
                   type="button"
                   :class="{ 'is-active': selectedId === child.id }"
@@ -99,7 +99,7 @@
                       <strong>{{ row.teacher_name || t('parent.teacher_fallback') }}</strong>
                       <time v-if="row.last_at" :datetime="row.last_at">{{ formatConversationWhen(row.last_at) }}</time>
                     </span>
-                    <small class="parent-messages-list__child">{{ row.child_name }}</small>
+                    <small v-if="children.length > 1" class="parent-messages-list__child">{{ row.child_name }}</small>
                     <small v-if="row.preview" class="parent-messages-list__preview" dir="auto">{{ row.preview }}</small>
                     <small v-else class="parent-messages-list__preview is-muted">{{ t('parent.messages_start') }}</small>
                   </span>
@@ -137,7 +137,7 @@
             </div>
           </div>
         </div>
-      </TeacherSectionPane>
+      </div>
     </template>
   </section>
 </template>

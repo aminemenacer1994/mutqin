@@ -1,10 +1,18 @@
 <template>
   <section class="parent-home parent-home-dashboard teacher-stack" aria-labelledby="parent-overview-heading">
-    <header class="teacher-page-header parent-home-hero dash-reveal">
-      <div class="parent-progress__head-copy">
-        <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
-        <h1 id="parent-overview-heading" class="teacher-page-header__title">{{ t('parent.greeting', { name: firstName }) }}</h1>
-        <p class="teacher-page-header__hint" role="status">{{ statusSubtitle }}</p>
+    <header class="dash-reveal teacher-hero parent-home-hero">
+      <div class="teacher-hero__row">
+        <div class="teacher-hero__identity">
+          <span class="teacher-hero__mark" aria-hidden="true"><i class="bi bi-people"></i></span>
+          <div class="teacher-hero__copy">
+            <p class="teacher-hero__eyebrow">{{ t('parent.workspace_label') }}</p>
+            <h1 id="parent-overview-heading" class="teacher-hero__title">{{ t('parent.greeting', { name: firstName }) }}</h1>
+            <p class="teacher-meta" role="status">{{ statusSubtitle }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" @click="$emit('open-children')">
+          <i class="bi bi-people" aria-hidden="true"></i>{{ t('parent.nav_children') }}
+        </button>
       </div>
     </header>
 
@@ -36,11 +44,6 @@
         icon="bi bi-sun"
         flat
       >
-        <p class="parent-lead">{{ todayLead }}</p>
-        <div v-if="homeworkStatusBars.length" class="parent-home-snapshot__chart">
-          <p class="parent-stat__hint">{{ t('parent.home_homework_chart_hint') }}</p>
-          <ParentSimpleBarChart :bars="homeworkStatusBars" :aria-label="t('parent.home_homework_chart')" />
-        </div>
         <div class="parent-home-snapshot__body">
           <dl v-if="nextLesson" class="parent-home-today__facts parent-home-snapshot__next">
             <div>
@@ -147,7 +150,7 @@
           flat
         >
           <TeacherEmpty v-if="!recentFeedback.length" inline icon="bi bi-chat-left" :message="t('parent.feedback_empty')" />
-          <ul v-else class="parent-report parent-home-feedback">
+          <ul v-else class="parent-home-feedback">
             <li v-for="row in recentFeedback" :key="row.id">
               <header class="parent-home-feedback__head">
                 <strong v-if="showFeedbackChildName">{{ row.child_name }}</strong>
@@ -250,7 +253,7 @@ export default {
     attendanceAlerts: { type: Array, default: () => [] },
     selectedChildId: { type: Number, default: null },
   },
-  emits: ['open-child', 'open-learning', 'open-messages', 'open-progress', 'open-settings'],
+  emits: ['open-child', 'open-children', 'open-learning', 'open-messages', 'open-progress', 'open-settings'],
   computed: {
     focusChild() {
       return resolveFocusChild(this.children, this.selectedChildId)

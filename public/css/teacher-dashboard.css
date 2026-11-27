@@ -11224,37 +11224,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   .teacher-metric-strip { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
-/* Parent shell keeps the teacher components and only lifts type, targets, and wrapping. */
-[data-platform-shell="parent"] .teacher-dashboard__main { font-size: 16px; line-height: 1.5; }
-[data-platform-shell="parent"] h1,
-[data-platform-shell="parent"] .teacher-page-header__title,
-[data-platform-shell="parent"] .teacher-hero__title { font-size: 28px; line-height: 1.2; }
-[data-platform-shell="parent"] .teacher-profile-hero h2 { font-size: 26px; line-height: 1.25; }
-[data-platform-shell="parent"] .teacher-pane__title,
-[data-platform-shell="parent"] .teacher-account__section-head h2,
-[data-platform-shell="parent"] .teacher-account__identity h3 { font-size: 20px; line-height: 1.3; }
-[data-platform-shell="parent"] .teacher-kicker,
-[data-platform-shell="parent"] .teacher-hero__eyebrow,
-[data-platform-shell="parent"] .teacher-meta,
-[data-platform-shell="parent"] .teacher-page-header__hint,
-[data-platform-shell="parent"] .teacher-pane__hint,
-[data-platform-shell="parent"] .teacher-metric__label,
-[data-platform-shell="parent"] .teacher-account__section-head p,
-[data-platform-shell="parent"] .teacher-account__email,
-[data-platform-shell="parent"] .teacher-account__role,
-[data-platform-shell="parent"] .parent-date,
-[data-platform-shell="parent"] .parent-steps time,
-[data-platform-shell="parent"] .teacher-direct-thread__bubble-head strong,
-[data-platform-shell="parent"] .teacher-direct-thread__bubble-foot { font-size: 14px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-activity-list__copy strong { font-size: 16px; line-height: 1.35; }
-[data-platform-shell="parent"] .teacher-activity-list__copy small,
-[data-platform-shell="parent"] .teacher-activity-list__score,
-[data-platform-shell="parent"] .teacher-pill,
-[data-platform-shell="parent"] .alert { font-size: 14px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-direct-thread__bubble p { font-size: 16px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-nav__link,
-[data-platform-shell="parent"] .dash-btn,
-[data-platform-shell="parent"] .btn { font-size: 15px; }
+/* Parent content keeps the shared Teacher type scale and touch-friendly controls. */
 [data-platform-shell="parent"] .btn,
 [data-platform-shell="parent"] .dash-btn,
 [data-platform-shell="parent"] .teacher-activity-list > li > button { min-height: 44px; }
@@ -11275,56 +11245,35 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 
 /* Parent home: calm, short, and one filter row. */
 [data-platform-shell="parent"].teacher-dashboard {
-  --teacher-bg: #f6f0e6;
-  --teacher-surface: #fffdfb;
-  --teacher-surface-soft: #f8f2ea;
-  --teacher-surface-hover: #f4ebdf;
-  --teacher-text: #3c2f26;
-  --teacher-text-soft: #7d6a59;
-  --teacher-line: #eadfce;
-  --teacher-accent: #9a6236;
-  --teacher-accent-ink: #7a4e2b;
-  --teacher-accent-soft: #f3e6d4;
-  --teacher-positive: #2f6a4a;
-  --teacher-positive-soft: #e7f3ec;
-  --teacher-warning: #8a5a16;
-  --teacher-warning-soft: #fbf1dc;
-  --teacher-danger: #9b3d3d;
-  --teacher-danger-soft: #fbeaea;
-  --teacher-radius: 20px;
-  --teacher-gap: 28px;
-  --teacher-nav-width: 248px;
-  --teacher-shadow: 0 1px 2px rgba(80, 52, 28, 0.04), 0 14px 32px rgba(80, 52, 28, 0.06);
+  /* Parent pages use the same visual tokens as the Teacher workspace. */
   --parent-ink: var(--teacher-text);
   --parent-muted: var(--teacher-text-soft);
   --parent-line: var(--teacher-line);
-  --parent-pill: #f3e6d4;
-  --parent-paper: #fffdfb;
+  --parent-pill: var(--teacher-accent-soft);
+  --parent-paper: var(--teacher-surface);
   background: var(--teacher-bg);
 }
-[data-platform-shell="parent"].user-dashboard.teacher-dashboard { padding: 44px 0 80px !important; }
-[data-platform-shell="parent"] .teacher-dashboard__layout { gap: 48px; }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav {
-  gap: 8px !important;
-  padding: 16px !important;
-  border-radius: 22px !important;
-  background: #fff !important;
+  gap: 4px !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  background: var(--teacher-surface) !important;
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link {
-  min-height: 48px;
-  padding: 12px 16px;
-  border-radius: 14px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 8px;
   transition: background 180ms ease, color 180ms ease;
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link:hover {
-  background: #f6f0e6;
+  background: var(--teacher-surface-hover);
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active,
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav .nav-link.is-active {
-  color: #fff;
-  background: #3c2f26;
+  color: var(--on-accent, #fff);
+  background: var(--accent-strong);
 }
-[data-platform-shell="parent"] .teacher-nav-shell--desktop .teacher-nav__label { white-space: nowrap; }
+[data-platform-shell="parent"] .teacher-nav-shell--desktop .teacher-nav__label { white-space: normal; line-height: 1.25; }
 [data-platform-shell="parent"] .teacher-view-stage { animation: parent-rise 420ms cubic-bezier(.2, .7, .2, 1); }
 [data-platform-shell="parent"] .parent-home { display: grid; gap: 24px; align-content: start; }
 [data-platform-shell="parent"] .parent-home.parent-home-dashboard { gap: 28px; }
@@ -13133,7 +13082,7 @@ html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button {
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button .bi { color: var(--teacher-text-soft); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button:hover { background: var(--teacher-surface-hover); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button.is-active,
-html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active { color: #1b1613; background: #e6d3bc; }
+html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active { color: #21180f; background: var(--accent); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button.is-active .bi { color: #6b4a30; }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-status.is-quiet { background: #342b24; color: #e6d3bc; }
 html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard {
@@ -15037,6 +14986,324 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
   .teacher-profile .teacher-direct-thread--chat .teacher-voice-note__preview-actions {
     width: 100%;
   }
+}
+
+/* Parent tasks use the Teacher workspace's surfaces, scale and list hierarchy.
+   Loaded after workspace-modern.css so older Parent presentation rules cannot
+   reintroduce oversized cards. All rules are scoped away from Teacher pages. */
+html[data-theme] [data-platform-shell="parent"] .parent-home {
+  gap: 24px;
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-panel, .parent-child-summary, .parent-settings__card, .parent-disclosure) {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--teacher-line);
+  border-radius: var(--teacher-radius);
+  background: var(--teacher-surface);
+  box-shadow: none;
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-report__subhead, .parent-panel h2, .parent-child-summary__section h3) {
+  margin: 0 0 12px;
+  color: var(--teacher-text);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-transform: none;
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-panel p:last-child, .parent-report-prose:last-child) { margin-bottom: 0; }
+html[data-theme] [data-platform-shell="parent"] :is(.parent-lead, .parent-report-prose) { font-size: 14px; line-height: 1.6; }
+html[data-theme] [data-platform-shell="parent"] .parent-child-context--solo {
+  margin: 0 0 12px;
+  padding: 0;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-child-context__solo {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--teacher-text-soft);
+  font-size: 13px;
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-filters, .parent-report__head) {
+  padding: 12px 16px;
+  gap: 12px;
+  border-radius: var(--teacher-radius);
+  background: var(--teacher-surface);
+  box-shadow: none;
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-report-select, .parent-date, .parent-download, .parent-messages-search) {
+  min-height: 42px;
+  border-radius: var(--teacher-radius-sm);
+  background: var(--teacher-surface);
+  color: var(--teacher-text);
+  font-size: 14px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-report-field__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-pills {
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--teacher-surface-soft);
+  gap: 4px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-pills button {
+  min-height: 36px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-pills button.is-active {
+  color: var(--teacher-accent-ink);
+  background: var(--teacher-accent-soft);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0;
+  border-bottom: 1px solid var(--teacher-line);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-section-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 16px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--teacher-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-section-tabs button.is-active {
+  border-bottom-color: var(--teacher-accent);
+  color: var(--teacher-accent-ink);
+}
+html[data-theme] [data-platform-shell="parent"] :is(.parent-section-tabs button:hover, .parent-homework-card__hit:hover) { background: var(--teacher-surface-soft); }
+html[data-theme] [data-platform-shell="parent"] :is(.parent-section-tabs button, summary):focus-visible {
+  outline: 2px solid var(--teacher-accent);
+  outline-offset: 3px;
+}
+/* Glanceable metrics: one horizontal row rather than icons stacked on numbers. */
+html[data-theme] [data-platform-shell="parent"] .parent-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-stat {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  -moz-column-gap: 12px;
+       column-gap: 12px;
+  row-gap: 3px;
+  align-content: center;
+  padding: 16px;
+  border: 1px solid var(--teacher-line);
+  border-radius: var(--teacher-radius-sm);
+  background: var(--teacher-surface);
+  box-shadow: none;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-stat > span {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  margin: 0;
+  color: var(--teacher-accent-ink);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-stat > strong { grid-column: 2; font-size: 26px; line-height: 1.15; }
+html[data-theme] [data-platform-shell="parent"] .parent-stat > small { grid-column: 2; }
+html[data-theme] [data-platform-shell="parent"] .parent-stat > p { grid-column: 1 / -1; margin-top: 6px; }
+/* The home summary has two useful destinations and no duplicate charts. */
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot.teacher-pane { background: var(--teacher-surface); border-color: var(--teacher-line); box-shadow: none; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__body { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__next { margin: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat { display: block; padding: 0; border: 0; border-inline-start: 1px solid var(--teacher-line); border-radius: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat button { padding: 8px 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat strong { font-size: 16px; line-height: 1.4; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat button > span { display: none; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-feedback { list-style: none; padding: 0; margin: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-feedback > li { padding: 0; border: 0; background: transparent; box-shadow: none; }
+html[data-theme] [data-platform-shell="parent"] .parent-home-feedback blockquote { margin: 10px 0; padding: 12px 16px; border-radius: 8px; background: var(--teacher-surface-soft); }
+html[data-theme] [data-platform-shell="parent"] .parent-home-feedback__head p { margin: 0; }
+/* Homework uses the same divided-row structure as Teacher assignments. */
+html[data-theme] [data-platform-shell="parent"] .parent-homework-breakdown {
+  padding: 0;
+  border: 1px solid var(--teacher-line);
+  border-radius: var(--teacher-radius);
+  overflow: hidden;
+  background: var(--teacher-surface);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-homework-breakdown > h2 { padding: 16px 20px; margin: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-group { margin: 0; padding: 0; border: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-group__title {
+  margin: 0;
+  padding: 10px 20px;
+  border-block: 1px solid var(--teacher-line);
+  background: var(--teacher-surface-soft);
+  color: var(--teacher-text-soft);
+  font-size: 13px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-homework-list { display: block; margin: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
+  background: var(--teacher-surface);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card + .parent-homework-card { border-top: 1px solid var(--teacher-line); }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card__hit { padding: 16px 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card__body { gap: 4px; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card__title { font-size: 15px; }
+html[data-theme] [data-platform-shell="parent"] .parent-homework-card__cta {
+  padding: 8px 12px;
+  border: 1px solid var(--teacher-line);
+  border-radius: var(--teacher-radius-sm);
+  background: var(--teacher-surface);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-status { font-size: 12px; padding: 4px 9px; min-height: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-disclosure > summary { cursor: pointer; color: var(--teacher-accent-ink); font-size: 14px; font-weight: 600; }
+html[data-theme] [data-platform-shell="parent"] .parent-disclosure[open] > summary { margin-bottom: 20px; }
+/* Progress and reports: summary first, supporting information second. */
+html[data-theme] [data-platform-shell="parent"] .parent-progress__toolbar { flex: 0 0 auto; padding: 0; border: 0; background: transparent; }
+html[data-theme] [data-platform-shell="parent"] .parent-progress-sections { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-progress-summary { grid-column: 1 / -1; }
+html[data-theme] [data-platform-shell="parent"] .parent-progress-summary .parent-stat { border: 0; background: var(--teacher-surface-soft); }
+html[data-theme] [data-platform-shell="parent"] .parent-progress-hifz-terms { margin: 12px 0; font-size: 13px; }
+html[data-theme] [data-platform-shell="parent"] .parent-report-metrics { gap: 0; margin: 12px 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-report-metrics li { padding: 10px 0; border: 0; border-bottom: 1px solid var(--teacher-line); border-radius: 0; background: transparent; }
+html[data-theme] [data-platform-shell="parent"] .parent-report-stack { gap: 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-report__head h2 { font-size: 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-report-support__body { display: grid; gap: 20px; }
+html[data-theme] [data-platform-shell="parent"] .parent-report-support__body > .parent-panel { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--teacher-line); border-radius: 0; }
+/* One settings panel at a time, with compact labels and normal-size actions. */
+html[data-theme] [data-platform-shell="parent"] .parent-settings__grid { display: block; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card { display: grid; gap: 20px; align-content: start; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card > :is(form, .parent-settings__field, .parent-settings__theme) { width: 100%; max-width: 720px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__field { gap: 6px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card label { min-height: 0; margin: 0; font-size: 14px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__label { margin: 0; padding: 0; font-size: 14px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card .teacher-account__section-head { margin: 0; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card .teacher-account__section-head h2 { font-size: 18px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card .teacher-account__section-head p { font-size: 13px; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__card .teacher-account__action { width: auto; justify-self: start; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__form > button { justify-self: start; }
+html[data-theme] [data-platform-shell="parent"] .parent-settings__details summary { list-style: revert; }
+/* Messages use two adjacent panes, not a card nested inside another card. */
+html[data-theme] [data-platform-shell="parent"] .parent-messages-workspace { gap: 16px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-inbox-bar { padding: 12px; gap: 8px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-search { padding: 8px 12px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-list > li > button { padding: 14px 12px; gap: 10px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-thread-empty { border-style: solid; background: var(--teacher-surface); }
+html[data-theme] [data-platform-shell="parent"] .parent-messages .teacher-direct-thread__bubble { width: -moz-fit-content; width: fit-content; max-width: 90%; padding: 12px 16px; border-radius: 12px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages .teacher-direct-thread__list { padding: 16px; gap: 12px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-context-feedback { padding: 12px 16px; }
+@media (min-width: 1200px) {
+  html[data-theme] [data-platform-shell="parent"] .parent-home-columns--split > .teacher-pane { grid-column: span 6; }
+}
+@media (max-width: 767.98px) {
+  html[data-theme] [data-platform-shell="parent"] .parent-progress-sections,
+  html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__body { grid-template-columns: minmax(0, 1fr); }
+  html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat { border-inline-start: 0; border-top: 1px solid var(--teacher-line); }
+  html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__stat button { padding: 16px 0 0; }
+  html[data-theme] [data-platform-shell="parent"] .parent-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-theme] [data-platform-shell="parent"] .parent-stat { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  html[data-theme] [data-platform-shell="parent"] .parent-stat > :is(strong, small, p) { grid-column: 1; }
+  html[data-theme] [data-platform-shell="parent"] .parent-stat > span { display: none; }
+  html[data-theme] [data-platform-shell="parent"] .parent-section-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  html[data-theme] [data-platform-shell="parent"] .parent-section-tabs button { padding: 10px 6px; text-align: start; font-size: 13px; }
+  html[data-theme] [data-platform-shell="parent"] :is(.parent-panel, .parent-child-summary, .parent-settings__card, .parent-disclosure) { padding: 16px; }
+  html[data-theme] [data-platform-shell="parent"] .parent-homework-card__hit { padding: 14px; }
+  html[data-theme] [data-platform-shell="parent"] .parent-homework-card__cta { padding: 0; border: 0; background: transparent; }
+}
+html[data-theme] [data-platform-shell="parent"] .parent-progress-lifetime {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-progress-lifetime li {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 0;
+  border: 0;
+  font-size: 13px;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-progress-lifetime strong { font-size: 26px; }
+html[data-theme] [data-platform-shell="parent"] .parent-messages-workspace {
+  --parent-messages-pane-height: max(400px, calc(100dvh - 244px));
+}
+html[data-theme] [data-platform-shell="parent"] .parent-messages-search input { min-height: 24px; padding: 0; }
+@media (max-width: 991.98px) {
+  [data-platform-shell="parent"] .teacher-nav--with-admin { max-height: none; overflow: visible; }
+  [data-platform-shell="parent"] .teacher-nav--with-admin :is(.teacher-nav__footer, .teacher-nav__admin) { display: contents; }
+  [data-platform-shell="parent"] .teacher-nav__admin-sheet {
+    position: fixed;
+    inset-inline: 10px;
+    bottom: calc(var(--teacher-mobile-nav-offset, 4.4rem) + 6px);
+    z-index: 1036;
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--teacher-line);
+    border-radius: 12px;
+    background: var(--teacher-surface);
+    box-shadow: var(--teacher-shadow);
+    max-height: min(40dvh, 280px);
+    overflow-y: auto;
+  }
+  html[data-theme] [data-platform-shell="parent"] .teacher-nav__admin-sheet .teacher-nav__link {
+    flex-direction: row !important;
+    justify-content: flex-start;
+    gap: 10px;
+    font-size: 14px;
+  }
+  html[data-theme] [data-platform-shell="parent"] .teacher-nav__admin-sheet .teacher-nav__label { font-size: 14px; }
+  [data-platform-shell="parent"] .teacher-nav__admin-toggle .teacher-nav__chevron { display: none; }
+  html[data-theme] [data-platform-shell="parent"] .teacher-nav__admin-toggle[aria-expanded="true"] {
+    background: var(--teacher-accent-soft);
+    color: var(--teacher-accent-ink);
+  }
+}
+@media (max-width: 991.98px) {
+  html[data-theme] [data-platform-shell="parent"] .teacher-nav-shell--mobile .teacher-nav__link { padding-inline: 2px; }
+  html[data-theme] [data-platform-shell="parent"] .teacher-nav-shell--mobile .teacher-nav__label {
+    max-width: 100%;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 575.98px) {
+  html[data-theme] [data-platform-shell="parent"] .teacher-activity-list > li > button {
+    grid-template-columns: 32px minmax(0, 1fr) 16px;
+    -moz-column-gap: 10px;
+         column-gap: 10px;
+    row-gap: 6px;
+  }
+  html[data-theme] [data-platform-shell="parent"] .teacher-activity-list__copy { grid-column: 2; grid-row: 1; }
+  html[data-theme] [data-platform-shell="parent"] .teacher-activity-list > li > button > :is(.parent-status, .teacher-activity-list__score) {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    text-align: start;
+    max-width: none;
+  }
+  html[data-theme] [data-platform-shell="parent"] .teacher-activity-list > li > button > .bi-chevron-right { grid-column: 3; grid-row: 1 / 3; }
+  html[data-theme] [data-platform-shell="parent"] .teacher-activity-list__avatar { grid-column: 1; grid-row: 1 / 3; }
 }
 
 @charset "UTF-8";

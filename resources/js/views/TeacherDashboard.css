@@ -2564,37 +2564,7 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
   .teacher-metric-strip { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
-/* Parent shell keeps the teacher components and only lifts type, targets, and wrapping. */
-[data-platform-shell="parent"] .teacher-dashboard__main { font-size: 16px; line-height: 1.5; }
-[data-platform-shell="parent"] h1,
-[data-platform-shell="parent"] .teacher-page-header__title,
-[data-platform-shell="parent"] .teacher-hero__title { font-size: 28px; line-height: 1.2; }
-[data-platform-shell="parent"] .teacher-profile-hero h2 { font-size: 26px; line-height: 1.25; }
-[data-platform-shell="parent"] .teacher-pane__title,
-[data-platform-shell="parent"] .teacher-account__section-head h2,
-[data-platform-shell="parent"] .teacher-account__identity h3 { font-size: 20px; line-height: 1.3; }
-[data-platform-shell="parent"] .teacher-kicker,
-[data-platform-shell="parent"] .teacher-hero__eyebrow,
-[data-platform-shell="parent"] .teacher-meta,
-[data-platform-shell="parent"] .teacher-page-header__hint,
-[data-platform-shell="parent"] .teacher-pane__hint,
-[data-platform-shell="parent"] .teacher-metric__label,
-[data-platform-shell="parent"] .teacher-account__section-head p,
-[data-platform-shell="parent"] .teacher-account__email,
-[data-platform-shell="parent"] .teacher-account__role,
-[data-platform-shell="parent"] .parent-date,
-[data-platform-shell="parent"] .parent-steps time,
-[data-platform-shell="parent"] .teacher-direct-thread__bubble-head strong,
-[data-platform-shell="parent"] .teacher-direct-thread__bubble-foot { font-size: 14px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-activity-list__copy strong { font-size: 16px; line-height: 1.35; }
-[data-platform-shell="parent"] .teacher-activity-list__copy small,
-[data-platform-shell="parent"] .teacher-activity-list__score,
-[data-platform-shell="parent"] .teacher-pill,
-[data-platform-shell="parent"] .alert { font-size: 14px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-direct-thread__bubble p { font-size: 16px; line-height: 1.45; }
-[data-platform-shell="parent"] .teacher-nav__link,
-[data-platform-shell="parent"] .dash-btn,
-[data-platform-shell="parent"] .btn { font-size: 15px; }
+/* Parent content keeps the shared Teacher type scale and touch-friendly controls. */
 [data-platform-shell="parent"] .btn,
 [data-platform-shell="parent"] .dash-btn,
 [data-platform-shell="parent"] .teacher-activity-list > li > button { min-height: 44px; }
@@ -2615,56 +2585,35 @@ html[data-theme="dark"] .teacher-review-page { --teacher-card-shadow: none; }
 
 /* Parent home: calm, short, and one filter row. */
 [data-platform-shell="parent"].teacher-dashboard {
-  --teacher-bg: #f6f0e6;
-  --teacher-surface: #fffdfb;
-  --teacher-surface-soft: #f8f2ea;
-  --teacher-surface-hover: #f4ebdf;
-  --teacher-text: #3c2f26;
-  --teacher-text-soft: #7d6a59;
-  --teacher-line: #eadfce;
-  --teacher-accent: #9a6236;
-  --teacher-accent-ink: #7a4e2b;
-  --teacher-accent-soft: #f3e6d4;
-  --teacher-positive: #2f6a4a;
-  --teacher-positive-soft: #e7f3ec;
-  --teacher-warning: #8a5a16;
-  --teacher-warning-soft: #fbf1dc;
-  --teacher-danger: #9b3d3d;
-  --teacher-danger-soft: #fbeaea;
-  --teacher-radius: 20px;
-  --teacher-gap: 28px;
-  --teacher-nav-width: 248px;
-  --teacher-shadow: 0 1px 2px rgba(80, 52, 28, 0.04), 0 14px 32px rgba(80, 52, 28, 0.06);
+  /* Parent pages use the same visual tokens as the Teacher workspace. */
   --parent-ink: var(--teacher-text);
   --parent-muted: var(--teacher-text-soft);
   --parent-line: var(--teacher-line);
-  --parent-pill: #f3e6d4;
-  --parent-paper: #fffdfb;
+  --parent-pill: var(--teacher-accent-soft);
+  --parent-paper: var(--teacher-surface);
   background: var(--teacher-bg);
 }
-[data-platform-shell="parent"].user-dashboard.teacher-dashboard { padding: 44px 0 80px !important; }
-[data-platform-shell="parent"] .teacher-dashboard__layout { gap: 48px; }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav {
-  gap: 8px !important;
-  padding: 16px !important;
-  border-radius: 22px !important;
-  background: #fff !important;
+  gap: 4px !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  background: var(--teacher-surface) !important;
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link {
-  min-height: 48px;
-  padding: 12px 16px;
-  border-radius: 14px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 8px;
   transition: background 180ms ease, color 180ms ease;
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link:hover {
-  background: #f6f0e6;
+  background: var(--teacher-surface-hover);
 }
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active,
 [data-platform-shell="parent"].teacher-dashboard .teacher-nav .nav-link.is-active {
-  color: #fff;
-  background: #3c2f26;
+  color: var(--on-accent, #fff);
+  background: var(--accent-strong);
 }
-[data-platform-shell="parent"] .teacher-nav-shell--desktop .teacher-nav__label { white-space: nowrap; }
+[data-platform-shell="parent"] .teacher-nav-shell--desktop .teacher-nav__label { white-space: normal; line-height: 1.25; }
 [data-platform-shell="parent"] .teacher-view-stage { animation: parent-rise 420ms cubic-bezier(.2, .7, .2, 1); }
 [data-platform-shell="parent"] .parent-home { display: grid; gap: 24px; align-content: start; }
 [data-platform-shell="parent"] .parent-home.parent-home-dashboard { gap: 28px; }
@@ -4468,7 +4417,7 @@ html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button {
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button .bi { color: var(--teacher-text-soft); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button:hover { background: var(--teacher-surface-hover); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button.is-active,
-html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active { color: #1b1613; background: #e6d3bc; }
+html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard .teacher-nav__link.is-active { color: #21180f; background: var(--accent); }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-pills button.is-active .bi { color: #6b4a30; }
 html[data-theme="dark"] [data-platform-shell="parent"] .parent-status.is-quiet { background: #342b24; color: #e6d3bc; }
 html[data-theme="dark"] [data-platform-shell="parent"].teacher-dashboard {

@@ -54,6 +54,7 @@
                 :attendance-alerts="visibleAttendanceAlerts"
                 :selected-child-id="selectedChildId"
                 @open-child="openChild"
+                @open-children="openView('children')"
                 @open-learning="(id, assignmentId) => openLearning(id, assignmentId)"
                 @open-messages="openMessages"
                 @open-progress="openProgress"
@@ -183,7 +184,9 @@
 
         <TeacherNav
           variant="mobile"
-          :items="PARENT_NAV"
+          :items="PARENT_NAV.filter(item => ['overview', 'learning', 'progress', 'messages'].includes(item.id))"
+          :admin-items="PARENT_NAV.filter(item => ['children', 'reports', 'settings'].includes(item.id))"
+          admin-label-key="parent.nav_more"
           :badges="navBadges"
           :active-view="navView"
           :show-account="false"
@@ -358,7 +361,7 @@ export default {
       return parentChildSelectorAllowsAll(this.view)
     },
     showChildContext() {
-      return this.children.length > 0 && this.view !== 'settings'
+      return this.children.length > 0 && ['overview', 'learning', 'progress', 'reports'].includes(this.view)
     },
     activeChildLearning() {
       const id = this.progressChildId

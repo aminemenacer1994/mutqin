@@ -74,14 +74,6 @@
           </ul>
         </section>
 
-        <div v-if="chartPanels.length" class="parent-reports-charts">
-          <section v-for="panel in chartPanels" :key="panel.key" class="parent-panel parent-reports-chart-panel">
-            <h2 class="parent-report__subhead">{{ panel.title }}</h2>
-            <p v-if="panel.hint" class="parent-stat__hint">{{ panel.hint }}</p>
-            <ParentSimpleBarChart :bars="panel.bars" :aria-label="panel.title" />
-          </section>
-        </div>
-
         <div v-if="kpiCards.length" class="parent-stats parent-stats--reports" role="list">
           <article v-for="card in kpiCards" :key="card.key" class="parent-stat" role="listitem">
             <span aria-hidden="true"><i :class="card.icon"></i></span>
@@ -91,125 +83,15 @@
           </article>
         </div>
 
-        <section v-if="showOverview" class="parent-panel" :class="{ 'parent-reports-overview--parent': parentFirstLayout }">
-          <h2><i class="bi bi-card-text" aria-hidden="true"></i>{{ t('parent.reports_overview') }}</h2>
-          <details v-if="parentFirstLayout && active.narrative?.text" class="parent-report-details parent-reports-detail-fold">
-            <summary>{{ t('parent.reports_read_more') }}</summary>
-            <p class="parent-report-prose">{{ active.narrative.text }}</p>
-          </details>
-          <template v-else-if="active.narrative?.text">
-            <p v-if="!needsFold(active.narrative.text)" class="parent-report-prose">{{ active.narrative.text }}</p>
-            <template v-else>
-              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.narrative.text) }}</p>
-              <details class="parent-report-details">
-                <summary>{{ t('parent.reports_read_more') }}</summary>
-                <p class="parent-report-prose">{{ active.narrative.text }}</p>
-              </details>
-            </template>
-          </template>
-          <div v-if="periodStats.length || lifetimeStats.length" class="parent-report-split">
-            <div v-if="periodStats.length">
-              <h3 class="parent-report__subhead">{{ t('parent.reports_period_stats') }}</h3>
-              <ul class="parent-report-metrics">
-                <li v-for="row in periodStats" :key="row.key">
-                  <span>{{ row.label }}</span>
-                  <strong>{{ row.value }}</strong>
-                </li>
-              </ul>
-            </div>
-            <div v-if="lifetimeStats.length">
-              <h3 class="parent-report__subhead">{{ t('parent.reports_lifetime_stats') }}</h3>
-              <ul class="parent-report-metrics">
-                <li v-for="row in lifetimeStats" :key="row.key">
-                  <span>{{ row.label }}</span>
-                  <strong>{{ row.value }}</strong>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <details v-if="active.comparison?.plain" class="parent-report-details">
-            <summary>{{ t('parent.reports_compare') }}</summary>
-            <p class="parent-report-prose">{{ active.comparison.plain }}</p>
-          </details>
-          <details v-if="active.goals?.plain" class="parent-report-details">
-            <summary>{{ t('parent.reports_goals') }}</summary>
-            <p class="parent-report-prose">{{ active.goals.plain }}</p>
-          </details>
-          <p v-if="sourceLabels.length" class="parent-stat__hint">{{ t('parent.reports_evidence_note') }}</p>
-          <details v-if="sourceLabels.length" class="parent-report-details">
-            <summary>{{ t('parent.reports_sources') }}</summary>
-            <ul class="parent-pills--sources" role="list">
-              <li v-for="(label, index) in sourceLabels" :key="`${label}-${index}`" role="listitem">
-                <span class="parent-report-source">{{ label }}</span>
-              </li>
-            </ul>
-          </details>
-          <div class="parent-report-attention parent-report-attention--spaced">
-            <h3 class="parent-report__subhead">{{ t('parent.reports_attention') }}</h3>
-            <p v-if="!hasAttention" class="parent-report-prose">{{ t('parent.reports_attention_empty') }}</p>
-            <ul v-else class="parent-report-list">
-              <li v-for="(item, index) in active.attention" :key="`${item.kind}-${index}`">{{ item.label }}</li>
-            </ul>
-          </div>
-        </section>
-
         <section v-if="showHomework" class="parent-panel">
           <h2><i class="bi bi-journal-check" aria-hidden="true"></i>{{ t('parent.reports_section_homework') }}</h2>
-          <template v-if="active.assignments?.plain">
-            <p v-if="!needsFold(active.assignments.plain)" class="parent-report-prose">{{ active.assignments.plain }}</p>
-            <template v-else>
-              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.assignments.plain) }}</p>
-              <details class="parent-report-details">
-                <summary>{{ t('parent.reports_read_more') }}</summary>
-                <p class="parent-report-prose">{{ active.assignments.plain }}</p>
-              </details>
-            </template>
-          </template>
+          <p v-if="active.assignments?.plain" class="parent-report-prose">{{ active.assignments.plain }}</p>
           <ul v-if="assignmentItems.length" class="parent-report-items">
             <li v-for="(item, index) in assignmentItems" :key="`${item.label}-${index}`">
               <span class="parent-report-item__label" :title="item.label">{{ item.label }}</span>
               <span class="parent-status" :class="statusClass(assignmentStatus(item))">{{ statusLabel(assignmentStatus(item)) }}</span>
             </li>
           </ul>
-        </section>
-
-        <section v-if="showAttendance" class="parent-panel">
-          <h2><i class="bi bi-calendar-week" aria-hidden="true"></i>{{ t('parent.reports_section_attendance') }}</h2>
-          <p v-if="active.attendance?.plain" class="parent-report-prose">{{ active.attendance.plain }}</p>
-          <div v-if="attendanceCards.length" class="parent-stats parent-stats--compact" role="list">
-            <article v-for="card in attendanceCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
-              <span aria-hidden="true"><i :class="card.icon"></i></span>
-              <strong>{{ card.value }}</strong>
-              <small>{{ card.label }}</small>
-            </article>
-          </div>
-        </section>
-
-        <section v-if="showHomePractice" class="parent-panel">
-          <h2><i class="bi bi-house-heart" aria-hidden="true"></i>{{ t('parent.reports_home_practice') }}</h2>
-          <p class="parent-stat__hint">{{ t('parent.reports_home_practice_hint') }}</p>
-          <p v-if="active.home_practice?.plain" class="parent-report-prose">{{ active.home_practice.plain }}</p>
-          <p v-if="!homePracticeItems.length" class="parent-report-prose">{{ t('parent.reports_home_practice_empty') }}</p>
-          <ul v-else class="parent-suggest">
-            <li v-for="(item, index) in homePracticeItems" :key="`${item.label}-${index}`">
-              <strong v-if="item.label">{{ item.label }}</strong>
-              <span v-if="item.text">{{ item.text }}</span>
-            </li>
-          </ul>
-        </section>
-
-        <section v-if="showPractice" class="parent-panel">
-          <h2><i class="bi bi-activity" aria-hidden="true"></i>{{ t('parent.reports_section_practice') }}</h2>
-          <template v-if="active.activity?.plain">
-            <p v-if="!needsFold(active.activity.plain)" class="parent-report-prose">{{ active.activity.plain }}</p>
-            <template v-else>
-              <p class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.activity.plain) }}</p>
-              <details class="parent-report-details">
-                <summary>{{ t('parent.reports_read_more') }}</summary>
-                <p class="parent-report-prose">{{ active.activity.plain }}</p>
-              </details>
-            </template>
-          </template>
         </section>
 
         <section v-if="showFeedback" class="parent-panel">
@@ -227,6 +109,98 @@
             </li>
           </ul>
         </section>
+
+        <details class="parent-disclosure parent-report-support">
+          <summary>{{ t('parent.reports_read_more') }}</summary>
+          <div class="parent-report-support__body">
+            <section v-if="showOverview" class="parent-panel" :class="{ 'parent-reports-overview--parent': parentFirstLayout }">
+              <h2><i class="bi bi-card-text" aria-hidden="true"></i>{{ t('parent.reports_overview') }}</h2>
+              <p v-if="active.narrative?.text" class="parent-report-prose">{{ active.narrative.text }}</p>
+              <div v-if="periodStats.length || lifetimeStats.length" class="parent-report-split">
+                <div v-if="periodStats.length">
+                  <h3 class="parent-report__subhead">{{ t('parent.reports_period_stats') }}</h3>
+                  <ul class="parent-report-metrics">
+                    <li v-for="row in periodStats" :key="row.key">
+                      <span>{{ row.label }}</span>
+                      <strong>{{ row.value }}</strong>
+                    </li>
+                  </ul>
+                </div>
+                <div v-if="lifetimeStats.length">
+                  <h3 class="parent-report__subhead">{{ t('parent.reports_lifetime_stats') }}</h3>
+                  <ul class="parent-report-metrics">
+                    <li v-for="row in lifetimeStats" :key="row.key">
+                      <span>{{ row.label }}</span>
+                      <strong>{{ row.value }}</strong>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <details v-if="active.comparison?.plain" class="parent-report-details">
+                <summary>{{ t('parent.reports_compare') }}</summary>
+                <p class="parent-report-prose">{{ active.comparison.plain }}</p>
+              </details>
+              <details v-if="active.goals?.plain" class="parent-report-details">
+                <summary>{{ t('parent.reports_goals') }}</summary>
+                <p class="parent-report-prose">{{ active.goals.plain }}</p>
+              </details>
+              <details v-if="sourceLabels.length" class="parent-report-details">
+                <summary>{{ t('parent.reports_sources') }}</summary>
+                <p class="parent-stat__hint">{{ t('parent.reports_evidence_note') }}</p>
+                <ul class="parent-pills--sources" role="list">
+                  <li v-for="(label, index) in sourceLabels" :key="`${label}-${index}`" role="listitem">
+                    <span class="parent-report-source">{{ label }}</span>
+                  </li>
+                </ul>
+              </details>
+              <div class="parent-report-attention parent-report-attention--spaced">
+                <h3 class="parent-report__subhead">{{ t('parent.reports_attention') }}</h3>
+                <p v-if="!hasAttention" class="parent-report-prose">{{ t('parent.reports_attention_empty') }}</p>
+                <ul v-else class="parent-report-list">
+                  <li v-for="(item, index) in active.attention" :key="`${item.kind}-${index}`">{{ item.label }}</li>
+                </ul>
+              </div>
+            </section>
+
+            <div v-if="chartPanels.length" class="parent-reports-charts">
+              <section v-for="panel in chartPanels" :key="panel.key" class="parent-panel parent-reports-chart-panel">
+                <h2 class="parent-report__subhead">{{ panel.title }}</h2>
+                <p v-if="panel.hint" class="parent-stat__hint">{{ panel.hint }}</p>
+                <ParentSimpleBarChart :bars="panel.bars" :aria-label="panel.title" />
+              </section>
+            </div>
+
+            <section v-if="showAttendance" class="parent-panel">
+              <h2><i class="bi bi-calendar-week" aria-hidden="true"></i>{{ t('parent.reports_section_attendance') }}</h2>
+              <p v-if="active.attendance?.plain" class="parent-report-prose">{{ active.attendance.plain }}</p>
+              <div v-if="attendanceCards.length" class="parent-stats parent-stats--compact" role="list">
+                <article v-for="card in attendanceCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
+                  <span aria-hidden="true"><i :class="card.icon"></i></span>
+                  <strong>{{ card.value }}</strong>
+                  <small>{{ card.label }}</small>
+                </article>
+              </div>
+            </section>
+
+            <section v-if="showHomePractice" class="parent-panel">
+              <h2><i class="bi bi-house-heart" aria-hidden="true"></i>{{ t('parent.reports_home_practice') }}</h2>
+              <p v-if="active.home_practice?.plain" class="parent-report-prose">{{ active.home_practice.plain }}</p>
+              <p v-if="!homePracticeItems.length && !active.home_practice?.plain" class="parent-report-prose">{{ t('parent.reports_home_practice_empty') }}</p>
+              <ul v-if="homePracticeItems.length" class="parent-suggest">
+                <li v-for="(item, index) in homePracticeItems" :key="`${item.label}-${index}`">
+                  <strong v-if="item.label">{{ item.label }}</strong>
+                  <span v-if="item.text">{{ item.text }}</span>
+                </li>
+              </ul>
+            </section>
+
+            <section v-if="showPractice" class="parent-panel">
+              <h2><i class="bi bi-activity" aria-hidden="true"></i>{{ t('parent.reports_section_practice') }}</h2>
+              <p v-if="active.activity?.plain" class="parent-report-prose">{{ active.activity.plain }}</p>
+            </section>
+
+          </div>
+        </details>
 
       </div>
     </template>

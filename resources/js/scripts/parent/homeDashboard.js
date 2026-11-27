@@ -1,3 +1,5 @@
+import { homeworkDisplayStatusClass } from './familyLearning.js'
+
 const DUE_SOON_MS = 48 * 60 * 60 * 1000
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -273,5 +275,5 @@ export function childHomeworkPill(t, child, homework = [], now = new Date()) {
 export function homeworkRowStatusClass(row, now = new Date()) {
   if (isHomeworkOverdue(row)) return 'is-late'
   if (isDueSoon(row, now)) return 'is-open'
-  return 'is-wait'
+  return homeworkDisplayStatusClass(row?.status)
 }

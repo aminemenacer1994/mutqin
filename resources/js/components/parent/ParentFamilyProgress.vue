@@ -36,14 +36,9 @@
       <span class="visually-hidden">{{ t('parent.loading') }}</span>
     </div>
     <NetworkFallback v-else-if="error" @retry="$emit('reload')" />
-    <template v-else-if="payload">
+    <div v-else-if="payload" class="parent-progress-sections">
       <section class="parent-panel parent-progress-summary parent-progress-summary--featured" :aria-labelledby="overviewHeadingId">
         <h2 :id="overviewHeadingId" class="parent-report__subhead">{{ t('parent.progress_summary_title') }}</h2>
-        <p class="parent-lead">{{ summaryLine }}</p>
-        <div v-if="practiceBar.length" class="parent-progress-chart parent-progress-chart--practice">
-          <p class="parent-stat__hint">{{ t('parent.progress_practice_chart_hint') }}</p>
-          <ParentSimpleBarChart :bars="practiceBar" :aria-label="t('parent.kpi_practice')" />
-        </div>
         <div class="parent-stats parent-stats--compact parent-progress-overview" role="list">
           <article v-for="card in overviewCards" :key="card.key" class="parent-stat parent-stat--compact" role="listitem">
             <span aria-hidden="true"><i :class="card.icon"></i></span>
@@ -52,14 +47,6 @@
             <p v-if="card.hint" class="parent-stat__hint">{{ card.hint }}</p>
           </article>
         </div>
-        <section
-          v-if="periodHomeworkBars.length"
-          class="parent-progress-chart parent-progress-chart--period"
-          :aria-label="t('parent.progress_chart_period_homework')"
-        >
-          <p class="parent-stat__hint">{{ t('parent.progress_chart_period_homework_hint') }}</p>
-          <ParentSimpleBarChart :bars="periodHomeworkBars" :aria-label="t('parent.progress_chart_period_homework')" />
-        </section>
         <div class="parent-progress-summary__actions">
           <button
             v-if="assignmentsShared"
@@ -154,13 +141,12 @@
           <summary>{{ t('parent.progress_hifz_terms') }}</summary>
           <p class="parent-stat__hint">{{ t('teacher.hifz_stage_help') }}</p>
         </details>
-        <ul class="parent-report-metrics">
+        <ul class="parent-report-metrics parent-progress-lifetime">
           <li v-for="row in lifetimeRows" :key="row.key">
             <span>{{ row.label }}</span>
             <strong>{{ row.value }}</strong>
           </li>
         </ul>
-        <p v-for="row in lifetimeHints" :key="`${row.key}-hint`" class="parent-stat__hint">{{ row.hint }}</p>
       </section>
 
       <section v-if="showActivitySection" class="parent-panel" :aria-labelledby="activityHeadingId">
@@ -215,7 +201,7 @@
         </div>
         <NetworkFallback v-else-if="attendanceError" @retry="$emit('reload')" />
         <template v-else-if="attendance">
-          <div class="parent-stats parent-stats--compact" role="list">
+          <div v-if="attendanceHistory.length || attendanceCounts.some(chip => chip.value > 0)" class="parent-stats parent-stats--compact" role="list">
             <article class="parent-stat parent-stat--compact" role="listitem">
               <span aria-hidden="true"><i class="bi bi-percent"></i></span>
               <strong>{{ attendanceRateLabel }}</strong>
@@ -273,7 +259,7 @@
         />
       </section>
 
-    </template>
+    </div>
   </section>
 </template>
 
