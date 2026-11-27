@@ -66,6 +66,36 @@ class StudentLessonManagementWorkflowTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_progressive_hiding_assignments_load_with_completed_practice_sessions(): void
+    {
+        [$teacher, , , $student, $group] = $this->classroom();
+        $assignment = $this->assignment($teacher, $student, $group, 'hifz', 'sabaq');
+        $assignment->forceFill(['session_settings' => ['progressive_hiding' => ['enabled' => true]]])->save();
+        $recipient = $assignment->recipients()->firstOrFail();
+
+        $this->actingAs($student)->getJson(route('api.me.assignments.index'))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.memorisation_summary.session_count', 0);
+
+        UserSession::query()->create([
+            'user_id' => $student->id,
+            'teacher_assignment_recipient_id' => $recipient->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => 'completed',
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'metadata' => ['config' => ['blurModeEnabled' => true], 'repetitions_completed' => 3],
+        ]);
+
+        $this->getJson(route('api.me.assignments.show', $recipient))
+            ->assertOk()
+            ->assertJsonPath('assignment.memorisation_summary.session_count', 1)
+            ->assertJsonPath('assignment.memorisation_summary.repetitions_recorded', 3)
+            ->assertJsonPath('assignment.memorisation_summary.practice_complete', true)
+            ->assertJsonPath('assignment.memorisation_summary.ai_assessment', null);
+    }
+
     public function test_student_messages_open_latest_page_and_load_older_without_other_students(): void
     {
         [$teacher, , , $student] = $this->classroom();

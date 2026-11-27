@@ -16,6 +16,9 @@ assert.match(useTeacher, /defaultAssignmentForm|assignmentForm/, 'Teacher dashbo
 
 const en = JSON.parse(locales)
 assert.ok(en.teacher?.nav_assignments_short, 'Teacher mobile nav has compact assignment label')
+assert.ok(en.teacher?.nav_home, 'Teacher mobile home label')
+assert.ok(en.teacher?.nav_tasks_short, 'Teacher mobile tasks label')
+assert.ok(en.teacher?.nav_more, 'Teacher mobile more label')
 assert.ok(en.parent?.platform_switch_hint, 'Platform switch copy is localised')
 
 console.log('phase4-teacher-onboarding-verify.mjs: ok')

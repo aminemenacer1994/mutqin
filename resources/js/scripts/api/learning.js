@@ -900,6 +900,36 @@ export const learningApi = {
     const { data } = await http.get(`/teacher/students/${studentId}/report`, { params })
     return data
   },
+  async getTeacherStudentProgressReports(studentId) {
+    const { data } = await http.get(`/teacher/students/${studentId}/progress-reports`)
+    return data
+  },
+  async getTeacherStudentProgressReport(reportId) {
+    const { data } = await http.get(`/teacher/progress-reports/${reportId}`)
+    return data
+  },
+  async createTeacherStudentProgressReport(studentId, body = {}) {
+    const { data } = await http.post(`/teacher/students/${studentId}/progress-reports`, body)
+    return data
+  },
+  async updateTeacherStudentProgressReport(reportId, body = {}) {
+    const { data } = await http.patch(`/teacher/progress-reports/${reportId}`, body)
+    return data
+  },
+  async refreshTeacherStudentProgressReport(reportId) {
+    const { data } = await http.post(`/teacher/progress-reports/${reportId}/refresh`)
+    return data
+  },
+  async approveTeacherStudentProgressReport(reportId, body = {}) {
+    const { data } = await http.post(`/teacher/progress-reports/${reportId}/approve`, body)
+    return data
+  },
+  async downloadTeacherStudentProgressReport(reportId) {
+    return http.get(`/teacher/progress-reports/${reportId}/download`, {
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf' },
+    })
+  },
   async sendTeacherStudentMessage(studentId, body, recording = null, clientMessageId = null) {
     const form = new FormData()
     if (String(body || '').trim()) form.append('body', String(body).trim())
@@ -940,6 +970,19 @@ export const learningApi = {
   async getParentReports({ cadence = 'week', childId = null } = {}) {
     const { data } = await http.get('/parent/reports', {
       params: { cadence, child_id: childId || undefined },
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async getParentProgressReports(childId) {
+    const { data } = await http.get('/parent/progress-reports', {
+      params: { child_id: childId },
+      headers: { 'Cache-Control': 'no-cache' },
+    })
+    return data
+  },
+  async getParentProgressReport(reportId) {
+    const { data } = await http.get(`/parent/progress-reports/${reportId}`, {
       headers: { 'Cache-Control': 'no-cache' },
     })
     return data

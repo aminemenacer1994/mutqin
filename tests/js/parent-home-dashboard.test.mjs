@@ -13,6 +13,7 @@ import {
   upcomingHomeworkRows,
   weeklyProgressCards,
 } from '../../resources/js/scripts/parent/homeDashboard.js'
+import { mapTeacherProgressReportForParent } from '../../resources/js/scripts/parent/reportsView.js'
 
 const t = (key, vars = {}) => {
   const strings = {
@@ -169,4 +170,19 @@ test('homework badges distinguish work in progress, review, completion and overd
   assert.equal(homeworkRowStatusClass({ status: 'awaiting_confirmation' }), 'is-wait')
   assert.equal(homeworkRowStatusClass({ status: 'completed' }), 'is-ok')
   assert.equal(homeworkRowStatusClass({ status: 'in_progress', overdue: true }), 'is-late')
+})
+
+test('teacher-approved progress reports map for parent reports UI', () => {
+  const mapped = mapTeacherProgressReportForParent({
+    id: 9,
+    period_label: '1 Nov – 19 Nov 2026',
+    approved_at: '2026-11-20T10:00:00Z',
+    payload: {
+      assignments: { assigned: 4, completed: 3, overdue: 1 },
+      summary: { attendance: { counts: { present: 3, absent: 0 }, rate_percent: 100 } },
+    },
+  })
+  assert.equal(mapped.kind, 'teacher_approved')
+  assert.equal(mapped.assignments.completed, 3)
+  assert.equal(mapped.attendance.counts.present, 3)
 })

@@ -13,8 +13,8 @@
     <div :class="bodyClass">
       <template v-if="showTeacherInviteBlock">
         <form class="learner-circle__invite" @submit.prevent="onInviteSubmit">
-          <label class="visually-hidden" for="learner-class-invite">{{ t('ui.connections_join_code') }}</label>
-          <p class="teacher-meta learner-circle__invite-help">{{ t('ui.connections_join_code_help') }}</p>
+          <label class="form-label" for="learner-class-invite">{{ t('ui.connections_join_code') }}</label>
+          <p id="learner-class-invite-help" class="teacher-meta learner-circle__invite-help">{{ t('ui.connections_join_code_help') }}</p>
           <div class="learner-circle__invite-row">
             <input
               id="learner-class-invite"
@@ -22,6 +22,7 @@
               class="form-control"
               maxlength="2048"
               autocomplete="off"
+              aria-describedby="learner-class-invite-help"
               spellcheck="false"
               :placeholder="t('ui.connections_join_code')"
               :disabled="busy"
@@ -110,6 +111,7 @@
                 class="learner-circle__badge"
                 :class="group.independent ? 'is-muted' : 'is-institution'"
               >{{ group.independent ? t('ui.connections_teacher_independent') : t('ui.connections_teacher_institution') }}</span>
+              <i class="bi bi-chevron-down learner-circle__group-chevron" aria-hidden="true"></i>
             </summary>
             <ul v-if="group.classes.length" class="learner-circle__list learner-circle__list--memberships">
               <li v-for="classRow in group.classes" :key="`class-${classRow.id}`" class="learner-circle__membership">

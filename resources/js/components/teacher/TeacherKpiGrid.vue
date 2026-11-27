@@ -14,6 +14,7 @@
         { 'teacher-metric--selectable': selectable },
       ]"
       :aria-label="`${card.label}: ${card.value}. ${card.action || t('teacher.open')}`"
+      :title="card.hint || undefined"
       :style="stagger ? { '--dash-delay': `${index * 45}ms` } : undefined"
       :disabled="!selectable"
       @click="selectable && $emit('select', card.key)"

@@ -19,6 +19,7 @@ use App\Models\TeacherWordCoachingCorrection;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Support\QuranMetadata;
+use App\Support\SmartRevisionSettings;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -417,7 +418,7 @@ class RevisionRecommendationService
         return MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->whereIn('status', [MemorisationWeakSpot::STATUS_ACTIVE, MemorisationWeakSpot::STATUS_IMPROVING])
-            ->where('affected_attempt_count', '>=', 2)
+            ->where('affected_attempt_count', '>=', SmartRevisionSettings::minWeakSpotAttempts())
             ->where(function ($query) {
                 $query->whereNull('teacher_review_status')
                     ->orWhere('teacher_review_status', '!=', MemorisationWeakSpot::REVIEW_DISMISSED);
@@ -776,15 +777,7 @@ class RevisionRecommendationService
 
     private function rank(string $code): int
     {
-        return match ($code) {
-            'teacher_tajweed_finding', 'teacher_pronunciation_finding', 'teacher_memorisation_finding' => 1,
-            'teacher_confirmed_difficulty' => 2,
-            'previous_revision' => 3,
-            'previous_feedback' => 4,
-            'plan_goal' => 5,
-            'outstanding_assignment' => 6,
-            default => 7,
-        };
+        return SmartRevisionSettings::reasonRank($code);
     }
 
     private function focusLabel(string $focus): string

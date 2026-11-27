@@ -13,6 +13,27 @@
         <button type="button" :class="{ 'is-active': cadence === 'week' }" :aria-pressed="cadence === 'week' ? 'true' : 'false'" @click="setCadence('week')">{{ t('parent.reports_week') }}</button>
         <button type="button" :class="{ 'is-active': cadence === 'month' }" :aria-pressed="cadence === 'month' ? 'true' : 'false'" @click="setCadence('month')">{{ t('parent.reports_month') }}</button>
       </div>
+      <div
+        v-if="selectedId && teacherReports.length"
+        class="parent-teacher-reports"
+        role="group"
+        :aria-label="t('parent.reports_teacher_shared')"
+      >
+        <p class="parent-stat__hint">{{ t('parent.reports_teacher_shared_hint') }}</p>
+        <div class="parent-pills">
+          <button
+            v-for="row in teacherReports"
+            :key="row.id"
+            type="button"
+            :class="{ 'is-active': activeTeacherId === row.id }"
+            :aria-pressed="activeTeacherId === row.id ? 'true' : 'false'"
+            @click="selectTeacherReport(row)"
+          >
+            {{ row.period_label }}
+          </button>
+        </div>
+      </div>
+
       <label v-if="selectedId && reportOptions.length > 1" class="parent-report-field">
         <span class="parent-report-field__label">{{ t('parent.reports_previous') }}</span>
         <select
@@ -57,9 +78,10 @@
             <h2>{{ active.period_label }}</h2>
             <p v-if="preparedLabel">{{ preparedLabel }}</p>
           </div>
+          <span v-if="active.kind === 'teacher_approved'" class="parent-report-source parent-status is-ok">{{ t('parent.reports_teacher_badge') }}</span>
           <a
             class="parent-download"
-            :href="`/api/parent/reports/${active.id}/download`"
+            :href="reportDownloadHref"
             :title="t('parent.reports_download_hint')"
             :aria-label="t('parent.reports_download_pdf')"
           >
@@ -211,7 +233,7 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatWhen } from '../../scripts/parent/dashboard'
-import { periodMetricRowsFromReport, proseNeedsFold, prosePreview } from '../../scripts/parent/reportsView'
+import { mapTeacherProgressReportForParent, periodMetricRowsFromReport, proseNeedsFold, prosePreview } from '../../scripts/parent/reportsView'
 import { reportAttendanceChart, reportHomeworkChart, reportParentHighlights, reportPracticeChart } from '../../scripts/parent/reportCharts'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
 import NetworkFallback from '../NetworkFallback.vue'
@@ -234,6 +256,9 @@ export default {
       family: null,
       reports: [],
       activeId: null,
+      teacherReports: [],
+      activeTeacherId: null,
+      teacherReportDetail: null,
     }
   },
   computed: {
@@ -244,7 +269,17 @@ export default {
       return this.reports
     },
     active() {
+      if (this.activeTeacherId && this.teacherReportDetail) {
+        return mapTeacherProgressReportForParent(this.teacherReportDetail)
+      }
       return this.reports.find((report) => report.id === this.activeId) || this.reports[0] || null
+    },
+    reportDownloadHref() {
+      if (!this.active?.id) return '#'
+      if (this.active.kind === 'teacher_approved') {
+        return `/api/parent/progress-reports/${this.active.id}/download`
+      }
+      return `/api/parent/reports/${this.active.id}/download`
     },
     preparedLabel() {
       if (!this.active?.generated_at) return ''
@@ -437,6 +472,8 @@ export default {
     onReportChange(event) {
       const id = Number(event.target.value)
       this.activeId = Number.isNaN(id) ? this.activeId : id
+      this.activeTeacherId = null
+      this.teacherReportDetail = null
     },
     setCadence(cadence) {
       this.cadence = cadence
@@ -445,17 +482,36 @@ export default {
     async load() {
       this.loading = true
       this.error = false
+      this.activeTeacherId = null
+      this.teacherReportDetail = null
+      this.teacherReports = []
       try {
         const data = await learningApi.getParentReports({ cadence: this.cadence, childId: this.selectedId })
         this.family = data.family || null
         this.reports = Array.isArray(data.reports) ? data.reports : []
         this.activeId = this.reports[0]?.id || null
+        if (this.selectedId) {
+          const teacherData = await learningApi.getParentProgressReports(this.selectedId)
+          this.teacherReports = Array.isArray(teacherData?.reports) ? teacherData.reports : []
+        }
       } catch {
         this.error = true
         this.reports = []
         this.family = null
+        this.teacherReports = []
       } finally {
         this.loading = false
+      }
+    },
+    async selectTeacherReport(row) {
+      if (!row?.id) return
+      this.activeTeacherId = row.id
+      this.activeId = null
+      try {
+        const data = await learningApi.getParentProgressReport(row.id)
+        this.teacherReportDetail = data?.report || null
+      } catch {
+        this.teacherReportDetail = null
       }
     },
     noteWhen(value) {

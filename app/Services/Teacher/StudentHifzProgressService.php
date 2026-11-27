@@ -16,6 +16,7 @@ use App\Services\Learning\ProgressOverviewService;
 use App\Services\Learning\StudentAiFeedbackService;
 use App\Support\QuranMetadata;
 use App\Support\ScoredAttemptIdentity;
+use App\Support\SmartRevisionSettings;
 use Illuminate\Support\Carbon;
 
 /**
@@ -61,6 +62,7 @@ class StudentHifzProgressService
             'coverage' => $this->publicCoverage($this->coverage($student)),
             'wording_match' => $this->wordingTrend($student, $from, $to),
             'weak_passages' => $this->confirmedWeak($student),
+            'recurring_mistakes' => app(TeacherWordCoachingService::class)->recurringForLearner($student, $from, $to),
             'validated_memorisation' => $this->validatedMemorisationForStudent($student),
         ];
     }
@@ -625,7 +627,7 @@ class StudentHifzProgressService
             ->where('user_id', $student->id)
             ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
             ->where('teacher_review_status', MemorisationWeakSpot::REVIEW_CONFIRMED)
-            ->where('affected_attempt_count', '>=', self::WEAK_SPOT_MIN_EVIDENCE)
+            ->where('affected_attempt_count', '>=', SmartRevisionSettings::minWeakSpotAttempts())
             ->orderByDesc('affected_attempt_count')
             ->limit(8)
             ->get()

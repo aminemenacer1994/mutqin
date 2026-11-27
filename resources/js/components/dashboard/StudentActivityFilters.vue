@@ -25,6 +25,7 @@
     <label class="dash-filter-field">
       <span class="dash-filter-field__label">{{ t('dashboard.activity_from') }}</span>
       <input
+        class="form-control"
         type="date"
         :value="from"
         :aria-label="t('dashboard.activity_from')"
@@ -34,6 +35,7 @@
     <label class="dash-filter-field">
       <span class="dash-filter-field__label">{{ t('dashboard.activity_to') }}</span>
       <input
+        class="form-control"
         type="date"
         :value="to"
         :aria-label="t('dashboard.activity_to')"

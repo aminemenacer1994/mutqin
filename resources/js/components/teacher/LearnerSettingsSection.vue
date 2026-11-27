@@ -66,7 +66,7 @@
         :aria-labelledby="`${uid}-guardians`"
       >
         <div class="teacher-account__section-head">
-          <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-shield-heart"></i></span>
+          <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-people"></i></span>
           <div>
             <h2 :id="`${uid}-guardians`">{{ t('dashboard.settings_guardians_title') }}</h2>
             <p>{{ t('dashboard.settings_guardians_hint') }}</p>
@@ -87,7 +87,7 @@
           <span class="teacher-account__section-icon" aria-hidden="true"><i class="bi bi-sliders"></i></span>
           <div>
             <h2 :id="`${uid}-prefs`">{{ t('dashboard.settings_preferences_tab') }}</h2>
-            <p>{{ t('dashboard.settings_preferences_security_hint') }}</p>
+            <p>{{ t('dashboard.settings_preferences_hint') }}</p>
           </div>
         </div>
         <div class="learner-settings__inline-actions">

@@ -12,6 +12,7 @@ use App\Models\TeacherWordCoachingRetry;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Support\QuranMetadata;
+use App\Support\SmartRevisionSettings;
 use App\Support\TeacherTajweedFocus;
 use App\Support\RecitationAlignmentStatus;
 use App\Support\TeacherRecitationWordEvidence;
@@ -115,7 +116,7 @@ class TeacherWordCoachingService
         $rows = array_values(array_filter(
             $this->collectRecurringMistakes(null, $student),
             function (array $row) use ($from, $to) {
-                if ((int) ($row['count'] ?? 0) < 2) {
+                if ((int) ($row['count'] ?? 0) < SmartRevisionSettings::minRecurringMistakeCount()) {
                     return false;
                 }
                 $last = $row['last_at'] ?? null;

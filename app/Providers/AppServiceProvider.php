@@ -27,6 +27,9 @@ use App\Services\Parent\ParentAssistantComposer;
 use App\Services\Parent\ParentLearningReportCollector;
 use App\Services\Parent\RecordParentLearningReportCollector;
 use App\Services\SpeechmaticsRateLimit;
+use App\Services\TajweedAcoustic\Contracts\PhonemeRecognitionProvider;
+use App\Services\TajweedAcoustic\Providers\HisnLabsCliPhonemeProvider;
+use App\Services\TajweedAcoustic\Providers\NullPhonemeRecognitionProvider;
 use App\Support\DatabaseDeploySafety;
 use App\Support\PreviewSandbox;
 use App\Support\PublicAppUrl;
@@ -56,6 +59,19 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ParentAssistantComposer::class, LocalParentAssistantComposer::class);
         $this->app->bind(ParentLearningReportCollector::class, RecordParentLearningReportCollector::class);
+
+        $this->app->bind(PhonemeRecognitionProvider::class, function () {
+            $provider = (string) config('mutqin.acoustic_tajweed.provider', 'null');
+            if ($provider === HisnLabsCliPhonemeProvider::PROVIDER_ID) {
+                return new HisnLabsCliPhonemeProvider(
+                    (string) config('mutqin.acoustic_tajweed.hisnlabs.python', 'python3'),
+                    base_path('scripts/experimental/hisnlabs_phoneme_infer.py'),
+                    max(10, (int) config('mutqin.acoustic_tajweed.hisnlabs.timeout_seconds', 90)),
+                );
+            }
+
+            return new NullPhonemeRecognitionProvider();
+        });
     }
 
     /**

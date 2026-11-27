@@ -119,7 +119,7 @@
                 <input v-model="assignmentSearch" type="search" class="form-control" maxlength="120" :placeholder="t('dashboard.student_assignment_search')" @input="scheduleAssignmentSearch" />
               </label>
               <button v-if="isMobileLayout" type="button" class="btn btn-outline-secondary" :aria-expanded="assignmentFiltersOpen" @click="assignmentFiltersOpen = true"><i class="bi bi-funnel" aria-hidden="true"></i> {{ t('common.filters') }}</button>
-              <component :is="isMobileLayout ? 'TeacherDialog' : 'div'" v-bind="isMobileLayout ? { open: assignmentFiltersOpen, title: t('common.filters'), closeLabel: t('common.close'), dirty: false, size: 'md' } : {}" class="user-dashboard student-assignment-filter-container" @close="assignmentFiltersOpen = false">
+              <component :is="isMobileLayout ? 'TeacherDialog' : 'div'" v-bind="isMobileLayout ? { open: assignmentFiltersOpen, title: t('common.filters'), closeLabel: t('common.close'), dirty: false, size: 'md' } : {}" class="student-assignment-filter-container" :class="{ 'user-dashboard': isMobileLayout }" @close="assignmentFiltersOpen = false">
                 <div class="student-assignment-filter-fields">
               <label>
                 <span class="visually-hidden">{{ t('dashboard.student_assignment_teacher') }}</span>
@@ -1201,7 +1201,7 @@ export default {
         this.assignmentTotal = result.total || 0
         this.assignmentNextPage = result.next_page
       } catch (error) {
-        if (requestId === this.assignmentRequestId) this.assignmentListError = error?.response?.data?.message || this.t('teacher.action_failed')
+        if (requestId === this.assignmentRequestId) this.assignmentListError = this.t('dashboard.drawer_load_error')
       } finally {
         if (requestId === this.assignmentRequestId) this.assignmentListLoading = false
       }

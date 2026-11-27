@@ -54,3 +54,36 @@ export function periodMetricRowsFromReport(t, active) {
   }
   return rows
 }
+
+/** Map a teacher-approved progress report API payload for the parent Reports UI. */
+export function mapTeacherProgressReportForParent(report) {
+  if (!report || typeof report !== 'object') return null
+  const payload = report.payload && typeof report.payload === 'object' ? report.payload : {}
+  const summaryAttendance = payload.summary?.attendance
+  let attendance = payload.attendance ?? null
+  if (!attendance && summaryAttendance && typeof summaryAttendance === 'object') {
+    attendance = {
+      plain: typeof summaryAttendance.plain === 'string' ? summaryAttendance.plain : null,
+      counts: summaryAttendance.counts ?? summaryAttendance,
+      rate_percent: summaryAttendance.rate_percent ?? null,
+    }
+  }
+  return {
+    id: report.id,
+    kind: 'teacher_approved',
+    period_label: report.period_label,
+    generated_at: report.approved_at || report.generated_at,
+    narrative: null,
+    assignments: payload.assignments ?? null,
+    activity: payload.activity ?? null,
+    goals: payload.goals ?? null,
+    feedback: payload.feedback ?? null,
+    comparison: payload.comparison ?? null,
+    attention: Array.isArray(payload.attention) ? payload.attention : [],
+    wording: payload.wording ?? null,
+    attendance,
+    home_practice: payload.home_practice ?? null,
+    sources: Array.isArray(payload.sources) ? payload.sources : [],
+    insufficient: Boolean(payload.insufficient),
+  }
+}

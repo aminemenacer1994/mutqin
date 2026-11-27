@@ -1,5 +1,11 @@
 <template>
-  <section class="teacher-stack teacher-assignments" :class="{ 'is-compact': compactView }">
+  <section
+    class="teacher-stack teacher-assignments"
+    :class="[
+      compactView ? 'is-compact' : 'is-comfortable',
+      mobileShell ? 'teacher-assignments--mobile' : 'teacher-assignments--desktop',
+    ]"
+  >
     <header class="teacher-page-header teacher-page-header--actions">
       <div>
         <p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p>
@@ -51,6 +57,7 @@
         </div>
       </div>
       <button
+        v-if="desktopShell"
         type="button"
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
@@ -238,13 +245,14 @@ import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherTaskConversation from './TeacherTaskConversation.vue'
 import TeacherTaskReminder from './TeacherTaskReminder.vue'
 import { learningApi } from '../../scripts/api/learning'
+import { teacherViewportMixin } from '../../mixins/teacherViewportMixin'
 
 const STEP = 25
 
 export default {
   name: 'TeacherAssignmentsSection',
   components: { TeacherDialog, TeacherEmpty, TeacherMore, TeacherRecitationPlaybackReview, TeacherSectionPane, TeacherTaskConversation, TeacherTaskReminder },
-  mixins: [i18nMixin],
+  mixins: [i18nMixin, teacherViewportMixin],
   props: {
     form: { type: Object, required: true },
     formOpen: { type: Boolean, default: false },
@@ -282,8 +290,23 @@ export default {
       taskMenuKey: null,
     }
   },
+  watch: {
+    mobileShell: {
+      immediate: true,
+      handler(mobile) {
+        if (mobile) {
+          this.compactView = true
+          return
+        }
+        try {
+          this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1'
+        } catch {
+          this.compactView = false
+        }
+      },
+    },
+  },
   mounted() {
-    try { this.compactView = window.localStorage.getItem('mutqin.teacher.tasks.compact') === '1' } catch { /* Storage is optional. */ }
     this.closeTaskMenu = () => { this.taskMenuKey = null }
     document.addEventListener('click', this.closeTaskMenu)
   },

@@ -1,7 +1,20 @@
 <template>
-  <section class="teacher-stack" aria-labelledby="teacher-overview-heading">
+  <section
+    class="teacher-stack teacher-overview"
+    :class="mobileShell ? 'teacher-overview--mobile' : 'teacher-overview--desktop'"
+    aria-labelledby="teacher-overview-heading"
+  >
     <h2 id="teacher-overview-heading" class="visually-hidden">{{ t('teacher.nav_overview') }}</h2>
     <TeacherKpiGrid :cards="kpiCards" compact selectable @select="$emit('select-kpi', $event)" />
+
+    <TeacherGettingStarted
+      :student-count="Number(overview?.kpis?.authorised_students || 0)"
+      :outstanding-assignments="Number(overview?.kpis?.outstanding_assignments || 0)"
+      :overdue-assignments="Number(overview?.kpis?.overdue_assignments || 0)"
+      @import-students="$emit('import-students')"
+      @create-assignment="$emit('create-assignment')"
+      @open-attendance="$emit('open-attendance')"
+    />
 
     <TeacherSectionPane v-if="actionQueue.length" class="teacher-overview-queue" :title="t('teacher.overview_action_queue')" icon="bi bi-lightning" flat>
       <ul class="teacher-activity-list">
@@ -62,12 +75,33 @@
       </TeacherSectionPane>
     </div>
 
-    <section class="teacher-insights teacher-overview-trends" :aria-labelledby="trendHeadingId">
-      <header class="teacher-insights__head">
+    <component
+      :is="mobileShell ? 'details' : 'section'"
+      class="teacher-insights teacher-overview-trends"
+      :open="mobileShell ? trendsExpanded : undefined"
+    >
+      <component :is="mobileShell ? 'summary' : 'header'" class="teacher-insights__head" :aria-labelledby="trendHeadingId">
         <div class="teacher-insights__copy">
           <h3 :id="trendHeadingId" class="teacher-insights__title">{{ t('teacher.overview_trends') }}</h3>
           <p class="teacher-insights__hint">{{ t('teacher.overview_trends_hint') }}</p>
         </div>
+        <div v-if="desktopShell" class="dash-range-toggle" role="group" :aria-label="t('teacher.chart_range')">
+          <button
+            v-for="days in chartDayOptions"
+            :key="`head-${days}`"
+            type="button"
+            class="dash-btn dash-btn--ghost dash-btn--sm"
+            :class="{ 'is-active': chartDays === days }"
+            :aria-pressed="chartDays === days ? 'true' : 'false'"
+            :disabled="trendLoading"
+            @click="$emit('set-chart-days', days)"
+          >
+            {{ t('teacher.days', { n: days }) }}
+          </button>
+        </div>
+        <i v-if="mobileShell" class="bi bi-chevron-down" aria-hidden="true"></i>
+      </component>
+      <div v-if="mobileShell" class="teacher-insights__range teacher-insights__head">
         <div class="dash-range-toggle" role="group" :aria-label="t('teacher.chart_range')">
           <button
             v-for="days in chartDayOptions"
@@ -82,7 +116,7 @@
             {{ t('teacher.days', { n: days }) }}
           </button>
         </div>
-      </header>
+      </div>
       <div class="teacher-insights__body">
         <div class="teacher-insights__charts">
           <TeacherActivityChart
@@ -113,16 +147,18 @@
           />
         </div>
       </div>
-    </section>
+    </component>
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { teacherViewportMixin } from '../../mixins/teacherViewportMixin'
 import { cssThemeColor, scoreBadgeTone, studentInitial, teacherActionQueue, teacherAttentionAction, teacherAttentionRank, teacherDeskCounts } from '../../scripts/teacher/formatters'
 import TeacherAttentionList from './TeacherAttentionList.vue'
 import TeacherActivityChart from './TeacherActivityChart.vue'
 import TeacherEmpty from './TeacherEmpty.vue'
+import TeacherGettingStarted from './TeacherGettingStarted.vue'
 import TeacherKpiGrid from './TeacherKpiGrid.vue'
 import TeacherSectionPane from './TeacherSectionPane.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
@@ -133,11 +169,12 @@ export default {
     TeacherAttentionList,
     TeacherActivityChart,
     TeacherEmpty,
+    TeacherGettingStarted,
     TeacherKpiGrid,
     TeacherSectionPane,
     TeacherWordingMatch,
   },
-  mixins: [i18nMixin],
+  mixins: [i18nMixin, teacherViewportMixin],
   props: {
     overview: { type: Object, required: true },
     kpiCards: { type: Array, default: () => [] },
@@ -148,7 +185,18 @@ export default {
     trendLoading: { type: Boolean, default: false },
     trendError: { type: String, default: '' },
   },
-  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'open-attendance', 'open-messages', 'create-assignment'],
+  emits: ['open-student', 'select-kpi', 'assign-revision', 'set-chart-days', 'open-assignments', 'open-plans', 'open-reviews', 'open-attendance', 'open-messages', 'create-assignment', 'import-students'],
+  data() {
+    return { trendsExpanded: false }
+  },
+  watch: {
+    mobileShell: {
+      immediate: true,
+      handler(mobile) {
+        this.trendsExpanded = !mobile
+      },
+    },
+  },
   computed: {
     deskCounts() {
       return teacherDeskCounts(this.overview)

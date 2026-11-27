@@ -48,7 +48,8 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
         $previousAssignments = $this->assignmentCounts($student, $previousFrom, $previousTo);
         $previousPractice = $this->practiceCount($student, $previousFrom, $previousTo);
         $comparison = $this->comparison($cadence, $assignments, $activity, $previousAssignments, $previousPractice);
-        $attention = $this->attention($assignments, $feedback, $wording);
+        $improve = $this->improve($hifz);
+        $attention = $this->attention($assignments, $feedback, $wording, $improve);
 
         $insufficient = $assignments['assigned'] === 0
             && $activity['practice_rows'] === 0
@@ -57,6 +58,7 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             && $goals['plans'] === []
             && $feedback['notes'] === []
             && $feedback['recommendations'] === []
+            && $improve['items'] === []
             && ($wording['direction'] ?? 'insufficient') === 'insufficient'
             && (int) ($activity['current_memorised'] ?? 0) === 0
             && (int) ($attendance['total'] ?? 0) === 0;
@@ -71,8 +73,9 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             'comparison' => $comparison,
             'attention' => $attention,
             'wording' => $wording,
+            'improve' => $improve,
             'insufficient' => $insufficient,
-            'sources' => $this->sources($assignments, $activity, $goals, $feedback, $wording, $attendance),
+            'sources' => $this->sources($assignments, $activity, $goals, $feedback, $wording, $attendance, $improve),
         ];
     }
 
@@ -258,25 +261,25 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             ->values()
             ->all();
 
+        // Published revision targets only — pending teacher review stays off parent reports.
         $recommendations = RevisionRecommendation::query()
             ->where('student_id', $student->id)
-            ->whereIn('status', [
-                RevisionRecommendationStatus::Pending->value,
-                RevisionRecommendationStatus::Accepted->value,
-            ])
+            ->where('status', RevisionRecommendationStatus::Assigned->value)
             ->where(function ($query) use ($from, $to) {
-                $query->whereBetween('created_at', [$from, $to])
-                    ->orWhereBetween('due_on', [$from->toDateString(), $to->toDateString()]);
+                $query->whereBetween('assigned_at', [$from, $to])
+                    ->orWhereBetween('due_on', [$from->toDateString(), $to->toDateString()])
+                    ->orWhereBetween('updated_at', [$from, $to]);
             })
             ->orderBy('due_on')
             ->limit(3)
             ->get()
             ->map(function (RevisionRecommendation $row) {
-                $text = trim((string) ($row->reason ?: $row->instructions));
+                $text = trim((string) ($row->instructions ?: $row->reason));
 
                 return [
                     'label' => $this->passageLabel((int) $row->surah_number, (int) $row->ayah_start, (int) $row->ayah_end),
                     'text' => $this->plain($text, 160),
+                    'status' => 'assigned',
                 ];
             })
             ->filter(fn (array $row) => $row['text'] !== '')
@@ -383,6 +386,47 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
     }
 
     /**
+     * Teacher-confirmed weak areas and recurring mistakes (no pending AI flags).
+     *
+     * @param  array<string, mixed>  $hifz
+     * @return array{items: list<array<string, mixed>>, plain: string}
+     */
+    private function improve(array $hifz): array
+    {
+        $items = [];
+        foreach (array_slice(is_array($hifz['weak_passages'] ?? null) ? $hifz['weak_passages'] : [], 0, 4) as $row) {
+            if (! is_array($row) || (string) ($row['label'] ?? '') === '') {
+                continue;
+            }
+            $items[] = [
+                'kind' => 'teacher_confirmed_weak',
+                'label' => (string) $row['label'],
+                'count' => (int) ($row['count'] ?? 0),
+                'ai_wording_flag' => false,
+            ];
+        }
+        foreach (array_slice(is_array($hifz['recurring_mistakes'] ?? null) ? $hifz['recurring_mistakes'] : [], 0, 4) as $row) {
+            if (! is_array($row) || (string) ($row['label'] ?? '') === '') {
+                continue;
+            }
+            $items[] = [
+                'kind' => 'recurring_mistake',
+                'label' => (string) $row['label'],
+                'count' => (int) ($row['count'] ?? 0),
+                'category' => (string) ($row['category'] ?? 'other'),
+                'ai_wording_flag' => (bool) ($row['ai_wording_flag'] ?? false),
+                'is_tajweed_assessment' => (bool) ($row['is_tajweed_assessment'] ?? false),
+            ];
+        }
+        $items = array_slice($items, 0, 6);
+        $plain = $items === []
+            ? 'No teacher-confirmed recurring difficulties were listed for this period.'
+            : $this->noun(count($items), 'teacher-supported practice area is', 'teacher-supported practice areas are').' listed for continued care.';
+
+        return ['items' => $items, 'plain' => $plain];
+    }
+
+    /**
      * @param  array<string, mixed>  $hifz
      * @return array<string, mixed>
      */
@@ -444,7 +488,7 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
      * @param  array<string, mixed>  $wording
      * @return list<array{kind: string, label: string}>
      */
-    private function attention(array $assignments, array $feedback, array $wording): array
+    private function attention(array $assignments, array $feedback, array $wording, array $improve): array
     {
         $items = [];
         foreach ($assignments['items'] as $item) {
@@ -461,6 +505,19 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
                 continue;
             }
             $items[] = ['kind' => 'weak', 'label' => 'Teacher-confirmed: '.$weak['label'].'.'];
+        }
+        foreach ($improve['items'] ?? [] as $row) {
+            if (! is_array($row) || ($row['kind'] ?? '') !== 'recurring_mistake' || ($row['label'] ?? '') === '') {
+                continue;
+            }
+            $count = (int) ($row['count'] ?? 0);
+            $items[] = [
+                'kind' => 'recurring_mistake',
+                'label' => $row['label'].($count > 1 ? ' (noted '.$count.' times)' : '').'.',
+            ];
+            if (count($items) >= 6) {
+                break;
+            }
         }
         foreach ($feedback['recommendations'] as $recommendation) {
             $items[] = ['kind' => 'recommendation', 'label' => $recommendation['label'].': '.$recommendation['text']];
@@ -480,7 +537,7 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
      * @param  array<string, mixed>  $wording
      * @return list<array{kind: string, label: string}>
      */
-    private function sources(array $assignments, array $activity, array $goals, array $feedback, array $wording, array $attendance): array
+    private function sources(array $assignments, array $activity, array $goals, array $feedback, array $wording, array $attendance, array $improve): array
     {
         $sources = [
             ['kind' => 'assignments', 'label' => 'Homework records'],
@@ -497,7 +554,10 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             $sources[] = ['kind' => 'teacher_feedback', 'label' => 'Teacher feedback'];
         }
         if ($feedback['recommendations'] !== []) {
-            $sources[] = ['kind' => 'teacher_recommendation', 'label' => 'Teacher recommendation'];
+            $sources[] = ['kind' => 'teacher_recommendation', 'label' => 'Published revision target'];
+        }
+        if ($improve['items'] !== []) {
+            $sources[] = ['kind' => 'teacher_confirmed_practice', 'label' => 'Teacher-confirmed practice areas'];
         }
         if (($wording['direction'] ?? 'insufficient') !== 'insufficient') {
             $sources[] = ['kind' => 'ai_word_match', 'label' => 'Automatic wording check'];

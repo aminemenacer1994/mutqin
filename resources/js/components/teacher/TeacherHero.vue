@@ -1,5 +1,5 @@
 <template>
-  <header class="dash-reveal teacher-hero">
+  <header class="dash-reveal teacher-hero" :class="mobileShell ? 'teacher-hero--mobile' : 'teacher-hero--desktop'">
     <div class="teacher-hero__row">
       <div class="teacher-hero__identity">
         <span class="teacher-hero__mark" aria-hidden="true"><i class="bi bi-mortarboard"></i></span>
@@ -13,9 +13,19 @@
           <p v-else class="teacher-meta">{{ t('ui.connections_status_none') }}</p>
         </div>
       </div>
-      <button type="button" class="btn btn-primary" data-sandbox-tour="teacher-new-assignment" @click="$emit('create-assignment')">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.assign_task') }}
-      </button>
+      <div class="teacher-hero__actions">
+        <button type="button" class="btn btn-primary" data-sandbox-tour="teacher-new-assignment" @click="$emit('create-assignment')">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>{{ t('teacher.assign_task') }}
+        </button>
+        <button
+          v-if="mobileShell"
+          type="button"
+          class="btn btn-outline-secondary teacher-hero__attendance"
+          @click="$emit('open-attendance')"
+        >
+          <i class="bi bi-calendar-check" aria-hidden="true"></i>{{ t('teacher.nav_attendance') }}
+        </button>
+      </div>
     </div>
     <ConnectPrompt
       v-if="!organisationName"
@@ -29,18 +39,19 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { teacherViewportMixin } from '../../mixins/teacherViewportMixin'
 import ConnectPrompt from '../ConnectPrompt.vue'
 
 export default {
   name: 'TeacherHero',
   components: { ConnectPrompt },
-  mixins: [i18nMixin],
+  mixins: [i18nMixin, teacherViewportMixin],
   props: {
     firstName: { type: String, required: true },
     organisationName: { type: String, default: '' },
     studentCount: { type: Number, default: 0 },
     supportCount: { type: Number, default: 0 },
   },
-  emits: ['open-students', 'open-attention', 'create-assignment'],
+  emits: ['open-students', 'open-attention', 'create-assignment', 'open-attendance'],
 }
 </script>

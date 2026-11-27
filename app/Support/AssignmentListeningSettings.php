@@ -74,6 +74,13 @@ final class AssignmentListeningSettings
             $clean['progressive_hiding'] = $progressive;
         }
 
+        $exam = AssignmentHifzExaminationSettings::sanitize(
+            is_array($input['examination'] ?? null) ? $input['examination'] : null
+        );
+        if ($exam !== null) {
+            $clean['examination'] = $exam;
+        }
+
         $merged = AssignmentProgressiveHidingSettings::mergeListeningSettings($clean);
         if (! $merged['ok']) {
             unset($merged['session_settings']['progressive_hiding']);
@@ -106,7 +113,9 @@ final class AssignmentListeningSettings
             $params[$key] = $value;
         }
 
-        return AssignmentProgressiveHidingSettings::mergeIntoMemorisationQuery($settings, $params);
+        $params = AssignmentProgressiveHidingSettings::mergeIntoMemorisationQuery($settings, $params);
+
+        return AssignmentHifzExaminationSettings::mergeIntoMemorisationQuery($settings, $params);
     }
 
     public static function reciterLabel(?string $reciterId): ?string

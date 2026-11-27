@@ -64,7 +64,7 @@ export function defaultAssignmentSessionSettings() {
 
 export function assignmentSupportsRecommendedReciter(form = {}) {
   const taskType = String(form.task_type || form.activity || '')
-  return ['hifz', 'new_memorisation', 'revision'].includes(taskType)
+  return ['hifz', 'new_memorisation', 'revision', 'hifz_examination'].includes(taskType)
 }
 
 export function sanitizeTeacherAssignmentSessionSettings(raw) {

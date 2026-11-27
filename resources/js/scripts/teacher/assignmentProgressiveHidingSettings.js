@@ -22,7 +22,7 @@ export function defaultProgressiveHidingSettings() {
 export function assignmentSupportsProgressiveHiding(form = {}) {
   const taskType = String(form.task_type || form.activity || '')
   if (form.kind === 'ai_recite' || form.recording_required) return false
-  return ['hifz', 'new_memorisation', 'revision', 'nazra'].includes(taskType)
+  return ['hifz', 'new_memorisation', 'revision', 'nazra', 'hifz_examination'].includes(taskType)
 }
 
 export function sanitizeTeacherProgressiveHidingSettings(raw) {

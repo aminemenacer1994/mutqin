@@ -345,51 +345,13 @@
             />
           </template>
         </LearnerTeacherSection>
-        <section
-          v-if="showLearnerTeacherSection"
-          class="dash-section dash-section--flat learner-learning-connections"
-          :class="{ 'is-collapsed': isSectionCollapsed('learning-connections') }"
-          aria-labelledby="learner-learning-connections-heading"
-        >
-          <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__head-row">
-              <button
-                type="button"
-                class="btn btn-link w-100 text-start d-flex justify-content-between dash-section__collapse"
-                :aria-expanded="isSectionCollapsed('learning-connections') ? 'false' : 'true'"
-                aria-controls="learner-learning-connections-body"
-                @click="toggleSection('learning-connections')"
-              >
-                <span class="dash-section__title">
-                  <span class="dash-section__title-copy">
-                    <h2 id="learner-learning-connections-heading">
-                      {{ t('teacher.learner_teachers_classes_title') }}
-                      <span v-if="learnerTeachersClassesCount">({{ learnerTeachersClassesCount }})</span>
-                    </h2>
-                    <p class="dash-section__hint">{{ t('ui.connections_settings_teachers_hint') }}</p>
-                  </span>
-                </span>
-                <i class="bi dash-section__chevron" :class="isSectionCollapsed('learning-connections') ? 'bi-chevron-down' : 'bi-chevron-up'" aria-hidden="true"></i>
-              </button>
-              <button
-                type="button"
-                class="dash-text-link learner-learning-connections__settings"
-                @click="openStudentConnectionsSettings"
-              >
-                {{ t('ui.connections_settings_manage') }}
-              </button>
+        <section v-if="showLearnerTeacherSection" class="teacher-pane learner-learning-connections" aria-labelledby="learner-learning-connections-heading">
+          <div class="teacher-pane__head learner-home__section-head">
+            <div class="teacher-pane__titles">
+              <h2 id="learner-learning-connections-heading" class="teacher-pane__title">{{ t('teacher.learner_teachers_classes_title') }}</h2>
+              <p class="teacher-meta">{{ learnerConnectionsHubSummary || learnerConnectionStatus }}</p>
             </div>
-          </div>
-          <div
-            v-show="!isSectionCollapsed('learning-connections')"
-            id="learner-learning-connections-body"
-            class="learner-learning-connections__body learner-learning-connections__body--hub-link"
-          >
-            <p v-if="learnerConnectionStatus" class="learner-settings__status" :class="`is-${learnerConnectionPhaseLabel}`">{{ learnerConnectionStatus }}</p>
-            <p class="teacher-meta">{{ learnerConnectionsHubSummary }}</p>
-            <button type="button" class="btn dash-btn dash-btn--secondary dash-btn--sm btn-outline-secondary btn-sm" @click="openStudentConnectionsSettings">
-              {{ t('ui.connections_settings_manage') }}
-            </button>
+            <button type="button" class="btn btn-outline-secondary" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
           </div>
         </section>
         <TeacherEmpty v-else inline class="dash-pane__empty" :message="t('dashboard.jump_learning_empty')" />
@@ -494,7 +456,7 @@
           </div>
           <div id="dash-learning-body" class="dash-section__body dash-learning__body student-progress__overview">
             <p class="parent-lead student-progress__lead">{{ progressOverviewLead }}</p>
-            <TeacherKpiGrid :cards="progressOverviewStatCards.map(card => ({ ...card, label: `${card.label} · ${card.hint}` }))" selectable @select="key => onProgressOverviewMetric(progressOverviewStatCards.find(card => card.key === key))" />
+            <TeacherKpiGrid :cards="progressOverviewStatCards" selectable @select="key => onProgressOverviewMetric(progressOverviewStatCards.find(card => card.key === key))" />
             <p v-if="progressOverviewNextStep" class="student-progress__next">
               <a
                 v-if="progressOverviewNextStep.href"
@@ -1100,22 +1062,20 @@
           <h2 v-else id="dash-history-heading" class="visually-hidden">{{ t('dashboard.history_title') }}</h2>
           <div v-show="studentPane === 'activity' || !isSectionCollapsed('history')" id="dash-history-body">
           <div class="student-activity__toolbar" :class="{ 'is-expanded': activityFiltersOpen }">
-            <nav class="student-activity__tabs dash-range-toggle" role="tablist" :aria-label="t('dashboard.activity_filter_type')">
+            <nav class="student-activity__tabs teacher-tabs" :aria-label="t('dashboard.activity_filter_type')">
               <button
                 v-for="filter in activityPageTypes"
                 :key="filter.key"
                 type="button"
-                role="tab"
-                class="btn dash-btn dash-btn--ghost dash-btn--sm btn-outline-secondary btn-sm"
+                class="teacher-tabs__tab"
                 :class="{ 'is-active': activityType === filter.key }"
-                :aria-selected="activityType === filter.key ? 'true' : 'false'"
-                :aria-current="activityType === filter.key ? 'page' : undefined"
+                :aria-pressed="activityType === filter.key"
                 @click="setActivityType(filter.key)"
               >{{ filter.label }}</button>
             </nav>
             <button
               type="button"
-              class="student-activity__open"
+              class="btn btn-outline-secondary student-activity__open"
               :class="{ 'is-set': activityMoreFilterCount > 0 }"
               :aria-expanded="activityFiltersOpen ? 'true' : 'false'"
               @click="activityFiltersOpen = !activityFiltersOpen"
@@ -1131,6 +1091,7 @@
               @click="clearActivityFilters"
             >{{ t('parent.filter_reset') }}</button>
             <StudentActivityFilters
+              v-if="activityFiltersOpen"
               :area="activityArea"
               :status="activityStatus"
               :from="activityFrom"
@@ -1251,7 +1212,7 @@
               </ul>
             </section>
             <div
-              v-if="historyPage === 1 && (historyHasMore || historyCanCollapse)"
+              v-if="studentPane !== 'activity' && historyPage === 1 && (historyHasMore || historyCanCollapse)"
               class="dash-history__toggle-row"
             >
               <button
@@ -1290,7 +1251,7 @@
             :subtitle="t('dashboard.nav_messages_hint')"
           />
           <p v-if="messagingRestricted" class="teacher-meta">{{ t('dashboard.messaging_age_restricted') }}</p>
-          <p v-else-if="auth.learner_teacher_section_enabled" class="teacher-meta learner-messages__connections-hint">
+          <p v-else-if="auth.learner_teacher_section_enabled && !studentDirectThreads.length && !supportLoading" class="teacher-meta learner-messages__connections-hint">
             {{ t('ui.connections_settings_teachers_hint') }}
             <button type="button" class="btn btn-link dash-text-link" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
           </p>
@@ -2455,7 +2416,7 @@ export default {
         .map((card) => ({
           ...card,
           icon: `bi ${card.icon}`,
-          label: card.hint ? `${card.label} · ${card.hint}` : card.label,
+          label: card.label,
           shortLabel: card.label,
           unitHint: card.hint,
         }))

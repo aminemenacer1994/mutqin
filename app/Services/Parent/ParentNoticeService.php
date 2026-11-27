@@ -286,6 +286,42 @@ final class ParentNoticeService
         }
     }
 
+    public function approvedStudentProgressReport(User $student, int $reportId): void
+    {
+        if (! ParentFeatures::enabled()) {
+            return;
+        }
+
+        $links = ParentStudentLink::query()
+            ->where('student_user_id', $student->id)
+            ->where('status', ParentLinkStatus::Approved->value)
+            ->with('parent')
+            ->get();
+
+        foreach ($links as $link) {
+            $parent = $link->parent;
+            if (! $parent instanceof User || ! $this->preferences->allows($parent, 'reports')) {
+                continue;
+            }
+            $allowed = $this->access->allows($parent, $student, ParentGuardianPermission::ViewAssignments->value)
+                || $this->access->allows($parent, $student, ParentGuardianPermission::ViewProgress->value);
+            if (! $allowed) {
+                continue;
+            }
+            if ($this->isQuietHours($parent)) {
+                continue;
+            }
+            $this->once($parent, 'parent-student-progress-report:'.$reportId, [
+                'type' => 'parent_student_progress_report',
+                'title' => 'Teacher progress report',
+                'body' => 'Your teacher shared a progress report.',
+                'href' => '/parent?view=reports&child='.$student->id.'&progress_report='.$reportId,
+                'child_user_id' => (int) $student->id,
+                'student_progress_report_id' => $reportId,
+            ]);
+        }
+    }
+
     private function hadRecentProgress(User $student): bool
     {
         $since = now()->subDays(7);

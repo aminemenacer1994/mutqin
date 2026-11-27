@@ -8,6 +8,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Services\Achievements\AchievementService;
+use App\Services\TajweedAcoustic\AcousticTajweedAssessmentService;
 use App\Services\Analytics\ProductEventRecorder;
 use App\Services\NextSessionRecommendationService;
 use App\Services\Billing\AiAssessmentQuotaExceeded;
@@ -374,6 +375,11 @@ class RecitationAssessmentService
 
         $assessmentId = (int) ($result['assessment']['id'] ?? 0);
         if ($assessmentId > 0) {
+            $assessmentModel = MemorisationAssessment::query()->find($assessmentId);
+            if ($assessmentModel) {
+                app(AcousticTajweedAssessmentService::class)->queueIfEnabled($assessmentModel);
+            }
+
             $durationMs = (int) ($result['assessment']['duration_ms'] ?? 0);
             $surah = (int) ($result['assessment']['surah_number'] ?? 0);
             app(ProductEventRecorder::class)->recordQuietly(

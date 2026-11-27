@@ -198,6 +198,27 @@ return [
      | Automated revision reminders (spaced murājaʿah + teacher tasks).
      | Zone ladders mirror resources/js/scripts/composables/useRetentionZones.js.
      */
+    /*
+     | Deterministic teacher revision recommendations and weak-spot evidence.
+     | Lower reason_rank = higher priority when two sources target the same passage.
+     */
+    'revision_recommendations' => [
+        'reason_rank' => [
+            'teacher_tajweed_finding' => 1,
+            'teacher_pronunciation_finding' => 1,
+            'teacher_memorisation_finding' => 1,
+            'teacher_confirmed_difficulty' => 2,
+            'previous_revision' => 3,
+            'previous_feedback' => 4,
+            'plan_goal' => 5,
+            'outstanding_assignment' => 6,
+            'ai_word_match' => 7,
+            'default' => 99,
+        ],
+        'min_weak_spot_attempts' => max(1, (int) env('MUTQIN_REVISION_MIN_WEAK_SPOT_ATTEMPTS', 2)),
+        'min_recurring_mistake_count' => max(2, (int) env('MUTQIN_REVISION_MIN_RECURRING_MISTAKE_COUNT', 2)),
+    ],
+
     'revision_reminders' => [
         'zones' => [
             'Fresh' => [0, 1, 2],
@@ -249,6 +270,25 @@ return [
         'max_session_delta' => 0.10,
         'high_confidence_threshold' => 0.72,
         'persistent_weak_attempts' => 2,
+    ],
+
+    /*
+     | Experimental acoustic Tajweed / Makharij pipeline (async job). Disabled by default.
+     | Does not affect Speechmatics wording scores or student-facing grades when off.
+     */
+    'acoustic_tajweed' => [
+        'enabled' => filter_var(env('MUTQIN_ACOUSTIC_TAJWEED_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'expose_teacher_playback' => filter_var(
+            env('MUTQIN_ACOUSTIC_TAJWEED_EXPOSE_TEACHER', false),
+            FILTER_VALIDATE_BOOL
+        ),
+        'provider' => (string) env('MUTQIN_ACOUSTIC_TAJWEED_PROVIDER', 'null'),
+        'min_confidence' => max(0.0, min(1.0, (float) env('MUTQIN_ACOUSTIC_TAJWEED_MIN_CONFIDENCE', 0.3))),
+        'queue' => (string) env('MUTQIN_ACOUSTIC_TAJWEED_QUEUE', 'default'),
+        'hisnlabs' => [
+            'python' => (string) env('MUTQIN_HISNLABS_PYTHON', 'python3'),
+            'timeout_seconds' => max(10, (int) env('MUTQIN_HISNLABS_TIMEOUT_SECONDS', 90)),
+        ],
     ],
 
     'ai_recite' => [

@@ -63,6 +63,19 @@
             <span class="teacher-nav__label">{{ navText(item) }}</span>
             <span v-if="countFor(item.id)" class="teacher-nav__badge" :title="countTitle(item.id)" :aria-label="countTitle(item.id)">{{ countFor(item.id) }}</span>
           </button>
+          <form
+            v-if="showLogout"
+            method="POST"
+            :action="logoutUrl"
+            class="teacher-nav__logout-form teacher-nav__logout-form--sheet"
+            @submit="onLogoutSubmit"
+          >
+            <input type="hidden" name="_token" :value="csrfToken" />
+            <button type="submit" class="teacher-nav__link teacher-nav__logout nav-link d-flex align-items-center gap-2 text-start" :class="linkClass">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              <span class="teacher-nav__label">{{ t(logoutLabelKey) }}</span>
+            </button>
+          </form>
         </div>
 
         <div class="teacher-nav__footer">
@@ -75,13 +88,14 @@
                 aria-controls="teacher-nav-admin-children"
                 @click="toggleAdmin"
               >
-                <i class="bi bi-sliders" aria-hidden="true"></i>
+                <i :class="adminIcon" aria-hidden="true"></i>
                 <span class="teacher-nav__label">{{ t(adminLabelKey) }}</span>
                 <span v-if="adminBadgeTotal" class="teacher-nav__badge" :aria-label="t('teacher.nav_count', { n: adminBadgeTotal })">{{ adminBadgeTotal }}</span>
                 <i class="bi bi-chevron-down teacher-nav__chevron" :class="{ 'is-collapsed': !adminOpen }" aria-hidden="true"></i>
               </button>
               <div
-                v-show="adminOpen && variant === 'desktop'"
+                v-if="variant === 'desktop'"
+                v-show="adminOpen"
                 id="teacher-nav-admin-children"
                 class="teacher-nav__admin-children"
               >
@@ -101,9 +115,9 @@
                 </button>
               </div>
             </div>
-            <hr v-if="showLogout" class="teacher-nav__divider" aria-hidden="true" />
+            <hr v-if="showLogout && variant !== 'mobile'" class="teacher-nav__divider" aria-hidden="true" />
             <form
-              v-if="showLogout"
+              v-if="showLogout && variant !== 'mobile'"
               method="POST"
               :action="logoutUrl"
               class="teacher-nav__logout-form"
@@ -163,6 +177,7 @@ export default {
     navLabelKey: { type: String, default: 'teacher.nav_label' },
     settingsLabelKey: { type: String, default: 'teacher.nav_settings' },
     adminLabelKey: { type: String, default: 'teacher.nav_admin' },
+    adminIcon: { type: String, default: 'bi bi-sliders' },
     logoutLabelKey: { type: String, default: 'teacher.nav_logout' },
     showAccount: { type: Boolean, default: true },
     logoutUrl: { type: String, default: '' },
@@ -208,7 +223,7 @@ export default {
     navStyle() {
       if (this.variant !== 'mobile') return null
       let count = this.visibleItems.length
-      if (this.hasAdminFooter) count += this.showLogout ? 2 : 1
+      if (this.hasAdminFooter) count += 1
       else if (this.showAccount) count += 1
       return { '--teacher-nav-count': String(count) }
     },

@@ -804,6 +804,21 @@ html[data-theme] :is(.teacher-dashboard, .learner-workspace) :focus-visible {
   text-align: end;
 }
 
+.teacher-playback-studio .teacher-playback__glyph--featured {
+  border-color: var(--workspace-line);
+  background: var(--workspace-surface);
+}
+
+.teacher-playback-studio .teacher-playback__glyph--compare {
+  border-color: var(--workspace-line);
+  background: var(--workspace-surface);
+}
+
+.teacher-playback-studio .teacher-playback__compare-empty {
+  border-color: var(--workspace-line);
+  background: color-mix(in srgb, var(--workspace-surface) 92%, var(--workspace-line));
+}
+
 .teacher-voice-note {
   display: inline-flex;
   flex-wrap: wrap;

@@ -1034,10 +1034,10 @@ class TeacherAssignmentService
     private function coachingActivity(array $input, AssignmentKind $kind): array
     {
         $activity = isset($input['activity']) && $input['activity'] !== '' ? (string) $input['activity'] : null;
-        $allowed = ['nazra', 'hifz', 'tajweed', 'revision'];
+        $allowed = ['nazra', 'hifz', 'tajweed', 'revision', 'examination'];
         if ($activity !== null && ! in_array($activity, $allowed, true)) {
             throw ValidationException::withMessages([
-                'activity' => 'Choose Nazra, Hifz, Tajweed, or Revision.',
+                'activity' => 'Choose Nazra, Hifz, Tajweed, Revision, or Examination.',
             ]);
         }
 
@@ -1047,7 +1047,14 @@ class TeacherAssignmentService
         if ($activity === 'tajweed') {
             $recordingRequired = true;
         }
-        if ($activity !== null) {
+        if ($activity === 'examination') {
+            $session = is_array($input['session_settings'] ?? null) ? $input['session_settings'] : [];
+            $exam = is_array($session['examination'] ?? null) ? $session['examination'] : [];
+            $delivery = strtolower((string) ($exam['delivery'] ?? 'async'));
+            $recordingRequired = $delivery === 'async';
+            $kind = $recordingRequired ? AssignmentKind::AiRecite : AssignmentKind::Practice;
+        }
+        if ($activity !== null && $activity !== 'examination') {
             $kind = $recordingRequired ? AssignmentKind::AiRecite : AssignmentKind::Practice;
         }
 
@@ -1084,6 +1091,10 @@ class TeacherAssignmentService
 
         $settings = is_array($assignment->session_settings) ? $assignment->session_settings : null;
         $params = AssignmentListeningSettings::mergeIntoMemorisationQuery($params, $settings);
+
+        if ($assignment->activity === 'examination') {
+            return route('hifz-examination').'?'.http_build_query($params);
+        }
 
         return route('memorisation').'?'.http_build_query($params);
     }
@@ -1227,7 +1238,8 @@ class TeacherAssignmentService
             ->where('teacher_assignment_recipient_id', $recipient->id)
             ->where('is_onboarding_example', false)
             ->where('status', UserSessionStatus::Completed->value)
-            ->orderBy('completed_at')
+            ->orderBy('ended_at')
+            ->orderBy('id')
             ->get();
 
         $blurSessions = $sessions->filter(function (UserSession $session) {

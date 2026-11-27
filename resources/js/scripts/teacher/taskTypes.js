@@ -40,6 +40,16 @@ export const TEACHER_TASK_TYPES = [
     matches: [],
   },
   {
+    id: 'hifz_examination',
+    labelKey: 'teacher.activity_hifz_examination',
+    helpKey: 'teacher.activity_hifz_examination_help',
+    kind: 'practice',
+    hifz_category: 'manzil',
+    activity: 'examination',
+    recordingRequired: false,
+    matches: [{ activity: 'examination' }],
+  },
+  {
     id: 'new_memorisation',
     labelKey: 'teacher.task_type_new',
     helpKey: 'teacher.task_type_new_help',
@@ -96,7 +106,11 @@ export function defaultAyahRange(surahs, surahNumber) {
 }
 
 export function resolveTeacherTaskType(kind, hifzCategory, activity = null) {
-  if (activity && TEACHER_TASK_TYPES.some((entry) => entry.id === activity && !entry.legacy)) return activity
+  if (activity) {
+    const byActivity = TEACHER_TASK_TYPES.find((entry) => entry.activity === activity && !entry.legacy)
+    if (byActivity) return byActivity.id
+    if (TEACHER_TASK_TYPES.some((entry) => entry.id === activity && !entry.legacy)) return activity
+  }
   const normalizedKind = kind || 'practice'
   const normalizedCategory = hifzCategory || 'sabaq'
   for (const type of TEACHER_TASK_TYPES) {
@@ -115,7 +129,7 @@ export function applyTeacherTaskType(form, taskTypeId) {
   return {
     ...form,
     task_type: type.id,
-    activity: type.legacy ? null : type.id,
+    activity: type.legacy ? null : (type.activity || type.id),
     kind: recordingRequired ? 'ai_recite' : type.kind,
     hifz_category: type.hifz_category,
     recording_required: recordingRequired,

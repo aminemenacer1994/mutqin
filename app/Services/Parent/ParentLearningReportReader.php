@@ -113,6 +113,7 @@ class ParentLearningReportReader
         );
         $goals = $progress ? ($payload['goals'] ?? null) : null;
         $wording = $progress ? ($payload['wording'] ?? null) : null;
+        $improve = $progress && is_array($payload['improve'] ?? null) ? $payload['improve'] : null;
         $feedback = [
             'notes' => $messages && is_array($payload['feedback']['notes'] ?? null) ? $payload['feedback']['notes'] : [],
             'recommendations' => $progress && is_array($payload['feedback']['recommendations'] ?? null) ? $payload['feedback']['recommendations'] : [],
@@ -139,13 +140,13 @@ class ParentLearningReportReader
                     'assignments' => $assignments !== null,
                     'teacher_feedback' => $messages,
                     'attendance' => $attendanceShared,
-                    'plans', 'memorisation', 'revision', 'teacher_recommendation', 'ai_word_match' => $progress,
+                    'plans', 'memorisation', 'revision', 'teacher_recommendation', 'teacher_confirmed_practice', 'ai_word_match' => $progress,
                     default => false,
                 };
             }
         ));
 
-        $visible = $assignments !== null || $activity !== null || $goals !== null || $feedback !== null || $attendance !== null;
+        $visible = $assignments !== null || $activity !== null || $goals !== null || $feedback !== null || $attendance !== null || $improve !== null;
         abort_unless($visible, 404);
 
         $start = $report->period_start instanceof Carbon ? $report->period_start : Carbon::parse((string) $report->period_start);
@@ -170,10 +171,11 @@ class ParentLearningReportReader
             'comparison' => $comparison,
             'attention' => $attention,
             'wording' => $wording,
+            'improve' => $improve,
             'attendance' => $attendance,
             'home_practice' => $homePractice,
             'sources' => $sources,
-            'insufficient' => $this->insufficient($assignments, $activity, $goals, $feedback, $wording, $attendance),
+            'insufficient' => $this->insufficient($assignments, $activity, $goals, $feedback, $wording, $attendance, $improve),
         ];
         if ($withNarrative) {
             $presented['narrative'] = $this->narrative($presented);
@@ -272,8 +274,9 @@ class ParentLearningReportReader
      * @param  array<string, mixed>|null  $goals
      * @param  array<string, mixed>|null  $feedback
      * @param  array<string, mixed>|null  $wording
+     * @param  array<string, mixed>|null  $improve
      */
-    private function insufficient(?array $assignments, ?array $activity, ?array $goals, ?array $feedback, ?array $wording, ?array $attendance): bool
+    private function insufficient(?array $assignments, ?array $activity, ?array $goals, ?array $feedback, ?array $wording, ?array $attendance, ?array $improve): bool
     {
         $assigned = (int) ($assignments['assigned'] ?? 0);
         $practice = (int) ($activity['practice_rows'] ?? 0);
@@ -281,6 +284,7 @@ class ParentLearningReportReader
         $plans = is_array($goals['plans'] ?? null) ? $goals['plans'] : [];
         $notes = is_array($feedback['notes'] ?? null) ? $feedback['notes'] : [];
         $recommendations = is_array($feedback['recommendations'] ?? null) ? $feedback['recommendations'] : [];
+        $improveItems = is_array($improve['items'] ?? null) ? $improve['items'] : [];
         $direction = (string) ($wording['direction'] ?? 'insufficient');
         $current = $activity['current_memorised'] ?? null;
         $attendanceTotal = (int) ($attendance['total'] ?? 0);
@@ -291,6 +295,7 @@ class ParentLearningReportReader
             && $plans === []
             && $notes === []
             && $recommendations === []
+            && $improveItems === []
             && $direction === 'insufficient'
             && (int) ($current ?? 0) === 0
             && $attendanceTotal === 0;

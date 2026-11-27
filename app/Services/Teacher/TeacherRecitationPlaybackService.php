@@ -23,6 +23,7 @@ use App\Support\RecitationAlignmentStatus;
 use App\Support\TeacherFeatures;
 use App\Support\TeacherOverviewCache;
 use App\Support\TeacherRecitationWordEvidence;
+use App\Support\TeacherAcousticTajweedEvidence;
 use App\Support\TeacherTajweedPracticeEvidence;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -497,6 +498,7 @@ class TeacherRecitationPlaybackService
             'coachings' => $coachings,
             'transcript' => $this->transcript($attempt),
             'tajweed_practice_suggestion' => TeacherTajweedPracticeEvidence::fromAttempt($attempt),
+            'acoustic_tajweed_experiment' => TeacherAcousticTajweedEvidence::fromAttempt($attempt),
         ];
     }
 

@@ -1,5 +1,5 @@
 <template>
-  <section class="teacher-stack">
+  <section class="teacher-stack" :class="mobileShell ? 'teacher-students--mobile' : 'teacher-students--desktop'">
     <header class="teacher-page-header teacher-page-header--actions">
       <div><p class="teacher-kicker">{{ t('teacher.workspace_label') }}</p><h1 class="teacher-page-header__title">{{ t('teacher.nav_students') }}</h1></div>
       <div class="teacher-page-header__aside d-flex flex-wrap align-items-center gap-2">
@@ -51,6 +51,7 @@
         </label>
       </div>
       <button
+        v-if="desktopShell"
         type="button"
         class="btn btn-outline-secondary btn-sm teacher-density-toggle"
         :class="{ 'is-active': compactView }"
@@ -119,6 +120,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { teacherViewportMixin } from '../../mixins/teacherViewportMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherPagination from './TeacherPagination.vue'
 import TeacherStudentTable from './TeacherStudentTable.vue'
@@ -126,7 +128,7 @@ import TeacherStudentTable from './TeacherStudentTable.vue'
 export default {
   name: 'TeacherStudentsSection',
   components: { TeacherEmpty, TeacherPagination, TeacherStudentTable },
-  mixins: [i18nMixin],
+  mixins: [i18nMixin, teacherViewportMixin],
   props: {
     filters: { type: Object, required: true },
     groups: { type: Array, default: () => [] },
@@ -140,11 +142,22 @@ export default {
   data() {
     return { compactView: true, selectedIds: [] }
   },
-  mounted() {
-    try {
-      const saved = window.localStorage.getItem('mutqin.teacher.students.compact')
-      this.compactView = saved === null ? true : saved === '1'
-    } catch { /* Storage is optional. */ }
+  watch: {
+    mobileShell: {
+      immediate: true,
+      handler(mobile) {
+        if (mobile) {
+          this.compactView = true
+          return
+        }
+        try {
+          const saved = window.localStorage.getItem('mutqin.teacher.students.compact')
+          this.compactView = saved === null ? false : saved === '1'
+        } catch {
+          this.compactView = false
+        }
+      },
+    },
   },
   computed: {
     hasFilters() {

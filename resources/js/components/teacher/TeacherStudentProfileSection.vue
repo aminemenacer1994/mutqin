@@ -109,6 +109,10 @@
           v-else-if="section === 'guardians' && profile.student"
           :student-id="Number(profile.student.id)"
         />
+        <TeacherStudentProfileReports
+          v-else-if="section === 'reports' && profile.student"
+          :student-id="Number(profile.student.id)"
+        />
         <KeepAlive>
           <TeacherStudentProfileTasks
             v-if="section === 'tasks'"
@@ -222,6 +226,7 @@ import TeacherStudentProfileMessages from './profile/TeacherStudentProfileMessag
 import TeacherStudentGuardianThreads from './profile/TeacherStudentGuardianThreads.vue'
 import TeacherStudentProfileAttendance from './profile/TeacherStudentProfileAttendance.vue'
 import TeacherStudentProfileGuardians from './profile/TeacherStudentProfileGuardians.vue'
+import TeacherStudentProfileReports from './profile/TeacherStudentProfileReports.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
 export default {
@@ -237,6 +242,7 @@ export default {
     TeacherStudentGuardianThreads,
     TeacherStudentProfileAttendance,
     TeacherStudentProfileGuardians,
+    TeacherStudentProfileReports,
     TeacherWordingMatch,
   },
   mixins: [i18nMixin],

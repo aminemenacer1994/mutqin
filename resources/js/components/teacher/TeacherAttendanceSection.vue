@@ -1,5 +1,8 @@
 <template>
-  <section class="teacher-stack teacher-attendance teacher-attendance--workspace">
+  <section
+    class="teacher-stack teacher-attendance teacher-attendance--workspace"
+    :class="mobileShell ? 'teacher-attendance--mobile-shell' : 'teacher-attendance--desktop-shell'"
+  >
     <header class="teacher-attendance__page-head">
       <div class="teacher-page-header">
         <h1 class="teacher-page-header__title">{{ t('teacher.nav_attendance') }}</h1>
@@ -31,7 +34,7 @@
         <button
           v-if="groupId"
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-outline-secondary btn-sm"
           @click="openSchedule"
         >
           <i class="bi bi-calendar-plus" aria-hidden="true"></i>
@@ -51,28 +54,58 @@
     </div>
 
     <template v-else>
-      <div class="teacher-attendance__toolbar">
-        <label v-if="groups.length > 1" class="teacher-attendance__field">
-          <span class="teacher-attendance__field-label">{{ t('teacher.attendance_group') }}</span>
-          <select v-model="groupId" class="form-select form-select-sm" @change="load">
-            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-          </select>
-        </label>
-        <label v-if="lessonsOnFocusDay.length > 1" class="teacher-attendance__field">
-          <span class="teacher-attendance__field-label">{{ t('teacher.attendance_schedule_name') }}</span>
-          <select v-model="selectedLessonId" class="form-select form-select-sm">
-            <option v-for="lesson in lessonsOnFocusDay" :key="lesson.id" :value="lesson.id">
-              {{ lesson.title || t('teacher.attendance_lesson_untitled') }}
-            </option>
-          </select>
-        </label>
-        <p v-else-if="lessonsOnFocusDay.length === 1" class="teacher-attendance__lesson-pill" role="status">
-          <i class="bi bi-bookmark" aria-hidden="true"></i>
-          {{ lessonsOnFocusDay[0].title || t('teacher.attendance_lesson_untitled') }}
-        </p>
-      </div>
-
-      <div v-if="panelMode === 'register'" class="teacher-attendance__controls">
+      <div
+        v-if="panelMode === 'register'"
+        class="teacher-attendance__nav-card"
+      >
+        <div class="teacher-attendance__toolbar teacher-attendance__toolbar--register">
+          <label v-if="groups.length > 1" class="teacher-attendance__field">
+            <span class="teacher-attendance__field-label">{{ t('teacher.attendance_group') }}</span>
+            <select v-model="groupId" class="form-select form-select-sm" @change="load">
+              <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+            </select>
+          </label>
+          <label v-if="lessonsOnFocusDay.length > 1" class="teacher-attendance__field">
+            <span class="teacher-attendance__field-label">{{ t('teacher.attendance_schedule_name') }}</span>
+            <select v-model="selectedLessonId" class="form-select form-select-sm">
+              <option v-for="lesson in lessonsOnFocusDay" :key="lesson.id" :value="lesson.id">
+                {{ lesson.title || t('teacher.attendance_lesson_untitled') }}
+              </option>
+            </select>
+          </label>
+          <p v-else-if="lessonsOnFocusDay.length === 1" class="teacher-attendance__lesson-pill" role="status">
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+            {{ lessonsOnFocusDay[0].title || t('teacher.attendance_lesson_untitled') }}
+          </p>
+          <label class="teacher-attendance__field teacher-attendance__field--grow">
+            <span class="visually-hidden">{{ t('teacher.attendance_filter_student') }}</span>
+            <input
+              v-model.trim="studentQuery"
+              type="search"
+              class="form-control form-control-sm"
+              :placeholder="t('teacher.attendance_filter_student_placeholder')"
+              autocomplete="off"
+            >
+          </label>
+          <label class="teacher-attendance__field">
+            <span class="visually-hidden">{{ t('teacher.attendance_status') }}</span>
+            <select v-model="registerStatusFilter" class="form-select form-select-sm">
+              <option value="">{{ t('teacher.task_filter_all') }}</option>
+              <option value="unmarked">{{ t('teacher.attendance_unmarked') }}</option>
+              <option v-for="option in registerStatusOptions" :key="option.id" :value="option.id">{{ t(option.label) }}</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm teacher-attendance__mark-all"
+            :disabled="!canMark(focusDay) || markAllSaving || !registerRows.length"
+            :title="markAllScopeLabel"
+            @click="markAllPresent"
+          >
+            <i class="bi bi-check2-all" aria-hidden="true"></i>
+            {{ t('teacher.attendance_mark_all_present') }}
+          </button>
+        </div>
         <div class="teacher-attendance__weekbar">
           <button type="button" class="btn btn-outline-secondary btn-sm" :aria-label="t('teacher.attendance_previous_week')" @click="shiftWeek(-1)">
             <i class="bi bi-chevron-left" aria-hidden="true"></i>
@@ -159,37 +192,6 @@
       <p v-if="panelError" class="alert alert-danger teacher-attendance__panel-error" role="alert">{{ panelError }}</p>
 
       <div v-if="panelMode === 'register' && focusDay" class="teacher-attendance__register">
-        <div class="teacher-attendance__register-toolbar">
-          <label class="teacher-attendance__field teacher-attendance__field--grow">
-            <span class="visually-hidden">{{ t('teacher.attendance_filter_student') }}</span>
-            <input
-              v-model.trim="studentQuery"
-              type="search"
-              class="form-control form-control-sm"
-              :placeholder="t('teacher.attendance_filter_student_placeholder')"
-              autocomplete="off"
-            >
-          </label>
-          <label class="teacher-attendance__field">
-            <span class="visually-hidden">{{ t('teacher.attendance_status') }}</span>
-            <select v-model="registerStatusFilter" class="form-select form-select-sm">
-              <option value="">{{ t('teacher.task_filter_all') }}</option>
-              <option value="unmarked">{{ t('teacher.attendance_unmarked') }}</option>
-              <option v-for="option in registerStatusOptions" :key="option.id" :value="option.id">{{ t(option.label) }}</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            class="btn btn-outline-secondary btn-sm"
-            :disabled="!canMark(focusDay) || markAllSaving || !registerRows.length"
-            :title="markAllScopeLabel"
-            @click="markAllPresent"
-          >
-            <i class="bi bi-check2-all" aria-hidden="true"></i>
-            {{ t('teacher.attendance_mark_all_present') }}
-          </button>
-        </div>
-
         <p v-if="!registerRows.length" class="teacher-attendance__filter-empty">{{ t('teacher.attendance_filter_empty') }}</p>
         <div v-else class="teacher-attendance__scroll">
           <table class="teacher-attendance__table teacher-attendance__table--register">
@@ -408,6 +410,7 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { teacherViewportMixin } from '../../mixins/teacherViewportMixin'
 import { learningApi } from '../../scripts/api/learning'
 import { formatTeacherWhen, studentInitial } from '../../scripts/teacher/formatters'
 import TeacherDialog from './TeacherDialog.vue'
@@ -419,7 +422,7 @@ const ATTENDANCE_TABLE_PAGE_SIZE = 20
 export default {
   name: 'TeacherAttendanceSection',
   components: { TeacherDialog, TeacherPagination },
-  mixins: [i18nMixin],
+  mixins: [i18nMixin, teacherViewportMixin],
   data() {
     return {
       groups: [],

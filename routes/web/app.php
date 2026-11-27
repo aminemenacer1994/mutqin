@@ -181,6 +181,14 @@ Route::get('/memorisation', function (Request $request) {
     ]);
 })->middleware(['auth', 'verified'])->name('memorisation');
 
+Route::get('/hifz-examination', function (Request $request) {
+    return view('hifz-examination', [
+        'justRegistered' => false,
+        'justLoggedIn' => false,
+        'startFirstSession' => false,
+    ]);
+})->middleware(['auth', 'verified'])->name('hifz-examination');
+
 Route::get('/memorisation/demo', function () {
     return view('memorisation', ['demoMode' => true]);
 })->name('memorisation.demo');

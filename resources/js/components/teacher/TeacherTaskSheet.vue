@@ -81,7 +81,13 @@
         <div v-if="rangeError" class="teacher-form-field teacher-form-field--full">
           <p :id="`${formId}-range-error`" class="text-danger small mb-0" role="alert">{{ rangeError }}</p>
         </div>
-        <div class="teacher-form-field teacher-form-field--half teacher-form-field--reps">
+        <TeacherAssignmentExaminationFields
+          :form-id="formId"
+          :form="form"
+          :saving="saving"
+          @update:form="$emit('update:form', $event)"
+        />
+        <div v-if="!isExaminationTask" class="teacher-form-field teacher-form-field--half teacher-form-field--reps">
           <label class="form-label" :for="`${formId}-reps`">{{ requirementLabel }}</label>
           <input :id="`${formId}-reps`" class="form-control" :class="{ 'is-invalid': showTargetError }" :value="form.repetition_target" type="number" min="1" max="50" inputmode="numeric" required :aria-invalid="showTargetError ? 'true' : 'false'" :aria-describedby="showTargetError ? `${formId}-reps-error` : undefined" @input="patch('repetition_target', $event.target.value)">
           <p v-if="showTargetError" :id="`${formId}-reps-error`" class="text-danger small mb-0 mt-1" role="alert">{{ targetError }}</p>
@@ -154,9 +160,11 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherDialog from './TeacherDialog.vue'
 import TeacherAssignmentListeningFields from './TeacherAssignmentListeningFields.vue'
+import TeacherAssignmentExaminationFields from './TeacherAssignmentExaminationFields.vue'
 import TeacherAssignmentProgressiveHidingFields from './TeacherAssignmentProgressiveHidingFields.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
 import { assignmentRequirementLabel } from '../../scripts/teacher/formatters'
+import { defaultExaminationSettings } from '../../scripts/teacher/assignmentExaminationSettings'
 import {
   TEACHER_TASK_TYPES,
   applyRecordingRequirement,
@@ -168,7 +176,13 @@ let sheetUid = 0
 
 export default {
   name: 'TeacherTaskSheet',
-  components: { TeacherDialog, TeacherAssignmentListeningFields, TeacherAssignmentProgressiveHidingFields, TeacherSurahSelect },
+  components: {
+    TeacherDialog,
+    TeacherAssignmentListeningFields,
+    TeacherAssignmentExaminationFields,
+    TeacherAssignmentProgressiveHidingFields,
+    TeacherSurahSelect,
+  },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -236,7 +250,11 @@ export default {
     selectedTaskType() {
       return TEACHER_TASK_TYPES.find((type) => type.id === this.form.task_type) || null
     },
+    isExaminationTask() {
+      return this.form.task_type === 'hifz_examination' || this.form.activity === 'examination'
+    },
     showHifzStage() {
+      if (this.isExaminationTask) return false
       return this.form.task_type === 'hifz' || this.form.task_type === 'new_memorisation'
     },
     showRecordingOption() {
@@ -282,12 +300,14 @@ export default {
       if (!this.form.student_id && !this.bulkStudents.length) return this.t('teacher.task_submit_choose_student')
       if (!this.form.task_type) return this.t('teacher.task_submit_choose_type')
       if (!this.form.surah_number || !this.form.ayah_start || !this.form.ayah_end || this.rangeError) return this.t('teacher.task_submit_choose_passage')
-      if (this.targetError) return this.t('teacher.task_submit_choose_target')
+      if (!this.isExaminationTask && this.targetError) return this.t('teacher.task_submit_choose_target')
       if (this.dueError) return ''
       return this.t('teacher.complete_required_fields')
     },
     canSubmit() {
       const target = Number(this.form.repetition_target)
+      const targetOk = this.isExaminationTask
+        || (Number.isInteger(target) && target >= 1 && target <= 50)
       return Boolean(
         (this.form.student_id || this.bulkStudents.length)
         && this.form.task_type
@@ -298,9 +318,7 @@ export default {
         && this.form.due_at
         && !this.rangeError
         && !this.dueError
-        && Number.isInteger(target)
-        && target >= 1
-        && target <= 50,
+        && targetOk,
       )
     },
   },
@@ -347,7 +365,19 @@ export default {
       this.$emit('update:form', { ...this.form, [key]: value })
     },
     onTaskTypeChange(taskTypeId) {
-      this.$emit('update:form', applyTeacherTaskType(this.form, taskTypeId))
+      let next = applyTeacherTaskType(this.form, taskTypeId)
+      if (taskTypeId === 'hifz_examination') {
+        const session = next.session_settings && typeof next.session_settings === 'object' ? next.session_settings : {}
+        next = {
+          ...next,
+          repetition_target: 1,
+          session_settings: {
+            ...session,
+            examination: { ...defaultExaminationSettings(), ...(session.examination || {}) },
+          },
+        }
+      }
+      this.$emit('update:form', next)
     },
     onRecordingChange(required) {
       this.$emit('update:form', applyRecordingRequirement(this.form, required))

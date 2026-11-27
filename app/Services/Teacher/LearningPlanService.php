@@ -17,6 +17,7 @@ use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\RevisionReminders\RevisionReminderSyncService;
 use App\Support\ActivityProgress;
 use App\Support\QuranMetadata;
+use App\Support\SmartRevisionSettings;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -396,7 +397,7 @@ class LearningPlanService
         MemorisationWeakSpot::query()
             ->where('user_id', $student->id)
             ->whereIn('status', ['active', 'improving'])
-            ->where('affected_attempt_count', '>=', 2)
+            ->where('affected_attempt_count', '>=', SmartRevisionSettings::minWeakSpotAttempts())
             ->orderByDesc('affected_attempt_count')
             ->orderByDesc('severity')
             ->limit(24)

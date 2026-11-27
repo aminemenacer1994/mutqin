@@ -2,8 +2,10 @@
   <div
     v-if="featuresEnabled"
     class="user-dashboard teacher-dashboard"
+    :class="teacherViewport === 'mobile' ? 'teacher-dashboard--mobile' : 'teacher-dashboard--desktop'"
     data-teacher-ui="2026-11-15-unified-workspace"
     data-platform-shell="teacher"
+    :data-teacher-viewport="teacherViewport"
     tabindex="-1"
   >
     <div class="container user-dashboard__shell teacher-dashboard__shell">
@@ -52,6 +54,7 @@
               @open-students="openView('students')"
               @open-attention="openStudentsFromKpi('attention')"
               @create-assignment="startAssignment"
+              @open-attendance="openView('attendance')"
             />
 
             <TeacherOverviewSection
@@ -74,6 +77,7 @@
               @open-attendance="openView('attendance')"
               @open-messages="openView('messages')"
               @create-assignment="startAssignment"
+              @import-students="openStudentImport"
             />
 
             <TeacherStudentsSection
@@ -180,8 +184,10 @@
 
         <TeacherNav
           variant="mobile"
-          :items="TEACHER_NAV"
-          :admin-items="TEACHER_ADMIN_NAV"
+          :items="teacherMobilePrimary"
+          :admin-items="teacherMobileMore"
+          admin-label-key="teacher.nav_more"
+          admin-icon="bi bi-three-dots"
           :counts="deskCounts"
           :badges="navBadges"
           :active-view="view"
@@ -236,7 +242,9 @@ import TeacherStudentImportWizard from '../components/teacher/TeacherStudentImpo
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
 import TeacherTaskSheet from '../components/teacher/TeacherTaskSheet.vue'
 import { useTeacherDashboard } from '../scripts/composables/useTeacherDashboard'
+import { teacherMobileMoreNav, teacherMobilePrimaryNav } from '../scripts/teacher/constants'
 import { teacherDeskCounts } from '../scripts/teacher/formatters'
+import { useTeacherViewport } from '../scripts/teacher/viewport'
 
 export default {
   name: 'TeacherDashboard',
@@ -261,6 +269,8 @@ export default {
   },
   setup(props) {
     const dashboard = useTeacherDashboard(props.auth)
+    const { isMobileShell, viewport: teacherViewport } = useTeacherViewport()
+    provide('teacherIsMobileShell', isMobileShell)
     const deskCounts = computed(() => teacherDeskCounts(dashboard.overview.value))
     const navBadges = computed(() => ({
       messages: Number(deskCounts.value.unread || 0),
@@ -319,10 +329,16 @@ export default {
     function startAssignment() {
       dashboard.beginCreateAssignment()
     }
+    const teacherMobilePrimary = teacherMobilePrimaryNav()
+    const teacherMobileMore = teacherMobileMoreNav()
     return {
       ...dashboard,
+      teacherViewport,
+      isMobileShell,
       deskCounts,
       navBadges,
+      teacherMobilePrimary,
+      teacherMobileMore,
       updateFilters,
       onProfileSection,
       openAssignments,

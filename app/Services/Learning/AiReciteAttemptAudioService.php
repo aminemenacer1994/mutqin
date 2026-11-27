@@ -199,6 +199,27 @@ class AiReciteAttemptAudioService
         return ! $this->isExpired($attempt);
     }
 
+    /**
+     * Absolute path for server-side acoustic inference (local disk only).
+     */
+    public function localPathForInference(?AiReciteAttempt $attempt): ?string
+    {
+        if (! $this->hasPlayableAudio($attempt) || ! $this->hasFile($attempt)) {
+            return null;
+        }
+
+        $diskName = $attempt->audio_disk ?: self::DISK;
+        if (config('filesystems.disks.'.$diskName.'.driver') !== 'local') {
+            return null;
+        }
+
+        try {
+            return Storage::disk($diskName)->path((string) $attempt->audio_path);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     public function stream(User $user, AiReciteAttempt $attempt): ?Response
     {
         if (! $this->canView($user, $attempt)) {

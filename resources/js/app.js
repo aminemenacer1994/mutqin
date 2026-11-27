@@ -303,6 +303,11 @@ const AdminFeedback = lazyPage(
 // The memorisation workspace is by far the heaviest component. It is only used
 // on the memorisation page, so load it as a separate async chunk to keep the
 // main bundle (and every other page) lean.
+const HifzExamination = lazyPage(
+    () => import(/* webpackChunkName: "hifz-examination" */ './views/HifzExamination.vue'),
+    { feature: 'hifz-examination' },
+);
+
 const Memorisation = lazyPage(
     () => import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
@@ -453,6 +458,7 @@ async function bootstrapApp() {
         'madani-spread': MadaniSpread,
         homepage: Homepage,
         memorisation: Memorisation,
+        'hifz-examination': HifzExamination,
         'user-dashboard': UserDashboard,
         'teacher-dashboard': TeacherDashboardComponent,
         'parent-dashboard': ParentDashboardComponent,
