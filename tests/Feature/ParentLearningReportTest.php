@@ -99,8 +99,9 @@ class ParentLearningReportTest extends TestCase
         $this->assertStringContainsString('1 task was set in this period', $body);
         $this->assertStringContainsString(QuranMetadata::name(1), $body);
         $this->assertStringContainsString('SHARED-FEEDBACK-LINE', $body);
-        $this->assertStringContainsString('not a Tajweed grade', $body);
         $this->assertStringContainsString('Generated summary', $body);
+        $this->assertStringContainsString('"lines"', $body);
+        $this->assertStringNotContainsString('not a Tajweed grade', $body);
         $this->assertStringNotContainsString(QuranMetadata::name(2), $body);
         $this->assertStringNotContainsString('PRIVATE-NOTE-TOKEN', $body);
         $this->assertStringNotContainsString('Tajweed proficiency', $body);
@@ -207,8 +208,8 @@ class ParentLearningReportTest extends TestCase
             ->assertOk()
             ->assertJsonPath('reports.0.insufficient', true)
             ->getContent();
-        $this->assertStringContainsString('not enough learning data', $body);
-        $this->assertStringContainsString('No score has been estimated', $body);
+        $this->assertStringContainsString('Not enough shared learning data', $body);
+        $this->assertStringContainsString('Ask your child', $body);
     }
 
     public function test_opted_in_notices_stay_generic_and_generation_is_scheduled(): void

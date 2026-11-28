@@ -1,10 +1,16 @@
 <template>
   <section class="parent-home parent-homework teacher-stack">
-    <header class="teacher-page-header">
+    <header class="teacher-page-header teacher-page-header--actions">
       <div>
         <p class="teacher-kicker">{{ t('parent.workspace_label') }}</p>
         <h1 class="teacher-page-header__title">{{ t('parent.nav_learning') }}</h1>
         <p class="teacher-page-header__hint">{{ t('parent.learning_detail_hint') }}</p>
+      </div>
+      <div v-if="shared && !loading && !error && sortedRows.length" class="teacher-page-header__aside">
+        <button type="button" class="dash-btn dash-btn--ghost" @click="openBreakdown">
+          <i class="bi bi-columns-gap" aria-hidden="true"></i>
+          {{ t('parent.homework_breakdown_title') }}
+        </button>
       </div>
     </header>
 
@@ -53,68 +59,131 @@
           {{ t('parent.filter_reset') }}
         </button>
       </div>
-      <div v-else id="parent-homework-breakdown" class="parent-homework-breakdown">
-        <h2 class="parent-report__subhead">{{ listHint }}</h2>
-        <section
-          v-for="group in groupedRows"
-          :key="group.key"
-          class="parent-homework-group"
-          :aria-labelledby="`parent-homework-group-${group.key}`"
-        >
-          <h2 :id="`parent-homework-group-${group.key}`" class="parent-homework-group__title">
-            {{ groupTitle(group.key) }}
-            <span class="parent-homework-group__count">{{ group.rows.length }}</span>
-          </h2>
-          <ul class="parent-tasks parent-homework-list">
-            <li
-              v-for="(item, index) in group.rows"
-              :key="item.id"
-              class="parent-task parent-homework-card"
-              :style="{ '--parent-i': index }"
-            >
-              <article>
-                <button
-                  type="button"
-                  class="parent-homework-card__hit"
-                  :aria-label="viewLabel(item)"
-                  @click="openDetail(item)"
-                >
-                  <span class="parent-task__icon" aria-hidden="true"><i :class="activityIcon(item.assignment?.activity)"></i></span>
-                  <span class="parent-homework-card__body">
-                    <strong class="parent-homework-card__title" :dir="titleDir(item)">{{ taskTitle(item) }}</strong>
-                    <small class="parent-homework-card__meta">{{ cardMeta(item) }}</small>
-                    <span class="parent-homework-card__badges">
-                      <span v-if="categoryLabel(item)" class="parent-status is-quiet">{{ categoryLabel(item) }}</span>
-                      <span class="parent-status" :class="statusClass(item.display_status)">
-                        <i :class="statusIcon(item.display_status)" aria-hidden="true"></i>
-                        {{ statusLabel(item.display_status) }}
+      <template v-else>
+        <div id="parent-homework-breakdown" class="parent-homework-breakdown">
+          <div v-if="showBreakdownCharts" class="parent-homework-breakdown__summary">
+            <div class="parent-homework-breakdown__charts">
+              <section v-if="statusChartBars.length" class="parent-reports-chart-panel">
+                <h3 class="parent-report__subhead parent-report__subhead--chart">{{ t('parent.homework_chart_status') }}</h3>
+                <ParentSimpleBarChart :bars="statusChartBars" :aria-label="t('parent.homework_chart_status')" />
+              </section>
+              <section v-if="activityChartBars.length" class="parent-reports-chart-panel">
+                <h3 class="parent-report__subhead parent-report__subhead--chart">{{ t('parent.homework_chart_activity') }}</h3>
+                <ParentSimpleBarChart :bars="activityChartBars" :aria-label="t('parent.homework_chart_activity')" />
+              </section>
+            </div>
+          </div>
+          <h2 class="parent-report__subhead">{{ t('parent.homework_breakdown_list') }}</h2>
+          <p v-if="breakdownLead" class="parent-stat__hint parent-homework-breakdown__lead">{{ breakdownLead }}</p>
+          <section
+            v-for="group in groupedRows"
+            :key="group.key"
+            class="parent-homework-group"
+            :aria-labelledby="`parent-homework-group-${group.key}`"
+          >
+            <h2 :id="`parent-homework-group-${group.key}`" class="parent-homework-group__title">
+              {{ groupTitle(group.key) }}
+              <span class="parent-homework-group__count">{{ group.rows.length }}</span>
+            </h2>
+            <ul class="parent-tasks parent-homework-list">
+              <li
+                v-for="(item, index) in group.rows"
+                :key="item.id"
+                class="parent-task parent-homework-card"
+                :style="{ '--parent-i': index }"
+              >
+                <article>
+                  <button
+                    type="button"
+                    class="parent-homework-card__hit"
+                    :aria-label="viewLabel(item)"
+                    @click="openDetail(item)"
+                  >
+                    <span class="parent-task__icon" aria-hidden="true"><i :class="activityIcon(item.assignment?.activity)"></i></span>
+                    <span class="parent-homework-card__body">
+                      <strong class="parent-homework-card__title" :dir="titleDir(item)">{{ taskTitle(item) }}</strong>
+                      <small class="parent-homework-card__meta">{{ cardMeta(item) }}</small>
+                      <span class="parent-homework-card__badges">
+                        <span v-if="categoryLabel(item)" class="parent-status is-quiet">{{ categoryLabel(item) }}</span>
+                        <span class="parent-status" :class="statusClass(item.display_status)">
+                          <i :class="statusIcon(item.display_status)" aria-hidden="true"></i>
+                          {{ statusLabel(item.display_status) }}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                  <span class="parent-homework-card__cta">
-                    {{ t('parent.homework_view_details') }}
-                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                  </span>
-                </button>
-              </article>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </template>
-    <details v-if="!loading && !error && shared && sortedRows.length" class="parent-disclosure parent-homework-analytics">
-      <summary>{{ t('parent.homework_breakdown_title') }}</summary>
-        <div v-if="statusBars.length || activityBars.length" class="parent-homework-breakdown__charts">
-          <section v-if="statusBars.length" class="parent-reports-chart-panel">
-            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_status') }}</h3>
-            <ParentSimpleBarChart :bars="statusBars" :aria-label="t('parent.homework_chart_status')" />
-          </section>
-          <section v-if="activityBars.length" class="parent-reports-chart-panel">
-            <h3 class="parent-report__subhead parent-report__subhead--minor">{{ t('parent.homework_chart_activity') }}</h3>
-            <ParentSimpleBarChart :bars="activityBars" :aria-label="t('parent.homework_chart_activity')" />
+                    <span class="parent-homework-card__cta">
+                      {{ t('parent.homework_view_details') }}
+                      <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </span>
+                  </button>
+                </article>
+              </li>
+            </ul>
           </section>
         </div>
-    </details>
+      </template>
+    </template>
+
+    <DashModalRoot
+      :open="breakdownOpen"
+      labelled-by="parent-homework-breakdown-title"
+      root-class="parent-modal-root parent-homework-breakdown-modal"
+      panel-class="parent-modal parent-homework-breakdown-modal__panel"
+      test-id="parent-homework-breakdown-modal"
+      @close="closeBreakdown"
+    >
+      <header class="parent-modal__head">
+        <div class="parent-modal__head-main">
+          <h2 id="parent-homework-breakdown-title" class="parent-report__subhead">{{ t('parent.homework_breakdown_title') }}</h2>
+          <p class="parent-lead parent-modal__quiet">{{ breakdownIntro }}</p>
+        </div>
+        <button type="button" class="parent-modal__close" :aria-label="t('parent.modal_close')" @click="closeBreakdown">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="parent-modal__body parent-homework-breakdown-modal__body">
+        <div class="parent-stats parent-stats--compact parent-homework-breakdown__stats" role="list">
+          <article
+            v-for="card in summaryCards"
+            :key="card.key"
+            class="parent-stat parent-stat--compact parent-homework-stat"
+            :class="`is-tone-${card.tone}`"
+            role="listitem"
+          >
+            <span aria-hidden="true"><i :class="card.icon"></i></span>
+            <strong>{{ card.value }}</strong>
+            <small>{{ card.label }}</small>
+          </article>
+        </div>
+        <p v-if="breakdownLead" class="parent-stat__hint">{{ breakdownLead }}</p>
+        <div class="parent-homework-breakdown parent-homework-breakdown--modal">
+          <section
+            v-for="group in groupedRows"
+            :key="`modal-${group.key}`"
+            class="parent-homework-group"
+            :aria-labelledby="`parent-homework-breakdown-group-${group.key}`"
+          >
+            <h3 :id="`parent-homework-breakdown-group-${group.key}`" class="parent-homework-group__title">
+              {{ groupTitle(group.key) }}
+              <span class="parent-homework-group__count">{{ group.rows.length }}</span>
+            </h3>
+            <ul class="parent-homework-breakdown-modal__list" role="list">
+              <li v-for="item in group.rows" :key="`modal-${item.id}`" role="listitem">
+                <button type="button" class="parent-homework-breakdown-modal__row" @click="openDetailFromBreakdown(item)">
+                  <span class="parent-homework-breakdown-modal__row-main">
+                    <strong :dir="titleDir(item)">{{ taskTitle(item) }}</strong>
+                    <small>{{ cardMeta(item) }}</small>
+                  </span>
+                  <span class="parent-status" :class="statusClass(item.display_status)">
+                    {{ statusLabel(item.display_status) }}
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </DashModalRoot>
 
     <DashModalRoot
         :open="Boolean(active)"
@@ -177,17 +246,73 @@
                 </li>
               </ol>
             </section>
-            <section v-if="active.instructions" class="learner-assignment-modal__section">
+            <section v-if="active.instructions || assignmentFeedback(active) || assignmentVoiceInstruction(active) || assignmentRecitationDemo(active)" class="learner-assignment-modal__section">
               <h3>{{ t('parent.instructions') }}</h3>
-              <p dir="auto">{{ active.instructions }}</p>
+              <p v-if="active.instructions" dir="auto">{{ active.instructions }}</p>
+              <p v-if="assignmentFeedback(active)" dir="auto">{{ assignmentFeedback(active) }}</p>
+              <TeacherAudioFeedbackPlayer
+                v-if="assignmentVoiceInstruction(active)?.available && assignmentVoiceInstruction(active)?.url"
+                :src="assignmentVoiceInstruction(active).url"
+                :duration-ms="assignmentVoiceInstruction(active).duration_ms"
+                compact
+                :play-label="t('teacher.assignment_voice_instruction_label')"
+                :pause-label="t('teacher.pause_recording')"
+              />
+              <TeacherAudioFeedbackPlayer
+                v-if="assignmentRecitationDemo(active)?.available && assignmentRecitationDemo(active)?.url"
+                class="mt-2"
+                :src="assignmentRecitationDemo(active).url"
+                :duration-ms="assignmentRecitationDemo(active).duration_ms"
+                compact
+                :play-label="t('teacher.assignment_recitation_demo_label')"
+                :pause-label="t('teacher.pause_recording')"
+              />
             </section>
-            <section v-if="assignmentFeedback(active)" class="learner-assignment-modal__section parent-homework-detail__feedback">
+            <section v-if="publishedFeedback(active)" class="learner-assignment-modal__section parent-homework-detail__feedback">
               <h3><i class="bi bi-chat-left-quote" aria-hidden="true"></i>{{ t('parent.teacher_feedback') }}</h3>
-              <p dir="auto">{{ assignmentFeedback(active) }}</p>
+              <template v-if="publishedFeedback(active)">
+                <p v-if="publishedFeedback(active).body" dir="auto">{{ publishedFeedback(active).body }}</p>
+                <TeacherAudioFeedbackPlayer
+                  v-if="publishedFeedback(active).audio?.available && publishedFeedback(active).audio?.url"
+                  :src="publishedFeedback(active).audio.url"
+                  :duration-ms="publishedFeedback(active).audio.duration_ms"
+                  compact
+                />
+              </template>
             </section>
             <section v-if="reviewedAssessment(active)" class="learner-assignment-modal__section">
               <h3>{{ t('parent.assessment_heading') }}</h3>
               <ParentAssessmentCard :assessment="reviewedAssessment(active)" />
+            </section>
+            <section v-if="mushafRows(active).length" class="learner-assignment-modal__section parent-homework-detail__mushaf">
+              <h3>{{ t('parent.homework_mushaf_title') }}</h3>
+              <p class="parent-modal__quiet">{{ t('parent.homework_mushaf_hint') }}</p>
+              <ul class="parent-homework-mushaf-list">
+                <li v-for="row in mushafRows(active)" :key="row.id">
+                  <span class="parent-status is-quiet">{{ mushafCategory(row) }}</span>
+                  <p v-if="row.guidance" class="mb-0" dir="auto">{{ row.guidance }}</p>
+                </li>
+              </ul>
+            </section>
+            <section
+              v-if="canAcknowledgeSupervision(active)"
+              class="learner-assignment-modal__section parent-homework-detail__supervision"
+            >
+              <h3>{{ t('parent.homework_supervision_title') }}</h3>
+              <p class="parent-modal__quiet">{{ t('parent.homework_supervision_hint') }}</p>
+              <p v-if="supervisionAcknowledged(active)" class="parent-homework-supervision-done" role="status">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                {{ supervisionAcknowledgedLabel(active) }}
+              </p>
+              <button
+                v-else
+                type="button"
+                class="dash-btn dash-btn--primary"
+                :disabled="acknowledging"
+                @click="acknowledgeSupervision(active)"
+              >
+                {{ acknowledging ? t('parent.homework_supervision_saving') : t('parent.homework_supervision_confirm') }}
+              </button>
             </section>
             <p v-if="!detailHasContent(active)" class="parent-modal__quiet">{{ t('parent.task_no_note') }}</p>
           </div>
@@ -201,12 +326,15 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { activityIcon, activityName, formatWhen, passageLabel } from '../../scripts/parent/dashboard'
 import {
   hasLearningFiltersActive,
+  assignmentRecitationDemo,
+  assignmentVoiceInstruction,
   homeworkDetailHasContent,
   homeworkDisplayStatusClass,
   homeworkDisplayStatusIcon,
   homeworkDisplayStatusKey,
   passageTitleDirection,
   resetLearningFilters,
+  publishedHomeworkFeedback,
   sharedReviewedAssessment,
   sortLearningRows,
   visibleAssignmentFeedback,
@@ -218,12 +346,14 @@ import {
   homeworkStatusChartBars,
   homeworkSummaryCards,
 } from '../../scripts/parent/homeworkBreakdown'
+import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
 import DashModalRoot from '../dashboard/DashModalRoot.vue'
 import ParentAssessmentCard from './ParentAssessmentCard.vue'
-import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
 import ParentChildLearningFilters from './ParentChildLearningFilters.vue'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
+import TeacherAudioFeedbackPlayer from '../teacher/TeacherAudioFeedbackPlayer.vue'
 import NetworkFallback from '../NetworkFallback.vue'
+import { learningApi } from '../../scripts/api/learning'
 
 export default {
   name: 'ParentFamilyLearning',
@@ -232,6 +362,7 @@ export default {
     ParentAssessmentCard,
     ParentChildLearningFilters,
     ParentSimpleBarChart,
+    TeacherAudioFeedbackPlayer,
     TeacherEmpty,
     NetworkFallback,
   },
@@ -247,9 +378,9 @@ export default {
     filters: { type: Object, default: () => ({ activity: null, status: 'all', from: '', to: '' }) },
     focusAssignmentId: { type: Number, default: null },
   },
-  emits: ['select-child', 'filter', 'reload', 'focus-cleared'],
+  emits: ['select-child', 'filter', 'reload', 'focus-cleared', 'supervision-updated'],
   data() {
-    return { active: null, filtersOpen: false }
+    return { active: null, breakdownOpen: false, filtersOpen: false, acknowledging: false }
   },
   watch: {
     rows: {
@@ -295,17 +426,17 @@ export default {
     emptyMessage() {
       return this.filtersActive ? this.t('parent.homework_empty_filter') : this.t('parent.homework_empty')
     },
-    breakdownHeadingId() {
-      return `parent-homework-breakdown-${this.selectedId || 'all'}`
-    },
     summaryCards() {
       return homeworkSummaryCards(this.t, this.sortedRows)
     },
-    statusBars() {
+    statusChartBars() {
       return homeworkStatusChartBars(this.t, this.sortedRows)
     },
-    activityBars() {
+    activityChartBars() {
       return homeworkActivityChartBars(this.t, this.sortedRows)
+    },
+    showBreakdownCharts() {
+      return this.statusChartBars.length > 0 || this.activityChartBars.length > 0
     },
     breakdownIntro() {
       const count = this.sortedRows.length
@@ -332,9 +463,15 @@ export default {
         this.$emit('focus-cleared')
       }
     },
-    scrollToBreakdown() {
-      const el = this.$el?.querySelector('#parent-homework-breakdown')
-      el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    openBreakdown() {
+      this.breakdownOpen = true
+    },
+    closeBreakdown() {
+      this.breakdownOpen = false
+    },
+    openDetailFromBreakdown(item) {
+      this.breakdownOpen = false
+      this.openDetail(item)
     },
     detailFields(item) {
       return homeworkDetailFields(this.t, item)
@@ -402,6 +539,9 @@ export default {
       return dueAt ? this.t('parent.homework_due_short', { when: formatWhen(dueAt) }) : this.t('parent.not_yet')
     },
     assignmentFeedback: visibleAssignmentFeedback,
+    assignmentVoiceInstruction,
+    assignmentRecitationDemo,
+    publishedFeedback: publishedHomeworkFeedback,
     reviewedAssessment: sharedReviewedAssessment,
     detailHasContent: homeworkDetailHasContent,
     statusLabel(status) {
@@ -414,6 +554,43 @@ export default {
     },
     statusIcon(status) {
       return homeworkDisplayStatusIcon(status)
+    },
+    mushafRows(item) {
+      return Array.isArray(item?.mushaf_annotations) ? item.mushaf_annotations : []
+    },
+    mushafCategory(row) {
+      const key = row?.category ? `teacher.mushaf_category_${row.category}` : ''
+      const label = key ? this.t(key) : ''
+      return label && label !== key ? label : (row?.category || '—')
+    },
+    canAcknowledgeSupervision(item) {
+      if (!item) return false
+      const status = item.display_status
+      if (['completed', 'cancelled', 'reassigned'].includes(status)) return false
+      return true
+    },
+    supervisionAcknowledged(item) {
+      return Boolean(item?.supervision?.acknowledged)
+    },
+    supervisionAcknowledgedLabel(item) {
+      const at = item?.supervision?.acknowledged_at
+      return at
+        ? this.t('parent.homework_supervision_done_when', { when: formatWhen(at) })
+        : this.t('parent.homework_supervision_done')
+    },
+    async acknowledgeSupervision(item) {
+      if (!item?.child_id || !item?.id || this.acknowledging) return
+      this.acknowledging = true
+      try {
+        const { supervision } = await learningApi.acknowledgeParentHomeworkSupervision(item.child_id, item.id)
+        const next = { ...item, supervision: supervision || { acknowledged: true, acknowledged_at: new Date().toISOString() } }
+        this.active = next
+        this.$emit('supervision-updated', next)
+      } catch {
+        // Parent sees no change; they can retry from the same button.
+      } finally {
+        this.acknowledging = false
+      }
     },
   },
 }

@@ -108,6 +108,7 @@
                 @filter="updateLearningFilters"
                 @reload="loadLearningDetail"
                 @focus-cleared="focusAssignmentId = null"
+                @supervision-updated="patchLearningRow"
               />
               <ParentFamilyProgress
                 v-else-if="view === 'progress'"
@@ -542,6 +543,14 @@ export default {
       } finally {
         this.learningLoading = false
       }
+    },
+    patchLearningRow(row) {
+      if (!row?.id) return
+      const index = this.learningRows.findIndex((item) => Number(item.id) === Number(row.id))
+      if (index < 0) return
+      const next = [...this.learningRows]
+      next[index] = { ...next[index], ...row }
+      this.learningRows = next
     },
     async loadAttendanceDetail() {
       const id = this.progressChildId

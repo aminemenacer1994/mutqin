@@ -84,6 +84,12 @@ class TeacherRecitationPlaybackController extends Controller
             'body' => ['nullable', 'string', 'max:2000'],
             'focus' => ['nullable', 'string', 'in:makharij,sifaat,madd,ghunnah,noon_meem,qalqalah,waqf,pronunciation,memorisation,other'],
             'finding' => ['nullable', 'string', 'in:strength,difficulty,correction'],
+            'category' => ['nullable', 'string', 'in:memorisation,tajweed,makharij,pronunciation,hesitation,fluency,other'],
+            'severity' => ['nullable', 'string', 'in:minor,moderate,major'],
+            'granularity' => ['nullable', 'string', 'in:word,ayah'],
+            'start_ms' => ['nullable', 'integer', 'min:0', 'max:3600000'],
+            'end_ms' => ['nullable', 'integer', 'min:0', 'max:3600000'],
+            'publish' => ['nullable', 'boolean'],
             'audio' => ['nullable', 'file', 'max:8192'],
             'duration_ms' => ['nullable', 'integer', 'between:1,120000'],
             'review_status' => ['required_if:action,status', 'nullable', 'string', 'in:awaiting_retry,needs_practice,improved,resolved'],
@@ -108,6 +114,21 @@ class TeacherRecitationPlaybackController extends Controller
         TeacherRecitationPlaybackService $playback,
     ): JsonResponse {
         return $this->json($playback->deleteCoachingAudio(
+            $this->teacher($request),
+            $student,
+            $attempt,
+            $correction,
+        ));
+    }
+
+    public function destroyWord(
+        Request $request,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherWordCoachingCorrection $correction,
+        TeacherRecitationPlaybackService $playback,
+    ): JsonResponse {
+        return $this->json($playback->deleteCoaching(
             $this->teacher($request),
             $student,
             $attempt,

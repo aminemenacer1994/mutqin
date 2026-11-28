@@ -21,8 +21,11 @@ use App\Models\User;
 use App\Notifications\LearningTaskNotification;
 use App\Services\Learning\LearningTaskNotifier;
 use App\Services\Parent\ParentNoticeService;
+use App\Support\DemoRecitationAudio;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ParentCommunicationTest extends TestCase
@@ -191,6 +194,81 @@ class ParentCommunicationTest extends TestCase
             $this->notices($parent),
             fn (array $notice) => ($notice['title'] ?? '') === 'Homework deadline',
         ));
+    }
+
+    public function test_linked_parent_can_play_published_teacher_voice_feedback(): void
+    {
+        Storage::fake('user_files');
+        [$teacher, $student, $parent] = $this->classroom();
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+
+        $voice = $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), [
+                'audio' => UploadedFile::fake()->createWithContent(
+                    'feedback.wav',
+                    DemoRecitationAudio::silentWavBytes(900),
+                ),
+                'duration_ms' => 900,
+            ])
+            ->assertCreated()
+            ->json('message');
+
+        $this->actingAs($parent)->get($voice['audio']['url'])->assertOk();
+
+        $shell = $this->actingAs($parent)
+            ->getJson(route('api.parent.shell'))
+            ->assertOk()
+            ->json();
+        $note = collect($shell['feedback'])->firstWhere('id', $voice['id']);
+        $this->assertNotNull($note);
+        $this->assertTrue((bool) ($note['audio']['available'] ?? false));
+        $this->assertSame('', $note['excerpt']);
+    }
+
+    public function test_parent_homework_detail_includes_published_voice_feedback(): void
+    {
+        Storage::fake('user_files');
+        [$teacher, $student, $parent] = $this->classroom();
+
+        $created = $this->actingAs($teacher)->postJson(route('api.teacher.assignments.store'), [
+            'kind' => 'practice',
+            'hifz_category' => 'sabaq',
+            'student_id' => $student->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'due_at' => today()->addDays(7)->toDateString(),
+        ])->assertCreated()->json();
+        $recipientId = $created['recipients'][0]['id'];
+
+        $this->actingAs($teacher)
+            ->postJson(route('api.teacher.assignment-recipients.notes.store', $recipientId), [
+                'audio' => UploadedFile::fake()->createWithContent(
+                    'feedback.wav',
+                    DemoRecitationAudio::silentWavBytes(900),
+                ),
+                'duration_ms' => 900,
+            ])
+            ->assertCreated();
+
+        $assignments = $this->actingAs($parent)
+            ->getJson(route('api.parent.children.assignments', $student))
+            ->assertOk()
+            ->json('assignments');
+        $row = collect($assignments)->firstWhere('id', $recipientId);
+        $this->assertNotNull($row);
+        $this->assertTrue((bool) ($row['published_feedback']['audio']['available'] ?? false));
+        $this->actingAs($parent)->get($row['published_feedback']['audio']['url'])->assertOk();
     }
 
     public function test_reports_are_audited_and_weekly_summary_uses_existing_progress(): void

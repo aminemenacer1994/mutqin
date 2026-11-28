@@ -215,6 +215,98 @@ export async function withRetry(fn, { retries = 3, baseDelay = 800 } = {}) {
   }
 }
 
+function buildTeacherLearningPlanRequestBody(payload = {}, itemVoices = []) {
+  const voices = Array.isArray(itemVoices) ? itemVoices : []
+  const hasVoice = voices.some((voice) => Boolean(
+    voice?.instruction?.blob
+    || voice?.recitationDemo?.blob
+    || voice?.clearInstruction
+    || voice?.clearRecitationDemo
+    || voice?.instruction_audio_asset_id
+    || voice?.recitation_demo_audio_asset_id,
+  ))
+  const items = Array.isArray(payload.items) ? payload.items.map((item, index) => {
+    const voice = voices[index] || {}
+  const next = { ...item }
+    if (voice.instruction_audio_asset_id) next.instruction_audio_asset_id = voice.instruction_audio_asset_id
+    if (voice.recitation_demo_audio_asset_id) next.recitation_demo_audio_asset_id = voice.recitation_demo_audio_asset_id
+    if (voice.clearInstruction) next.clear_instruction_audio = true
+    if (voice.clearRecitationDemo) next.clear_recitation_demo_audio = true
+    if (voice.instruction?.durationMs) next.instruction_audio_duration_ms = Math.round(voice.instruction.durationMs)
+    if (voice.recitationDemo?.durationMs) next.recitation_demo_audio_duration_ms = Math.round(voice.recitationDemo.durationMs)
+    return next
+  }) : []
+  if (!hasVoice) {
+    return { ...payload, items }
+  }
+  const form = new FormData()
+  const scalarKeys = ['student_id', 'title', 'cadence', 'starts_on', 'ends_on', 'notes', 'student_goal', 'activate', 'allow_duplicate', 'status']
+  scalarKeys.forEach((key) => {
+    const value = payload[key]
+    if (value === undefined || value === null || value === '') return
+    if (key === 'activate' || key === 'allow_duplicate') {
+      form.append(key, value ? '1' : '0')
+      return
+    }
+    form.append(key, String(value))
+  })
+  form.append('items', JSON.stringify(items))
+  voices.forEach((voice, index) => {
+    if (voice?.instruction?.blob) {
+      form.append(`items_instruction_audio_${index}`, voice.instruction.blob, voice.instruction.filename || 'instruction.webm')
+    }
+    if (voice?.recitationDemo?.blob) {
+      form.append(`items_recitation_demo_audio_${index}`, voice.recitationDemo.blob, voice.recitationDemo.filename || 'recitation-demo.webm')
+    }
+  })
+
+  return form
+}
+
+function buildTeacherAssignmentRequestBody(payload = {}, recordings = {}) {
+  const hasVoice = Boolean(
+    recordings.instruction?.blob
+    || recordings.recitationDemo?.blob
+    || recordings.clearInstruction
+    || recordings.clearRecitationDemo,
+  )
+  if (!hasVoice) return payload
+
+  const form = new FormData()
+  const scalarKeys = [
+    'kind', 'hifz_category', 'activity', 'recording_required', 'surah_number', 'ayah_start', 'ayah_end',
+    'repetition_target', 'due_at', 'priority', 'feedback', 'student_id', 'learning_group_id',
+  ]
+  scalarKeys.forEach((key) => {
+    const value = payload[key]
+    if (value === undefined || value === null || value === '') return
+    if (key === 'recording_required') {
+      form.append(key, value ? '1' : '0')
+      return
+    }
+    form.append(key, String(value))
+  })
+  if (payload.session_settings && typeof payload.session_settings === 'object') {
+    form.append('session_settings', JSON.stringify(payload.session_settings))
+  }
+  if (recordings.instruction?.blob) {
+    form.append('instruction_audio', recordings.instruction.blob, recordings.instruction.filename || 'instruction.webm')
+    if (recordings.instruction.durationMs) {
+      form.append('instruction_audio_duration_ms', String(Math.round(recordings.instruction.durationMs)))
+    }
+  }
+  if (recordings.recitationDemo?.blob) {
+    form.append('recitation_demo_audio', recordings.recitationDemo.blob, recordings.recitationDemo.filename || 'recitation-demo.webm')
+    if (recordings.recitationDemo.durationMs) {
+      form.append('recitation_demo_audio_duration_ms', String(Math.round(recordings.recitationDemo.durationMs)))
+    }
+  }
+  if (recordings.clearInstruction) form.append('clear_instruction_audio', '1')
+  if (recordings.clearRecitationDemo) form.append('clear_recitation_demo_audio', '1')
+
+  return form
+}
+
 export const learningApi = {
   // Dashboard -------------------------------------------------------------
   async getDashboard(days = 30, options = {}) {
@@ -1138,6 +1230,31 @@ export const learningApi = {
     const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/corrections/${correctionId}/audio`)
     return data
   },
+  async deleteTeacherWordCoaching(studentId, attemptId, correctionId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/attempts/${attemptId}/playback/corrections/${correctionId}`)
+    return data
+  },
+  async listTeacherMushafAnnotations(studentId, params = {}) {
+    const { data } = await http.get(`/teacher/students/${studentId}/mushaf-annotations`, { params })
+    return data
+  },
+  async saveTeacherMushafAnnotation(studentId, payload = {}, recording = null) {
+    const form = new FormData()
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      form.append(key, String(value))
+    })
+    if (recording?.blob) {
+      form.append('audio', recording.blob, recording.filename || 'voice-note.webm')
+      if (recording.durationMs) form.append('duration_ms', String(Math.round(recording.durationMs)))
+    }
+    const { data } = await http.post(`/teacher/students/${studentId}/mushaf-annotations`, form)
+    return data
+  },
+  async deleteTeacherMushafAnnotation(studentId, annotationId) {
+    const { data } = await http.delete(`/teacher/students/${studentId}/mushaf-annotations/${annotationId}`)
+    return data
+  },
   async saveTeacherFeedbackSegment(studentId, attemptId, payload = {}, recording = null) {
     const form = new FormData()
     Object.entries(payload || {}).forEach(([key, value]) => {
@@ -1221,12 +1338,14 @@ export const learningApi = {
     const { data } = await http.get('/teacher/assignments')
     return data
   },
-  async createTeacherAssignment(payload) {
-    const { data } = await http.post('/teacher/assignments', payload)
+  async createTeacherAssignment(payload, recordings = {}) {
+    const body = buildTeacherAssignmentRequestBody(payload, recordings)
+    const { data } = await http.post('/teacher/assignments', body)
     return data
   },
-  async updateTeacherAssignment(id, payload) {
-    const { data } = await http.put(`/teacher/assignments/${id}`, payload)
+  async updateTeacherAssignment(id, payload, recordings = {}) {
+    const body = buildTeacherAssignmentRequestBody(payload, recordings)
+    const { data } = await http.put(`/teacher/assignments/${id}`, body)
     return data
   },
   async deleteTeacherAssignment(id) {
@@ -1268,18 +1387,24 @@ export const learningApi = {
     const { data } = await http.get(`/parent/children/${studentId}/attendance`, { params })
     return data
   },
+  async acknowledgeParentHomeworkSupervision(studentId, recipientId) {
+    const { data } = await http.post(`/parent/children/${studentId}/assignments/${recipientId}/supervision`)
+    return data
+  },
   async getTeacherLearningPlans(studentId = null) {
     const { data } = await http.get('/teacher/learning-plans', {
       params: studentId ? { student_id: studentId } : {},
     })
     return data
   },
-  async createTeacherLearningPlan(payload) {
-    const { data } = await http.post('/teacher/learning-plans', payload)
+  async createTeacherLearningPlan(payload, itemVoices = []) {
+    const body = buildTeacherLearningPlanRequestBody(payload, itemVoices)
+    const { data } = await http.post('/teacher/learning-plans', body)
     return data
   },
-  async updateTeacherLearningPlan(planId, payload) {
-    const { data } = await http.put(`/teacher/learning-plans/${planId}`, payload)
+  async updateTeacherLearningPlan(planId, payload, itemVoices = []) {
+    const body = buildTeacherLearningPlanRequestBody(payload, itemVoices)
+    const { data } = await http.put(`/teacher/learning-plans/${planId}`, body)
     return data
   },
   async setTeacherLearningPlanStatus(planId, status) {

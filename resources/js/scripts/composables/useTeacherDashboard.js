@@ -579,6 +579,7 @@ export function useTeacherDashboard(authRef) {
       due_at: source.due_at ? source.due_at.slice(0, 10) : '',
       priority: source.priority || 'normal',
       feedback: source.feedback || '',
+      voice_instructions: source.voice_instructions || null,
       session_settings: sessionSettingsFromAssignment(source),
     }
     formError.value = ''
@@ -586,7 +587,7 @@ export function useTeacherDashboard(authRef) {
     assignmentFormOpen.value = true
   }
 
-  async function saveAssignment() {
+  async function saveAssignment(voiceDraft = {}) {
     if (assignmentSaving.value) return
     assignmentSaving.value = true
     formError.value = ''
@@ -608,8 +609,14 @@ export function useTeacherDashboard(authRef) {
       ? [...new Set(assignment.value.student_ids.map((id) => Number(id)).filter((id) => id > 0))]
       : [Number(assignment.value.student_id)]
     try {
+      const recordings = {
+        instruction: voiceDraft.instruction || null,
+        recitationDemo: voiceDraft.recitationDemo || null,
+        clearInstruction: Boolean(voiceDraft.clearInstruction),
+        clearRecitationDemo: Boolean(voiceDraft.clearRecitationDemo),
+      }
       if (editingAssignmentId.value) {
-        await learningApi.updateTeacherAssignment(editingAssignmentId.value, payload)
+        await learningApi.updateTeacherAssignment(editingAssignmentId.value, payload, recordings)
       } else {
         const failures = []
         let created = 0
@@ -630,7 +637,7 @@ export function useTeacherDashboard(authRef) {
             continue
           }
           try {
-            await learningApi.createTeacherAssignment({ ...payload, student_id: studentId })
+            await learningApi.createTeacherAssignment({ ...payload, student_id: studentId }, recordings)
             created += 1
           } catch (err) {
             failures.push(teacherErrorMessage(err, t) || t('teacher.task_bulk_failed', { name }))

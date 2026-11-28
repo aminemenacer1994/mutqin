@@ -365,7 +365,7 @@ html[data-theme="dark"] .teacher-report {
   gap: 12px;
   font-size: 13px;
 }
-.teacher-progress-reports .parent-chart__label strong { font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.teacher-progress-reports .parent-chart__value { font-size: 13px; font-weight: 650; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .teacher-progress-reports .parent-chart__track {
   height: 10px;
   border-radius: 999px;
@@ -1421,4 +1421,41 @@ body.teacher-recite-modal-open { overflow: hidden; }
 }
 .teacher-dashboard .teacher-attendance--mobile-shell .teacher-attendance__segmented button {
   min-height: 44px;
+}
+
+.teacher-dashboard .teacher-mushaf-marking__spread {
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  .teacher-dashboard .teacher-mushaf-review__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .teacher-dashboard .teacher-segmented {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .teacher-dashboard .teacher-segmented__btn {
+    flex: 1 1 0;
+    text-align: center;
+  }
+}
+
+.teacher-dashboard .teacher-mushaf-manual__sheet {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  max-width: min(420px, 96vw);
+  width: 100%;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  background: var(--teacher-surface, #fff);
+  box-shadow: 0 -12px 32px rgb(17 24 28 / 0.18);
+  border-radius: 16px 16px 0 0;
+}
+
+.teacher-dashboard .teacher-mushaf-manual__form {
+  padding: 16px;
 }

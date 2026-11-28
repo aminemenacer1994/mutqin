@@ -17,6 +17,7 @@
     :data-chain="techniqueState.isChainMember ? '1' : null"
     :data-talqin="techniqueState.isTalqinRepeat ? 'repeat' : (techniqueState.isTalqinListen ? 'listen' : null)"
     :data-qpc-progress="progressAttr"
+    :aria-label="annotationAriaLabel"
     :class="wordClass"
     :style="{ fontFamily: `'${displayFontFamily}'` }"
     tabindex="0"
@@ -101,6 +102,14 @@ export default {
     progressSnapshot: {
       type: Object,
       default: null,
+    },
+    annotationOverlays: {
+      type: Object,
+      default: null,
+    },
+    mushafInteractionMode: {
+      type: String,
+      default: '',
     },
   },
   data() {
@@ -193,6 +202,29 @@ export default {
     progressAttr() {
       return qpcMadaniProgressAttribute(this.progressState)
     },
+    annotationOverlay() {
+      const overlays = this.annotationOverlays
+      if (!overlays || typeof overlays !== 'object') return null
+      const direct = overlays[this.word?.location]
+      if (direct) return direct
+      const parts = String(this.word?.location || '').split(':')
+      if (parts.length >= 2) {
+        return overlays[`${parts[0]}:${parts[1]}:_ayah`] || null
+      }
+      return null
+    },
+    annotationOverlayClass() {
+      if (!this.annotationOverlay) return null
+      const category = this.annotationOverlay.category || 'other'
+      const source = this.annotationOverlay.source === 'ai_word_match' ? 'is-ai' : 'is-teacher'
+      const tentative = this.annotationOverlay.tentative ? 'is-tentative' : ''
+      return [
+        'mushaf-annotation-overlay',
+        `mushaf-annotation--${String(category).replace(/[^a-z_]/g, '') || 'other'}`,
+        source,
+        tentative,
+      ].filter(Boolean).join(' ')
+    },
     wordClass() {
       return {
         'is-selected': this.selected,
@@ -200,15 +232,23 @@ export default {
         'qpc-madani-word--indopak': this.isIndopakLayout,
         'qpc-madani-word--indopak-tajweed': !!this.indopakTajweedHtml,
         'qpc-madani-word--ornament': !!this.word?.isEnd,
+        [this.annotationOverlayClass]: !!this.annotationOverlayClass,
+        'mushaf-annotation--marking-disabled': this.mushafInteractionMode === 'reading',
         ...madaniWordVisualClass(this.visualState),
         ...madaniQpcWordTechniqueClass(this.techniqueState),
         ...qpcMadaniWordProgressClass(this.progressState),
       }
     },
+    annotationAriaLabel() {
+      if (!this.annotationOverlay) return undefined
+      const pieces = [this.annotationOverlay.category, this.annotationOverlay.source === 'ai_word_match' ? 'AI wording flag' : 'Teacher mark']
+      if (this.annotationOverlay.guidance) pieces.push(this.annotationOverlay.guidance)
+      return pieces.filter(Boolean).join(' · ')
+    },
   },
   methods: {
     onSelect() {
-      // Ornaments stay in layout for ayah selection, but do not drive word-audio.
+      // Reading mode still emits selection so teachers can seek recordings; marking opens coaching.
       this.$emit('select', this.word.location)
     },
     onMouseEnter() {
@@ -243,6 +283,35 @@ export default {
 </script>
 
 <style scoped>
+.mushaf-annotation-overlay::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.08em;
+  bottom: 0.04em;
+  height: 0.14em;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.mushaf-annotation-overlay.is-teacher::after {
+  opacity: 0.92;
+}
+
+.mushaf-annotation-overlay.is-ai.is-tentative::after {
+  opacity: 0.55;
+  border-bottom: 1px dashed currentColor;
+  height: 0;
+  bottom: 0.08em;
+}
+
+.mushaf-annotation--memorisation::after { background: #c45c26; }
+.mushaf-annotation--tajweed::after { background: #2a6f4e; }
+.mushaf-annotation--makharij::after { background: #5b4aa8; }
+.mushaf-annotation--pronunciation::after { background: #b42318; }
+.mushaf-annotation--hesitation::after { background: #9a6b00; }
+.mushaf-annotation--fluency::after { background: #1a6b8a; }
+.mushaf-annotation--other::after { background: #5c6773; }
+
 .qpc-madani-word {
   position: relative;
   display: inline-block;

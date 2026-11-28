@@ -156,10 +156,17 @@
                 <strong v-if="showFeedbackChildName">{{ row.child_name }}</strong>
                 <p>{{ row.teacher_name }}</p>
               </header>
-              <blockquote>
+              <blockquote v-if="row.excerpt">
                 <p>{{ row.excerpt }}</p>
                 <footer>{{ formatWhen(row.at) }}</footer>
               </blockquote>
+              <p v-else class="parent-home-feedback__voice-label">{{ t('teacher.voice_feedback') }}</p>
+              <TeacherAudioFeedbackPlayer
+                v-if="row.audio?.available && row.audio?.url"
+                :src="row.audio.url"
+                :duration-ms="row.audio.duration_ms"
+                compact
+              />
               <button type="button" class="parent-home-link" @click="$emit('open-progress', row.child_id)">
                 {{ t('parent.open_progress') }}<i class="bi bi-arrow-right" aria-hidden="true"></i>
               </button>
@@ -238,10 +245,11 @@ import TeacherSectionPane from '../teacher/TeacherSectionPane.vue'
 import ParentHomeChildCard from './ParentHomeChildCard.vue'
 import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
 import { homeHomeworkStatusBars } from '../../scripts/parent/homeworkBreakdown'
+import TeacherAudioFeedbackPlayer from '../teacher/TeacherAudioFeedbackPlayer.vue'
 
 export default {
   name: 'ParentFamilyOverview',
-  components: { ConnectPrompt, ParentHomeChildCard, ParentSimpleBarChart, TeacherEmpty, TeacherSectionPane },
+  components: { ConnectPrompt, ParentHomeChildCard, ParentSimpleBarChart, TeacherAudioFeedbackPlayer, TeacherEmpty, TeacherSectionPane },
   mixins: [i18nMixin],
   props: {
     firstName: { type: String, required: true },

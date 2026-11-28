@@ -114,7 +114,7 @@ export function buildAttentionItems({
       icon: 'bi bi-chat-square-text',
       childId: row.child_id,
       name: row.child_name,
-      detail: row.excerpt,
+      detail: row.excerpt || t('teacher.voice_feedback'),
       reason: t(ATTENTION_REASON_KEYS.feedback),
       action: t('parent.attention_open_progress'),
     })

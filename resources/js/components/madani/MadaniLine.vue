@@ -62,6 +62,8 @@
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
           :tajweed-html-by-location="tajweedHtmlByLocation"
+          :annotation-overlays="annotationOverlays"
+          :mushaf-interaction-mode="mushafInteractionMode"
           @select="$emit('select', $event)"
           @ayah-enter="$emit('ayah-enter', $event)"
           @ayah-leave="$emit('ayah-leave', $event)"
@@ -98,6 +100,8 @@
         :tajweed-enabled="tajweedEnabled"
         :code-v2-by-location="codeV2ByLocation"
         :tajweed-html-by-location="tajweedHtmlByLocation"
+        :annotation-overlays="annotationOverlays"
+        :mushaf-interaction-mode="mushafInteractionMode"
         @select="$emit('select', $event)"
         @ayah-enter="$emit('ayah-enter', $event)"
         @ayah-leave="$emit('ayah-leave', $event)"
@@ -173,6 +177,14 @@ export default {
     tajweedHtmlByLocation: {
       type: Object,
       default: null,
+    },
+    annotationOverlays: {
+      type: Object,
+      default: null,
+    },
+    mushafInteractionMode: {
+      type: String,
+      default: '',
     },
     surahNamesReady: {
       type: Boolean,

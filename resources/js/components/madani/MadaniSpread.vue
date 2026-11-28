@@ -85,6 +85,8 @@
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
           :tajweed-html-by-location="tajweedHtmlByLocation"
+          :annotation-overlays="annotationOverlays"
+          :mushaf-interaction-mode="mushafInteractionMode"
           @select="onWordSelect"
           @ayah-enter="onAyahEnter"
           @ayah-leave="onAyahLeave"
@@ -172,6 +174,8 @@ export default {
     tajweedEnabled: { type: Boolean, default: false },
     codeV2ByLocation: { type: Object, default: null },
     tajweedHtmlByLocation: { type: Object, default: null },
+    annotationOverlays: { type: Object, default: null },
+    mushafInteractionMode: { type: String, default: '' },
   },
   data() {
     return {

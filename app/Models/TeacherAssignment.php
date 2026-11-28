@@ -68,4 +68,19 @@ class TeacherAssignment extends Model
     {
         return $this->hasMany(TeacherNote::class, 'teacher_assignment_id');
     }
+
+    public function instructionAudioAsset(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentAudioAsset::class, 'instruction_audio_asset_id');
+    }
+
+    public function recitationDemoAudioAsset(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentAudioAsset::class, 'recitation_demo_audio_asset_id');
+    }
+
+    public function instructionAudioRevisions(): HasMany
+    {
+        return $this->hasMany(TeacherAssignmentAudioRevision::class);
+    }
 }

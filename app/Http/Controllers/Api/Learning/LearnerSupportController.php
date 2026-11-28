@@ -12,6 +12,8 @@ use App\Services\Learning\LearnerConnectionGate;
 use App\Services\Learning\StudentCircleService;
 use App\Services\Organisations\GroupMembershipService;
 use App\Services\Teacher\StudentSelfAssessmentService;
+use App\Models\TeacherAssignmentAudioAsset;
+use App\Services\Teacher\TeacherAssignmentInstructionAudioService;
 use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Services\Teacher\TeacherDashboardService;
@@ -273,6 +275,22 @@ class LearnerSupportController extends Controller
         abort_unless($user instanceof User, 401);
 
         $response = $audio->stream($user, $note);
+        if ($response === null) {
+            return response()->json(['message' => 'Not found.'], 404);
+        }
+
+        return $response;
+    }
+
+    public function assignmentInstructionAudio(
+        Request $request,
+        TeacherAssignmentAudioAsset $asset,
+        TeacherAssignmentInstructionAudioService $audio,
+    ): Response {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $response = $audio->stream($user, $asset);
         if ($response === null) {
             return response()->json(['message' => 'Not found.'], 404);
         }

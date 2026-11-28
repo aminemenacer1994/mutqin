@@ -203,4 +203,50 @@ class ParentChildLearningTest extends TestCase
             ->assertJsonCount(1, 'assignments')
             ->assertJsonPath('assignments.0.display_status', 'overdue');
     }
+
+    public function test_parent_supervision_ack_is_separate_from_student_workflow(): void
+    {
+        $organisation = Organisation::factory()->create();
+        $teacher = User::factory()->create([
+            'account_role' => AccountRole::Teacher->value,
+            'organisation_id' => $organisation->id,
+        ]);
+        $parent = User::factory()->create(['account_role' => AccountRole::Parent->value]);
+        $child = User::factory()->create(['account_role' => AccountRole::Student->value]);
+
+        ParentStudentLink::factory()->approved()->create([
+            'parent_user_id' => $parent->id,
+            'student_user_id' => $child->id,
+        ]);
+
+        $assignment = TeacherAssignment::factory()->create([
+            'teacher_id' => $teacher->id,
+            'organisation_id' => $organisation->id,
+            'due_at' => now()->addDay(),
+        ]);
+        $recipient = TeacherAssignmentRecipient::factory()->create([
+            'teacher_assignment_id' => $assignment->id,
+            'student_id' => $child->id,
+            'status' => AssignmentStatus::InProgress->value,
+            'started_at' => now()->subHour(),
+        ]);
+
+        $this->actingAs($parent)
+            ->getJson(route('api.parent.children.assignments', $child))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.supervision.acknowledged', false);
+
+        $this->actingAs($parent)
+            ->postJson(route('api.parent.children.assignments.supervision', [$child, $recipient]))
+            ->assertOk()
+            ->assertJsonPath('supervision.acknowledged', true);
+
+        $recipient->refresh();
+        $this->assertSame(AssignmentStatus::InProgress, $recipient->status);
+
+        $this->actingAs($parent)
+            ->getJson(route('api.parent.children.assignments', $child))
+            ->assertOk()
+            ->assertJsonPath('assignments.0.supervision.acknowledged', true);
+    }
 }

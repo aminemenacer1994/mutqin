@@ -6,6 +6,7 @@ const api = fs.readFileSync(new URL('../../resources/js/scripts/api/learning.js'
 const inbox = fs.readFileSync(new URL('../../resources/js/components/teacher/LearnerStudentNotifications.vue', import.meta.url), 'utf8')
 
 assert.match(dashboard, /LearnerStudentNotifications/)
+assert.match(dashboard, /studentPane === 'messages'[\s\S]*LearnerStudentNotifications/, 'Messages pane includes the notifications inbox')
 assert.match(dashboard, /openStudentNotice/)
 assert.match(dashboard, /studentNoticeUnread/)
 assert.match(api, /getStudentNotifications/)

@@ -347,6 +347,23 @@
           <section class="learner-assignment-modal__section">
             <h3>{{ t('teacher.assignment_instructions_label') }}</h3>
             <p v-if="instructionText(detailItem)">{{ instructionText(detailItem) }}</p>
+            <TeacherAudioFeedbackPlayer
+              v-if="instructionVoice(detailItem)?.available && instructionVoice(detailItem)?.url"
+              :src="instructionVoice(detailItem).url"
+              :duration-ms="instructionVoice(detailItem).duration_ms"
+              compact
+              :play-label="t('teacher.assignment_voice_instruction_label')"
+              :pause-label="t('teacher.pause_recording')"
+            />
+            <TeacherAudioFeedbackPlayer
+              v-if="recitationDemoVoice(detailItem)?.available && recitationDemoVoice(detailItem)?.url"
+              class="mt-2"
+              :src="recitationDemoVoice(detailItem).url"
+              :duration-ms="recitationDemoVoice(detailItem).duration_ms"
+              compact
+              :play-label="t('teacher.assignment_recitation_demo_label')"
+              :pause-label="t('teacher.pause_recording')"
+            />
             <p>{{ requirementHelp(detailItem) }}</p>
           </section>
           <section v-if="recommendedReciterLine(detailItem)" class="learner-assignment-modal__section">
@@ -1832,10 +1849,16 @@ export default {
     },
     hasInstruction(row) {
       if (this.isTeacherApproved(row) || this.isSubmitted(row)) return false
-      return Boolean(this.instructionText(row))
+      return Boolean(this.instructionText(row) || this.instructionVoice(row)?.available || this.recitationDemoVoice(row)?.available)
     },
     instructionText(row) {
       return String(row?.assignment?.feedback || '').trim()
+    },
+    instructionVoice(row) {
+      return row?.assignment?.voice_instructions?.instruction || null
+    },
+    recitationDemoVoice(row) {
+      return row?.assignment?.voice_instructions?.recitation_demo || null
     },
     correctionNote(row) {
       if (!this.needsCorrection(row)) return ''

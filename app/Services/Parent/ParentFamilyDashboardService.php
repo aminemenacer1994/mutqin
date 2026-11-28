@@ -17,6 +17,7 @@ use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherNote;
 use App\Models\User;
+use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Support\PlatformContextResolver;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
@@ -336,16 +337,23 @@ class ParentFamilyDashboardService
             return collect();
         }
 
+        $audio = app(TeacherAssignmentMessageAudioService::class);
+
         return TeacherNote::query()
             ->whereIn('student_id', $studentIds)
             ->where('kind', TeacherNoteKind::Feedback->value)
-            ->whereNotNull('body')
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('body')->where('body', '!=', '');
+                })->orWhereNotNull('audio_path');
+            })
             ->with(['teacher:id,name', 'student:id,name'])
             ->latest('id')
             ->limit(8)
             ->get()
-            ->map(function (TeacherNote $note) {
+            ->map(function (TeacherNote $note) use ($audio) {
                 $body = trim((string) $note->body);
+                $clip = $audio->payload($note);
 
                 return [
                     'id' => (int) $note->id,
@@ -353,12 +361,13 @@ class ParentFamilyDashboardService
                     'child_name' => $note->student?->name,
                     'teacher_id' => (int) $note->teacher_id,
                     'teacher_name' => $note->teacher?->name,
-                    'excerpt' => mb_substr($body, 0, 180),
+                    'excerpt' => $body !== '' ? mb_substr($body, 0, 180) : '',
+                    'audio' => $clip,
                     'unread' => $note->read_at === null,
                     'at' => $note->created_at?->toIso8601String(),
                 ];
             })
-            ->filter(fn (array $row) => $row['excerpt'] !== '' && $row['child_name'] !== null)
+            ->filter(fn (array $row) => ($row['excerpt'] !== '' || ($row['audio']['available'] ?? false)) && $row['child_name'] !== null)
             ->values();
     }
 

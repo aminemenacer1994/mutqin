@@ -1255,6 +1255,13 @@
             {{ t('ui.connections_settings_teachers_hint') }}
             <button type="button" class="btn btn-link dash-text-link" @click="openStudentConnectionsSettings">{{ t('ui.connections_settings_manage') }}</button>
           </p>
+          <LearnerStudentNotifications
+            v-if="messagingEnabled"
+            :compact="false"
+            :limit="12"
+            @open="openStudentNotice"
+            @unread-change="studentNoticeUnread = $event"
+          />
           <LearnerStudentMessages
             v-if="messagingEnabled"
             ref="studentMessages"
@@ -2226,7 +2233,10 @@ export default {
       const badges = {}
       if (total > 0) badges.messages = total
       const notices = Number(this.studentNoticeUnread || 0)
-      if (notices > 0) badges.home = notices
+      if (notices > 0) {
+        badges.home = notices
+        if (this.messagingEnabled) badges.messages = Number(badges.messages || 0) + notices
+      }
       return badges
     },
     settingsInitial() {
@@ -4063,7 +4073,7 @@ export default {
         this.$refs.learnerTeacherSection?.openFeedbackFromPanel(item)
       })
     },
-    openStudentNotice(item) {
+    async openStudentNotice(item) {
       const href = String(item?.href || '').trim()
       if (!href) return
       if (href.startsWith('/memorisation')) {
@@ -4074,13 +4084,17 @@ export default {
         const url = new URL(href, window.location.origin)
         const tab = url.searchParams.get('tab')
         const assignmentId = url.searchParams.get('assignment_recipient') || url.searchParams.get('assignment')
-        const feedbackId = url.searchParams.get('feedback')
+        const feedbackId = url.searchParams.get('feedback') || (item?.teacher_note_id ? String(item.teacher_note_id) : '')
         if (tab) this.navigateDashboardPane(tab, { history: 'push', focus: true })
         else if (assignmentId || feedbackId) this.navigateDashboardPane('learning', { history: 'push', focus: true })
+        if (feedbackId && this.auth?.learner_learning_network_connected) {
+          await this.loadLearnerSupport()
+        }
         this.$nextTick(() => {
           if (feedbackId) {
             const row = (this.support?.learning?.feedback_inbox || []).find((r) => String(r.id) === String(feedbackId))
             if (row) this.openMessageFeedback(row)
+            else if (item?.teacher_note_id) this.openMessageFeedback({ id: item.teacher_note_id })
           } else if (assignmentId) {
             this.$refs.learnerTeacherSection?.openAssignmentById?.(assignmentId)
           }

@@ -308,33 +308,78 @@ class ParentLearningReportReader
     private function narrative(array $report): array
     {
         if ($report['insufficient'] === true) {
+            $lines = [
+                'Not enough shared learning data for this period yet.',
+                'Ask your child’s teacher if you expected more detail.',
+            ];
+
             return [
                 'label' => 'Generated summary',
-                'text' => 'There is not enough learning data in this period to describe progress. No score has been estimated. This summary was written from the shared records in this report. It does not replace the teacher.',
+                'text' => implode(' ', $lines),
+                'lines' => $lines,
             ];
         }
 
-        $parts = [];
-        foreach (['assignments', 'activity', 'goals', 'attendance', 'comparison'] as $key) {
-            $plain = $report[$key]['plain'] ?? null;
-            if (is_string($plain) && $plain !== '') {
-                $parts[] = $plain;
+        $lines = [];
+        $assignments = is_array($report['assignments'] ?? null) ? $report['assignments'] : [];
+        $assigned = (int) ($assignments['assigned'] ?? 0);
+        $completed = (int) ($assignments['completed'] ?? 0);
+        $overdue = (int) ($assignments['overdue'] ?? 0);
+        if ($assigned > 0) {
+            $homework = $completed.' of '.$assigned.' homework '.($assigned === 1 ? 'task' : 'tasks').' finished.';
+            if ($overdue > 0) {
+                $homework .= ' '.$overdue.' '.($overdue === 1 ? 'task is' : 'tasks are').' past the deadline.';
+            }
+            $lines[] = $homework;
+        } else {
+            $lines[] = 'No homework was set this period.';
+        }
+
+        $activity = is_array($report['activity'] ?? null) ? $report['activity'] : [];
+        $practice = (int) ($activity['practice_rows'] ?? 0);
+        $revision = (int) ($activity['revision_sessions'] ?? 0);
+        if ($practice > 0 || $revision > 0) {
+            $bits = [];
+            if ($practice > 0) {
+                $bits[] = $practice.' practice '.($practice === 1 ? 'session' : 'sessions');
+            }
+            if ($revision > 0) {
+                $bits[] = $revision.' revision '.($revision === 1 ? 'session' : 'sessions');
+            }
+            $lines[] = 'Logged: '.implode(', ', $bits).'.';
+        } else {
+            $lines[] = 'No practice or revision sessions were logged.';
+        }
+
+        $current = $activity['current_memorised'] ?? null;
+        if ($current !== null && (int) $current > 0) {
+            $lines[] = (int) $current.' '.((int) $current === 1 ? 'verse' : 'verses').' memorised in total (all time).';
+        }
+
+        $attendance = is_array($report['attendance'] ?? null) ? $report['attendance'] : [];
+        $attendanceTotal = (int) ($attendance['total'] ?? 0);
+        if ($attendanceTotal > 0) {
+            $rate = $attendance['rate_percent'] ?? null;
+            if ($rate !== null) {
+                $lines[] = 'Attendance: '.$rate.'% present or on time ('.$attendanceTotal.' days marked).';
+            } else {
+                $lines[] = 'Attendance marked on '.$attendanceTotal.' '.($attendanceTotal === 1 ? 'day' : 'days').'.';
             }
         }
-        if (is_array($report['wording'] ?? null) && is_string($report['wording']['plain'] ?? null)) {
-            $parts[] = $report['wording']['plain'];
-        }
+
         $attention = is_array($report['attention'] ?? null) ? $report['attention'] : [];
-        if ($attention === []) {
-            $parts[] = 'Nothing in the shared records is marked as needing extra attention.';
+        if ($attention !== []) {
+            $lines[] = count($attention).' '.(count($attention) === 1 ? 'item needs' : 'items need').' a follow-up.';
         } else {
-            $parts[] = 'Needs attention: '.implode(' ', array_map(fn (array $item) => (string) $item['label'], $attention));
+            $lines[] = 'Nothing flagged as needing extra attention.';
         }
-        $parts[] = 'This summary was written from the shared records in this report. It does not replace the teacher.';
+
+        $lines[] = 'From shared records only — your teacher’s updates still matter most.';
 
         return [
             'label' => 'Generated summary',
-            'text' => implode(' ', $parts),
+            'text' => implode(' ', $lines),
+            'lines' => $lines,
         ];
     }
 

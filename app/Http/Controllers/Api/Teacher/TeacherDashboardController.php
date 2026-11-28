@@ -406,6 +406,7 @@ class TeacherDashboardController extends Controller
     public function storeAssignment(Request $request, TeacherAssignmentService $assignments): JsonResponse
     {
         $teacher = $this->teacher($request);
+        $this->mergeAssignmentSessionSettings($request);
         $data = $request->validate([
             'kind' => ['required', Rule::in(['practice', 'ai_recite'])],
             'hifz_category' => ['required', Rule::in(['sabaq', 'sabqi', 'manzil'])],
@@ -418,6 +419,14 @@ class TeacherDashboardController extends Controller
             'due_at' => ['required', 'date'],
             'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
+            'instruction_audio' => ['nullable', 'file', 'max:8192'],
+            'instruction_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'instruction_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'clear_instruction_audio' => ['nullable', 'boolean'],
+            'recitation_demo_audio' => ['nullable', 'file', 'max:8192'],
+            'recitation_demo_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'recitation_demo_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'clear_recitation_demo_audio' => ['nullable', 'boolean'],
             'session_settings' => ['nullable', 'array'],
             'session_settings.reciter' => ['nullable', 'string', 'max:64'],
             'session_settings.speed' => ['nullable', 'numeric', 'min:0.5', 'max:2'],
@@ -451,6 +460,10 @@ class TeacherDashboardController extends Controller
             'learning_group_id' => ['nullable', 'integer', 'required_without:student_id'],
         ]);
 
+        $data = array_merge($data, [
+            'instruction_audio' => $request->file('instruction_audio'),
+            'recitation_demo_audio' => $request->file('recitation_demo_audio'),
+        ]);
         $assignment = $assignments->create($teacher, $data);
 
         return $this->json([
@@ -462,6 +475,7 @@ class TeacherDashboardController extends Controller
     public function updateAssignment(Request $request, TeacherAssignment $assignment, TeacherAssignmentService $assignments): JsonResponse
     {
         $teacher = $this->teacher($request);
+        $this->mergeAssignmentSessionSettings($request);
         $data = $request->validate([
             'kind' => ['required', Rule::in(['practice', 'ai_recite'])],
             'hifz_category' => ['required', Rule::in(['sabaq', 'sabqi', 'manzil'])],
@@ -474,6 +488,14 @@ class TeacherDashboardController extends Controller
             'due_at' => ['required', 'date'],
             'priority' => ['nullable', Rule::in(['low', 'normal', 'high'])],
             'feedback' => ['nullable', 'string', 'max:2000'],
+            'instruction_audio' => ['nullable', 'file', 'max:8192'],
+            'instruction_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'instruction_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'clear_instruction_audio' => ['nullable', 'boolean'],
+            'recitation_demo_audio' => ['nullable', 'file', 'max:8192'],
+            'recitation_demo_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'recitation_demo_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'clear_recitation_demo_audio' => ['nullable', 'boolean'],
             'session_settings' => ['nullable', 'array'],
             'session_settings.reciter' => ['nullable', 'string', 'max:64'],
             'session_settings.speed' => ['nullable', 'numeric', 'min:0.5', 'max:2'],
@@ -503,6 +525,11 @@ class TeacherDashboardController extends Controller
             'session_settings.examination.delivery' => ['nullable', 'string', 'in:live,async'],
             'session_settings.examination.ai_wording_assessment' => ['nullable', 'boolean'],
             'session_settings.examination.manual_questions' => ['nullable', 'array'],
+        ]);
+
+        $data = array_merge($data, [
+            'instruction_audio' => $request->file('instruction_audio'),
+            'recitation_demo_audio' => $request->file('recitation_demo_audio'),
         ]);
 
         return $this->json(['assignment' => $assignments->presentAssignment($assignments->update($teacher, $assignment, $data))]);
@@ -827,6 +854,7 @@ class TeacherDashboardController extends Controller
     public function storeLearningPlan(Request $request, LearningPlanService $plans): JsonResponse
     {
         $teacher = $this->teacher($request);
+        $this->mergeLearningPlanItemsFromRequest($request);
         $data = $request->validate([
             'student_id' => ['required', 'integer'],
             'title' => ['required', 'string', 'max:160'],
@@ -852,7 +880,16 @@ class TeacherDashboardController extends Controller
             'items.*.origin' => ['nullable', Rule::in(['assigned', 'suggested'])],
             'items.*.weak_spot_id' => ['nullable', 'integer'],
             'items.*.is_milestone' => ['nullable', 'boolean'],
+            'items.*.instruction_audio' => ['nullable', 'file', 'max:8192'],
+            'items.*.instruction_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'items.*.instruction_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'items.*.clear_instruction_audio' => ['nullable', 'boolean'],
+            'items.*.recitation_demo_audio' => ['nullable', 'file', 'max:8192'],
+            'items.*.recitation_demo_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'items.*.recitation_demo_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'items.*.clear_recitation_demo_audio' => ['nullable', 'boolean'],
         ]);
+        $data['items'] = $this->attachPlanItemUploads($request, $data['items'] ?? []);
 
         $plan = $plans->createPlan($teacher, $data);
 
@@ -862,6 +899,7 @@ class TeacherDashboardController extends Controller
     public function updateLearningPlan(Request $request, LearningPlan $plan, LearningPlanService $plans): JsonResponse
     {
         $teacher = $this->teacher($request);
+        $this->mergeLearningPlanItemsFromRequest($request);
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:160'],
             'cadence' => ['nullable', Rule::in(['weekly', 'monthly', 'custom'])],
@@ -885,7 +923,16 @@ class TeacherDashboardController extends Controller
             'items.*.weak_spot_id' => ['nullable', 'integer'],
             'items.*.id' => ['nullable', 'integer'],
             'items.*.is_milestone' => ['nullable', 'boolean'],
+            'items.*.instruction_audio' => ['nullable', 'file', 'max:8192'],
+            'items.*.instruction_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'items.*.instruction_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'items.*.clear_instruction_audio' => ['nullable', 'boolean'],
+            'items.*.recitation_demo_audio' => ['nullable', 'file', 'max:8192'],
+            'items.*.recitation_demo_audio_duration_ms' => ['nullable', 'integer', 'between:1,120000'],
+            'items.*.recitation_demo_audio_asset_id' => ['nullable', 'integer', 'min:1'],
+            'items.*.clear_recitation_demo_audio' => ['nullable', 'boolean'],
         ]);
+        $data['items'] = $this->attachPlanItemUploads($request, $data['items'] ?? []);
         $updated = $plans->updatePlan($teacher, $plan, $data);
 
         return $this->json(['plan' => $plans->presentPlan($updated)]);
@@ -1018,6 +1065,55 @@ class TeacherDashboardController extends Controller
         $teacher = $this->teacher($request);
 
         return $this->json(['recommendation' => $recommendations->present($recommendations->assign($teacher, $recommendation))]);
+    }
+
+    private function mergeAssignmentSessionSettings(Request $request): void
+    {
+        $raw = $request->input('session_settings');
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $request->merge(['session_settings' => $decoded]);
+            }
+        }
+    }
+
+    private function mergeLearningPlanItemsFromRequest(Request $request): void
+    {
+        $raw = $request->input('items');
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $request->merge(['items' => $decoded]);
+            }
+        }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>|null  $items
+     * @return list<array<string, mixed>>
+     */
+    private function attachPlanItemUploads(Request $request, ?array $items): array
+    {
+        $items = is_array($items) ? $items : [];
+        foreach ($items as $index => &$item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $instruction = $request->file("items.$index.instruction_audio")
+                ?? $request->file("items_instruction_audio_$index");
+            if ($instruction !== null) {
+                $item['instruction_audio'] = $instruction;
+            }
+            $recitation = $request->file("items.$index.recitation_demo_audio")
+                ?? $request->file("items_recitation_demo_audio_$index");
+            if ($recitation !== null) {
+                $item['recitation_demo_audio'] = $recitation;
+            }
+        }
+        unset($item);
+
+        return $items;
     }
 
     private function teacher(Request $request): User

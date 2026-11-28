@@ -2,10 +2,12 @@
 
 namespace App\Services\Teacher;
 
+use App\Enums\ParentGuardianPermission;
 use App\Enums\TeacherNoteKind;
 use App\Models\TeacherNote;
 use App\Models\User;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Parent\ParentAccessAuthorizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,7 +15,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TeacherAssignmentMessageAudioService
 {
-    public function __construct(private readonly StudentAccessAuthorizer $access) {}
+    public function __construct(
+        private readonly StudentAccessAuthorizer $access,
+        private readonly ParentAccessAuthorizer $parentAccess,
+    ) {}
     public const DISK = 'user_files';
 
     public const PREFIX = 'teacher-task-audio';
@@ -153,25 +158,30 @@ class TeacherAssignmentMessageAudioService
             ? $note->kind
             : TeacherNoteKind::tryFrom((string) $note->kind);
 
-        $isParticipant = (int) $note->student_id === (int) $user->id
-            || ((int) $note->teacher_id === (int) $user->id
-                && $note->student !== null
-                && $this->access->allows($user, $note->student));
+        $note->loadMissing('student');
+        $student = $note->student;
 
-        if (! $isParticipant) {
-            return false;
-        }
+        $isStudent = (int) $note->student_id === (int) $user->id;
+        $isTeacher = $student instanceof User
+            && (int) $note->teacher_id === (int) $user->id
+            && $this->access->allows($user, $student);
+        $isGuardian = $student instanceof User
+            && $kind === TeacherNoteKind::Feedback
+            && $this->parentAccess->allows($user, $student, ParentGuardianPermission::ViewMessages->value);
 
         if ($note->teacher_assignment_id !== null) {
-            return true;
+            return $isStudent || $isTeacher || $isGuardian;
         }
 
-        // Direct messages and standalone teacher audio feedback (kind=feedback).
-        return in_array($kind, [
-            TeacherNoteKind::TeacherMessage,
-            TeacherNoteKind::StudentMessage,
-            TeacherNoteKind::Feedback,
-        ], true);
+        if ($isStudent || $isTeacher) {
+            return in_array($kind, [
+                TeacherNoteKind::TeacherMessage,
+                TeacherNoteKind::StudentMessage,
+                TeacherNoteKind::Feedback,
+            ], true);
+        }
+
+        return $isGuardian;
     }
 
     private function normaliseMime(UploadedFile $file): string

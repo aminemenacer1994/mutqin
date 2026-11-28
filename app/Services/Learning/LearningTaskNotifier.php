@@ -89,6 +89,32 @@ final class LearningTaskNotifier
         }
     }
 
+    public function assignmentInstructionsUpdated(TeacherAssignment $assignment): void
+    {
+        $assignment->loadMissing('recipients');
+        $students = $this->studentsById($assignment->recipients->pluck('student_id'));
+
+        foreach ($assignment->recipients as $recipient) {
+            $student = $students->get((int) $recipient->student_id);
+            if (! $student instanceof User) {
+                continue;
+            }
+            $this->once($student, 'assignment-instructions:'.$assignment->id.':'.now()->timestamp, [
+                'type' => 'assignment_update',
+                'title' => 'Task instructions updated',
+                'body' => $this->noticeBody($assignment),
+                'href' => $this->dashboardHref([
+                    'tab' => 'learning',
+                    'assignment_recipient' => (int) $recipient->id,
+                ]),
+                'surah_number' => (int) $assignment->surah_number,
+                'ayah_start' => (int) $assignment->ayah_start,
+                'ayah_end' => (int) $assignment->ayah_end,
+                'teacher_assignment_recipient_id' => (int) $recipient->id,
+            ]);
+        }
+    }
+
     public function deadlineMoved(TeacherAssignment $assignment): void
     {
         if ($assignment->due_at === null) {
@@ -162,10 +188,13 @@ final class LearningTaskNotifier
             return;
         }
         $body = trim((string) $note->body);
+        $preview = $body === ''
+            ? (($note->audio_path ?? '') !== '' ? 'Voice feedback' : null)
+            : mb_substr($body, 0, 180);
         $this->once($student, 'feedback:'.$note->id, [
             'type' => 'teacher_feedback',
             'title' => 'Teacher feedback',
-            'body' => $body === '' ? null : mb_substr($body, 0, 180),
+            'body' => $preview,
             'href' => $this->dashboardHref([
                 'tab' => 'learning',
                 'feedback' => (int) $note->id,

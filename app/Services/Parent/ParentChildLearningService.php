@@ -16,14 +16,17 @@ use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
 use App\Models\TeacherNote;
 use App\Models\TeacherRecitationAssessment;
+use App\Models\ParentHomeworkSupervision;
 use App\Models\TeacherAttendanceRecord;
 use App\Models\TeacherRecitationReview;
 use App\Models\User;
 use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Services\Learning\StudentCircleService;
+use App\Services\Teacher\TeacherAssignmentMessageAudioService;
 use App\Services\Teacher\TeacherAttendanceService;
 use App\Services\Teacher\TeacherRecitationFeedbackSegmentService;
 use App\Services\Teacher\StudentHifzProgressService;
+use App\Services\Teacher\MushafAnnotationService;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\AssignmentRecipientLifecycle;
 use App\Support\QuranMetadata;
@@ -44,7 +47,48 @@ class ParentChildLearningService
         private readonly StudentHifzProgressService $hifzProgress,
         private readonly AiReciteAttemptAudioService $attemptAudio,
         private readonly TeacherRecitationFeedbackSegmentService $feedbackSegments,
+        private readonly TeacherAssignmentMessageAudioService $messageAudio,
+        private readonly MushafAnnotationService $mushafAnnotations,
     ) {}
+
+    /**
+     * Optional parent record of supervised home practice. Does not change student or teacher workflow.
+     *
+     * @return array<string, mixed>
+     */
+    public function acknowledgeSupervision(
+        User $parent,
+        User $student,
+        TeacherAssignmentRecipient $recipient,
+    ): array {
+        $this->assertPermission($parent, $student, ParentGuardianPermission::ViewAssignments);
+        abort_if((int) $recipient->student_id !== (int) $student->id, 404);
+
+        $display = $this->assignments->displayStatusForRecipient($recipient);
+        if (in_array($display, ['completed', 'cancelled', 'reassigned'], true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'assignment' => 'This homework is already closed.',
+            ]);
+        }
+
+        $supervision = ParentHomeworkSupervision::query()
+            ->where('parent_user_id', $parent->id)
+            ->where('teacher_assignment_recipient_id', $recipient->id)
+            ->first();
+        if ($supervision === null) {
+            $supervision = new ParentHomeworkSupervision;
+            $supervision->forceFill([
+                'parent_user_id' => $parent->id,
+                'teacher_assignment_recipient_id' => $recipient->id,
+            ]);
+        }
+        $supervision->forceFill(['acknowledged_at' => now()])->save();
+
+        return [
+            'supervision' => $this->presentSupervision($supervision),
+            'read_only' => true,
+        ];
+    }
 
     /**
      * @param  array{activity?: ?string, status?: ?string, from?: ?string, to?: ?string}  $filters
@@ -182,6 +226,11 @@ class ParentChildLearningService
             ? TeacherNote::query()
                 ->where('student_id', $student->id)
                 ->where('kind', TeacherNoteKind::Feedback->value)
+                ->where(function ($query) {
+                    $query->where(function ($inner) {
+                        $inner->whereNotNull('body')->where('body', '!=', '');
+                    })->orWhereNotNull('audio_path');
+                })
                 ->with('teacher:id,name')
                 ->latest('id')
                 ->limit(12)
@@ -190,9 +239,10 @@ class ParentChildLearningService
                     'id' => (int) $note->id,
                     'teacher_name' => $note->teacher?->name,
                     'body' => trim((string) $note->body),
+                    'audio' => $this->messageAudio->payload($note),
                     'at' => $note->created_at?->toIso8601String(),
                 ])
-                ->filter(fn (array $row) => $row['body'] !== '')
+                ->filter(fn (array $row) => $row['body'] !== '' || ($row['audio']['available'] ?? false))
                 ->values()
                 ->all()
             : [];
@@ -370,6 +420,21 @@ class ParentChildLearningService
             ->latest('id')
             ->first();
 
+        $student = User::query()->find($recipient->student_id);
+        $supervision = ParentHomeworkSupervision::query()
+            ->where('parent_user_id', $parent->id)
+            ->where('teacher_assignment_recipient_id', $recipient->id)
+            ->first();
+        $mushaf = [];
+        if ($student instanceof User && $this->access->allows($parent, $student, ParentGuardianPermission::ViewProgress->value)) {
+            $mushaf = $this->mushafAnnotations->publishedForStudent(
+                $student,
+                (int) $assignment->surah_number,
+                (int) $assignment->ayah_start,
+                (int) $assignment->ayah_end,
+            );
+        }
+
         return [
             'id' => (int) $recipient->id,
             'child_id' => (int) $recipient->student_id,
@@ -381,12 +446,32 @@ class ParentChildLearningService
             'teacher_name' => $assignment->teacher?->name,
             'instructions' => $instructions !== '' ? $instructions : null,
             'teacher_feedback' => $assignment->feedback ? trim((string) $assignment->feedback) : null,
+            'published_feedback' => $student instanceof User
+                ? $this->publishedAssignmentFeedback($parent, $student, (int) $assignment->id)
+                : null,
             'history' => $this->completionHistory($recipient, $assignment),
             'lifecycle' => AssignmentRecipientLifecycle::present($recipient),
             'latest_assessment' => $latestAttempt
                 ? $this->presentAssessment($parent, $recipient->student_id, $latestAttempt)
                 : null,
+            'mushaf_annotations' => $mushaf,
+            'supervision' => $this->presentSupervision($supervision),
             'read_only' => true,
+        ];
+    }
+
+    /**
+     * @return array{acknowledged: bool, acknowledged_at: ?string}
+     */
+    private function presentSupervision(?ParentHomeworkSupervision $supervision): array
+    {
+        if ($supervision === null || $supervision->acknowledged_at === null) {
+            return ['acknowledged' => false, 'acknowledged_at' => null];
+        }
+
+        return [
+            'acknowledged' => true,
+            'acknowledged_at' => $supervision->acknowledged_at->toIso8601String(),
         ];
     }
 
@@ -639,5 +724,45 @@ class ParentChildLearningService
                 'at' => $row->created_at?->toIso8601String(),
             ])
             ->all();
+    }
+
+    /**
+     * Latest published feedback note for a homework assignment, including voice.
+     *
+     * @return array{body: string, audio: array<string, mixed>, at: ?string}|null
+     */
+    private function publishedAssignmentFeedback(User $parent, User $student, int $assignmentId): ?array
+    {
+        if (! $this->access->allows($parent, $student, ParentGuardianPermission::ViewMessages->value)) {
+            return null;
+        }
+
+        $note = TeacherNote::query()
+            ->where('student_id', $student->id)
+            ->where('teacher_assignment_id', $assignmentId)
+            ->where('kind', TeacherNoteKind::Feedback->value)
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('body')->where('body', '!=', '');
+                })->orWhereNotNull('audio_path');
+            })
+            ->latest('id')
+            ->first();
+
+        if (! $note instanceof TeacherNote) {
+            return null;
+        }
+
+        $body = trim((string) $note->body);
+        $audio = $this->messageAudio->payload($note);
+        if ($body === '' && ! ($audio['available'] ?? false)) {
+            return null;
+        }
+
+        return [
+            'body' => $body,
+            'audio' => $audio,
+            'at' => $note->created_at?->toIso8601String(),
+        ];
     }
 }

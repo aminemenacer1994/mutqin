@@ -2,8 +2,8 @@
   <div class="parent-chart" role="img" :aria-label="ariaLabel">
     <div v-for="bar in normalised" :key="bar.key" class="parent-chart__row">
       <div class="parent-chart__label">
-        <span>{{ bar.label }}</span>
-        <strong>{{ bar.display }}</strong>
+        <span class="parent-chart__name">{{ bar.label }}</span>
+        <span class="parent-chart__value">{{ bar.display }}</span>
       </div>
       <div class="parent-chart__track" aria-hidden="true">
         <span class="parent-chart__fill" :class="`is-${bar.tone}`" :style="{ width: `${bar.percent}%` }"></span>

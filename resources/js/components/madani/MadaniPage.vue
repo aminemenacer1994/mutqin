@@ -47,6 +47,8 @@
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
           :tajweed-html-by-location="tajweedHtmlByLocation"
+          :annotation-overlays="annotationOverlays"
+          :mushaf-interaction-mode="mushafInteractionMode"
           :surah-names-ready="surahNamesReady"
           @select="onWordSelect"
           @ayah-enter="onAyahEnter"
@@ -211,6 +213,14 @@ export default {
     tajweedHtmlByLocation: {
       type: Object,
       default: null,
+    },
+    annotationOverlays: {
+      type: Object,
+      default: null,
+    },
+    mushafInteractionMode: {
+      type: String,
+      default: '',
     },
   },
   emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel', 'fit-word-size'],

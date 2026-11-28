@@ -28,6 +28,7 @@ class LearningPlanService
     public function __construct(
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentService $assignments,
+        private readonly TeacherAssignmentInstructionAudioService $instructionAudio,
     ) {}
 
     /**
@@ -335,6 +336,7 @@ class LearningPlanService
         ]);
         if ($persist) {
             $row->save();
+            $this->instructionAudio->applyPlanItemInstructionAudio($teacher, $row, $item);
         }
 
         return $row;
@@ -360,6 +362,8 @@ class LearningPlanService
                 'repetition_target' => $item->repetition_target,
                 'due_at' => $item->due_on?->toDateString() ?: $plan->ends_on?->toDateString() ?: today()->addDays(7)->toDateString(),
                 'feedback' => $item->instructions,
+                'instruction_audio_asset_id' => $item->instruction_audio_asset_id ? (int) $item->instruction_audio_asset_id : null,
+                'recitation_demo_audio_asset_id' => $item->recitation_demo_audio_asset_id ? (int) $item->recitation_demo_audio_asset_id : null,
                 'learning_plan_id' => $plan->id,
                 'learning_plan_item_id' => $item->id,
             ];
@@ -599,6 +603,9 @@ class LearningPlanService
             'priority' => $item->priority,
             'is_milestone' => (bool) $item->is_milestone,
             'instructions' => $item->instructions,
+            'voice_instructions' => $this->instructionAudio->planItemPayload($item),
+            'instruction_audio_asset_id' => $item->instruction_audio_asset_id ? (int) $item->instruction_audio_asset_id : null,
+            'recitation_demo_audio_asset_id' => $item->recitation_demo_audio_asset_id ? (int) $item->recitation_demo_audio_asset_id : null,
             'teacher_assignment_id' => $item->teacher_assignment_id ? (int) $item->teacher_assignment_id : null,
             'recipient_id' => $recipient ? (int) $recipient->id : null,
             'task_status' => $taskStatusValue,
@@ -967,6 +974,7 @@ class LearningPlanService
             'is_milestone' => $draft->is_milestone,
             'instructions' => $draft->instructions,
         ])->save();
+        $this->instructionAudio->applyPlanItemInstructionAudio($teacher, $item, $input);
     }
 
     private function stage(mixed $value, string $fallback): string

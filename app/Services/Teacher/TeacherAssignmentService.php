@@ -4,6 +4,7 @@ namespace App\Services\Teacher;
 
 use App\Enums\AssignmentKind;
 use App\Enums\AssignmentStatus;
+use App\Enums\TeacherAssignmentAudioRole;
 use App\Enums\LearningPlanItemStatus;
 use App\Enums\LearningPlanStatus;
 use App\Enums\MembershipRole;
@@ -48,6 +49,7 @@ class TeacherAssignmentService
     public function __construct(
         private readonly StudentAccessAuthorizer $access,
         private readonly TeacherAssignmentMessageAudioService $messageAudio,
+        private readonly TeacherAssignmentInstructionAudioService $instructionAudio,
         private readonly AiReciteAttemptAudioService $attemptAudio,
         private readonly TeacherRecitationFeedbackSegmentService $feedbackSegments,
     ) {}
@@ -172,6 +174,8 @@ class TeacherAssignmentService
                 'source_ai_recite_attempt_id' => $sourceAttemptId,
             ])->save();
 
+            $this->applyAssignmentInstructionAudio($teacher, $assignment, $input);
+
             foreach ($recipients as $studentId) {
                 $recipient = new TeacherAssignmentRecipient;
                 $recipient->forceFill([
@@ -232,6 +236,10 @@ class TeacherAssignmentService
             $locked = TeacherAssignment::query()->whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             $this->assertManageable($teacher, $locked, true);
             $previousDue = $locked->due_at?->toDateString();
+            $previousFeedback = $this->nullableText($locked->feedback);
+            $previousInstructionAsset = $locked->instruction_audio_asset_id ? (int) $locked->instruction_audio_asset_id : null;
+            $previousDemoAsset = $locked->recitation_demo_audio_asset_id ? (int) $locked->recitation_demo_audio_asset_id : null;
+            $nextFeedback = $this->nullableText($input['feedback'] ?? null);
             $locked->forceFill([
                 'kind' => $kind->value,
                 'hifz_category' => $input['hifz_category'],
@@ -243,14 +251,23 @@ class TeacherAssignmentService
                 'repetition_target' => $input['repetition_target'] ?? null,
                 'due_at' => $input['due_at'] ?? null,
                 'priority' => $priority,
-                'feedback' => $this->nullableText($input['feedback'] ?? null),
+                'feedback' => $nextFeedback,
                 'session_settings' => $sessionSettings,
             ])->save();
+
+            $audioChanged = $this->applyAssignmentInstructionAudio($teacher, $locked, $input);
+            $instructionsChanged = $previousFeedback !== $nextFeedback
+                || $audioChanged
+                || $previousInstructionAsset !== ($locked->instruction_audio_asset_id ? (int) $locked->instruction_audio_asset_id : null)
+                || $previousDemoAsset !== ($locked->recitation_demo_audio_asset_id ? (int) $locked->recitation_demo_audio_asset_id : null);
 
             $loaded = $locked->refresh()->load('recipients');
             $this->syncRevisionRemindersForAssignment($loaded);
             if ($previousDue !== $loaded->due_at?->toDateString()) {
                 app(LearningTaskNotifier::class)->deadlineMoved($loaded);
+            }
+            if ($instructionsChanged) {
+                app(LearningTaskNotifier::class)->assignmentInstructionsUpdated($loaded);
             }
 
             return $loaded;
@@ -439,6 +456,8 @@ class TeacherAssignmentService
             'due_at' => ($overrides['due_at'] ?? null) ?: optional($assignment->due_at)->toDateString(),
             'priority' => $assignment->priority,
             'feedback' => $assignment->feedback,
+            'instruction_audio_asset_id' => $assignment->instruction_audio_asset_id ? (int) $assignment->instruction_audio_asset_id : null,
+            'recitation_demo_audio_asset_id' => $assignment->recitation_demo_audio_asset_id ? (int) $assignment->recitation_demo_audio_asset_id : null,
             'session_settings' => $assignment->session_settings,
             'source_ai_recite_attempt_id' => $assignment->source_ai_recite_attempt_id,
             'student_id' => $overrides['student_id'] ?? null,
@@ -1490,6 +1509,7 @@ class TeacherAssignmentService
             'due_at' => $assignment->due_at?->toIso8601String(),
             'priority' => RevisionReminderPriority::normalise($assignment->priority ?? 'normal')->value,
             'feedback' => $assignment->feedback,
+            'voice_instructions' => $this->instructionAudio->assignmentPayload($assignment),
             'session_settings' => array_merge(
                 AssignmentListeningSettings::present(
                     is_array($assignment->session_settings) ? $assignment->session_settings : null
@@ -2041,6 +2061,40 @@ class TeacherAssignmentService
         $text = trim((string) $value);
 
         return $text === '' ? null : $text;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function applyAssignmentInstructionAudio(User $teacher, TeacherAssignment $assignment, array $input): bool
+    {
+        $changed = false;
+        $instructionInput = $input;
+        $instructionInput['duration_ms'] = $input['instruction_audio_duration_ms'] ?? null;
+        $changed = $this->instructionAudio->applyRoleInput(
+            $teacher,
+            $assignment,
+            TeacherAssignmentAudioRole::Instruction,
+            $instructionInput,
+            'instruction_audio',
+            'instruction_audio_asset_id',
+            'clear_instruction_audio',
+            'instruction_audio_asset_id',
+        ) || $changed;
+
+        $demoInput = $input;
+        $demoInput['duration_ms'] = $input['recitation_demo_audio_duration_ms'] ?? null;
+
+        return $this->instructionAudio->applyRoleInput(
+            $teacher,
+            $assignment,
+            TeacherAssignmentAudioRole::RecitationDemo,
+            $demoInput,
+            'recitation_demo_audio',
+            'recitation_demo_audio_asset_id',
+            'clear_recitation_demo_audio',
+            'recitation_demo_audio_asset_id',
+        ) || $changed;
     }
 
     /**

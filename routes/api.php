@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\Teacher\TeacherClassInviteController;
 use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
 use App\Http\Controllers\Api\Teacher\TeacherGuardianController;
 use App\Http\Controllers\Api\Teacher\TeacherMembershipTransferController;
+use App\Http\Controllers\Api\Teacher\TeacherMushafAnnotationController;
 use App\Http\Controllers\Api\Teacher\TeacherRecitationPlaybackController;
 use App\Http\Controllers\Api\Teacher\TeacherStudentImportController;
 use App\Http\Controllers\AskMutqinCommandController;
@@ -187,6 +188,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/onboarding/connections', [ConnectionOnboardingController::class, 'state'])->name('api.onboarding.connections.show');
         Route::patch('/onboarding/connections', [ConnectionOnboardingController::class, 'update'])->name('api.onboarding.connections.update');
 
+        Route::get('/assignment-audio/{asset}/stream', [LearnerSupportController::class, 'assignmentInstructionAudio'])
+            ->whereNumber('asset')
+            ->name('api.assignment-audio.stream');
+
         Route::middleware('learner.teacher.section')->group(function () {
             Route::get('/me/circle', [LearnerCircleController::class, 'show'])->name('api.me.circle');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
@@ -244,6 +249,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/shell', [ParentDashboardController::class, 'shell'])->name('api.parent.shell');
                 Route::get('/children/{student}', [ParentDashboardController::class, 'showChild'])->name('api.parent.children.show');
                 Route::get('/children/{student}/assignments', [ParentChildController::class, 'assignments'])->name('api.parent.children.assignments');
+                Route::post('/children/{student}/assignments/{recipient}/supervision', [ParentChildController::class, 'acknowledgeSupervision'])->whereNumber('recipient')->name('api.parent.children.assignments.supervision');
                 Route::get('/children/{student}/progress', [ParentChildController::class, 'progress'])->name('api.parent.children.progress');
                 Route::get('/children/{student}/profile', [ParentChildController::class, 'profile'])->name('api.parent.children.profile');
                 Route::get('/children/{student}/attendance', [ParentChildController::class, 'attendance'])->name('api.parent.children.attendance');
@@ -299,6 +305,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/students/{student}/attempts/{attempt}/playback/revision', [TeacherRecitationPlaybackController::class, 'revision'])->whereNumber('attempt')->name('api.teacher.students.attempts.playback.revision');
                 Route::post('/students/{student}/attempts/{attempt}/playback/words', [TeacherRecitationPlaybackController::class, 'word'])->whereNumber('attempt')->middleware('throttle:30,1,api-teacher-playback-words')->name('api.teacher.students.attempts.playback.words');
                 Route::delete('/students/{student}/attempts/{attempt}/playback/corrections/{correction}/audio', [TeacherRecitationPlaybackController::class, 'deleteWordAudio'])->whereNumber('attempt')->whereNumber('correction')->name('api.teacher.students.attempts.playback.corrections.audio.destroy');
+                Route::delete('/students/{student}/attempts/{attempt}/playback/corrections/{correction}', [TeacherRecitationPlaybackController::class, 'destroyWord'])->whereNumber('attempt')->whereNumber('correction')->name('api.teacher.students.attempts.playback.corrections.destroy');
+                Route::get('/students/{student}/mushaf-annotations', [TeacherMushafAnnotationController::class, 'index'])->name('api.teacher.students.mushaf-annotations.index');
+                Route::post('/students/{student}/mushaf-annotations', [TeacherMushafAnnotationController::class, 'store'])->middleware('throttle:30,1,api-teacher-mushaf-annotations')->name('api.teacher.students.mushaf-annotations.store');
+                Route::delete('/students/{student}/mushaf-annotations/{annotation}', [TeacherMushafAnnotationController::class, 'destroy'])->whereNumber('annotation')->name('api.teacher.students.mushaf-annotations.destroy');
+                Route::get('/mushaf-annotations/{annotation}/audio', [TeacherMushafAnnotationController::class, 'audio'])->whereNumber('annotation')->name('api.teacher.mushaf-annotations.audio');
                 Route::post('/students/{student}/attempts/{attempt}/playback/segments', [TeacherRecitationPlaybackController::class, 'storeSegment'])->whereNumber('attempt')->middleware('throttle:30,1,api-teacher-playback-segments')->name('api.teacher.students.attempts.playback.segments.store');
                 Route::patch('/students/{student}/attempts/{attempt}/playback/segments/{segment}', [TeacherRecitationPlaybackController::class, 'updateSegment'])->whereNumber('attempt')->whereNumber('segment')->name('api.teacher.students.attempts.playback.segments.update');
                 Route::delete('/students/{student}/attempts/{attempt}/playback/segments/{segment}', [TeacherRecitationPlaybackController::class, 'deleteSegment'])->whereNumber('attempt')->whereNumber('segment')->name('api.teacher.students.attempts.playback.segments.destroy');

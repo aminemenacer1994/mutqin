@@ -327,6 +327,25 @@ class TeacherWordCoachingService
         });
     }
 
+    public function deleteCorrection(User $teacher, User $student, AiReciteAttempt $attempt, TeacherWordCoachingCorrection $correction): void
+    {
+        $correction->loadMissing('coaching');
+        $coaching = $correction->coaching;
+        abort_unless(
+            $coaching instanceof TeacherWordCoaching
+            && (int) $coaching->teacher_id === (int) $teacher->id
+            && (int) $coaching->student_id === (int) $student->id
+            && (int) $coaching->ai_recite_attempt_id === (int) $attempt->id
+            && (int) $correction->teacher_id === (int) $teacher->id,
+            404,
+        );
+
+        if ($correction->audio_path) {
+            $this->audio->deleteStored($correction);
+        }
+        $correction->delete();
+    }
+
     public function deleteCorrectionAudio(User $teacher, User $student, AiReciteAttempt $attempt, TeacherWordCoachingCorrection $correction): void
     {
         $correction->loadMissing('coaching');
@@ -430,6 +449,13 @@ class TeacherWordCoachingService
                     'body' => $body !== '' ? $body : null,
                     'focus' => $correction->focus,
                     'finding' => $correction->finding,
+                    'category' => $correction->category,
+                    'severity' => $correction->severity,
+                    'granularity' => $correction->granularity ?: 'word',
+                    'start_ms' => $correction->start_ms,
+                    'end_ms' => $correction->end_ms,
+                    'is_published' => (bool) ($correction->is_published ?? true),
+                    'is_draft' => (bool) ($correction->is_draft ?? false),
                     'source' => 'teacher',
                     'audio' => $this->audio->payload($correction),
                     'created_at' => $correction->created_at?->toIso8601String(),
@@ -627,9 +653,15 @@ class TeacherWordCoachingService
         $body = trim($body);
         $focus = isset($input['focus']) && $input['focus'] !== '' ? (string) $input['focus'] : null;
         $finding = isset($input['finding']) && $input['finding'] !== '' ? (string) $input['finding'] : null;
-        if (($focus === null) !== ($finding === null)) {
+        $category = isset($input['category']) && $input['category'] !== '' ? (string) $input['category'] : null;
+        if ($category === null && ($focus === null) !== ($finding === null)) {
             throw ValidationException::withMessages([
                 'focus' => 'Choose both the teacher finding and what it refers to.',
+            ]);
+        }
+        if ($category !== null && ! in_array($category, \App\Enums\MushafAnnotationCategory::values(), true)) {
+            throw ValidationException::withMessages([
+                'category' => 'Choose a supported mistake category.',
             ]);
         }
 
@@ -658,6 +690,15 @@ class TeacherWordCoachingService
             'body' => $body !== '' ? $body : $correction->body,
             'focus' => $focus,
             'finding' => $finding,
+            'category' => $category,
+            'severity' => isset($input['severity']) && $input['severity'] !== '' ? (string) $input['severity'] : null,
+            'granularity' => in_array((string) ($input['granularity'] ?? 'word'), ['word', 'ayah'], true)
+                ? (string) ($input['granularity'] ?? 'word')
+                : 'word',
+            'start_ms' => isset($input['start_ms']) ? (int) $input['start_ms'] : null,
+            'end_ms' => isset($input['end_ms']) ? (int) $input['end_ms'] : null,
+            'is_published' => array_key_exists('publish', $input) ? (bool) $input['publish'] : ($correction->is_published ?? true),
+            'is_draft' => array_key_exists('publish', $input) ? ! (bool) $input['publish'] : ($correction->is_draft ?? false),
         ])->save();
 
         if ($audio === null) {

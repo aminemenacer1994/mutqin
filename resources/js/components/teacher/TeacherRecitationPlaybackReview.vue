@@ -112,26 +112,47 @@
                     <span class="visually-hidden">{{ t('teacher.playback_legend_flagged') }}</span>
                   </span>
                   <span class="is-skipped">{{ t('teacher.word_status_skipped') }}</span>
+                  <template v-if="mushafSurface === 'page'">
+                    <span class="is-teacher-mark">{{ t('teacher.mushaf_legend_teacher_short') }}</span>
+                    <span class="is-ai-mark">{{ t('teacher.mushaf_legend_ai_short') }}</span>
+                  </template>
                 </div>
               </div>
               </div>
 
               <div ref="mushaf" class="teacher-playback__mushaf">
-                <p v-if="mushafLoading" class="teacher-playback__hint" role="status">{{ t('teacher.loading_quran_text') }}</p>
-                <TeacherReciteMushafAyahs
-                  v-else-if="ayahs.length"
-                  :ayahs="ayahs"
-                  :active-key="activeKey"
-                  :selected-key="selectedKey"
-                  :marks="coachingMarks"
-                  lines
-                  interactive
-                  @select-word="onSelectWord"
+                <TeacherMushafReviewChrome
+                  v-if="playbackRange.surah"
+                  v-model:surface="mushafSurface"
+                  v-model:interaction-mode="mushafInteractionMode"
                 />
-                <p v-else class="teacher-playback__hint">{{ t('teacher.madani_text_unavailable') }}</p>
+                <div class="teacher-playback__mushaf-body" dir="rtl">
+                  <p v-if="mushafLoading && mushafSurface === 'lines'" class="teacher-playback__hint" role="status">{{ t('teacher.loading_quran_text') }}</p>
+                  <TeacherReciteMushafAyahs
+                    v-else-if="mushafSurface === 'lines' && ayahs.length"
+                    :ayahs="ayahs"
+                    :active-key="activeKey"
+                    :selected-key="selectedKey"
+                    :marks="coachingMarks"
+                    lines
+                    interactive
+                    @select-word="onSelectWord"
+                  />
+                  <TeacherMushafMarkingWorkspace
+                    v-else-if="mushafSurface === 'page' && playbackRange.surah"
+                    :interaction-mode="mushafInteractionMode"
+                    :surah="playbackRange.surah"
+                    :ayah-from="playbackRange.from"
+                    :ayah-to="playbackRange.to"
+                    :annotation-overlays="mushafAnnotationOverlays"
+                    :active-ayah="selectedWord?.ayah || currentAyah"
+                    @select-word="onSelectWordFromPage"
+                  />
+                  <p v-else class="teacher-playback__hint">{{ t('teacher.madani_text_unavailable') }}</p>
+                </div>
               </div>
 
-              <details v-if="selectedCoaching" class="teacher-playback__compare">
+              <details v-if="selectedCoaching && hasRetryComparison" class="teacher-playback__compare">
                 <summary>{{ t('teacher.coaching_compare') }}</summary>
                 <p class="teacher-playback__hint">{{ comparisonSummary }}</p>
                 <div class="teacher-playback__compare-grid">
@@ -163,8 +184,115 @@
               <p v-if="actionError" class="teacher-playback__alert" role="alert">{{ actionError }}</p>
               <p v-else-if="actionMessage" class="teacher-playback__saved" role="status">{{ actionMessage }}</p>
 
-              <section class="teacher-playback__section teacher-playback__ai" :aria-label="t('teacher.playback_wording_summary')">
-                <h2>{{ t('teacher.playback_wording_summary') }}</h2>
+              <p v-if="!selectedKey && mushafInteractionMode === 'marking' && mushafSurface === 'page'" class="teacher-playback__hint" role="status">{{ t('teacher.mushaf_pick_word') }}</p>
+
+              <TeacherPlaybackSideSection
+                v-if="selectedKey"
+                v-model:open="sidePanelOpen.word"
+                :title="t('teacher.mushaf_selected_word')"
+                tone="mark"
+                :aria-label="t('teacher.mushaf_selected_word')"
+              >
+                <template #lead>
+                  <p v-if="selectedReference" class="teacher-word-mark-card__ref">{{ selectedReference }}</p>
+                </template>
+                <template #bar-end>
+                  <p
+                    v-if="selectedArabicDisplay"
+                    class="teacher-word-mark-card__arabic"
+                    lang="ar"
+                    dir="rtl"
+                    :style="selectedArabicFontFamily ? { fontFamily: selectedArabicFontFamily } : undefined"
+                  >{{ selectedArabicDisplay }}</p>
+                </template>
+                <p v-if="selectedAiSummary" class="teacher-word-mark-card__ai">{{ selectedAiSummary }}</p>
+                <p v-if="selectedDecision" class="teacher-word-mark-card__status">{{ selectedDecision }}</p>
+                <div v-if="selectedNeedsAttention" class="teacher-word-mark-card__flags">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
+                </div>
+                <div class="teacher-playback__field-grid teacher-playback__field-grid--mark">
+                  <label class="teacher-playback__field">
+                    <span>{{ t('teacher.mushaf_category_label') }}</span>
+                    <select v-model="annotationCategory" :disabled="Boolean(saving)">
+                      <option value="">{{ t('teacher.mushaf_category_unset') }}</option>
+                      <option v-for="[id, key] in categoryOptions" :key="id" :value="id">{{ t(key) }}</option>
+                    </select>
+                  </label>
+                  <label class="teacher-playback__field">
+                    <span>{{ t('teacher.mushaf_severity_label') }}</span>
+                    <select v-model="annotationSeverity" :disabled="Boolean(saving)">
+                      <option value="">{{ t('teacher.mushaf_severity_unset') }}</option>
+                      <option v-for="[id, key] in severityOptions" :key="id" :value="id">{{ t(key) }}</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="teacher-playback__field">
+                  <span>{{ t('teacher.mushaf_teacher_feedback') }}</span>
+                  <textarea v-model="wordNote" rows="3" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.mushaf_feedback_placeholder')"></textarea>
+                </label>
+                <div class="teacher-word-mark-card__voice">
+                  <p class="teacher-word-mark-card__voice-hint">{{ t('teacher.mushaf_voice_optional') }}</p>
+                  <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
+                </div>
+                <div class="teacher-word-mark-card__actions">
+                  <button
+                    v-if="latestWordCorrectionId"
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    :disabled="Boolean(saving)"
+                    @click="removeWordMark"
+                  >{{ t('teacher.mushaf_remove_mark') }}</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    :disabled="Boolean(saving) || wordVoiceState.active || (!wordNote.trim() && !wordVoiceState.hasRecording && !annotationCategory)"
+                    @click="saveWord('correct')"
+                  >
+                    <i class="bi bi-send" aria-hidden="true"></i>
+                    {{ saving === 'correct' ? t('teacher.saving') : t('teacher.mushaf_apply_mark') }}
+                  </button>
+                </div>
+                <details class="teacher-playback__panel teacher-playback__panel--compact">
+                  <summary>{{ t('teacher.mushaf_more_word_actions') }}</summary>
+                  <button v-if="canRepeatWord" type="button" class="btn btn-link btn-sm" @click="repeatWord">
+                    <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    {{ t('teacher.coaching_play_segment') }}
+                  </button>
+                  <p v-if="selectedWord?.recognised || selectedCoaching?.ai?.recognised" class="teacher-playback__heard">
+                    <span>{{ t('teacher.playback_heard') }}</span>
+                    <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
+                  </p>
+                  <div v-if="selectedCoaching?.corrections?.length" class="teacher-playback__history-wrap">
+                    <p class="teacher-playback__hint">{{ t('teacher.coaching_history') }}</p>
+                    <ul class="teacher-playback__history">
+                      <li v-for="item in selectedCoaching.corrections" :key="item.id">
+                        <p v-if="item.body">{{ item.body }}</p>
+                        <TeacherAudioFeedbackPlayer
+                          v-if="item.audio?.available"
+                          :src="item.audio.url"
+                          :duration-ms="item.audio.duration_ms"
+                          compact
+                        />
+                        <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="editCorrection(item)">
+                          {{ t('teacher.coaching_correct_note') }}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="teacher-playback__action-row">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
+                  </div>
+                </details>
+              </TeacherPlaybackSideSection>
+
+              <TeacherPlaybackSideSection
+                v-model:open="sidePanelOpen.wording"
+                :title="t('teacher.playback_wording_summary')"
+                tone="wording"
+                :aria-label="t('teacher.playback_wording_summary')"
+              >
                 <p v-if="checkerScore" class="teacher-playback__score">{{ checkerScore }}</p>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_ai_wording_only') }}</p>
                 <details v-if="payload.tajweed_practice_suggestion" class="teacher-playback__panel teacher-playback__practice-aid">
@@ -255,10 +383,15 @@
                     <li v-for="line in observationLines(payload.history.previous_review.observations)" :key="line.id">{{ line.text }}</li>
                   </ul>
                 </details>
-              </section>
+              </TeacherPlaybackSideSection>
 
-              <section v-if="hasAttention" class="teacher-playback__section teacher-playback__attention" :aria-label="t('teacher.playback_attention_title')">
-                <h2>{{ t('teacher.playback_attention_title') }}</h2>
+              <TeacherPlaybackSideSection
+                v-if="hasAttention"
+                v-model:open="sidePanelOpen.attention"
+                :title="t('teacher.playback_attention_title')"
+                tone="attention"
+                :aria-label="t('teacher.playback_attention_title')"
+              >
                 <ul v-if="attentionByAyah.length" class="teacher-playback__attention-rows">
                   <li v-for="group in attentionByAyah" :key="group.ayah" class="teacher-playback__attention-row">
                     <div class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
@@ -289,13 +422,17 @@
                 <button v-if="filteredItems.length > visibleItems.length" type="button" class="teacher-playback__more" @click="showAllAttention = true">
                   {{ t('teacher.playback_show_all') }}
                 </button>
-              </section>
+              </TeacherPlaybackSideSection>
 
-              <section class="teacher-playback__section teacher-playback__assessment" :aria-label="t('teacher.playback_teacher_assessment')">
-                <h2>
-                  {{ t('teacher.playback_teacher_assessment') }}
+              <TeacherPlaybackSideSection
+                v-model:open="sidePanelOpen.assessment"
+                :title="t('teacher.playback_teacher_assessment')"
+                tone="assessment"
+                :aria-label="t('teacher.playback_teacher_assessment')"
+              >
+                <template #bar-end>
                   <span v-if="!soundEvidenceReady" class="teacher-playback__fold-state">{{ t('teacher.playback_sound_unverified') }}</span>
-                </h2>
+                </template>
                 <p class="teacher-playback__hint">{{ t('teacher.playback_teacher_assessment_help') }}</p>
                 <p v-if="!soundEvidenceReady" class="teacher-playback__hint">{{ t('teacher.playback_sound_needs_evidence') }}</p>
                 <label v-if="!soundEvidenceReady" class="teacher-playback__heard-live">
@@ -320,105 +457,15 @@
                 <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || !assessmentReady" @click="saveAssessment">
                   {{ saving === 'assessment' ? t('teacher.saving') : t('teacher.playback_save_assessment') }}
                 </button>
+              </TeacherPlaybackSideSection>
 
-                <div v-if="selectedKey" class="teacher-playback__word" :aria-label="t('teacher.coaching_word')">
-                  <h3>{{ t('teacher.coaching_word') }}</h3>
-                  <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
-                  <p v-if="selectedReference || selectedWord || selectedCoaching" class="teacher-playback__selection-meta">
-                    <template v-if="selectedReference">{{ selectedReference }}<br></template>
-                    <span class="teacher-playback__ai-result">{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</span>
-                  </p>
-                  <p v-if="selectedWord?.recognised || selectedCoaching?.ai?.recognised" class="teacher-playback__heard">
-                    <span>{{ t('teacher.playback_heard') }}</span>
-                    <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
-                  </p>
-                  <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
-                  <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
-                    <i class="bi bi-play-fill" aria-hidden="true"></i>
-                    {{ t('teacher.coaching_play_segment') }}
-                  </button>
-                  <div v-if="selectedNeedsAttention" class="teacher-playback__action-row">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
-                  </div>
-                  <div class="teacher-playback__action-row">
-                    <label class="teacher-playback__field">
-                      <span>{{ t('teacher.finding_label') }}</span>
-                      <select v-model="annotationFinding" :disabled="Boolean(saving)">
-                        <option value="">{{ t('teacher.finding_unset') }}</option>
-                        <option v-for="[id, key] in findingOptions" :key="id" :value="id">{{ t(key) }}</option>
-                      </select>
-                    </label>
-                    <label class="teacher-playback__field">
-                      <span>{{ t('teacher.focus_label') }}</span>
-                      <select v-model="annotationFocus" :disabled="Boolean(saving)">
-                        <option value="">{{ t('teacher.focus_unset') }}</option>
-                        <option v-for="[id, key] in focusOptions" :key="id" :value="id">{{ t(key) }}</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label class="teacher-playback__field">
-                    <span>{{ t('teacher.coaching_write') }}</span>
-                    <textarea v-model="wordNote" rows="2" maxlength="2000" :disabled="Boolean(saving)" :placeholder="t('teacher.coaching_write_placeholder')"></textarea>
-                  </label>
-                  <div class="teacher-playback__action-row">
-                    <TeacherVoiceNoteControls ref="wordVoice" :disabled="Boolean(saving)" @state-change="wordVoiceState = $event" />
-                    <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(saving) || wordVoiceState.active || (!wordNote.trim() && !wordVoiceState.hasRecording)" @click="saveWord('correct')">
-                      <i class="bi bi-send" aria-hidden="true"></i>
-                      {{ saving === 'correct' ? t('teacher.saving') : t('teacher.coaching_send') }}
-                    </button>
-                  </div>
-                  <details class="teacher-playback__panel">
-                    <summary>{{ t('teacher.playback_actions') }}</summary>
-                    <div class="teacher-playback__action-row">
-                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('reviewed')">{{ t('teacher.playback_mark_reviewed') }}</button>
-                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('retry')">{{ t('teacher.coaching_request_retry') }}</button>
-                    </div>
-                    <div v-if="selectedCoaching?.corrections?.length">
-                      <p class="teacher-playback__hint">{{ t('teacher.coaching_history') }}</p>
-                      <ul class="teacher-playback__history">
-                        <li v-for="item in selectedCoaching.corrections" :key="item.id">
-                          <p v-if="item.focus || item.finding" class="teacher-playback__hint">{{ teacherFindingLabel(item) }}</p>
-                          <p v-if="item.body">{{ item.body }}</p>
-                          <TeacherAudioFeedbackPlayer
-                            v-if="item.audio?.available"
-                            :src="item.audio.url"
-                            :duration-ms="item.audio.duration_ms"
-                            compact
-                          />
-                          <button v-if="item.audio?.available" type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="deleteCorrectionAudio(item.id)">
-                            {{ t('teacher.coaching_delete_audio') }}
-                          </button>
-                          <button type="button" class="btn btn-link btn-sm" :disabled="Boolean(saving)" @click="editCorrection(item)">
-                            {{ t('teacher.coaching_correct_note') }}
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="teacher-playback__word-practice">
-                      <label class="teacher-playback__field">
-                        <span>{{ t('teacher.playback_revision_due') }}</span>
-                        <input v-model="wordDueAt" type="date" :min="today" :disabled="Boolean(saving)">
-                      </label>
-                      <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordDueAt || wordDueAt < today" @click="saveWord('practice')">{{ t('teacher.coaching_assign_practice') }}</button>
-                    </div>
-                    <label class="teacher-playback__field">
-                      <span>{{ t('teacher.coaching_set_status') }}</span>
-                      <select v-model="wordStatus" :disabled="Boolean(saving)">
-                        <option value="">{{ t('teacher.coaching_status_keep') }}</option>
-                        <option value="awaiting_retry">{{ t('teacher.coaching_status_awaiting') }}</option>
-                        <option value="needs_practice">{{ t('teacher.coaching_status_practice') }}</option>
-                        <option value="improved">{{ t('teacher.coaching_status_improved') }}</option>
-                        <option value="resolved">{{ t('teacher.coaching_status_resolved') }}</option>
-                      </select>
-                    </label>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving) || !wordStatus" @click="saveWord('status')">{{ t('teacher.coaching_save_status') }}</button>
-                  </details>
-                </div>
-              </section>
-
-              <section v-if="hasAudio && !audioError" class="teacher-playback__section teacher-playback__segments" :aria-label="t('teacher.playback_segment_feedback')">
-                <h2>{{ t('teacher.playback_segment_feedback') }}</h2>
+              <TeacherPlaybackSideSection
+                v-if="hasAudio && !audioError"
+                v-model:open="sidePanelOpen.segments"
+                :title="t('teacher.playback_segment_feedback')"
+                tone="segments"
+                :aria-label="t('teacher.playback_segment_feedback')"
+              >
                 <p class="teacher-playback__hint">{{ t('teacher.playback_segment_help') }}</p>
                 <div v-if="segmentDraftReady" class="teacher-playback__field">
                   <p class="teacher-playback__hint">{{ segmentRangeLabel }}</p>
@@ -451,10 +498,14 @@
                   </li>
                 </ul>
                 <p v-else class="teacher-empty-line">{{ t('teacher.playback_segment_empty') }}</p>
-              </section>
+              </TeacherPlaybackSideSection>
 
-              <section class="teacher-playback__section teacher-playback__response" :aria-label="t('teacher.playback_feedback')">
-                <h2>{{ t('teacher.playback_feedback') }}</h2>
+              <TeacherPlaybackSideSection
+                v-model:open="sidePanelOpen.response"
+                :title="t('teacher.playback_feedback')"
+                tone="response"
+                :aria-label="t('teacher.playback_feedback')"
+              >
                 <p class="teacher-playback__hint">{{ t('teacher.playback_feedback_optional') }}</p>
                 <div v-if="payload.review?.feedback" class="teacher-playback__saved-feedback">
                   <p v-if="payload.review.feedback.body" class="teacher-playback__saved">{{ payload.review.feedback.body }}</p>
@@ -470,10 +521,14 @@
                     {{ saving === 'feedback' ? t('teacher.saving') : t('teacher.playback_send_feedback') }}
                   </button>
                 </div>
-              </section>
+              </TeacherPlaybackSideSection>
 
-              <section class="teacher-playback__section" :aria-label="t('teacher.playback_private_note')">
-                <h2>{{ t('teacher.playback_private_note') }}</h2>
+              <TeacherPlaybackSideSection
+                v-model:open="sidePanelOpen.private"
+                :title="t('teacher.playback_private_note')"
+                tone="private"
+                :aria-label="t('teacher.playback_private_note')"
+              >
                 <p class="teacher-playback__hint">{{ t('teacher.playback_private_help') }}</p>
                 <label class="teacher-playback__field">
                   <span class="visually-hidden">{{ t('teacher.playback_private_note') }}</span>
@@ -493,10 +548,14 @@
                 >
                   {{ saving === 'note' ? t('teacher.saving') : t('teacher.private_notes_create') }}
                 </button>
-              </section>
+              </TeacherPlaybackSideSection>
 
-              <section class="teacher-playback__section teacher-playback__revision" :aria-label="t('teacher.playback_revision_section')">
-                <h2>{{ t('teacher.playback_revision_section') }}</h2>
+              <TeacherPlaybackSideSection
+                v-model:open="sidePanelOpen.revision"
+                :title="t('teacher.playback_revision_section')"
+                tone="revision"
+                :aria-label="t('teacher.playback_revision_section')"
+              >
                 <p class="teacher-playback__hint">{{ t('teacher.playback_revision_optional') }}</p>
                 <p class="teacher-playback__hint">{{ revisionHelp }}</p>
                 <div v-if="revisionAyahs.length" class="teacher-playback__chips" :aria-label="t('teacher.playback_weak_ayahs')">
@@ -516,7 +575,7 @@
                 </button>
                 <p v-if="payload.review?.revision" class="teacher-playback__saved">{{ t('teacher.playback_revision_sent') }}<template v-if="assignedRevisionLabel"><br>{{ assignedRevisionLabel }}</template></p>
                 <p v-if="followUpLabel" class="teacher-playback__hint">{{ followUpLabel }}</p>
-              </section>
+              </TeacherPlaybackSideSection>
             </aside>
           </div>
     </div>
@@ -576,7 +635,12 @@ import {
 } from '../../scripts/teacher/playbackSync'
 import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import TeacherDialog from './TeacherDialog.vue'
+import TeacherMushafMarkingWorkspace from './TeacherMushafMarkingWorkspace.vue'
+import TeacherMushafReviewChrome from './TeacherMushafReviewChrome.vue'
 import TeacherReciteMushafAyahs from './TeacherReciteMushafAyahs.vue'
+import { buildMushafAnnotationOverlayMap } from '../../scripts/teacher/mushafAnnotationOverlays'
+import { MUSHAF_ANNOTATION_CATEGORIES, MUSHAF_ANNOTATION_SEVERITIES } from '../../scripts/teacher/mushafAnnotationCategories'
+import TeacherPlaybackSideSection from './TeacherPlaybackSideSection.vue'
 import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
 import TeacherWordingMatch from './TeacherWordingMatch.vue'
 
@@ -584,7 +648,7 @@ let playbackUid = 0
 
 export default {
   name: 'TeacherRecitationPlaybackReview',
-  components: { TeacherAudioFeedbackPlayer, TeacherDialog, TeacherReciteMushafAyahs, TeacherVoiceNoteControls, TeacherWordingMatch },
+  components: { TeacherAudioFeedbackPlayer, TeacherDialog, TeacherMushafMarkingWorkspace, TeacherMushafReviewChrome, TeacherPlaybackSideSection, TeacherReciteMushafAyahs, TeacherVoiceNoteControls, TeacherWordingMatch },
   mixins: [i18nMixin],
   props: {
     open: { type: Boolean, default: false },
@@ -647,9 +711,15 @@ export default {
       wordNote: '',
       wordStatus: '',
       annotationFinding: '',
+      annotationCategory: '',
+      annotationSeverity: '',
+      mushafSurface: 'page',
+      mushafInteractionMode: 'reading',
       annotationFocus: '',
       findingOptions: TEACHER_FINDINGS,
       focusOptions: TEACHER_FINDING_FOCI,
+      categoryOptions: MUSHAF_ANNOTATION_CATEGORIES,
+      severityOptions: MUSHAF_ANNOTATION_SEVERITIES,
       attentionFilter: 'flagged',
       showAllAttention: false,
       feedback: '',
@@ -669,6 +739,16 @@ export default {
       moving: false,
       queueScroll: false,
       queueSnapshot: [],
+      sidePanelOpen: {
+        word: true,
+        wording: true,
+        attention: true,
+        assessment: false,
+        segments: false,
+        response: true,
+        private: false,
+        revision: false,
+      },
     }
   },
   computed: {
@@ -924,6 +1004,29 @@ export default {
     selectedCoaching() {
       return (this.payload?.coachings || []).find((row) => row.key === this.selectedKey) || null
     },
+    selectedArabicDisplay() {
+      const fromGlyph = String(this.selectedGlyph?.text || this.selectedGlyph?.accessibleText || '').trim()
+      if (fromGlyph) return fromGlyph
+      const fromWord = String(this.selectedWord?.expected || this.selectedWord?.text || '').trim()
+      return fromWord || ''
+    },
+    selectedArabicFontFamily() {
+      return this.selectedGlyph?.fontFamily || ''
+    },
+    selectedAiSummary() {
+      const status = this.wordStatusLabel(this.selectedWord?.status || this.selectedCoaching?.ai?.status)
+      if (!status) return ''
+      return `${this.t('teacher.coaching_ai')}: ${status}`
+    },
+    latestWordCorrectionId() {
+      const items = this.selectedCoaching?.corrections
+      if (!Array.isArray(items) || !items.length) return null
+      return items[items.length - 1]?.id || null
+    },
+    hasRetryComparison() {
+      const coaching = this.selectedCoaching
+      return Boolean(coaching?.comparison?.latest_retry || coaching?.comparison?.retries?.length)
+    },
     coachingMarks() {
       const marks = {}
       for (const row of this.payload?.coachings || []) {
@@ -931,6 +1034,23 @@ export default {
         marks[row.key] = row.decision || (row.reviewed_at ? 'reviewed' : '')
       }
       return marks
+    },
+    playbackRange() {
+      const range = this.payload?.range || {}
+      return {
+        surah: Number(range.surah) || 0,
+        from: Number(range.from) || 0,
+        to: Number(range.to || range.from) || 0,
+      }
+    },
+    mushafAnnotationOverlays() {
+      if (!this.playbackRange.surah) return {}
+      return buildMushafAnnotationOverlayMap({
+        surah: this.playbackRange.surah,
+        coachings: this.payload?.coachings || [],
+        words: this.words,
+        includeAiFlags: true,
+      })
     },
     canRepeatWord() {
       const word = this.selectedWord || this.words.find((item) => wordKey(item) === this.activeKey)
@@ -1025,6 +1145,9 @@ export default {
         if (!this.open) return
         if (this.queueItems.some((item) => item.attemptId === Number(this.attemptId))) this.captureQueue()
       },
+    },
+    selectedKey(key) {
+      if (key) this.sidePanelOpen.word = true
     },
     activeKey(key) {
       if (!key) return
@@ -1384,6 +1507,23 @@ export default {
       if (!target) return
       this.seekTo(target.start, true)
     },
+    onSelectWordFromPage(selection) {
+      if (this.mushafInteractionMode === 'reading') {
+        const match = this.words.find((word) => Number(word.ayah) === selection.ayah && Number(word.word_index) === selection.word_index)
+        if (match) this.onSelectWord({ ...match, key: wordKey(match) })
+        return
+      }
+      const key = `${selection.ayah}:${selection.word_index}`
+      const glyph = this.words.find((word) => wordKey(word) === key)
+      this.onSelectWord({
+        key,
+        ayah: selection.ayah,
+        word_index: selection.word_index,
+        text: glyph?.expected || '',
+        fontFamily: '',
+        accessibleText: glyph?.expected || '',
+      })
+    },
     onSelectWord(part) {
       const key = part?.key || ''
       if (!key || this.saving) return
@@ -1410,7 +1550,12 @@ export default {
       if (!key) return
       this.wordDrafts[key] = this.wordNote
       this.wordStatusDrafts[key] = this.wordStatus
-      this.wordMetaDrafts[key] = { finding: this.annotationFinding, focus: this.annotationFocus }
+      this.wordMetaDrafts[key] = {
+        finding: this.annotationFinding,
+        focus: this.annotationFocus,
+        category: this.annotationCategory,
+        severity: this.annotationSeverity,
+      }
     },
     applyWordDraft(key) {
       const meta = this.wordMetaDrafts[key] || {}
@@ -1418,6 +1563,8 @@ export default {
       this.wordStatus = this.wordStatusDrafts[key] || ''
       this.annotationFinding = meta.finding || ''
       this.annotationFocus = meta.focus || ''
+      this.annotationCategory = meta.category || ''
+      this.annotationSeverity = meta.severity || ''
     },
     revealCoachingField() {
       const panel = this.$refs.coachingPanel
@@ -1502,8 +1649,13 @@ export default {
       if (!Number.isInteger(ayah) || !Number.isInteger(index)) return
       if (action === 'correct' && this.$refs.wordVoice?.isRecordingActive) return
       const recording = action === 'correct' ? (this.$refs.wordVoice?.recordingPayload?.() || null) : null
-      if (action === 'correct' && Boolean(this.annotationFocus) !== Boolean(this.annotationFinding)) {
+      if (action === 'correct' && !this.annotationCategory && Boolean(this.annotationFocus) !== Boolean(this.annotationFinding)) {
         this.actionError = this.t('teacher.finding_pair_required')
+        this.actionMessage = ''
+        return
+      }
+      if (action === 'correct' && !this.annotationCategory && !this.annotationFinding && !this.annotationFocus) {
+        this.actionError = this.t('teacher.mushaf_category_required')
         this.actionMessage = ''
         return
       }
@@ -1525,6 +1677,9 @@ export default {
           body: action === 'correct' || action === 'practice' ? this.wordNote.trim() : undefined,
           focus: action === 'correct' ? this.annotationFocus : undefined,
           finding: action === 'correct' ? this.annotationFinding : undefined,
+          category: action === 'correct' ? this.annotationCategory || undefined : undefined,
+          severity: action === 'correct' ? this.annotationSeverity || undefined : undefined,
+          publish: action === 'correct' ? true : undefined,
           review_status: action === 'status' ? this.wordStatus : undefined,
           due_at: action === 'practice' ? this.wordDueAt : undefined,
           correction_id: action === 'correct' ? this.editingCorrectionId || undefined : undefined,
@@ -1536,6 +1691,8 @@ export default {
           this.wordNote = ''
           this.annotationFinding = ''
           this.annotationFocus = ''
+          this.annotationCategory = ''
+          this.annotationSeverity = ''
           this.editingCorrectionId = null
           this.$refs.wordVoice?.discardRecording()
         }
@@ -1545,6 +1702,31 @@ export default {
         }
         if (action === 'practice') this.initialWordDueAt = this.wordDueAt
         this.actionMessage = this.t('teacher.coaching_saved')
+      } catch (err) {
+        this.actionError = this.failureMessage(err)
+      } finally {
+        this.saving = ''
+      }
+    },
+    async removeWordMark() {
+      const id = this.latestWordCorrectionId
+      if (id) {
+        await this.deleteCorrection(id)
+        return
+      }
+      if (this.selectedCoaching?.decision === 'confirmed') {
+        await this.saveWord('dismiss')
+      }
+    },
+    async deleteCorrection(correctionId) {
+      if (this.saving || !correctionId) return
+      this.saving = 'delete'
+      this.actionError = ''
+      this.actionMessage = ''
+      try {
+        const payload = await learningApi.deleteTeacherWordCoaching(this.studentId, this.attemptId, correctionId)
+        this.applyPayload(payload)
+        this.actionMessage = this.t('teacher.mushaf_annotation_deleted')
       } catch (err) {
         this.actionError = this.failureMessage(err)
       } finally {
@@ -1649,6 +1831,8 @@ export default {
       this.wordNote = item.body || ''
       this.annotationFinding = item.finding || ''
       this.annotationFocus = item.focus || ''
+      this.annotationCategory = item.category || ''
+      this.annotationSeverity = item.severity || ''
     },
     async sendFeedback() {
       if (this.saving) return

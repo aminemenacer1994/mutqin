@@ -40,7 +40,7 @@
           </span>
           <span class="learner-notifications__copy">
             <strong>{{ item.title || typeLabel(item.type) }}</strong>
-            <span v-if="item.body" class="teacher-meta">{{ item.body }}</span>
+            <span v-if="noticePreview(item)" class="teacher-meta">{{ noticePreview(item) }}</span>
             <time v-if="item.created_at" class="teacher-meta" :datetime="item.created_at">{{ when(item.created_at) }}</time>
           </span>
           <span v-if="item.unread" class="learner-notifications__unread">{{ t('dashboard.notifications_unread') }}</span>
@@ -158,6 +158,12 @@ export default {
       const key = `dashboard.notifications_type_${type}`
       const translated = this.t(key)
       return translated !== key ? translated : type
+    },
+    noticePreview(item) {
+      const body = String(item?.body || '').trim()
+      if (body) return body
+      if (item?.type === 'teacher_feedback' && item?.teacher_note_id) return this.t('teacher.voice_feedback')
+      return ''
     },
     when(value) {
       return formatTeacherWhen(value)

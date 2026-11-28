@@ -136,7 +136,14 @@
         @endforeach
     @endif
 
-    @if(!empty($report['narrative']['text']))
+    @if(!empty($report['narrative']['lines']) && is_array($report['narrative']['lines']))
+        <h2>Summary</h2>
+        <ul class="clean">
+            @foreach($report['narrative']['lines'] as $line)
+                <li>{{ $line }}</li>
+            @endforeach
+        </ul>
+    @elseif(!empty($report['narrative']['text']))
         <h2>Summary</h2>
         <p>{{ $report['narrative']['text'] }}</p>
     @endif

@@ -141,6 +141,32 @@
         <div class="teacher-form-field teacher-form-field--full">
           <label class="form-label" :for="`${formId}-feedback`">{{ t('teacher.feedback') }} <span class="text-body-secondary fw-normal">{{ t('teacher.optional_short') }}</span></label>
           <textarea :id="`${formId}-feedback`" class="form-control" :value="form.feedback" rows="2" maxlength="2000" :placeholder="t('teacher.task_message_prompt')" @input="patch('feedback', $event.target.value)"></textarea>
+          <div class="teacher-task-form__voice-instruction mt-2">
+            <TeacherAudioFeedbackPlayer
+              v-if="savedInstructionAudio?.available && savedInstructionAudio?.url && !instructionVoiceState?.hasRecording"
+              :src="savedInstructionAudio.url"
+              :duration-ms="savedInstructionAudio.duration_ms"
+              compact
+              :play-label="t('teacher.assignment_voice_instruction_label')"
+              :pause-label="t('teacher.pause_recording')"
+            />
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <TeacherVoiceNoteControls ref="instructionVoice" :disabled="saving" @state-change="instructionVoiceState = $event" />
+              <button
+                v-if="savedInstructionAudio?.available && !instructionVoiceState?.hasRecording && !instructionVoiceState?.active"
+                type="button"
+                class="btn btn-link btn-sm p-0"
+                :disabled="saving"
+                @click="clearSavedInstruction = true"
+              >
+                {{ t('teacher.remove_voice_note') }}
+              </button>
+              <button v-if="clearSavedInstruction" type="button" class="btn btn-link btn-sm p-0" :disabled="saving" @click="clearSavedInstruction = false">
+                {{ t('teacher.cancel') }}
+              </button>
+            </div>
+            <p class="text-body-secondary small mb-0">{{ t('teacher.assignment_voice_instruction_help') }}</p>
+          </div>
         </div>
       </div>
     </form>
@@ -163,6 +189,8 @@ import TeacherAssignmentListeningFields from './TeacherAssignmentListeningFields
 import TeacherAssignmentExaminationFields from './TeacherAssignmentExaminationFields.vue'
 import TeacherAssignmentProgressiveHidingFields from './TeacherAssignmentProgressiveHidingFields.vue'
 import TeacherSurahSelect from './TeacherSurahSelect.vue'
+import TeacherVoiceNoteControls from './TeacherVoiceNoteControls.vue'
+import TeacherAudioFeedbackPlayer from './TeacherAudioFeedbackPlayer.vue'
 import { assignmentRequirementLabel } from '../../scripts/teacher/formatters'
 import { defaultExaminationSettings } from '../../scripts/teacher/assignmentExaminationSettings'
 import {
@@ -182,6 +210,8 @@ export default {
     TeacherAssignmentExaminationFields,
     TeacherAssignmentProgressiveHidingFields,
     TeacherSurahSelect,
+    TeacherVoiceNoteControls,
+    TeacherAudioFeedbackPlayer,
   },
   mixins: [i18nMixin],
   props: {
@@ -207,6 +237,8 @@ export default {
       submitAttempted: false,
       initialForm: '',
       studentBlurTimer: null,
+      instructionVoiceState: null,
+      clearSavedInstruction: false,
     }
   },
   watch: {
@@ -218,6 +250,8 @@ export default {
       if (!value) return
       this.dueTouched = false
       this.submitAttempted = false
+      this.clearSavedInstruction = false
+      this.instructionVoiceState = null
       this.initialForm = JSON.stringify(this.form)
       this.syncStudentQuery()
       this.studentOptionsOpen = false
@@ -296,7 +330,14 @@ export default {
     showTargetError() {
       return this.submitAttempted && Boolean(this.targetError)
     },
+    savedInstructionAudio() {
+      return this.form?.voice_instructions?.instruction || this.form?.voice_instructions?.instruction_audio || null
+    },
+    voiceRecordingActive() {
+      return Boolean(this.instructionVoiceState?.active)
+    },
     submitHint() {
+      if (this.voiceRecordingActive) return this.t('teacher.finish_voice_note_before_save')
       if (!this.form.student_id && !this.bulkStudents.length) return this.t('teacher.task_submit_choose_student')
       if (!this.form.task_type) return this.t('teacher.task_submit_choose_type')
       if (!this.form.surah_number || !this.form.ayah_start || !this.form.ayah_end || this.rangeError) return this.t('teacher.task_submit_choose_passage')
@@ -318,7 +359,8 @@ export default {
         && this.form.due_at
         && !this.rangeError
         && !this.dueError
-        && targetOk,
+        && targetOk
+        && !this.voiceRecordingActive,
       )
     },
   },
@@ -397,7 +439,12 @@ export default {
     },
     submit() {
       this.submitAttempted = true
-      if (!this.saving && this.canSubmit) this.$emit('submit')
+      if (!this.saving && this.canSubmit) {
+        this.$emit('submit', {
+          instruction: this.$refs.instructionVoice?.recordingPayload?.() || null,
+          clearInstruction: this.clearSavedInstruction,
+        })
+      }
     },
   },
 }

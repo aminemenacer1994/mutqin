@@ -32,4 +32,14 @@ class LearningPlanItem extends Model
     {
         return $this->belongsTo(MemorisationWeakSpot::class, 'weak_spot_id');
     }
+
+    public function instructionAudioAsset(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentAudioAsset::class, 'instruction_audio_asset_id');
+    }
+
+    public function recitationDemoAudioAsset(): BelongsTo
+    {
+        return $this->belongsTo(TeacherAssignmentAudioAsset::class, 'recitation_demo_audio_asset_id');
+    }
 }

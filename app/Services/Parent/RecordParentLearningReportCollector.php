@@ -244,10 +244,16 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
      */
     private function feedback(User $student, Carbon $from, Carbon $to): array
     {
+        $audio = app(\App\Services\Teacher\TeacherAssignmentMessageAudioService::class);
         $notes = TeacherNote::query()
             ->where('student_id', $student->id)
             ->where('kind', TeacherNoteKind::Feedback->value)
             ->whereBetween('created_at', [$from, $to])
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('body')->where('body', '!=', '');
+                })->orWhereNotNull('audio_path');
+            })
             ->with('teacher:id,name')
             ->latest('id')
             ->limit(3)
@@ -255,9 +261,10 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             ->map(fn (TeacherNote $note) => [
                 'teacher' => $this->firstName($note->teacher) ?: 'Teacher',
                 'excerpt' => $this->plain((string) $note->body, 160),
+                'audio' => $audio->payload($note),
                 'at' => $note->created_at?->toIso8601String(),
             ])
-            ->filter(fn (array $row) => $row['excerpt'] !== '')
+            ->filter(fn (array $row) => $row['excerpt'] !== '' || ($row['audio']['available'] ?? false))
             ->values()
             ->all();
 
@@ -442,10 +449,9 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             fn ($row) => is_array($row) && ($row['label'] ?? '') !== '',
         ));
         $plain = $direction === 'insufficient' || $direction === ''
-            ? 'There is no automatic wording check in this period. A wording check compares words only. It is not a Tajweed grade.'
-            : 'The automatic wording check is '.$this->direction($direction).'.'
-                .($latest !== null && $label !== '' ? ' Words matched on the latest check of '.$label.': '.$latest.'%.' : '')
-                .' This compares words only. It is not a Tajweed grade.';
+            ? 'No practice reading checks were saved this period.'
+            : 'Practice reading checks are '.$this->direction($direction).'.'
+                .($latest !== null && $label !== '' ? ' Latest on '.$label.': '.$latest.'% of words matched.' : '');
 
         return [
             'source' => 'ai_word_match',
@@ -560,7 +566,7 @@ class RecordParentLearningReportCollector implements ParentLearningReportCollect
             $sources[] = ['kind' => 'teacher_confirmed_practice', 'label' => 'Teacher-confirmed practice areas'];
         }
         if (($wording['direction'] ?? 'insufficient') !== 'insufficient') {
-            $sources[] = ['kind' => 'ai_word_match', 'label' => 'Automatic wording check'];
+            $sources[] = ['kind' => 'ai_word_match', 'label' => 'Practice reading checks'];
         }
 
         return $sources;

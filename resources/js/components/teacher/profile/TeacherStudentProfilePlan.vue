@@ -259,6 +259,23 @@
                 <tr class="teacher-plan-items__followup">
                   <td colspan="4">
                     <p v-if="item.instructions" class="teacher-plan-detail__notes">{{ item.instructions }}</p>
+                    <TeacherAudioFeedbackPlayer
+                      v-if="item.voice_instructions?.instruction?.available && item.voice_instructions?.instruction?.url"
+                      :src="item.voice_instructions.instruction.url"
+                      :duration-ms="item.voice_instructions.instruction.duration_ms"
+                      compact
+                      :play-label="t('teacher.assignment_voice_instruction_label')"
+                      :pause-label="t('teacher.pause_recording')"
+                    />
+                    <TeacherAudioFeedbackPlayer
+                      v-if="item.voice_instructions?.recitation_demo?.available && item.voice_instructions?.recitation_demo?.url"
+                      class="mt-2"
+                      :src="item.voice_instructions.recitation_demo.url"
+                      :duration-ms="item.voice_instructions.recitation_demo.duration_ms"
+                      compact
+                      :play-label="t('teacher.assignment_recitation_demo_label')"
+                      :pause-label="t('teacher.pause_recording')"
+                    />
                     <p class="teacher-plan-detail__notes">{{ completionCriteriaLabel(item) }}</p>
                     <div v-if="item.origin === 'suggested' && item.item_status !== 'released' && item.item_status !== 'skipped'" class="teacher-plan-detail__actions">
                       <button type="button" class="btn btn-sm btn-primary" :disabled="busy" @click="approveItem(item)">{{ t('teacher.plan_approve') }}</button>
@@ -282,8 +299,14 @@
                         <span>{{ t('teacher.plan_feedback') }}</span>
                         <textarea v-model="feedbackDrafts[item.id]" class="form-control" rows="2" maxlength="2000"></textarea>
                       </label>
+                      <TeacherVoiceNoteControls
+                        v-if="item.recipient_id"
+                        :ref="el => setPlanVoiceRef(item.id, el)"
+                        :disabled="busy"
+                        @state-change="setPlanVoiceState(item.id, $event)"
+                      />
                       <div v-if="item.recipient_id" class="teacher-plan-detail__actions">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !String(feedbackDrafts[item.id] || '').trim()" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" :disabled="busy || !canSendPlanFeedback(item)" @click="sendFeedback(item)">{{ t('teacher.plan_send_feedback') }}</button>
                       </div>
                     </details>
                   </td>
@@ -439,6 +462,30 @@
             <label class="teacher-plan-modal__field teacher-plan-modal__field--wide teacher-plan-modal__instructions">
               <span>{{ t('teacher.plan_instructions_placeholder') }}</span>
               <input v-model="item.instructions" class="form-control form-control-sm" type="text" maxlength="2000" :disabled="item.locked">
+              <div v-if="!item.locked" class="teacher-plan-modal__voice mt-2 d-grid gap-2">
+                <TeacherAudioFeedbackPlayer
+                  v-if="planItemInstructionAudio(item)?.available && planItemInstructionAudio(item)?.url && !planItemVoiceState(item)?.hasRecording"
+                  :src="planItemInstructionAudio(item).url"
+                  :duration-ms="planItemInstructionAudio(item).duration_ms"
+                  compact
+                  :play-label="t('teacher.assignment_voice_instruction_label')"
+                  :pause-label="t('teacher.pause_recording')"
+                />
+                <TeacherVoiceNoteControls
+                  :ref="el => setPlanItemVoiceRef(item.key, el)"
+                  :disabled="busy || item.locked"
+                  @state-change="setPlanItemVoiceState(item.key, $event)"
+                />
+                <button
+                  v-if="planItemInstructionAudio(item)?.available && !planItemVoiceState(item)?.hasRecording && !planItemVoiceState(item)?.active"
+                  type="button"
+                  class="btn btn-link btn-sm p-0 align-self-start"
+                  @click="item.clear_instruction_audio = true"
+                >
+                  {{ t('teacher.remove_voice_note') }}
+                </button>
+                <p class="text-body-secondary small mb-0">{{ t('teacher.assignment_voice_instruction_help') }}</p>
+              </div>
             </label>
             <label class="teacher-plan-modal__field teacher-plan-modal__field--milestone">
               <input v-model="item.is_milestone" type="checkbox">
@@ -603,6 +650,8 @@ import TeacherSurahSelect from '../TeacherSurahSelect.vue'
 import TeacherEmpty from '../TeacherEmpty.vue'
 import TeacherHifzProgress from './TeacherHifzProgress.vue'
 import TeacherPagination from '../TeacherPagination.vue'
+import TeacherVoiceNoteControls from '../TeacherVoiceNoteControls.vue'
+import TeacherAudioFeedbackPlayer from '../TeacherAudioFeedbackPlayer.vue'
 import { tablePageCount, tablePageSlice } from '../../../scripts/teacher/tablePagination.js'
 
 const PLAN_TABLE_PAGE_SIZE = 12
@@ -691,7 +740,7 @@ function uniquePlans(list) {
 
 export default {
   name: 'TeacherStudentProfilePlan',
-  components: { TeacherDialog, TeacherEmpty, TeacherHifzProgress, TeacherPagination, TeacherRecitationPlaybackReview, TeacherSurahSelect },
+  components: { TeacherDialog, TeacherEmpty, TeacherHifzProgress, TeacherPagination, TeacherRecitationPlaybackReview, TeacherSurahSelect, TeacherVoiceNoteControls, TeacherAudioFeedbackPlayer },
   inject: { teacherSurahs: { default: () => [] } },
   emits: ['updated', 'leave', 'created', 'open-task', 'assign-next'],
   mixins: [i18nMixin],
@@ -731,6 +780,10 @@ export default {
       planMenuToggleEl: null,
       deletePlan: null,
       feedbackDrafts: {},
+      planVoiceRefs: {},
+      planVoiceStates: {},
+      planItemVoiceRefs: {},
+      planItemVoiceStates: {},
       rescheduleDrafts: {},
       recommendations: [],
       editDraft: { id: null, due_on: '', instructions: '' },
@@ -1122,6 +1175,11 @@ export default {
         priority: item.priority || 'normal',
         repetition_target: item.repetition_target || '',
         instructions: item.instructions || '',
+        voice_instructions: item.voice_instructions || null,
+        instruction_audio_asset_id: item.instruction_audio_asset_id || null,
+        recitation_demo_audio_asset_id: item.recitation_demo_audio_asset_id || null,
+        clear_instruction_audio: false,
+        clear_recitation_demo_audio: false,
         origin: item.origin === 'suggested' ? 'suggested' : 'assigned',
         weak_spot_id: item.weak_spot_id || null,
         open: false,
@@ -1336,6 +1394,19 @@ export default {
         this.suggestionsLoading = false
       }
     },
+    planItemVoices() {
+      return this.form.items.map((item) => ({
+        instruction: this.planItemVoiceRefs[item.key]?.recordingPayload?.() || null,
+        clearInstruction: Boolean(item.clear_instruction_audio),
+        instruction_audio_asset_id: item.instruction_audio_asset_id || null,
+      }))
+    },
+    planItemInstructionAudio(item) {
+      return item?.voice_instructions?.instruction || null
+    },
+    planItemVoiceState(item) {
+      return this.planItemVoiceStates[item.key] || null
+    },
     payloadItems() {
       return this.form.items.map((item) => {
         const reps = Number(item.repetition_target)
@@ -1390,7 +1461,7 @@ export default {
             notes: this.form.notes,
             student_goal: this.form.student_goal,
             items: this.payloadItems(),
-          })
+          }, this.planItemVoices())
           if (willActivate) await learningApi.setTeacherLearningPlanStatus(planId, 'active')
           this.success = willActivate ? this.t('teacher.plan_activated') : this.t('teacher.plan_updated')
         } else {
@@ -1404,7 +1475,7 @@ export default {
             student_goal: this.form.student_goal,
             activate: willActivate,
             items: this.payloadItems(),
-          })
+          }, this.planItemVoices())
           this.success = willActivate ? this.t('teacher.plan_activated') : this.t('teacher.plan_saved')
           this.$emit('created', created?.plan || null)
         }
@@ -1449,6 +1520,7 @@ export default {
       this.busy = true
       this.error = ''
       try {
+        const duplicateItems = (plan.items || []).filter((item) => item.origin !== 'suggested')
         await learningApi.createTeacherLearningPlan({
           student_id: plan.student?.id || this.studentId,
           title: `${plan.title} copy`,
@@ -1458,7 +1530,7 @@ export default {
           notes: plan.notes || '',
           allow_duplicate: true,
           activate: false,
-          items: (plan.items || []).filter((item) => item.origin !== 'suggested').map((item) => ({
+          items: duplicateItems.map((item) => ({
             activity: item.activity,
             kind: item.kind,
             hifz_category: item.hifz_category,
@@ -1468,9 +1540,14 @@ export default {
             due_on: item.due_on,
             priority: item.priority,
             instructions: item.instructions,
+            instruction_audio_asset_id: item.instruction_audio_asset_id || null,
+            recitation_demo_audio_asset_id: item.recitation_demo_audio_asset_id || null,
             origin: 'assigned',
           })),
-        })
+        }, duplicateItems.map((item) => ({
+          instruction_audio_asset_id: item.instruction_audio_asset_id || null,
+          recitation_demo_audio_asset_id: item.recitation_demo_audio_asset_id || null,
+        })))
         this.success = this.t('teacher.plan_duplicated')
         await this.reload()
         this.$emit('updated')
@@ -1504,14 +1581,38 @@ export default {
         this.busy = false
       }
     },
+    setPlanItemVoiceRef(key, el) {
+      if (el) this.planItemVoiceRefs[key] = el
+      else delete this.planItemVoiceRefs[key]
+    },
+    setPlanItemVoiceState(key, state) {
+      this.planItemVoiceStates = { ...this.planItemVoiceStates, [key]: state || { hasRecording: false, active: false } }
+    },
+    setPlanVoiceRef(itemId, el) {
+      if (el) this.planVoiceRefs[itemId] = el
+      else delete this.planVoiceRefs[itemId]
+    },
+    setPlanVoiceState(itemId, state) {
+      this.planVoiceStates = { ...this.planVoiceStates, [itemId]: state || { hasRecording: false, active: false } }
+    },
+    canSendPlanFeedback(item) {
+      const body = String(this.feedbackDrafts[item.id] || '').trim()
+      const voice = this.planVoiceStates[item.id]
+      if (voice?.active) return false
+      return Boolean(body || voice?.hasRecording)
+    },
     async sendFeedback(item) {
       const body = String(this.feedbackDrafts[item.id] || '').trim()
-      if (!body || !item.recipient_id) return
+      const voice = this.planVoiceRefs[item.id]
+      if (voice?.isRecordingActive) return
+      const recording = voice?.recordingPayload?.() || null
+      if ((!body && !recording?.blob) || !item.recipient_id) return
       this.busy = true
       this.error = ''
       try {
-        await learningApi.sendTeacherAssignmentMessage(item.recipient_id, body)
+        await learningApi.sendTeacherAssignmentMessage(item.recipient_id, body, recording)
         this.feedbackDrafts[item.id] = ''
+        voice?.discardRecording?.()
         this.success = this.t('teacher.plan_feedback_sent')
       } catch (error) {
         this.error = error?.response?.data?.message || this.t('teacher.plan_save_error')

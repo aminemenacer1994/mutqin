@@ -132,6 +132,51 @@ html[data-theme] [data-platform-shell="parent"] .parent-stat > span {
 html[data-theme] [data-platform-shell="parent"] .parent-stat > strong { grid-column: 2; font-size: 26px; line-height: 1.15; }
 html[data-theme] [data-platform-shell="parent"] .parent-stat > small { grid-column: 2; }
 html[data-theme] [data-platform-shell="parent"] .parent-stat > p { grid-column: 1 / -1; margin-top: 6px; }
+html[data-theme] [data-platform-shell="parent"] .parent-chart__label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-chart__name {
+  color: var(--teacher-text-soft);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-chart__value {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--teacher-text);
+  flex-shrink: 0;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-reports-chart-panel .parent-report__subhead--chart {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--teacher-text);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-homework-breakdown__summary {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--teacher-line);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-homework-breakdown__lead,
+html[data-theme] [data-platform-shell="parent"] .parent-reports-chart-panel + .parent-stat__hint {
+  margin: 0;
+}
+html[data-theme] [data-platform-shell="parent"] .parent-report-parent-list--overview {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--teacher-text);
+}
+html[data-theme] [data-platform-shell="parent"] .parent-report-parent-list--overview li {
+  padding-inline-start: 0;
+}
 /* The home summary has two useful destinations and no duplicate charts. */
 html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot.teacher-pane { background: var(--teacher-surface); border-color: var(--teacher-line); box-shadow: none; }
 html[data-theme] [data-platform-shell="parent"] .parent-home-snapshot__body { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; }

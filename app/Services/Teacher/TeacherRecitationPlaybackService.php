@@ -271,6 +271,21 @@ class TeacherRecitationPlaybackService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function deleteCoaching(
+        User $teacher,
+        User $student,
+        AiReciteAttempt $attempt,
+        TeacherWordCoachingCorrection $correction,
+    ): array {
+        $attempt = $this->authorisedAttempt($teacher, $student, $attempt);
+        $this->coachings->deleteCorrection($teacher, $student, $attempt, $correction);
+
+        return $this->present($teacher, $student, $attempt);
+    }
+
+    /**
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */

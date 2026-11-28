@@ -121,13 +121,20 @@
           <p v-if="!feedbackNotes.length" class="parent-report-prose">{{ t('parent.reports_feedback_empty') }}</p>
           <ul v-else class="parent-report-feedback">
             <li v-for="(note, index) in feedbackNotes" :key="`${note.teacher}-${index}`">
-              <blockquote>
+              <blockquote v-if="note.excerpt">
                 <p>“{{ note.excerpt }}”</p>
                 <footer>
                   {{ note.teacher }}
                   <template v-if="noteWhen(note.at)"> · {{ noteWhen(note.at) }}</template>
                 </footer>
               </blockquote>
+              <p v-else class="parent-report-prose">{{ t('teacher.voice_feedback') }}</p>
+              <TeacherAudioFeedbackPlayer
+                v-if="note.audio?.available && note.audio?.url"
+                :src="note.audio.url"
+                :duration-ms="note.audio.duration_ms"
+                compact
+              />
             </li>
           </ul>
         </section>
@@ -137,7 +144,10 @@
           <div class="parent-report-support__body">
             <section v-if="showOverview" class="parent-panel" :class="{ 'parent-reports-overview--parent': parentFirstLayout }">
               <h2><i class="bi bi-card-text" aria-hidden="true"></i>{{ t('parent.reports_overview') }}</h2>
-              <p v-if="active.narrative?.text" class="parent-report-prose">{{ active.narrative.text }}</p>
+              <ul v-if="narrativeLines.length" class="parent-report-parent-list parent-report-parent-list--overview">
+                <li v-for="(line, index) in narrativeLines" :key="`narrative-${index}`">{{ line }}</li>
+              </ul>
+              <p v-else-if="active.narrative?.text" class="parent-report-prose parent-report-prose--preview">{{ prosePreview(active.narrative.text) }}</p>
               <div v-if="periodStats.length || lifetimeStats.length" class="parent-report-split">
                 <div v-if="periodStats.length">
                   <h3 class="parent-report__subhead">{{ t('parent.reports_period_stats') }}</h3>
@@ -236,12 +246,13 @@ import { formatWhen } from '../../scripts/parent/dashboard'
 import { mapTeacherProgressReportForParent, periodMetricRowsFromReport, proseNeedsFold, prosePreview } from '../../scripts/parent/reportsView'
 import { reportAttendanceChart, reportHomeworkChart, reportParentHighlights, reportPracticeChart } from '../../scripts/parent/reportCharts'
 import TeacherEmpty from '../teacher/TeacherEmpty.vue'
+import TeacherAudioFeedbackPlayer from '../teacher/TeacherAudioFeedbackPlayer.vue'
 import NetworkFallback from '../NetworkFallback.vue'
 import ParentSimpleBarChart from './ParentSimpleBarChart.vue'
 
 export default {
   name: 'ParentFamilyReports',
-  components: { TeacherEmpty, NetworkFallback, ParentSimpleBarChart },
+  components: { TeacherAudioFeedbackPlayer, TeacherEmpty, NetworkFallback, ParentSimpleBarChart },
   mixins: [i18nMixin],
   props: {
     children: { type: Array, default: () => [] },
@@ -335,7 +346,8 @@ export default {
     showOverview() {
       if (!this.active) return false
       return Boolean(
-        this.active.narrative?.text
+        this.narrativeLines.length
+          || this.active.narrative?.text
           || this.periodStats.length
           || this.lifetimeStats.length
           || this.active.comparison?.plain
@@ -416,6 +428,10 @@ export default {
     },
     parentHighlights() {
       return reportParentHighlights(this.t, this.active)
+    },
+    narrativeLines() {
+      const lines = this.active?.narrative?.lines
+      return Array.isArray(lines) && lines.length ? lines : []
     },
     parentFirstLayout() {
       return this.parentHighlights.length > 0 || this.chartPanels.length > 0

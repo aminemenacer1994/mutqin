@@ -11,6 +11,7 @@ import {
   passageTitleDirection,
   resetLearningFilters,
   sharedReviewedAssessment,
+  publishedHomeworkFeedback,
   sortLearningRows,
   visibleAssignmentFeedback,
 } from '../../resources/js/scripts/parent/familyLearning.js'
@@ -69,4 +70,12 @@ test('sharedReviewedAssessment ignores automatic checks', () => {
   }
   assert.equal(sharedReviewedAssessment(row), null)
   assert.equal(homeworkDetailHasContent({ instructions: 'Read aloud.' }), true)
+})
+
+test('publishedHomeworkFeedback surfaces voice-only published notes', () => {
+  const row = {
+    published_feedback: { body: '', audio: { available: true, url: '/api/task-messages/9/audio' } },
+  }
+  assert.deepEqual(publishedHomeworkFeedback(row), row.published_feedback)
+  assert.equal(homeworkDetailHasContent(row), true)
 })

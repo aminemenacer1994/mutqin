@@ -96,11 +96,39 @@ export function visibleAssignmentFeedback(item) {
   return feedback
 }
 
+export function publishedHomeworkFeedback(item) {
+  const published = item?.published_feedback
+  if (!published) return null
+  const body = String(published.body || '').trim()
+  const hasAudio = Boolean(published.audio?.available && published.audio?.url)
+  if (!body && !hasAudio) return null
+  return published
+}
+
+function assignmentVoiceAudio(item, role) {
+  const audio = item?.assignment?.voice_instructions?.[role]
+  if (!audio?.available || !audio?.url) return null
+  return audio
+}
+
+export function assignmentVoiceInstruction(item) {
+  return assignmentVoiceAudio(item, 'instruction')
+}
+
+export function assignmentRecitationDemo(item) {
+  return assignmentVoiceAudio(item, 'recitation_demo')
+}
+
 export function homeworkDetailHasContent(item) {
   return Boolean(
     String(item?.instructions || '').trim()
     || visibleAssignmentFeedback(item)
+    || assignmentVoiceInstruction(item)
+    || assignmentRecitationDemo(item)
+    || publishedHomeworkFeedback(item)
     || sharedReviewedAssessment(item)
-    || (Array.isArray(item?.history) && item.history.length),
+    || (Array.isArray(item?.history) && item.history.length)
+    || (Array.isArray(item?.mushaf_annotations) && item.mushaf_annotations.length)
+    || item?.supervision?.acknowledged,
   )
 }
