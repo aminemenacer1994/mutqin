@@ -1,0 +1,202 @@
+.mr-mutqin-modal-overlay {
+  z-index: 1065;
+}
+
+.mr-mutqin-modal {
+  max-width: 28rem;
+  width: calc(100% - 1.5rem);
+}
+
+.mr-mutqin-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0.5rem;
+}
+
+.mr-mutqin-modal__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.mr-mutqin-modal__title-row h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.mr-mutqin-modal__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 4.5rem;
+}
+
+.mr-mutqin-modal__orb-wrap {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(145deg, #1a6b45 0%, color-mix(in srgb, #1a6b45 75%, #000) 100%);
+  box-shadow: 0 6px 18px color-mix(in srgb, #1a6b45 28%, transparent);
+}
+
+.mr-mutqin-modal__status {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--dash-ink-muted, #5c6670);
+}
+
+.mr-mutqin-modal__listen-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--dash-ink-muted, #5c6670);
+  text-align: center;
+}
+
+.mr-mutqin-modal__body {
+  padding: 0.35rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mr-mutqin-modal__orb {
+  display: grid;
+  place-items: center;
+  min-height: 5.5rem;
+}
+
+.mr-mutqin-waveform {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.18rem;
+  height: 1.35rem;
+}
+
+.mr-mutqin-waveform__bar {
+  width: 0.22rem;
+  height: calc(0.65rem + var(--mr-level, 0.3) * 0.85rem);
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: bottom;
+}
+
+.mr-mutqin-waveform.is-active .mr-mutqin-waveform__bar {
+  animation: mr-mutqin-wave 0.9s ease-in-out infinite;
+}
+
+.mr-mutqin-waveform.is-active .mr-mutqin-waveform__bar:nth-child(2) { animation-delay: 0.08s; }
+.mr-mutqin-waveform.is-active .mr-mutqin-waveform__bar:nth-child(3) { animation-delay: 0.16s; }
+.mr-mutqin-waveform.is-active .mr-mutqin-waveform__bar:nth-child(4) { animation-delay: 0.24s; }
+.mr-mutqin-waveform.is-active .mr-mutqin-waveform__bar:nth-child(5) { animation-delay: 0.32s; }
+
+.mr-mutqin-waveform.is-reduced.is-active .mr-mutqin-waveform__bar {
+  animation: none;
+}
+
+@keyframes mr-mutqin-wave {
+  0%, 100% { transform: scaleY(0.75); opacity: 0.85; }
+  50% { transform: scaleY(1.15); opacity: 1; }
+}
+
+.mr-mutqin-modal__mic {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--dash-accent, #1f7a4c);
+  color: #fff;
+  font-size: 1.35rem;
+}
+
+.mr-mutqin-modal__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mr-mutqin-modal__suggestion {
+  border: 1px solid var(--dash-border, #d8dee4);
+  background: var(--dash-surface, #fff);
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.mr-mutqin-modal__transcript {
+  margin: 0;
+  font-size: 0.88rem;
+  min-height: 1.25rem;
+}
+
+.mr-mutqin-modal__transcript.is-interim {
+  opacity: 0.7;
+}
+
+.mr-mutqin-modal__result {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--dash-border, #d8dee4);
+  background: color-mix(in srgb, var(--dash-accent-light, #e8f5ee) 35%, var(--dash-surface, #fff));
+  font-size: 0.86rem;
+}
+
+.mr-mutqin-modal__text-form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.mr-mutqin-modal__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.5rem;
+  margin: 0;
+}
+
+.mr-mutqin-modal__send {
+  flex: 0 0 auto;
+  min-width: 4.75rem;
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  line-height: 1.2;
+}
+
+.mr-mutqin-modal__listen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.teacher-nav-shell--desktop.is-compact .mr-mutqin-flagship__title,
+.teacher-nav-shell--desktop.is-compact .mr-mutqin-flagship__beta {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .mr-mutqin-modal-overlay .modal-dialog {
+    margin: 0;
+    min-height: 100dvh;
+    max-width: none;
+    width: 100%;
+  }
+
+  .mr-mutqin-modal {
+    min-height: 100dvh;
+    border-radius: 0;
+    width: 100%;
+  }
+}

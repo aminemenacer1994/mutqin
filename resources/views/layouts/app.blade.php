@@ -13389,10 +13389,135 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v233">
+  /*
+   * Unicode mushaf: ayah wrappers must stay display:contents so words join the
+   * sheet’s RTL justify run. Flex space-between on .madani-word spans breaks shaping.
+   */
+  html body .app .main.mushaf-mode-active .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-line--glyphs,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--glyphs,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--glyphs {
+    display: contents !important;
+    flex-flow: unset !important;
+    flex-wrap: unset !important;
+    justify-content: unset !important;
+    align-self: unset !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-inline: unset !important;
+    padding-inline: unset !important;
+    white-space: normal !important;
+    text-align: inherit !important;
+    text-align-last: inherit !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-page--madani,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani {
+    display: block !important;
+    direction: rtl !important;
+    text-align: justify !important;
+    text-align-last: justify !important;
+    text-justify: inter-word !important;
+    line-height: 1.75 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+    display: contents !important;
+    line-height: inherit !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-page--madani {
+    text-align-last: center !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-word,
+  html body .app .main.mushaf-mode-active .madani-word--unicode,
+  html body .app .main.mushaf-mode-active .madani-word--fallback,
+  html body .app .main.mushaf-mode-active .madani-basmala,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-word,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-word--unicode,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-word--fallback,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-basmala {
+    display: inline !important;
+    font-size: calc(clamp(3.15rem, 5.6vw, 4.5rem) * (var(--verse-font-percent, 150) * 0.01)) !important;
+    line-height: 1.65 !important;
+    margin-inline: 0.12em 0 !important;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+    white-space: nowrap !important;
+    vertical-align: baseline !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-basmala,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-basmala {
+    display: block !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-word--glyph,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-word--glyph {
+    font-size: calc(clamp(2.9rem, 5.1vw, 4.15rem) * (var(--verse-font-percent, 150) * 0.01)) !important;
+    margin-inline: 0 !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app .main.mushaf-mode-active .madani-word,
+    html body .app .main.mushaf-mode-active .madani-word--unicode,
+    html body .app .main.mushaf-mode-active .madani-word--fallback,
+    html body .app .main.mushaf-mode-active .madani-word--glyph,
+    html body .app .main.mushaf-mode-active .madani-basmala,
+    html body.memorisation-page .app .main.mushaf-mode-active .madani-word,
+    html body.memorisation-page .app .main.mushaf-mode-active .madani-word--unicode,
+    html body.memorisation-page .app .main.mushaf-mode-active .madani-word--fallback,
+    html body.memorisation-page .app .main.mushaf-mode-active .madani-word--glyph,
+    html body.memorisation-page .app .main.mushaf-mode-active .madani-basmala {
+      font-size: calc(clamp(2.15rem, 8.4vw, 3.05rem) * (var(--verse-font-percent, 150) * 0.01)) !important;
+      line-height: 1.55 !important;
+    }
+  }
+
+  html body .app .main.mushaf-mode-active .madani-line--basmala,
+  html body .app .main.mushaf-mode-active .madani-line--basmala_ayah,
+  html body .app .main.mushaf-mode-active .madani-line--basmala-ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--basmala,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-basmala {
+    display: block !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+</style>
 <script>
   (function () {
+    function clearUnicodeMushafLine(line) {
+      line.style.removeProperty('display')
+      line.style.removeProperty('flex-wrap')
+      line.style.removeProperty('white-space')
+      line.style.removeProperty('width')
+      line.style.removeProperty('max-width')
+      line.style.removeProperty('align-self')
+      line.style.removeProperty('margin-inline')
+      line.style.removeProperty('box-sizing')
+      line.style.removeProperty('overflow')
+      line.style.removeProperty('justify-content')
+    }
+
+    function isUnicodeMushafAyahLine(line) {
+      if (line.classList.contains('qpc-madani-line--ayah')) return false
+      return line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--glyphs')
+    }
+
     function stretchAyahLine(line) {
       if (!line) return
+      if (isUnicodeMushafAyahLine(line)) {
+        clearUnicodeMushafLine(line)
+        return
+      }
       var wasMeasuring = line.style.width === 'max-content'
       if (wasMeasuring) {
         line.style.setProperty('width', '100%', 'important')

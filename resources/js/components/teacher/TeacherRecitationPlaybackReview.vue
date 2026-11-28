@@ -135,36 +135,22 @@
                 <summary>{{ t('teacher.coaching_compare') }}</summary>
                 <p class="teacher-playback__hint">{{ comparisonSummary }}</p>
                 <div class="teacher-playback__compare-grid">
-                  <div class="teacher-playback__compare-pane">
+                  <div>
                     <h3>{{ t('teacher.coaching_original') }}</h3>
-                    <p class="teacher-playback__compare-status">{{ wordStatusLabel(selectedCoaching.ai?.status) }}</p>
-                    <p
-                      v-if="selectedGlyph.text"
-                      class="teacher-playback__glyph teacher-playback__glyph--compare"
-                      lang="ar"
-                      dir="rtl"
-                      :style="selectedGlyphStyle"
-                    >{{ selectedGlyph.text }}</p>
+                    <p>{{ wordStatusLabel(selectedCoaching.ai?.status) }}</p>
+                    <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
                   </div>
-                  <div class="teacher-playback__compare-pane">
+                  <div>
                     <h3>{{ t('teacher.coaching_latest') }}</h3>
-                    <template v-if="selectedCoaching.comparison?.latest_retry">
-                      <p class="teacher-playback__compare-status">{{ retryStatusLabel(selectedCoaching.comparison.latest_retry) }}</p>
-                      <p
-                        v-if="retryCompareText"
-                        class="teacher-playback__glyph teacher-playback__glyph--compare"
-                        lang="ar"
-                        dir="rtl"
-                        :style="retryCompareGlyphStyle"
-                      >{{ retryCompareText }}</p>
-                      <TeacherAudioFeedbackPlayer
-                        v-if="selectedCoaching.comparison.latest_retry.audio?.available"
-                        :src="selectedCoaching.comparison.latest_retry.audio.url"
-                        :duration-ms="selectedCoaching.comparison.latest_retry.audio.duration_ms"
-                        compact
-                      />
-                    </template>
-                    <p v-else class="teacher-playback__compare-empty">{{ t('teacher.coaching_no_retry') }}</p>
+                    <p v-if="selectedCoaching.comparison?.latest_retry">{{ retryStatusLabel(selectedCoaching.comparison.latest_retry) }}</p>
+                    <p v-else class="teacher-playback__hint">{{ t('teacher.coaching_no_retry') }}</p>
+                    <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
+                    <TeacherAudioFeedbackPlayer
+                      v-if="selectedCoaching.comparison?.latest_retry?.audio?.available"
+                      :src="selectedCoaching.comparison.latest_retry.audio.url"
+                      :duration-ms="selectedCoaching.comparison.latest_retry.audio.duration_ms"
+                      compact
+                    />
                   </div>
                 </div>
                 <p v-if="selectedCoaching.comparison?.retries?.length" class="teacher-playback__hint">
@@ -337,13 +323,7 @@
 
                 <div v-if="selectedKey" class="teacher-playback__word" :aria-label="t('teacher.coaching_word')">
                   <h3>{{ t('teacher.coaching_word') }}</h3>
-                  <p
-                    v-if="selectedGlyph.text"
-                    class="teacher-playback__glyph teacher-playback__glyph--featured"
-                    lang="ar"
-                    dir="rtl"
-                    :style="selectedGlyphStyle"
-                  >{{ selectedGlyph.text }}</p>
+                  <p v-if="selectedGlyph.fontFamily" class="teacher-playback__glyph" lang="ar" dir="rtl" :style="{ fontFamily: selectedGlyph.fontFamily }">{{ selectedGlyph.text }}</p>
                   <p v-if="selectedReference || selectedWord || selectedCoaching" class="teacher-playback__selection-meta">
                     <template v-if="selectedReference">{{ selectedReference }}<br></template>
                     <span class="teacher-playback__ai-result">{{ t('teacher.coaching_ai') }}: {{ wordStatusLabel(selectedWord?.status || selectedCoaching?.ai?.status) }}</span>
@@ -352,12 +332,12 @@
                     <span>{{ t('teacher.playback_heard') }}</span>
                     <span lang="ar" dir="rtl">{{ selectedWord?.recognised || selectedCoaching?.ai?.recognised }}</span>
                   </p>
-                  <p v-if="selectedDecision" class="teacher-playback__decision" role="status">{{ selectedDecision }}</p>
+                  <p v-if="selectedDecision" class="teacher-playback__saved">{{ selectedDecision }}</p>
                   <button v-if="canRepeatWord" type="button" class="btn btn-outline-secondary btn-sm" @click="repeatWord">
                     <i class="bi bi-play-fill" aria-hidden="true"></i>
                     {{ t('teacher.coaching_play_segment') }}
                   </button>
-                  <div v-if="canAdjudicateFlag" class="teacher-playback__action-row">
+                  <div v-if="selectedNeedsAttention" class="teacher-playback__action-row">
                     <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('confirm')">{{ t('teacher.coaching_confirm') }}</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" :disabled="Boolean(saving)" @click="saveWord('dismiss')">{{ t('teacher.coaching_dismiss') }}</button>
                   </div>
@@ -733,25 +713,6 @@ export default {
     selectedNeedsAttention() {
       const status = this.selectedWord?.status || this.selectedCoaching?.ai?.status
       return studioWordStatusKey(status) !== 'teacher.playback_word_unassessed' && ['incorrect', 'partial', 'omitted', 'skipped'].includes(normaliseTeacherWordStatus({ status }))
-    },
-    canAdjudicateFlag() {
-      if (this.selectedCoaching?.decision) return false
-      return this.selectedNeedsAttention
-    },
-    selectedGlyphStyle() {
-      return this.selectedGlyph.fontFamily ? { fontFamily: this.selectedGlyph.fontFamily } : undefined
-    },
-    retryCompareText() {
-      const retry = this.selectedCoaching?.comparison?.latest_retry
-      if (!retry) return ''
-      const heard = typeof retry.recognised === 'string' ? retry.recognised.trim() : ''
-      return heard || (this.selectedGlyph.text || '')
-    },
-    retryCompareGlyphStyle() {
-      const retry = this.selectedCoaching?.comparison?.latest_retry
-      const heard = typeof retry?.recognised === 'string' ? retry.recognised.trim() : ''
-      if (heard && this.selectedGlyph.fontFamily) return { fontFamily: this.selectedGlyph.fontFamily }
-      return this.selectedGlyphStyle
     },
     hasAudio() {
       return Boolean(this.payload?.audio?.available && this.payload?.audio?.url)

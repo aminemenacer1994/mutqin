@@ -1,0 +1,5 @@
+{"transcript":"How many students do I have?","role":"teacher","intent":"teacher.students.count","response_mode":"ANSWER_ONLY"}
+{"transcript":"Show my students","role":"teacher","intent":"teacher.students.list","response_mode":"NAVIGATE_ONLY"}
+{"transcript":"Do I have homework?","role":"student","intent":"student.homework.status","response_mode":"ANSWER_ONLY"}
+{"transcript":"Open my progress","role":"student","intent":"student.progress.open","response_mode":"NAVIGATE_ONLY"}
+{"transcript":"Pause","role":"student","intent":"quran.workspace.control","response_mode":"EXECUTE_ACTION","shell":"memorisation"}

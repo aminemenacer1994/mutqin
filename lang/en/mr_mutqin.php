@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'clarify_empty' => 'Say or type what you would like Mr. Mutqin to do.',
+    'clarify_unsupported' => 'I do not recognise that yet. Try one of the suggestions below.',
+    'clarify_student_name' => 'Which student did you mean?',
+    'clarify_unknown_student' => 'I could not find a student called :name in your classes.',
+    'clarify_ambiguous_student' => 'More than one student matches that name. Pick one from the list.',
+    'clarify_workspace_command' => 'I could not apply that playback command here.',
+    'clarify_session' => 'Tell me the surah, ayah range, and reciter you want.',
+    'teacher_student_count' => '{0} You have no authorised students yet.|{1} You have :count student.|[2,*] You have :count students.',
+    'teacher_students_title' => 'Your students',
+    'teacher_overdue_summary' => ':overdue overdue assignments and :outstanding still outstanding.',
+    'teacher_assignments_title' => 'Overdue assignments',
+    'teacher_outstanding_detail' => ':count assignments still open.',
+    'teacher_reviews_pending' => '{0} No recitations are waiting for review.|{1} :count recitation is waiting for review.|[2,*] :count recitations are waiting for review.',
+    'teacher_reviews_title' => 'Pending reviews',
+    'teacher_unread_messages' => '{0} You have no unread messages.|{1} You have :count unread message.|[2,*] You have :count unread messages.',
+    'teacher_messages_title' => 'Unread messages',
+    'teacher_priorities_summary' => 'Today: :reviews submissions to review, :overdue overdue assignments, and :attention students who need attention.',
+    'teacher_priority_reviews' => ':count submissions to review',
+    'teacher_priority_overdue' => ':count overdue assignments',
+    'teacher_priority_attention' => ':count students need attention',
+    'student_no_teacher_network' => 'You are not connected to a teacher yet, so there is no homework to show.',
+    'student_homework_count' => '{0} You have no open homework.|{1} You have :count piece of homework left.|[2,*] You have :count pieces of homework left.',
+    'student_homework_title' => 'Homework',
+    'session_ready' => 'Your session is ready. Opening the workspace.',
+];

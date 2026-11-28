@@ -517,6 +517,16 @@ includesAll('top card dashboard visibility', [
     'blade v204 must fade mushaf pages without a translating slide'
   )
   assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v233[\s\S]*?main\.mushaf-mode-active \.madani-line--ayah[\s\S]*?display:\s*contents\s*!important/,
+    'blade v233 must keep unicode mushaf ayah lines as display:contents'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v233[\s\S]*?clamp\(3\.15rem,\s*5\.6vw,\s*4\.5rem\)/,
+    'blade v233 must restore natural desktop unicode mushaf word size'
+  )
+  assert.match(
     mobileGridCss,
     /main\.madani-qpc-mode-active \.qpc-madani-line--ayah:not\(\.qpc-madani-line--sparse\)[\s\S]*?justify-content:\s*space-between\s*!important/,
     'mobile-grid must stretch full QPC ayah lines edge-to-edge on phones'

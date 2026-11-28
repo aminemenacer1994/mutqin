@@ -85,26 +85,8 @@ export default {
     fitLines() {
       if (!this.lines || !this.$el || this.fitting) return
       const lines = [...this.$el.querySelectorAll(':scope > .teacher-recite-mushaf__line')]
-      const flattened = lines[0] && getComputedStyle(lines[0]).display === 'contents'
-      const words = flattened
-        ? [...this.$el.querySelectorAll(':scope .teacher-recite-mushaf__word')]
-        : []
+      if (lines[0] && getComputedStyle(lines[0]).display === 'contents') return
       const available = this.$el.clientWidth
-      if (flattened) {
-        if (!words.length || available < 48) return
-        const packed = words.reduce((sum, kid) => sum + kid.getBoundingClientRect().width, 0)
-        if (packed < 24) return
-        const sample = words[0]
-        if (!this.fitCap) this.fitCap = parseFloat(getComputedStyle(sample).fontSize) || 28
-        const current = parseFloat(getComputedStyle(sample).fontSize) || this.fitCap
-        const fitted = current * (available / packed) * 0.97
-        const next = Math.min(this.fitCap, Math.max(16, fitted))
-        if (Math.abs(next - current) < 0.6) return
-        this.fitting = true
-        this.$el.style.setProperty('--mushaf-fit', `${next.toFixed(2)}px`)
-        this.fitting = false
-        return
-      }
       if (!lines.length || available < 48) return
       const packed = Math.max(...lines.map((line) => (
         [...line.children].reduce((sum, kid) => sum + kid.getBoundingClientRect().width, 0)
